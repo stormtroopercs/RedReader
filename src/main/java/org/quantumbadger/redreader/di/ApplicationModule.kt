@@ -30,7 +30,7 @@ import javax.inject.Singleton
 
 /**
  * Hilt module providing application-wide dependencies.
- * Replaces singleton patterns with @Inject injection.
+ * Consolidates singleton patterns into Hilt-managed singletons.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -52,5 +52,11 @@ object ApplicationModule {
     @Singleton
     fun provideContext(@ApplicationContext context: Context): Context {
         return context.applicationContext
+    }
+
+    @Provides
+    @Singleton
+    fun provideNetworkModule(okHttpClient: OkHttpClient): NetworkModule {
+        return NetworkModule(okHttpClient)
     }
 }

@@ -31,6 +31,7 @@ import javax.inject.Singleton
 
 /**
  * Hilt module that provides Room database and DAO instances.
+ * Replaces the manual singleton pattern in RedReaderDatabase.getDatabase().
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -48,9 +49,13 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun providePostDao(database: RedReaderDatabase): PostDao = database.postDao()
+    fun providePostDao(database: RedReaderDatabase): PostDao {
+        return database.postDao()
+    }
 
     @Provides
     @Singleton
-    fun provideCommentDao(database: RedReaderDatabase): CommentDao = database.commentDao()
+    fun provideCommentDao(database: RedReaderDatabase): CommentDao {
+        return database.commentDao()
+    }
 }

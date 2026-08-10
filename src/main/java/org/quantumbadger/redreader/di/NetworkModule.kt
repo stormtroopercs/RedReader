@@ -27,6 +27,9 @@ import okhttp3.Call
 import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import okhttp3.OkHttpClient.Builder
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.http.HTTPBackend
+import org.quantumbadger.redreader.http.HttpBackendImplementation
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -51,5 +54,14 @@ object NetworkModule {
             .writeTimeout(30, TimeUnit.SECONDS)
             .dispatcher(dispatcher)
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideHTTPBackend(
+        @ApplicationContext context: Context,
+        okHttpClient: OkHttpClient
+    ): HTTPBackend {
+        return HttpBackendImplementation(okHttpClient, context)
     }
 }
