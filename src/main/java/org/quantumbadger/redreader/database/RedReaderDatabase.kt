@@ -29,16 +29,19 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Date
 
 @Database(
-    entities = [PostEntity::class, CommentEntity::class],
-    version = 2,
+    entities = [PostEntity::class, CommentEntity::class, SubredditEntity::class, UserSessionEntity::class],
+    version = 3,
     autoMigrations = [
-        AutoMigration(from = 1, to = 2)
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 3)
     ]
 )
 @TypeConverters(Converters::class)
 abstract class RedReaderDatabase : RoomDatabase() {
     abstract fun postDao(): PostDao
     abstract fun commentDao(): CommentDao
+    abstract fun subredditDao(): SubredditDao
+    abstract fun userSessionDao(): UserSessionDao
 
     companion object {
         private const val DATABASE_NAME = "redreader.db"
