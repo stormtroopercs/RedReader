@@ -25,7 +25,10 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.migration.AutoMigrationSpec
+import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 import java.util.Date
 
 @Database(
@@ -42,29 +45,27 @@ abstract class RedReaderDatabase : RoomDatabase() {
     abstract fun commentDao(): CommentDao
     abstract fun subredditDao(): SubredditDao
     abstract fun userSessionDao(): UserSessionDao
+}
 
-    companion object {
-        private const val DATABASE_NAME = "redreader.db"
-
-        @Volatile
-        private var INSTANCE: RedReaderDatabase? = null
-
-        fun getDatabase(
-            @ApplicationContext context: Context
-        ): RedReaderDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    RedReaderDatabase::class.java,
-                    DATABASE_NAME
-                )
-                    .addMigrations(MIGRATION_1_2)
-                    .fallbackToDestructiveMigration()
-                    .build()
-                INSTANCE = instance
-                instance
-            }
-        }
+/**
+ * Hilt module for providing the Room database instance.
+ * Replaces companion object singleton pattern.
+ */
+@Singleton
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+    @androidx.room.RoomDatabaseSingleton
+    fun provideDatabase(
+        @ApplicationContext context: Context
+    ): RedReaderDatabase {
+        return Room.databaseBuilder(
+            context.applicationContext,
+            RedReaderDatabase::class.java,
+            "redreader.db"
+        )
+            .addMigrations(MIGRATION_1_2)
+            .fallbackToDestructiveMigration()
+            .build()
     }
 }
 
