@@ -38,17 +38,20 @@ Branch: java-to-kotlin-conversion
 
 ## Phase 2: UI Modernization
 
-### 4. Navigation Compose
-- Add Navigation Compose dependency
-- Create nav graph for new Compose screens
-- Gradually replace Fragment transactions
+**Status: IN PROGRESS — Navigation Compose added, screen migrations started**
+
+### 4. Navigation Compose ✅ IN PROGRESS
+- Add Navigation Compose dependency ✅ DONE
+- Create nav graph for new Compose screens ✅ DONE
+- Gradually replace Fragment transactions 🔄 IN PROGRESS
+- Reference: nowinandroid/core/navigation
 - Reference: nowinandroid/core/navigation
 - Add Navigation Compose dependency
 - Create nav graph for new Compose screens
 - Gradually replace Fragment transactions
 - Reference: nowinandroid/core/navigation
 
-### 5. Compose Screen Migrations
+### 5. Compose Screen Migrations 🔄 IN PROGRESS
 Priority order:
 - Settings screens (simpler, good proof of concept)
 - Report flow (already partially Compose)
