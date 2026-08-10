@@ -153,8 +153,8 @@ class CommentEditActivity : ViewsBaseActivity() {
                 }
             }
 
-            val cm = CacheManager.getInstance(this)
-            val selectedAccount = RedditAccountManager.getInstance(this)
+            val cm = CacheManager.getInstance(this@CommentEditActivity)
+            val selectedAccount = RedditAccountManager.getInstance(this@CommentEditActivity)
                 .getDefaultAccount()
 
             RedditAPI.editComment(

@@ -1,5 +1,5 @@
 [versions]
-agp = "9.3.1"
+agp = "9.3.0"
 kotlin = "2.2.21"
 java = "11"
 
@@ -33,12 +33,13 @@ media3 = "1.8.0"
 netcipher = "2.1.0"
 okhttp = "5.3.0"
 pmd = "6.55.0"
-hilt = "2.56.2"
-hilt-compiler = "2.56.2"
+hilt = "2.60.1"
+hilt-compiler = "2.60.1"
 hilt-navigation-compose = "1.2.0"
+hilt-work = "1.2.0"
 room = "2.6.1"
 workmanager = "2.10.0"
-ksp = "2.2.21-1.0.32"
+ksp = "2.2.21-2.0.5"
 zstd = "1.5.7-6"
 
 junit = "4.13.2"
@@ -71,6 +72,9 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt"
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-compiler" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-navigation-compose" }
+androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-work" }
+work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workmanager" }
+work-gcm = { module = "androidx.work:work-gcm", version.ref = "workmanager" }
 jdk-desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "jdk-desugar" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
@@ -104,6 +108,7 @@ androidx-compose-constraintlayout = { module = "androidx.constraintlayout:constr
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }

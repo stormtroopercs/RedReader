@@ -34,7 +34,8 @@ import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
 @HiltWorker
 class CachePrunerWorker @AssistedInject constructor(
     @Assisted context: Context,
-    @Assisted params: WorkerParameters
+    @Assisted params: WorkerParameters,
+    private val cacheManager: CacheManager
 ) : CoroutineWorker(context, params) {
 
     private val TAG = "CachePrunerWorker"
@@ -43,7 +44,7 @@ class CachePrunerWorker @AssistedInject constructor(
         return try {
             Log.i(TAG, "Pruning cache...")
             RedditChangeDataManager.pruneAllUsersDefaultMaxAge()
-            CacheManager.getInstance(applicationContext).pruneCache()
+            cacheManager.pruneCache()
             Result.success()
         } catch (e: Exception) {
             Log.e(TAG, "Error pruning cache", e)

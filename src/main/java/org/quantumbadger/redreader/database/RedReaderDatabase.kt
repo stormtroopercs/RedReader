@@ -48,28 +48,6 @@ abstract class RedReaderDatabase : RoomDatabase() {
 }
 
 /**
- * Hilt module for providing the Room database instance.
- * Replaces companion object singleton pattern.
- */
-@Singleton
-@InstallIn(SingletonComponent::class)
-object DatabaseModule {
-    @androidx.room.RoomDatabaseSingleton
-    fun provideDatabase(
-        @ApplicationContext context: Context
-    ): RedReaderDatabase {
-        return Room.databaseBuilder(
-            context.applicationContext,
-            RedReaderDatabase::class.java,
-            "redreader.db"
-        )
-            .addMigrations(MIGRATION_1_2)
-            .fallbackToDestructiveMigration()
-            .build()
-    }
-}
-
-/**
  * Migration from version 1 to 2.
  */
 private val MIGRATION_1_2 = object : Migration(1, 2) {

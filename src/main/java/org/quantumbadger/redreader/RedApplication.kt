@@ -21,7 +21,11 @@ import android.app.Application
 import android.content.Context
 import android.os.Process
 import android.util.Log
-import dagger.hilt.android.HiltAndroidApp
+import dagger.hilt.EntryPoint
+import dagger.hilt.EntryPoints
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.common.AndroidCommon
 import org.quantumbadger.redreader.common.Fonts
@@ -29,6 +33,7 @@ import org.quantumbadger.redreader.common.GlobalConfig
 import org.quantumbadger.redreader.common.GlobalExceptionHandler
 import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.compose.prefs.ComposePrefsSingleton
+import javax.inject.Inject
 
 /**
  * Hilt-managed application class for RedReader.
@@ -39,9 +44,18 @@ class RedReader : Application() {
 
     companion object {
         const val TAG = "RedReader"
+
+        @EntryPoint
+        @InstallIn(SingletonComponent::class)
+        interface CacheManagerEntryPoint {
+            fun cacheManager(): CacheManager
+        }
     }
 
     private lateinit var packageInfo: AndroidCommon.PackageInfo
+
+    @Inject
+    lateinit var cacheManager: CacheManager
 
     override fun onCreate() {
         super.onCreate()
@@ -61,13 +75,14 @@ class RedReader : Application() {
 
         Log.i(TAG, "Config: " + GlobalConfig.appName + " (" + GlobalConfig.appBuildType + ")")
 
-        val cm = CacheManager.getInstance(this)
+        // Wire CacheManager static instance for legacy call sites
+        CacheManager.setInstance(cacheManager)
 
         object : Thread() {
             override fun run() {
                 Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-                cm.pruneTemp()
-                cm.pruneCache()
+                CacheManager.getInstance(this@RedReader).pruneTemp()
+                CacheManager.getInstance(this@RedReader).pruneCache()
             }
         }.start()
     }

@@ -26,6 +26,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
+import org.quantumbadger.redreader.cache.CacheManager
 import javax.inject.Singleton
 
 /**
@@ -58,5 +59,11 @@ object ApplicationModule {
     @Singleton
     fun provideNetworkModule(okHttpClient: OkHttpClient): NetworkModule {
         return NetworkModule(okHttpClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCacheManager(@ApplicationContext context: Context): CacheManager {
+        return CacheManager(context)
     }
 }

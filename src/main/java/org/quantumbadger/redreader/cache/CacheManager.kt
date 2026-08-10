@@ -87,6 +87,19 @@ class CacheManager @Inject constructor(
     }
 
     companion object {
+        @Volatile
+        private var instance: CacheManager? = null
+
+        fun getInstance(context: Context): CacheManager {
+            return instance ?: synchronized(this) {
+                instance ?: throw IllegalStateException("CacheManager not initialized by Hilt")
+            }
+        }
+
+        internal fun setInstance(i: CacheManager?) {
+            instance = i
+        }
+
         private const val TAG = "CacheManager"
 
         private const val ext = ".rr_cache_data"

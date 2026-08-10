@@ -15,6 +15,7 @@ plugins {
 	// The reason is that Gradle isolates class loaders between subprojects and some plugins can't handle it.
 	// Root project's class loader however is available to all subprojects and importing plugin here (but not applying it) solves the issue
 	alias(libs.plugins.kotlin.jvm) apply false
+	alias(libs.plugins.kotlin.android) apply false
 }
 
 dependencies {
@@ -30,7 +31,6 @@ dependencies {
 	// Hilt dependencies
 	implementation(libs.hilt.android)
 	ksp(libs.hilt.compiler)
-	ksp(libs.androidx.hilt.compiler)
 	implementation(libs.androidx.hilt.navigation.compose)
 	implementation(libs.androidx.hilt.work)
 
