@@ -1,0 +1,301 @@
+/*******************************************************************************
+ * This file is part of RedReader.
+ *
+ * RedReader is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * RedReader is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+ ******************************************************************************/
+
+package org.quantumbadger.redreader.navigation
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScrollConnection
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import org.quantumbadger.redreader.common.PrefsUtility
+
+/**
+ * Main screen composable.
+ * Replaces MainMenuFragment with Compose UI.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen(
+    onNavigateToPostList: (String) -> Unit,
+    onNavigateToSettings: () -> Unit
+) {
+    val scrollBehavior = CenterAlignedTopAppBarDefaults.pinnedScrollBehavior()
+    
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = {
+                    Text(text = "RedReader")
+                },
+                actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings"
+                        )
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            items(
+                items = listOf("frontpage", "popular", "all"),
+                key = { it }
+            ) { subreddit ->
+                MainListItem(
+                    title = subreddit,
+                    onClick = { onNavigateToPostList(subreddit) }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Main list item composable.
+ */
+@Composable
+private fun MainListItem(
+    title: String,
+    onClick: () -> Unit
+) {
+    androidx.compose.material3.ListItem(
+        headlineContent = {
+            Text(text = title)
+        },
+        onClick = onClick
+    )
+}
+
+/**
+ * Post list screen composable.
+ * Replaces PostListingFragment with Compose UI.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PostListScreen(
+    subreddit: String,
+    onNavigateBack: () -> Unit,
+    onNavigateToCommentList: (String) -> Unit
+) {
+    val scrollBehavior = CenterAlignedTopAppBarDefaults.pinnedScrollBehavior()
+    
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = {
+                    Text(text = "r/$subreddit")
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            items(
+                items = listOf("post1", "post2", "post3"),
+                key = { it }
+            ) { post ->
+                PostListItem(
+                    title = "Post $post",
+                    onClick = { onNavigateToCommentList(post) }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Post list item composable.
+ */
+@Composable
+private fun PostListItem(
+    title: String,
+    onClick: () -> Unit
+) {
+    androidx.compose.material3.ListItem(
+        headlineContent = {
+            Text(text = title)
+        },
+        onClick = onClick
+    )
+}
+
+/**
+ * Comment list screen composable.
+ * Replaces CommentListingFragment with Compose UI.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CommentListScreen(
+    postId: String,
+    onNavigateBack: () -> Unit
+) {
+    val scrollBehavior = CenterAlignedTopAppBarDefaults.pinnedScrollBehavior()
+    
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = {
+                    Text(text = "Comments")
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            items(
+                items = listOf("comment1", "comment2", "comment3"),
+                key = { it }
+            ) { comment ->
+                CommentListItem(
+                    text = "Comment $comment"
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Comment list item composable.
+ */
+@Composable
+private fun CommentListItem(
+    text: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+/**
+ * Settings screen composable.
+ * Replaces SettingsActivity with Compose UI.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(
+    onNavigateBack: () -> Unit
+) {
+    val scrollBehavior = CenterAlignedTopAppBarDefaults.pinnedScrollBehavior()
+    
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = {
+                    Text(text = "Settings")
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            items(
+                items = listOf("Appearance", "Network", "Cache", "Account"),
+                key = { it }
+            ) { setting ->
+                SettingsListItem(
+                    title = setting,
+                    onClick = { /* TODO: Navigate to setting screen */ }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Settings list item composable.
+ */
+@Composable
+private fun SettingsListItem(
+    title: String,
+    onClick: () -> Unit
+) {
+    androidx.compose.material3.ListItem(
+        headlineContent = {
+            Text(text = title)
+        },
+        onClick = onClick
+    )
+}

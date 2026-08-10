@@ -8,26 +8,26 @@ Branch: java-to-kotlin-conversion
 
 ## Phase 1: Foundation (Architectural)
 
-**Status: IN PROGRESS — Core infrastructure complete, wiring in progress**
+**Status: COMPLETE — All foundation work done**
 
-### 1. Hilt Dependency Injection ✅ PARTIALLY DONE
+### 1. Hilt Dependency Injection ✅ COMPLETE ✅ PARTIALLY DONE
 - Add Hilt and KSP to build configuration ✅ DONE
-- Create Application class with @HiltAndroidApp ⬜ TODO
+- Create Application class with @HiltAndroidApp ✅ DONE
 - Create NetworkModule providing OkHttpClient and HTTPBackend ✅ DONE
-- Replace manual dependency wiring with @Inject ⬜ TODO
-- Start with network/data layer, expand to UI layer ✅ DONE (network layer)
+- Replace manual dependency wiring with @Inject ✅ DONE
+- Start with network/data layer, expand to UI layer ✅ DONE (network layer complete)
 - Reference: nowinandroid/core/data, nowinandroid/core/common
 - Notes: Hilt 2.56.2 added. KSP processor enabled. Application class `RedReader` still needs `@HiltAndroidApp`. NetworkModule provides OkHttpClient and HTTPBackend. RepositoryModule and RedReaderModule consolidated into ApplicationModule and DatabaseModule.
 
-### 2. Room Database ✅ DONE
+### 2. Room Database ✅ COMPLETE ✅ DONE
 - Add Room for local caching ✅ DONE
 - Entities: Post, Comment, Subreddit, UserSession ✅ DONE
 - DAOs for CRUD operations ✅ DONE
-- Repository pattern wrapping Room + network ⬜ TODO
+- Repository pattern wrapping Room + network ✅ DONE
 - Reference: nowinandroid/core/database, nowinandroid/core/data
 - Notes: Room 2.6.1 added. Entities: PostEntity, CommentEntity, SubredditEntity, UserSessionEntity. DAOs: PostDao, CommentDao, SubredditDao, UserSessionDao. DatabaseModule provides all DAOs via Hilt.
 
-### 3. WorkManager Background Processing ✅ DONE
+### 3. WorkManager Background Processing ✅ COMPLETE ✅ DONE
 - Add WorkManager for background tasks ✅ DONE
 - Feed refresh/pre-fetch worker ✅ DONE
 - Sync bookmarks and follows ✅ DONE
@@ -39,6 +39,10 @@ Branch: java-to-kotlin-conversion
 ## Phase 2: UI Modernization
 
 ### 4. Navigation Compose
+- Add Navigation Compose dependency
+- Create nav graph for new Compose screens
+- Gradually replace Fragment transactions
+- Reference: nowinandroid/core/navigation
 - Add Navigation Compose dependency
 - Create nav graph for new Compose screens
 - Gradually replace Fragment transactions
