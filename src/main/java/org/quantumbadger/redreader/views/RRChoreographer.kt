@@ -12,13 +12,20 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.quantumbadger.redreader.views
 
 import android.view.Choreographer
+import dagger.hilt.android.scopes.Singleton
+import javax.inject.Inject
 
-class RRChoreographer private constructor() : Choreographer.FrameCallback {
+/**
+ * Hilt-injected choreographer for frame callbacks.
+ * Replaces companion object singleton pattern.
+ */
+@Singleton
+class RRChoreographer @Inject constructor() : Choreographer.FrameCallback {
     interface Callback {
         fun doFrame(frameTimeNanos: Long)
     }
@@ -26,6 +33,8 @@ class RRChoreographer private constructor() : Choreographer.FrameCallback {
     private val mCallbacks = arrayOfNulls<Callback>(128)
     private var mCallbackCount = 0
     private var mPosted = false
+
+    private val CHOREOGRAPHER: Choreographer = Choreographer.getInstance()
 
     fun postFrameCallback(callback: Callback) {
         mCallbacks[mCallbackCount] = callback
@@ -45,11 +54,5 @@ class RRChoreographer private constructor() : Choreographer.FrameCallback {
         for (i in 0..<callbackCount) {
             mCallbacks[i]!!.doFrame(frameTimeNanos)
         }
-    }
-
-    companion object {
-        val INSTANCE: RRChoreographer = RRChoreographer()
-
-        private val CHOREOGRAPHER: Choreographer = Choreographer.getInstance()
     }
 }
