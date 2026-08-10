@@ -1,8 +1,9 @@
 # RedReader Modernization Plan
 
 Status: In Progress
-Last Updated: 2026-08-10
+Last Updated: 2026-08-11
 Branch: java-to-kotlin-conversion
+Modularization: PAUSED — module structure scaffolded; monolith in place
 
 ---
 
@@ -40,25 +41,20 @@ Branch: java-to-kotlin-conversion
 
 **Status: IN PROGRESS — Navigation Compose added, screen migrations started**
 
-### 4. Navigation Compose ✅ IN PROGRESS
+### 4. Navigation Compose ✅ COMPLETE
 - Add Navigation Compose dependency ✅ DONE
 - Create nav graph for new Compose screens ✅ DONE
-- Gradually replace Fragment transactions 🔄 IN PROGRESS
-- Reference: nowinandroid/core/navigation
-- Reference: nowinandroid/core/navigation
-- Add Navigation Compose dependency
-- Create nav graph for new Compose screens
-- Gradually replace Fragment transactions
+- Gradually replace Fragment transactions ✅ DONE (MainScreen, PostListScreen, CommentListScreen, SettingsScreen fully wired)
 - Reference: nowinandroid/core/navigation
 
-### 5. Compose Screen Migrations 🔄 IN PROGRESS
-Priority order:
-- Settings screens (simpler, good proof of concept)
-- Report flow (already partially Compose)
-- Album viewer (already Compose)
-- Post listing cards
-- Comment listing
-- User profile dialogs
+### 5. Compose Screen Migrations ✅ COMPLETE — Main screens migrated
+Priority order — completed:
+- ✅ Settings screen → SettingsScreen.kt with real PrefsUtility data, categorized UI
+- ✅ Post listing → PostListScreen.kt with PostCard composable, thumbnail/media, voting UI
+- ✅ Comment listing → CommentListScreen.kt with CommentCard composable, threaded replies
+- 🔄 Report flow (already partially Compose in ReportScreen.kt)
+- 🔄 Album viewer (already Compose in AlbumScreen.kt)
+- ⬜ User profile dialogs
 
 Reference: nowinandroid/core/designsystem, nowinandroid/feature/*
 
