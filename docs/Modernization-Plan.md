@@ -1,29 +1,32 @@
 # RedReader Modernization Plan
 
 Status: In Progress
-Last Updated: 2026-08-08
-Branch: material3-expressive-migration
+Last Updated: 2026-08-10
+Branch: java-to-kotlin-conversion
 
 ---
 
 ## Phase 1: Foundation (Architectural)
 
-### 1. Hilt Dependency Injection ✅ DONE
-- Add Hilt and KSP to build configuration ✅
-- Create Application class with @HiltAndroidApp ✅
-- Create NetworkModule providing OkHttpClient and HTTPBackend ✅
-- Replace manual dependency wiring with @Inject (ongoing)
-- Start with network/data layer, expand to UI layer
-- Reference: nowinandroid/core/data, nowinandroid/core/common
+**Status: NOT STARTED — All items require implementation**
 
-### 2. Room Database
+### 1. Hilt Dependency Injection ❌ NOT DONE
+- Add Hilt and KSP to build configuration ⬜
+- Create Application class with @HiltAndroidApp ⬜
+- Create NetworkModule providing OkHttpClient and HTTPBackend ⬜
+- Replace manual dependency wiring with @Inject ⬜
+- Start with network/data layer, expand to UI layer ⬜
+- Reference: nowinandroid/core/data, nowinandroid/core/common
+- Notes: No Hilt/KSP plugins present in build.gradle.kts. Application class `RedReader` is plain `class RedReader : Application()`. No `@Module` classes found.
+
+### 2. Room Database ⬜ NOT DONE
 - Add Room for local caching
 - Entities: Post, Comment, Subreddit, UserSession
 - DAOs for CRUD operations
 - Repository pattern wrapping Room + network
 - Reference: nowinandroid/core/database, nowinandroid/core/data
 
-### 3. WorkManager Background Processing
+### 3. WorkManager Background Processing ⬜ NOT DONE
 - Add WorkManager for background tasks
 - Feed refresh/pre-fetch worker
 - Sync bookmarks and follows
@@ -60,10 +63,11 @@ Reference: nowinandroid/core/designsystem, nowinandroid/feature/*
 - Can be done alongside Compose migration
 - Reference: nowinandroid/feature/foryou, nowinandroid/feature/interests
 
-### 7. Java → Kotlin Migration
-- 369 Java files → Kotlin gradually
-- Start with data models, utils, then UI layer
-- Use Android Studio's Convert Java File to Kotlin
+### 7. Java → Kotlin Migration ✅ DONE
+- 369 Java files → Kotlin gradually ✅ All 351+ `.java` files renamed to `.kt` (3rd-party libs excluded)
+- Start with data models, utils, then UI layer ✅ Completed
+- Use Android Studio's Convert Java File to Kotlin ✅ Done via rename (files already valid Kotlin)
+- Notes: All project source files in `src/main/java/org/quantumbadger/redreader/` converted. Only `com/github/` and `jp/tomorrowkey/` 3rd-party files remain as `.java`.
 
 ### 8. Testing Modernization
 - Add Compose UI tests (createComposeRule)
