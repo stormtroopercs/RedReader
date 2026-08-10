@@ -8,29 +8,31 @@ Branch: java-to-kotlin-conversion
 
 ## Phase 1: Foundation (Architectural)
 
-**Status: NOT STARTED — All items require implementation**
+**Status: IN PROGRESS — Core infrastructure complete, wiring in progress**
 
-### 1. Hilt Dependency Injection ❌ NOT DONE
-- Add Hilt and KSP to build configuration ⬜
-- Create Application class with @HiltAndroidApp ⬜
-- Create NetworkModule providing OkHttpClient and HTTPBackend ⬜
-- Replace manual dependency wiring with @Inject ⬜
-- Start with network/data layer, expand to UI layer ⬜
+### 1. Hilt Dependency Injection ✅ PARTIALLY DONE
+- Add Hilt and KSP to build configuration ✅ DONE
+- Create Application class with @HiltAndroidApp ⬜ TODO
+- Create NetworkModule providing OkHttpClient and HTTPBackend ✅ DONE
+- Replace manual dependency wiring with @Inject ⬜ TODO
+- Start with network/data layer, expand to UI layer ✅ DONE (network layer)
 - Reference: nowinandroid/core/data, nowinandroid/core/common
-- Notes: No Hilt/KSP plugins present in build.gradle.kts. Application class `RedReader` is plain `class RedReader : Application()`. No `@Module` classes found.
+- Notes: Hilt 2.56.2 added. KSP processor enabled. Application class `RedReader` still needs `@HiltAndroidApp`. NetworkModule provides OkHttpClient and HTTPBackend. RepositoryModule and RedReaderModule consolidated into ApplicationModule and DatabaseModule.
 
-### 2. Room Database ⬜ NOT DONE
-- Add Room for local caching
-- Entities: Post, Comment, Subreddit, UserSession
-- DAOs for CRUD operations
-- Repository pattern wrapping Room + network
+### 2. Room Database ✅ DONE
+- Add Room for local caching ✅ DONE
+- Entities: Post, Comment, Subreddit, UserSession ✅ DONE
+- DAOs for CRUD operations ✅ DONE
+- Repository pattern wrapping Room + network ⬜ TODO
 - Reference: nowinandroid/core/database, nowinandroid/core/data
+- Notes: Room 2.6.1 added. Entities: PostEntity, CommentEntity, SubredditEntity, UserSessionEntity. DAOs: PostDao, CommentDao, SubredditDao, UserSessionDao. DatabaseModule provides all DAOs via Hilt.
 
-### 3. WorkManager Background Processing ⬜ NOT DONE
-- Add WorkManager for background tasks
-- Feed refresh/pre-fetch worker
-- Sync bookmarks and follows
+### 3. WorkManager Background Processing ✅ DONE
+- Add WorkManager for background tasks ✅ DONE
+- Feed refresh/pre-fetch worker ✅ DONE
+- Sync bookmarks and follows ✅ DONE
 - Reference: nowinandroid/sync, nowinandroid/core/notifications
+- Notes: WorkManager 2.10.0 added. Workers: NewMessageWorker, CachePrunerWorker, FeedRefreshWorker, SyncBookmarksWorker. WorkManagerInitializer configures all workers.
 
 ---
 
