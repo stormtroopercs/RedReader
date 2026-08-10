@@ -17,6 +17,16 @@
 package org.quantumbadger.redreader.reddit
 
 import android.content.Context
+import dagger.hilt.android.scopes.SingletonScoped
+import dagger.hilt.android.components.ActivityComponent
+import dagger.hilt.android.components.FragmentComponent
+import dagger.hilt.android.components.ActivityRetainedComponent
+import dagger.hilt.android.components.ServiceComponent
+import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.android.scopes.ViewModelScoped
+import javax.inject.Inject
+import javax.inject.Singleton
+import javax.inject.Named
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.common.General.sha1
 import org.quantumbadger.redreader.common.RRError
@@ -30,8 +40,37 @@ import org.quantumbadger.redreader.io.WeakCache
 import org.quantumbadger.redreader.reddit.api.RedditAPIIndividualSubredditDataRequester
 import org.quantumbadger.redreader.reddit.things.RedditSubreddit
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
+import javax.inject.Provider
 
-class RedditSubredditManager private constructor(context: Context, user: RedditAccount) {
+/**
+ * Hilt-injected subreddit manager. Replaces manual singleton pattern.
+ * Uses per-user caching for subreddit data.
+ */
+@SingletonScoped
+class RedditSubredditManager @Inject constructor(
+    private val context: Context,
+    private val user: RedditAccount
+) {
+    private val subredditCache: WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>
+
+    init {
+        // Subreddit cache
+
+        val subredditDb = RawObjectDB<SubredditCanonicalId?, RedditSubreddit?>(
+            context,
+            getDbFilename("subreddits", user),
+            RedditSubreddit::class.java
+        )
+
+        val subredditDbWrapper =
+            ThreadedRawObjectDB<SubredditCanonicalId?, RedditSubreddit?, RRError?>(
+                subredditDb,
+                RedditAPIIndividualSubredditDataRequester(context, user)
+            )
+
+        subredditCache =
+            WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>(subredditDbWrapper)
+    }
     fun offerRawSubredditData(
         toWrite: MutableCollection<RedditSubreddit?>?,
         timestamp: TimestampUTC?
@@ -97,22 +136,6 @@ class RedditSubredditManager private constructor(context: Context, user: RedditA
     }
 
     companion object {
-        private var singleton: RedditSubredditManager? = null
-        private var singletonUser: RedditAccount? = null
-
-        @Synchronized
-        fun getInstance(
-            context: Context,
-            user: RedditAccount
-        ): RedditSubredditManager {
-            if (singleton == null || !user.equals(singletonUser)) {
-                singletonUser = user
-                singleton = RedditSubredditManager(context, user)
-            }
-
-            return singleton!!
-        }
-
         private fun getDbFilename(type: String?, user: RedditAccount): String {
             return sha1(user.username.toByteArray()) + "_" + type + "_subreddits.db"
         }

@@ -28,8 +28,19 @@ import org.quantumbadger.redreader.reddit.api.RedditOAuth.RefreshToken
 import java.util.LinkedList
 import java.util.Locale
 
-class RedditAccountManager private constructor(private val context: Context) : SQLiteOpenHelper(
-    context.getApplicationContext(),
+import dagger.hilt.android.scopes.SingletonScoped
+import javax.inject.Inject
+import javax.inject.Named
+
+/**
+ * Hilt-injected account manager. Replaces manual singleton pattern.
+ * Provides Reddit account CRUD operations backed by SQLite.
+ */
+@SingletonScoped
+class RedditAccountManager @Inject constructor(
+    @ApplicationContext private val context: Context
+) : SQLiteOpenHelper(
+    context.applicationContext,
     ACCOUNTS_DB_FILENAME,
     null,
     ACCOUNTS_DB_VERSION
@@ -303,16 +314,5 @@ class RedditAccountManager private constructor(private val context: Context) : S
         private const val FIELD_USES_NEW_CLIENT_ID = "uses_new_client_id"
 
         private const val ACCOUNTS_DB_VERSION = 4
-
-        @SuppressLint("StaticFieldLeak")
-        private var singleton: RedditAccountManager? = null
-
-        @Synchronized
-        fun getInstance(context: Context): RedditAccountManager {
-            if (singleton == null) {
-                singleton = RedditAccountManager(context.getApplicationContext())
-            }
-            return singleton!!
-        }
     }
 }

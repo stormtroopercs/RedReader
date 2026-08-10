@@ -16,9 +16,12 @@
  */
 package org.quantumbadger.redreader.io
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.android.scopes.ViewModelScoped
+import javax.inject.Inject
+import javax.inject.Singleton
 import org.quantumbadger.redreader.common.TriggerableThread
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
 import java.io.BufferedInputStream
@@ -30,7 +33,10 @@ import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 
-class RedditChangeDataIO private constructor(private val mContext: Context) {
+@ViewModelScoped
+class RedditChangeDataIO @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
     private val mLock = Any()
 
     private val mIsInitialReadStarted = AtomicBoolean(false)
@@ -201,31 +207,5 @@ class RedditChangeDataIO private constructor(private val mContext: Context) {
         private const val DB_VERSION = 1
         private const val DB_FILENAME = "rr_change_data.dat"
         private const val DB_WRITETMP_FILENAME = "rr_change_data_tmp.dat"
-
-        @SuppressLint("StaticFieldLeak")
-        private var INSTANCE: RedditChangeDataIO? = null
-        private var STATIC_UPDATE_PENDING = false
-
-        @Synchronized
-        fun getInstance(context: Context): RedditChangeDataIO {
-            if (INSTANCE == null) {
-                INSTANCE = RedditChangeDataIO(context.getApplicationContext())
-
-                if (STATIC_UPDATE_PENDING) {
-                    INSTANCE!!.notifyUpdate()
-                }
-            }
-
-            return INSTANCE!!
-        }
-
-        @Synchronized
-        fun notifyUpdateStatic() {
-            if (INSTANCE != null) {
-                INSTANCE!!.notifyUpdate()
-            } else {
-                STATIC_UPDATE_PENDING = true
-            }
-        }
     }
 }
