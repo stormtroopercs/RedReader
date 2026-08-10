@@ -12,12 +12,15 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.quantumbadger.redreader.reddit.api
 
-import android.annotation.SuppressLint
 import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.android.scopes.ViewModelScoped
+import javax.inject.Inject
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.common.RRError
 import org.quantumbadger.redreader.common.TimestampBound
@@ -27,14 +30,21 @@ import org.quantumbadger.redreader.io.RawObjectDB
 import org.quantumbadger.redreader.io.RequestResponseHandler
 import org.quantumbadger.redreader.io.WritableHashSet
 
-class RedditMultiredditSubscriptionManager private constructor(
+/**
+ * Hilt-injected multireddit subscription manager.
+ * Replaces companion object singleton pattern.
+ */
+@ViewModelScoped
+class RedditMultiredditSubscriptionManager @Inject constructor(
     private val mUser: RedditAccount,
-    private val mContext: Context
+    @ApplicationContext private val mContext: Context
 ) {
     private val notifier = MultiredditListChangeNotifier()
     private val listeners = WeakReferenceListManager<MultiredditListChangeListener?>()
 
     private var mMultireddits: WritableHashSet?
+
+    private val db: RawObjectDB<String?, WritableHashSet?>?
 
     init {
         mMultireddits = db!!.getById(mUser.canonicalUsername)
@@ -122,37 +132,12 @@ class RedditMultiredditSubscriptionManager private constructor(
     }
 
     companion object {
-        @SuppressLint("StaticFieldLeak")
-        private var singleton: RedditMultiredditSubscriptionManager? = null
-        private var singletonAccount: RedditAccount? = null
-
-        private var db: RawObjectDB<String?, WritableHashSet?>? = null
-
-        @Synchronized
+        @JvmStatic
         fun getSingleton(
             context: Context,
             account: RedditAccount
         ): RedditMultiredditSubscriptionManager {
-            if (db == null) {
-                db = RawObjectDB<String?, WritableHashSet?>(
-                    context.getApplicationContext(),
-                    "rr_multireddit_subscriptions.db",
-                    WritableHashSet::class.java
-                )
-            }
-
-            if (singleton == null
-                || !account.equals(singletonAccount)
-            ) {
-                singleton = RedditMultiredditSubscriptionManager(
-                    account,
-                    context.getApplicationContext()
-                )
-
-                singletonAccount = account
-            }
-
-            return singleton!!
+            return RedditMultiredditSubscriptionManager(account, context)
         }
     }
 }
