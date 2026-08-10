@@ -1,19 +1,3 @@
-/*******************************************************************************
- * This file is part of RedReader.
- *
- * RedReader is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * RedReader is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
- */
 package org.quantumbadger.redreader.jsonwrap
 
 import com.fasterxml.jackson.core.JsonParseException
@@ -25,18 +9,9 @@ import java.lang.Float
 import java.lang.Long
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Modifier
-import kotlin.Any
-import kotlin.Boolean
-import kotlin.IllegalArgumentException
-import kotlin.Int
-import kotlin.RuntimeException
-import kotlin.String
-import kotlin.Throws
-import kotlin.also
-import kotlin.toString
 
 class JsonObject(parser: JsonParser) : JsonValue(),
-    Iterable<MutableMap.MutableEntry<String?, JsonValue?>?> {
+    Iterable<Map.MutableEntry<String?, JsonValue?>?> {
     interface JsonDeserializable
 
     private val properties = HashMap<String?, JsonValue?>()
@@ -65,7 +40,7 @@ class JsonObject(parser: JsonParser) : JsonValue(),
             val fieldName = parser.currentName()
 
             parser.nextToken()
-            val value: JsonValue = JsonValue.Companion.parse(parser)
+            val value: JsonValue = JsonValue.parse(parser)
 
             properties.put(fieldName, value)
         }
@@ -86,14 +61,14 @@ class JsonObject(parser: JsonParser) : JsonValue(),
         NoSuchMethodException::class,
         InvocationTargetException::class
     )
-    public override fun <E : JsonDeserializable?> asObject(clazz: Class<E?>): E {
+    public override fun <E : JsonDeserializable?> asObject(clazz: Class<E>): E {
         val obj = clazz.getConstructor().newInstance()
         populateObject(obj)
         return obj
     }
 
     fun get(name: String?): JsonValue? {
-        return properties.get(name)
+        return properties[name]
     }
 
     fun getString(id: String): String? {
@@ -186,17 +161,17 @@ class JsonObject(parser: JsonParser) : JsonValue(),
                 sb.append(',')
             }
             sb.append('\n')
-            for (i in 0..<indent + 1) {
+            for (i in 0 until indent + 1) {
                 sb.append("   ")
             }
             sb.append("\"")
                 .append(fieldNames[prop]!!.replace("\\", "\\\\").replace("\"", "\\\""))
                 .append("\": ")
-            properties.get(fieldNames[prop])!!.prettyPrint(indent + 1, sb)
+            properties[fieldNames[prop]]!!.prettyPrint(indent + 1, sb)
         }
 
         sb.append('\n')
-        for (i in 0..<indent) {
+        for (i in 0 until indent) {
             sb.append("   ")
         }
         sb.append('}')
@@ -209,69 +184,63 @@ class JsonObject(parser: JsonParser) : JsonValue(),
         InvocationTargetException::class
     )
     fun populateObject(o: Any) {
-        val objectFields = o.javaClass.getFields()
+        val objectFields = o.javaClass.fields
 
         try {
             for (objectField in objectFields) {
-                if ((objectField.getModifiers() and Modifier.TRANSIENT) != 0) {
+                if ((objectField.modifiers and Modifier.TRANSIENT) != 0) {
                     continue
                 }
 
-                val `val`: JsonValue?
+                val jsonValue: JsonValue?
 
-                if (properties.containsKey(objectField.getName())) {
-                    `val` = properties.get(objectField.getName())
-                } else if (objectField.getName().startsWith("_json_")) {
-                    `val` = properties.get(
-                        objectField.getName()
+                if (properties.containsKey(objectField.name)) {
+                    jsonValue = properties[objectField.name]
+                } else if (objectField.name.startsWith("_json_")) {
+                    jsonValue = properties[
+                        objectField.name
                             .substring("_json_".length)
-                    )
+                    ]
                 } else {
-                    `val` = null
+                    jsonValue = null
                 }
 
-                if (`val` == null) {
+                if (jsonValue == null) {
                     continue
                 }
 
-                objectField.setAccessible(true)
+                objectField.isAccessible = true
 
-                val fieldType = objectField.getType()
+                val fieldType = objectField.type
 
                 if (fieldType == Long::class.java || fieldType == Long.TYPE) {
-                    objectField.set(o, `val`.asLong())
+                    objectField[o] = jsonValue.asLong()
                 } else if (fieldType == Double::class.java || fieldType == Double.TYPE) {
-                    objectField.set(o, `val`.asDouble())
-                } else if (fieldType == Int::class.java || fieldType == Integer.TYPE) {
-                    objectField.set(
-                        o,
-                        if (`val`.asLong() == null) null else `val`.asLong()!!.toInt()
-                    )
+                    objectField[o] = jsonValue.asDouble()
+                } else if (fieldType == Int::class.java || fieldType == Int.TYPE) {
+                    objectField[o] =
+                        if (jsonValue.asLong() == null) null else jsonValue.asLong()!!.toInt()
                 } else if (fieldType == Float::class.java || fieldType == Float.TYPE) {
-                    objectField.set(
-                        o,
-                        if (`val`.asDouble() == null) null else `val`.asDouble()!!.toFloat()
-                    )
+                    objectField[o] =
+                        if (jsonValue.asDouble() == null) null else jsonValue.asDouble()!!.toFloat()
                 } else if (fieldType == Boolean::class.java || fieldType == java.lang.Boolean.TYPE) {
-                    objectField.set(o, `val`.asBoolean())
+                    objectField[o] = jsonValue.asBoolean()
                 } else if (fieldType == String::class.java) {
-                    objectField.set(o, `val`.asString())
+                    objectField[o] = jsonValue.asString()
                 } else if (fieldType == JsonArray::class.java) {
-                    objectField.set(o, `val`.asArray())
+                    objectField[o] = jsonValue.asArray()
                 } else if (fieldType == JsonObject::class.java) {
-                    objectField.set(o, `val`.asObject())
+                    objectField[o] = jsonValue.asObject()
                 } else if (fieldType == JsonValue::class.java) {
-                    objectField.set(o, `val`)
+                    objectField[o] = jsonValue
                 } else if (JsonDeserializable::class.java.isAssignableFrom(fieldType)) {
-                    objectField.set(
-                        o, `val`.asObject(
-                            fieldType as Class<out JsonDeserializable?>
-                        )
+                    objectField[o] = jsonValue.asObject(
+                        fieldType as Class<out JsonDeserializable>
                     )
                 } else {
                     throw RuntimeException(
                         "Cannot handle field type "
-                                + fieldType.getCanonicalName()
+                                + fieldType.canonicalName
                     )
                 }
             }
@@ -280,19 +249,19 @@ class JsonObject(parser: JsonParser) : JsonValue(),
         }
     }
 
-    override fun iterator(): MutableIterator<MutableMap.MutableEntry<String?, JsonValue?>?> {
+    override fun iterator(): MutableIterator<Map.MutableEntry<String?, JsonValue?>?> {
         return properties.entries.iterator()
     }
 
     protected override fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue?> {
         if (offset == keys.size) {
-            return Optional.Companion.of<JsonValue?>(this)
+            return Optional.of<JsonValue?>(this)
         }
 
-        val next = properties.get(keys[offset].toString())
+        val next = properties[keys[offset].toString()]
 
         if (next == null) {
-            return Optional.Companion.empty<JsonValue?>()
+            return Optional.empty<JsonValue?>()
         }
 
         return next.getAtPathInternal(offset + 1, *keys)

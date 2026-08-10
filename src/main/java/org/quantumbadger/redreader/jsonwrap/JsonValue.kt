@@ -1,19 +1,3 @@
-/*******************************************************************************
- * This file is part of RedReader.
- *
- * RedReader is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * RedReader is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
- */
 package org.quantumbadger.redreader.jsonwrap
 
 import com.fasterxml.jackson.core.JsonFactory
@@ -28,7 +12,6 @@ import java.lang.reflect.InvocationTargetException
 
 abstract class JsonValue {
     open fun asObject(): JsonObject? {
-        // Default implementation
         return null
     }
 
@@ -39,33 +22,26 @@ abstract class JsonValue {
         InvocationTargetException::class
     )
     open fun <E : JsonDeserializable?> asObject(clazz: Class<E?>?): E? {
-        // Default implementation
-
         return null
     }
 
     open fun asArray(): JsonArray? {
-        // Default implementation
         return null
     }
 
     open fun asBoolean(): Boolean? {
-        // Default implementation
         return null
     }
 
     open fun asString(): String? {
-        // Default implementation
         return null
     }
 
     open fun asDouble(): Double? {
-        // Default implementation
         return null
     }
 
     open fun asLong(): Long? {
-        // Default implementation
         return null
     }
 
@@ -85,40 +61,38 @@ abstract class JsonValue {
         val result = getAtPath(*keys)
 
         if (result.isEmpty()) {
-            return Optional.Companion.empty<JsonObject?>()
+            return Optional.empty<JsonObject?>()
         }
 
-        return Optional.Companion.ofNullable<JsonObject?>(result.get().asObject())
+        return Optional.ofNullable<JsonObject?>(result.get().asObject())
     }
 
     fun getArrayAtPath(vararg keys: Any?): Optional<JsonArray?> {
         val result = getAtPath(*keys)
 
         if (result.isEmpty()) {
-            return Optional.Companion.empty<JsonArray?>()
+            return Optional.empty<JsonArray?>()
         }
 
-        return Optional.Companion.ofNullable<JsonArray?>(result.get().asArray())
+        return Optional.ofNullable<JsonArray?>(result.get().asArray())
     }
 
     fun getStringAtPath(vararg keys: Any?): Optional<String?> {
         val result = getAtPath(*keys)
 
         if (result.isEmpty()) {
-            return Optional.Companion.empty<String?>()
+            return Optional.empty<String?>()
         }
 
-        return Optional.Companion.ofNullable<String?>(result.get().asString())
+        return Optional.ofNullable<String?>(result.get().asString())
     }
 
     open fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue?> {
-        // Default implementation
-
         if (offset == keys.size) {
-            return Optional.Companion.of<JsonValue?>(this)
+            return Optional.of<JsonValue?>(this)
         }
 
-        return Optional.Companion.empty<JsonValue?>()
+        return Optional.empty<JsonValue?>()
     }
 
     companion object {
@@ -137,44 +111,36 @@ abstract class JsonValue {
                 throw IOException("Invalid input: no JSON tokens available")
             }
 
-            when (parser.currentToken()) {
-                JsonToken.START_OBJECT -> return JsonObject(parser)
-
-                JsonToken.START_ARRAY -> return JsonArray(parser)
-
+            return when (parser.currentToken()) {
+                JsonToken.START_OBJECT -> JsonObject(parser)
+                JsonToken.START_ARRAY -> JsonArray(parser)
                 JsonToken.VALUE_FALSE -> {
                     parser.nextToken()
-                    return JsonBoolean.Companion.FALSE
+                    JsonBoolean.FALSE
                 }
-
                 JsonToken.VALUE_TRUE -> {
                     parser.nextToken()
-                    return JsonBoolean.Companion.TRUE
+                    JsonBoolean.TRUE
                 }
-
                 JsonToken.VALUE_NULL -> {
                     parser.nextToken()
-                    return JsonNull.Companion.INSTANCE
+                    JsonNull.INSTANCE
                 }
-
                 JsonToken.VALUE_STRING -> {
-                    val result = JsonString(parser.getValueAsString())
+                    val result = JsonString(parser.valueAsString)
                     parser.nextToken()
-                    return result
+                    result
                 }
-
                 JsonToken.VALUE_NUMBER_FLOAT -> {
-                    val result = JsonDouble(parser.getValueAsDouble())
+                    val result = JsonDouble(parser.valueAsDouble)
                     parser.nextToken()
-                    return result
+                    result
                 }
-
                 JsonToken.VALUE_NUMBER_INT -> {
-                    val result = JsonLong(parser.getValueAsLong())
+                    val result = JsonLong(parser.valueAsLong)
                     parser.nextToken()
-                    return result
+                    result
                 }
-
                 else -> throw JsonParseException(
                     parser,
                     "Expecting an object, literal, or array, got: " + parser.currentToken(),
