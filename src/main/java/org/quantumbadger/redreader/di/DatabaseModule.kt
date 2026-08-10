@@ -27,6 +27,8 @@ import dagger.hilt.components.SingletonComponent
 import org.quantumbadger.redreader.database.CommentDao
 import org.quantumbadger.redreader.database.PostDao
 import org.quantumbadger.redreader.database.RedReaderDatabase
+import org.quantumbadger.redreader.database.SubredditDao
+import org.quantumbadger.redreader.database.UserSessionDao
 import javax.inject.Singleton
 
 /**
@@ -57,5 +59,17 @@ object DatabaseModule {
     @Singleton
     fun provideCommentDao(database: RedReaderDatabase): CommentDao {
         return database.commentDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSubredditDao(database: RedReaderDatabase): SubredditDao {
+        return database.subredditDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserSessionDao(database: RedReaderDatabase): UserSessionDao {
+        return database.userSessionDao()
     }
 }
