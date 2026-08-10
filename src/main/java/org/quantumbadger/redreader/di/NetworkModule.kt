@@ -18,24 +18,21 @@
 package org.quantumbadger.redreader.di
 
 import android.content.Context
-import com.squareup.okhttp3.Call
-import com.squareup.okhttp3.OkHttpClient
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Call
 import okhttp3.Dispatcher
-import okhttp3.EventListener
 import okhttp3.OkHttpClient
-import java.net.InetSocketAddress
-import java.net.Proxy
+import okhttp3.OkHttpClient.Builder
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 /**
  * Hilt module providing network-related dependencies.
- * Provides OkHttpClient with appropriate configuration and HTTPBackend.
+ * Provides OkHttpClient and HTTPBackend as singletons.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -43,43 +40,16 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(
-        @ApplicationContext context: Context
-    ): OkHttpClient {
+    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
+        val dispatcher = Dispatcher()
+        dispatcher.maxRequests = 100
+        dispatcher.maxRequestsPerHost = 10
+
         return OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
-            .eventListenerFactory(OkHttpLoggerFactory())
+            .dispatcher(dispatcher)
             .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideHttpBackend(okHttpClient: OkHttpClient): HTTPBackend {
-        return HTTPBackend(okHttpClient)
-    }
-}
-
-/**
- * Factory for creating OkHttp EventListeners for logging.
- */
-class OkHttpLoggerFactory : EventListener.Factory {
-    override fun create(call: Call): EventListener {
-        return OkHttpLogger()
-    }
-}
-
-/**
- * Custom EventListener for logging HTTP requests.
- */
-class OkHttpLogger : EventListener() {
-    override fun connectFailed(
-        call: Call,
-        proxy: Proxy,
-        addr: InetSocketAddress,
-        connectException: java.io.IOException
-    ) {
-        // Log connection failure
     }
 }
