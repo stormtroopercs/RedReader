@@ -12,16 +12,18 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.quantumbadger.redreader.reddit.api
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.android.scopes.ViewModelScoped
+import javax.inject.Inject
 import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheManager
@@ -51,10 +53,17 @@ import org.quantumbadger.redreader.reddit.RedditSubredditManager.SubredditListTy
 import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 
-class RedditSubredditSubscriptionManager private constructor(
+/**
+ * Hilt-injected subreddit subscription manager.
+ * Replaces companion object singleton pattern.
+ */
+@ViewModelScoped
+class RedditSubredditSubscriptionManager @Inject constructor(
     private val user: RedditAccount,
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) {
+    private val TAG = "SubscriptionManager"
+
     inner class ListenerContext private constructor(private val mListener: SubredditSubscriptionStateChangeListener?) {
         fun removeListener() {
             synchronized(this@RedditSubredditSubscriptionManager) {
@@ -67,10 +76,13 @@ class RedditSubredditSubscriptionManager private constructor(
     private val listeners = WeakReferenceListManager<SubredditSubscriptionStateChangeListener?>()
 
     private var subscriptions: WritableHashSet?
+
     private val pendingSubscriptions = HashSet<SubredditCanonicalId?>()
     private val pendingUnsubscriptions = HashSet<SubredditCanonicalId?>()
 
     private var mLastUpdateRequestTime = TimestampUTC.ZERO
+
+    private val db: RawObjectDB<String?, WritableHashSet?>?
 
     init {
         subscriptions = db!!.getById(user.canonicalUsername)
@@ -247,7 +259,7 @@ class RedditSubredditSubscriptionManager private constructor(
             && (mLastUpdateRequestTime === TimestampUTC.ZERO
                     || mLastUpdateRequestTime.elapsed().isGreaterThan(secs(10)))
         ) {
-            triggerUpdate(handler, TimestampBound.Companion.notOlderThan(hours(1)))
+            triggerUpdate(handler, TimestampBound.notOlderThan(hours(1)))
         }
     }
 
@@ -311,7 +323,7 @@ class RedditSubredditSubscriptionManager private constructor(
         activity: AppCompatActivity
     ) {
         RedditAPI.subscriptionAction(
-            CacheManager.Companion.getInstance(context),
+            CacheManager.getSingleton(context),
             SubredditActionResponseHandler(
                 activity,
                 RedditAPI.SUBSCRIPTION_ACTION_SUBSCRIBE,
@@ -331,7 +343,7 @@ class RedditSubredditSubscriptionManager private constructor(
         activity: AppCompatActivity
     ) {
         RedditAPI.subscriptionAction(
-            CacheManager.Companion.getInstance(context),
+            CacheManager.getSingleton(context),
             SubredditActionResponseHandler(
                 activity,
                 RedditAPI.SUBSCRIPTION_ACTION_UNSUBSCRIBE,
@@ -435,40 +447,12 @@ class RedditSubredditSubscriptionManager private constructor(
     }
 
     companion object {
-        private const val TAG = "SubscriptionManager"
-
-        @SuppressLint("StaticFieldLeak")
-        private var singleton: RedditSubredditSubscriptionManager? = null
-        private var singletonAccount: RedditAccount? = null
-
-        private var db: RawObjectDB<String?, WritableHashSet?>? = null
-
-        @Synchronized
+        @JvmStatic
         fun getSingleton(
             context: Context,
             account: RedditAccount
-        ): RedditSubredditSubscriptionManager? {
-            if (db == null) {
-                db = RawObjectDB<String?, WritableHashSet?>(
-                    context.getApplicationContext(),
-                    "rr_subscriptions.db",
-                    WritableHashSet::class.java
-                )
-            }
-
-            if (singleton == null
-                || !account.equals(singletonAccount)
-            ) {
-                singleton = RedditSubredditSubscriptionManager(
-                    account,
-                    context.getApplicationContext()
-                )
-                singletonAccount = account
-            }
-
-            singleton!!.triggerUpdateIfNotReady()
-
-            return singleton
+        ): RedditSubredditSubscriptionManager {
+            return RedditSubredditSubscriptionManager(account, context)
         }
 
         private fun addToHistory(
