@@ -12,78 +12,71 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.liststatus
 
-package org.quantumbadger.redreader.views.liststatus;
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.common.LinkHandler.onLinkClicked
+import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
 
-import android.content.res.TypedArray;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+class CommentSubThreadView(
+    activity: AppCompatActivity,
+    private val mUrl: PostCommentListingURL,
+    messageRes: Int
+) : StatusListItemView(activity) {
+    init {
+        val attr = activity.obtainStyledAttributes(
+            intArrayOf(
+                R.attr.rrCommentSpecificThreadHeaderBackCol,
+                R.attr.rrCommentSpecificThreadHeaderTextCol
+            )
+        )
 
-import androidx.appcompat.app.AppCompatActivity;
+        val rrCommentSpecificThreadHeaderBackCol = attr.getColor(0, 0)
+        val rrCommentSpecificThreadHeaderTextCol = attr.getColor(1, 0)
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.LinkHandler;
-import org.quantumbadger.redreader.reddit.url.PostCommentListingURL;
+        attr.recycle()
 
-public final class CommentSubThreadView extends StatusListItemView {
+        val textView = TextView(activity)
+        textView.setText(messageRes)
+        textView.setTextColor(rrCommentSpecificThreadHeaderTextCol)
+        textView.setTextSize(15.0f)
+        textView.setPadding(
+            (15 * dpScale).toInt(),
+            (10 * dpScale).toInt(),
+            (10 * dpScale).toInt(),
+            (4 * dpScale).toInt()
+        )
 
-	private final PostCommentListingURL mUrl;
+        val messageView = TextView(activity)
+        messageView.setText(string.comment_header_specific_thread_message)
+        messageView.setTextColor(rrCommentSpecificThreadHeaderTextCol)
+        messageView.setTextSize(12.0f)
+        messageView.setPadding(
+            (15 * dpScale).toInt(),
+            0,
+            (10 * dpScale).toInt(),
+            (10 * dpScale).toInt()
+        )
 
-	public CommentSubThreadView(
-			final AppCompatActivity activity,
-			final PostCommentListingURL url,
-			final int messageRes) {
+        val layout = LinearLayout(activity)
+        layout.setOrientation(LinearLayout.VERTICAL)
+        layout.addView(textView)
+        layout.addView(messageView)
 
-		super(activity);
+        setContents(layout)
+        setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS)
 
-		mUrl = url;
+        setBackgroundColor(rrCommentSpecificThreadHeaderBackCol)
 
-		final TypedArray attr = activity.obtainStyledAttributes(new int[] {
-				R.attr.rrCommentSpecificThreadHeaderBackCol,
-				R.attr.rrCommentSpecificThreadHeaderTextCol
-		});
-
-		final int rrCommentSpecificThreadHeaderBackCol = attr.getColor(0, 0);
-		final int rrCommentSpecificThreadHeaderTextCol = attr.getColor(1, 0);
-
-		attr.recycle();
-
-		final TextView textView = new TextView(activity);
-		textView.setText(messageRes);
-		textView.setTextColor(rrCommentSpecificThreadHeaderTextCol);
-		textView.setTextSize(15.0f);
-		textView.setPadding(
-				(int)(15 * dpScale),
-				(int)(10 * dpScale),
-				(int)(10 * dpScale),
-				(int)(4 * dpScale));
-
-		final TextView messageView = new TextView(activity);
-		messageView.setText(R.string.comment_header_specific_thread_message);
-		messageView.setTextColor(rrCommentSpecificThreadHeaderTextCol);
-		messageView.setTextSize(12.0f);
-		messageView.setPadding(
-				(int)(15 * dpScale),
-				0,
-				(int)(10 * dpScale),
-				(int)(10 * dpScale));
-
-		final LinearLayout layout = new LinearLayout(activity);
-		layout.setOrientation(LinearLayout.VERTICAL);
-		layout.addView(textView);
-		layout.addView(messageView);
-
-		setContents(layout);
-		setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
-
-		setBackgroundColor(rrCommentSpecificThreadHeaderBackCol);
-
-		setOnClickListener(v -> {
-			final PostCommentListingURL allComments = mUrl.commentId(null);
-			LinkHandler.onLinkClicked(activity, allComments.toUriString());
-		});
-	}
-
+        setOnClickListener(OnClickListener { v: View? ->
+            val allComments = mUrl.commentId(null)
+            onLinkClicked(activity, allComments.toUriString())
+        })
+    }
 }

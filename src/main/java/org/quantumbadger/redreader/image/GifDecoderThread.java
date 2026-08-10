@@ -12,140 +12,124 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.image
 
-package org.quantumbadger.redreader.image;
+import android.graphics.Bitmap
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
+import android.util.Log
+import android.widget.ImageView
+import jp.tomorrowkey.android.gifplayer.GifDecoder
+import java.io.InputStream
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.concurrent.Volatile
+import kotlin.math.max
 
-import android.graphics.Bitmap;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.util.Log;
-import android.widget.ImageView;
-import androidx.annotation.NonNull;
-import jp.tomorrowkey.android.gifplayer.GifDecoder;
+class GifDecoderThread(private val `is`: InputStream, private val listener: OnGifLoadedListener) :
+    Thread("GIF playing thread") {
+    @Volatile
+    private var playing = true
+    private var view: ImageView? = null
 
-import java.io.InputStream;
-import java.util.concurrent.atomic.AtomicBoolean;
+    fun setView(view: ImageView?) {
+        this.view = view
+    }
 
-public class GifDecoderThread extends Thread {
+    interface OnGifLoadedListener {
+        fun onGifLoaded()
 
-	@NonNull private static final String TAG = "GifDecoderThread";
+        fun onOutOfMemory()
 
-	private volatile boolean playing = true;
-	private final InputStream is;
-	private ImageView view;
-	private final OnGifLoadedListener listener;
+        fun onGifInvalid()
+    }
 
-	public void setView(final ImageView view) {
-		this.view = view;
-	}
+    private val handler: Handler = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            if (playing && view != null) {
+                view!!.setImageBitmap(msg.obj as Bitmap?)
+            }
+        }
+    }
 
-	public interface OnGifLoadedListener {
-		void onGifLoaded();
+    fun stopPlaying() {
+        playing = false
+        interrupt()
 
-		void onOutOfMemory();
+        try {
+            `is`.close()
+        } catch (t: Throwable) {
+            Log.e(TAG, "Exception while stopping", t)
+        }
+    }
 
-		void onGifInvalid();
-	}
+    override fun run() {
+        val loaded = AtomicBoolean(false)
+        val failed = AtomicBoolean(false)
 
-	private final Handler handler = new Handler(Looper.getMainLooper()) {
-		@Override
-		public void handleMessage(@NonNull final Message msg) {
-			if(playing && view != null) {
-				view.setImageBitmap((Bitmap)msg.obj);
-			}
-		}
-	};
+        val decoder = GifDecoder()
 
-	public GifDecoderThread(final InputStream is, final OnGifLoadedListener listener) {
-		super("GIF playing thread");
-		this.is = is;
-		this.listener = listener;
-	}
+        object : Thread("GIF decoding thread") {
+            override fun run() {
+                try {
+                    decoder.read(`is`)
+                    loaded.set(true)
+                } catch (t: Throwable) {
+                    Log.i(TAG, "Got exception", t)
+                    failed.set(true)
+                }
+            }
+        }.start()
 
-	public void stopPlaying() {
-		playing = false;
-		interrupt();
+        try {
+            if (!playing) {
+                return
+            }
 
-		try {
-			is.close();
-		} catch(final Throwable t) {
-			Log.e(TAG, "Exception while stopping", t);
-		}
-	}
+            listener.onGifLoaded()
 
-	@Override
-	public void run() {
+            var frame = 0
 
-		final AtomicBoolean loaded = new AtomicBoolean(false);
-		final AtomicBoolean failed = new AtomicBoolean(false);
+            while (playing) {
+                while (decoder.frameCount <= frame + 1 && !loaded.get() && !failed.get()) {
+                    try {
+                        sleep(100)
+                    } catch (e: InterruptedException) {
+                        return
+                    }
+                }
 
-		final GifDecoder decoder = new GifDecoder();
+                frame = frame % decoder.frameCount
 
-		new Thread("GIF decoding thread") {
-			@Override
-			public void run() {
-				try {
-					decoder.read(is);
-					loaded.set(true);
-				} catch(final Throwable t) {
-					Log.i(TAG, "Got exception", t);
-					failed.set(true);
-				}
-			}
-		}.start();
+                val img = decoder.getFrame(frame)
 
-		try {
+                val msg = Message.obtain()
+                msg.obj = img
+                handler.sendMessage(msg)
 
-			if(!playing) {
-				return;
-			}
+                try {
+                    sleep(max(32, decoder.getDelay(frame)).toLong())
+                } catch (e: InterruptedException) {
+                    return
+                }
 
-			listener.onGifLoaded();
+                if (failed.get()) {
+                    listener.onGifInvalid()
+                    return
+                }
 
-			int frame = 0;
+                frame++
+            }
+        } catch (e: OutOfMemoryError) {
+            listener.onOutOfMemory()
+        } catch (t: Throwable) {
+            listener.onGifInvalid()
+        }
+    }
 
-			while(playing) {
-
-				while(decoder.getFrameCount() <= frame + 1
-						&& !loaded.get()
-						&& !failed.get()) {
-					try {
-						sleep(100);
-					} catch(final InterruptedException e) {
-						return;
-					}
-				}
-
-				frame = frame % decoder.getFrameCount();
-
-				final Bitmap img = decoder.getFrame(frame);
-
-				final Message msg = Message.obtain();
-				msg.obj = img;
-				handler.sendMessage(msg);
-
-				try {
-					sleep(Math.max(32, decoder.getDelay(frame)));
-				} catch(final InterruptedException e) {
-					return;
-				}
-
-				if(failed.get()) {
-					listener.onGifInvalid();
-					return;
-				}
-
-				frame++;
-			}
-
-		} catch(final OutOfMemoryError e) {
-			listener.onOutOfMemory();
-
-		} catch(final Throwable t) {
-			listener.onGifInvalid();
-		}
-	}
+    companion object {
+        private const val TAG = "GifDecoderThread"
+    }
 }

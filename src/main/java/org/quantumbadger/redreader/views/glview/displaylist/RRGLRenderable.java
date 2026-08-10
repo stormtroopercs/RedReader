@@ -12,55 +12,48 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.displaylist
 
-package org.quantumbadger.redreader.views.glview.displaylist;
+import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
-import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack;
+abstract class RRGLRenderable {
+    var isVisible: Boolean = true
+        private set
+    private var mAttachmentCount = 0
 
-public abstract class RRGLRenderable {
+    fun hide() {
+        this.isVisible = false
+    }
 
-	private boolean mVisible = true;
-	private int mAttachmentCount = 0;
+    fun show() {
+        this.isVisible = true
+    }
 
-	public final void hide() {
-		mVisible = false;
-	}
+    fun startRender(stack: RRGLMatrixStack?, time: Long) {
+        if (this.isVisible) {
+            renderInternal(stack, time)
+        }
+    }
 
-	public final void show() {
-		mVisible = true;
-	}
+    open fun onAdded() {
+        mAttachmentCount++
+    }
 
-	public final boolean isVisible() {
-		return mVisible;
-	}
+    open val isAdded: Boolean
+        get() = mAttachmentCount > 0
 
-	public final void startRender(final RRGLMatrixStack stack, final long time) {
-		if(mVisible) {
-			renderInternal(stack, time);
-		}
-	}
+    protected abstract fun renderInternal(stack: RRGLMatrixStack?, time: Long)
 
-	public void onAdded() {
-		mAttachmentCount++;
-	}
+    open fun onRemoved() {
+        mAttachmentCount--
+    }
 
-	public boolean isAdded() {
-		return mAttachmentCount > 0;
-	}
+    open val isAnimating: Boolean
+        get() = false
 
-	protected abstract void renderInternal(RRGLMatrixStack stack, final long time);
-
-	public void onRemoved() {
-		mAttachmentCount--;
-	}
-
-	public boolean isAnimating() {
-		return false;
-	}
-
-	public void setOverallAlpha(final float alpha) {
-		throw new UnsupportedOperationException();
-	}
+    open fun setOverallAlpha(alpha: Float) {
+        throw UnsupportedOperationException()
+    }
 }

@@ -12,119 +12,103 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
-
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.util.AttributeSet;
-import android.view.View;
-import androidx.annotation.Nullable;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.PrefsUtility;
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.util.AttributeSet
+import android.view.View
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.PrefsUtility
 
 /**
  * Draws the left margin for comments based on the RedditPreparedComment#indentation number
  */
-class IndentView extends View {
+internal class IndentView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : View(context, attrs, defStyleAttr) {
+    private val mPaint = Paint()
+    private var mIndent = 0
 
-	private final Paint mPaint = new Paint();
-	private int mIndent;
+    private val mPixelsPerIndent: Int
+    private val mHalfALine: Int
 
-	private final int mPixelsPerIndent;
-	private final int mHalfALine;
+    private val mPrefDrawLines: Boolean
 
-	private final boolean mPrefDrawLines;
+    private var mLineBuffer: FloatArray
 
-	private float[] mLineBuffer;
+    init {
+        mPixelsPerIndent = dpToPixels(context, 10.0f)
+        val mPixelsPerLine = dpToPixels(context, 2f)
+        mHalfALine = mPixelsPerLine / 2
 
-	public IndentView(final Context context) {
-		this(context, null);
-	}
+        val rrIndentBackgroundCol: Int
+        val rrIndentLineCol: Int
 
-	public IndentView(final Context context, @Nullable final AttributeSet attrs) {
-		this(context, attrs, 0);
-	}
+        run {
+            val attr = context.obtainStyledAttributes(
+                intArrayOf(
+                    R.attr.rrIndentBackgroundCol,
+                    R.attr.rrIndentLineCol
+                )
+            )
+            rrIndentBackgroundCol = attr.getColor(0, General.COLOR_INVALID)
+            rrIndentLineCol = attr.getColor(1, General.COLOR_INVALID)
+            attr.recycle()
+        }
 
-	public IndentView(
-			final Context context,
-			@Nullable final AttributeSet attrs,
-			final int defStyleAttr) {
+        this.setBackgroundColor(rrIndentBackgroundCol)
+        mPaint.setColor(rrIndentLineCol)
+        mPaint.setStrokeWidth(mPixelsPerLine.toFloat())
 
-		super(context, attrs, defStyleAttr);
+        mPrefDrawLines = PrefsUtility.pref_appearance_indentlines()
+    }
 
-		mPixelsPerIndent = General.dpToPixels(context, 10.0f);
-		final int mPixelsPerLine = General.dpToPixels(context, 2);
-		mHalfALine = mPixelsPerLine / 2;
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
 
-		final int rrIndentBackgroundCol;
-		final int rrIndentLineCol;
+        val height = getMeasuredHeight()
 
-		{
-			final TypedArray attr = context.obtainStyledAttributes(new int[] {
-					R.attr.rrIndentBackgroundCol,
-					R.attr.rrIndentLineCol
-			});
+        if (mPrefDrawLines) {
+            // i keeps track of indentation, and
+            // l is to populate the float[] with line co-ordinates
+            var l = 0
+            var i = 0
+            while (i < mIndent) {
+                val x = ((mPixelsPerIndent * ++i) - mHalfALine).toFloat()
+                mLineBuffer[l++] = x // start-x
+                mLineBuffer[l++] = 0f // start-y
+                mLineBuffer[l++] = x // stop-x
+                mLineBuffer[l++] = height.toFloat() // stop-y
+            }
+            canvas.drawLines(mLineBuffer, mPaint)
+        } else {
+            val rightLine = (getWidth() - mHalfALine).toFloat()
+            canvas.drawLine(rightLine, 0f, rightLine, getHeight().toFloat(), mPaint)
+        }
+    }
 
-			rrIndentBackgroundCol = attr.getColor(0, General.COLOR_INVALID);
-			rrIndentLineCol = attr.getColor(1, General.COLOR_INVALID);
+    /**
+     * Sets the indentation for the View
+     *
+     * @param indent comment indentation number
+     */
+    fun setIndentation(indent: Int) {
+        getLayoutParams().width = (mPixelsPerIndent * indent)
+        mIndent = indent
 
-			attr.recycle();
-		}
+        if (mPrefDrawLines) {
+            mLineBuffer = FloatArray(mIndent * 4)
+        }
 
-		this.setBackgroundColor(rrIndentBackgroundCol);
-		mPaint.setColor(rrIndentLineCol);
-		mPaint.setStrokeWidth(mPixelsPerLine);
-
-		mPrefDrawLines = PrefsUtility.pref_appearance_indentlines();
-	}
-
-	@Override
-	protected void onDraw(final Canvas canvas) {
-
-		super.onDraw(canvas);
-
-		final int height = getMeasuredHeight();
-
-		if(mPrefDrawLines) {
-			// i keeps track of indentation, and
-			// l is to populate the float[] with line co-ordinates
-			int l = 0;
-			int i = 0;
-			while(i < mIndent) {
-				final float x = (mPixelsPerIndent * ++i) - mHalfALine;
-				mLineBuffer[l++] = x;      // start-x
-				mLineBuffer[l++] = 0;      // start-y
-				mLineBuffer[l++] = x;      // stop-x
-				mLineBuffer[l++] = height; // stop-y
-			}
-			canvas.drawLines(mLineBuffer, mPaint);
-
-		} else {
-			final float rightLine = getWidth() - mHalfALine;
-			canvas.drawLine(rightLine, 0, rightLine, getHeight(), mPaint);
-		}
-	}
-
-	/**
-	 * Sets the indentation for the View
-	 *
-	 * @param indent comment indentation number
-	 */
-	public void setIndentation(final int indent) {
-		getLayoutParams().width = (mPixelsPerIndent * indent);
-		mIndent = indent;
-
-		if(mPrefDrawLines) {
-			mLineBuffer = new float[mIndent * 4];
-		}
-
-		invalidate();
-		requestLayout();
-	}
+        invalidate()
+        requestLayout()
+    }
 }

@@ -12,64 +12,52 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.adapters
 
-package org.quantumbadger.redreader.adapters;
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.recyclerview.widget.RecyclerView
+import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
 
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import androidx.recyclerview.widget.RecyclerView;
-import org.quantumbadger.redreader.common.General;
+internal class GroupedRecyclerViewItemFrameLayout(private val mChildView: View) :
+    GroupedRecyclerViewAdapter.Item<Any?>() {
+    private var mHidden = false
 
-final class GroupedRecyclerViewItemFrameLayout extends GroupedRecyclerViewAdapter.Item {
+    private var mParent: FrameLayout? = null
 
-	private final View mChildView;
-	private boolean mHidden;
+    override fun getViewType(): Class<*> {
+        return this.javaClass
+    }
 
-	private FrameLayout mParent;
+    override fun onCreateViewHolder(viewGroup: ViewGroup): RecyclerView.ViewHolder {
+        setLayoutMatchWidthWrapHeight(viewGroup)
 
-	GroupedRecyclerViewItemFrameLayout(final View childView) {
-		mChildView = childView;
-	}
+        val frameLayout = FrameLayout(viewGroup.getContext())
+        return object : RecyclerView.ViewHolder(frameLayout) {}
+    }
 
-	@Override
-	public Class getViewType() {
-		return this.getClass();
-	}
+    override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder) {
+        val view = viewHolder.itemView as FrameLayout
+        view.removeAllViews()
 
-	@Override
-	public RecyclerView.ViewHolder onCreateViewHolder(final ViewGroup viewGroup) {
+        if (mParent != null && mChildView.getParent() === mParent) {
+            mParent!!.removeAllViews()
+        }
 
-		General.setLayoutMatchWidthWrapHeight(viewGroup);
+        mParent = view
 
-		final FrameLayout frameLayout = new FrameLayout(viewGroup.getContext());
-		return new RecyclerView.ViewHolder(frameLayout) {};
-	}
+        view.addView(mChildView)
+        setLayoutMatchWidthWrapHeight(mChildView)
+    }
 
-	@Override
-	public void onBindViewHolder(final RecyclerView.ViewHolder viewHolder) {
+    override fun isHidden(): Boolean {
+        return mHidden
+    }
 
-		final FrameLayout view = (FrameLayout)viewHolder.itemView;
-		view.removeAllViews();
-
-		if(mParent != null && mChildView.getParent() == mParent) {
-			mParent.removeAllViews();
-		}
-
-		mParent = view;
-
-		view.addView(mChildView);
-		General.setLayoutMatchWidthWrapHeight(mChildView);
-	}
-
-	@Override
-	public boolean isHidden() {
-		return mHidden;
-	}
-
-	public void setHidden(final boolean hidden) {
-		mHidden = hidden;
-	}
+    fun setHidden(hidden: Boolean) {
+        mHidden = hidden
+    }
 }

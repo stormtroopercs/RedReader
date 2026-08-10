@@ -12,69 +12,53 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.content.Context
+import android.graphics.Color
+import android.util.AttributeSet
+import android.widget.RelativeLayout
+import com.github.lzyzsd.circleprogress.DonutProgress
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.common.General.dpToPixels
 
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Color;
-import android.util.AttributeSet;
-import android.widget.RelativeLayout;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.github.lzyzsd.circleprogress.DonutProgress;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.General;
+class LoadingSpinnerView @JvmOverloads constructor(
+    context: Context,
+    attributeSet: AttributeSet? = null,
+    defStyle: Int = 0
+) : RelativeLayout(context, attributeSet, defStyle) {
+    val mProgressView: DonutProgress
 
-public class LoadingSpinnerView extends RelativeLayout {
+    init {
+        val typedArray = context.obtainStyledAttributes(
+            intArrayOf(
+                R.attr.rrLoadingRingForegroundCol,
+                R.attr.rrLoadingRingBackgroundCol
+            )
+        )
 
-	final DonutProgress mProgressView;
+        val foreground = typedArray.getColor(0, Color.MAGENTA)
+        val background = typedArray.getColor(1, Color.GREEN)
 
-	public LoadingSpinnerView(
-			@NonNull final Context context,
-			@Nullable final AttributeSet attributeSet,
-			final int defStyle) {
+        typedArray.recycle()
 
-		super(context, attributeSet, defStyle);
+        mProgressView = DonutProgress(context)
+        mProgressView.setAspectIndicatorDisplay(false)
+        mProgressView.setIndeterminate(true)
+        mProgressView.setFinishedStrokeColor(foreground)
+        mProgressView.setUnfinishedStrokeColor(background)
+        val progressStrokeWidthPx = dpToPixels(context, 10f)
+        mProgressView.setUnfinishedStrokeWidth(progressStrokeWidthPx.toFloat())
+        mProgressView.setFinishedStrokeWidth(progressStrokeWidthPx.toFloat())
+        mProgressView.startingDegree = -90
+        mProgressView.initPainters()
 
-		final TypedArray typedArray = context.obtainStyledAttributes(new int[] {
-				R.attr.rrLoadingRingForegroundCol,
-				R.attr.rrLoadingRingBackgroundCol
-		});
-
-		final int foreground = typedArray.getColor(0, Color.MAGENTA);
-		final int background = typedArray.getColor(1, Color.GREEN);
-
-		typedArray.recycle();
-
-		mProgressView = new DonutProgress(context);
-		mProgressView.setAspectIndicatorDisplay(false);
-		mProgressView.setIndeterminate(true);
-		mProgressView.setFinishedStrokeColor(foreground);
-		mProgressView.setUnfinishedStrokeColor(background);
-		final int progressStrokeWidthPx = General.dpToPixels(context, 10);
-		mProgressView.setUnfinishedStrokeWidth(progressStrokeWidthPx);
-		mProgressView.setFinishedStrokeWidth(progressStrokeWidthPx);
-		mProgressView.setStartingDegree(-90);
-		mProgressView.initPainters();
-
-		addView(mProgressView);
-		final int progressDimensionsPx = General.dpToPixels(context, 100);
-		mProgressView.getLayoutParams().width = progressDimensionsPx;
-		mProgressView.getLayoutParams().height = progressDimensionsPx;
-		((LayoutParams)mProgressView.getLayoutParams()).addRule(CENTER_IN_PARENT);
-	}
-
-	public LoadingSpinnerView(
-			@NonNull final Context context,
-			@Nullable final AttributeSet attributeSet) {
-
-		this(context, attributeSet, 0);
-	}
-
-	public LoadingSpinnerView(@NonNull final Context context) {
-		this(context, null);
-	}
+        addView(mProgressView)
+        val progressDimensionsPx = dpToPixels(context, 100f)
+        mProgressView.getLayoutParams().width = progressDimensionsPx
+        mProgressView.getLayoutParams().height = progressDimensionsPx
+        (mProgressView.getLayoutParams() as LayoutParams).addRule(CENTER_IN_PARENT)
+    }
 }

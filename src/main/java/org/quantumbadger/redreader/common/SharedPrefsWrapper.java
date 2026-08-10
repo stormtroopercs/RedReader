@@ -12,219 +12,200 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.annotation.SuppressLint
+import android.content.SharedPreferences
+import android.util.Log
+import java.util.concurrent.locks.ReadWriteLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
 
-import android.annotation.SuppressLint;
-import android.content.SharedPreferences;
-import android.util.Log;
+class SharedPrefsWrapper internal constructor(private val mPrefs: SharedPreferences) {
+    inner class Editor @SuppressLint("CommitPrefEdits") private constructor() {
+        private val mEditor: SharedPreferences.Editor
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+        init {
+            mEditor = mPrefs.edit()
+        }
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+        fun putString(
+            key: String,
+            value: String?
+        ): Editor {
+            mEditor.putString(key, value)
+            return this
+        }
 
-public class SharedPrefsWrapper {
+        fun putFloat(
+            key: String,
+            value: Float?
+        ): Editor {
+            mEditor.putString(key, if (value == null) null else value.toString())
+            return this
+        }
 
-	@NonNull private static final String TAG = "SharedPrefsWrapper";
+        fun putInt(
+            key: String,
+            value: Int
+        ): Editor {
+            mEditor.putInt(key, value)
+            return this
+        }
 
-	public class Editor {
+        fun putLong(
+            key: String,
+            value: Long
+        ): Editor {
+            mEditor.putLong(key, value)
+            return this
+        }
 
-		@NonNull private final SharedPreferences.Editor mEditor;
+        fun putBoolean(
+            key: String,
+            value: Boolean
+        ): Editor {
+            mEditor.putBoolean(key, value)
+            return this
+        }
 
-		@SuppressLint("CommitPrefEdits")
-		private Editor() {
-			mEditor = mPrefs.edit();
-		}
+        fun putStringSet(
+            key: String,
+            value: MutableSet<String?>?
+        ): Editor {
+            mEditor.putStringSet(key, value)
+            return this
+        }
 
-		public Editor putString(
-				@NonNull final String key,
-				@Nullable final String value) {
+        fun apply() {
+            // Take read lock as we aren't doing an atomic restore
+            Locker(mRestoreLock.readLock()).use { ignored ->
+                mEditor.apply()
+            }
+        }
+    }
 
-			mEditor.putString(key, value);
-			return this;
-		}
+    interface OnSharedPreferenceChangeListener {
+        fun onSharedPreferenceChanged(
+            sharedPreferences: SharedPrefsWrapper,
+            key: String
+        )
+    }
 
-		public Editor putFloat(
-				@NonNull final String key,
-				@Nullable final Float value) {
+    private val mRestoreLock: ReadWriteLock = ReentrantReadWriteLock()
 
-			mEditor.putString(key, value == null ? null : value.toString());
-			return this;
-		}
+    private val mListenerWrappers =
+        HashMap<OnSharedPreferenceChangeListener?, SharedPreferences.OnSharedPreferenceChangeListener?>()
 
-		public Editor putInt(
-				@NonNull final String key,
-				final int value) {
+    fun registerOnSharedPreferenceChangeListener(
+        listener: OnSharedPreferenceChangeListener
+    ) {
+        val spListener =
+            SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences: SharedPreferences?, key: String? ->
+                listener.onSharedPreferenceChanged(
+                    this,
+                    key!!
+                )
+            }
 
-			mEditor.putInt(key, value);
-			return this;
-		}
+        mPrefs.registerOnSharedPreferenceChangeListener(spListener)
 
-		public Editor putLong(
-				@NonNull final String key,
-				final long value) {
+        mListenerWrappers.put(listener, spListener)
+    }
 
-			mEditor.putLong(key, value);
-			return this;
-		}
+    fun unregisterOnSharedPreferenceChangeListener(
+        listener: OnSharedPreferenceChangeListener?
+    ) {
+        val spListener = mListenerWrappers.remove(listener)
 
-		public Editor putBoolean(
-				@NonNull final String key,
-				final boolean value) {
+        if (spListener != null) {
+            mPrefs.unregisterOnSharedPreferenceChangeListener(spListener)
+        }
+    }
 
-			mEditor.putBoolean(key, value);
-			return this;
-		}
+    fun contains(key: String): Boolean {
+        Locker(mRestoreLock.readLock()).use { ignored ->
+            return mPrefs.contains(key)
+        }
+    }
 
-		public Editor putStringSet(
-				@NonNull final String key,
-				@Nullable final Set<String> value) {
+    val allClone: MutableMap<String?, *>
+        get() {
+            Locker(mRestoreLock.readLock()).use { ignored ->
+                return HashMap<String?, Any?>(mPrefs.getAll())
+            }
+        }
 
-			mEditor.putStringSet(key, value);
-			return this;
-		}
+    fun getString(
+        key: String,
+        defValue: String?
+    ): String? {
+        Locker(mRestoreLock.readLock()).use { ignored ->
+            return mPrefs.getString(key, defValue)
+        }
+    }
 
-		public void apply() {
-			// Take read lock as we aren't doing an atomic restore
-			try(Locker ignored = new Locker(mRestoreLock.readLock())) {
-				mEditor.apply();
-			}
-		}
-	}
+    fun getInt(
+        key: String,
+        defValue: Int
+    ): Int {
+        try {
+            Locker(mRestoreLock.readLock()).use { ignored ->
+                return mPrefs.getInt(key, defValue)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get pref", e)
+            return defValue
+        }
+    }
 
-	public interface OnSharedPreferenceChangeListener {
+    fun getLong(
+        key: String,
+        defValue: Long
+    ): Long {
+        try {
+            Locker(mRestoreLock.readLock()).use { ignored ->
+                return mPrefs.getLong(key, defValue)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get pref", e)
+            return defValue
+        }
+    }
 
-		void onSharedPreferenceChanged(
-				@NonNull SharedPrefsWrapper sharedPreferences,
-				@NonNull String key);
-	}
+    fun getStringSet(
+        key: String,
+        defValues: MutableSet<String?>?
+    ): MutableSet<String?>? {
+        Locker(mRestoreLock.readLock()).use { ignored ->
+            return mPrefs.getStringSet(key, defValues)
+        }
+    }
 
-	@NonNull private final SharedPreferences mPrefs;
+    fun getBoolean(
+        key: String,
+        defValue: Boolean
+    ): Boolean {
+        Locker(mRestoreLock.readLock()).use { ignored ->
+            return mPrefs.getBoolean(key, defValue)
+        }
+    }
 
-	@NonNull private final ReadWriteLock mRestoreLock = new ReentrantReadWriteLock();
+    fun edit(): Editor {
+        return SharedPrefsWrapper.Editor()
+    }
 
-	@NonNull private final HashMap<
-			OnSharedPreferenceChangeListener,
-			SharedPreferences.OnSharedPreferenceChangeListener> mListenerWrappers
-					= new HashMap<>();
+    fun performActionWithWriteLock(action: Consumer<SharedPreferences?>) {
+        Log.i(TAG, "Acquiring write lock")
 
-	SharedPrefsWrapper(@NonNull final SharedPreferences prefs) {
-		mPrefs = prefs;
-	}
+        Locker(mRestoreLock.writeLock()).use { ignored ->
+            Log.i(TAG, "Write lock acquired, performing action...")
+            action.consume(mPrefs)
+        }
+    }
 
-	public void registerOnSharedPreferenceChangeListener(
-			final OnSharedPreferenceChangeListener listener) {
-
-		final SharedPreferences.OnSharedPreferenceChangeListener spListener
-				= (sharedPreferences, key)
-						-> listener.onSharedPreferenceChanged(this, key);
-
-		mPrefs.registerOnSharedPreferenceChangeListener(spListener);
-
-		mListenerWrappers.put(listener, spListener);
-	}
-
-	public void unregisterOnSharedPreferenceChangeListener(
-			final OnSharedPreferenceChangeListener listener) {
-
-		final SharedPreferences.OnSharedPreferenceChangeListener spListener
-				= mListenerWrappers.remove(listener);
-
-		if(spListener != null) {
-		mPrefs.unregisterOnSharedPreferenceChangeListener(spListener);
-		}
-	}
-
-	public boolean contains(@NonNull final String key) {
-
-		try(Locker ignored = new Locker(mRestoreLock.readLock())) {
-			return mPrefs.contains(key);
-		}
-	}
-
-	@NonNull
-	public Map<String, ?> getAllClone() {
-
-		try(Locker ignored = new Locker(mRestoreLock.readLock())) {
-			return new HashMap<>(mPrefs.getAll());
-		}
-	}
-
-	@Nullable
-	public String getString(
-			@NonNull final String key,
-			@Nullable final String defValue) {
-
-		try(Locker ignored = new Locker(mRestoreLock.readLock())) {
-			return mPrefs.getString(key, defValue);
-		}
-	}
-
-	public int getInt(
-			@NonNull final String key,
-			final int defValue) {
-
-		try(Locker ignored = new Locker(mRestoreLock.readLock())) {
-			return mPrefs.getInt(key, defValue);
-		} catch(final Exception e) {
-			Log.e(TAG, "Failed to get pref", e);
-			return defValue;
-		}
-	}
-
-	public long getLong(
-			@NonNull final String key,
-			final long defValue) {
-
-		try(Locker ignored = new Locker(mRestoreLock.readLock())) {
-			return mPrefs.getLong(key, defValue);
-		} catch(final Exception e) {
-			Log.e(TAG, "Failed to get pref", e);
-			return defValue;
-		}
-	}
-
-	@Nullable
-	public Set<String> getStringSet(
-			@NonNull final String key,
-			@Nullable final Set<String> defValues) {
-
-		try(Locker ignored = new Locker(mRestoreLock.readLock())) {
-			return mPrefs.getStringSet(key, defValues);
-		}
-	}
-
-	public boolean getBoolean(
-			@NonNull final String key,
-			final boolean defValue) {
-
-		try(Locker ignored = new Locker(mRestoreLock.readLock())) {
-			return mPrefs.getBoolean(key, defValue);
-		}
-	}
-
-	@NonNull
-	public Editor edit() {
-		return new Editor();
-	}
-
-	void performActionWithWriteLock(@NonNull final Consumer<SharedPreferences> action) {
-
-		Log.i(TAG, "Acquiring write lock");
-
-		try(Locker ignored = new Locker(mRestoreLock.writeLock())) {
-
-			Log.i(TAG, "Write lock acquired, performing action...");
-
-			action.consume(mPrefs);
-		}
-	}
-
+    companion object {
+        private const val TAG = "SharedPrefsWrapper"
+    }
 }

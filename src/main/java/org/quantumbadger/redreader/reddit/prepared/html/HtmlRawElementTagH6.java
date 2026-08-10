@@ -12,28 +12,17 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+class HtmlRawElementTagH6(children: ArrayList<HtmlRawElement?>?) :
+    HtmlRawElementTagAttributeChange(children) {
+    override fun onStart(activeAttributes: HtmlTextAttributes) {
+        activeAttributes.underline++
+    }
 
-import androidx.annotation.NonNull;
-
-import java.util.ArrayList;
-
-public class HtmlRawElementTagH6 extends HtmlRawElementTagAttributeChange {
-
-	public HtmlRawElementTagH6(final ArrayList<HtmlRawElement> children) {
-		super(children);
-	}
-
-	@Override
-	protected void onStart(@NonNull final HtmlTextAttributes activeAttributes) {
-		activeAttributes.underline++;
-	}
-
-	@Override
-	protected void onEnd(@NonNull final HtmlTextAttributes activeAttributes) {
-		activeAttributes.underline--;
-	}
+    override fun onEnd(activeAttributes: HtmlTextAttributes) {
+        activeAttributes.underline--
+    }
 }

@@ -12,193 +12,172 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.datastream
 
-package org.quantumbadger.redreader.common.datastream;
+import java.io.IOException
+import kotlin.math.min
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+class MemoryDataStream {
+    private val mLock = Any()
 
-import java.io.IOException;
-import java.util.Arrays;
+    private var mData: ByteArray
+    private var mSize: Int
 
-public final class MemoryDataStream {
+    private var mFailed: IOException? = null
+    private var mComplete = false
 
-	private final Object mLock = new Object();
+    @JvmOverloads
+    constructor(initialCapacity: Int = 64 * 1024) {
+        if (initialCapacity < 1) {
+            throw RuntimeException("Initial capacity must be at least 1")
+        }
 
-	@NonNull private byte[] mData;
-	private int mSize;
+        mData = ByteArray(initialCapacity)
+        mSize = 0
+    }
 
-	@Nullable private IOException mFailed;
-	private boolean mComplete;
+    constructor(data: ByteArray) {
+        mData = data
+        mSize = data.size
+        mComplete = true
+    }
 
-	public MemoryDataStream() {
-		this(64 * 1024);
-	}
+    private fun ensureCapacity(desiredCapacity: Int) {
+        if (desiredCapacity <= mData.size) {
+            return
+        }
 
-	public MemoryDataStream(final int initialCapacity) {
+        if (desiredCapacity > (mData.size * 2)) {
+            realloc(desiredCapacity + (desiredCapacity / 2))
+        } else {
+            realloc(mData.size * 2)
+        }
+    }
 
-		if(initialCapacity < 1) {
-			throw new RuntimeException("Initial capacity must be at least 1");
-		}
+    private fun realloc(newCapacity: Int) {
+        if (newCapacity < mSize) {
+            throw RuntimeException("Cannot shrink array")
+        }
 
-		mData = new byte[initialCapacity];
-		mSize = 0;
-	}
+        mData = mData.copyOf(newCapacity)
+    }
 
-	public MemoryDataStream(final byte[] data) {
-		mData = data;
-		mSize = data.length;
-		mComplete = true;
-	}
+    fun size(): Int {
+        synchronized(mLock) {
+            return mSize
+        }
+    }
 
-	private void ensureCapacity(final int desiredCapacity) {
+    fun writeBytes(data: ByteArray, offset: Int, length: Int) {
+        synchronized(mLock) {
+            ensureCapacity(mSize + length)
+            System.arraycopy(data, offset, mData, mSize, length)
+            mSize += length
+            (mLock as Object).notifyAll()
+        }
+    }
 
-		if(desiredCapacity <= mData.length) {
-			return;
-		}
+    fun setComplete() {
+        synchronized(mLock) {
+            mComplete = true
+            (mLock as Object).notifyAll()
+        }
+    }
 
-		if(desiredCapacity > (mData.length * 2)) {
-			realloc(desiredCapacity + (desiredCapacity / 2));
+    fun setFailed(e: IOException) {
+        synchronized(mLock) {
+            mFailed = e
+            (mLock as Object).notifyAll()
+        }
+    }
 
-		} else {
-			realloc(mData.length * 2);
-		}
-	}
+    private fun notReadyForRead(startingPosition: Int): Boolean {
+        return !mComplete && mFailed == null && mSize <= startingPosition
+    }
 
-	private void realloc(final int newCapacity) {
+    @Throws(IOException::class)
+    fun blockingReadOneByte(position: Int): Int {
+        synchronized(mLock) {
+            while (notReadyForRead(position)) {
+                try {
+                    (mLock as Object).wait()
+                } catch (e: InterruptedException) {
+                    throw RuntimeException(e)
+                }
+            }
+            if (mFailed != null) {
+                throw mFailed
+            }
 
-		if(newCapacity < mSize) {
-			throw new RuntimeException("Cannot shrink array");
-		}
+            if (mSize > position) {
+                return mData[position].toInt()
+            }
 
-		mData = Arrays.copyOf(mData, newCapacity);
-	}
+            if (mComplete) {
+                return -1
+            }
+            throw IOException("Internal error: ready conditions not true")
+        }
+    }
 
-	public int size() {
-		synchronized(mLock) {
-			return mSize;
-		}
-	}
+    @Throws(IOException::class)
+    fun blockingRead(
+        startingPosition: Int,
+        output: ByteArray,
+        offset: Int,
+        maxLength: Int
+    ): Int {
+        if (maxLength == 0) {
+            throw RuntimeException("Attempted to read zero bytes")
+        }
 
-	public void writeBytes(@NonNull final byte[] data, final int offset, final int length) {
+        synchronized(mLock) {
+            while (notReadyForRead(startingPosition)) {
+                try {
+                    (mLock as Object).wait()
+                } catch (e: InterruptedException) {
+                    throw RuntimeException(e)
+                }
+            }
+            if (mFailed != null) {
+                throw mFailed
+            }
 
-		synchronized(mLock) {
-			ensureCapacity(mSize + length);
-			System.arraycopy(data, offset, mData, mSize, length);
-			mSize += length;
-			mLock.notifyAll();
-		}
-	}
+            if (mSize > startingPosition) {
+                val bytesToRead = min(maxLength, mSize - startingPosition)
+                System.arraycopy(mData, startingPosition, output, offset, bytesToRead)
+                return bytesToRead
+            }
 
-	public void setComplete() {
-		synchronized(mLock) {
-			mComplete = true;
-			mLock.notifyAll();
-		}
-	}
+            if (mComplete) {
+                return -1
+            }
+            throw IOException("Internal error: ready conditions not true")
+        }
+    }
 
-	public void setFailed(@NonNull final IOException e) {
-		synchronized(mLock) {
-			mFailed = e;
-			mLock.notifyAll();
-		}
-	}
+    val inputStream: MemoryDataStreamInputStream
+        get() = MemoryDataStreamInputStream(this)
 
-	private boolean notReadyForRead(final int startingPosition) {
-		return !mComplete && mFailed == null && mSize <= startingPosition;
-	}
+    @Throws(IOException::class)
+    fun getUnderlyingByteArrayWhenComplete(
+        callback: ByteArrayCallback
+    ) {
+        synchronized(mLock) {
+            while (!mComplete && mFailed == null) {
+                try {
+                    (mLock as Object).wait()
+                } catch (e: InterruptedException) {
+                    throw RuntimeException(e)
+                }
+            }
+            if (mFailed != null) {
+                throw mFailed
+            }
+        }
 
-	public int blockingReadOneByte(final int position) throws IOException {
-
-		synchronized(mLock) {
-
-			while(notReadyForRead(position)) {
-				try {
-					mLock.wait();
-				} catch(final InterruptedException e) {
-					throw new RuntimeException(e);
-				}
-			}
-
-			if(mFailed != null) {
-				throw mFailed;
-			}
-
-			if(mSize > position) {
-				return mData[position];
-			}
-
-			if(mComplete) {
-				return -1;
-			}
-
-			throw new IOException("Internal error: ready conditions not true");
-		}
-	}
-
-	public int blockingRead(
-			final int startingPosition,
-			@NonNull final byte[] output,
-			final int offset,
-			final int maxLength) throws IOException {
-
-		if(maxLength == 0) {
-			throw new RuntimeException("Attempted to read zero bytes");
-		}
-
-		synchronized(mLock) {
-
-			while(notReadyForRead(startingPosition)) {
-				try {
-					mLock.wait();
-				} catch(final InterruptedException e) {
-					throw new RuntimeException(e);
-				}
-			}
-
-			if(mFailed != null) {
-				throw mFailed;
-			}
-
-			if(mSize > startingPosition) {
-				final int bytesToRead = Math.min(maxLength, mSize - startingPosition);
-				System.arraycopy(mData, startingPosition, output, offset, bytesToRead);
-				return bytesToRead;
-			}
-
-			if(mComplete) {
-				return -1;
-			}
-
-			throw new IOException("Internal error: ready conditions not true");
-		}
-	}
-
-	@NonNull
-	public MemoryDataStreamInputStream getInputStream() {
-		return new MemoryDataStreamInputStream(this);
-	}
-
-	public void getUnderlyingByteArrayWhenComplete(
-			@NonNull final ByteArrayCallback callback) throws IOException {
-
-		synchronized(mLock) {
-
-			while(!mComplete && mFailed == null) {
-				try {
-					mLock.wait();
-				} catch(final InterruptedException e) {
-					throw new RuntimeException(e);
-				}
-			}
-
-			if(mFailed != null) {
-				throw mFailed;
-			}
-		}
-
-		callback.onByteArray(mData, 0, mSize);
-	}
+        callback.onByteArray(mData, 0, mSize)
+    }
 }

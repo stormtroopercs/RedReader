@@ -12,45 +12,32 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+import org.quantumbadger.redreader.common.UriString
 
-import androidx.annotation.NonNull;
+class HtmlRawElementTagAnchor(
+    children: ArrayList<HtmlRawElement?>?,
+    private val mHref: UriString
+) : HtmlRawElementTagAttributeChange(children) {
+    override fun onLinkButtons(linkButtons: ArrayList<LinkButtonDetails?>) {
+        val text = getPlainText().trim { it <= ' ' }
 
-import org.quantumbadger.redreader.common.UriString;
+        linkButtons.add(
+            LinkButtonDetails(
+                if (text.isEmpty()) null else text,
+                mHref
+            )
+        )
+    }
 
-import java.util.ArrayList;
+    override fun onStart(activeAttributes: HtmlTextAttributes) {
+        activeAttributes.href = mHref
+    }
 
-public class HtmlRawElementTagAnchor extends HtmlRawElementTagAttributeChange {
-
-	@NonNull private final UriString mHref;
-
-	public HtmlRawElementTagAnchor(
-			final ArrayList<HtmlRawElement> children,
-			@NonNull final UriString href) {
-		super(children);
-		mHref = href;
-	}
-
-	@Override
-	protected void onLinkButtons(@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
-
-		final String text = getPlainText().trim();
-
-		linkButtons.add(new LinkButtonDetails(
-				text.isEmpty() ? null : text,
-				mHref));
-	}
-
-	@Override
-	protected void onStart(@NonNull final HtmlTextAttributes activeAttributes) {
-		activeAttributes.href = mHref;
-	}
-
-	@Override
-	protected void onEnd(@NonNull final HtmlTextAttributes activeAttributes) {
-		activeAttributes.href = null;
-	}
+    override fun onEnd(activeAttributes: HtmlTextAttributes) {
+        activeAttributes.href = null
+    }
 }

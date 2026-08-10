@@ -12,209 +12,187 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.listingcontrollers
 
-package org.quantumbadger.redreader.listingcontrollers;
-
-import android.content.Context;
-import android.net.Uri;
-import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.fragments.PostListingFragment;
-import org.quantumbadger.redreader.reddit.PostSort;
-import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException;
-import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
-import org.quantumbadger.redreader.reddit.url.PostListingURL;
-import org.quantumbadger.redreader.reddit.url.RedditURLParser;
-import org.quantumbadger.redreader.reddit.url.SubredditPostListURL;
-import org.quantumbadger.redreader.reddit.url.UserPostListingURL;
-
-import java.util.UUID;
+import android.content.Context
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.fragments.PostListingFragment
+import org.quantumbadger.redreader.reddit.PostSort
+import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
+import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
+import org.quantumbadger.redreader.reddit.url.PostListingURL
+import org.quantumbadger.redreader.reddit.url.RedditURLParser
+import org.quantumbadger.redreader.reddit.url.SubredditPostListURL
+import org.quantumbadger.redreader.reddit.url.UserPostListingURL
+import java.util.UUID
 
 // TODO add notification/header for abnormal sort order
-public class PostListingController {
+class PostListingController(url: PostListingURL, context: Context?) {
+    var session: UUID? = null
+    private var url: PostListingURL
 
-	private UUID session = null;
-	private PostListingURL url;
+    init {
+        var url = url
+        if (url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL) {
+            if (url.asSubredditPostListURL().order == null) {
+                var order = PrefsUtility.pref_behaviour_postsort()
 
-	public void setSession(final UUID session) {
-		this.session = session;
-	}
+                if (order == PostSort.BEST
+                    && (url.asSubredditPostListURL().type
+                            != SubredditPostListURL.Type.FRONTPAGE)
+                ) {
+                    order = PostSort.HOT
+                }
 
-	public UUID getSession() {
-		return session;
-	}
+                url = url.asSubredditPostListURL().sort(order)
+            }
+        } else if (url.pathType() == RedditURLParser.USER_POST_LISTING_URL) {
+            if (url.asUserPostListURL().order == null) {
+                url = url.asUserPostListURL().sort(PrefsUtility.pref_behaviour_user_postsort())
+            }
+        } else if (url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL) {
+            if (url.asMultiredditPostListURL().order == null) {
+                url = url.asMultiredditPostListURL()
+                    .sort(PrefsUtility.pref_behaviour_multi_postsort())
+            }
+        }
 
-	public PostListingController(PostListingURL url, final Context context) {
+        this.url = url
+    }
 
-		if(url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL) {
-			if(url.asSubredditPostListURL().order == null) {
+    val isSortable: Boolean
+        get() {
+            if (url.pathType() == RedditURLParser.USER_POST_LISTING_URL) {
+                return (url.asUserPostListURL().type == UserPostListingURL.Type.SUBMITTED)
+            }
+            return (url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL)
+                    || (url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL)
+                    || (url.pathType() == RedditURLParser.SEARCH_POST_LISTING_URL)
+        }
 
-				PostSort order = PrefsUtility.pref_behaviour_postsort();
+    val isFrontPage: Boolean
+        get() = url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL
+                && (url.asSubredditPostListURL().type
+                == SubredditPostListURL.Type.FRONTPAGE)
 
-				if(order == PostSort.BEST
-						&& url.asSubredditPostListURL().type
-						!= SubredditPostListURL.Type.FRONTPAGE) {
+    var sort: PostSort?
+        get() {
+            if (url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL) {
+                return url.asSubredditPostListURL().order
+            }
 
-					order = PostSort.HOT;
-				}
+            if (url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL) {
+                return url.asMultiredditPostListURL().order
+            }
 
-				url = url.asSubredditPostListURL().sort(order);
-			}
-		} else if(url.pathType() == RedditURLParser.USER_POST_LISTING_URL) {
-			if(url.asUserPostListURL().order == null) {
-				url = url.asUserPostListURL().sort(PrefsUtility.pref_behaviour_user_postsort());
-			}
-		} else if(url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL) {
-			if(url.asMultiredditPostListURL().order == null) {
-				url = url.asMultiredditPostListURL()
-						.sort(PrefsUtility.pref_behaviour_multi_postsort());
-			}
-		}
+            if (url.pathType() == RedditURLParser.SEARCH_POST_LISTING_URL) {
+                return url.asSearchPostListURL().order
+            }
 
-		this.url = url;
-	}
+            if (url.pathType() == RedditURLParser.USER_POST_LISTING_URL) {
+                return url.asUserPostListURL().order
+            }
 
-	public boolean isSortable() {
-		if(url.pathType() == RedditURLParser.USER_POST_LISTING_URL) {
-			return (url.asUserPostListURL().type == UserPostListingURL.Type.SUBMITTED);
-		}
-		return (url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL)
-				|| (url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL)
-				|| (url.pathType() == RedditURLParser.SEARCH_POST_LISTING_URL);
-	}
+            return null
+        }
+        set(order) {
+            if (url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL) {
+                url = url.asSubredditPostListURL().sort(order)
+            } else if (url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL) {
+                url = url.asMultiredditPostListURL().sort(order)
+            } else if (url.pathType() == RedditURLParser.SEARCH_POST_LISTING_URL) {
+                url = url.asSearchPostListURL().sort(order)
+            } else if (url.pathType() == RedditURLParser.USER_POST_LISTING_URL) {
+                url = url.asUserPostListURL().sort(order)
+            } else {
+                throw RuntimeException("Cannot set sort for this URL")
+            }
+        }
 
-	public boolean isFrontPage() {
-		return url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL
-				&& url.asSubredditPostListURL().type
-				== SubredditPostListURL.Type.FRONTPAGE;
-	}
+    val uri: Uri?
+        get() = url.generateJsonUri()
 
-	public final void setSort(final PostSort order) {
-		if(url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL) {
-			url = url.asSubredditPostListURL().sort(order);
+    fun get(
+        parent: AppCompatActivity?,
+        force: Boolean,
+        savedInstanceState: Bundle?
+    ): PostListingFragment {
+        if (force) {
+            session = null
+        }
+        return PostListingFragment(
+            parent,
+            savedInstanceState,
+            this.uri,
+            session,
+            force
+        )
+    }
 
-		} else if(url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL) {
-			url = url.asMultiredditPostListURL().sort(order);
+    val isSubreddit: Boolean
+        get() = url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL
+                && (url.asSubredditPostListURL().type
+                == SubredditPostListURL.Type.SUBREDDIT)
 
-		} else if(url.pathType() == RedditURLParser.SEARCH_POST_LISTING_URL) {
-			url = url.asSearchPostListURL().sort(order);
+    val isSubredditCombination: Boolean
+        get() = url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL
+                && (url.asSubredditPostListURL().type
+                == SubredditPostListURL.Type.SUBREDDIT_COMBINATION)
 
-		} else if(url.pathType() == RedditURLParser.USER_POST_LISTING_URL) {
-			url = url.asUserPostListURL().sort(order);
+    val isMultireddit: Boolean
+        get() = url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL
 
-		} else {
-			throw new RuntimeException("Cannot set sort for this URL");
-		}
-	}
+    val isSearchResults: Boolean
+        get() = url.pathType() == RedditURLParser.SEARCH_POST_LISTING_URL
 
-	public final PostSort getSort() {
+    val isSubredditSearchResults: Boolean
+        get() = this.isSearchResults && url.asSearchPostListURL().subreddit != null
 
-		if(url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL) {
-			return url.asSubredditPostListURL().order;
-		}
+    val isUserPostListing: Boolean
+        get() = url.pathType() == RedditURLParser.USER_POST_LISTING_URL
 
-		if(url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL) {
-			return url.asMultiredditPostListURL().order;
-		}
+    fun subredditCanonicalName(): SubredditCanonicalId? {
+        if (url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL
+            && ((url.asSubredditPostListURL().type
+                    == SubredditPostListURL.Type.SUBREDDIT)
+                    || (url.asSubredditPostListURL().type
+                    == SubredditPostListURL.Type.SUBREDDIT_COMBINATION))
+        ) {
+            try {
+                return SubredditCanonicalId(url.asSubredditPostListURL().subreddit!!)
+            } catch (e: InvalidSubredditNameException) {
+                throw RuntimeException(e)
+            }
+        } else if (url.pathType() == RedditURLParser.SEARCH_POST_LISTING_URL
+            && url.asSearchPostListURL().subreddit != null
+        ) {
+            try {
+                return SubredditCanonicalId(url.asSearchPostListURL().subreddit)
+            } catch (e: InvalidSubredditNameException) {
+                throw RuntimeException(e)
+            }
+        }
 
-		if(url.pathType() == RedditURLParser.SEARCH_POST_LISTING_URL) {
-			return url.asSearchPostListURL().order;
-		}
+        return null
+    }
 
-		if(url.pathType() == RedditURLParser.USER_POST_LISTING_URL) {
-			return url.asUserPostListURL().order;
-		}
+    fun multiredditName(): String? {
+        if (url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL) {
+            return url.asMultiredditPostListURL().name
+        }
 
-		return null;
-	}
+        return null
+    }
 
-	public Uri getUri() {
-		return url.generateJsonUri();
-	}
+    fun multiredditUsername(): String? {
+        if (url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL) {
+            return url.asMultiredditPostListURL().username
+        }
 
-	public final PostListingFragment get(
-			final AppCompatActivity parent,
-			final boolean force,
-			final Bundle savedInstanceState) {
-		if(force) {
-			session = null;
-		}
-		return new PostListingFragment(
-				parent,
-				savedInstanceState,
-				getUri(),
-				session,
-				force);
-	}
-
-	public final boolean isSubreddit() {
-		return url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL
-				&& url.asSubredditPostListURL().type
-				== SubredditPostListURL.Type.SUBREDDIT;
-	}
-
-	public final boolean isSubredditCombination() {
-		return url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL
-				&& url.asSubredditPostListURL().type
-				== SubredditPostListURL.Type.SUBREDDIT_COMBINATION;
-	}
-
-	public final boolean isMultireddit() {
-		return url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL;
-	}
-
-	public final boolean isSearchResults() {
-		return url.pathType() == RedditURLParser.SEARCH_POST_LISTING_URL;
-	}
-
-	public final boolean isSubredditSearchResults() {
-		return isSearchResults() && url.asSearchPostListURL().subreddit != null;
-	}
-
-	public final boolean isUserPostListing() {
-		return url.pathType() == RedditURLParser.USER_POST_LISTING_URL;
-	}
-
-	public final SubredditCanonicalId subredditCanonicalName() {
-
-		if(url.pathType() == RedditURLParser.SUBREDDIT_POST_LISTING_URL
-				&& (url.asSubredditPostListURL().type
-				== SubredditPostListURL.Type.SUBREDDIT
-				|| url.asSubredditPostListURL().type
-				== SubredditPostListURL.Type.SUBREDDIT_COMBINATION)) {
-			try {
-				return new SubredditCanonicalId(url.asSubredditPostListURL().subreddit);
-			} catch(final InvalidSubredditNameException e) {
-				throw new RuntimeException(e);
-			}
-		} else if(url.pathType() == RedditURLParser.SEARCH_POST_LISTING_URL
-				&& url.asSearchPostListURL().subreddit != null) {
-			try {
-				return new SubredditCanonicalId(url.asSearchPostListURL().subreddit);
-			} catch(final InvalidSubredditNameException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
-		return null;
-	}
-
-	public final String multiredditName() {
-		if(url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL) {
-			return url.asMultiredditPostListURL().name;
-		}
-
-		return null;
-	}
-
-	public final String multiredditUsername() {
-		if(url.pathType() == RedditURLParser.MULTIREDDIT_POST_LISTING_URL) {
-			return url.asMultiredditPostListURL().username;
-		}
-
-		return null;
-	}
+        return null
+    }
 }

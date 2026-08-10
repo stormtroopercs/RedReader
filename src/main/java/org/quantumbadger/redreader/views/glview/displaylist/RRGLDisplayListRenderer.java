@@ -12,125 +12,109 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.displaylist
 
-package org.quantumbadger.redreader.views.glview.displaylist;
+import android.opengl.GLSurfaceView
+import android.opengl.Matrix
+import android.util.Log
+import org.quantumbadger.redreader.views.glview.RRGLSurfaceView
+import org.quantumbadger.redreader.views.glview.Refreshable
+import org.quantumbadger.redreader.views.glview.program.RRGLContext
+import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
+import org.quantumbadger.redreader.views.imageview.FingerTracker.FingerListener
+import javax.microedition.khronos.egl.EGLConfig
+import javax.microedition.khronos.opengles.GL10
 
-import android.opengl.GLSurfaceView;
-import android.opengl.Matrix;
-import android.util.Log;
+class RRGLDisplayListRenderer(
+    private val mDisplayListManager: DisplayListManager,
+    private val mSurfaceView: RRGLSurfaceView
+) : GLSurfaceView.Renderer, Refreshable {
+    interface DisplayListManager : FingerListener {
+        fun onGLSceneCreate(
+            scene: RRGLDisplayList?,
+            context: RRGLContext?,
+            refreshable: Refreshable?
+        )
 
-import org.quantumbadger.redreader.views.glview.RRGLSurfaceView;
-import org.quantumbadger.redreader.views.glview.Refreshable;
-import org.quantumbadger.redreader.views.glview.program.RRGLContext;
-import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack;
-import org.quantumbadger.redreader.views.imageview.FingerTracker;
+        fun onGLSceneResolutionChange(
+            scene: RRGLDisplayList?,
+            context: RRGLContext?,
+            width: Int,
+            height: Int
+        )
 
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
+        fun onGLSceneUpdate(scene: RRGLDisplayList?, context: RRGLContext?): Boolean
 
-public class RRGLDisplayListRenderer implements GLSurfaceView.Renderer, Refreshable {
+        fun onUIAttach()
 
-	public interface DisplayListManager extends FingerTracker.FingerListener {
-		void onGLSceneCreate(
-				RRGLDisplayList scene,
-				RRGLContext context,
-				Refreshable refreshable);
+        fun onUIDetach()
+    }
 
-		void onGLSceneResolutionChange(
-				RRGLDisplayList scene,
-				RRGLContext context,
-				int width,
-				int height);
+    private val mPixelMatrix = FloatArray(16)
 
-		boolean onGLSceneUpdate(RRGLDisplayList scene, RRGLContext context);
+    private var mScene: RRGLDisplayList? = null
+    private var mGLContext: RRGLContext? = null
+    private var mMatrixStack: RRGLMatrixStack? = null
 
-		void onUIAttach();
+    override fun onSurfaceCreated(ignore: GL10?, config: EGLConfig?) {
+        mGLContext = RRGLContext(mSurfaceView.getContext())
+        mMatrixStack = RRGLMatrixStack(mGLContext)
+        mScene = RRGLDisplayList()
 
-		void onUIDetach();
-	}
+        mGLContext!!.setClearColor(0f, 0f, 0f, 1f)
 
-	private final float[] mPixelMatrix = new float[16];
+        mDisplayListManager.onGLSceneCreate(mScene, mGLContext, this)
+    }
 
-	private RRGLDisplayList mScene;
-	private RRGLContext mGLContext;
-	private RRGLMatrixStack mMatrixStack;
+    override fun onSurfaceChanged(ignore: GL10?, width: Int, height: Int) {
+        mGLContext!!.setViewport(width, height)
 
-	private final DisplayListManager mDisplayListManager;
-	private final RRGLSurfaceView mSurfaceView;
+        val hScale = 2f / width.toFloat()
+        val vScale = -2f / height.toFloat()
 
-	public RRGLDisplayListRenderer(
-			final DisplayListManager displayListManager,
-			final RRGLSurfaceView surfaceView) {
-		mDisplayListManager = displayListManager;
-		mSurfaceView = surfaceView;
-	}
+        Matrix.setIdentityM(mPixelMatrix, 0)
+        Matrix.translateM(mPixelMatrix, 0, -1f, 1f, 0f)
+        Matrix.scaleM(mPixelMatrix, 0, hScale, vScale, 1f)
 
-	@Override
-	public void onSurfaceCreated(final GL10 ignore, final EGLConfig config) {
+        mDisplayListManager.onGLSceneResolutionChange(mScene, mGLContext, width, height)
+    }
 
-		mGLContext = new RRGLContext(mSurfaceView.getContext());
-		mMatrixStack = new RRGLMatrixStack(mGLContext);
-		mScene = new RRGLDisplayList();
+    private var frames = 0
+    private var startTime: Long = -1
 
-		mGLContext.setClearColor(0f, 0f, 0f, 1);
+    override fun onDrawFrame(ignore: GL10?) {
+        val time = System.currentTimeMillis()
 
-		mDisplayListManager.onGLSceneCreate(mScene, mGLContext, this);
-	}
+        if (startTime == -1L) {
+            startTime = time
+        }
 
-	@Override
-	public void onSurfaceChanged(final GL10 ignore, final int width, final int height) {
+        frames++
 
-		mGLContext.setViewport(width, height);
+        if (time - startTime >= 1000) {
+            startTime = time
+            Log.i("FPS", "Frames: " + frames)
+            frames = 0
+        }
 
-		final float hScale = 2f / (float)width;
-		final float vScale = -2f / (float)height;
+        val animating = mDisplayListManager.onGLSceneUpdate(mScene, mGLContext)
 
-		Matrix.setIdentityM(mPixelMatrix, 0);
-		Matrix.translateM(mPixelMatrix, 0, -1, 1, 0);
-		Matrix.scaleM(mPixelMatrix, 0, hScale, vScale, 1f);
+        mGLContext!!.clear()
 
-		mDisplayListManager.onGLSceneResolutionChange(mScene, mGLContext, width, height);
-	}
+        mGLContext!!.activatePixelMatrix(mPixelMatrix, 0)
 
-	private int frames = 0;
-	private long startTime = -1;
+        mMatrixStack!!.assertAtRoot()
+        mScene!!.startRender(mMatrixStack, time)
+        mMatrixStack!!.assertAtRoot()
 
-	@Override
-	public void onDrawFrame(final GL10 ignore) {
+        if (animating || mScene!!.isAnimating()) {
+            mSurfaceView.requestRender()
+        }
+    }
 
-		final long time = System.currentTimeMillis();
-
-		if(startTime == -1) {
-			startTime = time;
-		}
-
-		frames++;
-
-		if(time - startTime >= 1000) {
-			startTime = time;
-			Log.i("FPS", "Frames: " + frames);
-			frames = 0;
-		}
-
-		final boolean animating = mDisplayListManager.onGLSceneUpdate(mScene, mGLContext);
-
-		mGLContext.clear();
-
-		mGLContext.activatePixelMatrix(mPixelMatrix, 0);
-
-		mMatrixStack.assertAtRoot();
-		mScene.startRender(mMatrixStack, time);
-		mMatrixStack.assertAtRoot();
-
-		if(animating || mScene.isAnimating()) {
-			mSurfaceView.requestRender();
-		}
-	}
-
-	@Override
-	public void refresh() {
-		mSurfaceView.requestRender();
-	}
+    override fun refresh() {
+        mSurfaceView.requestRender()
+    }
 }

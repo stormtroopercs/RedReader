@@ -12,30 +12,26 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+enum class NeverAlwaysOrWifiOnly {
+    NEVER {
+        override fun isEnabled(wifiActive: Boolean): Boolean {
+            return false
+        }
+    },
+    WIFIONLY {
+        override fun isEnabled(wifiActive: Boolean): Boolean {
+            return wifiActive
+        }
+    },
+    ALWAYS {
+        override fun isEnabled(wifiActive: Boolean): Boolean {
+            return true
+        }
+    };
 
-public enum NeverAlwaysOrWifiOnly {
-	NEVER {
-		@Override
-		public boolean isEnabled(final boolean wifiActive) {
-			return false;
-		}
-	},
-	WIFIONLY {
-		@Override
-		public boolean isEnabled(final boolean wifiActive) {
-			return wifiActive;
-		}
-	},
-	ALWAYS {
-		@Override
-		public boolean isEnabled(final boolean wifiActive) {
-			return true;
-		}
-	};
-
-	public abstract boolean isEnabled(final boolean wifiActive);
+    abstract fun isEnabled(wifiActive: Boolean): Boolean
 }

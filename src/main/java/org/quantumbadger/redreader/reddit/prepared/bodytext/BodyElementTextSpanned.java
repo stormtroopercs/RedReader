@@ -12,68 +12,54 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.text.SpannableStringBuilder
+import android.view.View
+import android.widget.TextView.BufferType
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.AndroidCommon.runOnUiThread
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.views.LinkifiedTextView
 
-import android.text.SpannableStringBuilder;
-import android.view.View;
+class BodyElementTextSpanned(
+    blockType: BlockType,
+    private val mSpanned: SpannableStringBuilder
+) : BodyElement(blockType), DynamicSpanned {
+    private var mTextView: LinkifiedTextView? = null
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    override fun addSpanDynamic(what: Any?, start: Int, end: Int, flags: Int) {
+        runOnUiThread(Runnable {
+            mSpanned.setSpan(what, start, end, flags)
+            if (mTextView != null) {
+                mTextView!!.setText(mSpanned)
+            }
+        })
+    }
 
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.AndroidCommon;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.views.LinkifiedTextView;
+    override fun generateView(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View? {
+        mTextView = LinkifiedTextView(activity)
 
-public class BodyElementTextSpanned extends BodyElement implements DynamicSpanned {
+        if (textColor != null) {
+            mTextView!!.setTextColor(textColor)
+        }
+        if (textSize != null) {
+            mTextView!!.setTextSize(textSize)
+        }
 
-	@NonNull private final SpannableStringBuilder mSpanned;
+        mTextView!!.setText(mSpanned, BufferType.SPANNABLE)
 
-	private LinkifiedTextView mTextView;
+        if (PrefsUtility.pref_accessibility_separate_body_text_lines()) {
+            mTextView!!.setFocusable(true)
+        }
 
-	public BodyElementTextSpanned(
-			@NonNull final BlockType blockType,
-			@NonNull final SpannableStringBuilder spanned) {
-		super(blockType);
-		mSpanned = spanned;
-	}
-
-	@Override
-	public void addSpanDynamic(final Object what, final int start, final int end, final int flags) {
-		AndroidCommon.runOnUiThread(() -> {
-			mSpanned.setSpan(what, start, end, flags);
-			if(mTextView != null) {
-				mTextView.setText(mSpanned);
-			}
-		});
-	}
-
-	@Override
-	public View generateView(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		mTextView = new LinkifiedTextView(activity);
-
-		if(textColor != null) {
-			mTextView.setTextColor(textColor);
-		}
-		if(textSize != null) {
-			mTextView.setTextSize(textSize);
-		}
-
-		mTextView.setText(mSpanned, LinkifiedTextView.BufferType.SPANNABLE);
-
-		if(PrefsUtility.pref_accessibility_separate_body_text_lines()) {
-
-			mTextView.setFocusable(true);
-		}
-
-		return mTextView;
-	}
+        return mTextView
+    }
 }

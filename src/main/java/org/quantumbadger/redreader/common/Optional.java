@@ -12,183 +12,149 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+class Optional<E> private constructor(private val mValue: E?) {
+    class OptionalHasNoValueException : RuntimeException()
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    val isPresent: Boolean
+        get() = mValue != null
 
-public final class Optional<E> {
+    val isEmpty: Boolean
+        get() = mValue == null
 
-	public static class OptionalHasNoValueException extends RuntimeException {}
+    fun get(): E {
+        if (mValue == null) {
+            throw OptionalHasNoValueException()
+        }
 
-	private static final Optional<?> EMPTY = new Optional<>(null);
+        return mValue
+    }
 
-	@Nullable private final E mValue;
+    fun asNullable(): E? {
+        return mValue
+    }
 
-	private Optional(@Nullable final E value) {
-		mValue = value;
-	}
+    fun orElse(alternative: E): E {
+        if (mValue == null) {
+            return alternative
+        } else {
+            return mValue
+        }
+    }
 
-	@NonNull
-	public static <E> Optional<E> empty() {
-		//noinspection unchecked
-		return (Optional<E>)EMPTY;
-	}
+    fun orElse(alternative: Optional<E?>): Optional<E?> {
+        if (mValue == null) {
+            return alternative
+        } else {
+            return of<E?>(mValue)
+        }
+    }
 
-	@NonNull
-	public static <E> Optional<E> of(@NonNull final E value) {
-		return new Optional<>(value);
-	}
+    fun orElseNull(): E? {
+        return mValue
+    }
 
-	@NonNull
-	public static <E> Optional<E> ofNullable(@Nullable final E value) {
+    @Throws(T::class)
+    fun <T : Exception?> orThrow(
+        factory: GenericFactory<T?, RuntimeException?>
+    ): E {
+        if (mValue == null) {
+            throw factory.create()
+        }
 
-		if(value == null) {
-			return empty();
-		}
+        return mValue
+    }
 
-		return new Optional<>(value);
-	}
+    fun <R> map(function: FunctionOneArgWithReturn<E?, R?>): Optional<R?> {
+        if (mValue == null) {
+            return empty<R?>()
+        } else {
+            return of<R?>(function.apply(mValue))
+        }
+    }
 
-	public boolean isPresent() {
-		return mValue != null;
-	}
+    fun <R> flatMap(
+        function: FunctionOneArgWithReturn<E?, Optional<R?>>
+    ): Optional<R?> {
+        if (mValue == null) {
+            return empty<R?>()
+        } else {
+            return function.apply(mValue)
+        }
+    }
 
-	public boolean isEmpty() {
-		return mValue == null;
-	}
+    fun apply(function: FunctionOneArgNoReturn<E?>) {
+        if (mValue != null) {
+            function.apply(mValue)
+        }
+    }
 
-	@NonNull
-	public E get() {
+    fun <R> filter(
+        function: FunctionOneArgWithReturn<E?, Optional<R?>>
+    ): Optional<R?> {
+        if (mValue == null) {
+            return empty<R?>()
+        } else {
+            return function.apply(mValue)
+        }
+    }
 
-		if(mValue == null) {
-			throw new OptionalHasNoValueException();
-		}
+    fun ifPresent(consumer: Consumer<E?>) {
+        if (mValue != null) {
+            consumer.consume(mValue)
+        }
+    }
 
-		return mValue;
-	}
+    override fun hashCode(): Int {
+        if (mValue == null) {
+            return 0x28734823 // Random value
+        } else {
+            return mValue.hashCode()
+        }
+    }
 
-	@Nullable
-	public E asNullable() {
-		return mValue;
-	}
+    override fun equals(obj: Any?): Boolean {
+        if (obj !is Optional<*>) {
+            return false
+        }
 
-	@NonNull
-	public E orElse(@NonNull final E alternative) {
+        if (mValue == null) {
+            return obj.mValue == null
+        }
 
-		if(mValue == null) {
-			return alternative;
-		} else {
-			return mValue;
-		}
-	}
+        return mValue == obj.mValue
+    }
 
-	@NonNull
-	public Optional<E> orElse(@NonNull final Optional<E> alternative) {
+    override fun toString(): String {
+        if (mValue == null) {
+            return "<empty>"
+        } else {
+            return mValue.toString()
+        }
+    }
 
-		if(mValue == null) {
-			return alternative;
-		} else {
-			return Optional.of(mValue);
-		}
-	}
+    companion object {
+        private val EMPTY: Optional<*> = Optional<Any?>(null)
 
-	@Nullable
-	public E orElseNull() {
-		return mValue;
-	}
+        @JvmStatic
+        fun <E> empty(): Optional<E?> {
+            return EMPTY as Optional<E?>
+        }
 
-	@NonNull
-	public <T extends Exception> E orThrow(
-			@NonNull final GenericFactory<T, RuntimeException> factory) throws T {
+        fun <E> of(value: E): Optional<E?> {
+            return Optional<E?>(value)
+        }
 
-		if(mValue == null) {
-			throw factory.create();
-		}
+        fun <E> ofNullable(value: E?): Optional<E?> {
+            if (value == null) {
+                return
+                E > empty<Any?>()
+            }
 
-		return mValue;
-	}
-
-	@NonNull
-	public <R> Optional<R> map(@NonNull final FunctionOneArgWithReturn<E, R> function) {
-
-		if(mValue == null) {
-			return Optional.empty();
-		} else {
-			return Optional.of(function.apply(mValue));
-		}
-	}
-
-	@NonNull
-	public <R> Optional<R> flatMap(
-			@NonNull final FunctionOneArgWithReturn<E, Optional<R>> function) {
-
-		if(mValue == null) {
-			return Optional.empty();
-		} else {
-			return function.apply(mValue);
-		}
-	}
-
-	public void apply(@NonNull final FunctionOneArgNoReturn<E> function) {
-
-		if(mValue != null) {
-			function.apply(mValue);
-		}
-	}
-
-	@NonNull
-	public <R> Optional<R> filter(
-			@NonNull final FunctionOneArgWithReturn<E, Optional<R>> function) {
-
-		if(mValue == null) {
-			return Optional.empty();
-		} else {
-			return function.apply(mValue);
-		}
-	}
-
-	public void ifPresent(@NonNull final Consumer<E> consumer) {
-		if(mValue != null) {
-			consumer.consume(mValue);
-		}
-	}
-
-	@Override
-	public int hashCode() {
-
-		if(mValue == null) {
-			return 0x28734823; // Random value
-		} else {
-			return mValue.hashCode();
-		}
-	}
-
-	@Override
-	public boolean equals(@Nullable final Object obj) {
-
-		if(!(obj instanceof Optional)) {
-			return false;
-		}
-
-		if(mValue == null) {
-			return ((Optional<?>)obj).mValue == null;
-		}
-
-		return mValue.equals(((Optional<?>)obj).mValue);
-	}
-
-	@NonNull
-	@Override
-	public String toString() {
-
-		if(mValue == null) {
-			return "<empty>";
-		} else {
-			return mValue.toString();
-		}
-	}
+            return Optional<E?>(value)
+        }
+    }
 }

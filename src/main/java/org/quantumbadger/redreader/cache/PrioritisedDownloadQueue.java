@@ -12,95 +12,81 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache
 
-package org.quantumbadger.redreader.cache;
+import android.content.Context
+import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
+import org.quantumbadger.redreader.common.PrioritisedCachedThreadPool
 
-import android.content.Context;
+internal class PrioritisedDownloadQueue(context: Context?) {
+    private val redditDownloadsQueued = HashSet<CacheDownload>()
 
-import org.quantumbadger.redreader.common.PrioritisedCachedThreadPool;
+    private val mDownloadThreadPool = PrioritisedCachedThreadPool(5, "Download")
 
-import java.util.HashSet;
+    init {
+        RedditQueueProcessor().start()
+    }
 
+    @Synchronized
+    fun add(request: CacheRequest, manager: CacheManager?) {
+        val download = CacheDownload(request, manager)
 
-class PrioritisedDownloadQueue {
+        if (request.queueType == DownloadQueueType.REDDIT_API) {
+            redditDownloadsQueued.add(download)
+            (this as Object).notifyAll()
+        } else if (request.queueType == DownloadQueueType.IMMEDIATE
+            || request.queueType == DownloadQueueType.IMGUR_API
+        ) {
+            CacheDownloadThread(download, true, "Cache Download Thread: Immediate")
+        } else {
+            mDownloadThreadPool.add(download)
+        }
+    }
 
-	private final HashSet<CacheDownload> redditDownloadsQueued = new HashSet<>();
+    @get:Synchronized
+    private val nextRedditInQueue: CacheDownload?
+        get() {
+            while (redditDownloadsQueued.isEmpty()) {
+                try {
+                    (this as Object).wait()
+                } catch (e: InterruptedException) {
+                    throw RuntimeException(e)
+                }
+            }
 
-	private final PrioritisedCachedThreadPool mDownloadThreadPool
-			= new PrioritisedCachedThreadPool(5, "Download");
+            var next: CacheDownload? = null
 
-	public PrioritisedDownloadQueue(final Context context) {
-		new RedditQueueProcessor().start();
-	}
+            for (entry in redditDownloadsQueued) {
+                if (next == null || entry.getPriority().isHigherPriorityThan(next.getPriority())) {
+                    next = entry
+                }
+            }
 
-	public synchronized void add(final CacheRequest request, final CacheManager manager) {
+            redditDownloadsQueued.remove(next)
 
-		final CacheDownload download = new CacheDownload(request, manager);
+            return next
+        }
 
-		if(request.queueType == CacheRequest.DownloadQueueType.REDDIT_API) {
-			redditDownloadsQueued.add(download);
-			notifyAll();
+    private inner class RedditQueueProcessor : Thread("Reddit Queue Processor") {
+        override fun run() {
+            while (true) {
+                synchronized(this) {
+                    val download: CacheDownload? = this.nextRedditInQueue
+                    CacheDownloadThread(
+                        download,
+                        true,
+                        "Cache Download Thread: Reddit"
+                    )
+                }
 
-		} else if(request.queueType == CacheRequest.DownloadQueueType.IMMEDIATE
-				|| request.queueType == CacheRequest.DownloadQueueType.IMGUR_API) {
-			new CacheDownloadThread(download, true, "Cache Download Thread: Immediate");
-
-		} else {
-			mDownloadThreadPool.add(download);
-		}
-	}
-
-	private synchronized CacheDownload getNextRedditInQueue() {
-
-		while(redditDownloadsQueued.isEmpty()) {
-			try {
-				wait();
-			} catch(final InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
-		CacheDownload next = null;
-
-		for(final CacheDownload entry : redditDownloadsQueued) {
-			if(next == null || entry.getPriority().isHigherPriorityThan(next.getPriority())) {
-				next = entry;
-			}
-		}
-
-		redditDownloadsQueued.remove(next);
-
-		return next;
-	}
-
-	private class RedditQueueProcessor extends Thread {
-
-		public RedditQueueProcessor() {
-			super("Reddit Queue Processor");
-		}
-
-		@Override
-		public void run() {
-
-			while(true) {
-
-				synchronized(this) {
-					final CacheDownload download = getNextRedditInQueue();
-					new CacheDownloadThread(
-							download,
-							true,
-							"Cache Download Thread: Reddit");
-				}
-
-				try {
-					sleep(1200); // Delay imposed by reddit API restrictions.
-				} catch(final InterruptedException e) {
-					throw new RuntimeException(e);
-				}
-			}
-
-		}
-	}
+                try {
+                    sleep(1200) // Delay imposed by reddit API restrictions.
+                } catch (e: InterruptedException) {
+                    throw RuntimeException(e)
+                }
+            }
+        }
+    }
 }

@@ -12,61 +12,48 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.os.Handler
+import android.os.Looper
+import androidx.annotation.UiThread
+import org.quantumbadger.redreader.common.General.checkThisIsUIThread
 
-import android.os.Handler;
-import android.os.Looper;
-import androidx.annotation.UiThread;
+class UIThreadRepeatingTimer(private val mIntervalMs: Long, private val mListener: Listener) :
+    Runnable {
+    interface Listener {
+        fun onUIThreadRepeatingTimer(timer: UIThreadRepeatingTimer?)
+    }
 
-public class UIThreadRepeatingTimer implements Runnable {
+    private val mHandler = Handler(Looper.getMainLooper())
 
-	public interface Listener {
-		void onUIThreadRepeatingTimer(UIThreadRepeatingTimer timer);
-	}
+    private var mShouldTimerRun = false
 
-	private final Handler mHandler = new Handler(Looper.getMainLooper());
+    @UiThread
+    fun startTimer() {
+        checkThisIsUIThread()
 
-	private final long mIntervalMs;
-	private final Listener mListener;
+        mShouldTimerRun = true
+        mHandler.postDelayed(this, mIntervalMs)
+    }
 
-	private boolean mShouldTimerRun = false;
+    @UiThread
+    fun stopTimer() {
+        checkThisIsUIThread()
 
-	public UIThreadRepeatingTimer(final long mIntervalMs, final Listener mListener) {
-		this.mIntervalMs = mIntervalMs;
-		this.mListener = mListener;
-	}
-
-	@UiThread
-	public void startTimer() {
-
-		General.checkThisIsUIThread();
-
-		mShouldTimerRun = true;
-		mHandler.postDelayed(this, mIntervalMs);
-	}
-
-	@UiThread
-	public void stopTimer() {
-
-		General.checkThisIsUIThread();
-
-		mShouldTimerRun = false;
-	}
+        mShouldTimerRun = false
+    }
 
 
-	@Override
-	public void run() {
+    override fun run() {
+        if (mShouldTimerRun) {
+            mListener.onUIThreadRepeatingTimer(this)
 
-		if(mShouldTimerRun) {
-
-			mListener.onUIThreadRepeatingTimer(this);
-
-			if(mShouldTimerRun) {
-				mHandler.postDelayed(this, mIntervalMs);
-			}
-		}
-	}
+            if (mShouldTimerRun) {
+                mHandler.postDelayed(this, mIntervalMs)
+            }
+        }
+    }
 }

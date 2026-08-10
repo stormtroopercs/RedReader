@@ -12,66 +12,63 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.activities
 
-package org.quantumbadger.redreader.activities;
+import android.graphics.drawable.GradientDrawable
+import android.os.Bundle
+import android.util.Log
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.common.General.setLayoutMatchParent
+import org.quantumbadger.redreader.common.LinkHandler.onLinkClicked
+import org.quantumbadger.redreader.common.RunnableOnce
+import org.quantumbadger.redreader.common.UriString.Companion.from
+import org.quantumbadger.redreader.reddit.api.RedditOAuth.completeLogin
 
-import android.content.Intent;
-import android.graphics.drawable.GradientDrawable;
-import android.net.Uri;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
+class LinkDispatchActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-import androidx.appcompat.app.AppCompatActivity;
+        val backgroundView = View(this)
 
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.LinkHandler;
-import org.quantumbadger.redreader.common.RunnableOnce;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.reddit.api.RedditOAuth;
+        backgroundView.setBackground(
+            GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(-0x2cd0d1, -0x4ad9da)
+            )
+        )
 
-public class LinkDispatchActivity extends AppCompatActivity {
+        setContentView(backgroundView)
 
-	private static final String TAG = "LinkDispatchActivity";
+        setLayoutMatchParent(backgroundView)
 
-	@Override
-	protected void onCreate(final Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+        val intent = getIntent()
 
-		final View backgroundView = new View(this);
+        if (intent == null) {
+            Log.e(TAG, "Got null intent")
+            finish()
+            return
+        }
 
-		backgroundView.setBackground(new GradientDrawable(
-				GradientDrawable.Orientation.LEFT_RIGHT,
-				new int[] {0xffd32f2f, 0xffb52626}));
+        val data = intent.getData()
 
-		setContentView(backgroundView);
+        if (data == null) {
+            Log.e(TAG, "Got null intent data")
+            finish()
+            return
+        }
 
-		General.setLayoutMatchParent(backgroundView);
+        if (data.getScheme().equals("redreader", ignoreCase = true)) {
+            completeLogin(this, data, RunnableOnce(Runnable { this.finish() }))
+        } else {
+            onLinkClicked(this, from(data), true, null, null, 0, true)
+            finish()
+        }
+    }
 
-		final Intent intent = getIntent();
-
-		if(intent == null) {
-			Log.e(TAG, "Got null intent");
-			finish();
-			return;
-		}
-
-		final Uri data = intent.getData();
-
-		if(data == null) {
-			Log.e(TAG, "Got null intent data");
-			finish();
-			return;
-		}
-
-		if(data.getScheme().equalsIgnoreCase("redreader")) {
-			RedditOAuth.completeLogin(this, data, new RunnableOnce(this::finish));
-
-		} else {
-			LinkHandler.onLinkClicked(this, UriString.from(data), true, null, null, 0, true);
-			finish();
-		}
-	}
+    companion object {
+        private const val TAG = "LinkDispatchActivity"
+    }
 }

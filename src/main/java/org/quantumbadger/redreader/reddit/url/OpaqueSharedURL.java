@@ -12,80 +12,63 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
 
-package org.quantumbadger.redreader.reddit.url;
+import android.net.Uri
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 
-import android.net.Uri;
+class OpaqueSharedURL private constructor(
+    val subreddit: String?,
+    val user: String?,
+    val shareKey: String?
+) : RedditURL() {
+    override fun generateJsonUri(): Uri? {
+        return null
+    }
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    override fun pathType(): Int {
+        return RedditURLParser.OPAQUE_SHARED_URL
+    }
 
-import org.quantumbadger.redreader.common.UriString;
+    val urlToFetch: UriString
+        get() {
+            if (subreddit != null) {
+                return UriString(
+                    String.format("https://www.reddit.com/r/%s/s/%s", subreddit, shareKey)
+                )
+            } else if (user != null) {
+                return UriString(
+                    String.format("https://www.reddit.com/u/%s/s/%s", user, shareKey)
+                )
+            } else {
+                throw RuntimeException("Neither subreddit nor user set")
+            }
+        }
 
-import java.util.List;
+    companion object {
+        fun parse(uri: Uri): OpaqueSharedURL? {
+            // URLs look like https://reddit.com/r/RedReader/s/<alphanumeric>
+            // first pull out the path segments and ensure they match the example (should be 4)
+            val pathSegments = uri.getPathSegments()
+            if (pathSegments.size != 4) {
+                return null
+            }
 
-public class OpaqueSharedURL extends RedditURLParser.RedditURL {
-
-	@Nullable public final String subreddit;
-	@Nullable public final String user;
-	@Nullable public final String shareKey;
-
-	private OpaqueSharedURL(
-			@Nullable final String subreddit,
-			@Nullable final String user,
-			@Nullable final String shareKey
-	) {
-		this.subreddit = subreddit;
-		this.user = user;
-		this.shareKey = shareKey;
-	}
-
-	@Override
-	public Uri generateJsonUri() {
-		return null;
-	}
-
-	@Override
-	public int pathType() {
-		return RedditURLParser.OPAQUE_SHARED_URL;
-	}
-
-	@Nullable
-	public static OpaqueSharedURL parse(final Uri uri) {
-		// URLs look like https://reddit.com/r/RedReader/s/<alphanumeric>
-		// first pull out the path segments and ensure they match the example (should be 4)
-		final List<String> pathSegments = uri.getPathSegments();
-		if (pathSegments.size() != 4) {
-			return null;
-		}
-
-		// Ensure the first segment is "r" or "u", and the third is "s"
-		if (pathSegments.get(2).equals("s")) {
-			if (pathSegments.get(0).equals("r")) {
-				return new OpaqueSharedURL(pathSegments.get(1), null, pathSegments.get(3));
-			} else if(pathSegments.get(0).equals("u")) {
-				return new OpaqueSharedURL(pathSegments.get(1), pathSegments.get(3), null);
-			} else {
-				return null;
-			}
-
-		} else {
-			return null;
-		}
-	}
-
-	@NonNull
-	public UriString getUrlToFetch() {
-		if (subreddit != null) {
-			return new UriString(
-					String.format("https://www.reddit.com/r/%s/s/%s", subreddit, shareKey));
-		} else if (user != null) {
-			return new UriString(
-					String.format("https://www.reddit.com/u/%s/s/%s", user, shareKey));
-		} else {
-			throw new RuntimeException("Neither subreddit nor user set");
-		}
-	}
+            // Ensure the first segment is "r" or "u", and the third is "s"
+            if (pathSegments.get(2) == "s") {
+                if (pathSegments.get(0) == "r") {
+                    return OpaqueSharedURL(pathSegments.get(1), null, pathSegments.get(3))
+                } else if (pathSegments.get(0) == "u") {
+                    return OpaqueSharedURL(pathSegments.get(1), pathSegments.get(3), null)
+                } else {
+                    return null
+                }
+            } else {
+                return null
+            }
+        }
+    }
 }

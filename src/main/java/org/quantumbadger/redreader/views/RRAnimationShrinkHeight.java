@@ -12,46 +12,44 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.view.View
+import android.view.ViewGroup
+import kotlin.math.sin
 
-import android.view.View;
-import android.view.ViewGroup;
+class RRAnimationShrinkHeight(private val mTarget: View) : RRAnimation() {
+    private val mLayoutParams: ViewGroup.LayoutParams
+    private val mStartHeight: Int
 
-public class RRAnimationShrinkHeight extends RRAnimation {
+    init {
+        mLayoutParams = mTarget.getLayoutParams()
+        mStartHeight = mTarget.getMeasuredHeight()
+    }
 
-	private static final long DURATION_NANOS = 500L * 1000 * 1000;
+    override fun handleFrame(nanosSinceAnimationStart: Long): Boolean {
+        mLayoutParams.height = (mStartHeight * interpolateSine(
+            1.0 - nanosSinceAnimationStart.toDouble() / DURATION_NANOS.toDouble()
+        )).toInt()
 
-	private final View mTarget;
-	private final ViewGroup.LayoutParams mLayoutParams;
-	private final int mStartHeight;
+        mTarget.setLayoutParams(mLayoutParams)
 
-	public RRAnimationShrinkHeight(final View target) {
-		mTarget = target;
-		mLayoutParams = mTarget.getLayoutParams();
-		mStartHeight = mTarget.getMeasuredHeight();
-	}
+        val finished = nanosSinceAnimationStart > DURATION_NANOS
 
-	@Override
-	protected boolean handleFrame(final long nanosSinceAnimationStart) {
+        if (finished) {
+            mTarget.setVisibility(View.GONE)
+        }
 
-		mLayoutParams.height = (int)(mStartHeight * interpolateSine(
-				1.0 - (double)nanosSinceAnimationStart / (double)DURATION_NANOS));
+        return !finished
+    }
 
-		mTarget.setLayoutParams(mLayoutParams);
+    companion object {
+        private val DURATION_NANOS = 500L * 1000 * 1000
 
-		final boolean finished = nanosSinceAnimationStart > DURATION_NANOS;
-
-		if(finished) {
-			mTarget.setVisibility(View.GONE);
-		}
-
-		return !finished;
-	}
-
-	private static double interpolateSine(final double fraction) {
-		return 0.5 + Math.sin((fraction - 0.5) * Math.PI) / 2;
-	}
+        private fun interpolateSine(fraction: Double): Double {
+            return 0.5 + sin((fraction - 0.5) * Math.PI) / 2
+        }
+    }
 }

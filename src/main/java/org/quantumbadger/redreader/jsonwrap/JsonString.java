@@ -12,76 +12,46 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.jsonwrap
 
-package org.quantumbadger.redreader.jsonwrap;
+import org.apache.commons.text.StringEscapeUtils
+import org.quantumbadger.redreader.common.StringUtils
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import org.apache.commons.text.StringEscapeUtils;
-import org.quantumbadger.redreader.common.StringUtils;
+class JsonString(private val mValue: String) : JsonValue() {
+    protected override fun prettyPrint(indent: Int, sb: StringBuilder) {
+        sb.append('"').append(StringEscapeUtils.escapeJson(mValue)).append('"')
+    }
 
-public class JsonString extends JsonValue {
+    public override fun asBoolean(): Boolean? {
+        val lowercase = StringUtils.asciiLowercase(mValue)
 
-	@NonNull private final String mValue;
+        when (lowercase) {
+            "true", "t", "1" -> return true
+            "false", "f", "0" -> return false
+        }
 
-	protected JsonString(@NonNull final String value) {
-		mValue = value;
-	}
+        return null
+    }
 
-	@Override
-	protected void prettyPrint(final int indent, final StringBuilder sb) {
-		sb.append('"').append(StringEscapeUtils.escapeJson(mValue)).append('"');
-	}
+    public override fun asString(): String {
+        return mValue
+    }
 
-	@Nullable
-	@Override
-	public Boolean asBoolean() {
+    public override fun asDouble(): Double? {
+        try {
+            return mValue.toDouble()
+        } catch (e: NumberFormatException) {
+            return null
+        }
+    }
 
-		final String lowercase = StringUtils.asciiLowercase(mValue);
-
-		switch(lowercase) {
-			case "true":
-			case "t":
-			case "1":
-				return true;
-			case "false":
-			case "f":
-			case "0":
-				return false;
-		}
-
-		return null;
-	}
-
-	@NonNull
-	@Override
-	public String asString() {
-		return mValue;
-	}
-
-	@Nullable
-	@Override
-	public Double asDouble() {
-
-		try {
-			return Double.parseDouble(mValue);
-
-		} catch(final NumberFormatException e) {
-			return null;
-		}
-	}
-
-	@Nullable
-	@Override
-	public Long asLong() {
-
-		try {
-			return Long.parseLong(mValue);
-
-		} catch(final NumberFormatException e) {
-			return null;
-		}
-	}
+    public override fun asLong(): Long? {
+        try {
+            return mValue.toLong()
+        } catch (e: NumberFormatException) {
+            return null
+        }
+    }
 }

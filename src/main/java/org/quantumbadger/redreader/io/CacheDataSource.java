@@ -12,28 +12,26 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.io
 
-package org.quantumbadger.redreader.io;
+import org.quantumbadger.redreader.common.TimestampBound
 
-import org.quantumbadger.redreader.common.TimestampBound;
+interface CacheDataSource<K, V, F> {
+    fun performRequest(
+        key: K?,
+        timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<V?, F?>?
+    )
 
-import java.util.Collection;
-import java.util.HashMap;
+    fun performRequest(
+        keys: MutableCollection<K?>?,
+        timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<HashMap<K?, V?>?, F?>?
+    )
 
-public interface CacheDataSource<K, V, F> {
-	void performRequest(
-			K key,
-			final TimestampBound timestampBound,
-			RequestResponseHandler<V, F> handler);
+    fun performWrite(value: V?)
 
-	void performRequest(
-			Collection<K> keys,
-			final TimestampBound timestampBound,
-			RequestResponseHandler<HashMap<K, V>, F> handler);
-
-	void performWrite(V value);
-
-	void performWrite(Collection<V> values);
+    fun performWrite(values: MutableCollection<V?>?)
 }

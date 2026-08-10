@@ -12,89 +12,79 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.datastream
 
-package org.quantumbadger.redreader.common.datastream;
+import java.io.IOException
+import kotlin.math.max
+import kotlin.math.min
 
-import androidx.annotation.NonNull;
+class MemoryDataStreamInputStream(private val mStream: MemoryDataStream) : SeekableInputStream() {
+    private var mPosition = 0
 
-import java.io.IOException;
+    @Throws(IOException::class)
+    override fun read(): Int {
+        val result = mStream.blockingReadOneByte(mPosition)
 
-public class MemoryDataStreamInputStream extends SeekableInputStream {
+        if (result >= 0) {
+            mPosition++
+        }
 
-	@NonNull private final MemoryDataStream mStream;
-	private int mPosition;
+        return result
+    }
 
-	public MemoryDataStreamInputStream(@NonNull final MemoryDataStream stream) {
-		mStream = stream;
-		mPosition = 0;
-	}
+    @Throws(IOException::class)
+    override fun read(buf: ByteArray): Int {
+        return read(buf, 0, buf.size)
+    }
 
-	@Override
-	public int read() throws IOException {
+    @Throws(IOException::class)
+    override fun read(buf: ByteArray, off: Int, len: Int): Int {
+        val bytesRead = mStream.blockingRead(mPosition, buf, off, len)
 
-		final int result = mStream.blockingReadOneByte(mPosition);
+        if (bytesRead > 0) {
+            mPosition += bytesRead
+        }
 
-		if(result >= 0) {
-			mPosition++;
-		}
+        return bytesRead
+    }
 
-		return result;
-	}
+    override fun getPosition(): Long {
+        return mPosition.toLong()
+    }
 
-	@Override
-	public int read(final byte[] buf) throws IOException {
-		return read(buf, 0, buf.length);
-	}
+    @Throws(IOException::class)
+    override fun seek(position: Long) {
+        if (position < 0) {
+            throw IOException("Attempted to seek before zero")
+        }
 
-	@Override
-	public int read(final byte[] buf, final int off, final int len) throws IOException {
+        mPosition = position.toInt()
+    }
 
-		final int bytesRead = mStream.blockingRead(mPosition, buf, off, len);
+    override fun skip(offset: Long): Long {
+        val bytesToSkip = min(offset, max(0, mStream.size() - mPosition).toLong()).toInt()
+        mPosition += bytesToSkip
+        return bytesToSkip.toLong()
+    }
 
-		if(bytesRead > 0) {
-			mPosition += bytesRead;
-		}
+    override fun available(): Int {
+        return mStream.size()
+    }
 
-		return bytesRead;
-	}
+    override fun close() {
+        // Nothing to do here
+    }
 
-	@Override
-	public long getPosition() {
-		return mPosition;
-	}
-
-	@Override
-	public void seek(final long position) throws IOException {
-
-		if(position < 0) {
-			throw new IOException("Attempted to seek before zero");
-		}
-
-		mPosition = (int)position;
-	}
-
-	@Override
-	public long skip(final long offset) {
-		final int bytesToSkip = (int)Math.min(offset, Math.max(0, mStream.size() - mPosition));
-		mPosition += bytesToSkip;
-		return bytesToSkip;
-	}
-
-	@Override
-	public int available() {
-		return mStream.size();
-	}
-
-	@Override
-	public void close() {
-		// Nothing to do here
-	}
-
-	@Override
-	public void readRemainingAsBytes(@NonNull final ByteArrayCallback callback) throws IOException {
-		mStream.getUnderlyingByteArrayWhenComplete((buf, offset, length)
-				-> callback.onByteArray(buf, offset + mPosition, length - mPosition));
-	}
+    @Throws(IOException::class)
+    override fun readRemainingAsBytes(callback: ByteArrayCallback) {
+        mStream.getUnderlyingByteArrayWhenComplete(ByteArrayCallback { buf: ByteArray?, offset: Int, length: Int ->
+            callback.onByteArray(
+                buf!!,
+                offset + mPosition,
+                length - mPosition
+            )
+        })
+    }
 }

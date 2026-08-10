@@ -12,80 +12,71 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.graphics.Color
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewGroup.MarginLayoutParams
+import android.widget.LinearLayout
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
 
-import android.graphics.Color;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
+class BodyElementQuote(private val mElements: ArrayList<BodyElement?>) :
+    BodyElement(BlockType.QUOTE) {
+    override fun generateView(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View {
+        val quoteLayout = LinearLayout(activity)
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+        val paddingPx = dpToPixels(activity, 6f)
+        quoteLayout.setPadding(paddingPx, paddingPx, paddingPx, 0)
 
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.General;
+        val quoteBarWidth = dpToPixels(activity, 3f)
 
-import java.util.ArrayList;
+        val quoteIndent = View(activity)
+        quoteLayout.addView(quoteIndent)
+        quoteIndent.setBackgroundColor(Color.rgb(128, 128, 128))
 
-public class BodyElementQuote extends BodyElement {
+        run {
+            val quoteIndentLayoutParams = quoteIndent.getLayoutParams()
+            quoteIndentLayoutParams.width = quoteBarWidth
+            quoteIndentLayoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+            (quoteIndentLayoutParams as MarginLayoutParams).rightMargin
+            = quoteBarWidth
+            quoteIndent.setLayoutParams(quoteIndentLayoutParams)
+        }
 
-	@NonNull private final ArrayList<BodyElement> mElements;
+        if (mElements.size == 1) {
+            quoteLayout.addView(
+                mElements.get(0)!!
+                    .generateView(
+                        activity,
+                        textColor,
+                        textSize,
+                        showLinkButtons
+                    )
+            )
+        } else {
+            quoteLayout.addView(
+                BodyElementVerticalSequence(mElements)
+                    .generateView(
+                        activity,
+                        textColor,
+                        textSize,
+                        showLinkButtons
+                    )
+            )
+        }
 
-	public BodyElementQuote(@NonNull final ArrayList<BodyElement> elements) {
-		super(BlockType.QUOTE);
-		mElements = elements;
-	}
+        setLayoutMatchWidthWrapHeight(quoteLayout)
 
-
-	@Override
-	public View generateView(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		final LinearLayout quoteLayout = new LinearLayout(activity);
-
-		final int paddingPx = General.dpToPixels(activity, 6);
-		quoteLayout.setPadding(paddingPx, paddingPx, paddingPx, 0);
-
-		final int quoteBarWidth = General.dpToPixels(activity, 3);
-
-		final View quoteIndent = new View(activity);
-		quoteLayout.addView(quoteIndent);
-		quoteIndent.setBackgroundColor(Color.rgb(128, 128, 128));
-
-		{
-			final ViewGroup.LayoutParams quoteIndentLayoutParams = quoteIndent.getLayoutParams();
-			quoteIndentLayoutParams.width = quoteBarWidth;
-			quoteIndentLayoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
-			((ViewGroup.MarginLayoutParams)quoteIndentLayoutParams).rightMargin
-					= quoteBarWidth;
-			quoteIndent.setLayoutParams(quoteIndentLayoutParams);
-		}
-
-		if(mElements.size() == 1) {
-			quoteLayout.addView(mElements.get(0)
-					.generateView(
-							activity,
-							textColor,
-							textSize,
-							showLinkButtons));
-
-		} else {
-			quoteLayout.addView(new BodyElementVerticalSequence(mElements)
-					.generateView(
-							activity,
-							textColor,
-							textSize,
-							showLinkButtons));
-		}
-
-		General.setLayoutMatchWidthWrapHeight(quoteLayout);
-
-		return quoteLayout;
-	}
+        return quoteLayout
+    }
 }

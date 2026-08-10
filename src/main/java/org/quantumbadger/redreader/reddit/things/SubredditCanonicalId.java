@@ -12,101 +12,87 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.things
 
-package org.quantumbadger.redreader.reddit.things;
+import android.os.Parcel
+import android.os.Parcelable
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.jsonwrap.JsonObject.JsonDeserializable
 
-import android.os.Parcel;
-import android.os.Parcelable;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.jsonwrap.JsonObject;
+class SubredditCanonicalId(name: String) : Comparable<SubredditCanonicalId?>, Parcelable,
+    JsonDeserializable {
+    private val mId: String
 
-public class SubredditCanonicalId implements
-		Comparable<SubredditCanonicalId>,
-		Parcelable,
-		JsonObject.JsonDeserializable {
+    init {
+        var name = name
+        name = StringUtils.asciiLowercase(name.trim { it <= ' ' })
+        val userSr: String? = RedditSubreddit.Companion.stripUserPrefix(name)
 
-	@NonNull private final String mId;
+        if (userSr != null) {
+            mId = "/user/" + userSr
+        } else {
+            mId = "/r/" + RedditSubreddit.Companion.stripRPrefix(name)
+        }
+    }
 
-	public SubredditCanonicalId(@NonNull String name) throws InvalidSubredditNameException {
+    val displayNameLowercase: String
+        get() {
+            if (mId.startsWith("/user/")) {
+                return mId
+            }
 
-		name = StringUtils.asciiLowercase(name.trim());
-		final String userSr = RedditSubreddit.stripUserPrefix(name);
+            return mId.substring(3)
+        }
 
-		if(userSr != null) {
-			mId = "/user/" + userSr;
-		} else {
-			mId = "/r/" + RedditSubreddit.stripRPrefix(name);
-		}
-	}
+    override fun toString(): String {
+        return mId
+    }
 
-	public static final Creator<SubredditCanonicalId> CREATOR
-			= new Creator<SubredditCanonicalId>() {
+    override fun hashCode(): Int {
+        return mId.hashCode()
+    }
 
-		@Override
-		public SubredditCanonicalId createFromParcel(final Parcel in) {
-			try {
-				return new SubredditCanonicalId(in.readString());
-			} catch(final InvalidSubredditNameException e) {
-				throw new RuntimeException(e);
-			}
-		}
+    override fun equals(obj: Any?): Boolean {
+        if (this === obj) {
+            return true
+        }
 
-		@Override
-		public SubredditCanonicalId[] newArray(final int size) {
-			return new SubredditCanonicalId[size];
-		}
-	};
+        if (obj !is SubredditCanonicalId) {
+            return false
+        }
 
-	public String getDisplayNameLowercase() {
+        return obj.mId == mId
+    }
 
-		if(mId.startsWith("/user/")) {
-			return mId;
-		}
+    override fun compareTo(o: SubredditCanonicalId): Int {
+        return mId.compareTo(o.mId)
+    }
 
-		return mId.substring(3);
-	}
+    override fun describeContents(): Int {
+        return 0
+    }
 
-	@NonNull
-	@Override
-	public String toString() {
-		return mId;
-	}
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeString(mId)
+    }
 
-	@Override
-	public int hashCode() {
-		return mId.hashCode();
-	}
+    companion object {
+        val CREATOR
+                : Parcelable.Creator<SubredditCanonicalId?> =
+            object : Parcelable.Creator<SubredditCanonicalId?> {
+                override fun createFromParcel(`in`: Parcel): SubredditCanonicalId {
+                    try {
+                        return SubredditCanonicalId(`in`.readString()!!)
+                    } catch (e: InvalidSubredditNameException) {
+                        throw RuntimeException(e)
+                    }
+                }
 
-	@Override
-	public boolean equals(@Nullable final Object obj) {
-
-		if(this == obj) {
-			return true;
-		}
-
-		if(!(obj instanceof SubredditCanonicalId)) {
-			return false;
-		}
-
-		return ((SubredditCanonicalId)obj).mId.equals(mId);
-	}
-
-	@Override
-	public int compareTo(final SubredditCanonicalId o) {
-		return mId.compareTo(o.mId);
-	}
-
-	@Override
-	public int describeContents() {
-		return 0;
-	}
-
-	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
-		dest.writeString(mId);
-	}
+                override fun newArray(size: Int): Array<SubredditCanonicalId?> {
+                    return arrayOfNulls<SubredditCanonicalId>(size)
+                }
+            }
+    }
 }

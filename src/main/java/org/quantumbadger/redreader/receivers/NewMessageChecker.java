@@ -12,310 +12,307 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
-package org.quantumbadger.redreader.receivers;
-
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.database.sqlite.SQLiteDatabaseCorruptException;
-import android.graphics.Color;
-import android.os.Build;
-import android.util.Log;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
-
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.activities.InboxListingActivity;
-import org.quantumbadger.redreader.cache.CacheManager;
-import org.quantumbadger.redreader.cache.CacheRequest;
-import org.quantumbadger.redreader.cache.CacheRequestCallbacks;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.GenericFactory;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.Priority;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.SharedPrefsWrapper;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.datastream.SeekableInputStream;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.http.FailedRequestBody;
-import org.quantumbadger.redreader.receivers.announcements.AnnouncementDownloader;
-import org.quantumbadger.redreader.reddit.kthings.JsonUtils;
-import org.quantumbadger.redreader.reddit.kthings.RedditComment;
-import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType;
-import org.quantumbadger.redreader.reddit.kthings.RedditListing;
-import org.quantumbadger.redreader.reddit.kthings.RedditMessage;
-import org.quantumbadger.redreader.reddit.kthings.RedditThing;
-import org.quantumbadger.redreader.reddit.kthings.UrlEncodedString;
-
-import java.io.IOException;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-public class NewMessageChecker extends BroadcastReceiver {
-
-	private static final String TAG = "NewMessageChecker";
-
-	private static final String NOTIFICATION_CHANNEL_ID = "RRNewMessageChecker";
-
-	public static final String PREFS_SAVED_MESSAGE_ID = "LastMessageId";
-	public static final String PREFS_SAVED_MESSAGE_TIMESTAMP = "LastMessageTimestamp";
-
-
-	@Override
-	public void onReceive(final Context context, final Intent intent) {
-		checkForNewMessages(context);
-		AnnouncementDownloader.performDownload(context);
-	}
-
-	public static void checkForNewMessages(final Context rawContext) {
-
-		// Ensure notification strings respect the app's language setting
-		final Context context = PrefsUtility.getLocalisedContext(rawContext);
-
-		Log.i("RedReader", "Checking for new messages.");
-
-		final boolean notificationsEnabled = PrefsUtility.pref_behaviour_notifications();
-		if(!notificationsEnabled) {
-			return;
-		}
-
-		final RedditAccount user;
-
-		try {
-			user = RedditAccountManager.getInstance(context).getDefaultAccount();
-
-		} catch(final SQLiteDatabaseCorruptException e) {
-			// Avoid background crash
-			Log.e(TAG, "Accounts database corrupt", e);
-			return;
-		}
-
-		if(user.isAnonymous()) {
-			return;
-		}
-
-		final CacheManager cm = CacheManager.getInstance(context);
-
-		final UriString url = Constants.Reddit.getUri("/message/unread.json?limit=2");
-
-		final CacheRequest request = new CacheRequest(
-				url,
-				user,
-				null,
-				new Priority(Constants.Priority.API_INBOX_LIST),
-				DownloadStrategyAlways.INSTANCE,
-				Constants.FileType.INBOX_LIST,
-				CacheRequest.DownloadQueueType.REDDIT_API,
-				false,
-				context,
-				new CacheRequestCallbacks() {
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-
-						Log.e(TAG, "Request failed: " + error, error.t);
-					}
-
-					@Override
-					public void onDataStreamComplete(
-							@NonNull final GenericFactory<SeekableInputStream, IOException>
-									streamFactory,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache,
-							@Nullable final String mimetype) {
-
-						try {
-							final RedditThing listingThing = JsonUtils.INSTANCE
-									.decodeRedditThingFromStream(streamFactory.create());
-
-							final RedditListing listing
-									= ((RedditThing.Listing)listingThing).getData();
-
-							final int messageCount = listing.getChildren().size();
-
-							if(General.isSensitiveDebugLoggingEnabled()) {
-								Log.i(TAG, "Got response. Message count = " + messageCount);
-							}
-
-							if(messageCount < 1) {
-								return;
-							}
-
-							final RedditThing thing = listing.getChildren().get(0).ok();
-
-							String title;
-							final String text
-									= context.getString(R.string.notification_message_action);
-
-							final RedditIdAndType messageID;
-							final TimestampUTC messageTimestamp;
-
-							final String unknownUser = "["
-									+ context.getString(R.string.general_unknown)
-									+ "]";
-
-							if(thing instanceof RedditThing.Comment) {
-								final RedditComment comment
-										= ((RedditThing.Comment)thing).getData();
-
-								title = context.getString(
-										R.string.notification_comment,
-										General.nullAlternative(
-												General.mapIfNotNull(
-														comment.getAuthor(),
-														UrlEncodedString::getDecoded),
-												unknownUser));
-
-								messageID = comment.getName();
-								messageTimestamp = comment.getCreated_utc().getValue();
-
-							} else if(thing instanceof RedditThing.Message) {
-								final RedditMessage message
-										= ((RedditThing.Message)thing).getData();
-
-								title = context.getString(
-										R.string.notification_message,
-										General.nullAlternative(
-												General.mapIfNotNull(
-														message.getAuthor(),
-														UrlEncodedString::getDecoded),
-												General.mapIfNotNull(
-														message.getSubreddit_name_prefixed(),
-														UrlEncodedString::getDecoded),
-												unknownUser));
-
-								messageID = message.getName();
-								messageTimestamp = message.getCreated_utc().getValue();
-
-							} else {
-								throw new RuntimeException("Unknown item in list.");
-							}
-
-							// Check if the previously saved message is the same as the one we
-							// just received
-
-							final SharedPrefsWrapper prefs
-									= General.getSharedPrefs(context);
-							final String oldMessageId = prefs.getString(
-									PREFS_SAVED_MESSAGE_ID,
-									"");
-							final long oldMessageTimestamp = prefs.getLong(
-									PREFS_SAVED_MESSAGE_TIMESTAMP,
-									0);
-
-							if(oldMessageId == null || (!messageID.getValue().equals(oldMessageId)
-									&& oldMessageTimestamp
-											<= messageTimestamp.toUtcSecs())) {
-
-								Log.e(TAG, "New messages detected. Showing notification.");
-
-								prefs.edit()
-										.putString(PREFS_SAVED_MESSAGE_ID, messageID.getValue())
-										.putLong(
-												PREFS_SAVED_MESSAGE_TIMESTAMP,
-												messageTimestamp.toUtcSecs())
-										.apply();
-
-								if(messageCount > 1) {
-									title = context.getString(
-											R.string.notification_message_multiple);
-								}
-
-								createNotification(title, text, context);
-
-							} else {
-								Log.e(TAG, "All messages have been previously seen.");
-							}
-
-						} catch(final Exception e) {
-							onFailure(General.getGeneralErrorForFailure(
-									context,
-									CacheRequest.RequestFailureType.PARSE,
-									e,
-									null,
-									url,
-									FailedRequestBody.from(streamFactory)));
-						}
-					}
-				});
-
-		cm.makeRequest(request);
-	}
-
-	private static final AtomicBoolean sChannelCreated = new AtomicBoolean(false);
-
-	public static void createNotification(
-			final String title,
-			final String text,
-			final Context context) {
-
-		final NotificationManager nm = (NotificationManager)context.getSystemService(
-				Context.NOTIFICATION_SERVICE);
-
-		synchronized(sChannelCreated) {
-
-			if(!sChannelCreated.getAndSet(true)) {
-
-				if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
-					if(nm.getNotificationChannel(NOTIFICATION_CHANNEL_ID) == null) {
-
-						Log.i(TAG, "Creating notification channel");
-
-						final NotificationChannel channel = new NotificationChannel(
-								NOTIFICATION_CHANNEL_ID,
-								context.getString(
-										R.string.notification_channel_name_reddit_messages),
-								NotificationManager.IMPORTANCE_DEFAULT);
-
-						nm.createNotificationChannel(channel);
-
-					} else {
-						Log.i(
-								TAG,
-								"Not creating notification channel as it already exists");
-					}
-
-				} else {
-					Log.i(
-							TAG,
-							"Not creating notification channel due to old Android version");
-				}
-			}
-		}
-
-		final NotificationCompat.Builder notification = new NotificationCompat.Builder(
-				context)
-				.setSmallIcon(R.drawable.icon_notif)
-				.setContentTitle(title)
-				.setContentText(text)
-				.setAutoCancel(true)
-				.setChannelId(NOTIFICATION_CHANNEL_ID)
-				.setColor(Color.rgb(0xd3, 0x2f, 0x2f));
-
-		final Intent intent = new Intent(context, InboxListingActivity.class);
-
-		int flags = 0;
-
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			flags |= PendingIntent.FLAG_IMMUTABLE;
-		}
-
-		notification.setContentIntent(PendingIntent.getActivity(context, 0, intent, flags));
-
-		nm.notify(0, notification.getNotification());
-	}
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.receivers
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.database.sqlite.SQLiteDatabaseCorruptException
+import android.graphics.Color
+import android.os.Build
+import android.util.Log
+import androidx.core.app.NotificationCompat
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.InboxListingActivity
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.cache.CacheRequest
+import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.cache.CacheRequestCallbacks
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.General.getSharedPrefs
+import org.quantumbadger.redreader.common.General.isSensitiveDebugLoggingEnabled
+import org.quantumbadger.redreader.common.GenericFactory
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.UriString.Companion.from
+import org.quantumbadger.redreader.common.datastream.SeekableInputStream
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.receivers.announcements.AnnouncementDownloader
+import org.quantumbadger.redreader.reddit.api.RedditPostActions.ActionDescriptionPair.Companion.from
+import org.quantumbadger.redreader.reddit.kthings.JsonUtils.decodeRedditThingFromStream
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
+import org.quantumbadger.redreader.reddit.kthings.RedditThing
+import org.quantumbadger.redreader.reddit.kthings.RedditThing.Listing
+import org.quantumbadger.redreader.reddit.kthings.UrlEncodedString
+import java.io.IOException
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
+
+class NewMessageChecker : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        checkForNewMessages(context)
+        AnnouncementDownloader.performDownload(context)
+    }
+
+    companion object {
+        private const val TAG = "NewMessageChecker"
+
+        private const val NOTIFICATION_CHANNEL_ID = "RRNewMessageChecker"
+
+        const val PREFS_SAVED_MESSAGE_ID: String = "LastMessageId"
+        const val PREFS_SAVED_MESSAGE_TIMESTAMP: String = "LastMessageTimestamp"
+
+
+        fun checkForNewMessages(rawContext: Context) {
+            // Ensure notification strings respect the app's language setting
+
+            val context = PrefsUtility.getLocalisedContext(rawContext)
+
+            Log.i("RedReader", "Checking for new messages.")
+
+            val notificationsEnabled = PrefsUtility.pref_behaviour_notifications()
+            if (!notificationsEnabled) {
+                return
+            }
+
+            val user: RedditAccount
+
+            try {
+                user = RedditAccountManager.Companion.getInstance(context).getDefaultAccount()
+            } catch (e: SQLiteDatabaseCorruptException) {
+                // Avoid background crash
+                Log.e(TAG, "Accounts database corrupt", e)
+                return
+            }
+
+            if (user.isAnonymous) {
+                return
+            }
+
+            val cm: CacheManager = CacheManager.Companion.getInstance(context)
+
+            val url = Reddit.getUri("/message/unread.json?limit=2")
+
+            val request = CacheRequest(
+                url,
+                user,
+                null,
+                Priority(Constants.Priority.API_INBOX_LIST),
+                DownloadStrategyAlways.Companion.INSTANCE,
+                Constants.FileType.INBOX_LIST,
+                DownloadQueueType.REDDIT_API,
+                false,
+                context,
+                object : CacheRequestCallbacks {
+                    override fun onFailure(error: RRError) {
+                        Log.e(TAG, "Request failed: " + error, error.t)
+                    }
+
+                    override fun onDataStreamComplete(
+                        streamFactory: GenericFactory<SeekableInputStream?, IOException?>,
+                        timestamp: TimestampUTC?,
+                        session: UUID,
+                        fromCache: Boolean,
+                        mimetype: String?
+                    ) {
+                        try {
+                            val listingThing = decodeRedditThingFromStream(streamFactory.create())
+
+                            val listing = (listingThing as Listing).data
+
+                            val messageCount = listing.children.size
+
+                            if (isSensitiveDebugLoggingEnabled) {
+                                Log.i(TAG, "Got response. Message count = " + messageCount)
+                            }
+
+                            if (messageCount < 1) {
+                                return
+                            }
+
+                            val thing = listing.children.get(0).ok()
+
+                            var title: String?
+                            val text = context.getString(string.notification_message_action)
+
+                            val messageID: RedditIdAndType
+                            val messageTimestamp: TimestampUTC
+
+                            val unknownUser = ("["
+                                    + context.getString(string.general_unknown)
+                                    + "]")
+
+                            if (thing is RedditThing.Comment) {
+                                val comment = thing.data
+
+                                title = context.getString(
+                                    string.notification_comment,
+                                    General.nullAlternative<String>(
+                                        org.quantumbadger.redreader.common.General.mapIfNotNull<UrlEncodedString?, String>(
+                                            comment.author,
+                                            UrlEncodedString::decoded
+                                        )!!,
+                                        unknownUser
+                                    )
+                                )
+
+                                messageID = comment.name
+                                messageTimestamp = comment.created_utc.value
+                            } else if (thing is RedditThing.Message) {
+                                val message = thing.data
+
+                                title = context.getString(
+                                    string.notification_message,
+                                    General.nullAlternative<String>(
+                                        org.quantumbadger.redreader.common.General.mapIfNotNull<UrlEncodedString?, String>(
+                                            message.author,
+                                            UrlEncodedString::decoded
+                                        )!!,
+                                        org.quantumbadger.redreader.common.General.mapIfNotNull<UrlEncodedString?, String>(
+                                            message.subreddit_name_prefixed,
+                                            UrlEncodedString::decoded
+                                        )!!,
+                                        unknownUser
+                                    )
+                                )
+
+                                messageID = message.name
+                                messageTimestamp = message.created_utc.value
+                            } else {
+                                throw RuntimeException("Unknown item in list.")
+                            }
+
+                            // Check if the previously saved message is the same as the one we
+                            // just received
+                            val prefs = getSharedPrefs(context)
+                            val oldMessageId = prefs.getString(
+                                PREFS_SAVED_MESSAGE_ID,
+                                ""
+                            )
+                            val oldMessageTimestamp = prefs.getLong(
+                                PREFS_SAVED_MESSAGE_TIMESTAMP,
+                                0
+                            )
+
+                            if (oldMessageId == null || (messageID.value != oldMessageId && (oldMessageTimestamp
+                                        <= messageTimestamp.toUtcSecs()))
+                            ) {
+                                Log.e(TAG, "New messages detected. Showing notification.")
+
+                                prefs.edit()
+                                    .putString(PREFS_SAVED_MESSAGE_ID, messageID.value)
+                                    .putLong(
+                                        PREFS_SAVED_MESSAGE_TIMESTAMP,
+                                        messageTimestamp.toUtcSecs()
+                                    )
+                                    .apply()
+
+                                if (messageCount > 1) {
+                                    title = context.getString(
+                                        string.notification_message_multiple
+                                    )
+                                }
+
+                                createNotification(title, text, context)
+                            } else {
+                                Log.e(TAG, "All messages have been previously seen.")
+                            }
+                        } catch (e: Exception) {
+                            onFailure(
+                                getGeneralErrorForFailure(
+                                    context,
+                                    RequestFailureType.PARSE,
+                                    e,
+                                    null,
+                                    url,
+                                    FailedRequestBody.Companion.from(streamFactory)
+                                )
+                            )
+                        }
+                    }
+                })
+
+            cm.makeRequest(request)
+        }
+
+        private val sChannelCreated = AtomicBoolean(false)
+
+        fun createNotification(
+            title: String?,
+            text: String?,
+            context: Context
+        ) {
+            val nm = context.getSystemService(
+                Context.NOTIFICATION_SERVICE
+            ) as NotificationManager
+
+            synchronized(sChannelCreated) {
+                if (!sChannelCreated.getAndSet(true)) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        if (nm.getNotificationChannel(NOTIFICATION_CHANNEL_ID) == null) {
+                            Log.i(TAG, "Creating notification channel")
+
+                            val channel = NotificationChannel(
+                                NOTIFICATION_CHANNEL_ID,
+                                context.getString(
+                                    string.notification_channel_name_reddit_messages
+                                ),
+                                NotificationManager.IMPORTANCE_DEFAULT
+                            )
+
+                            nm.createNotificationChannel(channel)
+                        } else {
+                            Log.i(
+                                TAG,
+                                "Not creating notification channel as it already exists"
+                            )
+                        }
+                    } else {
+                        Log.i(
+                            TAG,
+                            "Not creating notification channel due to old Android version"
+                        )
+                    }
+                }
+            }
+
+            val notification = NotificationCompat.Builder(
+                context
+            )
+                .setSmallIcon(R.drawable.icon_notif)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setAutoCancel(true)
+                .setChannelId(NOTIFICATION_CHANNEL_ID)
+                .setColor(Color.rgb(0xd3, 0x2f, 0x2f))
+
+            val intent = Intent(context, InboxListingActivity::class.java)
+
+            var flags = 0
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                flags = flags or PendingIntent.FLAG_IMMUTABLE
+            }
+
+            notification.setContentIntent(PendingIntent.getActivity(context, 0, intent, flags))
+
+            nm.notify(0, notification.getNotification())
+        }
+    }
 }

@@ -12,124 +12,112 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.os.Parcel
+import org.quantumbadger.redreader.image.ImageInfo
+import org.quantumbadger.redreader.image.ImageInfo.HasAudio
 
-import android.os.Parcel;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import org.quantumbadger.redreader.image.ImageInfo;
+object ParcelHelper {
+    fun readBoolean(`in`: Parcel): Boolean {
+        return `in`.readByte().toInt() == 1
+    }
 
-public class ParcelHelper {
+    fun readNullableString(`in`: Parcel): String? {
+        val isNull = readBoolean(`in`)
+        if (isNull) {
+            return null
+        }
 
-	public static boolean readBoolean(final Parcel in) {
-		return in.readByte() == 1;
-	}
+        return `in`.readString()
+    }
 
-	public static String readNullableString(final Parcel in) {
+    fun readNullableImageInfoMediaType(`in`: Parcel): ImageInfo.MediaType? {
+        val isNull = readBoolean(`in`)
+        if (isNull) {
+            return null
+        }
 
-		final boolean isNull = readBoolean(in);
-		if(isNull) {
-			return null;
-		}
+        return ImageInfo.MediaType.valueOf(`in`.readString()!!)
+    }
 
-		return in.readString();
-	}
+    fun readImageInfoHasAudio(`in`: Parcel): HasAudio {
+        return HasAudio.valueOf(`in`.readString()!!)
+    }
 
-	@Nullable
-	public static ImageInfo.MediaType readNullableImageInfoMediaType(final Parcel in) {
+    fun writeNullableEnum(
+        parcel: Parcel,
+        value: Enum<*>?
+    ) {
+        if (value == null) {
+            writeBoolean(parcel, false)
+        } else {
+            writeBoolean(parcel, true)
+            parcel.writeString(value.name)
+        }
+    }
 
-		final boolean isNull = readBoolean(in);
-		if(isNull) {
-			return null;
-		}
+    fun writeNonNullEnum(parcel: Parcel, value: Enum<*>) {
+        parcel.writeString(value.name)
+    }
 
-		return ImageInfo.MediaType.valueOf(in.readString());
-	}
+    fun readNullableInt(`in`: Parcel): Int? {
+        val isNull = readBoolean(`in`)
+        if (isNull) {
+            return null
+        }
 
-	public static ImageInfo.HasAudio readImageInfoHasAudio(final Parcel in) {
-		return ImageInfo.HasAudio.valueOf(in.readString());
-	}
+        return `in`.readInt()
+    }
 
-	public static void writeNullableEnum(
-			final Parcel parcel,
-			@Nullable final Enum value) {
+    fun readNullableLong(`in`: Parcel): Long? {
+        val isNull = readBoolean(`in`)
+        if (isNull) {
+            return null
+        }
 
-		if(value == null) {
-			writeBoolean(parcel, false);
-		} else {
-			writeBoolean(parcel, true);
-			parcel.writeString(value.name());
-		}
-	}
+        return `in`.readLong()
+    }
 
-	public static void writeNonNullEnum(final Parcel parcel, @NonNull final Enum value) {
-		parcel.writeString(value.name());
-	}
+    fun readNullableBoolean(`in`: Parcel): Boolean? {
+        val isNull = readBoolean(`in`)
+        if (isNull) {
+            return null
+        }
 
-	public static Integer readNullableInt(final Parcel in) {
+        return readBoolean(`in`)
+    }
 
-		final boolean isNull = readBoolean(in);
-		if(isNull) {
-			return null;
-		}
+    fun writeBoolean(parcel: Parcel, b: Boolean) {
+        parcel.writeByte((if (b) 1 else 0).toByte())
+    }
 
-		return in.readInt();
-	}
+    fun writeNullableString(parcel: Parcel, value: String?) {
+        if (value == null) {
+            writeBoolean(parcel, false)
+        } else {
+            writeBoolean(parcel, true)
+            parcel.writeString(value)
+        }
+    }
 
-	public static Long readNullableLong(final Parcel in) {
+    fun writeNullableLong(parcel: Parcel, value: Long?) {
+        if (value == null) {
+            writeBoolean(parcel, false)
+        } else {
+            writeBoolean(parcel, true)
+            parcel.writeLong(value)
+        }
+    }
 
-		final boolean isNull = readBoolean(in);
-		if(isNull) {
-			return null;
-		}
-
-		return in.readLong();
-	}
-
-	public static Boolean readNullableBoolean(final Parcel in) {
-
-		final boolean isNull = readBoolean(in);
-		if(isNull) {
-			return null;
-		}
-
-		return readBoolean(in);
-	}
-
-	public static void writeBoolean(final Parcel parcel, final boolean b) {
-		parcel.writeByte((byte)(b ? 1 : 0));
-	}
-
-	public static void writeNullableString(final Parcel parcel, final String value) {
-
-		if(value == null) {
-			writeBoolean(parcel, false);
-		} else {
-			writeBoolean(parcel, true);
-			parcel.writeString(value);
-		}
-	}
-
-	public static void writeNullableLong(final Parcel parcel, final Long value) {
-
-		if(value == null) {
-			writeBoolean(parcel, false);
-		} else {
-			writeBoolean(parcel, true);
-			parcel.writeLong(value);
-		}
-	}
-
-	public static void writeNullableBoolean(final Parcel parcel, final Boolean value) {
-
-		if(value == null) {
-			writeBoolean(parcel, false);
-		} else {
-			writeBoolean(parcel, true);
-			writeBoolean(parcel, value);
-		}
-	}
+    fun writeNullableBoolean(parcel: Parcel, value: Boolean?) {
+        if (value == null) {
+            writeBoolean(parcel, false)
+        } else {
+            writeBoolean(parcel, true)
+            writeBoolean(parcel, value)
+        }
+    }
 }

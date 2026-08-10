@@ -12,137 +12,116 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+import android.graphics.Typeface
+import android.text.style.CharacterStyle
+import android.text.style.ClickableSpan
+import android.text.style.RelativeSizeSpan
+import android.text.style.StrikethroughSpan
+import android.text.style.StyleSpan
+import android.text.style.SuperscriptSpan
+import android.text.style.TypefaceSpan
+import android.text.style.UnderlineSpan
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.common.LinkHandler.onLinkClicked
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
 
-import android.graphics.Typeface;
-import android.text.style.CharacterStyle;
-import android.text.style.ClickableSpan;
-import android.text.style.RelativeSizeSpan;
-import android.text.style.StrikethroughSpan;
-import android.text.style.StyleSpan;
-import android.text.style.SuperscriptSpan;
-import android.text.style.TypefaceSpan;
-import android.text.style.UnderlineSpan;
-import android.view.View;
+class HtmlRawElementPlainText(private val mText: String) : HtmlRawElement() {
+    override fun getPlainText(stringBuilder: StringBuilder) {
+        stringBuilder.append(mText)
+    }
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+    override fun reduce(
+        attributes: HtmlTextAttributes,
+        activity: AppCompatActivity,
+        destination: ArrayList<HtmlRawElement?>,
+        linkButtons: ArrayList<LinkButtonDetails?>
+    ) {
+        var spans: ArrayList<CharacterStyle?>? = null
 
-import org.quantumbadger.redreader.common.LinkHandler;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
+        if (attributes.bold > 0) {
+            if (spans == null) {
+                spans = ArrayList<CharacterStyle?>()
+            }
+            spans.add(StyleSpan(Typeface.BOLD))
+        }
 
-import java.util.ArrayList;
+        if (attributes.italic > 0) {
+            if (spans == null) {
+                spans = ArrayList<CharacterStyle?>()
+            }
+            spans.add(StyleSpan(Typeface.ITALIC))
+        }
 
-public class HtmlRawElementPlainText extends HtmlRawElement {
+        if (attributes.underline > 0) {
+            if (spans == null) {
+                spans = ArrayList<CharacterStyle?>()
+            }
+            spans.add(UnderlineSpan())
+        }
 
-	@NonNull private final String mText;
+        if (attributes.strikethrough > 0) {
+            if (spans == null) {
+                spans = ArrayList<CharacterStyle?>()
+            }
+            spans.add(StrikethroughSpan())
+        }
 
-	public HtmlRawElementPlainText(@NonNull final String text) {
-		mText = text;
-	}
+        if (attributes.monospace > 0) {
+            if (spans == null) {
+                spans = ArrayList<CharacterStyle?>()
+            }
+            spans.add(TypefaceSpan("monospace"))
+        }
 
-	@Override
-	public void getPlainText(@NonNull final StringBuilder stringBuilder) {
-		stringBuilder.append(mText);
-	}
+        if (attributes.superscript > 0) {
+            if (spans == null) {
+                spans = ArrayList<CharacterStyle?>()
+            }
 
-	@Override
-	public void reduce(
-			@NonNull final HtmlTextAttributes attributes,
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<HtmlRawElement> destination,
-			@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
+            for (i in 0..<attributes.superscript) {
+                spans.add(SuperscriptSpan())
+                spans.add(RelativeSizeSpan(0.85f))
+            }
+        }
 
-		ArrayList<CharacterStyle> spans = null;
+        if (attributes.extraLarge > 0) {
+            if (spans == null) {
+                spans = ArrayList<CharacterStyle?>()
+            }
+            spans.add(RelativeSizeSpan(1.6f))
+        } else if (attributes.large > 0) {
+            if (spans == null) {
+                spans = ArrayList<CharacterStyle?>()
+            }
+            spans.add(RelativeSizeSpan(1.3f))
+        }
 
-		if(attributes.bold > 0) {
-			//noinspection ConstantConditions
-			if(spans == null) {
-				spans = new ArrayList<>();
-			}
-			spans.add(new StyleSpan(Typeface.BOLD));
-		}
+        if (attributes.href != null) {
+            if (spans == null) {
+                spans = ArrayList<CharacterStyle?>()
+            }
 
-		if(attributes.italic > 0) {
-			if(spans == null) {
-				spans = new ArrayList<>();
-			}
-			spans.add(new StyleSpan(Typeface.ITALIC));
-		}
+            val url = attributes.href
 
-		if(attributes.underline > 0) {
-			if(spans == null) {
-				spans = new ArrayList<>();
-			}
-			spans.add(new UnderlineSpan());
-		}
+            spans.add(object : ClickableSpan() {
+                override fun onClick(widget: View) {
+                    onLinkClicked(activity, url)
+                }
+            })
+        }
 
-		if(attributes.strikethrough > 0) {
-			if(spans == null) {
-				spans = new ArrayList<>();
-			}
-			spans.add(new StrikethroughSpan());
-		}
+        destination.add(HtmlRawElementStyledText(mText, spans))
+    }
 
-		if(attributes.monospace > 0) {
-			if(spans == null) {
-				spans = new ArrayList<>();
-			}
-			spans.add(new TypefaceSpan("monospace"));
-		}
-
-		if(attributes.superscript > 0) {
-			if(spans == null) {
-				spans = new ArrayList<>();
-			}
-
-			for(int i = 0; i < attributes.superscript; i++) {
-				spans.add(new SuperscriptSpan());
-				spans.add(new RelativeSizeSpan(0.85f));
-			}
-		}
-
-		if(attributes.extraLarge > 0) {
-			if(spans == null) {
-				spans = new ArrayList<>();
-			}
-			spans.add(new RelativeSizeSpan(1.6f));
-
-		} else if(attributes.large > 0) {
-			if(spans == null) {
-				spans = new ArrayList<>();
-			}
-			spans.add(new RelativeSizeSpan(1.3f));
-		}
-
-		if(attributes.href != null) {
-
-			if(spans == null) {
-				spans = new ArrayList<>();
-			}
-
-			final UriString url = attributes.href;
-
-			spans.add(new ClickableSpan() {
-				@Override
-				public void onClick(@NonNull final View widget) {
-					LinkHandler.onLinkClicked(activity, url);
-				}
-			});
-		}
-
-		destination.add(new HtmlRawElementStyledText(mText, spans));
-	}
-
-	@Override
-	public void generate(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<BodyElement> destination) {
-
-		throw new RuntimeException("Attempt to call generate() on reducible element");
-	}
+    override fun generate(
+        activity: AppCompatActivity,
+        destination: ArrayList<BodyElement?>
+    ) {
+        throw RuntimeException("Attempt to call generate() on reducible element")
+    }
 }

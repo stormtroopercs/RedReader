@@ -12,142 +12,114 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.receivers.announcements
 
-package org.quantumbadger.redreader.receivers.announcements;
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.io.IOException
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+class Payload {
+    private val mStrings = HashMap<String?, String?>()
+    private val mLongs = HashMap<String?, Long?>()
+    private val mBooleans = HashMap<String?, Boolean?>()
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+    fun setString(key: String, value: String) {
+        mStrings.put(key, value)
+    }
 
-public final class Payload {
+    fun setLong(key: String, value: Long) {
+        mLongs.put(key, value)
+    }
 
-	private final HashMap<String, String> mStrings = new HashMap<>();
-	private final HashMap<String, Long> mLongs = new HashMap<>();
-	private final HashMap<String, Boolean> mBooleans = new HashMap<>();
+    fun setBoolean(key: String, value: Boolean) {
+        mBooleans.put(key, value)
+    }
 
-	private static final byte HEADER_EOF = 0;
-	private static final byte HEADER_ENTRY_STRING = 1;
-	private static final byte HEADER_ENTRY_LONG = 2;
-	private static final byte HEADER_ENTRY_BOOLEAN = 3;
+    fun getString(key: String): String? {
+        return mStrings.get(key)
+    }
 
-	public void setString(@NonNull final String key, @NonNull final String value) {
-		mStrings.put(key, value);
-	}
+    fun getLong(key: String): Long? {
+        return mLongs.get(key)
+    }
 
-	public void setLong(@NonNull final String key, final long value) {
-		mLongs.put(key, value);
-	}
+    fun getBoolean(key: String): Boolean? {
+        return mBooleans.get(key)
+    }
 
-	public void setBoolean(@NonNull final String key, final boolean value) {
-		mBooleans.put(key, value);
-	}
+    fun toBytes(): ByteArray {
+        val result = ByteArrayOutputStream()
+        val dos = DataOutputStream(result)
 
-	@Nullable
-	public String getString(@NonNull final String key) {
-		return mStrings.get(key);
-	}
+        try {
+            for (entry in mStrings.entries) {
+                if (entry.value == null) {
+                    continue
+                }
+                dos.writeByte(HEADER_ENTRY_STRING.toInt())
+                dos.writeUTF(entry.key)
+                dos.writeUTF(entry.value)
+            }
 
-	@Nullable
-	public Long getLong(@NonNull final String key) {
-		return mLongs.get(key);
-	}
+            for (entry in mLongs.entries) {
+                if (entry.value == null) {
+                    continue
+                }
 
-	@Nullable
-	public Boolean getBoolean(@NonNull final String key) {
-		return mBooleans.get(key);
-	}
+                dos.writeByte(HEADER_ENTRY_LONG.toInt())
+                dos.writeUTF(entry.key)
+                dos.writeLong(entry.value!!)
+            }
 
-	@NonNull
-	public byte[] toBytes() {
+            for (entry in mBooleans.entries) {
+                if (entry.value == null) {
+                    continue
+                }
 
-		final ByteArrayOutputStream result = new ByteArrayOutputStream();
-		final DataOutputStream dos = new DataOutputStream(result);
+                dos.writeByte(HEADER_ENTRY_BOOLEAN.toInt())
+                dos.writeUTF(entry.key)
+                dos.writeBoolean(entry.value!!)
+            }
 
-		try {
-			for(final Map.Entry<String, String> entry : mStrings.entrySet()) {
+            dos.writeByte(HEADER_EOF.toInt())
 
-				if(entry.getValue() == null) {
-					continue;
-				}
-				dos.writeByte(HEADER_ENTRY_STRING);
-				dos.writeUTF(entry.getKey());
-				dos.writeUTF(entry.getValue());
-			}
+            dos.flush()
+            dos.close()
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
 
-			for(final Map.Entry<String, Long> entry : mLongs.entrySet()) {
+        return result.toByteArray()
+    }
 
-				if(entry.getValue() == null) {
-					continue;
-				}
+    companion object {
+        private const val HEADER_EOF: Byte = 0
+        private const val HEADER_ENTRY_STRING: Byte = 1
+        private const val HEADER_ENTRY_LONG: Byte = 2
+        private const val HEADER_ENTRY_BOOLEAN: Byte = 3
 
-				dos.writeByte(HEADER_ENTRY_LONG);
-				dos.writeUTF(entry.getKey());
-				dos.writeLong(entry.getValue());
-			}
+        @JvmStatic
+        @Throws(IOException::class)
+        fun fromBytes(data: ByteArray): Payload {
+            DataInputStream(ByteArrayInputStream(data)).use { dis ->
+                val result = Payload()
+                while (true) {
+                    val header = dis.readByte()
 
-			for(final Map.Entry<String, Boolean> entry : mBooleans.entrySet()) {
+                    when (header) {
+                        HEADER_EOF -> return result
 
-				if(entry.getValue() == null) {
-					continue;
-				}
-
-				dos.writeByte(HEADER_ENTRY_BOOLEAN);
-				dos.writeUTF(entry.getKey());
-				dos.writeBoolean(entry.getValue());
-			}
-
-			dos.writeByte(HEADER_EOF);
-
-			dos.flush();
-			dos.close();
-
-		} catch(final IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		return result.toByteArray();
-	}
-
-	@NonNull
-	public static Payload fromBytes(@NonNull final byte[] data) throws IOException {
-
-		try(DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data))) {
-
-			final Payload result = new Payload();
-
-			while(true) {
-
-				final byte header = dis.readByte();
-
-				switch(header) {
-					case HEADER_EOF:
-						return result;
-
-					case HEADER_ENTRY_STRING:
-						result.setString(dis.readUTF(), dis.readUTF());
-						break;
-
-					case HEADER_ENTRY_LONG:
-						result.setLong(dis.readUTF(), dis.readLong());
-						break;
-
-					case HEADER_ENTRY_BOOLEAN:
-						result.setBoolean(dis.readUTF(), dis.readBoolean());
-						break;
-
-					default:
-						throw new IOException("Unknown entry header " + header);
-				}
-			}
-		}
-	}
+                        HEADER_ENTRY_STRING -> result.setString(dis.readUTF(), dis.readUTF())
+                        HEADER_ENTRY_LONG -> result.setLong(dis.readUTF(), dis.readLong())
+                        HEADER_ENTRY_BOOLEAN -> result.setBoolean(dis.readUTF(), dis.readBoolean())
+                        else -> throw IOException("Unknown entry header " + header)
+                    }
+                }
+            }
+        }
+    }
 }

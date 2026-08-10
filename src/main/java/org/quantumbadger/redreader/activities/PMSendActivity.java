@@ -12,273 +12,264 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.activities
 
-package org.quantumbadger.redreader.activities;
+import android.app.ProgressDialog
+import android.content.DialogInterface
+import android.os.Bundle
+import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.Spinner
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.common.AndroidCommon
+import org.quantumbadger.redreader.common.General.quickToast
+import org.quantumbadger.redreader.common.General.safeDismissDialog
+import org.quantumbadger.redreader.common.General.showResultDialog
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.fragments.AccountListDialog.Companion.show
+import org.quantumbadger.redreader.fragments.MarkdownPreviewDialog
+import org.quantumbadger.redreader.fragments.ReportDialog.Companion.show
+import org.quantumbadger.redreader.reddit.APIResponseHandler.ActionResponseHandler
+import org.quantumbadger.redreader.reddit.RedditAPI
 
-import android.app.ProgressDialog;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
-import android.widget.Spinner;
+class PMSendActivity : ViewsBaseActivity() {
+    private var usernameSpinner: Spinner? = null
+    private var recipientEdit: EditText? = null
+    private var subjectEdit: EditText? = null
+    private var textEdit: EditText? = null
 
-import androidx.annotation.NonNull;
+    private var mSendSuccess = false
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.cache.CacheManager;
-import org.quantumbadger.redreader.common.AndroidCommon;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.fragments.MarkdownPreviewDialog;
-import org.quantumbadger.redreader.reddit.APIResponseHandler;
-import org.quantumbadger.redreader.reddit.RedditAPI;
+    protected override fun onCreate(savedInstanceState: Bundle?) {
+        PrefsUtility.applyTheme(this)
 
-import java.util.ArrayList;
+        super.onCreate(savedInstanceState)
 
-public class PMSendActivity extends ViewsBaseActivity {
+        setTitle(string.pm_send_actionbar)
 
-	public static final String EXTRA_RECIPIENT = "recipient";
-	public static final String EXTRA_SUBJECT = "subject";
-	public static final String EXTRA_TEXT = "text";
+        val layout = getLayoutInflater().inflate(R.layout.pm_send, null) as LinearLayout
 
-	private static final String SAVED_STATE_RECIPIENT = "recipient";
-	private static final String SAVED_STATE_TEXT = "pm_text";
-	private static final String SAVED_STATE_SUBJECT = "pm_subject";
+        usernameSpinner = layout.findViewById<Spinner>(R.id.pm_send_username)
+        recipientEdit = layout.findViewById<EditText>(R.id.pm_send_recipient)
+        subjectEdit = layout.findViewById<EditText>(R.id.pm_send_subject)
+        textEdit = layout.findViewById<EditText?>(R.id.pm_send_text)
 
-	private Spinner usernameSpinner;
-	private EditText recipientEdit;
-	private EditText subjectEdit;
-	private EditText textEdit;
+        val initialRecipient: String?
+        val initialSubject: String?
+        val initialText: String?
 
-	private boolean mSendSuccess;
+        if (savedInstanceState != null
+            && savedInstanceState.containsKey(SAVED_STATE_TEXT)
+        ) {
+            initialRecipient = savedInstanceState.getString(SAVED_STATE_RECIPIENT)
+            initialSubject = savedInstanceState.getString(SAVED_STATE_SUBJECT)
+            initialText = savedInstanceState.getString(SAVED_STATE_TEXT)
+        } else {
+            val intent = getIntent()
 
-	private static String lastText;
-	private static String lastRecipient;
-	private static String lastSubject;
+            if (intent != null && intent.hasExtra(EXTRA_RECIPIENT)) {
+                initialRecipient = intent.getStringExtra(EXTRA_RECIPIENT)
+            } else {
+                initialRecipient = lastRecipient
+            }
 
-	@Override
-	protected void onCreate(final Bundle savedInstanceState) {
+            if (intent != null && intent.hasExtra(EXTRA_SUBJECT)) {
+                initialSubject = intent.getStringExtra(EXTRA_SUBJECT)
+            } else {
+                initialSubject = lastSubject
+            }
 
-		PrefsUtility.applyTheme(this);
+            if (intent != null && intent.hasExtra(EXTRA_TEXT)) {
+                initialText = intent.getStringExtra(EXTRA_TEXT)
+            } else {
+                initialText = lastText
+            }
+        }
 
-		super.onCreate(savedInstanceState);
+        if (initialRecipient != null) {
+            recipientEdit!!.setText(initialRecipient)
+        }
 
-		setTitle(R.string.pm_send_actionbar);
+        if (initialSubject != null) {
+            subjectEdit!!.setText(initialSubject)
+        }
 
-		final LinearLayout layout
-				= (LinearLayout)getLayoutInflater().inflate(R.layout.pm_send, null);
+        if (initialText != null) {
+            textEdit!!.setText(initialText)
+        }
 
-		usernameSpinner = layout.findViewById(R.id.pm_send_username);
-		recipientEdit = layout.findViewById(R.id.pm_send_recipient);
-		subjectEdit = layout.findViewById(R.id.pm_send_subject);
-		textEdit = layout.findViewById(R.id.pm_send_text);
+        val accounts: ArrayList<RedditAccount> = RedditAccountManager.Companion.getInstance(this)
+            .getAccounts()
+        val usernames = ArrayList<String?>()
 
-		final String initialRecipient;
-		final String initialSubject;
-		final String initialText;
+        for (account in accounts) {
+            if (!account.isAnonymous) {
+                usernames.add(account.username)
+            }
+        }
 
-		if(savedInstanceState != null
-				&& savedInstanceState.containsKey(SAVED_STATE_TEXT)) {
-			initialRecipient = savedInstanceState.getString(SAVED_STATE_RECIPIENT);
-			initialSubject = savedInstanceState.getString(SAVED_STATE_SUBJECT);
-			initialText = savedInstanceState.getString(SAVED_STATE_TEXT);
+        if (usernames.isEmpty()) {
+            quickToast(this, getString(string.error_toast_notloggedin))
+            finish()
+        }
 
-		} else {
+        usernameSpinner!!.setAdapter(
+            ArrayAdapter<String?>(
+                this,
+                android.R.layout.simple_list_item_1,
+                usernames
+            )
+        )
 
-			final Intent intent = getIntent();
+        val sv = ScrollView(this)
+        sv.addView(layout)
+        setBaseActivityListing(sv)
+    }
 
-			if(intent != null && intent.hasExtra(EXTRA_RECIPIENT)) {
-				initialRecipient = intent.getStringExtra(EXTRA_RECIPIENT);
-			} else {
-				initialRecipient = lastRecipient;
-			}
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(SAVED_STATE_RECIPIENT, recipientEdit!!.getText().toString())
+        outState.putString(SAVED_STATE_SUBJECT, subjectEdit!!.getText().toString())
+        outState.putString(SAVED_STATE_TEXT, textEdit!!.getText().toString())
+    }
 
-			if(intent != null && intent.hasExtra(EXTRA_SUBJECT)) {
-				initialSubject = intent.getStringExtra(EXTRA_SUBJECT);
-			} else {
-				initialSubject = lastSubject;
-			}
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val send = menu.add(string.comment_reply_send)
+        send.setIcon(R.drawable.ic_action_send_dark)
+        send.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
 
-			if(intent != null && intent.hasExtra(EXTRA_TEXT)) {
-				initialText = intent.getStringExtra(EXTRA_TEXT);
-			} else {
-				initialText = lastText;
-			}
-		}
+        menu.add(string.comment_reply_preview)
 
-		if(initialRecipient != null) {
-			recipientEdit.setText(initialRecipient);
-		}
+        return true
+    }
 
-		if(initialSubject != null) {
-			subjectEdit.setText(initialSubject);
-		}
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.getTitle() == getString(string.comment_reply_send)) {
+            val progressDialog = ProgressDialog(this)
+            progressDialog.setTitle(getString(string.comment_reply_submitting_title))
+            progressDialog.setMessage(getString(string.comment_reply_submitting_message))
+            progressDialog.setIndeterminate(true)
+            progressDialog.setCancelable(true)
+            progressDialog.setCanceledOnTouchOutside(false)
 
-		if(initialText != null) {
-			textEdit.setText(initialText);
-		}
+            progressDialog.setOnCancelListener(DialogInterface.OnCancelListener { dialogInterface: DialogInterface? ->
+                quickToast(this, getString(string.comment_reply_oncancel))
+                safeDismissDialog(progressDialog)
+            })
 
-		final ArrayList<RedditAccount> accounts = RedditAccountManager.getInstance(this)
-				.getAccounts();
-		final ArrayList<String> usernames = new ArrayList<>();
+            progressDialog.setOnKeyListener(DialogInterface.OnKeyListener { dialogInterface: DialogInterface?, keyCode: Int, keyEvent: KeyEvent? ->
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    quickToast(this, getString(string.comment_reply_oncancel))
+                    safeDismissDialog(progressDialog)
+                }
+                true
+            })
 
-		for(final RedditAccount account : accounts) {
-			if(!account.isAnonymous()) {
-				usernames.add(account.username);
-			}
-		}
+            val handler
+                    : ActionResponseHandler = object : ActionResponseHandler(this) {
+                override fun onSuccess() {
+                    AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
+                        safeDismissDialog(progressDialog)
+                        mSendSuccess = true
 
-		if(usernames.isEmpty()) {
-			General.quickToast(this, getString(R.string.error_toast_notloggedin));
-			finish();
-		}
+                        lastText = null
+                        lastRecipient = null
+                        lastSubject = null
 
-		usernameSpinner.setAdapter(new ArrayAdapter<>(
-				this,
-				android.R.layout.simple_list_item_1,
-				usernames));
+                        quickToast(
+                            this@PMSendActivity,
+                            getString(string.pm_send_done)
+                        )
+                        finish()
+                    })
+                }
 
-		final ScrollView sv = new ScrollView(this);
-		sv.addView(layout);
-		setBaseActivityListing(sv);
-	}
+                protected override fun onCallbackException(t: Throwable?) {
+                    handleGlobalError(this@PMSendActivity, t)
+                }
 
-	@Override
-	protected void onSaveInstanceState(@NonNull final Bundle outState) {
-		super.onSaveInstanceState(outState);
-		outState.putString(SAVED_STATE_RECIPIENT, recipientEdit.getText().toString());
-		outState.putString(SAVED_STATE_SUBJECT, subjectEdit.getText().toString());
-		outState.putString(SAVED_STATE_TEXT, textEdit.getText().toString());
-	}
+                protected override fun onFailure(error: RRError) {
+                    showResultDialog(this@PMSendActivity, error)
+                    safeDismissDialog(progressDialog)
+                }
+            }
 
-	@Override
-	public boolean onCreateOptionsMenu(final Menu menu) {
+            val cm: CacheManager = CacheManager.Companion.getInstance(this)
 
-		final MenuItem send = menu.add(R.string.comment_reply_send);
-		send.setIcon(R.drawable.ic_action_send_dark);
-		send.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+            val accounts: ArrayList<RedditAccount> = RedditAccountManager.Companion.getInstance(
+                this
+            ).getAccounts()
+            var selectedAccount: RedditAccount? = null
 
-		menu.add(R.string.comment_reply_preview);
+            for (account in accounts) {
+                if (!account.isAnonymous
+                    && account.username.equals(
+                        usernameSpinner!!.getSelectedItem() as String?, ignoreCase = true
+                    )
+                ) {
+                    selectedAccount = account
+                    break
+                }
+            }
 
-		return true;
-	}
+            if (selectedAccount == null) {
+                throw RuntimeException("Selected account no longer present")
+            }
 
-	@Override
-	public boolean onOptionsItemSelected(final MenuItem item) {
+            RedditAPI.compose(
+                cm,
+                handler,
+                selectedAccount,
+                recipientEdit!!.getText().toString(),
+                subjectEdit!!.getText().toString(),
+                textEdit!!.getText().toString(),
+                this
+            )
 
-		if(item.getTitle().equals(getString(R.string.comment_reply_send))) {
+            progressDialog.show()
+        } else if (item.getTitle() == getString(string.comment_reply_preview)) {
+            MarkdownPreviewDialog.Companion.newInstance(textEdit!!.getText().toString())
+                .show(getSupportFragmentManager(), "MarkdownPreviewDialog")
+        }
 
-			final ProgressDialog progressDialog = new ProgressDialog(this);
-			progressDialog.setTitle(getString(R.string.comment_reply_submitting_title));
-			progressDialog.setMessage(getString(R.string.comment_reply_submitting_message));
-			progressDialog.setIndeterminate(true);
-			progressDialog.setCancelable(true);
-			progressDialog.setCanceledOnTouchOutside(false);
+        return true
+    }
 
-			progressDialog.setOnCancelListener(dialogInterface -> {
-				General.quickToast(this, getString(R.string.comment_reply_oncancel));
-				General.safeDismissDialog(progressDialog);
-			});
+    protected override fun onDestroy() {
+        super.onDestroy()
 
-			progressDialog.setOnKeyListener((dialogInterface, keyCode, keyEvent) -> {
+        if (!mSendSuccess && textEdit != null) {
+            lastRecipient = recipientEdit!!.getText().toString()
+            lastSubject = subjectEdit!!.getText().toString()
+            lastText = textEdit!!.getText().toString()
+        }
+    }
 
-				if(keyCode == KeyEvent.KEYCODE_BACK) {
-					General.quickToast(this, getString(R.string.comment_reply_oncancel));
-					General.safeDismissDialog(progressDialog);
-				}
+    companion object {
+        const val EXTRA_RECIPIENT: String = "recipient"
+        const val EXTRA_SUBJECT: String = "subject"
+        const val EXTRA_TEXT: String = "text"
 
-				return true;
-			});
+        private const val SAVED_STATE_RECIPIENT = "recipient"
+        private const val SAVED_STATE_TEXT = "pm_text"
+        private const val SAVED_STATE_SUBJECT = "pm_subject"
 
-			final APIResponseHandler.ActionResponseHandler handler
-					= new APIResponseHandler.ActionResponseHandler(this) {
-				@Override
-				protected void onSuccess() {
-					AndroidCommon.UI_THREAD_HANDLER.post(() -> {
-
-						General.safeDismissDialog(progressDialog);
-
-						mSendSuccess = true;
-
-						lastText = null;
-						lastRecipient = null;
-						lastSubject = null;
-
-						General.quickToast(
-								PMSendActivity.this,
-								getString(R.string.pm_send_done));
-						finish();
-					});
-				}
-
-				@Override
-				protected void onCallbackException(final Throwable t) {
-					BugReportActivity.handleGlobalError(PMSendActivity.this, t);
-				}
-
-				@Override
-				protected void onFailure(@NonNull final RRError error) {
-					General.showResultDialog(PMSendActivity.this, error);
-					General.safeDismissDialog(progressDialog);
-				}
-			};
-
-			final CacheManager cm = CacheManager.getInstance(this);
-
-			final ArrayList<RedditAccount> accounts = RedditAccountManager.getInstance(
-					this).getAccounts();
-			RedditAccount selectedAccount = null;
-
-			for(final RedditAccount account : accounts) {
-				if(!account.isAnonymous()
-						&& account.username.equalsIgnoreCase(
-						(String)usernameSpinner.getSelectedItem())) {
-					selectedAccount = account;
-					break;
-				}
-			}
-
-			if(selectedAccount == null) {
-				throw new RuntimeException("Selected account no longer present");
-			}
-
-			RedditAPI.compose(
-					cm,
-					handler,
-					selectedAccount,
-					recipientEdit.getText().toString(),
-					subjectEdit.getText().toString(),
-					textEdit.getText().toString(),
-					this);
-
-			progressDialog.show();
-
-		} else if(item.getTitle().equals(getString(R.string.comment_reply_preview))) {
-			MarkdownPreviewDialog.newInstance(textEdit.getText().toString())
-					.show(getSupportFragmentManager(), "MarkdownPreviewDialog");
-		}
-
-		return true;
-	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-
-		if(!mSendSuccess && textEdit != null) {
-			lastRecipient = recipientEdit.getText().toString();
-			lastSubject = subjectEdit.getText().toString();
-			lastText = textEdit.getText().toString();
-		}
-	}
+        private var lastText: String? = null
+        private var lastRecipient: String? = null
+        private var lastSubject: String? = null
+    }
 }

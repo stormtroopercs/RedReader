@@ -12,35 +12,32 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.collections
 
-package org.quantumbadger.redreader.common.collections;
+abstract class Stream<Type> {
+    abstract fun hasNext(): Boolean
 
-import java.util.Collection;
+    abstract fun take(): Type?
 
-public abstract class Stream<Type> {
+    fun <Output> map(operator: MapStream.Operator<Type?, Output?>?): Stream<Output?> {
+        return MapStream<Type?, Output?>(this, operator)
+    }
 
-	public abstract boolean hasNext();
+    fun <Output> mapRethrowExceptions(
+        operator: MapStreamRethrowExceptions.Operator<Type?, Output?>?
+    ): Stream<Output?> {
+        return MapStreamRethrowExceptions<Type?, Output?>(this, operator)
+    }
 
-	public abstract Type take();
+    fun <Output : MutableCollection<in Type?>?> collect(
+        output: Output?
+    ): Output? {
+        while (hasNext()) {
+            output!!.add(take())
+        }
 
-	public final <Output> Stream<Output> map(final MapStream.Operator<Type, Output> operator) {
-		return new MapStream<>(this, operator);
-	}
-
-	public final <Output> Stream<Output> mapRethrowExceptions(
-			final MapStreamRethrowExceptions.Operator<Type, Output> operator) {
-		return new MapStreamRethrowExceptions<>(this, operator);
-	}
-
-	public final <Output extends Collection<? super Type>> Output collect(
-			final Output output) {
-
-		while(hasNext()) {
-			output.add(take());
-		}
-
-		return output;
-	}
+        return output
+    }
 }

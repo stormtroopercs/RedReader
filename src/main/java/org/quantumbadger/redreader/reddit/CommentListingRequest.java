@@ -12,416 +12,396 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
-package org.quantumbadger.redreader.reddit;
-
-import android.content.Context;
-import android.util.Log;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.UiThread;
-
-import org.apache.commons.text.StringEscapeUtils;
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.activities.SessionChangeListener;
-import org.quantumbadger.redreader.cache.CacheManager;
-import org.quantumbadger.redreader.cache.CacheRequest;
-import org.quantumbadger.redreader.cache.CacheRequestCallbacks;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategy;
-import org.quantumbadger.redreader.common.AndroidCommon;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.GenericFactory;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.Priority;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.datastream.SeekableInputStream;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.fragments.CommentListingFragment;
-import org.quantumbadger.redreader.http.FailedRequestBody;
-import org.quantumbadger.redreader.reddit.kthings.JsonUtils;
-import org.quantumbadger.redreader.reddit.kthings.MaybeParseError;
-import org.quantumbadger.redreader.reddit.kthings.RedditComment;
-import org.quantumbadger.redreader.reddit.kthings.RedditFieldReplies;
-import org.quantumbadger.redreader.reddit.kthings.RedditListing;
-import org.quantumbadger.redreader.reddit.kthings.RedditMediaMetadata;
-import org.quantumbadger.redreader.reddit.kthings.RedditPost;
-import org.quantumbadger.redreader.reddit.kthings.RedditThing;
-import org.quantumbadger.redreader.reddit.kthings.RedditThingResponse;
-import org.quantumbadger.redreader.reddit.kthings.UrlEncodedString;
-import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
-import org.quantumbadger.redreader.reddit.prepared.RedditParsedComment;
-import org.quantumbadger.redreader.reddit.prepared.RedditParsedPost;
-import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost;
-import org.quantumbadger.redreader.reddit.prepared.RedditRenderableComment;
-import org.quantumbadger.redreader.reddit.url.RedditURLParser;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
-
-public class CommentListingRequest {
-
-	private static final String TAG = "CommentListingRequest";
-
-	private final Context mContext;
-	private final CommentListingFragment mFragment;
-	private final BaseActivity mActivity;
-	private final RedditURLParser.RedditURL mCommentListingURL;
-
-	private final boolean mParsePostSelfText;
-	private final CacheManager mCacheManager;
-	private final RedditURLParser.RedditURL mUrl;
-	private final RedditAccount mUser;
-	private final UUID mSession;
-	private final DownloadStrategy mDownloadStrategy;
-
-	private final Listener mListener;
-
-	public CommentListingRequest(
-			final Context context,
-			final CommentListingFragment fragment,
-			final BaseActivity activity,
-			final RedditURLParser.RedditURL commentListingURL,
-			final boolean parsePostSelfText,
-			final RedditURLParser.RedditURL url,
-			final RedditAccount user,
-			final UUID session,
-			final DownloadStrategy downloadStrategy,
-			final Listener listener) {
-
-		mContext = context;
-		mFragment = fragment;
-		mActivity = activity;
-		mCommentListingURL = commentListingURL;
-		mParsePostSelfText = parsePostSelfText;
-		mUrl = url;
-		mUser = user;
-		mSession = session;
-		mDownloadStrategy = downloadStrategy;
-		mListener = listener;
-
-		mCacheManager = CacheManager.getInstance(context);
-
-		mCacheManager.makeRequest(createCommentListingCacheRequest());
-	}
-
-	@UiThread
-	public interface Listener {
-
-		void onCommentListingRequestDownloadNecessary();
-
-		void onCommentListingRequestFailure(RRError error);
-
-		void onCommentListingRequestCachedCopy(TimestampUTC timestamp);
-
-		void onCommentListingRequestParseStart();
-
-		void onCommentListingRequestPostDownloaded(RedditPreparedPost post);
-
-		void onCommentListingRequestAllItemsDownloaded(ArrayList<RedditCommentListItem> items);
-	}
-
-	private void onThingDownloaded(
-			@NonNull final RedditThingResponse thingResponse,
-			@NonNull final UUID session,
-			final TimestampUTC timestamp,
-			final boolean fromCache
-	) {
-		String parentPostAuthor = null;
-
-		if(mActivity instanceof SessionChangeListener) {
-			((SessionChangeListener)mActivity).onSessionChanged(
-					session,
-					SessionChangeListener.SessionChangeType.COMMENTS,
-					timestamp);
-		}
-
-		final Integer minimumCommentScore
-				= PrefsUtility.pref_behaviour_comment_min();
-
-		if(fromCache) {
-			AndroidCommon.runOnUiThread(()
-					-> mListener.onCommentListingRequestCachedCopy(timestamp));
-		}
-
-		AndroidCommon.runOnUiThread(mListener::onCommentListingRequestParseStart);
-
-		@NonNull final RedditListing commentListing;
-
-		if(thingResponse instanceof RedditThingResponse.Single) {
-			commentListing = ((RedditThing.Listing)((RedditThingResponse.Single) thingResponse)
-					.getThing()).getData();
-
-		} else {
-			final RedditThingResponse.Multiple multiple
-					= (RedditThingResponse.Multiple) thingResponse;
-
-			if(multiple.getThings().size() != 2) {
-				throw new RuntimeException("Expecting 2 items in array response, got "
-						+ multiple.getThings().size());
-			}
-
-			final RedditPost post
-					= ((RedditThing.Post)((RedditThing.Listing)multiple.getThings().get(0))
-							.getData()
-							.getChildren()
-							.get(0)
-							.ok()).getData();
-
-			final RedditParsedPost parsedPost =
-					new RedditParsedPost(mActivity, post, mParsePostSelfText);
-
-			final RedditPreparedPost preparedPost = new RedditPreparedPost(
-					mContext,
-					mCacheManager,
-					0,
-					parsedPost,
-					timestamp,
-					true,
-					false,
-					false,
-					false);
-
-			AndroidCommon.runOnUiThread(()
-					-> mListener.onCommentListingRequestPostDownloaded(
-					preparedPost));
-
-			parentPostAuthor = parsedPost.getAuthor();
-
-			commentListing = ((RedditThing.Listing)((RedditThingResponse.Multiple) thingResponse)
-					.getThings().get(1)).getData();
-		}
-
-		// Download comments
-
-		final ArrayList<MaybeParseError<RedditThing>> topLevelComments
-				= commentListing.getChildren();
-
-		final ArrayList<RedditCommentListItem> items
-				= new ArrayList<>(200);
-
-		for(final MaybeParseError<RedditThing> commentThingValue : topLevelComments) {
-			buildCommentTree(
-					commentThingValue,
-					null,
-					items,
-					minimumCommentScore,
-					parentPostAuthor);
-		}
-
-		final RedditChangeDataManager changeDataManager
-				= RedditChangeDataManager.getInstance(mUser);
-
-		for(final RedditCommentListItem item : items) {
-			if(item.isComment()) {
-				changeDataManager.update(
-						timestamp,
-						item.asComment().getParsedComment().getRawComment());
-			}
-		}
-
-		AndroidCommon.runOnUiThread(()
-				-> mListener.onCommentListingRequestAllItemsDownloaded(items));
-	}
-
-	@NonNull
-	private CacheRequest createCommentListingCacheRequest() {
-
-		final UriString url = UriString.from(mUrl.generateJsonUri());
-
-		return new CacheRequest(
-				url,
-				mUser,
-				mSession,
-				new Priority(Constants.Priority.API_COMMENT_LIST),
-				mDownloadStrategy,
-				Constants.FileType.COMMENT_LIST,
-				CacheRequest.DownloadQueueType.REDDIT_API,
-				mContext,
-				new CacheRequestCallbacks() {
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-						AndroidCommon.runOnUiThread(()
-								-> mListener.onCommentListingRequestFailure(error));
-					}
-
-					@Override
-					public void onDownloadNecessary() {
-						AndroidCommon.runOnUiThread(
-								mListener::onCommentListingRequestDownloadNecessary);
-					}
-
-					@Override
-					public void onDataStreamAvailable(
-							@NonNull final GenericFactory<SeekableInputStream, IOException>
-									streamFactory,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache,
-							@Nullable final String mimetype) {
-
-						new Thread(null, () -> {
-							try {
-								final RedditThingResponse thingResponse
-										= JsonUtils.INSTANCE.decodeRedditThingResponseFromStream(
-												streamFactory.create());
-
-								onThingDownloaded(thingResponse, session, timestamp, fromCache);
-
-							} catch(final Exception e) {
-								onFailure(General.getGeneralErrorForFailure(
-										mContext,
-										CacheRequest.RequestFailureType.PARSE,
-										e,
-										null,
-										url,
-										FailedRequestBody.from(streamFactory)));
-							}
-						}, "Comment parsing", 1_000_000).start();
-					}
-				});
-	}
-
-	private void buildCommentTree(
-			final MaybeParseError<RedditThing> maybeThing,
-			final RedditCommentListItem parent,
-			final ArrayList<RedditCommentListItem> output,
-			final Integer minimumCommentScore,
-			final String parentPostAuthor) {
-
-		// TODO handle gracefully by showing error message
-		final RedditThing thing = maybeThing.ok();
-
-		if(thing instanceof RedditThing.More
-				&& mUrl.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL) {
-
-			output.add(new RedditCommentListItem(
-					((RedditThing.More)thing).getData(),
-					parent,
-					mFragment,
-					mActivity,
-					mCommentListingURL));
-
-		} else if(thing instanceof RedditThing.Comment) {
-			RedditComment comment = ((RedditThing.Comment) thing).getData();
-
-			if (comment.getMedia_metadata() != null && comment.getBody_html() != null) {
-				try {
-
-					for(final Map.Entry<
-									UrlEncodedString,
-									MaybeParseError<RedditMediaMetadata>
-							> entry : comment.getMedia_metadata().entrySet()) {
-
-						if(!(entry.getValue() instanceof MaybeParseError.Ok)) {
-							continue;
-						}
-
-						final RedditMediaMetadata emoteMetadata
-								= ((MaybeParseError.Ok<RedditMediaMetadata>)
-										entry.getValue()).getValue();
-
-						// id is always structured as emote|{subreddit_id}|{emote_id}
-						// for subreddit emotes
-						if (emoteMetadata.getId().split("\\|")[0].equalsIgnoreCase("emote")
-								&& emoteMetadata.getS().getU() != null) {
-							final String subredditId = emoteMetadata.getId().split("\\|")[1];
-
-							// These are default reddit emotes (i think).
-							// They already have an img tag in the body html
-							// so no processing is required for these
-							if (subredditId.equals("free_emotes_pack")) {
-								continue;
-							}
-
-							final String emoteId = emoteMetadata.getId().split("\\|")[2];
-
-							final String emotePlaceholder = String.format(Locale.getDefault(),
-									":%s:", emoteId);
-
-							final String imgTag = String.format(Locale.getDefault(),
-									"<emote src=\"%s\" title=\"%s\"></emote>",
-									StringEscapeUtils.escapeHtml4(
-											emoteMetadata.getS().getU().getDecoded()),
-									emotePlaceholder);
-
-							comment = comment.copyWithNewBodyHtml(
-									comment.getBody_html().getDecoded()
-											.replace(emotePlaceholder, imgTag));
-						}
-					}
-
-				} catch (final Exception e) {
-					// Including this try-catch to cover for edge cases where reddit might send
-					// different values under media_metadata
-					Log.e(
-							TAG,
-							"Exception while processing media metadata for "
-									+ comment.getIdAndType(),
-							e);
-				}
-			}
-
-			final String currentCanonicalUserName = RedditAccountManager.getInstance(mContext)
-					.getDefaultAccount().getCanonicalUsername();
-			final boolean showSubredditName = !(mCommentListingURL != null
-					&& mCommentListingURL.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL);
-			final boolean neverAutoCollapse = mCommentListingURL != null
-					&& mCommentListingURL.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL;
-
-			final RedditCommentListItem item;
-			final RedditRenderableComment renderableComment = new RedditRenderableComment(
-					new RedditParsedComment(comment, mActivity),
-					parentPostAuthor,
-					minimumCommentScore,
-					currentCanonicalUserName,
-					true,
-					showSubredditName,
-					neverAutoCollapse);
-
-			if (comment.isBlockedByUser()
-					&& !PrefsUtility.pref_appearance_hide_comments_from_blocked_users()) {
-				renderableComment.setBlockedUser(true);
-			}
-
-			item = new RedditCommentListItem(
-					renderableComment,
-					parent,
-					mFragment,
-					mActivity,
-					mCommentListingURL);
-
-			// hide comment if user is blocked
-			if (comment.isBlockedByUser()
-					&& PrefsUtility.pref_appearance_hide_comments_from_blocked_users()) {
-				return;
-			}
-
-			output.add(item);
-
-			if(comment.getReplies() instanceof RedditFieldReplies.Some) {
-
-				final RedditListing listing = ((RedditThing.Listing)(
-						(RedditFieldReplies.Some)comment.getReplies()).getValue()).getData();
-
-				for(final MaybeParseError<RedditThing> reply : listing.getChildren()) {
-					buildCommentTree(
-							reply,
-							item,
-							output,
-							minimumCommentScore,
-							parentPostAuthor);
-				}
-			}
-		}
-	}
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
+
+import android.content.Context
+import android.util.Log
+import androidx.annotation.UiThread
+import org.apache.commons.text.StringEscapeUtils
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.activities.SessionChangeListener
+import org.quantumbadger.redreader.activities.SessionChangeListener.SessionChangeType
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.cache.CacheRequest
+import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.cache.CacheRequestCallbacks
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategy
+import org.quantumbadger.redreader.common.AndroidCommon.runOnUiThread
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.GenericFactory
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.UriString.Companion.from
+import org.quantumbadger.redreader.common.datastream.SeekableInputStream
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.fragments.CommentListingFragment
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.reddit.api.RedditPostActions.ActionDescriptionPair.Companion.from
+import org.quantumbadger.redreader.reddit.kthings.JsonUtils.decodeRedditThingResponseFromStream
+import org.quantumbadger.redreader.reddit.kthings.MaybeParseError
+import org.quantumbadger.redreader.reddit.kthings.RedditFieldReplies.Some
+import org.quantumbadger.redreader.reddit.kthings.RedditListing
+import org.quantumbadger.redreader.reddit.kthings.RedditMediaMetadata
+import org.quantumbadger.redreader.reddit.kthings.RedditThing
+import org.quantumbadger.redreader.reddit.kthings.RedditThing.Listing
+import org.quantumbadger.redreader.reddit.kthings.RedditThing.More
+import org.quantumbadger.redreader.reddit.kthings.RedditThing.Post
+import org.quantumbadger.redreader.reddit.kthings.RedditThingResponse
+import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
+import org.quantumbadger.redreader.reddit.prepared.RedditParsedComment
+import org.quantumbadger.redreader.reddit.prepared.RedditParsedPost
+import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost
+import org.quantumbadger.redreader.reddit.prepared.RedditRenderableComment
+import org.quantumbadger.redreader.reddit.url.RedditURLParser
+import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
+import java.io.IOException
+import java.util.Locale
+import java.util.UUID
+
+class CommentListingRequest(
+    private val mContext: Context,
+    private val mFragment: CommentListingFragment?,
+    private val mActivity: BaseActivity,
+    private val mCommentListingURL: RedditURL?,
+    private val mParsePostSelfText: Boolean,
+    private val mUrl: RedditURL,
+    private val mUser: RedditAccount,
+    private val mSession: UUID?,
+    private val mDownloadStrategy: DownloadStrategy,
+    private val mListener: Listener
+) {
+    private val mCacheManager: CacheManager
+
+    init {
+        mCacheManager = CacheManager.Companion.getInstance(mContext)
+
+        mCacheManager.makeRequest(createCommentListingCacheRequest())
+    }
+
+    @UiThread
+    interface Listener {
+        fun onCommentListingRequestDownloadNecessary()
+
+        fun onCommentListingRequestFailure(error: RRError?)
+
+        fun onCommentListingRequestCachedCopy(timestamp: TimestampUTC?)
+
+        fun onCommentListingRequestParseStart()
+
+        fun onCommentListingRequestPostDownloaded(post: RedditPreparedPost?)
+
+        fun onCommentListingRequestAllItemsDownloaded(items: ArrayList<RedditCommentListItem>?)
+    }
+
+    private fun onThingDownloaded(
+        thingResponse: RedditThingResponse,
+        session: UUID,
+        timestamp: TimestampUTC?,
+        fromCache: Boolean
+    ) {
+        var parentPostAuthor: String? = null
+
+        if (mActivity is SessionChangeListener) {
+            (mActivity as SessionChangeListener).onSessionChanged(
+                session,
+                SessionChangeType.COMMENTS,
+                timestamp
+            )
+        }
+
+        val minimumCommentScore = PrefsUtility.pref_behaviour_comment_min()
+
+        if (fromCache) {
+            runOnUiThread(Runnable { mListener.onCommentListingRequestCachedCopy(timestamp) })
+        }
+
+        runOnUiThread(Runnable { mListener.onCommentListingRequestParseStart() })
+
+        val commentListing: RedditListing
+
+        if (thingResponse is RedditThingResponse.Single) {
+            commentListing = (thingResponse
+                .thing as Listing).data
+        } else {
+            val multiple = thingResponse as RedditThingResponse.Multiple
+
+            if (multiple.things.size != 2) {
+                throw RuntimeException(
+                    "Expecting 2 items in array response, got "
+                            + multiple.things.size
+                )
+            }
+
+            val post = ((multiple.things.get(0) as Listing)
+                .data
+                .children
+                .get(0)
+                .ok() as Post).data
+
+            val parsedPost =
+                RedditParsedPost(mActivity, post, mParsePostSelfText)
+
+            val preparedPost = RedditPreparedPost(
+                mContext,
+                mCacheManager,
+                0,
+                parsedPost,
+                timestamp,
+                true,
+                false,
+                false,
+                false
+            )
+
+            runOnUiThread(Runnable {
+                mListener.onCommentListingRequestPostDownloaded(
+                    preparedPost
+                )
+            })
+
+            parentPostAuthor = parsedPost.author
+
+            commentListing = (thingResponse
+                .things.get(1) as Listing).data
+        }
+
+        // Download comments
+        val topLevelComments
+                : ArrayList<MaybeParseError<RedditThing?>> = commentListing.children
+
+        val items = ArrayList<RedditCommentListItem>(200)
+
+        for (commentThingValue in topLevelComments) {
+            buildCommentTree(
+                commentThingValue,
+                null,
+                items,
+                minimumCommentScore,
+                parentPostAuthor
+            )
+        }
+
+        val changeDataManager
+                : RedditChangeDataManager = RedditChangeDataManager.Companion.getInstance(mUser)
+
+        for (item in items) {
+            if (item.isComment()) {
+                changeDataManager.update(
+                    timestamp,
+                    item.asComment().getParsedComment().getRawComment()
+                )
+            }
+        }
+
+        runOnUiThread(Runnable { mListener.onCommentListingRequestAllItemsDownloaded(items) })
+    }
+
+    private fun createCommentListingCacheRequest(): CacheRequest {
+        val url = from(mUrl.generateJsonUri())
+
+        return CacheRequest(
+            url,
+            mUser,
+            mSession,
+            Priority(Constants.Priority.API_COMMENT_LIST),
+            mDownloadStrategy,
+            Constants.FileType.COMMENT_LIST,
+            DownloadQueueType.REDDIT_API,
+            mContext,
+            object : CacheRequestCallbacks {
+                override fun onFailure(error: RRError) {
+                    runOnUiThread(Runnable { mListener.onCommentListingRequestFailure(error) })
+                }
+
+                override fun onDownloadNecessary() {
+                    runOnUiThread(
+                        Runnable { mListener.onCommentListingRequestDownloadNecessary() })
+                }
+
+                override fun onDataStreamAvailable(
+                    streamFactory: GenericFactory<SeekableInputStream?, IOException?>,
+                    timestamp: TimestampUTC?,
+                    session: UUID,
+                    fromCache: Boolean,
+                    mimetype: String?
+                ) {
+                    Thread(null, Runnable {
+                        try {
+                            val thingResponse = decodeRedditThingResponseFromStream(
+                                streamFactory.create()
+                            )
+
+                            onThingDownloaded(thingResponse, session, timestamp, fromCache)
+                        } catch (e: Exception) {
+                            onFailure(
+                                getGeneralErrorForFailure(
+                                    mContext,
+                                    RequestFailureType.PARSE,
+                                    e,
+                                    null,
+                                    url,
+                                    FailedRequestBody.Companion.from(streamFactory)
+                                )
+                            )
+                        }
+                    }, "Comment parsing", 1000000).start()
+                }
+            })
+    }
+
+    private fun buildCommentTree(
+        maybeThing: MaybeParseError<RedditThing>,
+        parent: RedditCommentListItem?,
+        output: ArrayList<RedditCommentListItem>,
+        minimumCommentScore: Int?,
+        parentPostAuthor: String?
+    ) {
+        // TODO handle gracefully by showing error message
+
+        val thing = maybeThing.ok()
+
+        if (thing is More
+            && mUrl.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL
+        ) {
+            output.add(
+                RedditCommentListItem(
+                    thing.data,
+                    parent,
+                    mFragment,
+                    mActivity,
+                    mCommentListingURL
+                )
+            )
+        } else if (thing is RedditThing.Comment) {
+            var comment = thing.data
+
+            if (comment.media_metadata != null && comment.body_html != null) {
+                try {
+                    for (entry in comment.media_metadata.entries) {
+                        if (entry.value !is MaybeParseError.Ok<*>) {
+                            continue
+                        }
+
+                        val emoteMetadata =
+                            (entry.value as MaybeParseError.Ok<RedditMediaMetadata>).value
+
+                        // id is always structured as emote|{subreddit_id}|{emote_id}
+                        // for subreddit emotes
+                        if (emoteMetadata.id.split("\\|".toRegex()).dropLastWhile { it.isEmpty() }
+                                .toTypedArray()[0].equals("emote", ignoreCase = true)
+                            && emoteMetadata.s.u != null) {
+                            val subredditId = emoteMetadata.id.split("\\|".toRegex())
+                                .dropLastWhile { it.isEmpty() }.toTypedArray()[1]
+
+                            // These are default reddit emotes (i think).
+                            // They already have an img tag in the body html
+                            // so no processing is required for these
+                            if (subredditId == "free_emotes_pack") {
+                                continue
+                            }
+
+                            val emoteId = emoteMetadata.id.split("\\|".toRegex())
+                                .dropLastWhile { it.isEmpty() }.toTypedArray()[2]
+
+                            val emotePlaceholder = String.format(
+                                Locale.getDefault(),
+                                ":%s:", emoteId
+                            )
+
+                            val imgTag = String.format(
+                                Locale.getDefault(),
+                                "<emote src=\"%s\" title=\"%s\"></emote>",
+                                StringEscapeUtils.escapeHtml4(
+                                    emoteMetadata.s.u.decoded
+                                ),
+                                emotePlaceholder
+                            )
+
+                            comment = comment.copyWithNewBodyHtml(
+                                comment.body_html!!.decoded
+                                    .replace(emotePlaceholder, imgTag)
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Including this try-catch to cover for edge cases where reddit might send
+                    // different values under media_metadata
+                    Log.e(
+                        TAG,
+                        "Exception while processing media metadata for "
+                                + comment.getIdAndType(),
+                        e
+                    )
+                }
+            }
+
+            val currentCanonicalUserName: String =
+                RedditAccountManager.Companion.getInstance(mContext)
+                    .getDefaultAccount().canonicalUsername
+            val showSubredditName = !(mCommentListingURL != null
+                    && mCommentListingURL.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL)
+            val neverAutoCollapse = mCommentListingURL != null
+                    && mCommentListingURL.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL
+
+            val item: RedditCommentListItem
+            val renderableComment = RedditRenderableComment(
+                RedditParsedComment(comment, mActivity),
+                parentPostAuthor,
+                minimumCommentScore,
+                currentCanonicalUserName,
+                true,
+                showSubredditName,
+                neverAutoCollapse
+            )
+
+            if (comment.isBlockedByUser()
+                && !PrefsUtility.pref_appearance_hide_comments_from_blocked_users()
+            ) {
+                renderableComment.setBlockedUser(true)
+            }
+
+            item = RedditCommentListItem(
+                renderableComment,
+                parent,
+                mFragment,
+                mActivity,
+                mCommentListingURL
+            )
+
+            // hide comment if user is blocked
+            if (comment.isBlockedByUser()
+                && PrefsUtility.pref_appearance_hide_comments_from_blocked_users()
+            ) {
+                return
+            }
+
+            output.add(item)
+
+            if (comment.replies is Some) {
+                val listing = (comment.replies.value as Listing).data
+
+                for (reply in listing.children) {
+                    buildCommentTree(
+                        reply,
+                        item,
+                        output,
+                        minimumCommentScore,
+                        parentPostAuthor
+                    )
+                }
+            }
+        }
+    }
+
+    companion object {
+        private const val TAG = "CommentListingRequest"
+    }
 }

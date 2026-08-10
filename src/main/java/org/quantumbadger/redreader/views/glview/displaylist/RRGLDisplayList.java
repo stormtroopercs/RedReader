@@ -12,22 +12,18 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.displaylist
 
-package org.quantumbadger.redreader.views.glview.displaylist;
+import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
-import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack;
+class RRGLDisplayList : RRGLRenderableGroup() {
+    protected override fun renderInternal(matrixStack: RRGLMatrixStack?, time: Long) {
+        super.renderInternal(matrixStack, time)
+    }
 
-public final class RRGLDisplayList extends RRGLRenderableGroup {
-
-	@Override
-	protected void renderInternal(final RRGLMatrixStack matrixStack, final long time) {
-		super.renderInternal(matrixStack, time);
-	}
-
-	@Override
-	public boolean isAdded() {
-		return true;
-	}
+    override fun isAdded(): Boolean {
+        return true
+    }
 }

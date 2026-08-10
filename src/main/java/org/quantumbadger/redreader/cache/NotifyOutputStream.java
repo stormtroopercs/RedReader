@@ -12,31 +12,24 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache
 
-package org.quantumbadger.redreader.cache;
+import java.io.FilterOutputStream
+import java.io.IOException
+import java.io.OutputStream
 
-import java.io.FilterOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+class NotifyOutputStream(out: OutputStream?, private val listener: Listener) :
+    FilterOutputStream(out) {
+    @Throws(IOException::class)
+    override fun close() {
+        super.close()
+        listener.onClose()
+    }
 
-public class NotifyOutputStream extends FilterOutputStream {
-
-	private final Listener listener;
-
-	public NotifyOutputStream(final OutputStream out, final Listener listener) {
-		super(out);
-		this.listener = listener;
-	}
-
-	@Override
-	public void close() throws IOException {
-		super.close();
-		listener.onClose();
-	}
-
-	public interface Listener {
-		void onClose() throws IOException;
-	}
+    interface Listener {
+        @Throws(IOException::class)
+        fun onClose()
+    }
 }

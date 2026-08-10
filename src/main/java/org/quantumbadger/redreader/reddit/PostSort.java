@@ -12,323 +12,277 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
 
-package org.quantumbadger.redreader.reddit;
+import android.net.Uri
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.OptionsMenuUtility
+import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuPostsListener
+import org.quantumbadger.redreader.common.StringUtils
 
-import android.net.Uri;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.OptionsMenuUtility;
-import org.quantumbadger.redreader.common.StringUtils;
+enum class PostSort(@field:StringRes @param:StringRes private val menuTitle: Int) :
+    OptionsMenuUtility.Sort {
+    HOT(string.sort_posts_hot),
+    NEW(string.sort_posts_new),
+    RISING(string.sort_posts_rising),
+    TOP_HOUR(string.sort_posts_top_hour),
+    TOP_DAY(string.sort_posts_top_today),
+    TOP_WEEK(string.sort_posts_top_week),
+    TOP_MONTH(string.sort_posts_top_month),
+    TOP_YEAR(string.sort_posts_top_year),
+    TOP_ALL(string.sort_posts_top_all),
+    CONTROVERSIAL_HOUR(string.sort_posts_controversial_hour),
+    CONTROVERSIAL_DAY(string.sort_posts_controversial_today),
+    CONTROVERSIAL_WEEK(string.sort_posts_controversial_week),
+    CONTROVERSIAL_MONTH(string.sort_posts_controversial_month),
+    CONTROVERSIAL_YEAR(string.sort_posts_controversial_year),
+    CONTROVERSIAL_ALL(string.sort_posts_controversial_all),
+    BEST(string.sort_posts_best),
 
-public enum PostSort implements OptionsMenuUtility.Sort {
-	HOT(R.string.sort_posts_hot),
-	NEW(R.string.sort_posts_new),
-	RISING(R.string.sort_posts_rising),
-	TOP_HOUR(R.string.sort_posts_top_hour),
-	TOP_DAY(R.string.sort_posts_top_today),
-	TOP_WEEK(R.string.sort_posts_top_week),
-	TOP_MONTH(R.string.sort_posts_top_month),
-	TOP_YEAR(R.string.sort_posts_top_year),
-	TOP_ALL(R.string.sort_posts_top_all),
-	CONTROVERSIAL_HOUR(R.string.sort_posts_controversial_hour),
-	CONTROVERSIAL_DAY(R.string.sort_posts_controversial_today),
-	CONTROVERSIAL_WEEK(R.string.sort_posts_controversial_week),
-	CONTROVERSIAL_MONTH(R.string.sort_posts_controversial_month),
-	CONTROVERSIAL_YEAR(R.string.sort_posts_controversial_year),
-	CONTROVERSIAL_ALL(R.string.sort_posts_controversial_all),
-	BEST(R.string.sort_posts_best),
-	// Sorts related to Search Listings
-	RELEVANCE_HOUR(R.string.sort_posts_relevance_hour),
-	RELEVANCE_DAY(R.string.sort_posts_relevance_today),
-	RELEVANCE_WEEK(R.string.sort_posts_relevance_week),
-	RELEVANCE_MONTH(R.string.sort_posts_relevance_month),
-	RELEVANCE_YEAR(R.string.sort_posts_relevance_year),
-	RELEVANCE_ALL(R.string.sort_posts_relevance_all),
-	NEW_HOUR(R.string.sort_posts_new_hour),
-	NEW_DAY(R.string.sort_posts_new_today),
-	NEW_WEEK(R.string.sort_posts_new_week),
-	NEW_MONTH(R.string.sort_posts_new_month),
-	NEW_YEAR(R.string.sort_posts_new_year),
-	NEW_ALL(R.string.sort_posts_new_all),
-	COMMENTS_HOUR(R.string.sort_posts_comments_hour),
-	COMMENTS_DAY(R.string.sort_posts_comments_today),
-	COMMENTS_WEEK(R.string.sort_posts_comments_week),
-	COMMENTS_MONTH(R.string.sort_posts_comments_month),
-	COMMENTS_YEAR(R.string.sort_posts_comments_year),
-	COMMENTS_ALL(R.string.sort_posts_comments_all),
-	HOT_HOUR(R.string.sort_posts_hot_hour),
-	HOT_DAY(R.string.sort_posts_hot_today),
-	HOT_WEEK(R.string.sort_posts_hot_week),
-	HOT_MONTH(R.string.sort_posts_hot_month),
-	HOT_YEAR(R.string.sort_posts_hot_year),
-	HOT_ALL(R.string.sort_posts_hot_all);
+    // Sorts related to Search Listings
+    RELEVANCE_HOUR(string.sort_posts_relevance_hour),
+    RELEVANCE_DAY(string.sort_posts_relevance_today),
+    RELEVANCE_WEEK(string.sort_posts_relevance_week),
+    RELEVANCE_MONTH(string.sort_posts_relevance_month),
+    RELEVANCE_YEAR(string.sort_posts_relevance_year),
+    RELEVANCE_ALL(string.sort_posts_relevance_all),
+    NEW_HOUR(string.sort_posts_new_hour),
+    NEW_DAY(string.sort_posts_new_today),
+    NEW_WEEK(string.sort_posts_new_week),
+    NEW_MONTH(string.sort_posts_new_month),
+    NEW_YEAR(string.sort_posts_new_year),
+    NEW_ALL(string.sort_posts_new_all),
+    COMMENTS_HOUR(string.sort_posts_comments_hour),
+    COMMENTS_DAY(string.sort_posts_comments_today),
+    COMMENTS_WEEK(string.sort_posts_comments_week),
+    COMMENTS_MONTH(string.sort_posts_comments_month),
+    COMMENTS_YEAR(string.sort_posts_comments_year),
+    COMMENTS_ALL(string.sort_posts_comments_all),
+    HOT_HOUR(string.sort_posts_hot_hour),
+    HOT_DAY(string.sort_posts_hot_today),
+    HOT_WEEK(string.sort_posts_hot_week),
+    HOT_MONTH(string.sort_posts_hot_month),
+    HOT_YEAR(string.sort_posts_hot_year),
+    HOT_ALL(string.sort_posts_hot_all);
 
-	@StringRes private final int menuTitle;
-	PostSort(@StringRes final int menuTitle) {
-		this.menuTitle = menuTitle;
-	}
+    fun addToUserPostListingUri(builder: Uri.Builder) {
+        when (this) {
+            PostSort.HOT, PostSort.NEW -> builder.appendQueryParameter(
+                "sort",
+                StringUtils.asciiLowercase(name)
+            )
 
-	@Nullable
-	public static PostSort valueOfOrNull(@NonNull final String string) {
+            PostSort.CONTROVERSIAL_HOUR, PostSort.CONTROVERSIAL_DAY, PostSort.CONTROVERSIAL_WEEK, PostSort.CONTROVERSIAL_MONTH, PostSort.CONTROVERSIAL_YEAR, PostSort.CONTROVERSIAL_ALL, PostSort.TOP_HOUR, PostSort.TOP_DAY, PostSort.TOP_WEEK, PostSort.TOP_MONTH, PostSort.TOP_YEAR, PostSort.TOP_ALL -> {
+                val parts: Array<String?> =
+                    name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                builder.appendQueryParameter("sort", StringUtils.asciiLowercase(parts[0]!!))
+                builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]!!))
+            }
+        }
+    }
 
-		try {
-			return valueOf(StringUtils.asciiUppercase(string));
-		} catch(final IllegalArgumentException e) {
-			return null;
-		}
-	}
+    fun addToSubredditListingUri(builder: Uri.Builder) {
+        when (this) {
+            PostSort.HOT, PostSort.NEW, PostSort.RISING, PostSort.BEST -> builder.appendEncodedPath(
+                StringUtils.asciiLowercase(name)
+            )
 
-	@Nullable
-	public static PostSort parse(@Nullable String sort, @Nullable String t) {
+            PostSort.CONTROVERSIAL_HOUR, PostSort.CONTROVERSIAL_DAY, PostSort.CONTROVERSIAL_WEEK, PostSort.CONTROVERSIAL_MONTH, PostSort.CONTROVERSIAL_YEAR, PostSort.CONTROVERSIAL_ALL, PostSort.TOP_HOUR, PostSort.TOP_DAY, PostSort.TOP_WEEK, PostSort.TOP_MONTH, PostSort.TOP_YEAR, PostSort.TOP_ALL -> {
+                val parts: Array<String?> =
+                    name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                builder.appendEncodedPath(
+                    StringUtils.asciiLowercase(
+                        name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
+                    )
+                )
+                builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]!!))
+            }
+        }
+    }
 
-		if(sort == null) {
-			return null;
-		}
+    override fun getMenuTitle(): Int {
+        return menuTitle
+    }
 
-		sort = StringUtils.asciiLowercase(sort);
-		t = t != null ? StringUtils.asciiLowercase(t) : null;
+    override fun onSortSelected(activity: AppCompatActivity) {
+        (activity as OptionsMenuPostsListener).onSortSelected(this)
+    }
 
-		if(sort.equals("hot")) {
-			return HOT;
+    companion object {
+        fun valueOfOrNull(string: String): PostSort? {
+            try {
+                return valueOf(StringUtils.asciiUppercase(string))
+            } catch (e: IllegalArgumentException) {
+                return null
+            }
+        }
 
-		} else if(sort.equals("new")) {
-			return NEW;
+        fun parse(sort: String?, t: String?): PostSort? {
+            var sort = sort
+            var t = t
+            if (sort == null) {
+                return null
+            }
 
-		} else if(sort.equals("best")) {
-			return BEST;
+            sort = StringUtils.asciiLowercase(sort)
+            t = if (t != null) StringUtils.asciiLowercase(t) else null
 
-		} else if(sort.equals("controversial")) {
+            if (sort == "hot") {
+                return PostSort.HOT
+            } else if (sort == "new") {
+                return PostSort.NEW
+            } else if (sort == "best") {
+                return PostSort.BEST
+            } else if (sort == "controversial") {
+                if (t == null) {
+                    return PostSort.CONTROVERSIAL_ALL
+                } else if (t == "all") {
+                    return PostSort.CONTROVERSIAL_ALL
+                } else if (t == "hour") {
+                    return PostSort.CONTROVERSIAL_HOUR
+                } else if (t == "day") {
+                    return PostSort.CONTROVERSIAL_DAY
+                } else if (t == "week") {
+                    return PostSort.CONTROVERSIAL_WEEK
+                } else if (t == "month") {
+                    return PostSort.CONTROVERSIAL_MONTH
+                } else if (t == "year") {
+                    return PostSort.CONTROVERSIAL_YEAR
+                } else {
+                    return PostSort.CONTROVERSIAL_ALL
+                }
+            } else if (sort == "rising") {
+                return PostSort.RISING
+            } else if (sort == "top") {
+                if (t == null) {
+                    return PostSort.TOP_ALL
+                } else if (t == "all") {
+                    return PostSort.TOP_ALL
+                } else if (t == "hour") {
+                    return PostSort.TOP_HOUR
+                } else if (t == "day") {
+                    return PostSort.TOP_DAY
+                } else if (t == "week") {
+                    return PostSort.TOP_WEEK
+                } else if (t == "month") {
+                    return PostSort.TOP_MONTH
+                } else if (t == "year") {
+                    return PostSort.TOP_YEAR
+                } else {
+                    return PostSort.TOP_ALL
+                }
+            } else {
+                return null
+            }
+        }
 
-			if(t == null) {
-				return CONTROVERSIAL_ALL;
-			} else if(t.equals("all")) {
-				return CONTROVERSIAL_ALL;
-			} else if(t.equals("hour")) {
-				return CONTROVERSIAL_HOUR;
-			} else if(t.equals("day")) {
-				return CONTROVERSIAL_DAY;
-			} else if(t.equals("week")) {
-				return CONTROVERSIAL_WEEK;
-			} else if(t.equals("month")) {
-				return CONTROVERSIAL_MONTH;
-			} else if(t.equals("year")) {
-				return CONTROVERSIAL_YEAR;
-			} else {
-				return CONTROVERSIAL_ALL;
-			}
+        fun parseSearch(sort: String?, t: String?): PostSort? {
+            var sort = sort
+            var t = t
+            if (sort == null) {
+                return null
+            }
 
-		} else if(sort.equals("rising")) {
-			return RISING;
+            sort = StringUtils.asciiLowercase(sort)
+            t = if (t != null) StringUtils.asciiLowercase(t) else null
 
-		} else if(sort.equals("top")) {
-
-			if(t == null) {
-				return TOP_ALL;
-			} else if(t.equals("all")) {
-				return TOP_ALL;
-			} else if(t.equals("hour")) {
-				return TOP_HOUR;
-			} else if(t.equals("day")) {
-				return TOP_DAY;
-			} else if(t.equals("week")) {
-				return TOP_WEEK;
-			} else if(t.equals("month")) {
-				return TOP_MONTH;
-			} else if(t.equals("year")) {
-				return TOP_YEAR;
-			} else {
-				return TOP_ALL;
-			}
-
-		} else {
-			return null;
-		}
-	}
-
-	@Nullable
-	public static PostSort parseSearch(@Nullable String sort, @Nullable String t) {
-
-		if(sort == null) {
-			return null;
-		}
-
-		sort = StringUtils.asciiLowercase(sort);
-		t = t != null ? StringUtils.asciiLowercase(t) : null;
-
-		if(sort.equals("relevance")) {
-
-			if(t == null) {
-				return RELEVANCE_ALL;
-			} else if(t.equals("all")) {
-				return RELEVANCE_ALL;
-			} else if(t.equals("hour")) {
-				return RELEVANCE_HOUR;
-			} else if(t.equals("day")) {
-				return RELEVANCE_DAY;
-			} else if(t.equals("week")) {
-				return RELEVANCE_WEEK;
-			} else if(t.equals("month")) {
-				return RELEVANCE_MONTH;
-			} else if(t.equals("year")) {
-				return RELEVANCE_YEAR;
-			} else {
-				return RELEVANCE_ALL;
-			}
-
-		} else if(sort.equals("new")) {
-
-			if(t == null) {
-				return NEW_ALL;
-			} else if(t.equals("all")) {
-				return NEW_ALL;
-			} else if(t.equals("hour")) {
-				return NEW_HOUR;
-			} else if(t.equals("day")) {
-				return NEW_DAY;
-			} else if(t.equals("week")) {
-				return NEW_WEEK;
-			} else if(t.equals("month")) {
-				return NEW_MONTH;
-			} else if(t.equals("year")) {
-				return NEW_YEAR;
-			} else {
-				return NEW_ALL;
-			}
-
-		} else if(sort.equals("hot")) {
-
-			if(t == null) {
-				return HOT_ALL;
-			} else if(t.equals("all")) {
-				return HOT_ALL;
-			} else if(t.equals("hour")) {
-				return HOT_HOUR;
-			} else if(t.equals("day")) {
-				return HOT_DAY;
-			} else if(t.equals("week")) {
-				return HOT_WEEK;
-			} else if(t.equals("month")) {
-				return HOT_MONTH;
-			} else if(t.equals("year")) {
-				return HOT_YEAR;
-			} else {
-				return HOT_ALL;
-			}
-
-		} else if(sort.equals("top")) {
-
-			if(t == null) {
-				return TOP_ALL;
-			} else if(t.equals("all")) {
-				return TOP_ALL;
-			} else if(t.equals("hour")) {
-				return TOP_HOUR;
-			} else if(t.equals("day")) {
-				return TOP_DAY;
-			} else if(t.equals("week")) {
-				return TOP_WEEK;
-			} else if(t.equals("month")) {
-				return TOP_MONTH;
-			} else if(t.equals("year")) {
-				return TOP_YEAR;
-			} else {
-				return TOP_ALL;
-			}
-
-		} else if(sort.equals("comments")) {
-
-			if(t == null) {
-				return COMMENTS_ALL;
-			} else if(t.equals("all")) {
-				return COMMENTS_ALL;
-			} else if(t.equals("hour")) {
-				return COMMENTS_HOUR;
-			} else if(t.equals("day")) {
-				return COMMENTS_DAY;
-			} else if(t.equals("week")) {
-				return COMMENTS_WEEK;
-			} else if(t.equals("month")) {
-				return COMMENTS_MONTH;
-			} else if(t.equals("year")) {
-				return COMMENTS_YEAR;
-			} else {
-				return COMMENTS_ALL;
-			}
-
-		} else {
-			return null;
-		}
-	}
-
-	public void addToUserPostListingUri(@NonNull final Uri.Builder builder) {
-
-		switch(this) {
-			case HOT:
-			case NEW:
-				builder.appendQueryParameter("sort", StringUtils.asciiLowercase(name()));
-				break;
-
-			case CONTROVERSIAL_HOUR:
-			case CONTROVERSIAL_DAY:
-			case CONTROVERSIAL_WEEK:
-			case CONTROVERSIAL_MONTH:
-			case CONTROVERSIAL_YEAR:
-			case CONTROVERSIAL_ALL:
-			case TOP_HOUR:
-			case TOP_DAY:
-			case TOP_WEEK:
-			case TOP_MONTH:
-			case TOP_YEAR:
-			case TOP_ALL:
-				final String[] parts = name().split("_");
-				builder.appendQueryParameter("sort", StringUtils.asciiLowercase(parts[0]));
-				builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]));
-				break;
-		}
-	}
-
-	public void addToSubredditListingUri(@NonNull final Uri.Builder builder) {
-
-		switch(this) {
-			case HOT:
-			case NEW:
-			case RISING:
-			case BEST:
-				builder.appendEncodedPath(StringUtils.asciiLowercase(name()));
-				break;
-
-			case CONTROVERSIAL_HOUR:
-			case CONTROVERSIAL_DAY:
-			case CONTROVERSIAL_WEEK:
-			case CONTROVERSIAL_MONTH:
-			case CONTROVERSIAL_YEAR:
-			case CONTROVERSIAL_ALL:
-			case TOP_HOUR:
-			case TOP_DAY:
-			case TOP_WEEK:
-			case TOP_MONTH:
-			case TOP_YEAR:
-			case TOP_ALL:
-				final String[] parts = name().split("_");
-				builder.appendEncodedPath(StringUtils.asciiLowercase(name().split("_")[0]));
-				builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]));
-				break;
-		}
-	}
-
-	@Override
-	public int getMenuTitle() {
-		return menuTitle;
-	}
-
-	@Override
-	public void onSortSelected(final AppCompatActivity activity) {
-		((OptionsMenuUtility.OptionsMenuPostsListener)activity).onSortSelected(this);
-	}
+            if (sort == "relevance") {
+                if (t == null) {
+                    return PostSort.RELEVANCE_ALL
+                } else if (t == "all") {
+                    return PostSort.RELEVANCE_ALL
+                } else if (t == "hour") {
+                    return PostSort.RELEVANCE_HOUR
+                } else if (t == "day") {
+                    return PostSort.RELEVANCE_DAY
+                } else if (t == "week") {
+                    return PostSort.RELEVANCE_WEEK
+                } else if (t == "month") {
+                    return PostSort.RELEVANCE_MONTH
+                } else if (t == "year") {
+                    return PostSort.RELEVANCE_YEAR
+                } else {
+                    return PostSort.RELEVANCE_ALL
+                }
+            } else if (sort == "new") {
+                if (t == null) {
+                    return PostSort.NEW_ALL
+                } else if (t == "all") {
+                    return PostSort.NEW_ALL
+                } else if (t == "hour") {
+                    return PostSort.NEW_HOUR
+                } else if (t == "day") {
+                    return PostSort.NEW_DAY
+                } else if (t == "week") {
+                    return PostSort.NEW_WEEK
+                } else if (t == "month") {
+                    return PostSort.NEW_MONTH
+                } else if (t == "year") {
+                    return PostSort.NEW_YEAR
+                } else {
+                    return PostSort.NEW_ALL
+                }
+            } else if (sort == "hot") {
+                if (t == null) {
+                    return PostSort.HOT_ALL
+                } else if (t == "all") {
+                    return PostSort.HOT_ALL
+                } else if (t == "hour") {
+                    return PostSort.HOT_HOUR
+                } else if (t == "day") {
+                    return PostSort.HOT_DAY
+                } else if (t == "week") {
+                    return PostSort.HOT_WEEK
+                } else if (t == "month") {
+                    return PostSort.HOT_MONTH
+                } else if (t == "year") {
+                    return PostSort.HOT_YEAR
+                } else {
+                    return PostSort.HOT_ALL
+                }
+            } else if (sort == "top") {
+                if (t == null) {
+                    return PostSort.TOP_ALL
+                } else if (t == "all") {
+                    return PostSort.TOP_ALL
+                } else if (t == "hour") {
+                    return PostSort.TOP_HOUR
+                } else if (t == "day") {
+                    return PostSort.TOP_DAY
+                } else if (t == "week") {
+                    return PostSort.TOP_WEEK
+                } else if (t == "month") {
+                    return PostSort.TOP_MONTH
+                } else if (t == "year") {
+                    return PostSort.TOP_YEAR
+                } else {
+                    return PostSort.TOP_ALL
+                }
+            } else if (sort == "comments") {
+                if (t == null) {
+                    return PostSort.COMMENTS_ALL
+                } else if (t == "all") {
+                    return PostSort.COMMENTS_ALL
+                } else if (t == "hour") {
+                    return PostSort.COMMENTS_HOUR
+                } else if (t == "day") {
+                    return PostSort.COMMENTS_DAY
+                } else if (t == "week") {
+                    return PostSort.COMMENTS_WEEK
+                } else if (t == "month") {
+                    return PostSort.COMMENTS_MONTH
+                } else if (t == "year") {
+                    return PostSort.COMMENTS_YEAR
+                } else {
+                    return PostSort.COMMENTS_ALL
+                }
+            } else {
+                return null
+            }
+        }
+    }
 }

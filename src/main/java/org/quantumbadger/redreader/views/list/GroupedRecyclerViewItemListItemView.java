@@ -12,83 +12,52 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.list
 
-package org.quantumbadger.redreader.views.list;
+import android.graphics.drawable.Drawable
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import org.quantumbadger.redreader.adapters.GroupedRecyclerViewAdapter
+import org.quantumbadger.redreader.common.Optional
 
-import android.graphics.drawable.Drawable;
-import android.view.View;
-import android.view.ViewGroup;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.RecyclerView;
-import org.quantumbadger.redreader.adapters.GroupedRecyclerViewAdapter;
-import org.quantumbadger.redreader.common.Optional;
+class GroupedRecyclerViewItemListItemView(
+    private val mIcon: Drawable?,
+    private val mText: CharSequence,
+    private val mContentDescription: String?,
+    private val mHideDivider: Boolean,
+    private val mClickListener: View.OnClickListener?,
+    private val mLongClickListener: OnLongClickListener?,
+    private val mSecondaryIcon: Optional<Drawable?>,
+    private val mSecondaryAction: Optional<View.OnClickListener?>,
+    private val mSecondaryContentDesc: Optional<String?>
+) : GroupedRecyclerViewAdapter.Item<Any?>() {
+    override fun getViewType(): Class<*> {
+        return ListItemView::class.java
+    }
 
-public class GroupedRecyclerViewItemListItemView extends GroupedRecyclerViewAdapter.Item {
+    override fun onCreateViewHolder(viewGroup: ViewGroup): RecyclerView.ViewHolder {
+        return object : RecyclerView.ViewHolder(ListItemView(viewGroup.getContext())) {}
+    }
 
-	@Nullable private final Drawable mIcon;
-	@NonNull private final CharSequence mText;
-	@Nullable private final String mContentDescription;
-	private final boolean mHideDivider;
+    override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder) {
+        (viewHolder.itemView as ListItemView).reset(
+            mIcon,
+            mText,
+            mContentDescription,
+            mHideDivider,
+            mClickListener,
+            mLongClickListener,
+            mSecondaryIcon,
+            mSecondaryAction,
+            mSecondaryContentDesc
+        )
+    }
 
-	@Nullable private final View.OnClickListener mClickListener;
-	@Nullable private final View.OnLongClickListener mLongClickListener;
-
-	@NonNull private final Optional<Drawable> mSecondaryIcon;
-	@NonNull private final Optional<View.OnClickListener> mSecondaryAction;
-	@NonNull private final Optional<String> mSecondaryContentDesc;
-
-	public GroupedRecyclerViewItemListItemView(
-			@Nullable final Drawable icon,
-			@NonNull final CharSequence text,
-			@Nullable final String contentDescription,
-			final boolean hideDivider,
-			@Nullable final View.OnClickListener clickListener,
-			@Nullable final View.OnLongClickListener longClickListener,
-			@NonNull final Optional<Drawable> secondaryIcon,
-			@NonNull final Optional<View.OnClickListener> secondaryAction,
-			@NonNull final Optional<String> secondaryContentDesc) {
-
-		mIcon = icon;
-		mText = text;
-		mContentDescription = contentDescription;
-		mHideDivider = hideDivider;
-		mClickListener = clickListener;
-		mLongClickListener = longClickListener;
-		mSecondaryIcon = secondaryIcon;
-		mSecondaryAction = secondaryAction;
-		mSecondaryContentDesc = secondaryContentDesc;
-	}
-
-	@Override
-	public Class getViewType() {
-		return ListItemView.class;
-	}
-
-	@Override
-	public RecyclerView.ViewHolder onCreateViewHolder(final ViewGroup viewGroup) {
-		return new RecyclerView.ViewHolder(new ListItemView(viewGroup.getContext())) {};
-	}
-
-	@Override
-	public void onBindViewHolder(final RecyclerView.ViewHolder viewHolder) {
-
-		((ListItemView)viewHolder.itemView).reset(
-				mIcon,
-				mText,
-				mContentDescription,
-				mHideDivider,
-				mClickListener,
-				mLongClickListener,
-				mSecondaryIcon,
-				mSecondaryAction,
-				mSecondaryContentDesc);
-	}
-
-	@Override
-	public boolean isHidden() {
-		return false;
-	}
+    override fun isHidden(): Boolean {
+        return false
+    }
 }

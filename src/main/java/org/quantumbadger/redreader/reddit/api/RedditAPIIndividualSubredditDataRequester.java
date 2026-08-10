@@ -12,193 +12,174 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.api
 
-package org.quantumbadger.redreader.reddit.api;
+import android.content.Context
+import android.util.Log
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.cache.CacheRequest
+import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.cache.CacheRequestJSONParser
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.TimestampBound
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.io.CacheDataSource
+import org.quantumbadger.redreader.io.RequestResponseHandler
+import org.quantumbadger.redreader.jsonwrap.JsonValue
+import org.quantumbadger.redreader.reddit.RedditSubredditHistory
+import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
+import org.quantumbadger.redreader.reddit.things.RedditSubreddit
+import org.quantumbadger.redreader.reddit.things.RedditThing
+import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
-import android.content.Context;
-import android.util.Log;
+class RedditAPIIndividualSubredditDataRequester(
+    private val context: Context,
+    private val user: RedditAccount
+) : CacheDataSource<SubredditCanonicalId?, RedditSubreddit?, RRError?> {
+    override fun performRequest(
+        subredditCanonicalId: SubredditCanonicalId,
+        timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<RedditSubreddit?, RRError?>
+    ) {
+        val url = Reddit.getUri(subredditCanonicalId.toString() + "/about.json")
 
-import androidx.annotation.NonNull;
+        val aboutSubredditCacheRequest = CacheRequest(
+            url,
+            user,
+            null,
+            Priority(Constants.Priority.API_SUBREDDIT_INVIDIVUAL),
+            DownloadStrategyAlways.Companion.INSTANCE,
+            Constants.FileType.SUBREDDIT_ABOUT,
+            DownloadQueueType.REDDIT_API,
+            context,
+            CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
+                override fun onJsonParsed(
+                    result: JsonValue,
+                    timestamp: TimestampUTC,
+                    session: UUID,
+                    fromCache: Boolean
+                ) {
+                    try {
+                        val subredditThing = result.asObject<RedditThing?>(RedditThing::class.java)
+                        val subreddit = subredditThing!!.asSubreddit()
+                        subreddit.downloadTime = timestamp.toUtcMs()
+                        handler.onRequestSuccess(subreddit, timestamp)
 
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.cache.CacheManager;
-import org.quantumbadger.redreader.cache.CacheRequest;
-import org.quantumbadger.redreader.cache.CacheRequestJSONParser;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.Priority;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.TimestampBound;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.http.FailedRequestBody;
-import org.quantumbadger.redreader.io.CacheDataSource;
-import org.quantumbadger.redreader.io.RequestResponseHandler;
-import org.quantumbadger.redreader.jsonwrap.JsonValue;
-import org.quantumbadger.redreader.reddit.RedditSubredditHistory;
-import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException;
-import org.quantumbadger.redreader.reddit.things.RedditSubreddit;
-import org.quantumbadger.redreader.reddit.things.RedditThing;
-import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
+                        RedditSubredditHistory.addSubreddit(user, subredditCanonicalId)
+                    } catch (e: Exception) {
+                        handler.onRequestFailed(
+                            getGeneralErrorForFailure(
+                                context,
+                                RequestFailureType.PARSE,
+                                e,
+                                null,
+                                url,
+                                Optional.Companion.of<FailedRequestBody>(FailedRequestBody(result))
+                            )
+                        )
+                    }
+                }
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
+                override fun onFailure(error: RRError) {
+                    handler.onRequestFailed(error)
+                }
+            })
+        )
 
-public class RedditAPIIndividualSubredditDataRequester implements
-		CacheDataSource<SubredditCanonicalId, RedditSubreddit, RRError> {
+        CacheManager.Companion.getInstance(context).makeRequest(aboutSubredditCacheRequest)
+    }
 
-	private static final String TAG = "IndividualSRDataReq";
+    override fun performRequest(
+        subredditCanonicalIds: MutableCollection<SubredditCanonicalId>,
+        timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<HashMap<SubredditCanonicalId?, RedditSubreddit?>?, RRError?>
+    ) {
+        // TODO if there's a bulk API to do this, that would be good... :)
 
-	private final Context context;
-	private final RedditAccount user;
+        val result = HashMap<SubredditCanonicalId?, RedditSubreddit?>()
+        val stillOkay = AtomicBoolean(true)
+        val requestsToGo = AtomicInteger(subredditCanonicalIds.size)
+        val oldestResult = AtomicReference<TimestampUTC?>(null)
 
-	public RedditAPIIndividualSubredditDataRequester(
-			final Context context,
-			final RedditAccount user) {
-		this.context = context;
-		this.user = user;
-	}
+        val innerHandler
+                : RequestResponseHandler<RedditSubreddit?, RRError?> =
+            object : RequestResponseHandler<RedditSubreddit?, RRError?> {
+                override fun onRequestFailed(failureReason: RRError?) {
+                    synchronized(result) {
+                        if (stillOkay.get()) {
+                            stillOkay.set(false)
+                            handler.onRequestFailed(failureReason)
+                        }
+                    }
+                }
 
-	@Override
-	public void performRequest(
-			final SubredditCanonicalId subredditCanonicalId,
-			final TimestampBound timestampBound,
-			final RequestResponseHandler<RedditSubreddit, RRError> handler) {
+                override fun onRequestSuccess(
+                    innerResult: RedditSubreddit,
+                    timeCached: TimestampUTC
+                ) {
+                    synchronized(result) {
+                        if (stillOkay.get()) {
+                            try {
+                                val canonicalId = innerResult.getCanonicalId()
 
-		final UriString url
-				= Constants.Reddit.getUri(subredditCanonicalId.toString() + "/about.json");
+                                result.put(canonicalId, innerResult)
 
-		final CacheRequest aboutSubredditCacheRequest = new CacheRequest(
-				url,
-				user,
-				null,
-				new Priority(Constants.Priority.API_SUBREDDIT_INVIDIVUAL),
-				DownloadStrategyAlways.INSTANCE,
-				Constants.FileType.SUBREDDIT_ABOUT,
-				CacheRequest.DownloadQueueType.REDDIT_API,
-				context,
-				new CacheRequestJSONParser(context, new CacheRequestJSONParser.Listener() {
-					@Override
-					public void onJsonParsed(
-							@NonNull final JsonValue result,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache) {
+                                synchronized(oldestResult) {
+                                    if (oldestResult.get() == null) {
+                                        oldestResult.set(timeCached)
+                                    } else {
+                                        oldestResult.set(
+                                            TimestampUTC.oldest(
+                                                oldestResult.get()!!,
+                                                timeCached
+                                            )
+                                        )
+                                    }
+                                }
 
-						try {
-							final RedditThing subredditThing = result.asObject(RedditThing.class);
-							final RedditSubreddit subreddit = subredditThing.asSubreddit();
-							subreddit.downloadTime = timestamp.toUtcMs();
-							handler.onRequestSuccess(subreddit, timestamp);
+                                RedditSubredditHistory.addSubreddit(user, canonicalId)
+                            } catch (e: InvalidSubredditNameException) {
+                                Log.e(TAG, "Invalid subreddit name " + innerResult.name, e)
+                            }
 
-							RedditSubredditHistory.addSubreddit(user, subredditCanonicalId);
+                            if (requestsToGo.decrementAndGet() == 0) {
+                                handler.onRequestSuccess(result, oldestResult.get())
+                            }
+                        }
+                    }
+                }
+            }
 
-						} catch(final Exception e) {
-							handler.onRequestFailed(General.getGeneralErrorForFailure(
-									context,
-									CacheRequest.RequestFailureType.PARSE,
-									e,
-									null,
-									url,
-									Optional.of(new FailedRequestBody(result))));
-						}
-					}
+        for (subredditCanonicalId in subredditCanonicalIds) {
+            performRequest(subredditCanonicalId, timestampBound, innerHandler)
+        }
+    }
 
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-						handler.onRequestFailed(error);
-					}
-				}));
+    override fun performWrite(value: RedditSubreddit?) {
+        throw UnsupportedOperationException()
+    }
 
-		CacheManager.getInstance(context).makeRequest(aboutSubredditCacheRequest);
-	}
+    override fun performWrite(values: MutableCollection<RedditSubreddit?>?) {
+        throw UnsupportedOperationException()
+    }
 
-	@Override
-	public void performRequest(
-			final Collection<SubredditCanonicalId> subredditCanonicalIds,
-			final TimestampBound timestampBound,
-			final RequestResponseHandler<
-					HashMap<SubredditCanonicalId, RedditSubreddit>,
-					RRError> handler) {
-
-		// TODO if there's a bulk API to do this, that would be good... :)
-
-		final HashMap<SubredditCanonicalId, RedditSubreddit> result = new HashMap<>();
-		final AtomicBoolean stillOkay = new AtomicBoolean(true);
-		final AtomicInteger requestsToGo
-				= new AtomicInteger(subredditCanonicalIds.size());
-		final AtomicReference<TimestampUTC> oldestResult = new AtomicReference<>(null);
-
-		final RequestResponseHandler<RedditSubreddit, RRError>
-				innerHandler
-				= new RequestResponseHandler<RedditSubreddit, RRError>() {
-			@Override
-			public void onRequestFailed(final RRError failureReason) {
-				synchronized(result) {
-					if(stillOkay.get()) {
-						stillOkay.set(false);
-						handler.onRequestFailed(failureReason);
-					}
-				}
-			}
-
-			@Override
-			public void onRequestSuccess(
-					final RedditSubreddit innerResult,
-					final TimestampUTC timeCached) {
-
-				synchronized(result) {
-					if(stillOkay.get()) {
-
-						try {
-							final SubredditCanonicalId canonicalId
-									= innerResult.getCanonicalId();
-
-							result.put(canonicalId, innerResult);
-
-							synchronized (oldestResult) {
-								if(oldestResult.get() == null) {
-									oldestResult.set(timeCached);
-								} else {
-									oldestResult.set(TimestampUTC.oldest(
-											oldestResult.get(),
-											timeCached));
-								}
-							}
-
-							RedditSubredditHistory.addSubreddit(user, canonicalId);
-						} catch(final InvalidSubredditNameException e) {
-							Log.e(TAG, "Invalid subreddit name " + innerResult.name, e);
-						}
-
-						if(requestsToGo.decrementAndGet() == 0) {
-							handler.onRequestSuccess(result, oldestResult.get());
-						}
-					}
-				}
-			}
-		};
-
-		for(final SubredditCanonicalId subredditCanonicalId : subredditCanonicalIds) {
-			performRequest(subredditCanonicalId, timestampBound, innerHandler);
-		}
-	}
-
-	@Override
-	public void performWrite(final RedditSubreddit value) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void performWrite(final Collection<RedditSubreddit> values) {
-		throw new UnsupportedOperationException();
-	}
+    companion object {
+        private const val TAG = "IndividualSRDataReq"
+    }
 }

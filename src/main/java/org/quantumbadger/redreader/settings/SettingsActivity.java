@@ -12,62 +12,53 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.settings
 
-package org.quantumbadger.redreader.settings;
+import android.graphics.Color
+import android.os.Bundle
+import androidx.fragment.app.FragmentTransaction
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.activities.ViewsBaseActivity
+import org.quantumbadger.redreader.common.PrefsUtility
 
-import android.graphics.Color;
-import android.os.Bundle;
+class SettingsActivity : ViewsBaseActivity() {
+    private fun launchFragment(panel: String) {
+        val bundle = Bundle()
+        bundle.putString("panel", panel)
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentTransaction;
+        getSupportFragmentManager()
+            .beginTransaction()
+            .setReorderingAllowed(false)
+            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+            .replace(R.id.single_fragment_container, SettingsFragment::class.java, bundle)
+            .addToBackStack("Settings: " + panel)
+            .commit()
+    }
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.ViewsBaseActivity;
-import org.quantumbadger.redreader.common.PrefsUtility;
+    override fun baseActivityNavigationBarColour(): Int {
+        return Color.rgb(0x55, 0x55, 0x55)
+    }
 
-public class SettingsActivity extends ViewsBaseActivity {
+    protected override fun onCreate(savedInstanceState: Bundle?) {
+        PrefsUtility.applySettingsTheme(this)
 
-	private void launchFragment(@NonNull final String panel) {
+        super.onCreate(savedInstanceState)
 
-		final Bundle bundle = new Bundle();
-		bundle.putString("panel", panel);
+        setBaseActivityListing(R.layout.single_fragment_layout)
 
-		getSupportFragmentManager()
-				.beginTransaction()
-				.setReorderingAllowed(false)
-				.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-				.replace(R.id.single_fragment_container, SettingsFragment.class, bundle)
-				.addToBackStack("Settings: " + panel)
-				.commit();
-	}
+        val bundle = Bundle()
+        bundle.putString("panel", "root")
 
-	@Override
-	protected int baseActivityNavigationBarColour() {
-		return Color.rgb(0x55, 0x55, 0x55);
-	}
+        getSupportFragmentManager()
+            .beginTransaction()
+            .setReorderingAllowed(false)
+            .replace(R.id.single_fragment_container, SettingsFragment::class.java, bundle)
+            .commit()
+    }
 
-	@Override
-	protected void onCreate(final Bundle savedInstanceState) {
-
-		PrefsUtility.applySettingsTheme(this);
-
-		super.onCreate(savedInstanceState);
-
-		setBaseActivityListing(R.layout.single_fragment_layout);
-
-		final Bundle bundle = new Bundle();
-		bundle.putString("panel", "root");
-
-		getSupportFragmentManager()
-				.beginTransaction()
-				.setReorderingAllowed(false)
-				.replace(R.id.single_fragment_container, SettingsFragment.class, bundle)
-				.commit();
-	}
-
-	public void onPanelSelected(@NonNull final String panel) {
-		launchFragment(panel);
-	}
+    fun onPanelSelected(panel: String) {
+        launchFragment(panel)
+    }
 }

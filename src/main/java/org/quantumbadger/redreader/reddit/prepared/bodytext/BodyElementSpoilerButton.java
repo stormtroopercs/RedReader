@@ -12,85 +12,71 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.content.DialogInterface
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup.MarginLayoutParams
+import android.widget.FrameLayout
+import android.widget.ScrollView
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.General.dpToPixels
 
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.ScrollView;
+class BodyElementSpoilerButton(
+    activity: AppCompatActivity,
+    private val mSpoilerText: BodyElement
+) : BodyElementBaseButton(
+    activity.getApplicationContext().getString(
+        string.spoiler
+    ), null, false
+) {
+    protected override fun generateOnClickListener(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View.OnClickListener {
+        return View.OnClickListener { button: View? ->
+            val scrollView = ScrollView(activity)
+            val view = mSpoilerText.generateView(
+                activity,
+                textColor,
+                textSize,
+                true
+            )
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
+            scrollView.addView(view)
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+            val layoutParams
+                    : MarginLayoutParams = view.getLayoutParams() as FrameLayout.LayoutParams
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.General;
+            val marginPx = dpToPixels(activity, 14f)
+            layoutParams.setMargins(marginPx, marginPx, marginPx, marginPx)
 
-public class BodyElementSpoilerButton extends BodyElementBaseButton {
+            val builder = MaterialAlertDialogBuilder(activity)
+            builder.setView(scrollView)
 
-	@NonNull private final BodyElement mSpoilerText;
+            builder.setNeutralButton(
+                string.dialog_close,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> })
 
-	public BodyElementSpoilerButton(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final BodyElement spoilerText) {
+            val alert = builder.create()
+            alert.show()
+        }
+    }
 
-		super(activity.getApplicationContext().getString(R.string.spoiler), null, false);
-		mSpoilerText = spoilerText;
-	}
-
-	@NonNull
-	@Override
-	protected View.OnClickListener generateOnClickListener(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		return (button) -> {
-			final ScrollView scrollView = new ScrollView(activity);
-
-			final View view = mSpoilerText.generateView(
-					activity,
-					textColor,
-					textSize,
-					true);
-
-			scrollView.addView(view);
-
-			final ViewGroup.MarginLayoutParams layoutParams
-					= (FrameLayout.LayoutParams)view.getLayoutParams();
-
-			final int marginPx = General.dpToPixels(activity, 14);
-			layoutParams.setMargins(marginPx, marginPx, marginPx, marginPx);
-
-			final MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity);
-			builder.setView(scrollView);
-
-			builder.setNeutralButton(
-					R.string.dialog_close,
-					(dialog, which) -> {
-					});
-
-			final AlertDialog alert = builder.create();
-			alert.show();
-		};
-	}
-
-	@Nullable
-	@Override
-	protected View.OnLongClickListener generateOnLongClickListener(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		return null;
-	}
+    protected override fun generateOnLongClickListener(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): OnLongClickListener? {
+        return null
+    }
 }

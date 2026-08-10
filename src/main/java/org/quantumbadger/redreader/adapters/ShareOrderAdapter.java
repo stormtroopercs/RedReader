@@ -12,77 +12,64 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.adapters
 
-package org.quantumbadger.redreader.adapters;
+import android.content.Context
+import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatDialogFragment
+import org.quantumbadger.redreader.R
 
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.ImageView;
-import android.widget.TextView;
-import androidx.appcompat.app.AppCompatDialogFragment;
-import org.quantumbadger.redreader.R;
+class ShareOrderAdapter(
+    private val context: Context,
+    private val appList: MutableList<ResolveInfo?>,
+    private val fragment: AppCompatDialogFragment
+) : BaseAdapter() {
+    private val packageManager: PackageManager
 
-import java.util.List;
+    init {
+        this.packageManager = context.getPackageManager()
+    }
 
-public class ShareOrderAdapter extends BaseAdapter {
+    override fun getCount(): Int {
+        return appList.size
+    }
 
-	private final Context context;
-	private final List<ResolveInfo> appList;
-	private final PackageManager packageManager;
-	private final AppCompatDialogFragment fragment;
+    override fun getItem(position: Int): Any? {
+        return appList.get(position)
+    }
 
-	public ShareOrderAdapter(
-			final Context context,
-			final List<ResolveInfo> appList,
-			final AppCompatDialogFragment fragment) {
-		this.context = context;
-		this.appList = appList;
-		this.packageManager = context.getPackageManager();
-		this.fragment = fragment;
-	}
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
+    }
 
-	@Override
-	public int getCount() {
-		return appList.size();
-	}
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View? {
+        val inflater = context
+            .getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater?
+        var rowView: View? = null
+        if (inflater != null) {
+            rowView = inflater.inflate(R.layout.list_item_share_dialog, parent, false)
+            val label = rowView.findViewById<TextView>(R.id.list_item_share_dialog_text)
+            label.setText(appList.get(position)!!.loadLabel(packageManager).toString())
+            val icon = rowView.findViewById<ImageView>(R.id.list_item_share_dialog_icon)
+            icon.setImageDrawable(appList.get(position)!!.loadIcon(packageManager))
+            val divider = rowView.findViewById<View>(R.id.list_item_share_dialog_divider)
+            divider.setVisibility(View.INVISIBLE)
 
-	@Override
-	public Object getItem(final int position) {
-		return appList.get(position);
-	}
+            rowView.setOnClickListener(View.OnClickListener { v: View? ->
+                (fragment as ShareOrderCallbackListener).onSelectedIntent(position)
+                fragment.dismiss()
+            })
+        }
 
-	@Override
-	public long getItemId(final int position) {
-		return position;
-	}
-
-	@Override
-	public View getView(final int position, final View convertView, final ViewGroup parent) {
-		final LayoutInflater inflater = (LayoutInflater)context
-				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		View rowView = null;
-		if(inflater != null) {
-			rowView = inflater.inflate(R.layout.list_item_share_dialog, parent, false);
-			final TextView label = rowView.findViewById(R.id.list_item_share_dialog_text);
-			label.setText(appList.get(position).loadLabel(packageManager).toString());
-			final ImageView icon = rowView.findViewById(R.id.list_item_share_dialog_icon);
-			icon.setImageDrawable(appList.get(position).loadIcon(packageManager));
-			final View divider = rowView.findViewById(R.id.list_item_share_dialog_divider);
-			divider.setVisibility(View.INVISIBLE);
-
-			rowView.setOnClickListener(v -> {
-				((ShareOrderCallbackListener)fragment).onSelectedIntent(position);
-				fragment.dismiss();
-			});
-		}
-
-		return rowView;
-	}
+        return rowView
+    }
 }

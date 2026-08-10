@@ -12,73 +12,66 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+class SwipeHistory(len: Int) {
+    private val positions: FloatArray
+    private val timestamps: LongArray
+    private var start = 0
+    private var len = 0
 
-public final class SwipeHistory {
+    init {
+        positions = FloatArray(len)
+        timestamps = LongArray(len)
+    }
 
-	private final float[] positions;
-	private final long[] timestamps;
-	private int start = 0;
-	private int len = 0;
+    fun add(position: Float, timestamp: Long) {
+        if (len >= positions.size) {
+            positions[start] = position
+            timestamps[start] = timestamp
+            start = (start + 1) % positions.size
+        } else {
+            positions[(start + len) % positions.size] = position
+            timestamps[(start + len) % timestamps.size] = timestamp
+            len++
+        }
+    }
 
-	public SwipeHistory(final int len) {
-		positions = new float[len];
-		timestamps = new long[len];
-	}
+    val mostRecent: Float
+        get() = positions[getNthMostRecentIndex(0)]
 
-	public void add(final float position, final long timestamp) {
+    fun getAtTimeAgoMs(timeAgo: Long): Float {
+        val timestamp = timestamps[getNthMostRecentIndex(0)] - timeAgo
+        var result = this.mostRecent
 
-		if(len >= positions.length) {
-			positions[start] = position;
-			timestamps[start] = timestamp;
-			start = (start + 1) % positions.length;
+        for (i in 0..<len) {
+            val index = getNthMostRecentIndex(i)
 
-		} else {
-			positions[(start + len) % positions.length] = position;
-			timestamps[(start + len) % timestamps.length] = timestamp;
-			len++;
-		}
-	}
+            if (timestamp > timestamps[index]) {
+                return result
+            } else {
+                result = positions[index]
+            }
+        }
 
-	public float getMostRecent() {
-		return positions[getNthMostRecentIndex(0)];
-	}
+        return result
+    }
 
-	public float getAtTimeAgoMs(final long timeAgo) {
+    private fun getNthMostRecentIndex(n: Int): Int {
+        if (n >= len || n < 0) {
+            throw ArrayIndexOutOfBoundsException(n)
+        }
+        return (start + len - n - 1) % positions.size
+    }
 
-		final long timestamp = timestamps[getNthMostRecentIndex(0)] - timeAgo;
-		float result = getMostRecent();
+    fun clear() {
+        len = 0
+        start = 0
+    }
 
-		for(int i = 0; i < len; i++) {
-
-			final int index = getNthMostRecentIndex(i);
-
-			if(timestamp > timestamps[index]) {
-				return result;
-			} else {
-				result = positions[index];
-			}
-		}
-
-		return result;
-	}
-
-	private int getNthMostRecentIndex(final int n) {
-		if(n >= len || n < 0) {
-			throw new ArrayIndexOutOfBoundsException(n);
-		}
-		return (start + len - n - 1) % positions.length;
-	}
-
-	public void clear() {
-		len = 0;
-		start = 0;
-	}
-
-	public int size() {
-		return len;
-	}
+    fun size(): Int {
+        return len
+    }
 }

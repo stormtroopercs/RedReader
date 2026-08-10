@@ -12,80 +12,62 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.imageview
 
-package org.quantumbadger.redreader.views.imageview;
+import kotlin.math.min
 
-import org.quantumbadger.redreader.common.MutableFloatPoint2D;
+class BoundsHelper(
+    private val mResolutionX: Int, private val mResolutionY: Int,
+    private val mImageResolutionX: Int, private val mImageResolutionY: Int,
+    private val mCoordinateHelper: CoordinateHelper
+) {
+    private val mMinScale: Float
 
-public class BoundsHelper {
+    init {
+        mMinScale = min(
+            mResolutionX.toFloat() / mImageResolutionX.toFloat(),
+            mResolutionY.toFloat() / mImageResolutionY.toFloat()
+        )
+    }
 
-	private final int mResolutionX;
-	private final int mResolutionY;
-	private final int mImageResolutionX;
-	private final int mImageResolutionY;
-	private final CoordinateHelper mCoordinateHelper;
+    fun applyMinScale() {
+        mCoordinateHelper.setScale(mMinScale)
+    }
 
-	private final float mMinScale;
+    val isMinScale: Boolean
+        get() = mCoordinateHelper.getScale() - 0.000001f <= mMinScale
 
-	public BoundsHelper(
-			final int resolutionX, final int resolutionY,
-			final int imageResolutionX, final int imageResolutionY,
-			final CoordinateHelper coordinateHelper) {
+    fun applyBounds() {
+        if (mCoordinateHelper.getScale() < mMinScale) {
+            applyMinScale()
+        }
 
-		mResolutionX = resolutionX;
-		mResolutionY = resolutionY;
-		mImageResolutionX = imageResolutionX;
-		mImageResolutionY = imageResolutionY;
-		mCoordinateHelper = coordinateHelper;
+        val scale = mCoordinateHelper.getScale()
+        val posOffset = mCoordinateHelper.getPositionOffset()
 
-		mMinScale = Math.min(
-				(float)mResolutionX / (float)mImageResolutionX,
-				(float)mResolutionY / (float)mImageResolutionY
-		);
-	}
+        val scaledImageWidth = mImageResolutionX.toFloat() * scale
+        val scaledImageHeight = mImageResolutionY.toFloat() * scale
 
-	public void applyMinScale() {
-		mCoordinateHelper.setScale(mMinScale);
-	}
+        if (scaledImageWidth <= mResolutionX) {
+            posOffset.x = (mResolutionX - scaledImageWidth) / 2
+        } else if (posOffset.x > 0) {
+            posOffset.x = 0f
+        } else if (posOffset.x < mResolutionX - scaledImageWidth) {
+            posOffset.x = mResolutionX - scaledImageWidth
+        }
 
-	public boolean isMinScale() {
-		return mCoordinateHelper.getScale() - 0.000_001f <= mMinScale;
-	}
+        if (scaledImageHeight <= mResolutionY) {
+            posOffset.y = (mResolutionY - scaledImageHeight) / 2
+        } else if (posOffset.y > 0) {
+            posOffset.y = 0f
+        } else if (posOffset.y < mResolutionY - scaledImageHeight) {
+            posOffset.y = mResolutionY - scaledImageHeight
+        }
+    }
 
-	public void applyBounds() {
-
-		if(mCoordinateHelper.getScale() < mMinScale) {
-			applyMinScale();
-		}
-
-		final float scale = mCoordinateHelper.getScale();
-		final MutableFloatPoint2D posOffset = mCoordinateHelper.getPositionOffset();
-
-		final float scaledImageWidth = (float)mImageResolutionX * scale;
-		final float scaledImageHeight = (float)mImageResolutionY * scale;
-
-		if(scaledImageWidth <= mResolutionX) {
-			posOffset.x = (mResolutionX - scaledImageWidth) / 2;
-
-		} else if(posOffset.x > 0) {
-			posOffset.x = 0;
-		} else if(posOffset.x < mResolutionX - scaledImageWidth) {
-			posOffset.x = mResolutionX - scaledImageWidth;
-		}
-
-		if(scaledImageHeight <= mResolutionY) {
-			posOffset.y = (mResolutionY - scaledImageHeight) / 2;
-
-		} else if(posOffset.y > 0) {
-			posOffset.y = 0;
-		} else if(posOffset.y < mResolutionY - scaledImageHeight) {
-			posOffset.y = mResolutionY - scaledImageHeight;
-		}
-	}
-
-	public float getMinScale() {
-		return mMinScale;
-	}
+    fun getMinScale(): Float {
+        return mMinScale
+    }
 }

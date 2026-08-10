@@ -12,74 +12,58 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.view.View
+import android.widget.LinearLayout
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
 
-import android.view.View;
-import android.widget.LinearLayout;
+class BodyElementVerticalSequence(private val mElements: ArrayList<BodyElement>) : BodyElement(
+    BlockType.VERTICAL_SEQUENCE
+) {
+    override fun generateView(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View {
+        val result = LinearLayout(activity)
+        result.setOrientation(LinearLayout.VERTICAL)
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+        val dpScale = activity.getResources().getDisplayMetrics().density
+        val paragraphSpacing = (dpScale * 6).toInt()
 
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.General;
+        var lastBlock: BlockType? = null
 
-import java.util.ArrayList;
+        for (element in mElements) {
+            val view = element.generateView(
+                activity,
+                textColor,
+                textSize,
+                showLinkButtons
+            )
+            result.addView(view)
 
-public class BodyElementVerticalSequence extends BodyElement {
+            val layoutParams = view.getLayoutParams() as LinearLayout.LayoutParams
 
-	@NonNull private final ArrayList<BodyElement> mElements;
+            if (lastBlock != null) {
+                if (!(element.getType() == BlockType.LIST_ELEMENT
+                            && lastBlock == BlockType.LIST_ELEMENT)
+                ) {
+                    layoutParams.topMargin = paragraphSpacing
+                }
+            }
 
-	public BodyElementVerticalSequence(@NonNull final ArrayList<BodyElement> elements) {
-		super(BlockType.VERTICAL_SEQUENCE);
-		mElements = elements;
-	}
+            view.setLayoutParams(layoutParams)
 
-	@Override
-	public View generateView(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
+            lastBlock = element.getType()
+        }
 
-		final LinearLayout result = new LinearLayout(activity);
-		result.setOrientation(LinearLayout.VERTICAL);
+        setLayoutMatchWidthWrapHeight(result)
 
-		final float dpScale = activity.getResources().getDisplayMetrics().density;
-		final int paragraphSpacing = (int)(dpScale * 6);
-
-		@Nullable BlockType lastBlock = null;
-
-		for(final BodyElement element : mElements) {
-
-			final View view = element.generateView(
-					activity,
-					textColor,
-					textSize,
-					showLinkButtons);
-			result.addView(view);
-
-			final LinearLayout.LayoutParams layoutParams
-					= (LinearLayout.LayoutParams)view.getLayoutParams();
-
-			if(lastBlock != null) {
-
-				if(!(element.getType() == BlockType.LIST_ELEMENT
-						&& lastBlock == BlockType.LIST_ELEMENT)) {
-					layoutParams.topMargin = paragraphSpacing;
-				}
-
-			}
-
-			view.setLayoutParams(layoutParams);
-
-			lastBlock = element.getType();
-		}
-
-		General.setLayoutMatchWidthWrapHeight(result);
-
-		return result;
-	}
+        return result
+    }
 }

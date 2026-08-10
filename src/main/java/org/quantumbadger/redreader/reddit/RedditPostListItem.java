@@ -12,68 +12,46 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
 
-package org.quantumbadger.redreader.reddit;
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.adapters.GroupedRecyclerViewAdapter
+import org.quantumbadger.redreader.fragments.PostListingFragment
+import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost
+import org.quantumbadger.redreader.views.RedditPostView
 
-import android.view.ViewGroup;
+class RedditPostListItem
+    (
+    private val mPost: RedditPreparedPost,
+    private val mFragment: PostListingFragment?,
+    private val mActivity: BaseActivity?,
+    private val mLeftHandedMode: Boolean
+) : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder?>() {
+    override fun getViewType(): Class<RedditPostView?> {
+        return RedditPostView::class.java
+    }
 
-import androidx.recyclerview.widget.RecyclerView;
+    override fun onCreateViewHolder(viewGroup: ViewGroup?): RecyclerView.ViewHolder {
+        val view = RedditPostView(
+            mActivity,
+            mFragment,
+            mActivity,
+            mLeftHandedMode
+        )
 
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.adapters.GroupedRecyclerViewAdapter;
-import org.quantumbadger.redreader.fragments.PostListingFragment;
-import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost;
-import org.quantumbadger.redreader.views.RedditPostView;
+        return object : RecyclerView.ViewHolder(view) {
+        }
+    }
 
-public class RedditPostListItem
-		extends GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder> {
+    override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder) {
+        (viewHolder.itemView as RedditPostView).reset(mPost)
+    }
 
-	private final PostListingFragment mFragment;
-	private final BaseActivity mActivity;
-
-	private final RedditPreparedPost mPost;
-	private final boolean mLeftHandedMode;
-
-	public RedditPostListItem(
-			final RedditPreparedPost post,
-			final PostListingFragment fragment,
-			final BaseActivity activity,
-			final boolean leftHandedMode) {
-
-		mFragment = fragment;
-		mActivity = activity;
-		mPost = post;
-		mLeftHandedMode = leftHandedMode;
-	}
-
-	@Override
-	public Class<RedditPostView> getViewType() {
-		return RedditPostView.class;
-	}
-
-	@Override
-	public RecyclerView.ViewHolder onCreateViewHolder(final ViewGroup viewGroup) {
-
-		final RedditPostView view = new RedditPostView(
-				mActivity,
-				mFragment,
-				mActivity,
-				mLeftHandedMode);
-
-		return new RecyclerView.ViewHolder(view) {
-		};
-	}
-
-	@Override
-	public void onBindViewHolder(final RecyclerView.ViewHolder viewHolder) {
-		((RedditPostView)viewHolder.itemView).reset(mPost);
-	}
-
-	@Override
-	public boolean isHidden() {
-		return false;
-	}
-
+    override fun isHidden(): Boolean {
+        return false
+    }
 }

@@ -12,52 +12,44 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.view.Choreographer
 
-import android.view.Choreographer;
+class RRChoreographer private constructor() : Choreographer.FrameCallback {
+    interface Callback {
+        fun doFrame(frameTimeNanos: Long)
+    }
 
-import androidx.annotation.NonNull;
+    private val mCallbacks = arrayOfNulls<Callback>(128)
+    private var mCallbackCount = 0
+    private var mPosted = false
 
-public class RRChoreographer implements Choreographer.FrameCallback {
+    fun postFrameCallback(callback: Callback) {
+        mCallbacks[mCallbackCount] = callback
+        mCallbackCount++
 
-	public interface Callback {
-		void doFrame(long frameTimeNanos);
-	}
+        if (!mPosted) {
+            CHOREOGRAPHER.postFrameCallback(this)
+            mPosted = true
+        }
+    }
 
-	static final RRChoreographer INSTANCE = new RRChoreographer();
+    override fun doFrame(frameTimeNanos: Long) {
+        val callbackCount = mCallbackCount
+        mPosted = false
+        mCallbackCount = 0
 
-	private static final Choreographer CHOREOGRAPHER = Choreographer.getInstance();
+        for (i in 0..<callbackCount) {
+            mCallbacks[i]!!.doFrame(frameTimeNanos)
+        }
+    }
 
-	private final Callback[] mCallbacks = new Callback[128];
-	private int mCallbackCount = 0;
-	private boolean mPosted = false;
+    companion object {
+        val INSTANCE: RRChoreographer = RRChoreographer()
 
-	private RRChoreographer() {
-	}
-
-	public void postFrameCallback(@NonNull final Callback callback) {
-		mCallbacks[mCallbackCount] = callback;
-		mCallbackCount++;
-
-		if(!mPosted) {
-			CHOREOGRAPHER.postFrameCallback(this);
-			mPosted = true;
-		}
-	}
-
-	public void doFrame(final long frameTimeNanos) {
-
-		final int callbackCount = mCallbackCount;
-		mPosted = false;
-		mCallbackCount = 0;
-
-		for(int i = 0; i < callbackCount; i++) {
-			mCallbacks[i].doFrame(frameTimeNanos);
-		}
-
-
-	}
+        private val CHOREOGRAPHER: Choreographer = Choreographer.getInstance()
+    }
 }

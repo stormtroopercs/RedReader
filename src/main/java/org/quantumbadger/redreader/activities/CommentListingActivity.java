@@ -12,278 +12,267 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.activities
 
-package org.quantumbadger.redreader.activities;
+import android.net.Uri
+import android.os.Bundle
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.account.RedditAccountChangeListener
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuCommentsListener
+import org.quantumbadger.redreader.activities.SessionChangeListener.SessionChangeType
+import org.quantumbadger.redreader.common.DialogUtils
+import org.quantumbadger.redreader.common.DialogUtils.OnSearchListener
+import org.quantumbadger.redreader.common.LinkHandler.onLinkClicked
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.fragments.CommentListingFragment
+import org.quantumbadger.redreader.fragments.SessionListDialog
+import org.quantumbadger.redreader.listingcontrollers.CommentListingController
+import org.quantumbadger.redreader.reddit.PostCommentSort
+import org.quantumbadger.redreader.reddit.UserCommentSort
+import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost
+import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
+import org.quantumbadger.redreader.reddit.url.RedditURLParser
+import org.quantumbadger.redreader.views.RedditPostView.PostSelectionListener
+import java.util.UUID
 
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListener,
+    OptionsMenuCommentsListener, PostSelectionListener, SessionChangeListener {
+    private var controller: CommentListingController? = null
 
-import androidx.annotation.NonNull;
+    private var mFragment: CommentListingFragment? = null
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccountChangeListener;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.common.DialogUtils;
-import org.quantumbadger.redreader.common.LinkHandler;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.fragments.CommentListingFragment;
-import org.quantumbadger.redreader.fragments.SessionListDialog;
-import org.quantumbadger.redreader.listingcontrollers.CommentListingController;
-import org.quantumbadger.redreader.reddit.PostCommentSort;
-import org.quantumbadger.redreader.reddit.UserCommentSort;
-import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost;
-import org.quantumbadger.redreader.reddit.url.PostCommentListingURL;
-import org.quantumbadger.redreader.reddit.url.RedditURLParser;
-import org.quantumbadger.redreader.views.RedditPostView;
+    public override fun onCreate(savedInstanceState: Bundle?) {
+        PrefsUtility.applyTheme(this)
 
-import java.util.UUID;
+        super.onCreate(savedInstanceState)
 
-public class CommentListingActivity extends RefreshableActivity
-		implements RedditAccountChangeListener,
-		OptionsMenuUtility.OptionsMenuCommentsListener,
-		RedditPostView.PostSelectionListener,
-		SessionChangeListener {
+        setTitle(getString(R.string.app_name))
 
-	private static final String TAG = "CommentListingActivity";
+        RedditAccountManager.getInstance(this).addUpdateListener(this)
 
-	public static final String EXTRA_SEARCH_STRING = "cla_search_string";
+        if (getIntent() != null) {
+            val intent = getIntent()
 
-	private static final String SAVEDSTATE_SESSION = "cla_session";
-	private static final String SAVEDSTATE_SORT = "cla_sort";
-	private static final String SAVEDSTATE_SORT_IS_USER = "cla_sort_user";
-	private static final String SAVEDSTATE_FRAGMENT = "cla_fragment";
+            val url = intent.getDataString()
+            val searchString = intent.getStringExtra(EXTRA_SEARCH_STRING)
+            controller = CommentListingController(
+                RedditURLParser.parseProbableCommentListing(Uri.parse(url))
+            )
+            controller!!.setSearchString(searchString)
 
-	private CommentListingController controller;
+            var fragmentSavedInstanceState: Bundle? = null
 
-	private CommentListingFragment mFragment;
+            if (savedInstanceState != null) {
+                if (savedInstanceState.containsKey(SAVEDSTATE_SESSION)) {
+                    controller!!.setSession(
+                        UUID.fromString(
+                            savedInstanceState.getString(
+                                SAVEDSTATE_SESSION
+                            )
+                        )
+                    )
+                }
 
-	@Override
-	public void onCreate(final Bundle savedInstanceState) {
+                if (savedInstanceState.containsKey(SAVEDSTATE_SORT)) {
+                    if (savedInstanceState.getBoolean(SAVEDSTATE_SORT_IS_USER)) {
+                        controller!!.setSort(
+                            UserCommentSort.valueOf(
+                                savedInstanceState.getString(SAVEDSTATE_SORT)!!
+                            )
+                        )
+                    } else {
+                        controller!!.setSort(
+                            PostCommentSort.valueOf(
+                                savedInstanceState.getString(SAVEDSTATE_SORT)!!
+                            )
+                        )
+                    }
+                }
 
-		PrefsUtility.applyTheme(this);
+                if (savedInstanceState.containsKey(SAVEDSTATE_FRAGMENT)) {
+                    fragmentSavedInstanceState = savedInstanceState.getBundle(
+                        SAVEDSTATE_FRAGMENT
+                    )
+                }
+            }
 
-		super.onCreate(savedInstanceState);
+            doRefresh(RefreshableFragment.COMMENTS, false, fragmentSavedInstanceState)
+        } else {
+            throw RuntimeException("Nothing to show!")
+        }
+    }
 
-		setTitle(getString(R.string.app_name));
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
 
-		RedditAccountManager.getInstance(this).addUpdateListener(this);
+        val session = controller!!.getSession()
+        if (session != null) {
+            outState.putString(SAVEDSTATE_SESSION, session.toString())
+        }
 
-		if(getIntent() != null) {
+        val sort = controller!!.getSort()
+        if (sort != null) {
+            outState.putBoolean(SAVEDSTATE_SORT_IS_USER, controller!!.isUserCommentListing())
+            outState.putString(SAVEDSTATE_SORT, sort.name())
+        }
 
-			final Intent intent = getIntent();
+        if (mFragment != null) {
+            outState.putBundle(SAVEDSTATE_FRAGMENT, mFragment!!.onSaveInstanceState())
+        }
+    }
 
-			final String url = intent.getDataString();
-			final String searchString = intent.getStringExtra(EXTRA_SEARCH_STRING);
-			controller = new CommentListingController(
-					RedditURLParser.parseProbableCommentListing(Uri.parse(url)));
-			controller.setSearchString(searchString);
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        OptionsMenuUtility.prepare<CommentListingActivity?>(
+            this,
+            menu,
+            false,
+            false,
+            true,
+            false,
+            false,
+            controller!!.isUserCommentListing(),
+            false,
+            controller!!.isSortable(),
+            false,
+            null,
+            false,
+            true,
+            null,
+            null
+        )
 
-			Bundle fragmentSavedInstanceState = null;
+        if (mFragment != null) {
+            mFragment!!.onCreateOptionsMenu(menu)
+        }
 
-			if(savedInstanceState != null) {
+        return true
+    }
 
-				if(savedInstanceState.containsKey(SAVEDSTATE_SESSION)) {
-					controller.setSession(UUID.fromString(savedInstanceState.getString(
-							SAVEDSTATE_SESSION)));
-				}
+    override fun onRedditAccountChanged() {
+        requestRefresh(RefreshableFragment.ALL, false)
+    }
 
-				if(savedInstanceState.containsKey(SAVEDSTATE_SORT)) {
-					if(savedInstanceState.getBoolean(SAVEDSTATE_SORT_IS_USER)) {
-						controller.setSort(UserCommentSort.valueOf(
-								savedInstanceState.getString(SAVEDSTATE_SORT)));
-					} else {
-						controller.setSort(PostCommentSort.valueOf(
-								savedInstanceState.getString(SAVEDSTATE_SORT)));
-					}
-				}
+    override fun doRefresh(
+        which: RefreshableFragment?,
+        force: Boolean,
+        savedInstanceState: Bundle?
+    ) {
+        mFragment = controller!!.get(this, force, savedInstanceState)
+        mFragment!!.setBaseActivityContent(this)
 
-				if(savedInstanceState.containsKey(SAVEDSTATE_FRAGMENT)) {
-					fragmentSavedInstanceState = savedInstanceState.getBundle(
-							SAVEDSTATE_FRAGMENT);
-				}
-			}
+        setTitle(controller!!.getCommentListingUrl().humanReadableName(this, false))
+        invalidateOptionsMenu()
+    }
 
-			doRefresh(RefreshableFragment.COMMENTS, false, fragmentSavedInstanceState);
+    override fun onRefreshComments() {
+        controller!!.setSession(null)
+        requestRefresh(RefreshableFragment.COMMENTS, true)
+    }
 
-		} else {
-			throw new RuntimeException("Nothing to show!");
-		}
-	}
+    override fun onPastComments() {
+        val sessionListDialog = SessionListDialog.newInstance(
+            controller!!.getUri(),
+            controller!!.getSession(),
+            SessionChangeType.COMMENTS
+        )
+        sessionListDialog.show(getSupportFragmentManager(), null)
+    }
 
-	@Override
-	protected void onSaveInstanceState(@NonNull final Bundle outState) {
-		super.onSaveInstanceState(outState);
+    override fun onSortSelected(order: PostCommentSort?) {
+        controller!!.setSort(order)
+        requestRefresh(RefreshableFragment.COMMENTS, false)
+    }
 
-		final UUID session = controller.getSession();
-		if(session != null) {
-			outState.putString(SAVEDSTATE_SESSION, session.toString());
-		}
+    override fun onSortSelected(order: UserCommentSort?) {
+        controller!!.setSort(order)
+        requestRefresh(RefreshableFragment.COMMENTS, false)
+    }
 
-		final OptionsMenuUtility.Sort sort = controller.getSort();
-		if(sort != null) {
-			outState.putBoolean(SAVEDSTATE_SORT_IS_USER, controller.isUserCommentListing());
-			outState.putString(SAVEDSTATE_SORT, sort.name());
-		}
+    override fun onSearchComments() {
+        DialogUtils.showSearchDialog(this, OnSearchListener { query: String? ->
+            val searchIntent = getIntent()
+            searchIntent.putExtra(EXTRA_SEARCH_STRING, query)
+            startActivity(searchIntent)
+        })
+    }
 
-		if(mFragment != null) {
-			outState.putBundle(SAVEDSTATE_FRAGMENT, mFragment.onSaveInstanceState());
-		}
-	}
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (mFragment != null) {
+            if (mFragment!!.onOptionsItemSelected(item)) {
+                return true
+            }
+        }
 
-	@Override
-	public boolean onCreateOptionsMenu(final Menu menu) {
-		OptionsMenuUtility.prepare(
-				this,
-				menu,
-				false,
-				false,
-				true,
-				false,
-				false,
-				controller.isUserCommentListing(),
-				false,
-				controller.isSortable(),
-				false,
-				null,
-				false,
-				true,
-				null,
-				null);
+        return super.onOptionsItemSelected(item)
+    }
 
-		if(mFragment != null) {
-			mFragment.onCreateOptionsMenu(menu);
-		}
+    override fun onSessionRefreshSelected(type: SessionChangeType?) {
+        onRefreshComments()
+    }
 
-		return true;
-	}
+    override fun onSessionSelected(session: UUID?, type: SessionChangeType?) {
+        controller!!.setSession(session)
+        requestRefresh(RefreshableFragment.COMMENTS, false)
+    }
 
-	@Override
-	public void onRedditAccountChanged() {
-		requestRefresh(RefreshableFragment.ALL, false);
-	}
+    override fun onSessionChanged(
+        session: UUID?,
+        type: SessionChangeType,
+        timestamp: TimestampUTC?
+    ) {
+        Log.i(
+            TAG,
+            type.name + " session changed to " + (if (session != null)
+                session.toString()
+            else
+                "<null>")
+        )
+        controller!!.setSession(session)
+    }
 
-	@Override
-	protected void doRefresh(
-			final RefreshableFragment which,
-			final boolean force,
-			final Bundle savedInstanceState) {
+    override fun onPostSelected(post: RedditPreparedPost) {
+        onLinkClicked(this, post.src.url, false, post.src.src)
+    }
 
-		mFragment = controller.get(this, force, savedInstanceState);
-		mFragment.setBaseActivityContent(this);
+    override fun onPostCommentsSelected(post: RedditPreparedPost) {
+        onLinkClicked(
+            this,
+            PostCommentListingURL.forPostId(post.src.getIdAlone()).toUriString(),
+            false
+        )
+    }
 
-		setTitle(controller.getCommentListingUrl().humanReadableName(this, false));
-		invalidateOptionsMenu();
-	}
+    override fun baseActivityAllowToolbarHideOnScroll(): Boolean {
+        return true
+    }
 
-	@Override
-	public void onRefreshComments() {
-		controller.setSession(null);
-		requestRefresh(RefreshableFragment.COMMENTS, true);
-	}
+    override fun getCommentSort(): OptionsMenuUtility.Sort? {
+        return controller!!.getSort()
+    }
 
-	@Override
-	public void onPastComments() {
-		final SessionListDialog sessionListDialog = SessionListDialog.newInstance(
-				controller.getUri(),
-				controller.getSession(),
-				SessionChangeListener.SessionChangeType.COMMENTS);
-		sessionListDialog.show(getSupportFragmentManager(), null);
-	}
+    override fun getSuggestedCommentSort(): PostCommentSort? {
+        if (mFragment == null || mFragment!!.getPost() == null) {
+            return null
+        }
 
-	@Override
-	public void onSortSelected(final PostCommentSort order) {
-		controller.setSort(order);
-		requestRefresh(RefreshableFragment.COMMENTS, false);
-	}
+        return mFragment!!.getPost().src.suggestedCommentSort
+    }
 
-	@Override
-	public void onSortSelected(final UserCommentSort order) {
-		controller.setSort(order);
-		requestRefresh(RefreshableFragment.COMMENTS, false);
-	}
+    companion object {
+        private const val TAG = "CommentListingActivity"
 
-	@Override
-	public void onSearchComments() {
-		DialogUtils.showSearchDialog(this, query -> {
-			final Intent searchIntent = getIntent();
-			searchIntent.putExtra(EXTRA_SEARCH_STRING, query);
-			startActivity(searchIntent);
-		});
-	}
+        const val EXTRA_SEARCH_STRING: String = "cla_search_string"
 
-	@Override
-	public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
-
-		if(mFragment != null) {
-			if(mFragment.onOptionsItemSelected(item)) {
-				return true;
-			}
-		}
-
-		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
-	public void onSessionRefreshSelected(final SessionChangeType type) {
-		onRefreshComments();
-	}
-
-	@Override
-	public void onSessionSelected(final UUID session, final SessionChangeType type) {
-		controller.setSession(session);
-		requestRefresh(RefreshableFragment.COMMENTS, false);
-	}
-
-	@Override
-	public void onSessionChanged(
-			final UUID session,
-			final SessionChangeType type,
-			final TimestampUTC timestamp) {
-
-		Log.i(
-				TAG,
-				type.name() + " session changed to " + (session != null
-						? session.toString()
-						: "<null>"));
-		controller.setSession(session);
-	}
-
-	@Override
-	public void onPostSelected(final RedditPreparedPost post) {
-		LinkHandler.onLinkClicked(this, post.src.getUrl(), false, post.src.getSrc());
-	}
-
-	@Override
-	public void onPostCommentsSelected(final RedditPreparedPost post) {
-		LinkHandler.onLinkClicked(
-				this,
-				PostCommentListingURL.forPostId(post.src.getIdAlone()).toUriString(),
-				false);
-	}
-
-	@Override
-	protected boolean baseActivityAllowToolbarHideOnScroll() {
-		return true;
-	}
-
-	@Override
-	public OptionsMenuUtility.Sort getCommentSort() {
-		return controller.getSort();
-	}
-
-	@Override
-	public PostCommentSort getSuggestedCommentSort() {
-		if(mFragment == null || mFragment.getPost() == null) {
-			return null;
-		}
-
-		return mFragment.getPost().src.getSuggestedCommentSort();
-	}
+        private const val SAVEDSTATE_SESSION = "cla_session"
+        private const val SAVEDSTATE_SORT = "cla_sort"
+        private const val SAVEDSTATE_SORT_IS_USER = "cla_sort_user"
+        private const val SAVEDSTATE_FRAGMENT = "cla_fragment"
+    }
 }

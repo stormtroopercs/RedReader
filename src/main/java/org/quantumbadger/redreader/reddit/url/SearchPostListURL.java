@@ -12,463 +12,443 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
-package org.quantumbadger.redreader.reddit.url;
-
-import android.content.Context;
-import android.net.Uri;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.reddit.PostSort;
-import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class SearchPostListURL extends PostListingURL {
-
-	public final Type type;
-
-	public final String subreddit;
-
-	public final String username;
-	public final String name;
-
-	public final String query;
-	public final PostSort order;
-	public final Integer limit;
-	public final String before;
-	public final RedditIdAndType after;
-
-	public enum Type {
-		SUB_OR_SUB_COMBO, MULTI
-	}
-
-	SearchPostListURL(
-			final String subreddit,
-			final String query,
-			final PostSort order,
-			final Integer limit,
-			final String before,
-			final RedditIdAndType after) {
-		this.subreddit = subreddit;
-		this.query = query;
-		this.order = order;
-		this.limit = limit;
-		this.before = before;
-		this.after = after;
-
-		this.type = Type.SUB_OR_SUB_COMBO;
-		this.username = null;
-		this.name = null;
-	}
-
-	SearchPostListURL(
-			final String subreddit,
-			final String query,
-			final Integer limit,
-			final String before,
-			final RedditIdAndType after) {
-		this(subreddit, query, PostSort.RELEVANCE_ALL, limit, before, after);
-	}
-
-	SearchPostListURL(
-			final String username,
-			final String name,
-			final String query,
-			final PostSort order,
-			final Integer limit,
-			final String before,
-			final RedditIdAndType after) {
-		this.username = username;
-		this.name = name;
-		this.query = query;
-		this.order = order;
-		this.limit = limit;
-		this.before = before;
-		this.after = after;
-
-		this.type = Type.MULTI;
-		this.subreddit = null;
-	}
-
-	SearchPostListURL(
-			final String username,
-			final String name,
-			final String query,
-			final Integer limit,
-			final String before,
-			final RedditIdAndType after) {
-		this(username, name, query, PostSort.RELEVANCE_ALL, limit, before, after);
-	}
-
-	public static SearchPostListURL build(String location, final String query) {
-		if(location != null) {
-			while(location.startsWith("/")) {
-				location = location.substring(1);
-			}
-
-			//Create a multi SearchPostListURL, if needed
-			if(location.startsWith("user/")
-					|| location.startsWith("u/")
-					|| location.startsWith("me/m/")
-					|| location.startsWith("m/")) {
-				final String[] locationSegments = location.split("/");
-
-				final String username;
-				final String name;
-				if((location.startsWith("user/") || location.startsWith("u/"))
-						&& locationSegments.length == 4) {
-					username = locationSegments[1];
-					name = locationSegments[3];
-				} else if(location.startsWith("me/m/") && locationSegments.length == 3) {
-					username = null;
-					name = locationSegments[2];
-				} else if(location.startsWith("m/") && locationSegments.length == 2) {
-					username = null;
-					name = locationSegments[1];
-				} else {
-					// This will fail, but the user can fix it instead of typing from scratch.
-					return new SearchPostListURL(location, query, null, null, null);
-				}
-
-				return new SearchPostListURL(username, name, query, null, null, null);
-			}
-
-			while(location.startsWith("r/")) {
-				location = location.substring(2);
-			}
-		}
-
-		return new SearchPostListURL(location, query, null, null, null);
-	}
-
-	public static SearchPostListURL build(
-			final String username,
-			final String name,
-			final String query) {
-		return new SearchPostListURL(username, name, query, null, null, null);
-	}
-
-	@Override
-	public PostListingURL after(final RedditIdAndType after) {
-		if(type == Type.SUB_OR_SUB_COMBO) {
-			return new SearchPostListURL(subreddit, query, order, limit, before, after);
-		} else {
-			return new SearchPostListURL(username, name, query, order, limit, before, after);
-		}
-	}
-
-	@Override
-	public PostListingURL limit(final Integer limit) {
-		if(type == Type.SUB_OR_SUB_COMBO) {
-			return new SearchPostListURL(subreddit, query, order, limit, before, after);
-		} else {
-			return new SearchPostListURL(username, name, query, order, limit, before, after);
-		}
-	}
-
-	public SearchPostListURL sort(final PostSort newOrder) {
-		if(type == Type.SUB_OR_SUB_COMBO) {
-			return new SearchPostListURL(subreddit, query, newOrder, limit, before, after);
-		} else {
-			return new SearchPostListURL(username, name, query, newOrder, limit, before, after);
-		}
-	}
-
-	@Override
-	public Uri generateJsonUri() {
-
-		final Uri.Builder builder = new Uri.Builder();
-		builder.scheme(Constants.Reddit.getScheme())
-				.authority(Constants.Reddit.getDomain());
-
-		if(type == Type.SUB_OR_SUB_COMBO && subreddit != null) {
-			builder.encodedPath("/r/");
-			builder.appendPath(subreddit);
-			builder.appendQueryParameter("restrict_sr", "on");
-		} else if(type == Type.MULTI && name != null) {
-			if(username != null) {
-				builder.encodedPath("/user/");
-				builder.appendPath(username);
-			} else {
-				builder.encodedPath("/me/");
-			}
-
-			builder.appendPath("m");
-			builder.appendPath(name);
-			builder.appendQueryParameter("restrict_sr", "on");
-		} else {
-			builder.encodedPath("/");
-		}
-
-		builder.appendEncodedPath("search");
-
-		if(query != null) {
-			builder.appendQueryParameter("q", query);
-		}
-
-		if(order != null) {
-			switch(order) {
-				case RELEVANCE_HOUR:
-				case RELEVANCE_DAY:
-				case RELEVANCE_WEEK:
-				case RELEVANCE_MONTH:
-				case RELEVANCE_YEAR:
-				case RELEVANCE_ALL:
-				case NEW_HOUR:
-				case NEW_DAY:
-				case NEW_WEEK:
-				case NEW_MONTH:
-				case NEW_YEAR:
-				case NEW_ALL:
-				case HOT_HOUR:
-				case HOT_DAY:
-				case HOT_WEEK:
-				case HOT_MONTH:
-				case HOT_YEAR:
-				case HOT_ALL:
-				case TOP_HOUR:
-				case TOP_DAY:
-				case TOP_WEEK:
-				case TOP_MONTH:
-				case TOP_YEAR:
-				case TOP_ALL:
-				case COMMENTS_HOUR:
-				case COMMENTS_DAY:
-				case COMMENTS_WEEK:
-				case COMMENTS_MONTH:
-				case COMMENTS_YEAR:
-				case COMMENTS_ALL:
-					final String[] parts = order.name().split("_");
-					builder.appendQueryParameter("sort", StringUtils.asciiLowercase(parts[0]));
-					builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]));
-					break;
-			}
-		}
-
-		if(before != null) {
-			builder.appendQueryParameter("before", before);
-		}
-
-		if(after != null) {
-			builder.appendQueryParameter("after", after.getValue());
-		}
-
-		if(limit != null) {
-			builder.appendQueryParameter("limit", String.valueOf(limit));
-		}
-
-		builder.appendEncodedPath(".json");
-
-		// Only set over18 when NSFW content is enabled, to save on bandwidth and loading times
-		if(PrefsUtility.pref_behaviour_nsfw()) {
-			builder.appendQueryParameter("include_over_18", "on");
-		}
-
-		return builder.build();
-	}
-
-	@Override
-	public @RedditURLParser.PathType
-	int pathType() {
-		return RedditURLParser.SEARCH_POST_LISTING_URL;
-	}
-
-	public static SearchPostListURL parse(final Uri uri) {
-
-		boolean restrictSubreddit = false;
-		String query = "";
-		final PostSort order;
-		Integer limit = null;
-		String before = null;
-		RedditIdAndType after = null;
-
-		String sortParam = null;
-		String timeParam = null;
-
-		for(final String parameterKey : General.getUriQueryParameterNames(uri)) {
-
-			if(parameterKey.equalsIgnoreCase("after")) {
-				after = new RedditIdAndType(uri.getQueryParameter(parameterKey));
-
-			} else if(parameterKey.equalsIgnoreCase("before")) {
-				before = uri.getQueryParameter(parameterKey);
-
-			} else if(parameterKey.equalsIgnoreCase("limit")) {
-				try {
-					limit = Integer.parseInt(uri.getQueryParameter(parameterKey));
-				} catch(final Throwable ignored) {
-				}
-
-			} else if(parameterKey.equalsIgnoreCase("sort")) {
-				sortParam = uri.getQueryParameter(parameterKey);
-
-			} else if(parameterKey.equalsIgnoreCase("t")) {
-				timeParam = uri.getQueryParameter(parameterKey);
-
-			} else if(parameterKey.equalsIgnoreCase("q")) {
-				query = uri.getQueryParameter(parameterKey);
-
-			} else if(parameterKey.equalsIgnoreCase("restrict_sr")) {
-				restrictSubreddit = "on".equalsIgnoreCase(uri.getQueryParameter(parameterKey));
-			}
-		}
-
-		order = PostSort.parseSearch(sortParam, timeParam);
-
-		final String[] pathSegments;
-		{
-			final List<String> pathSegmentsList = uri.getPathSegments();
-
-			final ArrayList<String> pathSegmentsFiltered =
-					new ArrayList<>(pathSegmentsList.size());
-			for(String segment : pathSegmentsList) {
-
-				while(StringUtils.asciiLowercase(segment).endsWith(".json")
-						|| StringUtils.asciiLowercase(segment).endsWith(".xml")) {
-					segment = segment.substring(0, segment.lastIndexOf('.'));
-				}
-
-				if(!segment.isEmpty()) {
-					pathSegmentsFiltered.add(segment);
-				}
-			}
-
-			pathSegments =
-					pathSegmentsFiltered.toArray(new String[0]);
-		}
-
-		if(pathSegments.length != 1 && (pathSegments.length < 3 || pathSegments.length > 5)) {
-			return null;
-		}
-		if(!pathSegments[pathSegments.length - 1].equalsIgnoreCase("search")) {
-			return null;
-		}
-
-		switch(pathSegments.length) {
-
-			case 1: {
-				return new SearchPostListURL(null, query, order, limit, before, after);
-			}
-
-			case 3: {
-
-				if(!pathSegments[0].equals("r")) {
-					return null;
-				}
-
-				final String subreddit = pathSegments[1];
-				return new SearchPostListURL(
-						restrictSubreddit ? subreddit : null,
-						query,
-						order,
-						limit,
-						before,
-						after);
-
-			}
-
-			case 4: {
-				if(pathSegments[0].equals("me")) {
-
-					if(!pathSegments[1].equals("m")) {
-						return null;
-					}
-
-					final String name = pathSegments[2];
-					return new SearchPostListURL(
-							null,
-							name,
-							query,
-							order,
-							limit,
-							before,
-							after);
-				}
-			}
-
-			case 5: {
-
-				if(!(pathSegments[0].equals("user") || pathSegments[0].equals("u"))
-						|| !pathSegments[2].equals("m")) {
-					return null;
-				}
-
-				final String username = pathSegments[1];
-				final String name = pathSegments[3];
-				return new SearchPostListURL(
-						username,
-						name,
-						query,
-						order,
-						limit,
-						before,
-						after);
-			}
-
-			default:
-				return null;
-		}
-	}
-
-	@Override
-	public String humanReadableName(final Context context, final boolean shorter) {
-
-		if(shorter) {
-			return context.getString(R.string.search_results_short);
-		}
-
-		final String formattedLocation;
-		if(type == Type.SUB_OR_SUB_COMBO) {
-			if(subreddit != null) {
-				formattedLocation = "/r/" + subreddit;
-			} else {
-				formattedLocation = null;
-			}
-		} else {
-			if(name != null) {
-				if(username != null) {
-					formattedLocation = "/u/" + username + "/m/" + name;
-				} else {
-					formattedLocation = "/me/m/" + name;
-				}
-			} else {
-				formattedLocation = null;
-			}
-		}
-
-		if(query != null && formattedLocation != null) {
-			return String.format(
-					context.getString(R.string.search_results_query_and_location),
-					query,
-					formattedLocation);
-		} else if(query != null) {
-			return String.format(
-					context.getString(R.string.search_results_query_only),
-					query);
-		} else if(formattedLocation != null) {
-			return String.format(
-					context.getString(R.string.search_results_location_only),
-					formattedLocation);
-		}
-
-		return context.getString(R.string.action_search);
-	}
-
-	@Override
-	public String humanReadablePath() {
-		final StringBuilder builder = new StringBuilder(super.humanReadablePath());
-
-		if(query != null) {
-			builder.append("?q=").append(query);
-		}
-
-		return builder.toString();
-	}
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
+
+import android.content.Context
+import android.net.Uri
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.General.getUriQueryParameterNames
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.reddit.PostSort
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
+
+class SearchPostListURL : PostListingURL {
+    val type: Type
+
+    val subreddit: String?
+
+    val username: String?
+    val name: String?
+
+    val query: String?
+    val order: PostSort?
+    val limit: Int?
+    val before: String?
+    val after: RedditIdAndType?
+
+    enum class Type {
+        SUB_OR_SUB_COMBO, MULTI
+    }
+
+    internal constructor(
+        subreddit: String?,
+        query: String?,
+        order: PostSort?,
+        limit: Int?,
+        before: String?,
+        after: RedditIdAndType?
+    ) {
+        this.subreddit = subreddit
+        this.query = query
+        this.order = order
+        this.limit = limit
+        this.before = before
+        this.after = after
+
+        this.type = Type.SUB_OR_SUB_COMBO
+        this.username = null
+        this.name = null
+    }
+
+    internal constructor(
+        subreddit: String?,
+        query: String?,
+        limit: Int?,
+        before: String?,
+        after: RedditIdAndType?
+    ) : this(subreddit, query, PostSort.RELEVANCE_ALL, limit, before, after)
+
+    internal constructor(
+        username: String?,
+        name: String?,
+        query: String?,
+        order: PostSort?,
+        limit: Int?,
+        before: String?,
+        after: RedditIdAndType?
+    ) {
+        this.username = username
+        this.name = name
+        this.query = query
+        this.order = order
+        this.limit = limit
+        this.before = before
+        this.after = after
+
+        this.type = Type.MULTI
+        this.subreddit = null
+    }
+
+    internal constructor(
+        username: String?,
+        name: String?,
+        query: String?,
+        limit: Int?,
+        before: String?,
+        after: RedditIdAndType?
+    ) : this(username, name, query, PostSort.RELEVANCE_ALL, limit, before, after)
+
+    override fun after(after: RedditIdAndType?): PostListingURL {
+        if (type == Type.SUB_OR_SUB_COMBO) {
+            return SearchPostListURL(subreddit, query, order, limit, before, after)
+        } else {
+            return SearchPostListURL(username, name, query, order, limit, before, after)
+        }
+    }
+
+    override fun limit(limit: Int?): PostListingURL {
+        if (type == Type.SUB_OR_SUB_COMBO) {
+            return SearchPostListURL(subreddit, query, order, limit, before, after)
+        } else {
+            return SearchPostListURL(username, name, query, order, limit, before, after)
+        }
+    }
+
+    fun sort(newOrder: PostSort?): SearchPostListURL {
+        if (type == Type.SUB_OR_SUB_COMBO) {
+            return SearchPostListURL(subreddit, query, newOrder, limit, before, after)
+        } else {
+            return SearchPostListURL(username, name, query, newOrder, limit, before, after)
+        }
+    }
+
+    override fun generateJsonUri(): Uri? {
+        val builder = Uri.Builder()
+        builder.scheme(Reddit.getScheme())
+            .authority(Reddit.getDomain())
+
+        if (type == Type.SUB_OR_SUB_COMBO && subreddit != null) {
+            builder.encodedPath("/r/")
+            builder.appendPath(subreddit)
+            builder.appendQueryParameter("restrict_sr", "on")
+        } else if (type == Type.MULTI && name != null) {
+            if (username != null) {
+                builder.encodedPath("/user/")
+                builder.appendPath(username)
+            } else {
+                builder.encodedPath("/me/")
+            }
+
+            builder.appendPath("m")
+            builder.appendPath(name)
+            builder.appendQueryParameter("restrict_sr", "on")
+        } else {
+            builder.encodedPath("/")
+        }
+
+        builder.appendEncodedPath("search")
+
+        if (query != null) {
+            builder.appendQueryParameter("q", query)
+        }
+
+        if (order != null) {
+            when (order) {
+                PostSort.RELEVANCE_HOUR, PostSort.RELEVANCE_DAY, PostSort.RELEVANCE_WEEK, PostSort.RELEVANCE_MONTH, PostSort.RELEVANCE_YEAR, PostSort.RELEVANCE_ALL, PostSort.NEW_HOUR, PostSort.NEW_DAY, PostSort.NEW_WEEK, PostSort.NEW_MONTH, PostSort.NEW_YEAR, PostSort.NEW_ALL, PostSort.HOT_HOUR, PostSort.HOT_DAY, PostSort.HOT_WEEK, PostSort.HOT_MONTH, PostSort.HOT_YEAR, PostSort.HOT_ALL, PostSort.TOP_HOUR, PostSort.TOP_DAY, PostSort.TOP_WEEK, PostSort.TOP_MONTH, PostSort.TOP_YEAR, PostSort.TOP_ALL, PostSort.COMMENTS_HOUR, PostSort.COMMENTS_DAY, PostSort.COMMENTS_WEEK, PostSort.COMMENTS_MONTH, PostSort.COMMENTS_YEAR, PostSort.COMMENTS_ALL -> {
+                    val parts: Array<String?> =
+                        order.name.split("_".toRegex()).dropLastWhile { it.isEmpty() }
+                            .toTypedArray()
+                    builder.appendQueryParameter("sort", StringUtils.asciiLowercase(parts[0]!!))
+                    builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]!!))
+                }
+            }
+        }
+
+        if (before != null) {
+            builder.appendQueryParameter("before", before)
+        }
+
+        if (after != null) {
+            builder.appendQueryParameter("after", after.value)
+        }
+
+        if (limit != null) {
+            builder.appendQueryParameter("limit", limit.toString())
+        }
+
+        builder.appendEncodedPath(".json")
+
+        // Only set over18 when NSFW content is enabled, to save on bandwidth and loading times
+        if (PrefsUtility.pref_behaviour_nsfw()) {
+            builder.appendQueryParameter("include_over_18", "on")
+        }
+
+        return builder.build()
+    }
+
+    @RedditURLParser.PathType
+    override fun pathType(): Int {
+        return RedditURLParser.SEARCH_POST_LISTING_URL
+    }
+
+    override fun humanReadableName(context: Context, shorter: Boolean): String {
+        if (shorter) {
+            return context.getString(string.search_results_short)
+        }
+
+        val formattedLocation: String?
+        if (type == Type.SUB_OR_SUB_COMBO) {
+            if (subreddit != null) {
+                formattedLocation = "/r/" + subreddit
+            } else {
+                formattedLocation = null
+            }
+        } else {
+            if (name != null) {
+                if (username != null) {
+                    formattedLocation = "/u/" + username + "/m/" + name
+                } else {
+                    formattedLocation = "/me/m/" + name
+                }
+            } else {
+                formattedLocation = null
+            }
+        }
+
+        if (query != null && formattedLocation != null) {
+            return String.format(
+                context.getString(string.search_results_query_and_location),
+                query,
+                formattedLocation
+            )
+        } else if (query != null) {
+            return String.format(
+                context.getString(string.search_results_query_only),
+                query
+            )
+        } else if (formattedLocation != null) {
+            return String.format(
+                context.getString(string.search_results_location_only),
+                formattedLocation
+            )
+        }
+
+        return context.getString(string.action_search)
+    }
+
+    override fun humanReadablePath(): String {
+        val builder = StringBuilder(super.humanReadablePath())
+
+        if (query != null) {
+            builder.append("?q=").append(query)
+        }
+
+        return builder.toString()
+    }
+
+    companion object {
+        fun build(location: String?, query: String?): SearchPostListURL {
+            var location = location
+            if (location != null) {
+                while (location!!.startsWith("/")) {
+                    location = location.substring(1)
+                }
+
+                //Create a multi SearchPostListURL, if needed
+                if (location.startsWith("user/")
+                    || location.startsWith("u/")
+                    || location.startsWith("me/m/")
+                    || location.startsWith("m/")
+                ) {
+                    val locationSegments: Array<String?> =
+                        location.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+
+                    val username: String?
+                    val name: String?
+                    if ((location.startsWith("user/") || location.startsWith("u/"))
+                        && locationSegments.size == 4
+                    ) {
+                        username = locationSegments[1]
+                        name = locationSegments[3]
+                    } else if (location.startsWith("me/m/") && locationSegments.size == 3) {
+                        username = null
+                        name = locationSegments[2]
+                    } else if (location.startsWith("m/") && locationSegments.size == 2) {
+                        username = null
+                        name = locationSegments[1]
+                    } else {
+                        // This will fail, but the user can fix it instead of typing from scratch.
+                        return SearchPostListURL(location, query, null, null, null)
+                    }
+
+                    return SearchPostListURL(username, name, query, null, null, null)
+                }
+
+                while (location!!.startsWith("r/")) {
+                    location = location.substring(2)
+                }
+            }
+
+            return SearchPostListURL(location, query, null, null, null)
+        }
+
+        fun build(
+            username: String?,
+            name: String?,
+            query: String?
+        ): SearchPostListURL {
+            return SearchPostListURL(username, name, query, null, null, null)
+        }
+
+        fun parse(uri: Uri): SearchPostListURL? {
+            var restrictSubreddit = false
+            var query: String? = ""
+            val order: PostSort?
+            var limit: Int? = null
+            var before: String? = null
+            var after: RedditIdAndType? = null
+
+            var sortParam: String? = null
+            var timeParam: String? = null
+
+            for (parameterKey in getUriQueryParameterNames(uri)) {
+                if (parameterKey.equals("after", ignoreCase = true)) {
+                    after = RedditIdAndType(uri.getQueryParameter(parameterKey)!!)
+                } else if (parameterKey.equals("before", ignoreCase = true)) {
+                    before = uri.getQueryParameter(parameterKey)
+                } else if (parameterKey.equals("limit", ignoreCase = true)) {
+                    try {
+                        limit = uri.getQueryParameter(parameterKey)!!.toInt()
+                    } catch (ignored: Throwable) {
+                    }
+                } else if (parameterKey.equals("sort", ignoreCase = true)) {
+                    sortParam = uri.getQueryParameter(parameterKey)
+                } else if (parameterKey.equals("t", ignoreCase = true)) {
+                    timeParam = uri.getQueryParameter(parameterKey)
+                } else if (parameterKey.equals("q", ignoreCase = true)) {
+                    query = uri.getQueryParameter(parameterKey)
+                } else if (parameterKey.equals("restrict_sr", ignoreCase = true)) {
+                    restrictSubreddit =
+                        "on".equals(uri.getQueryParameter(parameterKey), ignoreCase = true)
+                }
+            }
+
+            order = PostSort.Companion.parseSearch(sortParam, timeParam)
+
+            val pathSegments: Array<String?>
+            run {
+                val pathSegmentsList = uri.getPathSegments()
+                val pathSegmentsFiltered =
+                    ArrayList<String?>(pathSegmentsList.size)
+                for (segment in pathSegmentsList) {
+                    var segment = segment
+                    while (StringUtils.asciiLowercase(segment).endsWith(".json")
+                        || StringUtils.asciiLowercase(segment).endsWith(".xml")
+                    ) {
+                        segment = segment.substring(0, segment.lastIndexOf('.'))
+                    }
+
+                    if (!segment.isEmpty()) {
+                        pathSegmentsFiltered.add(segment)
+                    }
+                }
+                pathSegments =
+                    pathSegmentsFiltered.toTypedArray<String?>()
+            }
+
+            if (pathSegments.size != 1 && (pathSegments.size < 3 || pathSegments.size > 5)) {
+                return null
+            }
+            if (!pathSegments[pathSegments.size - 1].equals("search", ignoreCase = true)) {
+                return null
+            }
+
+            when (pathSegments.size) {
+                1 -> {
+                    return SearchPostListURL(null, query, order, limit, before, after)
+                }
+
+                3 -> {
+                    if (pathSegments[0] != "r") {
+                        return null
+                    }
+
+                    val subreddit = pathSegments[1]
+                    return SearchPostListURL(
+                        if (restrictSubreddit) subreddit else null,
+                        query,
+                        order,
+                        limit,
+                        before,
+                        after
+                    )
+                }
+
+                4 -> {
+                    run {
+                        if (pathSegments[0] == "me") {
+                            if (pathSegments[1] != "m") {
+                                return null
+                            }
+
+                            val name = pathSegments[2]
+                            return SearchPostListURL(
+                                null,
+                                name,
+                                query,
+                                order,
+                                limit,
+                                before,
+                                after
+                            )
+                        }
+                    }
+                    run {
+                        if (!(pathSegments[0] == "user" || pathSegments[0] == "u")
+                            || pathSegments[2] != "m"
+                        ) {
+                            return null
+                        }
+                        val username = pathSegments[1]
+                        val name = pathSegments[3]
+                        return SearchPostListURL(
+                            username,
+                            name,
+                            query,
+                            order,
+                            limit,
+                            before,
+                            after
+                        )
+                    }
+                }
+
+                5 -> {
+                    if (!(pathSegments[0] == "user" || pathSegments[0] == "u")
+                        || pathSegments[2] != "m"
+                    ) {
+                        return null
+                    }
+
+                    val username = pathSegments[1]
+                    val name = pathSegments[3]
+                    return SearchPostListURL(
+                        username,
+                        name,
+                        query,
+                        order,
+                        limit,
+                        before,
+                        after
+                    )
+                }
+
+                else -> return null
+            }
+        }
+    }
 }

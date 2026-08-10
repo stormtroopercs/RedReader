@@ -12,202 +12,180 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.activities
 
-package org.quantumbadger.redreader.activities;
+import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccountChangeListener
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuCommentsListener
+import org.quantumbadger.redreader.common.DialogUtils
+import org.quantumbadger.redreader.common.DialogUtils.OnSearchListener
+import org.quantumbadger.redreader.common.LinkHandler.onLinkClicked
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.fragments.CommentListingFragment
+import org.quantumbadger.redreader.reddit.PostCommentSort
+import org.quantumbadger.redreader.reddit.UserCommentSort
+import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost
+import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
+import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
+import org.quantumbadger.redreader.views.RedditPostView.PostSelectionListener
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
+class MoreCommentsListingActivity : RefreshableActivity(), RedditAccountChangeListener,
+    OptionsMenuCommentsListener, PostSelectionListener {
+    private val mUrls = ArrayList<RedditURL?>(32)
 
-import androidx.annotation.NonNull;
+    private var mFragment: CommentListingFragment? = null
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccountChangeListener;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.common.DialogUtils;
-import org.quantumbadger.redreader.common.LinkHandler;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.fragments.CommentListingFragment;
-import org.quantumbadger.redreader.reddit.PostCommentSort;
-import org.quantumbadger.redreader.reddit.UserCommentSort;
-import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost;
-import org.quantumbadger.redreader.reddit.url.PostCommentListingURL;
-import org.quantumbadger.redreader.reddit.url.RedditURLParser;
-import org.quantumbadger.redreader.views.RedditPostView;
+    private var mSearchString: String? = null
 
-import java.util.ArrayList;
+    override fun baseActivityAllowToolbarHideOnScroll(): Boolean {
+        return true
+    }
 
-public class MoreCommentsListingActivity extends RefreshableActivity
-		implements RedditAccountChangeListener,
-		OptionsMenuUtility.OptionsMenuCommentsListener,
-		RedditPostView.PostSelectionListener {
+    public override fun onCreate(savedInstanceState: Bundle?) {
+        PrefsUtility.applyTheme(this)
 
-	private static final String EXTRA_SEARCH_STRING = "mcla_search_string";
+        super.onCreate(savedInstanceState)
 
-	private final ArrayList<RedditURLParser.RedditURL> mUrls = new ArrayList<>(32);
+        setTitle(string.app_name)
 
-	private CommentListingFragment mFragment;
+        // TODO load from savedInstanceState
+        val layout = getLayoutInflater().inflate(R.layout.main_single, null)
+        setBaseActivityListing(layout)
 
-	private String mSearchString = null;
+        RedditAccountManager.Companion.getInstance(this).addUpdateListener(this)
 
-	@Override
-	protected boolean baseActivityAllowToolbarHideOnScroll() {
-		return true;
-	}
+        if (getIntent() != null) {
+            val intent = getIntent()
+            mSearchString = intent.getStringExtra(EXTRA_SEARCH_STRING)
 
-	@Override
-	public void onCreate(final Bundle savedInstanceState) {
+            val commentIds = intent.getStringArrayListExtra(
+                "commentIds"
+            )
+            val postId = intent.getStringExtra("postId")
 
-		PrefsUtility.applyTheme(this);
+            for (commentId in commentIds!!) {
+                mUrls.add(PostCommentListingURL.Companion.forPostId(postId).commentId(commentId))
+            }
 
-		super.onCreate(savedInstanceState);
+            doRefresh(RefreshableFragment.COMMENTS, false, null)
+        } else {
+            throw RuntimeException("Nothing to show! (should load from bundle)") // TODO
+        }
+    }
 
-		setTitle(R.string.app_name);
+    // TODO save instance state
+    // @Override
+    // protected void onSaveInstanceState(final Bundle outState) {
+    // 	super.onSaveInstanceState(outState);
+    // }
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        OptionsMenuUtility.prepare<MoreCommentsListingActivity?>(
+            this,
+            menu,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            null,
+            false,
+            false,
+            null,
+            null
+        )
 
-		// TODO load from savedInstanceState
+        if (mFragment != null) {
+            mFragment!!.onCreateOptionsMenu(menu)
+        }
 
-		final View layout = getLayoutInflater().inflate(R.layout.main_single, null);
-		setBaseActivityListing(layout);
+        return true
+    }
 
-		RedditAccountManager.getInstance(this).addUpdateListener(this);
+    override fun onRedditAccountChanged() {
+        requestRefresh(RefreshableFragment.ALL, false)
+    }
 
-		if(getIntent() != null) {
+    override fun doRefresh(
+        which: RefreshableFragment?,
+        force: Boolean,
+        savedInstanceState: Bundle?
+    ) {
+        mFragment = CommentListingFragment(
+            this,
+            savedInstanceState,
+            mUrls,
+            null,
+            mSearchString,
+            force
+        )
 
-			final Intent intent = getIntent();
-			mSearchString = intent.getStringExtra(EXTRA_SEARCH_STRING);
+        mFragment!!.setBaseActivityContent(this)
 
-			final ArrayList<String> commentIds = intent.getStringArrayListExtra(
-					"commentIds");
-			final String postId = intent.getStringExtra("postId");
+        setTitle("More Comments")
+    }
 
-			for(final String commentId : commentIds) {
-				mUrls.add(PostCommentListingURL.forPostId(postId).commentId(commentId));
-			}
+    override fun onRefreshComments() {
+        requestRefresh(RefreshableFragment.COMMENTS, true)
+    }
 
-			doRefresh(RefreshableFragment.COMMENTS, false, null);
+    override fun onPastComments() {
+    }
 
-		} else {
-			throw new RuntimeException("Nothing to show! (should load from bundle)"); // TODO
-		}
-	}
+    override fun onSortSelected(order: PostCommentSort?) {
+    }
 
-	// TODO save instance state
-	// @Override
-	// protected void onSaveInstanceState(final Bundle outState) {
-	// 	super.onSaveInstanceState(outState);
-	// }
+    override fun onSortSelected(order: UserCommentSort?) {
+    }
 
-	@Override
-	public boolean onCreateOptionsMenu(final Menu menu) {
-		OptionsMenuUtility.prepare(
-				this,
-				menu,
-				false,
-				false,
-				true,
-				false,
-				false,
-				false,
-				false,
-				false,
-				false,
-				null,
-				false,
-				false,
-				null,
-				null);
+    override fun onSearchComments() {
+        DialogUtils.showSearchDialog(this, OnSearchListener { query: String? ->
+            val searchIntent = getIntent()
+            searchIntent.putExtra(EXTRA_SEARCH_STRING, query)
+            startActivity(searchIntent)
+        })
+    }
 
-		if(mFragment != null) {
-			mFragment.onCreateOptionsMenu(menu);
-		}
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (mFragment != null && mFragment!!.onOptionsItemSelected(item)) {
+            return true
+        }
 
-		return true;
-	}
+        return super.onOptionsItemSelected(item)
+    }
 
-	@Override
-	public void onRedditAccountChanged() {
-		requestRefresh(RefreshableFragment.ALL, false);
-	}
+    override fun onPostSelected(post: RedditPreparedPost) {
+        onLinkClicked(this, post.src.url, false, post.src.src)
+    }
 
-	@Override
-	protected void doRefresh(
-			final RefreshableFragment which,
-			final boolean force,
-			final Bundle savedInstanceState) {
+    override fun onPostCommentsSelected(post: RedditPreparedPost) {
+        onLinkClicked(
+            this,
+            PostCommentListingURL.Companion.forPostId(post.src.getIdAlone()).toUriString(),
+            false
+        )
+    }
 
-		mFragment = new CommentListingFragment(
-				this,
-				savedInstanceState,
-				mUrls,
-				null,
-				mSearchString,
-				force);
+    override fun getCommentSort(): OptionsMenuUtility.Sort? {
+        return null
+    }
 
-		mFragment.setBaseActivityContent(this);
+    override fun getSuggestedCommentSort(): PostCommentSort? {
+        return null
+    }
 
-		setTitle("More Comments");
-	}
-
-	@Override
-	public void onRefreshComments() {
-		requestRefresh(RefreshableFragment.COMMENTS, true);
-	}
-
-	@Override
-	public void onPastComments() {
-	}
-
-	@Override
-	public void onSortSelected(final PostCommentSort order) {
-	}
-
-	@Override
-	public void onSortSelected(final UserCommentSort order) {
-	}
-
-	@Override
-	public void onSearchComments() {
-		DialogUtils.showSearchDialog(this, query -> {
-			final Intent searchIntent = getIntent();
-			searchIntent.putExtra(EXTRA_SEARCH_STRING, query);
-			startActivity(searchIntent);
-		});
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
-
-		if(mFragment != null && mFragment.onOptionsItemSelected(item)) {
-			return true;
-		}
-
-		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
-	public void onPostSelected(final RedditPreparedPost post) {
-		LinkHandler.onLinkClicked(this, post.src.getUrl(), false, post.src.getSrc());
-	}
-
-	@Override
-	public void onPostCommentsSelected(final RedditPreparedPost post) {
-		LinkHandler.onLinkClicked(
-				this,
-				PostCommentListingURL.forPostId(post.src.getIdAlone()).toUriString(),
-				false);
-	}
-
-	@Override
-	public OptionsMenuUtility.Sort getCommentSort() {
-		return null;
-	}
-
-	@Override
-	public PostCommentSort getSuggestedCommentSort() {
-		return null;
-	}
+    companion object {
+        private const val EXTRA_SEARCH_STRING = "mcla_search_string"
+    }
 }

@@ -12,585 +12,562 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
-package org.quantumbadger.redreader.views;
-
-import android.content.Context;
-import android.text.SpannableStringBuilder;
-import android.util.TypedValue;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.AndroidCommon;
-import org.quantumbadger.redreader.common.BetterSSB;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.RRThemeAttributes;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.fragments.CommentListingFragment;
-import org.quantumbadger.redreader.reddit.RedditCommentListItem;
-import org.quantumbadger.redreader.reddit.api.RedditAPICommentAction;
-import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType;
-import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
-import org.quantumbadger.redreader.reddit.prepared.RedditParsedComment;
-import org.quantumbadger.redreader.reddit.prepared.RedditRenderableComment;
-
-import java.util.Observer;
-
-
-public class RedditCommentView extends FlingableItemView
-		implements RedditChangeDataManager.Listener {
-
-	private final AccessibilityActionManager mAccessibilityActionManager;
-
-	private RedditCommentListItem mComment;
-
-	private final BaseActivity mActivity;
-	private final RedditChangeDataManager mChangeDataManager;
-	private final RRThemeAttributes mTheme;
-
-	private final TextView mHeader;
-	private final FrameLayout mBodyHolder;
-
-	private final IndentView mIndentView;
-	private final LinearLayout mIndentedContent;
-
-	private final float mBodyFontScale;
-
-	private final boolean mShowLinkButtons;
-
-	private CharSequence mHeaderText;
-
-	private final CommentListener mListener;
-
-	@Nullable
-	private final CommentListingFragment mFragment;
-
-	@Nullable private ActionDescriptionPair mLeftFlingAction;
-	@Nullable private ActionDescriptionPair mRightFlingAction;
-
-	@Override
-	protected void onSetItemFlingPosition(final float position) {
-		mIndentedContent.setTranslationX(position);
-	}
-
-	private static final class ActionDescriptionPair {
-		public final RedditAPICommentAction.RedditCommentAction action;
-		public final int descriptionRes;
-
-		private ActionDescriptionPair(
-				final RedditAPICommentAction.RedditCommentAction action,
-				final int descriptionRes) {
-			this.action = action;
-			this.descriptionRes = descriptionRes;
-		}
-	}
-
-	@Nullable
-	private ActionDescriptionPair chooseFlingAction(final PrefsUtility.CommentFlingAction pref) {
-
-		if(!mComment.isComment()) {
-			return null;
-		}
-
-		final RedditParsedComment comment = mComment.asComment().getParsedComment();
-
-		switch(pref) {
-
-			case UPVOTE:
-				if(mChangeDataManager.isUpvoted(comment.getIdAndType())) {
-					return new ActionDescriptionPair(
-							RedditAPICommentAction.RedditCommentAction.UNVOTE,
-							R.string.action_vote_remove);
-				} else {
-					return new ActionDescriptionPair(
-							RedditAPICommentAction.RedditCommentAction.UPVOTE,
-							R.string.action_upvote);
-				}
-
-			case DOWNVOTE:
-				if(mChangeDataManager.isDownvoted(comment.getIdAndType())) {
-					return new ActionDescriptionPair(
-							RedditAPICommentAction.RedditCommentAction.UNVOTE,
-							R.string.action_vote_remove);
-				} else {
-					return new ActionDescriptionPair(
-							RedditAPICommentAction.RedditCommentAction.DOWNVOTE,
-							R.string.action_downvote);
-				}
-
-			case SAVE:
-				if(mChangeDataManager.isSaved(comment.getIdAndType())) {
-					return new ActionDescriptionPair(
-							RedditAPICommentAction.RedditCommentAction.UNSAVE,
-							R.string.action_unsave);
-				} else {
-					return new ActionDescriptionPair(
-							RedditAPICommentAction.RedditCommentAction.SAVE,
-							R.string.action_save);
-				}
-
-			case REPORT:
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.REPORT,
-						R.string.action_report
-				);
-
-			case REPLY:
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.REPLY,
-						R.string.action_reply);
-
-			case CONTEXT:
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.CONTEXT,
-						R.string.action_comment_context
-				);
-
-			case GO_TO_COMMENT:
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.GO_TO_COMMENT,
-						R.string.action_comment_go_to
-				);
-
-			case COMMENT_LINKS:
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.COMMENT_LINKS,
-						R.string.action_comment_links
-				);
-
-			case SHARE:
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.SHARE,
-						R.string.action_share
-				);
-
-			case COPY_TEXT:
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.COPY_TEXT,
-						R.string.action_copy_text
-				);
-
-			case COPY_URL:
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.COPY_URL,
-						R.string.action_copy_link
-				);
-
-			case USER_PROFILE:
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.USER_PROFILE,
-						R.string.action_user_profile);
-
-			case COLLAPSE:
-
-				if(mFragment == null) {
-					return null;
-				}
-
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.COLLAPSE,
-						R.string.action_collapse);
-
-			case ACTION_MENU:
-
-				if(mFragment == null) {
-					return null;
-				}
-
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.ACTION_MENU,
-						R.string.action_actionmenu_short);
-
-			case PROPERTIES:
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.PROPERTIES,
-						R.string.action_properties);
-
-			case BACK:
-				return new ActionDescriptionPair(
-						RedditAPICommentAction.RedditCommentAction.BACK,
-						R.string.action_back);
-
-			case DISABLED:
-				return null;
-		}
-
-		return null;
-	}
-
-	@NonNull
-	@Override
-	protected String getFlingLeftText() {
-
-		final Context context = getContext();
-
-		final PrefsUtility.CommentFlingAction pref =
-				PrefsUtility.pref_behaviour_fling_comment_left();
-
-		mLeftFlingAction = chooseFlingAction(pref);
-
-		if(mLeftFlingAction == null) {
-			return "Disabled";
-		}
-
-		return context.getString(mLeftFlingAction.descriptionRes);
-	}
-
-	@NonNull
-	@Override
-	protected String getFlingRightText() {
-
-		final Context context = getContext();
-
-		final PrefsUtility.CommentFlingAction pref =
-				PrefsUtility.pref_behaviour_fling_comment_right();
-
-		mRightFlingAction = chooseFlingAction(pref);
-
-		if(mRightFlingAction == null) {
-			return "Disabled";
-		}
-
-		return context.getString(mRightFlingAction.descriptionRes);
-	}
-
-	@Override
-	protected boolean allowFlingingLeft() {
-		return mLeftFlingAction != null;
-	}
-
-	@Override
-	protected boolean allowFlingingRight() {
-		return mRightFlingAction != null;
-	}
-
-	@Override
-	protected void onFlungLeft() {
-
-		if(mLeftFlingAction == null || !mComment.isComment()) {
-			return;
-		}
-
-		RedditAPICommentAction.onActionMenuItemSelected(
-				mComment.asComment(),
-				this,
-				mActivity,
-				mFragment,
-				mLeftFlingAction.action,
-				mChangeDataManager);
-	}
-
-	@Override
-	protected void onFlungRight() {
-
-		if(mRightFlingAction == null || !mComment.isComment()) {
-			return;
-		}
-
-		RedditAPICommentAction.onActionMenuItemSelected(
-				mComment.asComment(),
-				this,
-				mActivity,
-				mFragment,
-				mRightFlingAction.action,
-				mChangeDataManager);
-	}
-
-	public interface CommentListener {
-		void onCommentClicked(RedditCommentView view);
-
-		void onCommentLongClicked(RedditCommentView view);
-	}
-
-	public RedditCommentView(
-			final BaseActivity context,
-			final RRThemeAttributes themeAttributes,
-			final CommentListener listener,
-			@Nullable final CommentListingFragment fragment) {
-
-		super(context);
-
-		mAccessibilityActionManager = new AccessibilityActionManager(
-				this,
-				context.getResources());
-
-		mActivity = context;
-		mTheme = themeAttributes;
-		mListener = listener;
-		mFragment = fragment;
-
-		mChangeDataManager = RedditChangeDataManager.getInstance(
-				RedditAccountManager.getInstance(context).getDefaultAccount());
-
-		final View rootView =
-				LayoutInflater.from(context).inflate(R.layout.reddit_comment, this, true);
-
-		mIndentView = rootView.findViewById(R.id.view_reddit_comment_indentview);
-		mHeader = rootView.findViewById(R.id.view_reddit_comment_header);
-		mBodyHolder = rootView.findViewById(R.id.view_reddit_comment_bodyholder);
-		mIndentedContent = rootView.findViewById(R.id.view_reddit_comment_indented_content);
-
-		final int minimumCommentHeight = PrefsUtility.pref_accessibility_min_comment_height();
-
-		mIndentedContent.setMinimumHeight(General.dpToPixels(context, minimumCommentHeight));
-
-		mBodyFontScale = PrefsUtility.appearance_fontscale_bodytext();
-		final float mHeaderFontScale = PrefsUtility.appearance_fontscale_comment_headers();
-
-		mHeader.setTextSize(
-				TypedValue.COMPLEX_UNIT_PX,
-				mHeader.getTextSize() * mHeaderFontScale);
-
-		mShowLinkButtons = PrefsUtility.pref_appearance_linkbuttons();
-
-		setOnClickListener(view -> mListener.onCommentClicked(this));
-
-		setOnLongClickListener(v -> {
-			mListener.onCommentLongClicked(this);
-			return true;
-		});
-	}
-
-	@Override
-	public void onRedditDataChange(final RedditIdAndType thingIdAndType) {
-		reset(mActivity, mComment, true);
-	}
-
-	public void reset(
-			final BaseActivity activity,
-			final RedditCommentListItem comment) {
-		reset(activity, comment, false);
-	}
-
-	public void reset(
-			final BaseActivity activity,
-			final RedditCommentListItem comment,
-			final boolean updateOnly) {
-
-		if(!updateOnly) {
-			if(!comment.isComment()) {
-				throw new RuntimeException("Not a comment");
-			}
-
-			if(mComment != comment) {
-				if(mComment != null) {
-					mChangeDataManager.removeListener(mComment.asComment().getIdAndType(), this);
-				}
-
-				mChangeDataManager.addListener(comment.asComment().getIdAndType(), this);
-			}
-
-			mComment = comment;
-
-			resetSwipeState();
-		}
-
-		mIndentView.setIndentation(comment.getIndent());
-
-		final boolean hideLinkButtons = comment.asComment()
-				.getParsedComment()
-				.getRawComment().getAuthor().getDecoded().equalsIgnoreCase(
-						"autowikibot");
-
-		mBodyHolder.removeAllViews();
-		final View commentBody = comment.asComment().getBody(
-				activity,
-				mTheme.rrCommentBodyCol,
-				13.0f * mBodyFontScale,
-				mShowLinkButtons && !hideLinkButtons);
-
-		mBodyHolder.addView(commentBody);
-		General.setLayoutMatchWidthWrapHeight(commentBody);
-
-		((MarginLayoutParams)commentBody.getLayoutParams()).topMargin =
-				General.dpToPixels(activity, 1);
-
-		final RedditRenderableComment renderableComment = mComment.asComment();
-
-		final int ageUnits = PrefsUtility.appearance_comment_age_units();
-
-		final TimestampUTC postTimestamp = (mFragment != null && mFragment.getPost() != null)
-				? mFragment.getPost().src.getCreatedTimeUTC()
-				: null;
-
-		final TimestampUTC parentCommentTimestamp = mComment.getParent() != null
-				? mComment.getParent().asComment().getParsedComment().getRawComment()
-						.getCreated_utc().getValue()
-				: null;
-
-		final boolean isCollapsed = mComment.isCollapsed(mChangeDataManager);
-
-		final BetterSSB header = renderableComment.getHeader(
-				mTheme,
-				mChangeDataManager,
-				activity,
-				ageUnits,
-				postTimestamp,
-				parentCommentTimestamp);
-
-		final Observer observer = (observable, o) -> {
-			if (isCollapsed) {
-				mHeaderText = "[ + ]  " + o;
-			} else {
-				mHeaderText = (SpannableStringBuilder) o;
-			}
-
-			AndroidCommon.runOnUiThread(() -> mHeader.setText(mHeaderText));
-		};
-
-		header.addObserver(observer);
-
-		mHeaderText = header.get();
-
-		mHeader.setContentDescription(renderableComment.getAccessibilityHeader(
-				mTheme,
-				mChangeDataManager,
-				activity,
-				ageUnits,
-				postTimestamp,
-				parentCommentTimestamp,
-				isCollapsed,
-				Optional.of(comment.getIndent())));
-
-		if(isCollapsed) {
-			setFlingingEnabled(false);
-			//noinspection SetTextI18n
-			mHeader.setText("[ + ]  "
-					+ mHeaderText); // Note that this removes formatting (which is fine)
-			mBodyHolder.setVisibility(GONE);
-
-		} else {
-			setFlingingEnabled(true);
-			mHeader.setText(mHeaderText);
-			mBodyHolder.setVisibility(VISIBLE);
-		}
-
-		setupAccessibilityActions();
-	}
-
-	private void setupAccessibilityActions() {
-
-		final RedditAccount defaultAccount
-				= RedditAccountManager.getInstance(mActivity).getDefaultAccount();
-		final boolean isAuthenticated = defaultAccount.isNotAnonymous();
-
-		mAccessibilityActionManager.removeAllActions();
-
-		if(!mComment.isComment()) {
-			return;
-		}
-
-		addAccessibilityActionFromDescriptionPair(
-			chooseFlingAction(PrefsUtility.CommentFlingAction.COLLAPSE));
-
-		mAccessibilityActionManager.addAction(R.string.button_next_comment_parent, () -> {
-			mFragment.onNextParent();
-		});
-
-		mAccessibilityActionManager.addAction(R.string.button_prev_comment_parent, () -> {
-			mFragment.onPreviousParent();
-		});
-
-		if (isAuthenticated) {
-			addAccessibilityActionFromDescriptionPair(
-					chooseFlingAction(PrefsUtility.CommentFlingAction.REPLY));
-		}
-
-		// TODO null
-		if (mComment.asComment().getParsedComment().getRawComment()
-				.getAuthor().getDecoded().equalsIgnoreCase(defaultAccount.username)) {
-
-			addAccessibilityActionFromDescriptionPair(
-				new ActionDescriptionPair(
-					RedditAPICommentAction.RedditCommentAction.EDIT,
-					R.string.action_edit));
-
-			addAccessibilityActionFromDescriptionPair(
-				new ActionDescriptionPair(
-					RedditAPICommentAction.RedditCommentAction.DELETE,
-					R.string.action_delete));
-		}
-
-		// #136: When "save" is implemented for comments, add an a11y action
-		// here (behind an isAuthenticated guard).
-
-		addAccessibilityActionFromDescriptionPair(
-				chooseFlingAction(PrefsUtility.CommentFlingAction.USER_PROFILE));
-
-		if (isAuthenticated) {
-			addAccessibilityActionFromDescriptionPair(
-					chooseFlingAction(PrefsUtility.CommentFlingAction.REPORT));
-		}
-
-		addAccessibilityActionFromDescriptionPair(
-				chooseFlingAction(PrefsUtility.CommentFlingAction.SHARE));
-
-		if (isAuthenticated) {
-			addAccessibilityActionFromDescriptionPair(
-				chooseFlingAction(PrefsUtility.CommentFlingAction.DOWNVOTE));
-
-			addAccessibilityActionFromDescriptionPair(
-				chooseFlingAction(PrefsUtility.CommentFlingAction.UPVOTE));
-		}
-
-		mAccessibilityActionManager.setClickHint(
-			getAccessibilityHintForActionPref(PrefsUtility.pref_behaviour_actions_comment_tap())
-		);
-
-		mAccessibilityActionManager.setLongClickHint(
-			getAccessibilityHintForActionPref(
-					PrefsUtility.pref_behaviour_actions_comment_longclick())
-		);
-	}
-
-	@Nullable
-	@StringRes
-	private Integer getAccessibilityHintForActionPref(
-			@NonNull final PrefsUtility.CommentAction pref) {
-		switch (pref) {
-			case COLLAPSE:
-				return R.string.action_collapse;
-			case ACTION_MENU:
-				return R.string.action_actionmenu;
-		}
-		return null;
-	}
-
-	public RedditCommentListItem getComment() {
-		return mComment;
-	}
-
-	private void addAccessibilityActionFromDescriptionPair(
-			@Nullable final ActionDescriptionPair pair) {
-
-		if(pair == null) {
-			return;
-		}
-
-		mAccessibilityActionManager.addAction(pair.descriptionRes, () -> {
-			RedditAPICommentAction.onActionMenuItemSelected(
-				mComment.asComment(),
-				this,
-				mActivity,
-				mFragment,
-				pair.action,
-				mChangeDataManager
-			);
-		});
-	}
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
+
+import android.text.SpannableStringBuilder
+import android.util.TypedValue
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.annotation.StringRes
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.AndroidCommon.runOnUiThread
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.PrefsUtility.CommentAction
+import org.quantumbadger.redreader.common.PrefsUtility.CommentFlingAction
+import org.quantumbadger.redreader.common.RRThemeAttributes
+import org.quantumbadger.redreader.fragments.CommentListingFragment
+import org.quantumbadger.redreader.reddit.RedditCommentListItem
+import org.quantumbadger.redreader.reddit.api.RedditAPICommentAction
+import org.quantumbadger.redreader.reddit.api.RedditAPICommentAction.RedditCommentAction
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
+import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
+import java.util.Observable
+import java.util.Observer
+
+class RedditCommentView(
+    context: BaseActivity,
+    themeAttributes: RRThemeAttributes,
+    listener: CommentListener,
+    fragment: CommentListingFragment?
+) : FlingableItemView(context), RedditChangeDataManager.Listener {
+    private val mAccessibilityActionManager: AccessibilityActionManager
+
+    var comment: RedditCommentListItem? = null
+        private set
+
+    private val mActivity: BaseActivity
+    private val mChangeDataManager: RedditChangeDataManager
+    private val mTheme: RRThemeAttributes
+
+    private val mHeader: TextView
+    private val mBodyHolder: FrameLayout
+
+    private val mIndentView: IndentView
+    private val mIndentedContent: LinearLayout
+
+    private val mBodyFontScale: Float
+
+    private val mShowLinkButtons: Boolean
+
+    private var mHeaderText: CharSequence? = null
+
+    private val mListener: CommentListener
+
+    private val mFragment: CommentListingFragment?
+
+    private var mLeftFlingAction: ActionDescriptionPair? = null
+    private var mRightFlingAction: ActionDescriptionPair? = null
+
+    override fun onSetItemFlingPosition(position: Float) {
+        mIndentedContent.setTranslationX(position)
+    }
+
+    private class ActionDescriptionPair(
+        val action: RedditCommentAction,
+        val descriptionRes: Int
+    )
+
+    private fun chooseFlingAction(pref: CommentFlingAction): ActionDescriptionPair? {
+        if (!comment!!.isComment()) {
+            return null
+        }
+
+        val comment = comment!!.asComment().getParsedComment()
+
+        when (pref) {
+            CommentFlingAction.UPVOTE -> if (mChangeDataManager.isUpvoted(comment.getIdAndType())) {
+                return ActionDescriptionPair(
+                    RedditCommentAction.UNVOTE,
+                    string.action_vote_remove
+                )
+            } else {
+                return ActionDescriptionPair(
+                    RedditCommentAction.UPVOTE,
+                    string.action_upvote
+                )
+            }
+
+            CommentFlingAction.DOWNVOTE -> if (mChangeDataManager.isDownvoted(comment.getIdAndType())) {
+                return ActionDescriptionPair(
+                    RedditCommentAction.UNVOTE,
+                    string.action_vote_remove
+                )
+            } else {
+                return ActionDescriptionPair(
+                    RedditCommentAction.DOWNVOTE,
+                    string.action_downvote
+                )
+            }
+
+            CommentFlingAction.SAVE -> if (mChangeDataManager.isSaved(comment.getIdAndType())) {
+                return ActionDescriptionPair(
+                    RedditCommentAction.UNSAVE,
+                    string.action_unsave
+                )
+            } else {
+                return ActionDescriptionPair(
+                    RedditCommentAction.SAVE,
+                    string.action_save
+                )
+            }
+
+            CommentFlingAction.REPORT -> return ActionDescriptionPair(
+                RedditCommentAction.REPORT,
+                string.action_report
+            )
+
+            CommentFlingAction.REPLY -> return ActionDescriptionPair(
+                RedditCommentAction.REPLY,
+                string.action_reply
+            )
+
+            CommentFlingAction.CONTEXT -> return ActionDescriptionPair(
+                RedditCommentAction.CONTEXT,
+                string.action_comment_context
+            )
+
+            CommentFlingAction.GO_TO_COMMENT -> return ActionDescriptionPair(
+                RedditCommentAction.GO_TO_COMMENT,
+                string.action_comment_go_to
+            )
+
+            CommentFlingAction.COMMENT_LINKS -> return ActionDescriptionPair(
+                RedditCommentAction.COMMENT_LINKS,
+                string.action_comment_links
+            )
+
+            CommentFlingAction.SHARE -> return ActionDescriptionPair(
+                RedditCommentAction.SHARE,
+                string.action_share
+            )
+
+            CommentFlingAction.COPY_TEXT -> return ActionDescriptionPair(
+                RedditCommentAction.COPY_TEXT,
+                string.action_copy_text
+            )
+
+            CommentFlingAction.COPY_URL -> return ActionDescriptionPair(
+                RedditCommentAction.COPY_URL,
+                string.action_copy_link
+            )
+
+            CommentFlingAction.USER_PROFILE -> return ActionDescriptionPair(
+                RedditCommentAction.USER_PROFILE,
+                string.action_user_profile
+            )
+
+            CommentFlingAction.COLLAPSE -> {
+                if (mFragment == null) {
+                    return null
+                }
+
+                return ActionDescriptionPair(
+                    RedditCommentAction.COLLAPSE,
+                    string.action_collapse
+                )
+            }
+
+            CommentFlingAction.ACTION_MENU -> {
+                if (mFragment == null) {
+                    return null
+                }
+
+                return ActionDescriptionPair(
+                    RedditCommentAction.ACTION_MENU,
+                    string.action_actionmenu_short
+                )
+            }
+
+            CommentFlingAction.PROPERTIES -> return ActionDescriptionPair(
+                RedditCommentAction.PROPERTIES,
+                string.action_properties
+            )
+
+            CommentFlingAction.BACK -> return ActionDescriptionPair(
+                RedditCommentAction.BACK,
+                string.action_back
+            )
+
+            CommentFlingAction.DISABLED -> return null
+        }
+
+        return null
+    }
+
+    protected override fun getFlingLeftText(): String {
+        val context = getContext()
+
+        val pref =
+            PrefsUtility.pref_behaviour_fling_comment_left()
+
+        mLeftFlingAction = chooseFlingAction(pref)
+
+        if (mLeftFlingAction == null) {
+            return "Disabled"
+        }
+
+        return context.getString(mLeftFlingAction!!.descriptionRes)
+    }
+
+    protected override fun getFlingRightText(): String {
+        val context = getContext()
+
+        val pref =
+            PrefsUtility.pref_behaviour_fling_comment_right()
+
+        mRightFlingAction = chooseFlingAction(pref)
+
+        if (mRightFlingAction == null) {
+            return "Disabled"
+        }
+
+        return context.getString(mRightFlingAction!!.descriptionRes)
+    }
+
+    override fun allowFlingingLeft(): Boolean {
+        return mLeftFlingAction != null
+    }
+
+    override fun allowFlingingRight(): Boolean {
+        return mRightFlingAction != null
+    }
+
+    override fun onFlungLeft() {
+        if (mLeftFlingAction == null || !comment!!.isComment()) {
+            return
+        }
+
+        RedditAPICommentAction.onActionMenuItemSelected(
+            comment!!.asComment(),
+            this,
+            mActivity,
+            mFragment,
+            mLeftFlingAction!!.action,
+            mChangeDataManager
+        )
+    }
+
+    override fun onFlungRight() {
+        if (mRightFlingAction == null || !comment!!.isComment()) {
+            return
+        }
+
+        RedditAPICommentAction.onActionMenuItemSelected(
+            comment!!.asComment(),
+            this,
+            mActivity,
+            mFragment,
+            mRightFlingAction!!.action,
+            mChangeDataManager
+        )
+    }
+
+    interface CommentListener {
+        fun onCommentClicked(view: RedditCommentView?)
+
+        fun onCommentLongClicked(view: RedditCommentView?)
+    }
+
+    init {
+        mAccessibilityActionManager = AccessibilityActionManager(
+            this,
+            context.getResources()
+        )
+
+        mActivity = context
+        mTheme = themeAttributes
+        mListener = listener
+        mFragment = fragment
+
+        mChangeDataManager = RedditChangeDataManager.Companion.getInstance(
+            RedditAccountManager.Companion.getInstance(context).getDefaultAccount()
+        )
+
+        val rootView =
+            LayoutInflater.from(context).inflate(R.layout.reddit_comment, this, true)
+
+        mIndentView = rootView.findViewById<IndentView>(R.id.view_reddit_comment_indentview)
+        mHeader = rootView.findViewById<TextView>(R.id.view_reddit_comment_header)
+        mBodyHolder = rootView.findViewById<FrameLayout>(R.id.view_reddit_comment_bodyholder)
+        mIndentedContent =
+            rootView.findViewById<LinearLayout>(R.id.view_reddit_comment_indented_content)
+
+        val minimumCommentHeight = PrefsUtility.pref_accessibility_min_comment_height()
+
+        mIndentedContent.setMinimumHeight(dpToPixels(context, minimumCommentHeight.toFloat()))
+
+        mBodyFontScale = PrefsUtility.appearance_fontscale_bodytext()
+        val mHeaderFontScale = PrefsUtility.appearance_fontscale_comment_headers()
+
+        mHeader.setTextSize(
+            TypedValue.COMPLEX_UNIT_PX,
+            mHeader.getTextSize() * mHeaderFontScale
+        )
+
+        mShowLinkButtons = PrefsUtility.pref_appearance_linkbuttons()
+
+        setOnClickListener(OnClickListener { view: View? -> mListener.onCommentClicked(this) })
+
+        setOnLongClickListener(OnLongClickListener { v: View? ->
+            mListener.onCommentLongClicked(this)
+            true
+        })
+    }
+
+    override fun onRedditDataChange(thingIdAndType: RedditIdAndType?) {
+        reset(mActivity, this.comment!!, true)
+    }
+
+    @JvmOverloads
+    fun reset(
+        activity: BaseActivity,
+        comment: RedditCommentListItem,
+        updateOnly: Boolean = false
+    ) {
+        if (!updateOnly) {
+            if (!comment.isComment()) {
+                throw RuntimeException("Not a comment")
+            }
+
+            if (this.comment !== comment) {
+                if (this.comment != null) {
+                    mChangeDataManager.removeListener(comment.asComment().getIdAndType(), this)
+                }
+
+                mChangeDataManager.addListener(comment.asComment().getIdAndType(), this)
+            }
+
+            this.comment = comment
+
+            resetSwipeState()
+        }
+
+        mIndentView.setIndentation(comment.getIndent())
+
+        val hideLinkButtons = comment.asComment()
+            .getParsedComment()
+            .getRawComment().author!!.decoded.equals(
+                "autowikibot", ignoreCase = true
+            )
+
+        mBodyHolder.removeAllViews()
+        val commentBody = comment.asComment().getBody(
+            activity,
+            mTheme.rrCommentBodyCol,
+            13.0f * mBodyFontScale,
+            mShowLinkButtons && !hideLinkButtons
+        )
+
+        mBodyHolder.addView(commentBody)
+        setLayoutMatchWidthWrapHeight(commentBody)
+
+        (commentBody.getLayoutParams() as MarginLayoutParams).topMargin =
+            dpToPixels(activity, 1f)
+
+        val renderableComment = comment.asComment()
+
+        val ageUnits = PrefsUtility.appearance_comment_age_units()
+
+        val postTimestamp = if (mFragment != null && mFragment.getPost() != null)
+            mFragment.getPost().src.createdTimeUTC
+        else
+            null
+
+        val parentCommentTimestamp = if (comment.getParent() != null)
+            comment.getParent().asComment().getParsedComment().getRawComment()
+                .created_utc.value
+        else
+            null
+
+        val isCollapsed = comment.isCollapsed(mChangeDataManager)
+
+        val header = renderableComment.getHeader(
+            mTheme,
+            mChangeDataManager,
+            activity,
+            ageUnits,
+            postTimestamp,
+            parentCommentTimestamp
+        )
+
+        val observer = Observer { observable: Observable?, o: Any? ->
+            if (isCollapsed) {
+                mHeaderText = "[ + ]  " + o
+            } else {
+                mHeaderText = o as SpannableStringBuilder?
+            }
+            runOnUiThread(Runnable { mHeader.setText(mHeaderText) })
+        }
+
+        header.addObserver(observer)
+
+        mHeaderText = header.get()
+
+        mHeader.setContentDescription(
+            renderableComment.getAccessibilityHeader(
+                mTheme,
+                mChangeDataManager,
+                activity,
+                ageUnits,
+                postTimestamp,
+                parentCommentTimestamp,
+                isCollapsed,
+                Optional.Companion.of<Int?>(comment.getIndent())
+            )
+        )
+
+        if (isCollapsed) {
+            setFlingingEnabled(false)
+            mHeader.setText(
+                "[ + ]  "
+                        + mHeaderText
+            ) // Note that this removes formatting (which is fine)
+            mBodyHolder.setVisibility(GONE)
+        } else {
+            setFlingingEnabled(true)
+            mHeader.setText(mHeaderText)
+            mBodyHolder.setVisibility(VISIBLE)
+        }
+
+        setupAccessibilityActions()
+    }
+
+    private fun setupAccessibilityActions() {
+        val defaultAccount
+                : RedditAccount =
+            RedditAccountManager.Companion.getInstance(mActivity).getDefaultAccount()
+        val isAuthenticated = defaultAccount.isNotAnonymous
+
+        mAccessibilityActionManager.removeAllActions()
+
+        if (!comment!!.isComment()) {
+            return
+        }
+
+        addAccessibilityActionFromDescriptionPair(
+            chooseFlingAction(CommentFlingAction.COLLAPSE)
+        )
+
+        mAccessibilityActionManager.addAction(string.button_next_comment_parent, Runnable {
+            mFragment!!.onNextParent()
+        })
+
+        mAccessibilityActionManager.addAction(string.button_prev_comment_parent, Runnable {
+            mFragment!!.onPreviousParent()
+        })
+
+        if (isAuthenticated) {
+            addAccessibilityActionFromDescriptionPair(
+                chooseFlingAction(CommentFlingAction.REPLY)
+            )
+        }
+
+        // TODO null
+        if (comment!!.asComment().getParsedComment().getRawComment()
+                .author!!.decoded.equals(defaultAccount.username, ignoreCase = true)
+        ) {
+            addAccessibilityActionFromDescriptionPair(
+                ActionDescriptionPair(
+                    RedditCommentAction.EDIT,
+                    string.action_edit
+                )
+            )
+
+            addAccessibilityActionFromDescriptionPair(
+                ActionDescriptionPair(
+                    RedditCommentAction.DELETE,
+                    string.action_delete
+                )
+            )
+        }
+
+        // #136: When "save" is implemented for comments, add an a11y action
+        // here (behind an isAuthenticated guard).
+        addAccessibilityActionFromDescriptionPair(
+            chooseFlingAction(CommentFlingAction.USER_PROFILE)
+        )
+
+        if (isAuthenticated) {
+            addAccessibilityActionFromDescriptionPair(
+                chooseFlingAction(CommentFlingAction.REPORT)
+            )
+        }
+
+        addAccessibilityActionFromDescriptionPair(
+            chooseFlingAction(CommentFlingAction.SHARE)
+        )
+
+        if (isAuthenticated) {
+            addAccessibilityActionFromDescriptionPair(
+                chooseFlingAction(CommentFlingAction.DOWNVOTE)
+            )
+
+            addAccessibilityActionFromDescriptionPair(
+                chooseFlingAction(CommentFlingAction.UPVOTE)
+            )
+        }
+
+        mAccessibilityActionManager.setClickHint(
+            getAccessibilityHintForActionPref(PrefsUtility.pref_behaviour_actions_comment_tap())
+        )
+
+        mAccessibilityActionManager.setLongClickHint(
+            getAccessibilityHintForActionPref(
+                PrefsUtility.pref_behaviour_actions_comment_longclick()
+            )
+        )
+    }
+
+    @StringRes
+    private fun getAccessibilityHintForActionPref(
+        pref: CommentAction
+    ): Int? {
+        when (pref) {
+            CommentAction.COLLAPSE -> return string.action_collapse
+            CommentAction.ACTION_MENU -> return string.action_actionmenu
+        }
+        return null
+    }
+
+    private fun addAccessibilityActionFromDescriptionPair(
+        pair: ActionDescriptionPair?
+    ) {
+        if (pair == null) {
+            return
+        }
+
+        mAccessibilityActionManager.addAction(pair.descriptionRes, Runnable {
+            RedditAPICommentAction.onActionMenuItemSelected(
+                comment!!.asComment(),
+                this,
+                mActivity,
+                mFragment,
+                pair.action,
+                mChangeDataManager
+            )
+        })
+    }
 }

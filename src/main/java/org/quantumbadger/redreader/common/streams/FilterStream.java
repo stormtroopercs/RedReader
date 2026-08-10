@@ -12,55 +12,41 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.streams
 
-package org.quantumbadger.redreader.common.streams;
+class FilterStream<E>(
+    private val mInner: Stream<E?>,
+    private val mPredicate: Predicate<E?>
+) : Stream<E?> {
+    private var mHasNext = true
+    private var mNext: E? = null
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    init {
+        moveToNext()
+    }
 
-public class FilterStream<E> implements Stream<E> {
+    private fun moveToNext() {
+        while (mInner.hasNext()) {
+            mNext = mInner.next()
 
-	@NonNull private final Stream<E> mInner;
-	@NonNull private final Predicate<E> mPredicate;
+            if (mPredicate.matches(mNext)) {
+                return
+            }
+        }
 
-	private boolean mHasNext = true;
-	@Nullable private E mNext;
+        mNext = null
+        mHasNext = false
+    }
 
-	public FilterStream(
-			@NonNull final Stream<E> inner,
-			@NonNull final Predicate<E> predicate) {
+    override fun hasNext(): Boolean {
+        return mHasNext
+    }
 
-		mInner = inner;
-		mPredicate = predicate;
-		moveToNext();
-	}
-
-	private void moveToNext() {
-
-		while(mInner.hasNext()) {
-
-			mNext = mInner.next();
-
-			if(mPredicate.matches(mNext)) {
-				return;
-			}
-		}
-
-		mNext = null;
-		mHasNext = false;
-	}
-
-	@Override
-	public boolean hasNext() {
-		return mHasNext;
-	}
-
-	@Override
-	public E next() {
-		final E result = mNext;
-		moveToNext();
-		return result;
-	}
+    override fun next(): E? {
+        val result = mNext
+        moveToNext()
+        return result
+    }
 }

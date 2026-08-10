@@ -12,22 +12,21 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
-
-public enum BlockType {
-	VERTICAL_SEQUENCE,
-	NORMAL_TEXT,
-	HEADER,
-	LIST_ELEMENT,
-	TABLE,
-	TABLE_ROW,
-	TABLE_CELL,
-	CODE_BLOCK,
-	HORIZONTAL_RULE,
-	QUOTE,
-	BUTTON,
-	ERROR
+enum class BlockType {
+    VERTICAL_SEQUENCE,
+    NORMAL_TEXT,
+    HEADER,
+    LIST_ELEMENT,
+    TABLE,
+    TABLE_ROW,
+    TABLE_CELL,
+    CODE_BLOCK,
+    HORIZONTAL_RULE,
+    QUOTE,
+    BUTTON,
+    ERROR
 }

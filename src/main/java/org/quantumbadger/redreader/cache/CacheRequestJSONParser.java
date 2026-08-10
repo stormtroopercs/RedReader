@@ -12,118 +12,114 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache
 
-package org.quantumbadger.redreader.cache;
+import android.content.Context
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.common.CachedThreadPool
+import org.quantumbadger.redreader.common.FunctionOneArgWithReturn
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.General.ignoreIOException
+import org.quantumbadger.redreader.common.GenericFactory
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.UriString.Companion.from
+import org.quantumbadger.redreader.common.datastream.SeekableInputStream
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.jsonwrap.JsonValue
+import org.quantumbadger.redreader.reddit.api.RedditPostActions.ActionDescriptionPair.Companion.from
+import java.io.IOException
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 
-import android.content.Context;
+class CacheRequestJSONParser(
+    private val mContext: Context,
+    private val mListener: Listener
+) : CacheRequestCallbacks {
+    interface Listener {
+        fun onJsonParsed(
+            result: JsonValue,
+            timestamp: TimestampUTC?,
+            session: UUID,
+            fromCache: Boolean
+        )
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+        fun onFailure(error: RRError)
 
-import org.quantumbadger.redreader.activities.BugReportActivity;
-import org.quantumbadger.redreader.common.CachedThreadPool;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.GenericFactory;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.datastream.SeekableInputStream;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.http.FailedRequestBody;
-import org.quantumbadger.redreader.jsonwrap.JsonValue;
+        fun onDownloadNecessary() {
+            // Do nothing by default
+        }
+    }
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
+    private val mNotifiedFailure = AtomicBoolean(false)
 
-public final class CacheRequestJSONParser implements CacheRequestCallbacks {
+    override fun onDataStreamAvailable(
+        streamFactory: GenericFactory<SeekableInputStream, IOException?>,
+        timestamp: TimestampUTC?,
+        session: UUID,
+        fromCache: Boolean,
+        mimetype: String?
+    ) {
+        try {
+            mThreadPool.add(Runnable {
+                val jsonValue: JsonValue
+                try {
+                    streamFactory.create().use { `is` ->
+                        jsonValue = JsonValue.Companion.parse(`is`)
+                    }
+                } catch (e: IOException) {
+                    if (!mNotifiedFailure.getAndSet(true)) {
+                        mListener.onFailure(
+                            getGeneralErrorForFailure(
+                                mContext,
+                                RequestFailureType.PARSE,
+                                e,
+                                null,
+                                null,
+                                General.ignoreIOException<SeekableInputStream?>(streamFactory)
+                                    .filter<FailedRequestBody>(FunctionOneArgWithReturn { `is`: Param? ->
+                                        FailedRequestBody.Companion.from(
+                                            `is`
+                                        )
+                                    })
+                            )
+                        )
+                    }
+                    return@add
+                }
+                try {
+                    mListener.onJsonParsed(jsonValue, timestamp, session, fromCache)
+                } catch (e: Exception) {
+                    handleGlobalError(mContext, e)
+                }
+            })
+        } catch (e: Exception) {
+            if (!mNotifiedFailure.getAndSet(true)) {
+                onFailure(
+                    getGeneralErrorForFailure(
+                        mContext,
+                        RequestFailureType.STORAGE,
+                        e,
+                        null,
+                        null,
+                        Optional.Companion.empty<FailedRequestBody>()
+                    )
+                )
+            }
+        }
+    }
 
-	private static final CachedThreadPool mThreadPool
-			= new CachedThreadPool(5, "JSONParser");
+    override fun onFailure(error: RRError) {
+        if (!mNotifiedFailure.getAndSet(true)) {
+            mListener.onFailure(error)
+        }
+    }
 
-	public interface Listener {
-
-		void onJsonParsed(
-				@NonNull JsonValue result,
-				TimestampUTC timestamp,
-				@NonNull UUID session,
-				boolean fromCache);
-
-		void onFailure(@NonNull RRError error);
-
-		default void onDownloadNecessary() {
-			// Do nothing by default
-		}
-	}
-
-	@NonNull private final Context mContext;
-	@NonNull private final Listener mListener;
-
-	private final AtomicBoolean mNotifiedFailure = new AtomicBoolean(false);
-
-	public CacheRequestJSONParser(
-			@NonNull final Context context,
-			@NonNull final Listener listener) {
-		mContext = context;
-		mListener = listener;
-	}
-
-	@Override
-	public void onDataStreamAvailable(
-			@NonNull final GenericFactory<SeekableInputStream, IOException> streamFactory,
-			final TimestampUTC timestamp,
-			@NonNull final UUID session,
-			final boolean fromCache,
-			@Nullable final String mimetype) {
-
-		try {
-			mThreadPool.add(() -> {
-				final JsonValue jsonValue;
-
-				try(InputStream is = streamFactory.create()) {
-					jsonValue = JsonValue.parse(is);
-
-				} catch(final IOException e) {
-					if(!mNotifiedFailure.getAndSet(true)) {
-						mListener.onFailure(General.getGeneralErrorForFailure(
-								mContext,
-								CacheRequest.RequestFailureType.PARSE,
-								e,
-								null,
-								null,
-								General.ignoreIOException(streamFactory)
-										.filter(FailedRequestBody::from)));
-					}
-					return;
-				}
-
-				try {
-					mListener.onJsonParsed(jsonValue, timestamp, session, fromCache);
-
-				} catch(final Exception e) {
-					BugReportActivity.handleGlobalError(mContext, e);
-				}
-			});
-
-		} catch(final Exception e) {
-			if(!mNotifiedFailure.getAndSet(true)) {
-				onFailure(General.getGeneralErrorForFailure(
-						mContext,
-						CacheRequest.RequestFailureType.STORAGE,
-						e,
-						null,
-						null,
-						Optional.empty()));
-			}
-		}
-	}
-
-	@Override
-	public void onFailure(@NonNull final RRError error) {
-		if(!mNotifiedFailure.getAndSet(true)) {
-			mListener.onFailure(error);
-		}
-	}
+    companion object {
+        private val mThreadPool = CachedThreadPool(5, "JSONParser")
+    }
 }

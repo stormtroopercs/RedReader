@@ -12,29 +12,25 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache
 
-package org.quantumbadger.redreader.cache;
+import android.os.Process
 
-final class CacheDownloadThread extends Thread {
-	private final CacheDownload singleDownload;
+internal class CacheDownloadThread(
+    private val singleDownload: CacheDownload,
+    start: Boolean,
+    name: String
+) : Thread(name) {
+    init {
+        if (start) {
+            start()
+        }
+    }
 
-	public CacheDownloadThread(
-			final CacheDownload singleDownload,
-			final boolean start,
-			final String name) {
-
-		super(name);
-		this.singleDownload = singleDownload;
-		if(start) {
-			start();
-		}
-	}
-
-	@Override
-	public void run() {
-		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-		singleDownload.doDownload();
-	}
+    override fun run() {
+        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+        singleDownload.doDownload()
+    }
 }

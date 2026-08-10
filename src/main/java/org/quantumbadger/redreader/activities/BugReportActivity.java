@@ -12,212 +12,220 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.activities
 
-package org.quantumbadger.redreader.activities;
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.common.AndroidCommon
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.General.listOfOne
+import org.quantumbadger.redreader.common.General.quickToast
+import org.quantumbadger.redreader.common.RRError
+import java.util.LinkedList
 
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.util.Log;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
-import android.widget.TextView;
+class BugReportActivity : ViewsBaseActivity() {
+    protected override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-import androidx.annotation.NonNull;
+        val layout = LinearLayout(this)
+        layout.setOrientation(LinearLayout.VERTICAL)
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.AndroidCommon;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.RRError;
+        val title = TextView(this)
+        title.setText(R.string.bug_title)
+        layout.addView(title)
+        title.setTextSize(20.0f)
 
-import java.util.ArrayList;
-import java.util.LinkedList;
+        val text = TextView(this)
+        text.setText(R.string.bug_message)
 
-public class BugReportActivity extends ViewsBaseActivity {
+        layout.addView(text)
+        text.setTextSize(15.0f)
 
-	private static final ArrayList<RRError> errors = new ArrayList<>();
+        val paddingPx = dpToPixels(this, 20f)
+        title.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+        text.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
 
-	public static synchronized void addGlobalError(final RRError error) {
-		errors.add(error);
-	}
+        val send = Button(this)
+        send.setText(R.string.bug_button_send)
 
-	public static synchronized void handleGlobalError(final Context context, final String text) {
-		handleGlobalError(context, new RRError(text, null, true, new RuntimeException()));
-	}
+        send.setOnClickListener(View.OnClickListener { v: View? ->
+            sendBugReport(this, getErrors())
+            finish()
+        })
 
-	public static synchronized void handleGlobalError(final Context context, final Throwable t) {
+        val ignore = Button(this)
+        ignore.setText(R.string.bug_button_ignore)
 
-		if(t != null) {
-			Log.e("BugReportActivity", "Handling exception", t);
-		}
+        ignore.setOnClickListener(View.OnClickListener { v: View? -> finish() })
 
-		handleGlobalError(context, new RRError(null, null, true, t));
-	}
+        layout.addView(send)
+        layout.addView(ignore)
 
-	public static synchronized void handleGlobalError(
-			final Context context,
-			final RRError error) {
+        val sv = ScrollView(this)
+        sv.addView(layout)
 
-		addGlobalError(error);
+        setBaseActivityListing(sv)
+    }
 
-		AndroidCommon.UI_THREAD_HANDLER.post(() -> {
-			final Intent intent = new Intent(context, BugReportActivity.class);
-			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			context.startActivity(intent);
-		});
+    companion object {
+        private val errors = ArrayList<RRError?>()
 
-	}
+        @JvmStatic
+        @Synchronized
+        fun addGlobalError(error: RRError?) {
+            errors.add(error)
+        }
 
-	private static synchronized LinkedList<RRError> getErrors() {
-		final LinkedList<RRError> result = new LinkedList<>(errors);
-		errors.clear();
-		return result;
-	}
+        @JvmStatic
+        @Synchronized
+        fun handleGlobalError(context: Context, text: String?) {
+            handleGlobalError(context, RRError(text, null, true, RuntimeException()))
+        }
 
-	public static void sendBugReport(
-			@NonNull final Context context,
-			@NonNull final RRError error) {
+        @JvmStatic
+        @Synchronized
+        fun handleGlobalError(context: Context, t: Throwable?) {
+            if (t != null) {
+                Log.e("BugReportActivity", "Handling exception", t)
+            }
 
-		sendBugReport(context, General.listOfOne(error));
-	}
+            handleGlobalError(context, RRError(null, null, true, t))
+        }
 
-	public static void sendBugReport(
-			@NonNull final Context context,
-			@NonNull final Iterable<RRError> errors) {
+        @JvmStatic
+        @Synchronized
+        fun handleGlobalError(
+            context: Context,
+            error: RRError?
+        ) {
+            addGlobalError(error)
 
-		final StringBuilder sb = new StringBuilder(1024);
+            AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
+                val intent = Intent(context, BugReportActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            })
+        }
 
-		sb.append("Error report -- RedReader v")
-				.append(Constants.version(context))
-				.append("\r\n\r\n");
+        @Synchronized
+        private fun getErrors(): LinkedList<RRError> {
+            val result = LinkedList<RRError>(errors)
+            errors.clear()
+            return result
+        }
 
-		sb.append("Manufacturer: ").append(Build.MANUFACTURER).append("\r\n");
-		sb.append("Model: ").append(Build.MODEL).append("\r\n");
-		sb.append("Product: ").append(Build.PRODUCT).append("\r\n");
-		sb.append("Android release: ").append(Build.VERSION.RELEASE).append("\r\n");
-		sb.append("Android SDK: ").append(Build.VERSION.SDK_INT).append("\r\n");
+        @JvmStatic
+        fun sendBugReport(
+            context: Context,
+            error: RRError
+        ) {
+            Companion.sendBugReport(context, listOfOne<RRError?>(error))
+        }
 
-		for(final RRError error : errors) {
-			sb.append("\r\n-------------------------------\r\n");
-			if(error.title != null) {
-				sb.append("Title: ").append(error.title).append("\r\n");
-			}
-			if(error.message != null) {
-				sb.append("Message: ").append(error.message).append("\r\n");
-			}
-			if(error.httpStatus != null) {
-				sb.append("HTTP Status: ").append(error.httpStatus).append("\r\n");
-			}
-			if(error.url != null) {
-				sb.append("URL: ").append(error.url).append("\r\n");
-			}
-			if(error.debuggingContext != null) {
-				sb.append("Debugging context: ").append(error.debuggingContext).append("\r\n");
-			}
-			if(error.responseString != null) {
-				sb.append("Response: ").append(error.responseString).append("\r\n");
-			}
-			appendException(sb, error.t, 25);
-		}
+        fun sendBugReport(
+            context: Context,
+            errors: Iterable<RRError>
+        ) {
+            val sb = StringBuilder(1024)
 
-		final Intent intent = new Intent(Intent.ACTION_SENDTO);
-		intent.putExtra(
-				Intent.EXTRA_EMAIL,
-				new String[] {
-						"bug"
-								+ "reports"
-								+ (char)64
-								+ "redreader"
-								+ '.'
-								+ "org"}); // no spam, thanks
-		intent.putExtra(Intent.EXTRA_SUBJECT, "Bug Report");
-		intent.putExtra(Intent.EXTRA_TEXT, sb.toString());
+            sb.append("Error report -- RedReader v")
+                .append(Constants.version(context))
+                .append("\r\n\r\n")
 
-		final Intent emailSelectorIntent = new Intent(Intent.ACTION_SENDTO);
-		emailSelectorIntent.setData(Uri.parse("mailto:"));
-		intent.setSelector(emailSelectorIntent);
+            sb.append("Manufacturer: ").append(Build.MANUFACTURER).append("\r\n")
+            sb.append("Model: ").append(Build.MODEL).append("\r\n")
+            sb.append("Product: ").append(Build.PRODUCT).append("\r\n")
+            sb.append("Android release: ").append(Build.VERSION.RELEASE).append("\r\n")
+            sb.append("Android SDK: ").append(Build.VERSION.SDK_INT).append("\r\n")
 
-		try {
-			context.startActivity(Intent.createChooser(
-					intent,
-					context.getApplicationContext()
-							.getString(R.string.bug_chooser_title)));
+            for (error in errors) {
+                sb.append("\r\n-------------------------------\r\n")
+                if (error.title != null) {
+                    sb.append("Title: ").append(error.title).append("\r\n")
+                }
+                if (error.message != null) {
+                    sb.append("Message: ").append(error.message).append("\r\n")
+                }
+                if (error.httpStatus != null) {
+                    sb.append("HTTP Status: ").append(error.httpStatus).append("\r\n")
+                }
+                if (error.url != null) {
+                    sb.append("URL: ").append(error.url).append("\r\n")
+                }
+                if (error.debuggingContext != null) {
+                    sb.append("Debugging context: ").append(error.debuggingContext).append("\r\n")
+                }
+                if (error.responseString != null) {
+                    sb.append("Response: ").append(error.responseString).append("\r\n")
+                }
+                appendException(sb, error.t, 25)
+            }
 
-		} catch(final android.content.ActivityNotFoundException ex) {
-			General.quickToast(context, R.string.error_toast_no_email_apps);
-		}
-	}
+            val intent = Intent(Intent.ACTION_SENDTO)
+            intent.putExtra(
+                Intent.EXTRA_EMAIL,
+                arrayOf<String>(
+                    ("bug"
+                            + "reports"
+                            + 64.toChar() + "redreader"
+                            + '.'
+                            + "org")
+                )
+            ) // no spam, thanks
+            intent.putExtra(Intent.EXTRA_SUBJECT, "Bug Report")
+            intent.putExtra(Intent.EXTRA_TEXT, sb.toString())
 
-	@Override
-	protected void onCreate(final Bundle savedInstanceState) {
+            val emailSelectorIntent = Intent(Intent.ACTION_SENDTO)
+            emailSelectorIntent.setData(Uri.parse("mailto:"))
+            intent.setSelector(emailSelectorIntent)
 
-		super.onCreate(savedInstanceState);
+            try {
+                context.startActivity(
+                    Intent.createChooser(
+                        intent,
+                        context.getApplicationContext()
+                            .getString(R.string.bug_chooser_title)
+                    )
+                )
+            } catch (ex: ActivityNotFoundException) {
+                quickToast(context, R.string.error_toast_no_email_apps)
+            }
+        }
 
-		final LinearLayout layout = new LinearLayout(this);
-		layout.setOrientation(LinearLayout.VERTICAL);
+        @JvmStatic
+        fun appendException(
+            sb: StringBuilder,
+            t: Throwable?,
+            recurseLimit: Int
+        ) {
+            if (t != null) {
+                sb.append("Exception: ")
+                sb.append(t.javaClass.getCanonicalName()).append("\r\n")
+                sb.append(t.message).append("\r\n")
 
-		final TextView title = new TextView(this);
-		title.setText(R.string.bug_title);
-		layout.addView(title);
-		title.setTextSize(20.0f);
+                for (elem in t.getStackTrace()) {
+                    sb.append("  ").append(elem.toString()).append("\r\n")
+                }
 
-		final TextView text = new TextView(this);
-		text.setText(R.string.bug_message);
-
-		layout.addView(text);
-		text.setTextSize(15.0f);
-
-		final int paddingPx = General.dpToPixels(this, 20);
-		title.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-		text.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-
-		final Button send = new Button(this);
-		send.setText(R.string.bug_button_send);
-
-		send.setOnClickListener(v -> {
-			sendBugReport(this, getErrors());
-			finish();
-		});
-
-		final Button ignore = new Button(this);
-		ignore.setText(R.string.bug_button_ignore);
-
-		ignore.setOnClickListener(v -> finish());
-
-		layout.addView(send);
-		layout.addView(ignore);
-
-		final ScrollView sv = new ScrollView(this);
-		sv.addView(layout);
-
-		setBaseActivityListing(sv);
-	}
-
-	public static void appendException(
-			final StringBuilder sb,
-			final Throwable t,
-			final int recurseLimit) {
-
-		if(t != null) {
-
-			sb.append("Exception: ");
-			sb.append(t.getClass().getCanonicalName()).append("\r\n");
-			sb.append(t.getMessage()).append("\r\n");
-
-			for(final StackTraceElement elem : t.getStackTrace()) {
-				sb.append("  ").append(elem.toString()).append("\r\n");
-			}
-
-			if(recurseLimit > 0 && t.getCause() != null) {
-				sb.append("Caused by: ");
-				appendException(sb, t.getCause(), recurseLimit - 1);
-			}
-		}
-	}
+                if (recurseLimit > 0 && t.cause != null) {
+                    sb.append("Caused by: ")
+                    appendException(sb, t.cause, recurseLimit - 1)
+                }
+            }
+        }
+    }
 }

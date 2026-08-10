@@ -12,31 +12,27 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.receivers
 
-package org.quantumbadger.redreader.receivers;
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.util.Log
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.util.Log;
-import org.quantumbadger.redreader.cache.CacheManager;
-import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
+class RegularCachePruner : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        Log.i("RegularCachePruner", "Pruning cache...")
 
-public class RegularCachePruner extends BroadcastReceiver {
-
-	@Override
-	public void onReceive(final Context context, final Intent intent) {
-
-		Log.i("RegularCachePruner", "Pruning cache...");
-
-		new Thread() {
-			@Override
-			public void run() {
-				RedditChangeDataManager.pruneAllUsersDefaultMaxAge();
-				CacheManager.getInstance(context).pruneCache();
-			}
-		}.start();
-	}
+        object : Thread() {
+            override fun run() {
+                RedditChangeDataManager.Companion.pruneAllUsersDefaultMaxAge()
+                CacheManager.Companion.getInstance(context).pruneCache()
+            }
+        }.start()
+    }
 }

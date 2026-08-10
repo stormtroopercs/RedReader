@@ -12,40 +12,40 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.markdown
 
-package org.quantumbadger.redreader.reddit.prepared.markdown;
+class IntArrayLengthPair(capacity: Int) {
+    @JvmField
+    val data: IntArray
+    @JvmField
+    var pos: Int = 0
 
-public final class IntArrayLengthPair {
-	public final int[] data;
-	public int pos = 0;
+    init {
+        this.data = IntArray(capacity)
+    }
 
-	public IntArrayLengthPair(final int capacity) {
-		this.data = new int[capacity];
-	}
+    fun clear() {
+        pos = 0
+    }
 
-	public void clear() {
-		pos = 0;
-	}
+    fun append(arr: IntArray) {
+        System.arraycopy(arr, 0, data, pos, arr.size)
+        pos += arr.size
+    }
 
-	public void append(final int[] arr) {
-		System.arraycopy(arr, 0, data, pos, arr.length);
-		pos += arr.length;
-	}
+    fun append(arr: CharArray) {
+        for (i in arr.indices) {
+            data[pos + i] = arr[i].code
+        }
 
-	public void append(final char[] arr) {
+        pos += arr.size
+    }
 
-		for(int i = 0; i < arr.length; i++) {
-			data[pos + i] = arr[i];
-		}
-
-		pos += arr.length;
-	}
-
-	public int[] substringAsArray(final int start) {
-		final int[] result = new int[pos - start];
-		System.arraycopy(data, start, result, 0, result.length);
-		return result;
-	}
+    fun substringAsArray(start: Int): IntArray {
+        val result = IntArray(pos - start)
+        System.arraycopy(data, start, result, 0, result.size)
+        return result
+    }
 }

@@ -12,94 +12,86 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.imageview
 
-package org.quantumbadger.redreader.views.imageview;
+import android.graphics.Bitmap
+import android.graphics.Matrix
+import org.quantumbadger.redreader.common.General.divideCeil
+import kotlin.math.min
 
-import android.graphics.Bitmap;
-import android.graphics.Matrix;
-import org.quantumbadger.redreader.common.General;
+class ImageTileSourceWholeBitmap(private val mBitmap: Bitmap) : ImageTileSource {
+    private val mWidth: Int
+    private val mHeight: Int
 
-public class ImageTileSourceWholeBitmap implements ImageTileSource {
+    init {
+        mWidth = mBitmap.getWidth()
+        mHeight = mBitmap.getHeight()
+    }
 
-	private final Bitmap mBitmap;
+    override fun getWidth(): Int {
+        return mWidth
+    }
 
-	private final int mWidth;
-	private final int mHeight;
+    override fun getHeight(): Int {
+        return mHeight
+    }
 
-	private static final int TILE_SIZE = 512;
+    override fun getTileSize(): Int {
+        return TILE_SIZE
+    }
 
-	public ImageTileSourceWholeBitmap(final Bitmap bitmap) {
-		mBitmap = bitmap;
-		mWidth = bitmap.getWidth();
-		mHeight = bitmap.getHeight();
-	}
+    override fun getHTileCount(): Int {
+        return divideCeil(getWidth(), TILE_SIZE)
+    }
 
-	@Override
-	public int getWidth() {
-		return mWidth;
-	}
+    override fun getVTileCount(): Int {
+        return divideCeil(getHeight(), TILE_SIZE)
+    }
 
-	@Override
-	public int getHeight() {
-		return mHeight;
-	}
+    override fun getTile(sampleSize: Int, tileX: Int, tileY: Int): Bitmap? {
+        if (sampleSize == 1 && TILE_SIZE >= mWidth && TILE_SIZE >= mHeight) {
+            return mBitmap
+        }
 
-	@Override
-	public int getTileSize() {
-		return TILE_SIZE;
-	}
+        val tileStartX: Int = tileX * TILE_SIZE
+        val tileStartY: Int = tileY * TILE_SIZE
+        val tileEndX = min(mWidth, (tileX + 1) * TILE_SIZE)
+        val tileEndY = min(mHeight, (tileY + 1) * TILE_SIZE)
 
-	@Override
-	public int getHTileCount() {
-		return General.divideCeil(getWidth(), TILE_SIZE);
-	}
+        val inputTileWidthPx = tileEndX - tileStartX
+        val inputTileHeightPx = tileEndY - tileStartY
 
-	@Override
-	public int getVTileCount() {
-		return General.divideCeil(getHeight(), TILE_SIZE);
-	}
+        if (sampleSize == 1) {
+            return Bitmap.createBitmap(
+                mBitmap,
+                tileStartX,
+                tileStartY,
+                inputTileWidthPx,
+                inputTileHeightPx
+            )
+        }
 
-	@Override
-	public Bitmap getTile(final int sampleSize, final int tileX, final int tileY) {
+        val scaleMatrix = Matrix()
+        scaleMatrix.setScale(1.0f / sampleSize, 1.0f / sampleSize)
 
-		if(sampleSize == 1 && TILE_SIZE >= mWidth && TILE_SIZE >= mHeight) {
-			return mBitmap;
-		}
+        return Bitmap.createBitmap(
+            mBitmap,
+            tileStartX,
+            tileStartY,
+            inputTileWidthPx,
+            inputTileHeightPx,
+            scaleMatrix,
+            true
+        )
+    }
 
-		final int tileStartX = tileX * TILE_SIZE;
-		final int tileStartY = tileY * TILE_SIZE;
-		final int tileEndX = Math.min(mWidth, (tileX + 1) * TILE_SIZE);
-		final int tileEndY = Math.min(mHeight, (tileY + 1) * TILE_SIZE);
+    override fun dispose() {
+        // Nothing to do here
+    }
 
-		final int inputTileWidthPx = tileEndX - tileStartX;
-		final int inputTileHeightPx = tileEndY - tileStartY;
-
-		if(sampleSize == 1) {
-			return Bitmap.createBitmap(
-					mBitmap,
-					tileStartX,
-					tileStartY,
-					inputTileWidthPx,
-					inputTileHeightPx);
-		}
-
-		final Matrix scaleMatrix = new Matrix();
-		scaleMatrix.setScale(1.0f / sampleSize, 1.0f / sampleSize);
-
-		return Bitmap.createBitmap(
-				mBitmap,
-				tileStartX,
-				tileStartY,
-				inputTileWidthPx,
-				inputTileHeightPx,
-				scaleMatrix,
-				true);
-	}
-
-	@Override
-	public void dispose() {
-		// Nothing to do here
-	}
+    companion object {
+        private const val TILE_SIZE = 512
+    }
 }

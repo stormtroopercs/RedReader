@@ -12,89 +12,83 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.imageview
 
-package org.quantumbadger.redreader.views.imageview;
+class MultiScaleTileManager(
+    imageTileSource: ImageTileSource?,
+    thread: ImageViewTileLoaderThread?,
+    x: Int,
+    y: Int,
+    listener: ImageViewTileLoader.Listener?
+) {
+    private val mTileLoaders: Array<ImageViewTileLoader?>
 
-import android.graphics.Bitmap;
+    private var mDesiredScaleIndex = -1
 
-public class MultiScaleTileManager {
+    private val mLock = Any()
 
-	public static final int MAX_SAMPLE_SIZE = 32;
+    init {
+        mTileLoaders =
+            arrayOfNulls<ImageViewTileLoader>(sampleSizeToScaleIndex(MAX_SAMPLE_SIZE) + 1)
 
-	private final ImageViewTileLoader[] mTileLoaders;
+        for (s in mTileLoaders.indices) {
+            mTileLoaders[s] = ImageViewTileLoader(
+                imageTileSource,
+                thread,
+                x,
+                y,
+                scaleIndexToSampleSize(s),
+                listener,
+                mLock
+            )
+        }
+    }
 
-	private int mDesiredScaleIndex = -1;
+    val atDesiredScale: Bitmap?
+        get() = mTileLoaders[mDesiredScaleIndex]!!.get()
 
-	private final Object mLock = new Object();
+    fun markAsWanted(desiredScaleIndex: Int) {
+        if (desiredScaleIndex == mDesiredScaleIndex) {
+            return
+        }
 
-	public static int scaleIndexToSampleSize(final int scaleIndex) {
-		return 1 << scaleIndex;
-	}
+        mDesiredScaleIndex = desiredScaleIndex
 
-	public static int sampleSizeToScaleIndex(final int sampleSize) {
-		return Integer.numberOfTrailingZeros(sampleSize);
-	}
+        synchronized(mLock) {
+            mTileLoaders[desiredScaleIndex]!!.markAsWanted()
+            for (s in mTileLoaders.indices) {
+                if (s != desiredScaleIndex) {
+                    mTileLoaders[s]!!.markAsUnwanted()
+                }
+            }
+        }
+    }
 
-	public MultiScaleTileManager(
-			final ImageTileSource imageTileSource,
-			final ImageViewTileLoaderThread thread,
-			final int x,
-			final int y,
-			final ImageViewTileLoader.Listener listener) {
+    fun markAsUnwanted() {
+        if (mDesiredScaleIndex == -1) {
+            return
+        }
 
-		mTileLoaders =
-				new ImageViewTileLoader[sampleSizeToScaleIndex(MAX_SAMPLE_SIZE) + 1];
+        mDesiredScaleIndex = -1
 
-		for(int s = 0; s < mTileLoaders.length; s++) {
-			mTileLoaders[s] = new ImageViewTileLoader(
-					imageTileSource,
-					thread,
-					x,
-					y,
-					scaleIndexToSampleSize(s),
-					listener,
-					mLock);
-		}
-	}
+        synchronized(mLock) {
+            for (s in mTileLoaders.indices) {
+                mTileLoaders[s]!!.markAsUnwanted()
+            }
+        }
+    }
 
-	public Bitmap getAtDesiredScale() {
-		return mTileLoaders[mDesiredScaleIndex].get();
-	}
+    companion object {
+        const val MAX_SAMPLE_SIZE: Int = 32
 
-	public void markAsWanted(final int desiredScaleIndex) {
+        fun scaleIndexToSampleSize(scaleIndex: Int): Int {
+            return 1 shl scaleIndex
+        }
 
-		if(desiredScaleIndex == mDesiredScaleIndex) {
-			return;
-		}
-
-		mDesiredScaleIndex = desiredScaleIndex;
-
-		synchronized(mLock) {
-
-			mTileLoaders[desiredScaleIndex].markAsWanted();
-
-			for(int s = 0; s < mTileLoaders.length; s++) {
-				if(s != desiredScaleIndex) {
-					mTileLoaders[s].markAsUnwanted();
-				}
-			}
-		}
-	}
-
-	public void markAsUnwanted() {
-
-		if(mDesiredScaleIndex == -1) {
-			return;
-		}
-
-		mDesiredScaleIndex = -1;
-
-		synchronized(mLock) {
-			for(int s = 0; s < mTileLoaders.length; s++) {
-				mTileLoaders[s].markAsUnwanted();
-			}
-		}
-	}
+        fun sampleSizeToScaleIndex(sampleSize: Int): Int {
+            return Integer.numberOfTrailingZeros(sampleSize)
+        }
+    }
 }

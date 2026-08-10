@@ -12,50 +12,40 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.graphics.Color
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewGroup.MarginLayoutParams
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.General.dpToPixels
 
-import android.graphics.Color;
-import android.view.View;
-import android.view.ViewGroup;
+class BodyElementHorizontalRule : BodyElement(BlockType.HORIZONTAL_RULE) {
+    override fun generateView(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View {
+        val paddingPx = dpToPixels(activity, 3f)
+        val thicknessPx = dpToPixels(activity, 1f)
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+        val divider = View(activity)
 
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.General;
+        val layoutParams = MarginLayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            thicknessPx
+        )
 
-public class BodyElementHorizontalRule extends BodyElement {
+        layoutParams.leftMargin = paddingPx
+        layoutParams.rightMargin = paddingPx
 
-	public BodyElementHorizontalRule() {
-		super(BlockType.HORIZONTAL_RULE);
-	}
+        divider.setBackgroundColor(Color.GRAY)
+        divider.setLayoutParams(layoutParams)
 
-	@Override
-	public View generateView(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		final int paddingPx = General.dpToPixels(activity, 3);
-		final int thicknessPx = General.dpToPixels(activity, 1);
-
-		final View divider = new View(activity);
-
-		final ViewGroup.MarginLayoutParams layoutParams
-				= new ViewGroup.MarginLayoutParams(
-						ViewGroup.LayoutParams.MATCH_PARENT,
-						thicknessPx);
-
-		layoutParams.leftMargin = paddingPx;
-		layoutParams.rightMargin = paddingPx;
-
-		divider.setBackgroundColor(Color.GRAY);
-		divider.setLayoutParams(layoutParams);
-
-		return divider;
-	}
+        return divider
+    }
 }

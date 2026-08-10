@@ -12,135 +12,142 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.fragments
 
-package org.quantumbadger.redreader.fragments;
+import android.content.Context
+import android.content.DialogInterface
+import android.os.Bundle
+import android.widget.LinearLayout
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.activities.BugReportActivity
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.appendException
+import org.quantumbadger.redreader.common.RRError
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
-import android.content.Context;
-import android.os.Bundle;
-import android.widget.LinearLayout;
+class ErrorPropertiesDialog private constructor(private val mError: RRError) : PropertiesDialog() {
+    private var mContext: AppCompatActivity? = null
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+    override fun interceptBuilder(builder: MaterialAlertDialogBuilder) {
+        if ((mError.t !is UnknownHostException) && (mError.t !is SocketTimeoutException) && mError.reportable) {
+            builder.setPositiveButton(
+                string.button_error_send_report,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
+                    BugReportActivity.sendBugReport(
+                        mContext!!,
+                        mError
+                    )
+                })
+        }
+    }
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+    override fun getTitle(context: Context): String {
+        return context.getString(string.props_error_title)
+    }
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.activities.BugReportActivity;
-import org.quantumbadger.redreader.common.RRError;
+    override fun prepare(
+        context: BaseActivity,
+        items: LinearLayout
+    ) {
+        mContext = context
 
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
+        items.addView(
+            propView(
+                context,
+                string.props_title,
+                getArguments()!!.getString("title"),
+                true
+            )
+        )
+        items.addView(
+            propView(
+                context,
+                "Message",
+                getArguments()!!.getString("message"),
+                false
+            )
+        )
 
-public final class ErrorPropertiesDialog extends PropertiesDialog {
+        if (getArguments()!!.containsKey("httpStatus")) {
+            items.addView(
+                propView(
+                    context,
+                    "HTTP status",
+                    getArguments()!!.getString("httpStatus"),
+                    false
+                )
+            )
+        }
 
-	private AppCompatActivity mContext;
-	@NonNull private final RRError mError;
+        if (getArguments()!!.containsKey("url")) {
+            items.addView(
+                propView(
+                    context,
+                    "URL",
+                    getArguments()!!.getString("url"),
+                    false
+                )
+            )
+        }
 
-	private ErrorPropertiesDialog(@NonNull final RRError error) {
-		mError = error;
-	}
+        if (getArguments()!!.containsKey("t")) {
+            items.addView(
+                propView(
+                    context,
+                    "Exception",
+                    getArguments()!!.getString("t"),
+                    false
+                )
+            )
+        }
 
-	public static ErrorPropertiesDialog newInstance(final RRError error) {
+        if (getArguments()!!.containsKey("response")) {
+            items.addView(
+                propView(
+                    context,
+                    "Response",
+                    getArguments()!!.getString("response"),
+                    false
+                )
+            )
+        }
+    }
 
-		final ErrorPropertiesDialog dialog = new ErrorPropertiesDialog(error);
+    companion object {
+        fun newInstance(error: RRError): ErrorPropertiesDialog {
+            val dialog = ErrorPropertiesDialog(error)
 
-		final Bundle args = new Bundle();
+            val args = Bundle()
 
-		args.putString("title", error.title);
-		args.putString("message", error.message);
+            args.putString("title", error.title)
+            args.putString("message", error.message)
 
-		if(error.t != null) {
-			final StringBuilder sb = new StringBuilder(1024);
-			BugReportActivity.appendException(sb, error.t, 10);
-			args.putString("t", sb.toString());
-		}
+            if (error.t != null) {
+                val sb = StringBuilder(1024)
+                appendException(sb, error.t, 10)
+                args.putString("t", sb.toString())
+            }
 
-		if(error.httpStatus != null) {
-			args.putString("httpStatus", error.httpStatus.toString());
-		}
+            if (error.httpStatus != null) {
+                args.putString("httpStatus", error.httpStatus.toString())
+            }
 
-		if(error.url != null) {
-			args.putString("url", error.url.value);
-		}
+            if (error.url != null) {
+                args.putString("url", error.url.value)
+            }
 
-		if(error.responseString != null) {
-			args.putString("response", error.responseString);
-		}
+            if (error.responseString != null) {
+                args.putString("response", error.responseString)
+            }
 
-		dialog.setArguments(args);
+            dialog.setArguments(args)
 
-		return dialog;
-	}
-
-	@Override
-	protected void interceptBuilder(@NonNull final MaterialAlertDialogBuilder builder) {
-
-		if(!(mError.t instanceof UnknownHostException)
-				&& !(mError.t instanceof SocketTimeoutException)
-				&& mError.reportable) {
-
-			builder.setPositiveButton(
-					R.string.button_error_send_report,
-					(dialog, which) -> BugReportActivity.sendBugReport(mContext, mError));
-		}
-	}
-
-	@Override
-	protected String getTitle(final Context context) {
-		return context.getString(R.string.props_error_title);
-	}
-
-	@Override
-	protected void prepare(
-			@NonNull final BaseActivity context,
-			@NonNull final LinearLayout items) {
-
-		mContext = context;
-
-		items.addView(propView(
-				context,
-				R.string.props_title,
-				getArguments().getString("title"),
-				true));
-		items.addView(propView(
-				context,
-				"Message",
-				getArguments().getString("message"),
-				false));
-
-		if(getArguments().containsKey("httpStatus")) {
-			items.addView(propView(
-					context,
-					"HTTP status",
-					getArguments().getString("httpStatus"),
-					false));
-		}
-
-		if(getArguments().containsKey("url")) {
-			items.addView(propView(
-					context,
-					"URL",
-					getArguments().getString("url"),
-					false));
-		}
-
-		if(getArguments().containsKey("t")) {
-			items.addView(propView(
-					context,
-					"Exception",
-					getArguments().getString("t"),
-					false));
-		}
-
-		if(getArguments().containsKey("response")) {
-			items.addView(propView(
-					context,
-					"Response",
-					getArguments().getString("response"),
-					false));
-		}
-	}
+            return dialog
+        }
+    }
 }

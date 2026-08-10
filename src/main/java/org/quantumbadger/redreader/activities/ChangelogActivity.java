@@ -12,55 +12,49 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.activities
 
-package org.quantumbadger.redreader.activities;
+import android.graphics.Color
+import android.os.Bundle
+import android.view.MenuItem
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.common.ChangelogManager
+import org.quantumbadger.redreader.common.PrefsUtility
 
-import android.graphics.Color;
-import android.os.Bundle;
-import android.view.MenuItem;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
+class ChangelogActivity : ViewsBaseActivity() {
+    override fun baseActivityNavigationBarColour(): Int {
+        return Color.rgb(0x55, 0x55, 0x55)
+    }
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.ChangelogManager;
-import org.quantumbadger.redreader.common.PrefsUtility;
+    protected override fun onCreate(savedInstanceState: Bundle?) {
+        PrefsUtility.applySettingsTheme(this)
 
-public class ChangelogActivity extends ViewsBaseActivity {
+        super.onCreate(savedInstanceState)
 
-	@Override
-	protected int baseActivityNavigationBarColour() {
-		return Color.rgb(0x55, 0x55, 0x55);
-	}
+        setTitle(R.string.title_changelog)
 
-	@Override
-	protected void onCreate(final Bundle savedInstanceState) {
+        val items = LinearLayout(this)
+        items.setOrientation(LinearLayout.VERTICAL)
 
-		PrefsUtility.applySettingsTheme(this);
+        ChangelogManager.generateViews(this, items, true)
 
-		super.onCreate(savedInstanceState);
+        val sv = ScrollView(this)
+        sv.addView(items)
+        setBaseActivityListing(sv)
+    }
 
-		setTitle(R.string.title_changelog);
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.getItemId()) {
+            android.R.id.home -> {
+                finish()
+                return true
+            }
 
-		final LinearLayout items = new LinearLayout(this);
-		items.setOrientation(LinearLayout.VERTICAL);
-
-		ChangelogManager.generateViews(this, items, true);
-
-		final ScrollView sv = new ScrollView(this);
-		sv.addView(items);
-		setBaseActivityListing(sv);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(final MenuItem item) {
-		switch(item.getItemId()) {
-			case android.R.id.home:
-				finish();
-				return true;
-			default:
-				return false;
-		}
-	}
+            else -> return false
+        }
+    }
 }

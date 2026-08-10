@@ -12,258 +12,244 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
 
-package org.quantumbadger.redreader.reddit.url;
+import android.content.Context
+import android.net.Uri
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.General.getUriQueryParameterNames
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.reddit.PostCommentSort
 
-import android.content.Context;
-import android.net.Uri;
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.reddit.PostCommentSort;
+class PostCommentListingURL(
+    after: String?,
+    postId: String?,
+    commentId: String?,
+    context: Int?,
+    limit: Int?,
+    order: PostCommentSort?,
+    video: Boolean
+) : CommentListingURL() {
+    val after: String?
 
-import java.util.ArrayList;
-import java.util.List;
+    val postId: String?
+    val commentId: String?
 
-public class PostCommentListingURL extends CommentListingURL {
+    val context: Int?
+    val limit: Int?
 
-	public final String after;
+    val order: PostCommentSort?
 
-	public final String postId;
-	public final String commentId;
+    val video: Boolean
 
-	public final Integer context;
-	public final Integer limit;
+    init {
+        var postId = postId
+        var commentId = commentId
+        if (postId != null && postId.startsWith("t3_")) {
+            postId = postId.substring(3)
+        }
 
-	public final PostCommentSort order;
+        if (commentId != null && commentId.startsWith("t1_")) {
+            commentId = commentId.substring(3)
+        }
 
-	public final boolean video;
+        this.after = after
+        this.postId = postId
+        this.commentId = commentId
+        this.context = context
+        this.limit = limit
+        this.order = order
+        this.video = video
+    }
 
-	public static PostCommentListingURL forPostId(final String postId) {
-		return new PostCommentListingURL(null, postId, null, null, null, null, false);
-	}
+    override fun after(after: String?): PostCommentListingURL {
+        return PostCommentListingURL(after, postId, commentId, context, limit, order, video)
+    }
 
-	public PostCommentListingURL(
-			final String after,
-			String postId,
-			String commentId,
-			final Integer context,
-			final Integer limit,
-			final PostCommentSort order,
-			final boolean video) {
+    override fun limit(limit: Int?): PostCommentListingURL {
+        return PostCommentListingURL(after, postId, commentId, context, limit, order, video)
+    }
 
-		if(postId != null && postId.startsWith("t3_")) {
-			postId = postId.substring(3);
-		}
+    fun context(context: Int?): PostCommentListingURL {
+        return PostCommentListingURL(after, postId, commentId, context, limit, order, video)
+    }
 
-		if(commentId != null && commentId.startsWith("t1_")) {
-			commentId = commentId.substring(3);
-		}
+    fun order(order: PostCommentSort?): PostCommentListingURL {
+        return PostCommentListingURL(after, postId, commentId, context, limit, order, video)
+    }
 
-		this.after = after;
-		this.postId = postId;
-		this.commentId = commentId;
-		this.context = context;
-		this.limit = limit;
-		this.order = order;
-		this.video = video;
-	}
+    fun commentId(commentId: String?): PostCommentListingURL {
+        var commentId = commentId
+        if (commentId != null && commentId.startsWith("t1_")) {
+            commentId = commentId.substring(3)
+        }
 
-	@Override
-	public PostCommentListingURL after(final String after) {
-		return new PostCommentListingURL(after, postId, commentId, context, limit, order, video);
-	}
+        return PostCommentListingURL(after, postId, commentId, context, limit, order, video)
+    }
 
-	@Override
-	public PostCommentListingURL limit(final Integer limit) {
-		return new PostCommentListingURL(after, postId, commentId, context, limit, order, video);
-	}
+    override fun generateJsonUri(): Uri? {
+        val builder = Uri.Builder()
+        builder.scheme(Reddit.getScheme())
+            .authority(Reddit.getDomain())
 
-	public PostCommentListingURL context(final Integer context) {
-		return new PostCommentListingURL(after, postId, commentId, context, limit, order, video);
-	}
+        internalGenerateCommon(builder)
 
-	public PostCommentListingURL order(final PostCommentSort order) {
-		return new PostCommentListingURL(after, postId, commentId, context, limit, order, video);
-	}
+        builder.appendEncodedPath(".json")
 
-	public PostCommentListingURL commentId(String commentId) {
+        return builder.build()
+    }
 
-		if(commentId != null && commentId.startsWith("t1_")) {
-			commentId = commentId.substring(3);
-		}
+    fun generateNonJsonUri(): Uri? {
+        val builder = Uri.Builder()
+        builder.scheme(Reddit.getScheme())
+            .authority(Reddit.getHumanReadableDomain())
+        internalGenerateCommon(builder)
+        return builder.build()
+    }
 
-		return new PostCommentListingURL(after, postId, commentId, context, limit, order, video);
-	}
+    private fun internalGenerateCommon(builder: Uri.Builder) {
+        if (video) {
+            builder.encodedPath("/video")
+        } else {
+            builder.encodedPath("/comments")
+        }
+        builder.appendPath(postId)
 
-	@Override
-	public Uri generateJsonUri() {
+        if (commentId != null) {
+            builder.appendEncodedPath("comment")
+            builder.appendPath(commentId)
 
-		final Uri.Builder builder = new Uri.Builder();
-		builder.scheme(Constants.Reddit.getScheme())
-				.authority(Constants.Reddit.getDomain());
+            if (context != null) {
+                builder.appendQueryParameter("context", context.toString())
+            }
+        }
 
-		internalGenerateCommon(builder);
+        if (after != null) {
+            builder.appendQueryParameter("after", after)
+        }
 
-		builder.appendEncodedPath(".json");
+        if (limit != null) {
+            builder.appendQueryParameter("limit", limit.toString())
+        }
 
-		return builder.build();
-	}
+        if (order != null) {
+            builder.appendQueryParameter("sort", order.key)
+        }
+    }
 
-	public Uri generateNonJsonUri() {
+    @RedditURLParser.PathType
+    override fun pathType(): Int {
+        return RedditURLParser.POST_COMMENT_LISTING_URL
+    }
 
-		final Uri.Builder builder = new Uri.Builder();
-		builder.scheme(Constants.Reddit.getScheme())
-				.authority(Constants.Reddit.getHumanReadableDomain());
-		internalGenerateCommon(builder);
-		return builder.build();
-	}
+    override fun humanReadableName(context: Context?, shorter: Boolean): String? {
+        return super.humanReadableName(context, shorter)
+    }
 
-	private void internalGenerateCommon(@NonNull final Uri.Builder builder) {
+    companion object {
+        fun forPostId(postId: String?): PostCommentListingURL {
+            return PostCommentListingURL(null, postId, null, null, null, null, false)
+        }
 
-		if(video) {
-			builder.encodedPath("/video");
-		} else {
-			builder.encodedPath("/comments");
-		}
-		builder.appendPath(postId);
+        fun parse(uri: Uri): PostCommentListingURL? {
+            val pathSegments: Array<String?>
+            run {
+                val pathSegmentsList = uri.getPathSegments()
+                val pathSegmentsFiltered = ArrayList<String?>(
+                    pathSegmentsList.size
+                )
+                for (segment in pathSegmentsList) {
+                    var segment = segment
+                    while (StringUtils.asciiLowercase(segment).endsWith(".json")
+                        || StringUtils.asciiLowercase(segment).endsWith(".xml")
+                    ) {
+                        segment = segment.substring(0, segment.lastIndexOf('.'))
+                    }
 
-		if(commentId != null) {
+                    pathSegmentsFiltered.add(segment)
+                }
 
-			builder.appendEncodedPath("comment");
-			builder.appendPath(commentId);
+                pathSegments
+                = pathSegmentsFiltered.toTypedArray<String?>()
+            }
 
-			if(context != null) {
-				builder.appendQueryParameter("context", context.toString());
-			}
-		}
+            if (pathSegments.size == 1) {
+                if (uri.getHost() == "redd.it") {
+                    return forPostId(pathSegments[0])
+                }
+                if (uri.getHost() == "v.redd.it") {
+                    return PostCommentListingURL(
+                        null,
+                        pathSegments[0],
+                        null,
+                        null,
+                        null,
+                        null,
+                        true
+                    )
+                }
+            }
 
-		if(after != null) {
-			builder.appendQueryParameter("after", after);
-		}
+            if (pathSegments.size < 2) {
+                return null
+            }
 
-		if(limit != null) {
-			builder.appendQueryParameter("limit", limit.toString());
-		}
+            var offset = 0
 
-		if(order != null) {
-			builder.appendQueryParameter("sort", order.key);
-		}
-	}
+            if (pathSegments[0].equals("r", ignoreCase = true)) {
+                offset = 2
 
-	public static PostCommentListingURL parse(final Uri uri) {
+                if (pathSegments.size - offset < 2) {
+                    return null
+                }
+            }
 
-		final String[] pathSegments;
-		{
-			final List<String> pathSegmentsList = uri.getPathSegments();
+            var video = false
 
-			final ArrayList<String> pathSegmentsFiltered = new ArrayList<>(
-					pathSegmentsList.size());
-			for(String segment : pathSegmentsList) {
+            if (pathSegments[offset].equals("video", ignoreCase = true)) {
+                video = true
+            } else if (!pathSegments[offset].equals("comments", ignoreCase = true) &&
+                !pathSegments[offset].equals("gallery", ignoreCase = true)
+            ) {
+                return null
+            }
 
-				while(StringUtils.asciiLowercase(segment).endsWith(".json")
-						|| StringUtils.asciiLowercase(segment).endsWith(".xml")) {
-					segment = segment.substring(0, segment.lastIndexOf('.'));
-				}
+            val postId: String?
+            var commentId: String? = null
 
-				pathSegmentsFiltered.add(segment);
-			}
+            postId = pathSegments[offset + 1]
+            offset += 2
 
-			pathSegments
-					= pathSegmentsFiltered.toArray(new String[0]);
-		}
+            if (pathSegments.size - offset >= 2) {
+                commentId = pathSegments[offset + 1]
+            }
 
-		if(pathSegments.length == 1) {
-			if(uri.getHost().equals("redd.it")) {
-				return forPostId(pathSegments[0]);
-			}
-			if(uri.getHost().equals("v.redd.it")) {
-				return new PostCommentListingURL(
-						null,
-						pathSegments[0],
-						null,
-						null,
-						null,
-						null,
-						true);
-			}
-		}
+            var after: String? = null
+            var limit: Int? = null
+            var context: Int? = null
+            var order: PostCommentSort? = null
 
-		if(pathSegments.length < 2) {
-			return null;
-		}
+            for (parameterKey in getUriQueryParameterNames(uri)) {
+                if (parameterKey.equals("after", ignoreCase = true)) {
+                    after = uri.getQueryParameter(parameterKey)
+                } else if (parameterKey.equals("limit", ignoreCase = true)) {
+                    try {
+                        limit = uri.getQueryParameter(parameterKey)!!.toInt()
+                    } catch (ignored: Throwable) {
+                    }
+                } else if (parameterKey.equals("context", ignoreCase = true)) {
+                    try {
+                        context = uri.getQueryParameter(parameterKey)!!.toInt()
+                    } catch (ignored: Throwable) {
+                    }
+                } else if (parameterKey.equals("sort", ignoreCase = true)) {
+                    order = PostCommentSort.Companion.lookup(uri.getQueryParameter(parameterKey))
+                }
+            }
 
-		int offset = 0;
-
-		if(pathSegments[0].equalsIgnoreCase("r")) {
-			offset = 2;
-
-			if(pathSegments.length - offset < 2) {
-				return null;
-			}
-		}
-
-		boolean video = false;
-
-		if(pathSegments[offset].equalsIgnoreCase("video")) {
-			video = true;
-		} else if(!pathSegments[offset].equalsIgnoreCase("comments") &&
-				!pathSegments[offset].equalsIgnoreCase("gallery")) {
-			return null;
-		}
-
-		final String postId;
-		String commentId = null;
-
-		postId = pathSegments[offset + 1];
-		offset += 2;
-
-		if(pathSegments.length - offset >= 2) {
-			commentId = pathSegments[offset + 1];
-		}
-
-		String after = null;
-		Integer limit = null;
-		Integer context = null;
-		PostCommentSort order = null;
-
-		for(final String parameterKey : General.getUriQueryParameterNames(uri)) {
-
-			if(parameterKey.equalsIgnoreCase("after")) {
-				after = uri.getQueryParameter(parameterKey);
-
-			} else if(parameterKey.equalsIgnoreCase("limit")) {
-				try {
-					limit = Integer.parseInt(uri.getQueryParameter(parameterKey));
-				} catch(final Throwable ignored) {
-				}
-
-			} else if(parameterKey.equalsIgnoreCase("context")) {
-				try {
-					context = Integer.parseInt(uri.getQueryParameter(parameterKey));
-				} catch(final Throwable ignored) {
-				}
-
-			} else if(parameterKey.equalsIgnoreCase("sort")) {
-				order = PostCommentSort.lookup(uri.getQueryParameter(parameterKey));
-			}
-		}
-
-		return new PostCommentListingURL(after, postId, commentId, context, limit, order, video);
-	}
-
-	@Override
-	public @RedditURLParser.PathType
-	int pathType() {
-		return RedditURLParser.POST_COMMENT_LISTING_URL;
-	}
-
-	@Override
-	public String humanReadableName(final Context context, final boolean shorter) {
-		return super.humanReadableName(context, shorter);
-	}
-
+            return PostCommentListingURL(after, postId, commentId, context, limit, order, video)
+        }
+    }
 }

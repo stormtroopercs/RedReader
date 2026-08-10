@@ -12,166 +12,162 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.ImageSpan
+import android.util.TypedValue
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.cache.CacheRequest
+import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.cache.CacheRequestCallbacks
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyIfNotCached
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.GenericFactory
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.common.datastream.SeekableInputStream
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
+import org.quantumbadger.redreader.reddit.prepared.bodytext.DynamicSpanned
+import java.io.IOException
+import java.util.UUID
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.style.ImageSpan;
-import android.util.TypedValue;
+class HtmlRawElementImg(
+    private val mChildren: ArrayList<HtmlRawElement>,
+    private val mTitle: String,
+    private val mSrc: UriString
+) : HtmlRawElement() {
+    override fun getPlainText(stringBuilder: StringBuilder) {
+        for (element in mChildren) {
+            element.getPlainText(stringBuilder)
+        }
+    }
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+    @Synchronized
+    fun writeTo(
+        ssb: SpannableStringBuilder,
+        activity: AppCompatActivity,
+        dynamicSpanned: DynamicSpanned
+    ) {
+        val emoteLocationStart = ssb.length
 
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.cache.CacheManager;
-import org.quantumbadger.redreader.cache.CacheRequest;
-import org.quantumbadger.redreader.cache.CacheRequestCallbacks;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyIfNotCached;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.GenericFactory;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.Priority;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.datastream.SeekableInputStream;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.DynamicSpanned;
+        ssb.append(mTitle)
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.UUID;
+        CacheManager.Companion.getInstance(activity).makeRequest(
+            CacheRequest(
+                mSrc,
+                RedditAccountManager.Companion.getAnon(),
+                null,
+                Priority(Constants.Priority.API_COMMENT_LIST),
+                DownloadStrategyIfNotCached.Companion.INSTANCE,
+                Constants.FileType.IMAGE,
+                DownloadQueueType.IMMEDIATE,
+                activity,
+                object : CacheRequestCallbacks {
+                    var image: Bitmap? = null
 
-public class HtmlRawElementImg extends HtmlRawElement{
-	@NonNull private final ArrayList<HtmlRawElement> mChildren;
-	@NonNull private final String mTitle;
-	@NonNull private final UriString mSrc;
+                    override fun onDataStreamComplete(
+                        stream: GenericFactory<SeekableInputStream, IOException?>,
+                        timestamp: TimestampUTC?,
+                        session: UUID,
+                        fromCache: Boolean,
+                        mimetype: String?
+                    ) {
+                        try {
+                            stream.create().use { `is` ->
+                                image = BitmapFactory.decodeStream(`is`)
+                                if (image == null) {
+                                    throw IOException("Failed to decode bitmap")
+                                }
 
-	public HtmlRawElementImg(
-			@NonNull final ArrayList<HtmlRawElement> children,
-			@NonNull final String title,
-			@NonNull final UriString src) {
-		mChildren = children;
-		mTitle = title;
-		mSrc = src;
-	}
+                                val textSize = 18
+                                val maxImageHeightMultiple = 2.0f
 
-	@Override
-	public void getPlainText(@NonNull final StringBuilder stringBuilder) {
-		for(final HtmlRawElement element : mChildren) {
-			element.getPlainText(stringBuilder);
-		}
-	}
+                                val maxHeight = TypedValue.applyDimension(
+                                    TypedValue.COMPLEX_UNIT_SP,
+                                    (PrefsUtility.appearance_fontscale_comment_headers()
+                                            * textSize
+                                            * maxImageHeightMultiple),
+                                    activity.getApplicationContext()
+                                        .getResources()
+                                        .getDisplayMetrics()
+                                )
 
-	public final synchronized void writeTo(
-			@NonNull final SpannableStringBuilder ssb,
-			@NonNull final AppCompatActivity activity,
-			@NonNull final DynamicSpanned dynamicSpanned) {
-		final int emoteLocationStart = ssb.length();
+                                if (image!!.getHeight() > maxHeight) {
+                                    val imageAspectRatio =
+                                        image!!.getHeight().toFloat() / image!!.getWidth()
 
-		ssb.append(mTitle);
+                                    val newImageWidth = maxHeight / imageAspectRatio
 
-		CacheManager.getInstance(activity).makeRequest(new CacheRequest(
-				mSrc,
-				RedditAccountManager.getAnon(),
-				null,
-				new Priority(Constants.Priority.API_COMMENT_LIST),
-				DownloadStrategyIfNotCached.INSTANCE,
-				Constants.FileType.IMAGE,
-				CacheRequest.DownloadQueueType.IMMEDIATE,
-				activity,
-				new CacheRequestCallbacks() {
-					Bitmap image = null;
+                                    image = Bitmap.createScaledBitmap(
+                                        image!!,
+                                        Math.round(newImageWidth),
+                                        Math.round(maxHeight),
+                                        true
+                                    )
+                                }
 
-					@Override
-					public void onDataStreamComplete(
-							@NonNull final GenericFactory<SeekableInputStream, IOException> stream,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache,
-							@Nullable final String mimetype) {
-						try(InputStream is = stream.create()) {
+                                val span = ImageSpan(
+                                    activity.getApplicationContext(),
+                                    image!!
+                                )
+                                dynamicSpanned.addSpanDynamic(
+                                    span,
+                                    emoteLocationStart,
+                                    emoteLocationStart + mTitle.length,
+                                    Spannable.SPAN_INCLUSIVE_EXCLUSIVE
+                                )
+                            }
+                        } catch (t: Throwable) {
+                            onFailure(
+                                getGeneralErrorForFailure(
+                                    activity,
+                                    RequestFailureType.CONNECTION,
+                                    t,
+                                    null,
+                                    mSrc,
+                                    Optional.Companion.empty<FailedRequestBody>()
+                                )
+                            )
+                        }
+                    }
 
-							image = BitmapFactory.decodeStream(is);
+                    override fun onFailure(error: RRError) {
+                    }
+                }
+            ))
+    }
 
-							if (image == null) {
-								throw new IOException("Failed to decode bitmap");
-							}
+    override fun reduce(
+        activeAttributes: HtmlTextAttributes,
+        activity: AppCompatActivity,
+        destination: ArrayList<HtmlRawElement?>,
+        linkButtons: ArrayList<LinkButtonDetails?>
+    ) {
+        destination.add(this)
+    }
 
-							final int textSize = 18;
-							final float maxImageHeightMultiple = 2.0F;
-
-							final float maxHeight = TypedValue.applyDimension(
-									TypedValue.COMPLEX_UNIT_SP,
-									PrefsUtility.appearance_fontscale_comment_headers()
-											* textSize
-											* maxImageHeightMultiple,
-									activity.getApplicationContext()
-											.getResources()
-											.getDisplayMetrics());
-
-							if (image.getHeight() > maxHeight) {
-								final float imageAspectRatio =
-										(float) image.getHeight() / image.getWidth();
-
-								final float newImageWidth = maxHeight / imageAspectRatio;
-
-								image = Bitmap.createScaledBitmap(image,
-										Math.round(newImageWidth),
-										Math.round(maxHeight),
-										true);
-							}
-
-							final ImageSpan span = new ImageSpan(
-									activity.getApplicationContext(),
-									image);
-
-							dynamicSpanned.addSpanDynamic(
-									span,
-									emoteLocationStart,
-									emoteLocationStart + mTitle.length(),
-									Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
-
-						} catch (final Throwable t) {
-							onFailure(General.getGeneralErrorForFailure(
-									activity,
-									CacheRequest.RequestFailureType.CONNECTION,
-									t,
-									null,
-									mSrc,
-									Optional.empty()));
-						}
-					}
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-					}
-				}
-		));
-	}
-
-	@Override
-	public void reduce(
-			@NonNull final HtmlTextAttributes activeAttributes,
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<HtmlRawElement> destination,
-			@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
-		destination.add(this);
-	}
-
-	@Override
-	public void generate(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<BodyElement> destination) {
-		throw new RuntimeException(
-				"Attempt to call generate() on inline image: should be inside a block");
-	}
+    override fun generate(
+        activity: AppCompatActivity,
+        destination: ArrayList<BodyElement?>
+    ) {
+        throw RuntimeException(
+            "Attempt to call generate() on inline image: should be inside a block"
+        )
+    }
 }

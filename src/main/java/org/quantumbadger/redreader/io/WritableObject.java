@@ -12,51 +12,32 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.io
 
-package org.quantumbadger.redreader.io;
+import org.quantumbadger.redreader.common.time.TimestampUTC
 
-import org.quantumbadger.redreader.common.time.TimestampUTC;
+interface WritableObject<K> {
+    class CreationData(val key: String?, val timestamp: Long)
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+    val key: K?
 
-public interface WritableObject<K> {
+    val timestamp: TimestampUTC?
 
-	class CreationData {
-		public final String key;
-		public final long timestamp;
+    @Retention(AnnotationRetention.RUNTIME)
+    @Target(AnnotationTarget.FIELD)
+    annotation class WritableObjectVersion
 
-		public CreationData(final String key, final long timestamp) {
-			this.key = key;
-			this.timestamp = timestamp;
-		}
-	}
+    @Retention(AnnotationRetention.RUNTIME)
+    @Target(AnnotationTarget.FIELD)
+    annotation class WritableObjectKey
 
-	K getKey();
+    @Retention(AnnotationRetention.RUNTIME)
+    @Target(AnnotationTarget.FIELD)
+    annotation class WritableObjectTimestamp
 
-	TimestampUTC getTimestamp();
-
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.FIELD)
-	@interface WritableObjectVersion {
-	}
-
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.FIELD)
-	@interface WritableObjectKey {
-	}
-
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.FIELD)
-	@interface WritableObjectTimestamp {
-	}
-
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.FIELD)
-	@interface WritableField {
-	}
+    @Retention(AnnotationRetention.RUNTIME)
+    @Target(AnnotationTarget.FIELD)
+    annotation class WritableField
 }

@@ -12,27 +12,19 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import java.io.Closeable
+import java.util.concurrent.locks.Lock
 
-import androidx.annotation.NonNull;
+class Locker(private val mLock: Lock) : Closeable {
+    init {
+        mLock.lock()
+    }
 
-import java.io.Closeable;
-import java.util.concurrent.locks.Lock;
-
-public class Locker implements Closeable {
-
-	@NonNull private final Lock mLock;
-
-	public Locker(@NonNull final Lock lock) {
-		mLock = lock;
-		mLock.lock();
-	}
-
-	@Override
-	public void close() {
-		mLock.unlock();
-	}
+    override fun close() {
+        mLock.unlock()
+    }
 }

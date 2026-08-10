@@ -12,35 +12,27 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.displaylist
 
-package org.quantumbadger.redreader.views.glview.displaylist;
+import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
 
-import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack;
+class RRGLRenderableScale(entity: RRGLRenderable?) : RRGLRenderableRenderHooks(entity) {
+    private var mScaleX = 1f
+    private var mScaleY = 1f
 
-public class RRGLRenderableScale extends RRGLRenderableRenderHooks {
+    fun setScale(x: Float, y: Float) {
+        mScaleX = x
+        mScaleY = y
+    }
 
-	private float mScaleX = 1;
-	private float mScaleY = 1;
+    override fun preRender(stack: RRGLMatrixStack, time: Long) {
+        stack.pushAndScale(mScaleX, mScaleY)
+    }
 
-	public RRGLRenderableScale(final RRGLRenderable entity) {
-		super(entity);
-	}
-
-	public void setScale(final float x, final float y) {
-		mScaleX = x;
-		mScaleY = y;
-	}
-
-	@Override
-	protected void preRender(final RRGLMatrixStack stack, final long time) {
-		stack.pushAndScale(mScaleX, mScaleY);
-	}
-
-	@Override
-	protected void postRender(final RRGLMatrixStack stack, final long time) {
-		stack.pop();
-	}
+    override fun postRender(stack: RRGLMatrixStack, time: Long) {
+        stack.pop()
+    }
 }

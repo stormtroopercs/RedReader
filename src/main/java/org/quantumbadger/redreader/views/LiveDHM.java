@@ -12,82 +12,66 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import kotlin.math.abs
 
-public class LiveDHM {
+class LiveDHM(val params: Params) {
+    class Params {
+        var startPosition: Float = 0f
+        var endPosition: Float = 0f
 
-	public static class Params {
+        var startVelocity: Float = 0f
 
-		public float startPosition = 0;
-		public float endPosition = 0;
+        companion object {
+            const val accelerationCoefficient: Float = 30f
+            const val velocityDamping: Float = 0.87f
 
-		public float startVelocity = 0;
+            val stepLengthSeconds: Float = 1f / 60f
 
-		public static final float accelerationCoefficient = 30;
-		public static final float velocityDamping = 0.87f;
+            const val thresholdPositionDifference: Float = 0.49f
+            const val thresholdVelocity: Float = 15f
+            const val thresholdMaxSteps: Int = 1000
+        }
+    }
 
-		public static final float stepLengthSeconds = 1f / 60f;
+    var currentStep: Int = 0
+        private set
 
-		public static final float thresholdPositionDifference = 0.49f;
-		public static final float thresholdVelocity = 15;
-		public static final int thresholdMaxSteps = 1000;
-	}
+    var currentPosition: Float
+        private set
+    var currentVelocity: Float
+        private set
 
-	private final Params mParams;
+    init {
+        this.currentPosition = params.startPosition
+        this.currentVelocity = params.startVelocity
+    }
 
-	private int mStep = 0;
+    fun calculateStep() {
+        this.currentVelocity -= Params.Companion.stepLengthSeconds * ((this.currentPosition - params.endPosition)
+                * Params.Companion.accelerationCoefficient)
+        this.currentVelocity *= Params.Companion.velocityDamping
+        this.currentPosition += this.currentVelocity * Params.Companion.stepLengthSeconds
+        this.currentStep++
+    }
 
-	private float mPosition;
-	private float mVelocity;
+    val isEndThresholdReached: Boolean
+        get() {
+            if (this.currentStep >= Params.Companion.thresholdMaxSteps) {
+                return true
+            }
 
-	public LiveDHM(final Params params) {
-		mParams = params;
-		mPosition = params.startPosition;
-		mVelocity = params.startVelocity;
-	}
+            if (abs(this.currentPosition) > Params.Companion.thresholdPositionDifference) {
+                return false
+            }
 
-	public void calculateStep() {
-		mVelocity -= mParams.stepLengthSeconds * ((mPosition - mParams.endPosition)
-				* mParams.accelerationCoefficient);
-		mVelocity *= mParams.velocityDamping;
-		mPosition += mVelocity * mParams.stepLengthSeconds;
-		mStep++;
-	}
+            if (abs(this.currentVelocity) > Params.Companion.thresholdVelocity) {
+                return false
+            }
 
-	public int getCurrentStep() {
-		return mStep;
-	}
-
-	public float getCurrentPosition() {
-		return mPosition;
-	}
-
-	public float getCurrentVelocity() {
-		return mVelocity;
-	}
-
-	public Params getParams() {
-		return mParams;
-	}
-
-	public boolean isEndThresholdReached() {
-
-		if(mStep >= mParams.thresholdMaxSteps) {
-			return true;
-		}
-
-		if(Math.abs(mPosition) > mParams.thresholdPositionDifference) {
-			return false;
-		}
-
-		//noinspection RedundantIfStatement
-		if(Math.abs(mVelocity) > mParams.thresholdVelocity) {
-			return false;
-		}
-
-		return true;
-	}
+            return true
+        }
 }

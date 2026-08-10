@@ -12,43 +12,36 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.bezelmenu
 
-package org.quantumbadger.redreader.views.bezelmenu;
+import android.content.Context
+import android.graphics.Color
+import android.view.View
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import org.quantumbadger.redreader.common.General.dpToPixels
 
-import android.content.Context;
-import android.graphics.Color;
-import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
+class VerticalToolbar(context: Context) : FrameLayout(context) {
+    private val buttons: LinearLayout
 
-import org.quantumbadger.redreader.common.General;
+    init {
+        setBackgroundColor(Color.argb(192, 0, 0, 0)) // TODO change color based on theme?
 
-public class VerticalToolbar extends FrameLayout {
+        setElevation(dpToPixels(context, 10f).toFloat())
 
-	private final LinearLayout buttons;
+        // TODO add light, vertical line on swipe side
+        buttons = LinearLayout(context)
+        buttons.setOrientation(LinearLayout.VERTICAL)
 
-	public VerticalToolbar(final Context context) {
+        val sv = ScrollView(context)
+        sv.addView(buttons)
+        addView(sv)
+    }
 
-		super(context);
-
-		setBackgroundColor(Color.argb(192, 0, 0, 0)); // TODO change color based on theme?
-
-		setElevation(General.dpToPixels(context, 10));
-
-		// TODO add light, vertical line on swipe side
-
-		buttons = new LinearLayout(context);
-		buttons.setOrientation(LinearLayout.VERTICAL);
-
-		final ScrollView sv = new ScrollView(context);
-		sv.addView(buttons);
-		addView(sv);
-	}
-
-	public void addItem(final View v) {
-		buttons.addView(v);
-	}
+    fun addItem(v: View?) {
+        buttons.addView(v)
+    }
 }

@@ -12,89 +12,80 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.program
 
-package org.quantumbadger.redreader.views.glview.program;
+import android.opengl.Matrix
 
-import android.opengl.Matrix;
+class RRGLMatrixStack(private val mGLContext: RRGLContext) {
+    private var mTopMatrixPos = 0
+    private val mMatrices = FloatArray(16 * 128)
 
-public class RRGLMatrixStack {
+    init {
+        setIdentity()
+    }
 
-	private int mTopMatrixPos = 0;
-	private final float[] mMatrices = new float[16 * 128];
-	private final RRGLContext mGLContext;
+    fun pushAndTranslate(offsetX: Float, offsetY: Float): Int {
+        mTopMatrixPos += 16
+        Matrix.translateM(
+            mMatrices,
+            mTopMatrixPos,
+            mMatrices,
+            mTopMatrixPos - 16,
+            offsetX,
+            offsetY,
+            0f
+        )
+        return mTopMatrixPos - 16
+    }
 
-	public RRGLMatrixStack(final RRGLContext glContext) {
-		mGLContext = glContext;
-		setIdentity();
-	}
+    fun pushAndScale(factorX: Float, factorY: Float): Int {
+        mTopMatrixPos += 16
+        Matrix.scaleM(
+            mMatrices,
+            mTopMatrixPos,
+            mMatrices,
+            mTopMatrixPos - 16,
+            factorX,
+            factorY,
+            0f
+        )
+        return mTopMatrixPos - 16
+    }
 
-	public int pushAndTranslate(final float offsetX, final float offsetY) {
-		mTopMatrixPos += 16;
-		Matrix.translateM(
-				mMatrices,
-				mTopMatrixPos,
-				mMatrices,
-				mTopMatrixPos - 16,
-				offsetX,
-				offsetY,
-				0);
-		return mTopMatrixPos - 16;
-	}
+    fun pop(): Int {
+        mTopMatrixPos -= 16
+        return mTopMatrixPos
+    }
 
-	public int pushAndScale(final float factorX, final float factorY) {
-		mTopMatrixPos += 16;
-		Matrix.scaleM(
-				mMatrices,
-				mTopMatrixPos,
-				mMatrices,
-				mTopMatrixPos - 16,
-				factorX,
-				factorY,
-				0);
-		return mTopMatrixPos - 16;
-	}
+    fun setIdentity() {
+        Matrix.setIdentityM(mMatrices, mTopMatrixPos)
+    }
 
-	public int pop() {
-		mTopMatrixPos -= 16;
-		return mTopMatrixPos;
-	}
+    fun scale(factorX: Float, factorY: Float, factorZ: Float) {
+        Matrix.scaleM(mMatrices, mTopMatrixPos, factorX, factorY, factorZ)
+    }
 
-	public void setIdentity() {
-		Matrix.setIdentityM(mMatrices, mTopMatrixPos);
-	}
+    fun flush() {
+        mGLContext.activateMatrix(mMatrices, mTopMatrixPos)
+    }
 
-	public void scale(final float factorX, final float factorY, final float factorZ) {
-		Matrix.scaleM(mMatrices, mTopMatrixPos, factorX, factorY, factorZ);
-	}
+    fun assertAtRoot() {
+        if (mTopMatrixPos != 0) {
+            throw RuntimeException("assertAtRoot() failed!")
+        }
 
-	public void flush() {
-		mGLContext.activateMatrix(mMatrices, mTopMatrixPos);
-	}
+        for (i in 0..15) {
+            when (i) {
+                0, 5, 10, 15 -> if (mMatrices[i] != 1f) {
+                    throw RuntimeException("Root matrix is not identity!")
+                }
 
-	public void assertAtRoot() {
-
-		if(mTopMatrixPos != 0) {
-			throw new RuntimeException("assertAtRoot() failed!");
-		}
-
-		for(int i = 0; i < 16; i++) {
-			switch(i) {
-				case 0:
-				case 5:
-				case 10:
-				case 15:
-					if(mMatrices[i] != 1) {
-						throw new RuntimeException("Root matrix is not identity!");
-					}
-					break;
-				default:
-					if(mMatrices[i] != 0) {
-						throw new RuntimeException("Root matrix is not identity!");
-					}
-					break;
-			}
-		}
-	}
+                else -> if (mMatrices[i] != 0f) {
+                    throw RuntimeException("Root matrix is not identity!")
+                }
+            }
+        }
+    }
 }

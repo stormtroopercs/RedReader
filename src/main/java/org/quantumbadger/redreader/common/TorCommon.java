@@ -12,36 +12,32 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import org.quantumbadger.redreader.cache.CacheDownload
+import org.quantumbadger.redreader.common.General.checkThisIsUIThread
+import org.quantumbadger.redreader.http.HTTPBackend.Companion.backend
+import java.util.concurrent.atomic.AtomicBoolean
 
-import org.quantumbadger.redreader.cache.CacheDownload;
-import org.quantumbadger.redreader.http.HTTPBackend;
+object TorCommon {
+    private val sIsTorEnabled = AtomicBoolean(false)
 
-import java.util.concurrent.atomic.AtomicBoolean;
+    fun updateTorStatus() {
+        checkThisIsUIThread()
 
-public class TorCommon {
+        val torEnabled = PrefsUtility.network_tor()
+        val torChanged = (torEnabled != isTorEnabled)
 
-	private static final AtomicBoolean sIsTorEnabled = new AtomicBoolean(false);
+        sIsTorEnabled.set(torEnabled)
 
-	public static void updateTorStatus() {
+        if (torChanged) {
+            backend.recreateHttpBackend()
+            CacheDownload.Companion.resetUserCredentialsOnNextRequest()
+        }
+    }
 
-		General.checkThisIsUIThread();
-
-		final boolean torEnabled = PrefsUtility.network_tor();
-		final boolean torChanged = (torEnabled != isTorEnabled());
-
-		sIsTorEnabled.set(torEnabled);
-
-		if(torChanged) {
-			HTTPBackend.getBackend().recreateHttpBackend();
-			CacheDownload.resetUserCredentialsOnNextRequest();
-		}
-	}
-
-	public static boolean isTorEnabled() {
-		return sIsTorEnabled.get();
-	}
+    val isTorEnabled: Boolean
+        get() = sIsTorEnabled.get()
 }

@@ -12,259 +12,250 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.imageview
 
-package org.quantumbadger.redreader.views.imageview;
+import org.quantumbadger.redreader.common.MutableFloatPoint2D
+import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderable
+import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderableBlend
+import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderableColouredQuad
+import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderableGroup
+import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderableScale
+import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderableTranslation
+import org.quantumbadger.redreader.views.glview.program.RRGLContext
+import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
-import org.quantumbadger.redreader.common.MutableFloatPoint2D;
-import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderable;
-import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderableBlend;
-import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderableColouredQuad;
-import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderableGroup;
-import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderableScale;
-import org.quantumbadger.redreader.views.glview.displaylist.RRGLRenderableTranslation;
-import org.quantumbadger.redreader.views.glview.program.RRGLContext;
-import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack;
+class ImageViewScrollbars(
+    glContext: RRGLContext,
+    private val mCoordinateHelper: CoordinateHelper,
+    private val mImageResX: Int,
+    private val mImageResY: Int
+) : RRGLRenderable() {
+    private val mRenderable: RRGLRenderableBlend
 
-public class ImageViewScrollbars extends RRGLRenderable {
+    // Vertical scroll bar
+    private val mVScroll: RRGLRenderableGroup
+    private val mVScrollMarkerTranslation: RRGLRenderableTranslation
+    private val mVScrollMarkerScale: RRGLRenderableScale
+    private val mVScrollBarTranslation: RRGLRenderableTranslation
+    private val mVScrollBarScale: RRGLRenderableScale
+    private val mVScrollBorderTranslation: RRGLRenderableTranslation
+    private val mVScrollBorderScale: RRGLRenderableScale
 
-	private static final float EPSILON = 0.0001f;
+    // Horizontal scroll bar
+    private val mHScroll: RRGLRenderableGroup
+    private val mHScrollMarkerTranslation: RRGLRenderableTranslation
+    private val mHScrollMarkerScale: RRGLRenderableScale
+    private val mHScrollBarTranslation: RRGLRenderableTranslation
+    private val mHScrollBarScale: RRGLRenderableScale
+    private val mHScrollBorderTranslation: RRGLRenderableTranslation
+    private val mHScrollBorderScale: RRGLRenderableScale
 
-	private final RRGLRenderableBlend mRenderable;
+    private var mResX = 0
+    private var mResY = 0
 
-	// Vertical scroll bar
-	private final RRGLRenderableGroup mVScroll;
-	private final RRGLRenderableTranslation mVScrollMarkerTranslation;
-	private final RRGLRenderableScale mVScrollMarkerScale;
-	private final RRGLRenderableTranslation mVScrollBarTranslation;
-	private final RRGLRenderableScale mVScrollBarScale;
-	private final RRGLRenderableTranslation mVScrollBorderTranslation;
-	private final RRGLRenderableScale mVScrollBorderScale;
+    private val mDimMarginSides: Int
+    private val mDimMarginEnds: Int
+    private val mDimBarWidth: Int
+    private val mDimBorderWidth: Int
 
-	// Horizontal scroll bar
-	private final RRGLRenderableGroup mHScroll;
-	private final RRGLRenderableTranslation mHScrollMarkerTranslation;
-	private final RRGLRenderableScale mHScrollMarkerScale;
-	private final RRGLRenderableTranslation mHScrollBarTranslation;
-	private final RRGLRenderableScale mHScrollBarScale;
-	private final RRGLRenderableTranslation mHScrollBorderTranslation;
-	private final RRGLRenderableScale mHScrollBorderScale;
+    private var mShowUntil: Long = -1
+    private var mCurrentAlpha = 1f
+    private var mIsVisible = true
 
-	private final CoordinateHelper mCoordinateHelper;
+    init {
+        val group = RRGLRenderableGroup()
+        mRenderable = RRGLRenderableBlend(group)
 
-	private int mResX;
-	private int mResY;
-	private final int mImageResX;
-	private final int mImageResY;
+        mDimMarginSides = glContext.dpToPixels(10f)
+        mDimMarginEnds = glContext.dpToPixels(20f)
+        mDimBarWidth = glContext.dpToPixels(6f)
+        mDimBorderWidth = glContext.dpToPixels(1f)
 
-	private final int mDimMarginSides;
-	private final int mDimMarginEnds;
-	private final int mDimBarWidth;
-	private final int mDimBorderWidth;
+        // Vertical scroll bar
+        run {
+            mVScroll = RRGLRenderableGroup()
+            group.add(mVScroll)
 
-	private long mShowUntil = -1;
-	private float mCurrentAlpha = 1;
-	private static final float ALPHA_STEP = 0.05f;
-	private boolean mIsVisible = true;
+            val vScrollMarker =
+                RRGLRenderableColouredQuad(glContext)
+            val vScrollBar =
+                RRGLRenderableColouredQuad(glContext)
+            val vScrollBorder =
+                RRGLRenderableColouredQuad(glContext)
 
-	public ImageViewScrollbars(
-			final RRGLContext glContext,
-			final CoordinateHelper coordinateHelper,
-			final int imageResX,
-			final int imageResY) {
+            vScrollMarker.setColour(1f, 1f, 1f, 0.8f)
+            vScrollBar.setColour(0f, 0f, 0f, 0.5f)
+            vScrollBorder.setColour(1f, 1f, 1f, 0.5f)
 
-		mCoordinateHelper = coordinateHelper;
-		mImageResX = imageResX;
-		mImageResY = imageResY;
+            mVScrollMarkerScale = RRGLRenderableScale(vScrollMarker)
+            mVScrollBarScale = RRGLRenderableScale(vScrollBar)
+            mVScrollBorderScale = RRGLRenderableScale(vScrollBorder)
 
-		final RRGLRenderableGroup group = new RRGLRenderableGroup();
-		mRenderable = new RRGLRenderableBlend(group);
+            mVScrollMarkerTranslation =
+                RRGLRenderableTranslation(mVScrollMarkerScale)
+            mVScrollBarTranslation = RRGLRenderableTranslation(mVScrollBarScale)
+            mVScrollBorderTranslation =
+                RRGLRenderableTranslation(mVScrollBorderScale)
 
-		mDimMarginSides = glContext.dpToPixels(10);
-		mDimMarginEnds = glContext.dpToPixels(20);
-		mDimBarWidth = glContext.dpToPixels(6);
-		mDimBorderWidth = glContext.dpToPixels(1);
+            mVScroll.add(mVScrollBorderTranslation)
+            mVScroll.add(mVScrollBarTranslation)
+            mVScroll.add(mVScrollMarkerTranslation)
+        }
 
-		// Vertical scroll bar
-		{
-			mVScroll = new RRGLRenderableGroup();
-			group.add(mVScroll);
+        // Horizontal scroll bar
+        run {
+            mHScroll = RRGLRenderableGroup()
+            group.add(mHScroll)
 
-			final RRGLRenderableColouredQuad vScrollMarker =
-					new RRGLRenderableColouredQuad(glContext);
-			final RRGLRenderableColouredQuad vScrollBar =
-					new RRGLRenderableColouredQuad(glContext);
-			final RRGLRenderableColouredQuad vScrollBorder =
-					new RRGLRenderableColouredQuad(glContext);
+            val hScrollMarker =
+                RRGLRenderableColouredQuad(glContext)
+            val hScrollBar =
+                RRGLRenderableColouredQuad(glContext)
+            val hScrollBorder =
+                RRGLRenderableColouredQuad(glContext)
 
-			vScrollMarker.setColour(1, 1, 1, 0.8f);
-			vScrollBar.setColour(0, 0, 0, 0.5f);
-			vScrollBorder.setColour(1, 1, 1, 0.5f);
+            hScrollMarker.setColour(1f, 1f, 1f, 0.8f)
+            hScrollBar.setColour(0f, 0f, 0f, 0.5f)
+            hScrollBorder.setColour(1f, 1f, 1f, 0.5f)
 
-			mVScrollMarkerScale = new RRGLRenderableScale(vScrollMarker);
-			mVScrollBarScale = new RRGLRenderableScale(vScrollBar);
-			mVScrollBorderScale = new RRGLRenderableScale(vScrollBorder);
+            mHScrollMarkerScale = RRGLRenderableScale(hScrollMarker)
+            mHScrollBarScale = RRGLRenderableScale(hScrollBar)
+            mHScrollBorderScale = RRGLRenderableScale(hScrollBorder)
 
-			mVScrollMarkerTranslation =
-					new RRGLRenderableTranslation(mVScrollMarkerScale);
-			mVScrollBarTranslation = new RRGLRenderableTranslation(mVScrollBarScale);
-			mVScrollBorderTranslation =
-					new RRGLRenderableTranslation(mVScrollBorderScale);
+            mHScrollMarkerTranslation =
+                RRGLRenderableTranslation(mHScrollMarkerScale)
+            mHScrollBarTranslation = RRGLRenderableTranslation(mHScrollBarScale)
+            mHScrollBorderTranslation =
+                RRGLRenderableTranslation(mHScrollBorderScale)
 
-			mVScroll.add(mVScrollBorderTranslation);
-			mVScroll.add(mVScrollBarTranslation);
-			mVScroll.add(mVScrollMarkerTranslation);
-		}
+            mHScroll.add(mHScrollBorderTranslation)
+            mHScroll.add(mHScrollBarTranslation)
+            mHScroll.add(mHScrollMarkerTranslation)
+        }
+    }
 
-		// Horizontal scroll bar
-		{
-			mHScroll = new RRGLRenderableGroup();
-			group.add(mHScroll);
+    fun update() {
+        // TODO avoid GC
 
-			final RRGLRenderableColouredQuad hScrollMarker =
-					new RRGLRenderableColouredQuad(glContext);
-			final RRGLRenderableColouredQuad hScrollBar =
-					new RRGLRenderableColouredQuad(glContext);
-			final RRGLRenderableColouredQuad hScrollBorder =
-					new RRGLRenderableColouredQuad(glContext);
+        val tmp1 = MutableFloatPoint2D()
+        val tmp2 = MutableFloatPoint2D()
 
-			hScrollMarker.setColour(1, 1, 1, 0.8f);
-			hScrollBar.setColour(0, 0, 0, 0.5f);
-			hScrollBorder.setColour(1, 1, 1, 0.5f);
+        mCoordinateHelper.convertScreenToScene(tmp1, tmp2)
+        val xStart = tmp2.x / mImageResX.toFloat()
+        val yStart = tmp2.y / mImageResY.toFloat()
 
-			mHScrollMarkerScale = new RRGLRenderableScale(hScrollMarker);
-			mHScrollBarScale = new RRGLRenderableScale(hScrollBar);
-			mHScrollBorderScale = new RRGLRenderableScale(hScrollBorder);
+        tmp1.set(mResX.toFloat(), mResY.toFloat())
 
-			mHScrollMarkerTranslation =
-					new RRGLRenderableTranslation(mHScrollMarkerScale);
-			mHScrollBarTranslation = new RRGLRenderableTranslation(mHScrollBarScale);
-			mHScrollBorderTranslation =
-					new RRGLRenderableTranslation(mHScrollBorderScale);
+        mCoordinateHelper.convertScreenToScene(tmp1, tmp2)
+        val xEnd = tmp2.x / mImageResX.toFloat()
+        val yEnd = tmp2.y / mImageResY.toFloat()
 
-			mHScroll.add(mHScrollBorderTranslation);
-			mHScroll.add(mHScrollBarTranslation);
-			mHScroll.add(mHScrollMarkerTranslation);
-		}
-	}
+        // Vertical scroll bar
+        if (yStart < EPSILON && yEnd > 1 - EPSILON) {
+            mVScroll.hide()
+        } else {
+            mVScroll.show()
 
-	public void update() {
+            val vScrollTotalHeight = (mResY - 2 * mDimMarginEnds).toFloat()
 
-		// TODO avoid GC
+            val vScrollHeight = (yEnd - yStart) * vScrollTotalHeight
+            val vScrollTop = yStart * vScrollTotalHeight + mDimMarginEnds
+            val vScrollLeft = (mResX - mDimBarWidth - mDimMarginSides).toFloat()
 
-		final MutableFloatPoint2D tmp1 = new MutableFloatPoint2D();
-		final MutableFloatPoint2D tmp2 = new MutableFloatPoint2D();
+            mVScrollBorderTranslation.setPosition(
+                vScrollLeft - mDimBorderWidth,
+                (mDimMarginEnds - mDimBorderWidth).toFloat()
+            )
+            mVScrollBorderScale.setScale(
+                (mDimBarWidth + 2 * mDimBorderWidth).toFloat(),
+                vScrollTotalHeight + 2 * mDimBorderWidth
+            )
 
-		mCoordinateHelper.convertScreenToScene(tmp1, tmp2);
-		final float xStart = tmp2.x / (float)mImageResX;
-		final float yStart = tmp2.y / (float)mImageResY;
+            mVScrollBarTranslation.setPosition(vScrollLeft, mDimMarginEnds.toFloat())
+            mVScrollBarScale.setScale(mDimBarWidth.toFloat(), vScrollTotalHeight)
 
-		tmp1.set(mResX, mResY);
+            mVScrollMarkerTranslation.setPosition(vScrollLeft, vScrollTop)
+            mVScrollMarkerScale.setScale(mDimBarWidth.toFloat(), vScrollHeight)
+        }
 
-		mCoordinateHelper.convertScreenToScene(tmp1, tmp2);
-		final float xEnd = tmp2.x / (float)mImageResX;
-		final float yEnd = tmp2.y / (float)mImageResY;
+        // Horizontal scroll bar
+        if (xStart < EPSILON && xEnd > 1 - EPSILON) {
+            mHScroll.hide()
+        } else {
+            mHScroll.show()
 
-		// Vertical scroll bar
+            val hScrollTotalWidth = (mResX - 2 * mDimMarginEnds).toFloat()
 
-		if(yStart < EPSILON && yEnd > 1 - EPSILON) {
-			mVScroll.hide();
+            val hScrollWidth = (xEnd - xStart) * hScrollTotalWidth
+            val hScrollLeft = xStart * hScrollTotalWidth + mDimMarginEnds
+            val hScrollTop = (mResY - mDimBarWidth - mDimMarginSides).toFloat()
 
-		} else {
-			mVScroll.show();
+            mHScrollBorderTranslation.setPosition(
+                (mDimMarginEnds - mDimBorderWidth).toFloat(),
+                hScrollTop - mDimBorderWidth
+            )
+            mHScrollBorderScale.setScale(
+                hScrollTotalWidth + 2 * mDimBorderWidth,
+                (mDimBarWidth + mDimBorderWidth * 2).toFloat()
+            )
 
-			final float vScrollTotalHeight = mResY - 2 * mDimMarginEnds;
+            mHScrollBarTranslation.setPosition(mDimMarginEnds.toFloat(), hScrollTop)
+            mHScrollBarScale.setScale(hScrollTotalWidth, mDimBarWidth.toFloat())
 
-			final float vScrollHeight = (yEnd - yStart) * vScrollTotalHeight;
-			final float vScrollTop = yStart * vScrollTotalHeight + mDimMarginEnds;
-			final float vScrollLeft = mResX - mDimBarWidth - mDimMarginSides;
+            mHScrollMarkerTranslation.setPosition(hScrollLeft, hScrollTop)
+            mHScrollMarkerScale.setScale(hScrollWidth, mDimBarWidth.toFloat())
+        }
+    }
 
-			mVScrollBorderTranslation.setPosition(
-					vScrollLeft - mDimBorderWidth,
-					mDimMarginEnds - mDimBorderWidth);
-			mVScrollBorderScale.setScale(
-					mDimBarWidth + 2 * mDimBorderWidth,
-					vScrollTotalHeight + 2 * mDimBorderWidth);
+    @Synchronized
+    fun setResolution(x: Int, y: Int) {
+        mResX = x
+        mResY = y
+    }
 
-			mVScrollBarTranslation.setPosition(vScrollLeft, mDimMarginEnds);
-			mVScrollBarScale.setScale(mDimBarWidth, vScrollTotalHeight);
+    override fun onAdded() {
+        super.onAdded()
+        mRenderable.onAdded()
+    }
 
-			mVScrollMarkerTranslation.setPosition(vScrollLeft, vScrollTop);
-			mVScrollMarkerScale.setScale(mDimBarWidth, vScrollHeight);
-		}
+    override fun onRemoved() {
+        mRenderable.onRemoved()
+        super.onRemoved()
+    }
 
-		// Horizontal scroll bar
+    @Synchronized
+    override fun isAnimating(): Boolean {
+        return mIsVisible
+    }
 
-		if(xStart < EPSILON && xEnd > 1 - EPSILON) {
-			mHScroll.hide();
+    @Synchronized
+    fun showBars() {
+        mShowUntil = System.currentTimeMillis() + 600
+        mIsVisible = true
+        mCurrentAlpha = 1f
+    }
 
-		} else {
-			mHScroll.show();
+    @Synchronized
+    override fun renderInternal(stack: RRGLMatrixStack?, time: Long) {
+        if (mIsVisible && time > mShowUntil) {
+            mCurrentAlpha -= ALPHA_STEP
 
-			final float hScrollTotalWidth = mResX - 2 * mDimMarginEnds;
+            if (mCurrentAlpha < 0) {
+                mIsVisible = false
+                mCurrentAlpha = 0f
+            }
+        }
 
-			final float hScrollWidth = (xEnd - xStart) * hScrollTotalWidth;
-			final float hScrollLeft = xStart * hScrollTotalWidth + mDimMarginEnds;
-			final float hScrollTop = mResY - mDimBarWidth - mDimMarginSides;
+        mRenderable.setOverallAlpha(mCurrentAlpha)
 
-			mHScrollBorderTranslation.setPosition(
-					mDimMarginEnds - mDimBorderWidth,
-					hScrollTop - mDimBorderWidth);
-			mHScrollBorderScale.setScale(
-					hScrollTotalWidth + 2 * mDimBorderWidth,
-					mDimBarWidth + mDimBorderWidth * 2);
+        mRenderable.startRender(stack, time)
+    }
 
-			mHScrollBarTranslation.setPosition(mDimMarginEnds, hScrollTop);
-			mHScrollBarScale.setScale(hScrollTotalWidth, mDimBarWidth);
+    companion object {
+        private const val EPSILON = 0.0001f
 
-			mHScrollMarkerTranslation.setPosition(hScrollLeft, hScrollTop);
-			mHScrollMarkerScale.setScale(hScrollWidth, mDimBarWidth);
-		}
-	}
-
-	public synchronized void setResolution(final int x, final int y) {
-		mResX = x;
-		mResY = y;
-	}
-
-	@Override
-	public void onAdded() {
-		super.onAdded();
-		mRenderable.onAdded();
-	}
-
-	@Override
-	public void onRemoved() {
-		mRenderable.onRemoved();
-		super.onRemoved();
-	}
-
-	@Override
-	public synchronized boolean isAnimating() {
-		return mIsVisible;
-	}
-
-	public synchronized void showBars() {
-		mShowUntil = System.currentTimeMillis() + 600;
-		mIsVisible = true;
-		mCurrentAlpha = 1;
-	}
-
-	@Override
-	protected synchronized void renderInternal(final RRGLMatrixStack stack, final long time) {
-
-		if(mIsVisible && time > mShowUntil) {
-			mCurrentAlpha -= ALPHA_STEP;
-
-			if(mCurrentAlpha < 0) {
-				mIsVisible = false;
-				mCurrentAlpha = 0;
-			}
-		}
-
-		mRenderable.setOverallAlpha(mCurrentAlpha);
-
-		mRenderable.startRender(stack, time);
-	}
+        private const val ALPHA_STEP = 0.05f
+    }
 }

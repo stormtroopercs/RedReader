@@ -1,665 +1,660 @@
-package jp.tomorrowkey.android.gifplayer;
+package jp.tomorrowkey.android.gifplayer
 
-import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
-
-import java.io.InputStream;
-import java.util.Vector;
+import android.graphics.Bitmap
+import java.io.InputStream
+import java.util.Vector
+import kotlin.math.pow
 
 // From https://github.com/tomorrowkey/android-gifview/blob/master/src/jp/tomorrowkey/android/gifplayer/GifDecoder.java
 // This file under Apache License 2.0
+class GifDecoder {
+    protected var `in`: InputStream? = null
+    protected var status: Int = 0
+    protected var width: Int = 0 // full image width
+    protected var height: Int = 0 // full image height
+    protected var gctFlag: Boolean = false // global color table used
+    protected var gctSize: Int = 0 // size of global color table
 
-public class GifDecoder {
-	/**
-	 * File read status: No errors.
-	 */
-	public static final int STATUS_OK = 0;
-	/**
-	 * File read status: Error decoding file (may be partially decoded)
-	 */
-	public static final int STATUS_FORMAT_ERROR = 1;
-	/**
-	 * File read status: Unable to open source.
-	 */
-	public static final int STATUS_OPEN_ERROR = 2;
-	/** max decoder pixel stack size */
-	protected static final int MAX_STACK_SIZE = 4096;
-	protected InputStream in;
-	protected int status;
-	protected int width; // full image width
-	protected int height; // full image height
-	protected boolean gctFlag; // global color table used
-	protected int gctSize; // size of global color table
-	protected int loopCount = 1; // iterations; 0 = repeat forever
-	protected int[] gct; // global color table
-	protected int[] lct; // local color table
-	protected int[] act; // active color table
-	protected int bgIndex; // background color index
-	protected int bgColor; // background color
-	protected int lastBgColor; // previous bg color
-	protected int pixelAspect; // pixel aspect ratio
-	protected boolean lctFlag; // local color table flag
-	protected boolean interlace; // interlace flag
-	protected int lctSize; // local color table size
-	protected int ix;
-	protected int iy;
-	protected int iw;
-	protected int ih; // current image rectangle
-	protected int lrx;
-	protected int lry;
-	protected int lrw;
-	protected int lrh;
-	protected Bitmap image; // current frame
-	protected Bitmap lastBitmap; // previous frame
-	protected byte[] block = new byte[256]; // current data block
-	protected int blockSize = 0; // block size last graphic control extension info
-	protected int dispose = 0; // 0=no action; 1=leave in place; 2=restore to bg; 3=restore to prev
-	protected int lastDispose = 0;
-	protected boolean transparency = false; // use transparent color
-	protected int delay = 0; // delay in milliseconds
-	protected int transIndex; // transparent color index
-	// LZW decoder working arrays
-	protected short[] prefix;
-	protected byte[] suffix;
-	protected byte[] pixelStack;
-	protected byte[] pixels;
-	protected Vector<GifFrame> frames; // frames read from current file
-	protected int frameCount;
+    /**
+     * Gets the "Netscape" iteration count, if any. A count of 0 means repeat indefinitiely.
+     *
+     * @return iteration count if one was specified, else 1.
+     */
+    var loopCount: Int = 1 // iterations; 0 = repeat forever
+        protected set
+    protected var gct: IntArray? // global color table
+    protected var lct: IntArray? // local color table
+    protected var act: IntArray? // active color table
+    protected var bgIndex: Int = 0 // background color index
+    protected var bgColor: Int = 0 // background color
+    protected var lastBgColor: Int = 0 // previous bg color
+    protected var pixelAspect: Int = 0 // pixel aspect ratio
+    protected var lctFlag: Boolean = false // local color table flag
+    protected var interlace: Boolean = false // interlace flag
+    protected var lctSize: Int = 0 // local color table size
+    protected var ix: Int = 0
+    protected var iy: Int = 0
+    protected var iw: Int = 0
+    protected var ih: Int = 0 // current image rectangle
+    protected var lrx: Int = 0
+    protected var lry: Int = 0
+    protected var lrw: Int = 0
+    protected var lrh: Int = 0
+    protected var image: Bitmap? = null // current frame
+    protected var lastBitmap: Bitmap? = null // previous frame
+    protected var block: ByteArray = ByteArray(256) // current data block
+    protected var blockSize: Int = 0 // block size last graphic control extension info
+    protected var dispose: Int =
+        0 // 0=no action; 1=leave in place; 2=restore to bg; 3=restore to prev
+    protected var lastDispose: Int = 0
+    protected var transparency: Boolean = false // use transparent color
+    protected var delay: Int = 0 // delay in milliseconds
+    protected var transIndex: Int = 0 // transparent color index
 
-	private static class GifFrame {
-		public GifFrame(Bitmap im, int del) {
-			image = im;
-			delay = del;
-		}
+    // LZW decoder working arrays
+    protected var prefix: ShortArray?
+    protected var suffix: ByteArray?
+    protected var pixelStack: ByteArray?
+    protected var pixels: ByteArray?
+    protected var frames: Vector<GifFrame?>? = null // frames read from current file
 
-		public Bitmap image;
-		public int delay;
-	}
+    /**
+     * Gets the number of frames read from file.
+     *
+     * @return frame count
+     */
+    var frameCount: Int = 0
+        protected set
 
-	/**
-	 * Gets display duration for specified frame.
-	 *
-	 * @param n
-	 *          int index of frame
-	 * @return delay in milliseconds
-	 */
-	public int getDelay(int n) {
-		delay = -1;
-		if ((n >= 0) && (n < frameCount)) {
-			delay = frames.elementAt(n).delay;
-		}
-		return delay;
-	}
+    private class GifFrame(var image: Bitmap?, var delay: Int)
 
-	/**
-	 * Gets the number of frames read from file.
-	 *
-	 * @return frame count
-	 */
-	public int getFrameCount() {
-		return frameCount;
-	}
+    /**
+     * Gets display duration for specified frame.
+     *
+     * @param n
+     * int index of frame
+     * @return delay in milliseconds
+     */
+    fun getDelay(n: Int): Int {
+        delay = -1
+        if ((n >= 0) && (n < frameCount)) {
+            delay = frames!!.elementAt(n)!!.delay
+        }
+        return delay
+    }
 
-	/**
-	 * Gets the first (or only) image read.
-	 *
-	 * @return BufferedBitmap containing first frame, or null if none.
-	 */
-	public Bitmap getBitmap() {
-		return getFrame(0);
-	}
+    val bitmap: Bitmap?
+        /**
+         * Gets the first (or only) image read.
+         *
+         * @return BufferedBitmap containing first frame, or null if none.
+         */
+        get() = getFrame(0)
 
-	/**
-	 * Gets the "Netscape" iteration count, if any. A count of 0 means repeat indefinitiely.
-	 *
-	 * @return iteration count if one was specified, else 1.
-	 */
-	public int getLoopCount() {
-		return loopCount;
-	}
+    /**
+     * Creates new frame image from current data (and previous frames as specified by their disposition codes).
+     */
+    protected fun setPixels() {
+        // expose destination image's pixels as int array
+        val dest = IntArray(width * height)
+        // fill in starting image contents based on last image's dispose code
+        if (lastDispose > 0) {
+            if (lastDispose == 3) {
+                // use image before last
+                val n = frameCount - 2
+                if (n > 0) {
+                    lastBitmap = getFrame(n - 1)
+                } else {
+                    lastBitmap = null
+                }
+            }
+            if (lastBitmap != null) {
+                lastBitmap!!.getPixels(dest, 0, width, 0, 0, width, height)
+                // copy pixels
+                if (lastDispose == 2) {
+                    // fill last image rect area with background color
+                    var c = 0
+                    if (!transparency) {
+                        c = lastBgColor
+                    }
+                    for (i in 0..<lrh) {
+                        val n1 = (lry + i) * width + lrx
+                        val n2 = n1 + lrw
+                        for (k in n1..<n2) {
+                            dest[k] = c
+                        }
+                    }
+                }
+            }
+        }
+        // copy each source line to the appropriate place in the destination
+        var pass = 1
+        var inc = 8
+        var iline = 0
+        for (i in 0..<ih) {
+            var line = i
+            if (interlace) {
+                if (iline >= ih) {
+                    pass++
+                    when (pass) {
+                        2 -> iline = 4
+                        3 -> {
+                            iline = 2
+                            inc = 4
+                        }
 
-	/**
-	 * Creates new frame image from current data (and previous frames as specified by their disposition codes).
-	 */
-	protected void setPixels() {
-		// expose destination image's pixels as int array
-		int[] dest = new int[width * height];
-		// fill in starting image contents based on last image's dispose code
-		if (lastDispose > 0) {
-			if (lastDispose == 3) {
-				// use image before last
-				int n = frameCount - 2;
-				if (n > 0) {
-					lastBitmap = getFrame(n - 1);
-				} else {
-					lastBitmap = null;
-				}
-			}
-			if (lastBitmap != null) {
-				lastBitmap.getPixels(dest, 0, width, 0, 0, width, height);
-				// copy pixels
-				if (lastDispose == 2) {
-					// fill last image rect area with background color
-					int c = 0;
-					if (!transparency) {
-						c = lastBgColor;
-					}
-					for (int i = 0; i < lrh; i++) {
-						int n1 = (lry + i) * width + lrx;
-						int n2 = n1 + lrw;
-						for (int k = n1; k < n2; k++) {
-							dest[k] = c;
-						}
-					}
-				}
-			}
-		}
-		// copy each source line to the appropriate place in the destination
-		int pass = 1;
-		int inc = 8;
-		int iline = 0;
-		for (int i = 0; i < ih; i++) {
-			int line = i;
-			if (interlace) {
-				if (iline >= ih) {
-					pass++;
-					switch (pass) {
-						case 2:
-							iline = 4;
-							break;
-						case 3:
-							iline = 2;
-							inc = 4;
-							break;
-						case 4:
-							iline = 1;
-							inc = 2;
-							break;
-						default:
-							break;
-					}
-				}
-				line = iline;
-				iline += inc;
-			}
-			line += iy;
-			if (line < height) {
-				int k = line * width;
-				int dx = k + ix; // start of line in dest
-				int dlim = dx + iw; // end of dest line
-				if ((k + width) < dlim) {
-					dlim = k + width; // past dest edge
-				}
-				int sx = i * iw; // start of line in source
-				while (dx < dlim) {
-					// map color and insert in destination
-					int index = ((int) pixels[sx++]) & 0xff;
-					int c = act[index];
-					if (c != 0) {
-						dest[dx] = c;
-					}
-					dx++;
-				}
-			}
-		}
-		image = Bitmap.createBitmap(dest, width, height, Config.ARGB_4444);
-	}
+                        4 -> {
+                            iline = 1
+                            inc = 2
+                        }
 
-	/**
-	 * Gets the image contents of frame n.
-	 *
-	 * @return BufferedBitmap representation of frame, or null if n is invalid.
-	 */
-	public Bitmap getFrame(int n) {
-		if (frameCount <= 0)
-			return null;
-		n = n % frameCount;
-		return frames.elementAt(n).image;
-	}
+                        else -> {}
+                    }
+                }
+                line = iline
+                iline += inc
+            }
+            line += iy
+            if (line < height) {
+                val k = line * width
+                var dx = k + ix // start of line in dest
+                var dlim = dx + iw // end of dest line
+                if ((k + width) < dlim) {
+                    dlim = k + width // past dest edge
+                }
+                var sx = i * iw // start of line in source
+                while (dx < dlim) {
+                    // map color and insert in destination
+                    val index = (pixels!![sx++].toInt()) and 0xff
+                    val c = act!![index]
+                    if (c != 0) {
+                        dest[dx] = c
+                    }
+                    dx++
+                }
+            }
+        }
+        image = Bitmap.createBitmap(dest, width, height, Bitmap.Config.ARGB_4444)
+    }
 
-	/**
-	 * Reads GIF image from stream
-	 *
-	 * @param is
-	 *          containing GIF file.
-	 * @return read status code (0 = no errors)
-	 */
-	public int read(InputStream is) {
-		init();
-		if (is != null) {
-			in = is;
-			readHeader();
-			if (!err()) {
-				readContents();
-				if (frameCount < 0) {
-					status = STATUS_FORMAT_ERROR;
-				}
-			}
-		} else {
-			status = STATUS_OPEN_ERROR;
-		}
-		try {
-			is.close();
-		} catch (Exception e) {
-		}
-		return status;
-	}
+    /**
+     * Gets the image contents of frame n.
+     *
+     * @return BufferedBitmap representation of frame, or null if n is invalid.
+     */
+    fun getFrame(n: Int): Bitmap? {
+        var n = n
+        if (frameCount <= 0) return null
+        n = n % frameCount
+        return frames!!.elementAt(n)!!.image
+    }
 
-	/**
-	 * Decodes LZW image data into pixel array. Adapted from John Cristy's BitmapMagick.
-	 */
-	protected void decodeBitmapData() {
-		int nullCode = -1;
-		int npix = iw * ih;
-		int available;
-		int clear;
-		int code_mask;
-		int code_size;
-		int end_of_information;
-		int in_code;
-		int old_code;
-		int bits;
-		int code;
-		int count;
-		int i;
-		int datum;
-		int data_size;
-		int first;
-		int top;
-		int bi;
-		int pi;
-		if ((pixels == null) || (pixels.length < npix)) {
-			pixels = new byte[npix]; // allocate new pixel array
-		}
-		if (prefix == null) {
-			prefix = new short[MAX_STACK_SIZE];
-		}
-		if (suffix == null) {
-			suffix = new byte[MAX_STACK_SIZE];
-		}
-		if (pixelStack == null) {
-			pixelStack = new byte[MAX_STACK_SIZE + 1];
-		}
-		// Initialize GIF data stream decoder.
-		data_size = read();
-		clear = 1 << data_size;
-		end_of_information = clear + 1;
-		available = clear + 2;
-		old_code = nullCode;
-		code_size = data_size + 1;
-		code_mask = (1 << code_size) - 1;
-		for (code = 0; code < clear; code++) {
-			prefix[code] = 0; // XXX ArrayIndexOutOfBoundsException
-			suffix[code] = (byte) code;
-		}
-		// Decode GIF pixel stream.
-		datum = bits = count = first = top = pi = bi = 0;
-		for (i = 0; i < npix;) {
-			if (top == 0) {
-				if (bits < code_size) {
-					// Load bytes until there are enough bits for a code.
-					if (count == 0) {
-						// Read a new data block.
-						count = readBlock();
-						if (count <= 0) {
-							break;
-						}
-						bi = 0;
-					}
-					datum += (((int) block[bi]) & 0xff) << bits;
-					bits += 8;
-					bi++;
-					count--;
-					continue;
-				}
-				// Get the next code.
-				code = datum & code_mask;
-				datum >>= code_size;
-				bits -= code_size;
-				// Interpret the code
-				if ((code > available) || (code == end_of_information)) {
-					break;
-				}
-				if (code == clear) {
-					// Reset decoder.
-					code_size = data_size + 1;
-					code_mask = (1 << code_size) - 1;
-					available = clear + 2;
-					old_code = nullCode;
-					continue;
-				}
-				if (old_code == nullCode) {
-					pixelStack[top++] = suffix[code];
-					old_code = code;
-					first = code;
-					continue;
-				}
-				in_code = code;
-				if (code == available) {
-					pixelStack[top++] = (byte) first;
-					code = old_code;
-				}
-				while (code > clear) {
-					pixelStack[top++] = suffix[code];
-					code = prefix[code];
-				}
-				first = ((int) suffix[code]) & 0xff;
-				// Add a new string to the string table,
-				if (available >= MAX_STACK_SIZE) {
-					break;
-				}
-				pixelStack[top++] = (byte) first;
-				prefix[available] = (short) old_code;
-				suffix[available] = (byte) first;
-				available++;
-				if (((available & code_mask) == 0) && (available < MAX_STACK_SIZE)) {
-					code_size++;
-					code_mask += available;
-				}
-				old_code = in_code;
-			}
-			// Pop a pixel off the pixel stack.
-			top--;
-			pixels[pi++] = pixelStack[top];
-			i++;
-		}
-		for (i = pi; i < npix; i++) {
-			pixels[i] = 0; // clear missing pixels
-		}
-	}
+    /**
+     * Reads GIF image from stream
+     *
+     * @param is
+     * containing GIF file.
+     * @return read status code (0 = no errors)
+     */
+    fun read(`is`: InputStream?): Int {
+        init()
+        if (`is` != null) {
+            `in` = `is`
+            readHeader()
+            if (!err()) {
+                readContents()
+                if (frameCount < 0) {
+                    status = STATUS_FORMAT_ERROR
+                }
+            }
+        } else {
+            status = STATUS_OPEN_ERROR
+        }
+        try {
+            `is`!!.close()
+        } catch (e: Exception) {
+        }
+        return status
+    }
 
-	/**
-	 * Returns true if an error was encountered during reading/decoding
-	 */
-	protected boolean err() {
-		return status != STATUS_OK;
-	}
+    /**
+     * Decodes LZW image data into pixel array. Adapted from John Cristy's BitmapMagick.
+     */
+    protected fun decodeBitmapData() {
+        val nullCode = -1
+        val npix = iw * ih
+        var available: Int
+        val clear: Int
+        var code_mask: Int
+        var code_size: Int
+        val end_of_information: Int
+        var in_code: Int
+        var old_code: Int
+        var bits: Int
+        var code: Int
+        var count: Int
+        var i: Int
+        var datum: Int
+        val data_size: Int
+        var first: Int
+        var top: Int
+        var bi: Int
+        var pi: Int
+        if ((pixels == null) || (pixels!!.size < npix)) {
+            pixels = ByteArray(npix) // allocate new pixel array
+        }
+        if (prefix == null) {
+            prefix = ShortArray(MAX_STACK_SIZE)
+        }
+        if (suffix == null) {
+            suffix = ByteArray(MAX_STACK_SIZE)
+        }
+        if (pixelStack == null) {
+            pixelStack = ByteArray(MAX_STACK_SIZE + 1)
+        }
+        // Initialize GIF data stream decoder.
+        data_size = read()
+        clear = 1 shl data_size
+        end_of_information = clear + 1
+        available = clear + 2
+        old_code = nullCode
+        code_size = data_size + 1
+        code_mask = (1 shl code_size) - 1
+        code = 0
+        while (code < clear) {
+            prefix!![code] = 0 // XXX ArrayIndexOutOfBoundsException
+            suffix!![code] = code.toByte()
+            code++
+        }
+        // Decode GIF pixel stream.
+        bi = 0
+        pi = bi
+        top = pi
+        first = top
+        count = first
+        bits = count
+        datum = bits
+        i = 0
+        while (i < npix) {
+            if (top == 0) {
+                if (bits < code_size) {
+                    // Load bytes until there are enough bits for a code.
+                    if (count == 0) {
+                        // Read a new data block.
+                        count = readBlock()
+                        if (count <= 0) {
+                            break
+                        }
+                        bi = 0
+                    }
+                    datum += ((block[bi].toInt()) and 0xff) shl bits
+                    bits += 8
+                    bi++
+                    count--
+                    continue
+                }
+                // Get the next code.
+                code = datum and code_mask
+                datum = datum shr code_size
+                bits -= code_size
+                // Interpret the code
+                if ((code > available) || (code == end_of_information)) {
+                    break
+                }
+                if (code == clear) {
+                    // Reset decoder.
+                    code_size = data_size + 1
+                    code_mask = (1 shl code_size) - 1
+                    available = clear + 2
+                    old_code = nullCode
+                    continue
+                }
+                if (old_code == nullCode) {
+                    pixelStack!![top++] = suffix!![code]
+                    old_code = code
+                    first = code
+                    continue
+                }
+                in_code = code
+                if (code == available) {
+                    pixelStack!![top++] = first.toByte()
+                    code = old_code
+                }
+                while (code > clear) {
+                    pixelStack!![top++] = suffix!![code]
+                    code = prefix!![code].toInt()
+                }
+                first = (suffix!![code].toInt()) and 0xff
+                // Add a new string to the string table,
+                if (available >= MAX_STACK_SIZE) {
+                    break
+                }
+                pixelStack!![top++] = first.toByte()
+                prefix!![available] = old_code.toShort()
+                suffix!![available] = first.toByte()
+                available++
+                if (((available and code_mask) == 0) && (available < MAX_STACK_SIZE)) {
+                    code_size++
+                    code_mask += available
+                }
+                old_code = in_code
+            }
+            // Pop a pixel off the pixel stack.
+            top--
+            pixels!![pi++] = pixelStack!![top]
+            i++
+        }
+        i = pi
+        while (i < npix) {
+            pixels!![i] = 0 // clear missing pixels
+            i++
+        }
+    }
 
-	/**
-	 * Initializes or re-initializes reader
-	 */
-	protected void init() {
-		status = STATUS_OK;
-		frameCount = 0;
-		frames = new Vector<>();
-		gct = null;
-		lct = null;
-	}
+    /**
+     * Returns true if an error was encountered during reading/decoding
+     */
+    protected fun err(): Boolean {
+        return status != STATUS_OK
+    }
 
-	/**
-	 * Reads a single byte from the input stream.
-	 */
-	protected int read() {
-		int curByte = 0;
-		try {
-			curByte = in.read();
-		} catch (Exception e) {
-			status = STATUS_FORMAT_ERROR;
-		}
-		return curByte;
-	}
+    /**
+     * Initializes or re-initializes reader
+     */
+    protected fun init() {
+        status = STATUS_OK
+        frameCount = 0
+        frames = Vector<GifFrame?>()
+        gct = null
+        lct = null
+    }
 
-	/**
-	 * Reads next variable length block from input.
-	 *
-	 * @return number of bytes stored in "buffer"
-	 */
-	protected int readBlock() {
-		blockSize = read();
-		int n = 0;
-		if (blockSize > 0) {
-			try {
-				int count = 0;
-				while (n < blockSize) {
-					count = in.read(block, n, blockSize - n);
-					if (count == -1) {
-						break;
-					}
-					n += count;
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			if (n < blockSize) {
-				status = STATUS_FORMAT_ERROR;
-			}
-		}
-		return n;
-	}
+    /**
+     * Reads a single byte from the input stream.
+     */
+    protected fun read(): Int {
+        var curByte = 0
+        try {
+            curByte = `in`!!.read()
+        } catch (e: Exception) {
+            status = STATUS_FORMAT_ERROR
+        }
+        return curByte
+    }
 
-	/**
-	 * Reads color table as 256 RGB integer values
-	 *
-	 * @param ncolors
-	 *          int number of colors to read
-	 * @return int array containing 256 colors (packed ARGB with full alpha)
-	 */
-	protected int[] readColorTable(int ncolors) {
-		int nbytes = 3 * ncolors;
-		int[] tab = null;
-		byte[] c = new byte[nbytes];
-		int n = 0;
-		try {
-			n = in.read(c);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		if (n < nbytes) {
-			status = STATUS_FORMAT_ERROR;
-		} else {
-			tab = new int[256]; // max size to avoid bounds checks
-			int i = 0;
-			int j = 0;
-			while (i < ncolors) {
-				int r = ((int) c[j++]) & 0xff;
-				int g = ((int) c[j++]) & 0xff;
-				int b = ((int) c[j++]) & 0xff;
-				tab[i++] = 0xff000000 | (r << 16) | (g << 8) | b;
-			}
-		}
-		return tab;
-	}
+    /**
+     * Reads next variable length block from input.
+     *
+     * @return number of bytes stored in "buffer"
+     */
+    protected fun readBlock(): Int {
+        blockSize = read()
+        var n = 0
+        if (blockSize > 0) {
+            try {
+                var count = 0
+                while (n < blockSize) {
+                    count = `in`!!.read(block, n, blockSize - n)
+                    if (count == -1) {
+                        break
+                    }
+                    n += count
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            if (n < blockSize) {
+                status = STATUS_FORMAT_ERROR
+            }
+        }
+        return n
+    }
 
-	/**
-	 * Main file parser. Reads GIF content blocks.
-	 */
-	protected void readContents() {
-		// read GIF file content blocks
-		boolean done = false;
-		while (!(done || err())) {
-			int code = read();
-			switch (code) {
-				case 0x2C: // image separator
-					readBitmap();
-					break;
-				case 0x21: // extension
-					code = read();
-					switch (code) {
-						case 0xf9: // graphics control extension
-							readGraphicControlExt();
-							break;
-						case 0xff: // application extension
-							readBlock();
-							String app = "";
-							for (int i = 0; i < 11; i++) {
-								app += (char) block[i];
-							}
-							if (app.equals("NETSCAPE2.0")) {
-								readNetscapeExt();
-							} else {
-								skip(); // don't care
-							}
-							break;
-						case 0xfe:// comment extension
-							skip();
-							break;
-						case 0x01:// plain text extension
-							skip();
-							break;
-						default: // uninteresting extension
-							skip();
-					}
-					break;
-				case 0x3b: // terminator
-					done = true;
-					break;
-				case 0x00: // bad byte, but keep going and see what happens break;
-				default:
-					status = STATUS_FORMAT_ERROR;
-			}
-		}
-	}
+    /**
+     * Reads color table as 256 RGB integer values
+     *
+     * @param ncolors
+     * int number of colors to read
+     * @return int array containing 256 colors (packed ARGB with full alpha)
+     */
+    protected fun readColorTable(ncolors: Int): IntArray? {
+        val nbytes = 3 * ncolors
+        var tab: IntArray? = null
+        val c = ByteArray(nbytes)
+        var n = 0
+        try {
+            n = `in`!!.read(c)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        if (n < nbytes) {
+            status = STATUS_FORMAT_ERROR
+        } else {
+            tab = IntArray(256) // max size to avoid bounds checks
+            var i = 0
+            var j = 0
+            while (i < ncolors) {
+                val r = (c[j++].toInt()) and 0xff
+                val g = (c[j++].toInt()) and 0xff
+                val b = (c[j++].toInt()) and 0xff
+                tab[i++] = -0x1000000 or (r shl 16) or (g shl 8) or b
+            }
+        }
+        return tab
+    }
 
-	/**
-	 * Reads Graphics Control Extension values
-	 */
-	protected void readGraphicControlExt() {
-		read(); // block size
-		int packed = read(); // packed fields
-		dispose = (packed & 0x1c) >> 2; // disposal method
-		if (dispose == 0) {
-			dispose = 1; // elect to keep old image if discretionary
-		}
-		transparency = (packed & 1) != 0;
-		delay = readShort() * 10; // delay in milliseconds
-		transIndex = read(); // transparent color index
-		read(); // block terminator
-	}
+    /**
+     * Main file parser. Reads GIF content blocks.
+     */
+    protected fun readContents() {
+        // read GIF file content blocks
+        var done = false
+        while (!(done || err())) {
+            var code = read()
+            when (code) {
+                0x2C -> readBitmap()
+                0x21 -> {
+                    code = read()
+                    when (code) {
+                        0xf9 -> readGraphicControlExt()
+                        0xff -> {
+                            readBlock()
+                            val app = ""
+                            val i = 0
+                            while (i < 11) {
+                                app += Char(block[i].toUShort())
+                                i++
+                            }
+                            if (app == "NETSCAPE2.0") {
+                                readNetscapeExt()
+                            } else {
+                                skip() // don't care
+                            }
+                        }
 
-	/**
-	 * Reads GIF file header information.
-	 */
-	protected void readHeader() {
-		String id = "";
-		for (int i = 0; i < 6; i++) {
-			id += (char) read();
-		}
-		if (!id.startsWith("GIF")) {
-			status = STATUS_FORMAT_ERROR;
-			return;
-		}
-		readLSD();
-		if (gctFlag && !err()) {
-			gct = readColorTable(gctSize);
-			bgColor = gct[bgIndex];
-		}
-	}
+                        0xfe -> skip()
+                        0x01 -> skip()
+                        else -> skip()
+                    }
+                }
 
-	/**
-	 * Reads next frame image
-	 */
-	protected void readBitmap() {
-		ix = readShort(); // (sub)image position & size
-		iy = readShort();
-		iw = readShort();
-		ih = readShort();
-		int packed = read();
-		lctFlag = (packed & 0x80) != 0; // 1 - local color table flag interlace
-		lctSize = (int) Math.pow(2, (packed & 0x07) + 1);
-		// 3 - sort flag
-		// 4-5 - reserved lctSize = 2 << (packed & 7); // 6-8 - local color
-		// table size
-		interlace = (packed & 0x40) != 0;
-		if (lctFlag) {
-			lct = readColorTable(lctSize); // read table
-			act = lct; // make local table active
-		} else {
-			act = gct; // make global table active
-			if (bgIndex == transIndex) {
-				bgColor = 0;
-			}
-		}
-		int save = 0;
-		if (transparency) {
-			save = act[transIndex];
-			act[transIndex] = 0; // set transparent color if specified
-		}
-		if (act == null) {
-			status = STATUS_FORMAT_ERROR; // no color table defined
-		}
-		if (err()) {
-			return;
-		}
-		decodeBitmapData(); // decode pixel data
-		skip();
-		if (err()) {
-			return;
-		}
-		frameCount++;
-		// create new image to receive frame data
-		image = Bitmap.createBitmap(width, height, Config.ARGB_4444);
-		setPixels(); // transfer pixel data to image
-		frames.addElement(new GifFrame(image, delay)); // add image to frame
-		// list
-		if (transparency) {
-			act[transIndex] = save;
-		}
-		resetFrame();
-	}
+                0x3b -> done = true
+                0x00 -> status = STATUS_FORMAT_ERROR
+                else -> status = STATUS_FORMAT_ERROR
+            }
+        }
+    }
 
-	/**
-	 * Reads Logical Screen Descriptor
-	 */
-	protected void readLSD() {
-		// logical screen size
-		width = readShort();
-		height = readShort();
-		// packed fields
-		int packed = read();
-		gctFlag = (packed & 0x80) != 0; // 1 : global color table flag
-		// 2-4 : color resolution
-		// 5 : gct sort flag
-		gctSize = 2 << (packed & 7); // 6-8 : gct size
-		bgIndex = read(); // background color index
-		pixelAspect = read(); // pixel aspect ratio
-	}
+    /**
+     * Reads Graphics Control Extension values
+     */
+    protected fun readGraphicControlExt() {
+        read() // block size
+        val packed = read() // packed fields
+        dispose = (packed and 0x1c) shr 2 // disposal method
+        if (dispose == 0) {
+            dispose = 1 // elect to keep old image if discretionary
+        }
+        transparency = (packed and 1) != 0
+        delay = readShort() * 10 // delay in milliseconds
+        transIndex = read() // transparent color index
+        read() // block terminator
+    }
 
-	/**
-	 * Reads Netscape extenstion to obtain iteration count
-	 */
-	protected void readNetscapeExt() {
-		do {
-			readBlock();
-			if (block[0] == 1) {
-				// loop count sub-block
-				int b1 = ((int) block[1]) & 0xff;
-				int b2 = ((int) block[2]) & 0xff;
-				loopCount = (b2 << 8) | b1;
-			}
-		} while ((blockSize > 0) && !err());
-	}
+    /**
+     * Reads GIF file header information.
+     */
+    protected fun readHeader() {
+        var id = ""
+        for (i in 0..5) {
+            id += read().toChar()
+        }
+        if (!id.startsWith("GIF")) {
+            status = STATUS_FORMAT_ERROR
+            return
+        }
+        readLSD()
+        if (gctFlag && !err()) {
+            gct = readColorTable(gctSize)
+            bgColor = gct!![bgIndex]
+        }
+    }
 
-	/**
-	 * Reads next 16-bit value, LSB first
-	 */
-	protected int readShort() {
-		// read 16-bit value, LSB first
-		return read() | (read() << 8);
-	}
+    /**
+     * Reads next frame image
+     */
+    protected fun readBitmap() {
+        ix = readShort() // (sub)image position & size
+        iy = readShort()
+        iw = readShort()
+        ih = readShort()
+        val packed = read()
+        lctFlag = (packed and 0x80) != 0 // 1 - local color table flag interlace
+        lctSize = 2.0.pow(((packed and 0x07) + 1).toDouble()).toInt()
+        // 3 - sort flag
+        // 4-5 - reserved lctSize = 2 << (packed & 7); // 6-8 - local color
+        // table size
+        interlace = (packed and 0x40) != 0
+        if (lctFlag) {
+            lct = readColorTable(lctSize) // read table
+            act = lct // make local table active
+        } else {
+            act = gct // make global table active
+            if (bgIndex == transIndex) {
+                bgColor = 0
+            }
+        }
+        var save = 0
+        if (transparency) {
+            save = act!![transIndex]
+            act!![transIndex] = 0 // set transparent color if specified
+        }
+        if (act == null) {
+            status = STATUS_FORMAT_ERROR // no color table defined
+        }
+        if (err()) {
+            return
+        }
+        decodeBitmapData() // decode pixel data
+        skip()
+        if (err()) {
+            return
+        }
+        frameCount++
+        // create new image to receive frame data
+        image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444)
+        setPixels() // transfer pixel data to image
+        frames!!.addElement(GifFrame(image, delay)) // add image to frame
+        // list
+        if (transparency) {
+            act!![transIndex] = save
+        }
+        resetFrame()
+    }
 
-	/**
-	 * Resets frame state for reading next image.
-	 */
-	protected void resetFrame() {
-		lastDispose = dispose;
-		lrx = ix;
-		lry = iy;
-		lrw = iw;
-		lrh = ih;
-		lastBitmap = image;
-		lastBgColor = bgColor;
-		dispose = 0;
-		transparency = false;
-		delay = 0;
-		lct = null;
-	}
+    /**
+     * Reads Logical Screen Descriptor
+     */
+    protected fun readLSD() {
+        // logical screen size
+        width = readShort()
+        height = readShort()
+        // packed fields
+        val packed = read()
+        gctFlag = (packed and 0x80) != 0 // 1 : global color table flag
+        // 2-4 : color resolution
+        // 5 : gct sort flag
+        gctSize = 2 shl (packed and 7) // 6-8 : gct size
+        bgIndex = read() // background color index
+        pixelAspect = read() // pixel aspect ratio
+    }
 
-	/**
-	 * Skips variable length blocks up to and including next zero length block.
-	 */
-	protected void skip() {
-		do {
-			readBlock();
-		} while ((blockSize > 0) && !err());
-	}
+    /**
+     * Reads Netscape extenstion to obtain iteration count
+     */
+    protected fun readNetscapeExt() {
+        do {
+            readBlock()
+            if (block[0].toInt() == 1) {
+                // loop count sub-block
+                val b1 = (block[1].toInt()) and 0xff
+                val b2 = (block[2].toInt()) and 0xff
+                loopCount = (b2 shl 8) or b1
+            }
+        } while ((blockSize > 0) && !err())
+    }
+
+    /**
+     * Reads next 16-bit value, LSB first
+     */
+    protected fun readShort(): Int {
+        // read 16-bit value, LSB first
+        return read() or (read() shl 8)
+    }
+
+    /**
+     * Resets frame state for reading next image.
+     */
+    protected fun resetFrame() {
+        lastDispose = dispose
+        lrx = ix
+        lry = iy
+        lrw = iw
+        lrh = ih
+        lastBitmap = image
+        lastBgColor = bgColor
+        dispose = 0
+        transparency = false
+        delay = 0
+        lct = null
+    }
+
+    /**
+     * Skips variable length blocks up to and including next zero length block.
+     */
+    protected fun skip() {
+        do {
+            readBlock()
+        } while ((blockSize > 0) && !err())
+    }
+
+    companion object {
+        /**
+         * File read status: No errors.
+         */
+        const val STATUS_OK: Int = 0
+
+        /**
+         * File read status: Error decoding file (may be partially decoded)
+         */
+        const val STATUS_FORMAT_ERROR: Int = 1
+
+        /**
+         * File read status: Unable to open source.
+         */
+        const val STATUS_OPEN_ERROR: Int = 2
+
+        /** max decoder pixel stack size  */
+        protected const val MAX_STACK_SIZE: Int = 4096
+    }
 }

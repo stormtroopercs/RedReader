@@ -12,42 +12,38 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.liststatus
 
-package org.quantumbadger.redreader.views.liststatus;
+import android.content.Context
+import android.view.View
+import android.widget.FrameLayout
+import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
 
-import android.content.Context;
-import android.view.View;
-import android.widget.FrameLayout;
-import org.quantumbadger.redreader.common.General;
+open class StatusListItemView(context: Context) : FrameLayout(context) {
+    protected val dpScale: Float
 
-public class StatusListItemView extends FrameLayout {
+    private var contents: View? = null
 
-	protected final float dpScale;
+    init {
+        dpScale = context.getResources().getDisplayMetrics().density // TODO xml?
+    }
 
-	private View contents = null;
+    fun setContents(contents: View) {
+        if (this.contents != null) {
+            removeView(this.contents)
+        }
+        this.contents = contents
+        addView(contents)
+        setLayoutMatchWidthWrapHeight(contents)
+    }
 
-	public StatusListItemView(final Context context) {
-		super(context);
-		dpScale = context.getResources().getDisplayMetrics().density; // TODO xml?
-	}
+    fun hideNoAnim() {
+        setVisibility(GONE)
+        removeAllViews()
+        contents = null
 
-	public void setContents(final View contents) {
-		if(this.contents != null) {
-			removeView(this.contents);
-		}
-		this.contents = contents;
-		addView(contents);
-		General.setLayoutMatchWidthWrapHeight(contents);
-	}
-
-	public void hideNoAnim() {
-
-		setVisibility(GONE);
-		removeAllViews();
-		contents = null;
-
-		requestLayout();
-	}
+        requestLayout()
+    }
 }

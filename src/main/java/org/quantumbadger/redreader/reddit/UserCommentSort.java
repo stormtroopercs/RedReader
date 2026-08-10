@@ -12,140 +12,116 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
 
-package org.quantumbadger.redreader.reddit;
+import android.net.Uri
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.OptionsMenuUtility
+import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuCommentsListener
+import org.quantumbadger.redreader.common.StringUtils
 
-import android.net.Uri;
+enum class UserCommentSort(@field:StringRes @param:StringRes private val menuTitle: Int) :
+    OptionsMenuUtility.Sort {
+    NEW(string.sort_comments_new),
+    HOT(string.sort_comments_hot),
+    CONTROVERSIAL_HOUR(string.sort_posts_controversial_hour),
+    CONTROVERSIAL_DAY(string.sort_posts_controversial_today),
+    CONTROVERSIAL_WEEK(string.sort_posts_controversial_week),
+    CONTROVERSIAL_MONTH(string.sort_posts_controversial_month),
+    CONTROVERSIAL_YEAR(string.sort_posts_controversial_year),
+    CONTROVERSIAL_ALL(string.sort_posts_controversial_all),
+    TOP_HOUR(string.sort_posts_top_hour),
+    TOP_DAY(string.sort_posts_top_today),
+    TOP_WEEK(string.sort_posts_top_week),
+    TOP_MONTH(string.sort_posts_top_month),
+    TOP_YEAR(string.sort_posts_top_year),
+    TOP_ALL(string.sort_posts_top_all);
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.OptionsMenuUtility;
-import org.quantumbadger.redreader.common.StringUtils;
+    fun addToUserCommentListingUri(builder: Uri.Builder) {
+        when (this) {
+            UserCommentSort.HOT, UserCommentSort.NEW -> builder.appendQueryParameter(
+                "sort",
+                StringUtils.asciiLowercase(name)
+            )
 
-public enum UserCommentSort implements OptionsMenuUtility.Sort {
-	NEW(R.string.sort_comments_new),
-	HOT(R.string.sort_comments_hot),
-	CONTROVERSIAL_HOUR(R.string.sort_posts_controversial_hour),
-	CONTROVERSIAL_DAY(R.string.sort_posts_controversial_today),
-	CONTROVERSIAL_WEEK(R.string.sort_posts_controversial_week),
-	CONTROVERSIAL_MONTH(R.string.sort_posts_controversial_month),
-	CONTROVERSIAL_YEAR(R.string.sort_posts_controversial_year),
-	CONTROVERSIAL_ALL(R.string.sort_posts_controversial_all),
-	TOP_HOUR(R.string.sort_posts_top_hour),
-	TOP_DAY(R.string.sort_posts_top_today),
-	TOP_WEEK(R.string.sort_posts_top_week),
-	TOP_MONTH(R.string.sort_posts_top_month),
-	TOP_YEAR(R.string.sort_posts_top_year),
-	TOP_ALL(R.string.sort_posts_top_all);
+            UserCommentSort.CONTROVERSIAL_HOUR, UserCommentSort.CONTROVERSIAL_DAY, UserCommentSort.CONTROVERSIAL_WEEK, UserCommentSort.CONTROVERSIAL_MONTH, UserCommentSort.CONTROVERSIAL_YEAR, UserCommentSort.CONTROVERSIAL_ALL, UserCommentSort.TOP_HOUR, UserCommentSort.TOP_DAY, UserCommentSort.TOP_WEEK, UserCommentSort.TOP_MONTH, UserCommentSort.TOP_YEAR, UserCommentSort.TOP_ALL -> {
+                val parts: Array<String?> =
+                    name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                builder.appendQueryParameter(
+                    "sort",
+                    StringUtils.asciiLowercase(parts[0]!!)
+                )
+                builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]!!))
+            }
+        }
+    }
 
-	@StringRes
-	private final int menuTitle;
+    override fun getMenuTitle(): Int {
+        return menuTitle
+    }
 
-	UserCommentSort(@StringRes final int menuTitle) {
-		this.menuTitle = menuTitle;
-	}
+    override fun onSortSelected(activity: AppCompatActivity) {
+        (activity as OptionsMenuCommentsListener).onSortSelected(this)
+    }
 
-	@Nullable
-	public static UserCommentSort parse(@Nullable String sort, @Nullable String t) {
+    companion object {
+        fun parse(sort: String?, t: String?): UserCommentSort? {
+            var sort = sort
+            var t = t
+            if (sort == null) {
+                return null
+            }
 
-		if (sort == null) {
-			return null;
-		}
+            sort = StringUtils.asciiLowercase(sort)
+            t = if (t != null) StringUtils.asciiLowercase(t) else null
 
-		sort = StringUtils.asciiLowercase(sort);
-		t = t != null ? StringUtils.asciiLowercase(t) : null;
-
-		if (sort.equals("hot")) {
-			return HOT;
-
-		} else if (sort.equals("new")) {
-			return NEW;
-
-		} else if (sort.equals("controversial")) {
-			if (t == null) {
-				return CONTROVERSIAL_ALL;
-			} else if (t.equals("all")) {
-				return CONTROVERSIAL_ALL;
-			} else if (t.equals("hour")) {
-				return CONTROVERSIAL_HOUR;
-			} else if (t.equals("day")) {
-				return CONTROVERSIAL_DAY;
-			} else if (t.equals("week")) {
-				return CONTROVERSIAL_WEEK;
-			} else if (t.equals("month")) {
-				return CONTROVERSIAL_MONTH;
-			} else if (t.equals("year")) {
-				return CONTROVERSIAL_YEAR;
-			} else {
-				return CONTROVERSIAL_ALL;
-			}
-
-		} else if (sort.equals("top")) {
-
-			if (t == null) {
-				return TOP_ALL;
-			} else if (t.equals("all")) {
-				return TOP_ALL;
-			} else if (t.equals("hour")) {
-				return TOP_HOUR;
-			} else if (t.equals("day")) {
-				return TOP_DAY;
-			} else if (t.equals("week")) {
-				return TOP_WEEK;
-			} else if (t.equals("month")) {
-				return TOP_MONTH;
-			} else if (t.equals("year")) {
-				return TOP_YEAR;
-			} else {
-				return TOP_ALL;
-			}
-
-		} else {
-			return null;
-		}
-	}
-
-	public void addToUserCommentListingUri(@NonNull final Uri.Builder builder) {
-
-		switch (this) {
-			case HOT:
-			case NEW:
-				builder.appendQueryParameter("sort", StringUtils.asciiLowercase(name()));
-				break;
-
-			case CONTROVERSIAL_HOUR:
-			case CONTROVERSIAL_DAY:
-			case CONTROVERSIAL_WEEK:
-			case CONTROVERSIAL_MONTH:
-			case CONTROVERSIAL_YEAR:
-			case CONTROVERSIAL_ALL:
-			case TOP_HOUR:
-			case TOP_DAY:
-			case TOP_WEEK:
-			case TOP_MONTH:
-			case TOP_YEAR:
-			case TOP_ALL:
-				final String[] parts = name().split("_");
-				builder.appendQueryParameter(
-						"sort",
-						StringUtils.asciiLowercase(parts[0]));
-				builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]));
-				break;
-		}
-	}
-
-	@Override
-	public int getMenuTitle() {
-		return menuTitle;
-	}
-
-	@Override
-	public void onSortSelected(final AppCompatActivity activity) {
-		((OptionsMenuUtility.OptionsMenuCommentsListener)activity).onSortSelected(this);
-	}
+            if (sort == "hot") {
+                return UserCommentSort.HOT
+            } else if (sort == "new") {
+                return UserCommentSort.NEW
+            } else if (sort == "controversial") {
+                if (t == null) {
+                    return UserCommentSort.CONTROVERSIAL_ALL
+                } else if (t == "all") {
+                    return UserCommentSort.CONTROVERSIAL_ALL
+                } else if (t == "hour") {
+                    return UserCommentSort.CONTROVERSIAL_HOUR
+                } else if (t == "day") {
+                    return UserCommentSort.CONTROVERSIAL_DAY
+                } else if (t == "week") {
+                    return UserCommentSort.CONTROVERSIAL_WEEK
+                } else if (t == "month") {
+                    return UserCommentSort.CONTROVERSIAL_MONTH
+                } else if (t == "year") {
+                    return UserCommentSort.CONTROVERSIAL_YEAR
+                } else {
+                    return UserCommentSort.CONTROVERSIAL_ALL
+                }
+            } else if (sort == "top") {
+                if (t == null) {
+                    return UserCommentSort.TOP_ALL
+                } else if (t == "all") {
+                    return UserCommentSort.TOP_ALL
+                } else if (t == "hour") {
+                    return UserCommentSort.TOP_HOUR
+                } else if (t == "day") {
+                    return UserCommentSort.TOP_DAY
+                } else if (t == "week") {
+                    return UserCommentSort.TOP_WEEK
+                } else if (t == "month") {
+                    return UserCommentSort.TOP_MONTH
+                } else if (t == "year") {
+                    return UserCommentSort.TOP_YEAR
+                } else {
+                    return UserCommentSort.TOP_ALL
+                }
+            } else {
+                return null
+            }
+        }
+    }
 }

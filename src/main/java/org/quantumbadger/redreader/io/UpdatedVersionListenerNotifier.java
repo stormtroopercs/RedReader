@@ -12,18 +12,15 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.io
 
-package org.quantumbadger.redreader.io;
+import org.quantumbadger.redreader.common.collections.WeakReferenceListManager.ArgOperator
 
-import org.quantumbadger.redreader.common.collections.WeakReferenceListManager;
-
-public class UpdatedVersionListenerNotifier<K, V extends WritableObject<K>>
-		implements WeakReferenceListManager.ArgOperator<UpdatedVersionListener<K, V>, V> {
-
-	@Override
-	public void operate(final UpdatedVersionListener<K, V> listener, final V data) {
-		listener.onUpdatedVersion(data);
-	}
+class UpdatedVersionListenerNotifier<K, V : WritableObject<K?>?>
+    : ArgOperator<UpdatedVersionListener<K?, V?>?, V?> {
+    override fun operate(listener: UpdatedVersionListener<K?, V?>, data: V?) {
+        listener.onUpdatedVersion(data)
+    }
 }

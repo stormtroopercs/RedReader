@@ -12,65 +12,53 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.View
+import android.view.ViewGroup
+import android.widget.HorizontalScrollView
+import android.widget.LinearLayout
+import android.widget.TableLayout
+import org.quantumbadger.redreader.activities.BaseActivity
 
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.HorizontalScrollView;
-import android.widget.LinearLayout;
-import android.widget.TableLayout;
+class BodyElementTable(private val mElements: ArrayList<BodyElement>) :
+    BodyElement(BlockType.TABLE) {
+    override fun generateView(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View {
+        val table = TableLayout(activity)
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+        for (element in mElements) {
+            val view = element.generateView(
+                activity,
+                textColor,
+                textSize,
+                showLinkButtons
+            )
+            table.addView(view)
+        }
 
-import org.quantumbadger.redreader.activities.BaseActivity;
+        table.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE)
+        table.setDividerDrawable(ColorDrawable(Color.GRAY))
 
-import java.util.ArrayList;
+        table.setLayoutParams(
+            ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        )
 
-public class BodyElementTable extends BodyElement {
+        val scrollView = HorizontalScrollView(activity)
 
-	@NonNull private final ArrayList<BodyElement> mElements;
+        scrollView.addView(table)
 
-	public BodyElementTable(@NonNull final ArrayList<BodyElement> elements) {
-		super(BlockType.TABLE);
-		mElements = elements;
-	}
-
-	@Override
-	public View generateView(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		final TableLayout table = new TableLayout(activity);
-
-		for(final BodyElement element : mElements) {
-
-			final View view = element.generateView(
-					activity,
-					textColor,
-					textSize,
-					showLinkButtons);
-			table.addView(view);
-		}
-
-		table.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
-		table.setDividerDrawable(new ColorDrawable(Color.GRAY));
-
-		table.setLayoutParams(new ViewGroup.LayoutParams(
-				ViewGroup.LayoutParams.WRAP_CONTENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT));
-
-		final HorizontalScrollView scrollView = new HorizontalScrollView(activity);
-
-		scrollView.addView(table);
-
-		return scrollView;
-	}
+        return scrollView
+    }
 }

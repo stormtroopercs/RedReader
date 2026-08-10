@@ -12,164 +12,153 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.markdown
 
-package org.quantumbadger.redreader.reddit.prepared.markdown;
+import java.util.LinkedList
 
-import java.util.LinkedList;
+class CharArrSubstring internal constructor(val arr: CharArray, val start: Int, val length: Int) {
+    fun rejoin(toAppend: CharArrSubstring): CharArrSubstring {
+        if (toAppend.start - 1 != start + length) {
+            throw RuntimeException(
+                "Internal error: attempt to join non-consecutive substrings"
+            )
+        }
 
-public final class CharArrSubstring {
-	final char[] arr;
-	final int start;
-	public final int length;
+        return CharArrSubstring(arr, start, length + 1 + toAppend.length)
+    }
 
-	CharArrSubstring(final char[] arr, final int start, final int length) {
-		this.arr = arr;
-		this.start = start;
-		this.length = length;
-	}
+    fun countSpacesAtStart(): Int {
+        for (i in 0..<length) {
+            if (arr[start + i] != ' ') {
+                return i
+            }
+        }
+        return length
+    }
 
-	public static CharArrSubstring generate(final char[] src) {
-		return new CharArrSubstring(src, 0, src.length);
-	}
+    fun countSpacesAtEnd(): Int {
+        for (i in 0..<length) {
+            if (arr[start + length - 1 - i] != ' ') {
+                return i
+            }
+        }
+        return length
+    }
 
-	public static CharArrSubstring[] generateFromLines(final char[] src) {
+    fun charAt(index: Int): Char {
+        return arr[start + index]
+    }
 
-		int curPos = 0;
+    fun countPrefixLengthIgnoringSpaces(c: Char): Int {
+        for (i in 0..<length) {
+            if (arr[start + i] != ' ' && arr[start + i] != c) {
+                return i
+            }
+        }
+        return length
+    }
 
-		final LinkedList<CharArrSubstring> result = new LinkedList<>();
+    fun countPrefixLevelIgnoringSpaces(c: Char): Int {
+        var level = 0
+        for (i in 0..<length) {
+            if (arr[start + i] != ' ' && arr[start + i] != c) {
+                return level
+            } else if (arr[start + i] == c) {
+                level++ // TODO tidy up
+            }
+        }
+        return length
+    }
 
-		int nextLinebreak;
+    fun left(chars: Int): CharArrSubstring {
+        return CharArrSubstring(arr, start, chars)
+    }
 
-		while((nextLinebreak = indexOfLinebreak(src, curPos)) != -1) {
-			result.add(new CharArrSubstring(src, curPos, nextLinebreak - curPos));
-			curPos = nextLinebreak + 1;
-		}
+    fun substring(start: Int): CharArrSubstring {
+        return CharArrSubstring(arr, this.start + start, length - start)
+    }
 
-		result.add(new CharArrSubstring(src, curPos, src.length - curPos));
+    fun substring(start: Int, len: Int): CharArrSubstring {
+        return CharArrSubstring(arr, this.start + start, len)
+    }
 
-		return result.toArray(new CharArrSubstring[0]);
-	}
+    fun readInteger(start: Int): CharArrSubstring {
+        for (i in start..<length) {
+            val c = arr[this.start + i]
+            if (c < '0' || c > '9') {
+                return CharArrSubstring(arr, this.start + start, i - start)
+            }
+        }
+        return CharArrSubstring(arr, this.start + start, length - start)
+    }
 
-	public CharArrSubstring rejoin(final CharArrSubstring toAppend) {
+    override fun toString(): String {
+        return String(arr, start, length)
+    }
 
-		if(toAppend.start - 1 != start + length) {
-			throw new RuntimeException(
-					"Internal error: attempt to join non-consecutive substrings");
-		}
+    fun isRepeatingChar(c: Char, start: Int, len: Int): Boolean {
+        for (i in 0..<len) {
+            if (arr[i + start + this.start] != c) {
+                return false
+            }
+        }
+        return true
+    }
 
-		return new CharArrSubstring(arr, start, length + 1 + toAppend.length);
-	}
+    fun equalAt(position: Int, needle: String): Boolean {
+        if (length < position + needle.length) {
+            return false
+        }
 
-	private static int indexOfLinebreak(final char[] raw, final int startPos) {
-		for(int i = startPos; i < raw.length; i++) {
-			if(raw[i] == '\n') {
-				return i;
-			}
-		}
-		return -1;
-	}
+        for (i in 0..<needle.length) {
+            if (needle.get(i) != arr[start + position + i]) {
+                return false
+            }
+        }
 
-	public int countSpacesAtStart() {
-		for(int i = 0; i < length; i++) {
-			if(arr[start + i] != ' ') {
-				return i;
-			}
-		}
-		return length;
-	}
+        return true
+    }
 
-	public int countSpacesAtEnd() {
-		for(int i = 0; i < length; i++) {
-			if(arr[start + length - 1 - i] != ' ') {
-				return i;
-			}
-		}
-		return length;
-	}
+    fun replaceUnicodeSpaces() {
+        for (i in 0..<length) {
+            if (MarkdownTokenizer.isUnicodeWhitespace(arr[start + i].code)) {
+                arr[start + i] = ' '
+            }
+        }
+    }
 
-	public char charAt(final int index) {
-		return arr[start + index];
-	}
+    companion object {
+        @JvmStatic
+        fun generate(src: CharArray): CharArrSubstring {
+            return CharArrSubstring(src, 0, src.size)
+        }
 
-	public int countPrefixLengthIgnoringSpaces(final char c) {
-		for(int i = 0; i < length; i++) {
-			if(arr[start + i] != ' ' && arr[start + i] != c) {
-				return i;
-			}
-		}
-		return length;
-	}
+        fun generateFromLines(src: CharArray): Array<CharArrSubstring?> {
+            var curPos = 0
 
-	public int countPrefixLevelIgnoringSpaces(final char c) {
-		int level = 0;
-		for(int i = 0; i < length; i++) {
-			if(arr[start + i] != ' ' && arr[start + i] != c) {
-				return level;
-			} else if(arr[start + i] == c) {
-				level++; // TODO tidy up
-			}
-		}
-		return length;
-	}
+            val result = LinkedList<CharArrSubstring?>()
 
-	public CharArrSubstring left(final int chars) {
-		return new CharArrSubstring(arr, start, chars);
-	}
+            var nextLinebreak: Int
 
-	public CharArrSubstring substring(final int start) {
-		return new CharArrSubstring(arr, this.start + start, length - start);
-	}
+            while ((indexOfLinebreak(src, curPos).also { nextLinebreak = it }) != -1) {
+                result.add(CharArrSubstring(src, curPos, nextLinebreak - curPos))
+                curPos = nextLinebreak + 1
+            }
 
-	public CharArrSubstring substring(final int start, final int len) {
-		return new CharArrSubstring(arr, this.start + start, len);
-	}
+            result.add(CharArrSubstring(src, curPos, src.size - curPos))
 
-	public CharArrSubstring readInteger(final int start) {
-		for(int i = start; i < length; i++) {
-			final char c = arr[this.start + i];
-			if(c < '0' || c > '9') {
-				return new CharArrSubstring(arr, this.start + start, i - start);
-			}
-		}
-		return new CharArrSubstring(arr, this.start + start, length - start);
-	}
+            return result.toTypedArray<CharArrSubstring?>()
+        }
 
-	@Override
-	public String toString() {
-		return new String(arr, start, length);
-	}
-
-	public boolean isRepeatingChar(final char c, final int start, final int len) {
-		for(int i = 0; i < len; i++) {
-			if(arr[i + start + this.start] != c) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public boolean equalAt(final int position, final String needle) {
-
-		if(length < position + needle.length()) {
-			return false;
-		}
-
-		for(int i = 0; i < needle.length(); i++) {
-			if(needle.charAt(i) != arr[start + position + i]) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	public void replaceUnicodeSpaces() {
-		for(int i = 0; i < length; i++) {
-			if(MarkdownTokenizer.isUnicodeWhitespace(arr[start + i])) {
-				arr[start + i] = ' ';
-			}
-		}
-	}
+        private fun indexOfLinebreak(raw: CharArray, startPos: Int): Int {
+            for (i in startPos..<raw.size) {
+                if (raw[i] == '\n') {
+                    return i
+                }
+            }
+            return -1
+        }
+    }
 }

@@ -12,139 +12,172 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.fragments
 
-package org.quantumbadger.redreader.fragments;
+import android.content.Context
+import android.os.Bundle
+import android.widget.LinearLayout
+import androidx.core.os.BundleCompat
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.reddit.things.RedditUser
+import java.util.Objects
 
-import android.content.Context;
-import android.os.Bundle;
-import android.widget.LinearLayout;
+class UserPropertiesDialog : PropertiesDialog() {
+    override fun getTitle(context: Context?): String {
+        return Objects.requireNonNull<RedditUser?>(
+            BundleCompat.getParcelable<RedditUser?>(
+                requireArguments(),
+                "user",
+                RedditUser::class.java
+            )
+        ).name
+    }
 
-import androidx.annotation.NonNull;
-import androidx.core.os.BundleCompat;
+    override fun prepare(
+        context: BaseActivity,
+        items: LinearLayout
+    ) {
+        val user = Objects.requireNonNull<RedditUser>(
+            BundleCompat.getParcelable<RedditUser?>(
+                requireArguments(),
+                "user",
+                RedditUser::class.java
+            )
+        )
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.reddit.things.RedditUser;
+        items.addView(
+            propView(
+                context,
+                string.props_id,
+                user.id,
+                true
+            )
+        )
 
-import java.util.Objects;
+        if (user.created_utc != null) {
+            items.addView(
+                propView(
+                    context,
+                    string.userprofile_created,
+                    TimestampUTC.fromUtcSecs(user.created_utc!!).format(),
+                    false
+                )
+            )
+        }
 
-public final class UserPropertiesDialog extends PropertiesDialog {
+        if (user.link_karma != null) {
+            items.addView(
+                propView(
+                    context,
+                    string.karma_link,
+                    user.link_karma.toString(),
+                    false
+                )
+            )
+        }
 
-	public static UserPropertiesDialog newInstance(final RedditUser user) {
+        if (user.comment_karma != null) {
+            items.addView(
+                propView(
+                    context,
+                    string.karma_comment,
+                    user.comment_karma.toString(),
+                    false
+                )
+            )
+        }
 
-		final UserPropertiesDialog pp = new UserPropertiesDialog();
+        if (user.is_friend != null) {
+            items.addView(
+                propView(
+                    context,
+                    string.userprofile_isfriend,
+                    if (user.is_friend) string.general_true else string.general_false,
+                    false
+                )
+            )
+        }
 
-		final Bundle args = new Bundle();
-		args.putParcelable("user", user);
-		pp.setArguments(args);
+        if (user.is_gold != null) {
+            items.addView(
+                propView(
+                    context,
+                    string.userprofile_isgold,
+                    if (user.is_gold) string.general_true else string.general_false,
+                    false
+                )
+            )
+        }
 
-		return pp;
-	}
+        if (user.is_mod != null) {
+            items.addView(
+                propView(
+                    context,
+                    string.userprofile_moderator,
+                    if (user.is_mod) string.general_true else string.general_false,
+                    false
+                )
+            )
+        }
 
-	@Override
-	protected String getTitle(final Context context) {
-		return Objects.requireNonNull(BundleCompat.getParcelable(requireArguments(),
-				"user",
-				RedditUser.class)).name;
-	}
+        if (user.is_employee != null) {
+            items.addView(
+                propView(
+                    context,
+                    string.userprofile_tag_admin,
+                    if (user.is_employee) string.general_true else string.general_false,
+                    false
+                )
+            )
+        }
 
-	@Override
-	protected void prepare(
-			@NonNull final BaseActivity context,
-			@NonNull final LinearLayout items) {
+        if (user.is_suspended != null) {
+            items.addView(
+                propView(
+                    context,
+                    string.userprofile_tag_suspended,
+                    if (user.is_suspended) string.general_true else string.general_false,
+                    false
+                )
+            )
+        }
 
-		final RedditUser user = Objects.requireNonNull(
-				BundleCompat.getParcelable(requireArguments(),
-						"user",
-						RedditUser.class));
+        if (user.is_blocked != null) {
+            items.addView(
+                propView(
+                    context,
+                    string.userprofile_tag_blocked,
+                    if (user.is_blocked) string.general_true else string.general_false,
+                    false
+                )
+            )
+        }
 
-		items.addView(propView(
-				context,
-				R.string.props_id,
-				user.id,
-				true));
+        if (user.icon_img != null) {
+            items.addView(
+                propView(
+                    context,
+                    string.userprofile_avatar,
+                    user.icon_img,
+                    false
+                )
+            )
+        }
+    }
 
-		if (user.created_utc != null) {
-			items.addView(propView(
-					context,
-					R.string.userprofile_created,
-					TimestampUTC.fromUtcSecs(user.created_utc).format(),
-					false));
-		}
+    companion object {
+        fun newInstance(user: RedditUser?): UserPropertiesDialog {
+            val pp = UserPropertiesDialog()
 
-		if (user.link_karma != null) {
-			items.addView(propView(
-					context,
-					R.string.karma_link,
-					String.valueOf(user.link_karma),
-					false));
-		}
+            val args = Bundle()
+            args.putParcelable("user", user)
+            pp.setArguments(args)
 
-		if (user.comment_karma != null) {
-			items.addView(propView(
-					context,
-					R.string.karma_comment,
-					String.valueOf(user.comment_karma),
-					false));
-		}
-
-		if (user.is_friend != null) {
-			items.addView(propView(
-					context,
-					R.string.userprofile_isfriend,
-					user.is_friend ? R.string.general_true : R.string.general_false,
-					false));
-		}
-
-		if (user.is_gold != null) {
-			items.addView(propView(
-					context,
-					R.string.userprofile_isgold,
-					user.is_gold ? R.string.general_true : R.string.general_false,
-					false));
-		}
-
-		if (user.is_mod != null) {
-			items.addView(propView(
-					context,
-					R.string.userprofile_moderator,
-					user.is_mod ? R.string.general_true : R.string.general_false,
-					false));
-		}
-
-		if (user.is_employee != null) {
-			items.addView(propView(
-					context,
-					R.string.userprofile_tag_admin,
-					user.is_employee ? R.string.general_true : R.string.general_false,
-					false));
-		}
-
-		if (user.is_suspended != null) {
-			items.addView(propView(
-					context,
-					R.string.userprofile_tag_suspended,
-					user.is_suspended ? R.string.general_true : R.string.general_false,
-					false));
-		}
-
-		if (user.is_blocked != null) {
-			items.addView(propView(
-					context,
-					R.string.userprofile_tag_blocked,
-					user.is_blocked ? R.string.general_true : R.string.general_false,
-					false));
-		}
-
-		if (user.icon_img != null) {
-			items.addView(propView(
-					context,
-					R.string.userprofile_avatar,
-					user.icon_img,
-					false));
-		}
-	}
+            return pp
+        }
+    }
 }

@@ -12,58 +12,42 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TableRow
+import org.quantumbadger.redreader.activities.BaseActivity
 
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TableRow;
+class BodyElementTableRow(private val mElements: ArrayList<BodyElement>) :
+    BodyElement(BlockType.TABLE_ROW) {
+    override fun generateView(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View {
+        val result = TableRow(activity)
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+        for (element in mElements) {
+            val view = element.generateView(
+                activity,
+                textColor,
+                textSize,
+                showLinkButtons
+            )
+            result.addView(view)
 
-import org.quantumbadger.redreader.activities.BaseActivity;
+            val layoutParams = view.getLayoutParams() as TableRow.LayoutParams
 
-import java.util.ArrayList;
+            layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
+            layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
 
-public class BodyElementTableRow extends BodyElement {
+            view.setLayoutParams(layoutParams)
+        }
 
-	@NonNull private final ArrayList<BodyElement> mElements;
-
-	public BodyElementTableRow(@NonNull final ArrayList<BodyElement> elements) {
-		super(BlockType.TABLE_ROW);
-		mElements = elements;
-	}
-
-	@Override
-	public View generateView(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		final TableRow result = new TableRow(activity);
-
-		for(final BodyElement element : mElements) {
-
-			final View view = element.generateView(
-					activity,
-					textColor,
-					textSize,
-					showLinkButtons);
-			result.addView(view);
-
-			final TableRow.LayoutParams layoutParams
-					= (TableRow.LayoutParams)view.getLayoutParams();
-
-			layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT;
-			layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-
-			view.setLayoutParams(layoutParams);
-		}
-
-		return result;
-	}
+        return result
+    }
 }

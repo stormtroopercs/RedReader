@@ -12,11 +12,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
-
-public interface DynamicSpanned {
-	void addSpanDynamic(Object what, int start, int end, int flags);
+interface DynamicSpanned {
+    fun addSpanDynamic(what: Any?, start: Int, end: Int, flags: Int)
 }

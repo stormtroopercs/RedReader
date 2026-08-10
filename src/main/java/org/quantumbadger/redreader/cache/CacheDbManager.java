@@ -12,368 +12,378 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
-package org.quantumbadger.redreader.cache;
-
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
-
-import androidx.annotation.NonNull;
-
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.time.TimeDuration;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
-
-final class CacheDbManager extends SQLiteOpenHelper {
-
-	private static final String CACHE_DB_FILENAME = "cache.db";
-	private static final String TABLE = "web";
-
-	public static final String FIELD_URL = "url";
-	public static final String FIELD_ID = "id";
-	public static final String FIELD_TIMESTAMP = "timestamp";
-	public static final String FIELD_SESSION = "session";
-	public static final String FIELD_USER = "user";
-	public static final String FIELD_STATUS = "status";
-	public static final String FIELD_TYPE = "type";
-	public static final String FIELD_MIMETYPE = "mimetype";
-	public static final String FIELD_COMPRESSION_TYPE = "compressionType";
-	public static final String FIELD_LENGTH_UNCOMPRESSED = "lengthUncompressed";
-	public static final String FIELD_LENGTH_COMPRESSED = "lengthCompressed";
-
-	private static final int STATUS_MOVING = 1;
-	private static final int STATUS_DONE = 2;
-
-	private static final int CACHE_DB_VERSION = 2;
-
-	CacheDbManager(final Context context) {
-		super(context, CACHE_DB_FILENAME, null, CACHE_DB_VERSION);
-	}
-
-	@Override
-	public void onCreate(final SQLiteDatabase db) {
-
-		final String queryString = String.format(
-				"CREATE TABLE %s (" +
-						"%s INTEGER PRIMARY KEY AUTOINCREMENT," +
-						"%s TEXT NOT NULL," +
-						"%s TEXT NOT NULL," +
-						"%s TEXT NOT NULL," +
-						"%s INTEGER," +
-						"%s INTEGER," +
-						"%s INTEGER," +
-						"%s TEXT," +
-						"%s INTEGER," +
-						"%s INTEGER," +
-						"%s INTEGER," +
-						"UNIQUE (%s, %s, %s) ON CONFLICT REPLACE)",
-				TABLE,
-				FIELD_ID,
-				FIELD_URL,
-				FIELD_USER,
-				FIELD_SESSION,
-				FIELD_TIMESTAMP,
-				FIELD_STATUS,
-				FIELD_TYPE,
-				FIELD_MIMETYPE,
-				FIELD_COMPRESSION_TYPE,
-				FIELD_LENGTH_COMPRESSED,
-				FIELD_LENGTH_UNCOMPRESSED,
-				FIELD_USER, FIELD_URL, FIELD_SESSION);
-
-		db.execSQL(queryString);
-	}
-
-	@Override
-	public void onUpgrade(
-			final SQLiteDatabase db,
-			final int oldVersion,
-			final int newVersion) {
-
-		if(oldVersion < 2) {
-			db.execSQL(String.format(
-					Locale.US,
-					"ALTER TABLE %s ADD COLUMN %s INTEGER NOT NULL DEFAULT %d",
-					TABLE,
-					FIELD_COMPRESSION_TYPE,
-					CacheCompressionType.NONE.databaseId));
-
-			db.execSQL(String.format(
-					Locale.US,
-					"ALTER TABLE %s ADD COLUMN %s INTEGER NOT NULL DEFAULT %d",
-					TABLE,
-					FIELD_LENGTH_UNCOMPRESSED,
-					0));
-
-			db.execSQL(String.format(
-					Locale.US,
-					"ALTER TABLE %s ADD COLUMN %s INTEGER NOT NULL DEFAULT %d",
-					TABLE,
-					FIELD_LENGTH_COMPRESSED,
-					0));
-		}
-	}
-
-	synchronized Optional<CacheEntry> selectById(final long id) {
-
-		final SQLiteDatabase db = getReadableDatabase();
-
-		try(Cursor cursor = db.query(
-				TABLE,
-				CacheEntry.DB_FIELDS,
-				String.format(Locale.US, "%s=?", FIELD_ID),
-				new String[] {String.valueOf(id)},
-				null,
-				null,
-				FIELD_TIMESTAMP + " DESC")) {
-
-			final List<CacheEntry> entries = readEntriesFromCursor(cursor);
-
-			if(entries.isEmpty()) {
-				return Optional.empty();
-			} else {
-				return Optional.of(entries.get(0));
-			}
-		}
-	}
-
-	synchronized List<CacheEntry> select(
-			final UriString url,
-			final String user,
-			final UUID session) {
-
-		final SQLiteDatabase db = getReadableDatabase();
-
-		final String queryString;
-		final String[] queryParams;
-
-		if(session == null) {
-			queryString = String.format(
-					Locale.US,
-					"%s=%d AND %s=? AND %s=?",
-					FIELD_STATUS,
-					STATUS_DONE,
-					FIELD_URL,
-					FIELD_USER);
-			queryParams = new String[] {url.value, user};
-
-		} else {
-			queryString = String.format(
-					Locale.US,
-					"%s=%d AND %s=? AND %s=? AND %s=?",
-					FIELD_STATUS,
-					STATUS_DONE,
-					FIELD_URL,
-					FIELD_USER,
-					FIELD_SESSION);
-			queryParams = new String[] {url.value, user, session.toString()};
-		}
-
-		try(Cursor cursor = db.query(
-				TABLE,
-				CacheEntry.DB_FIELDS,
-				queryString,
-				queryParams,
-				null,
-				null,
-				FIELD_TIMESTAMP + " DESC")) {
-
-			return readEntriesFromCursor(cursor);
-		}
-	}
-
-	@NonNull
-	private List<CacheEntry> readEntriesFromCursor(@NonNull final Cursor cursor) {
-
-		final ArrayList<CacheEntry> result = new ArrayList<>();
-
-		while(cursor.moveToNext()) {
-			result.add(new CacheEntry(cursor));
-		}
-
-		return result;
-	}
-
-	synchronized long newEntry(
-			@NonNull final UriString url,
-			@NonNull final RedditAccount user,
-			final int fileType,
-			final UUID session,
-			final String mimetype,
-			@NonNull final CacheCompressionType compressionType,
-			final long lengthCompressed,
-			final long lengthUncompressed) throws IOException {
-
-		if(session == null) {
-			throw new RuntimeException("No session to write");
-		}
-
-		final SQLiteDatabase db = this.getWritableDatabase();
-
-		final ContentValues row = new ContentValues();
-
-		row.put(FIELD_URL, url.value);
-		row.put(FIELD_USER, user.username);
-		row.put(FIELD_SESSION, session.toString());
-		row.put(FIELD_TYPE, fileType);
-		row.put(FIELD_STATUS, STATUS_MOVING);
-		row.put(FIELD_TIMESTAMP, TimestampUTC.now().toUtcMs());
-		row.put(FIELD_MIMETYPE, mimetype);
-		row.put(FIELD_COMPRESSION_TYPE, compressionType.databaseId);
-		row.put(FIELD_LENGTH_COMPRESSED, lengthCompressed);
-		row.put(FIELD_LENGTH_UNCOMPRESSED, lengthUncompressed);
-
-		final long result = db.insert(TABLE, null, row);
-
-		if(result < 0) {
-			throw new IOException("DB insert failed");
-		}
-
-		return result;
-	}
-
-	synchronized void setEntryDone(final long id) {
-		final SQLiteDatabase db = this.getWritableDatabase();
-
-		final ContentValues row = new ContentValues();
-		row.put(FIELD_STATUS, STATUS_DONE);
-
-		db.update(TABLE, row, FIELD_ID + "=?", new String[] {String.valueOf(id)});
-	}
-
-	synchronized int delete(final long id) {
-		final SQLiteDatabase db = this.getWritableDatabase();
-		return db.delete(TABLE, FIELD_ID + "=?", new String[] {String.valueOf(id)});
-	}
-
-	public synchronized ArrayList<Long> getFilesToPrune(
-			final HashSet<Long> currentFiles,
-			final HashMap<Integer, TimeDuration> maxAge,
-			final TimeDuration defaultMaxAge) {
-
-		final SQLiteDatabase db = this.getWritableDatabase();
-
-		final TimestampUTC currentTime = TimestampUTC.now();
-
-		final Cursor cursor = db.query(
-				TABLE,
-				new String[] {FIELD_ID, FIELD_TIMESTAMP, FIELD_TYPE},
-				null,
-				null,
-				null,
-				null,
-				null,
-				null);
-
-		final HashSet<Long> currentEntries = new HashSet<>();
-		final ArrayList<Long> entriesToDelete = new ArrayList<>();
-		final ArrayList<Long> filesToDelete = new ArrayList<>(32);
-
-		while(cursor.moveToNext()) {
-
-			final long id = cursor.getLong(0);
-			final TimestampUTC timestamp = TimestampUTC.fromUtcMs(cursor.getLong(1));
-			final int type = cursor.getInt(2);
-
-			final TimestampUTC pruneIfBeforeMs;
-
-			if(maxAge.containsKey(type)) {
-				pruneIfBeforeMs = currentTime.subtract(maxAge.get(type));
-			} else {
-				Log.e("RR DEBUG cache", "Using default age! Filetype " + type);
-				pruneIfBeforeMs = currentTime.subtract(defaultMaxAge);
-			}
-
-			if(!currentFiles.contains(id)) {
-				entriesToDelete.add(id);
-
-			} else if(timestamp.isLessThan(pruneIfBeforeMs)) {
-				entriesToDelete.add(id);
-				filesToDelete.add(id);
-
-			} else {
-				currentEntries.add(id);
-			}
-		}
-
-		for(final long id : currentFiles) {
-			if(!currentEntries.contains(id)) {
-				filesToDelete.add(id);
-			}
-		}
-
-		if(!entriesToDelete.isEmpty()) {
-
-			final StringBuilder query = new StringBuilder(String.format(
-					Locale.US,
-					"DELETE FROM %s WHERE %s IN (",
-					TABLE,
-					FIELD_ID));
-
-			query.append(entriesToDelete.remove(entriesToDelete.size() - 1));
-
-			for(final long id : entriesToDelete) {
-				query.append(",").append(id);
-				if(query.length() > 512 * 1024) {
-					break;
-				}
-			}
-
-			query.append(')');
-
-			db.execSQL(query.toString());
-		}
-
-		cursor.close();
-
-		return filesToDelete;
-	}
-
-	public synchronized void emptyTheWholeCache() {
-		final SQLiteDatabase db = this.getWritableDatabase();
-		db.execSQL(String.format(Locale.US, "DELETE FROM %s", TABLE));
-	}
-
-	public synchronized HashMap<Long, Integer> getFilesToSize() {
-		final SQLiteDatabase db = this.getWritableDatabase();
-
-		final Cursor cursor = db.query(
-				TABLE,
-				new String[] {FIELD_ID, FIELD_TYPE},
-				null,
-				null,
-				null,
-				null,
-				null,
-				null);
-
-		final HashMap<Long, Integer> filesToCheck = new HashMap<>(32);
-
-		while(cursor.moveToNext()) {
-			final long id = cursor.getLong(0);
-			final int type = cursor.getInt(1);
-
-			filesToCheck.put(id, type);
-		}
-
-		cursor.close();
-
-		return filesToCheck;
-	}
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache
+
+import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.common.time.TimeDuration
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.fromUtcMs
+import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.now
+import java.io.IOException
+import java.util.Locale
+import java.util.UUID
+
+internal class CacheDbManager(context: Context?) :
+    SQLiteOpenHelper(context, CACHE_DB_FILENAME, null, CACHE_DB_VERSION) {
+    override fun onCreate(db: SQLiteDatabase) {
+        val queryString = String.format(
+            "CREATE TABLE %s (" +
+                    "%s INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "%s TEXT NOT NULL," +
+                    "%s TEXT NOT NULL," +
+                    "%s TEXT NOT NULL," +
+                    "%s INTEGER," +
+                    "%s INTEGER," +
+                    "%s INTEGER," +
+                    "%s TEXT," +
+                    "%s INTEGER," +
+                    "%s INTEGER," +
+                    "%s INTEGER," +
+                    "UNIQUE (%s, %s, %s) ON CONFLICT REPLACE)",
+            TABLE,
+            FIELD_ID,
+            FIELD_URL,
+            FIELD_USER,
+            FIELD_SESSION,
+            FIELD_TIMESTAMP,
+            FIELD_STATUS,
+            FIELD_TYPE,
+            FIELD_MIMETYPE,
+            FIELD_COMPRESSION_TYPE,
+            FIELD_LENGTH_COMPRESSED,
+            FIELD_LENGTH_UNCOMPRESSED,
+            FIELD_USER, FIELD_URL, FIELD_SESSION
+        )
+
+        db.execSQL(queryString)
+    }
+
+    override fun onUpgrade(
+        db: SQLiteDatabase,
+        oldVersion: Int,
+        newVersion: Int
+    ) {
+        if (oldVersion < 2) {
+            db.execSQL(
+                String.format(
+                    Locale.US,
+                    "ALTER TABLE %s ADD COLUMN %s INTEGER NOT NULL DEFAULT %d",
+                    TABLE,
+                    FIELD_COMPRESSION_TYPE,
+                    CacheCompressionType.NONE.databaseId
+                )
+            )
+
+            db.execSQL(
+                String.format(
+                    Locale.US,
+                    "ALTER TABLE %s ADD COLUMN %s INTEGER NOT NULL DEFAULT %d",
+                    TABLE,
+                    FIELD_LENGTH_UNCOMPRESSED,
+                    0
+                )
+            )
+
+            db.execSQL(
+                String.format(
+                    Locale.US,
+                    "ALTER TABLE %s ADD COLUMN %s INTEGER NOT NULL DEFAULT %d",
+                    TABLE,
+                    FIELD_LENGTH_COMPRESSED,
+                    0
+                )
+            )
+        }
+    }
+
+    @Synchronized
+    fun selectById(id: Long): Optional<CacheEntry?> {
+        val db = getReadableDatabase()
+
+        db.query(
+            TABLE,
+            CacheEntry.Companion.DB_FIELDS,
+            String.format(Locale.US, "%s=?", FIELD_ID),
+            arrayOf<String>(id.toString()),
+            null,
+            null,
+            FIELD_TIMESTAMP + " DESC"
+        ).use { cursor ->
+            val entries = readEntriesFromCursor(cursor)
+            if (entries.isEmpty()) {
+                return Optional.Companion.empty<CacheEntry?>()
+            } else {
+                return Optional.Companion.of<CacheEntry?>(entries.get(0))
+            }
+        }
+    }
+
+    @Synchronized
+    fun select(
+        url: UriString,
+        user: String?,
+        session: UUID?
+    ): MutableList<CacheEntry?> {
+        val db = getReadableDatabase()
+
+        val queryString: String
+        val queryParams: Array<String?>
+
+        if (session == null) {
+            queryString = String.format(
+                Locale.US,
+                "%s=%d AND %s=? AND %s=?",
+                FIELD_STATUS,
+                STATUS_DONE,
+                FIELD_URL,
+                FIELD_USER
+            )
+            queryParams = arrayOf<String?>(url.value, user)
+        } else {
+            queryString = String.format(
+                Locale.US,
+                "%s=%d AND %s=? AND %s=? AND %s=?",
+                FIELD_STATUS,
+                STATUS_DONE,
+                FIELD_URL,
+                FIELD_USER,
+                FIELD_SESSION
+            )
+            queryParams = arrayOf<String?>(url.value, user, session.toString())
+        }
+
+        db.query(
+            TABLE,
+            CacheEntry.Companion.DB_FIELDS,
+            queryString,
+            queryParams,
+            null,
+            null,
+            FIELD_TIMESTAMP + " DESC"
+        ).use { cursor ->
+            return readEntriesFromCursor(cursor)
+        }
+    }
+
+    private fun readEntriesFromCursor(cursor: Cursor): MutableList<CacheEntry?> {
+        val result = ArrayList<CacheEntry?>()
+
+        while (cursor.moveToNext()) {
+            result.add(CacheEntry(cursor))
+        }
+
+        return result
+    }
+
+    @Synchronized
+    @Throws(IOException::class)
+    fun newEntry(
+        url: UriString,
+        user: RedditAccount,
+        fileType: Int,
+        session: UUID,
+        mimetype: String?,
+        compressionType: CacheCompressionType,
+        lengthCompressed: Long,
+        lengthUncompressed: Long
+    ): Long {
+        if (session == null) {
+            throw RuntimeException("No session to write")
+        }
+
+        val db = this.getWritableDatabase()
+
+        val row = ContentValues()
+
+        row.put(FIELD_URL, url.value)
+        row.put(FIELD_USER, user.username)
+        row.put(FIELD_SESSION, session.toString())
+        row.put(FIELD_TYPE, fileType)
+        row.put(FIELD_STATUS, STATUS_MOVING)
+        row.put(FIELD_TIMESTAMP, now().toUtcMs())
+        row.put(FIELD_MIMETYPE, mimetype)
+        row.put(FIELD_COMPRESSION_TYPE, compressionType.databaseId)
+        row.put(FIELD_LENGTH_COMPRESSED, lengthCompressed)
+        row.put(FIELD_LENGTH_UNCOMPRESSED, lengthUncompressed)
+
+        val result = db.insert(TABLE, null, row)
+
+        if (result < 0) {
+            throw IOException("DB insert failed")
+        }
+
+        return result
+    }
+
+    @Synchronized
+    fun setEntryDone(id: Long) {
+        val db = this.getWritableDatabase()
+
+        val row = ContentValues()
+        row.put(FIELD_STATUS, STATUS_DONE)
+
+        db.update(TABLE, row, FIELD_ID + "=?", arrayOf<String>(id.toString()))
+    }
+
+    @Synchronized
+    fun delete(id: Long): Int {
+        val db = this.getWritableDatabase()
+        return db.delete(TABLE, FIELD_ID + "=?", arrayOf<String>(id.toString()))
+    }
+
+    @Synchronized
+    fun getFilesToPrune(
+        currentFiles: HashSet<Long?>,
+        maxAge: java.util.HashMap<Int?, TimeDuration?>,
+        defaultMaxAge: TimeDuration
+    ): ArrayList<Long?> {
+        val db = this.getWritableDatabase()
+
+        val currentTime = now()
+
+        val cursor = db.query(
+            TABLE,
+            arrayOf<String>(FIELD_ID, FIELD_TIMESTAMP, FIELD_TYPE),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+        )
+
+        val currentEntries = HashSet<Long?>()
+        val entriesToDelete = ArrayList<Long?>()
+        val filesToDelete = ArrayList<Long?>(32)
+
+        while (cursor.moveToNext()) {
+            val id = cursor.getLong(0)
+            val timestamp = fromUtcMs(cursor.getLong(1))
+            val type = cursor.getInt(2)
+
+            val pruneIfBeforeMs: TimestampUTC
+
+            if (maxAge.containsKey(type)) {
+                pruneIfBeforeMs = currentTime.subtract(maxAge.get(type)!!)
+            } else {
+                Log.e("RR DEBUG cache", "Using default age! Filetype " + type)
+                pruneIfBeforeMs = currentTime.subtract(defaultMaxAge)
+            }
+
+            if (!currentFiles.contains(id)) {
+                entriesToDelete.add(id)
+            } else if (timestamp.isLessThan(pruneIfBeforeMs)) {
+                entriesToDelete.add(id)
+                filesToDelete.add(id)
+            } else {
+                currentEntries.add(id)
+            }
+        }
+
+        for (id in currentFiles) {
+            if (!currentEntries.contains(id)) {
+                filesToDelete.add(id)
+            }
+        }
+
+        if (!entriesToDelete.isEmpty()) {
+            val query = StringBuilder(
+                String.format(
+                    Locale.US,
+                    "DELETE FROM %s WHERE %s IN (",
+                    TABLE,
+                    FIELD_ID
+                )
+            )
+
+            query.append(entriesToDelete.removeAt(entriesToDelete.size - 1))
+
+            for (id in entriesToDelete) {
+                query.append(",").append(id)
+                if (query.length > 512 * 1024) {
+                    break
+                }
+            }
+
+            query.append(')')
+
+            db.execSQL(query.toString())
+        }
+
+        cursor.close()
+
+        return filesToDelete
+    }
+
+    @Synchronized
+    fun emptyTheWholeCache() {
+        val db = this.getWritableDatabase()
+        db.execSQL(String.format(Locale.US, "DELETE FROM %s", TABLE))
+    }
+
+    @get:Synchronized
+    val filesToSize: HashMap<Long?, Int?>
+        get() {
+            val db = this.getWritableDatabase()
+
+            val cursor = db.query(
+                TABLE,
+                arrayOf<String>(
+                    FIELD_ID,
+                    FIELD_TYPE
+                ),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+
+            val filesToCheck =
+                java.util.HashMap<Long?, Int?>(32)
+
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(0)
+                val type = cursor.getInt(1)
+
+                filesToCheck.put(id, type)
+            }
+
+            cursor.close()
+
+            return filesToCheck
+        }
+
+    companion object {
+        private const val CACHE_DB_FILENAME = "cache.db"
+        private const val TABLE = "web"
+
+        const val FIELD_URL: String = "url"
+        const val FIELD_ID: String = "id"
+        const val FIELD_TIMESTAMP: String = "timestamp"
+        const val FIELD_SESSION: String = "session"
+        const val FIELD_USER: String = "user"
+        const val FIELD_STATUS: String = "status"
+        const val FIELD_TYPE: String = "type"
+        const val FIELD_MIMETYPE: String = "mimetype"
+        const val FIELD_COMPRESSION_TYPE: String = "compressionType"
+        const val FIELD_LENGTH_UNCOMPRESSED: String = "lengthUncompressed"
+        const val FIELD_LENGTH_COMPRESSED: String = "lengthCompressed"
+
+        private const val STATUS_MOVING = 1
+        private const val STATUS_DONE = 2
+
+        private const val CACHE_DB_VERSION = 2
+    }
 }

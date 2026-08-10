@@ -12,76 +12,75 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Movie
+import android.graphics.Paint
+import android.os.SystemClock
+import android.view.View
+import kotlin.math.min
 
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Movie;
-import android.graphics.Paint;
-import android.os.SystemClock;
-import android.view.View;
-import androidx.annotation.NonNull;
+class GIFView(context: Context?, movie: Movie) : View(context) {
+    private val mMovie: Movie
+    private var movieStart: Long = 0
 
-public final class GIFView extends View {
+    private val paint = Paint()
 
-	private final Movie mMovie;
-	private long movieStart;
+    // Accept as byte[] rather than stream due to Android bug workaround
+    init {
+        setLayerType(LAYER_TYPE_SOFTWARE, null)
 
-	private final Paint paint = new Paint();
+        mMovie = movie
 
-	public static Movie prepareMovie(
-			@NonNull final byte[] data,
-			final int offset,
-			final int length) {
+        paint.setAntiAlias(true)
+        paint.setFilterBitmap(true)
+    }
 
-		final Movie movie = Movie.decodeByteArray(data, offset, length);
+    override fun onDraw(canvas: Canvas) {
+        canvas.drawColor(Color.TRANSPARENT)
+        super.onDraw(canvas)
+        val now = SystemClock.uptimeMillis()
 
-		if(movie.duration() < 1) {
-			throw new RuntimeException("Invalid GIF");
-		}
+        val scale = min(
+            getWidth().toFloat() / mMovie.width(),
+            getHeight().toFloat() / mMovie.height()
+        )
 
-		return movie;
-	}
-
-	// Accept as byte[] rather than stream due to Android bug workaround
-	public GIFView(final Context context, final Movie movie) {
-		super(context);
-
-		setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-
-		mMovie = movie;
-
-		paint.setAntiAlias(true);
-		paint.setFilterBitmap(true);
-	}
-
-	@Override
-	protected void onDraw(final Canvas canvas) {
-		canvas.drawColor(Color.TRANSPARENT);
-		super.onDraw(canvas);
-		final long now = SystemClock.uptimeMillis();
-
-		final float scale = Math.min(
-				(float)getWidth() / mMovie.width(),
-				(float)getHeight() / mMovie.height());
-
-		canvas.scale(scale, scale);
-		canvas.translate(
-				((float)getWidth() / scale - (float)mMovie.width()) / 2f,
-				((float)getHeight() / scale - (float)mMovie.height()) / 2f);
+        canvas.scale(scale, scale)
+        canvas.translate(
+            (getWidth().toFloat() / scale - mMovie.width().toFloat()) / 2f,
+            (getHeight().toFloat() / scale - mMovie.height().toFloat()) / 2f
+        )
 
 
-		if(movieStart == 0) {
-			movieStart = (int)now;
-		}
+        if (movieStart == 0L) {
+            movieStart = now.toInt().toLong()
+        }
 
-		mMovie.setTime((int)((now - movieStart) % mMovie.duration()));
-		mMovie.draw(canvas, 0, 0, paint);
+        mMovie.setTime(((now - movieStart) % mMovie.duration()).toInt())
+        mMovie.draw(canvas, 0f, 0f, paint)
 
-		this.invalidate();
-	}
+        this.invalidate()
+    }
+
+    companion object {
+        fun prepareMovie(
+            data: ByteArray,
+            offset: Int,
+            length: Int
+        ): Movie {
+            val movie = Movie.decodeByteArray(data, offset, length)
+
+            if (movie.duration() < 1) {
+                throw RuntimeException("Invalid GIF")
+            }
+
+            return movie
+        }
+    }
 }

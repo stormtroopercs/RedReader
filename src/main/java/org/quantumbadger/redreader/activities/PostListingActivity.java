@@ -12,569 +12,562 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
-package org.quantumbadger.redreader.activities;
-
-
-import android.content.Intent;
-import android.content.res.TypedArray;
-import android.graphics.drawable.ColorDrawable;
-import android.os.Bundle;
-import android.os.SystemClock;
-import android.view.Menu;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.account.RedditAccountChangeListener;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.common.DialogUtils;
-import org.quantumbadger.redreader.common.LinkHandler;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.fragments.PostListingFragment;
-import org.quantumbadger.redreader.fragments.SessionListDialog;
-import org.quantumbadger.redreader.listingcontrollers.PostListingController;
-import org.quantumbadger.redreader.reddit.PostSort;
-import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager;
-import org.quantumbadger.redreader.reddit.api.SubredditSubscriptionState;
-import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost;
-import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException;
-import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
-import org.quantumbadger.redreader.reddit.url.PostCommentListingURL;
-import org.quantumbadger.redreader.reddit.url.PostListingURL;
-import org.quantumbadger.redreader.reddit.url.RedditURLParser;
-import org.quantumbadger.redreader.reddit.url.SearchPostListURL;
-import org.quantumbadger.redreader.views.RedditPostView;
-
-import java.util.Locale;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
-
-public class PostListingActivity extends RefreshableActivity
-		implements RedditAccountChangeListener,
-		RedditPostView.PostSelectionListener,
-		OptionsMenuUtility.OptionsMenuPostsListener,
-		SessionChangeListener,
-		RedditSubredditSubscriptionManager.SubredditSubscriptionStateChangeListener {
-
-	private static final String SAVEDSTATE_SESSION = "pla_session";
-	private static final String SAVEDSTATE_SORT = "pla_sort";
-	private static final String SAVEDSTATE_FRAGMENT = "pla_fragment";
-
-	private PostListingFragment fragment;
-	private PostListingController controller;
-
-	private final AtomicReference<RedditSubredditSubscriptionManager.ListenerContext>
-			mSubredditSubscriptionListenerContext = new AtomicReference<>(null);
-
-	private long mDoubleTapBack_lastTapMs = -1;
-
-	@Override
-	public void onCreate(final Bundle savedInstanceState) {
-
-		PrefsUtility.applyTheme(this);
-
-		super.onCreate(savedInstanceState);
-
-		final TypedArray typedArray
-				= obtainStyledAttributes(new int[] {R.attr.rrListBackgroundCol});
-
-		try {
-			getWindow().setBackgroundDrawable(
-					new ColorDrawable(typedArray.getColor(0, 0)));
-
-		} finally {
-			typedArray.recycle();
-		}
-
-		RedditAccountManager.getInstance(this).addUpdateListener(this);
-
-		if(getIntent() != null) {
-
-			final Intent intent = getIntent();
-
-			final RedditURLParser.RedditURL url
-					= RedditURLParser.parseProbablePostListing(intent.getData());
-
-			if(!(url instanceof PostListingURL)) {
-				throw new RuntimeException(String.format(
-						Locale.US,
-						"'%s' is not a post listing URL!",
-						url.generateJsonUri()));
-			}
-
-			controller = new PostListingController((PostListingURL)url, this);
-
-			Bundle fragmentSavedInstanceState = null;
-
-			if(savedInstanceState != null) {
-
-				if(savedInstanceState.containsKey(SAVEDSTATE_SESSION)) {
-					controller.setSession(UUID.fromString(savedInstanceState.getString(
-							SAVEDSTATE_SESSION)));
-				}
-
-				if(savedInstanceState.containsKey(SAVEDSTATE_SORT)) {
-					controller.setSort(PostSort.valueOf(
-							savedInstanceState.getString(SAVEDSTATE_SORT)));
-				}
-
-				if(savedInstanceState.containsKey(SAVEDSTATE_FRAGMENT)) {
-					fragmentSavedInstanceState = savedInstanceState.getBundle(
-							SAVEDSTATE_FRAGMENT);
-				}
-			}
-
-			setTitle(url.humanReadableName(this, false));
-
-			setBaseActivityListing(R.layout.main_single);
-			doRefresh(RefreshableFragment.POSTS, false, fragmentSavedInstanceState);
-
-		} else {
-			throw new RuntimeException("Nothing to show!");
-		}
-
-		recreateSubscriptionListener();
-	}
-
-	@Override
-	protected void onSaveInstanceState(@NonNull final Bundle outState) {
-		super.onSaveInstanceState(outState);
-
-		final UUID session = controller.getSession();
-		if(session != null) {
-			outState.putString(SAVEDSTATE_SESSION, session.toString());
-		}
-
-		final PostSort sort = controller.getSort();
-		if(sort != null) {
-			outState.putString(SAVEDSTATE_SORT, sort.name());
-		}
-
-		if(fragment != null) {
-			outState.putBundle(SAVEDSTATE_FRAGMENT, fragment.onSaveInstanceState());
-		}
-	}
-
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-
-		final RedditSubredditSubscriptionManager.ListenerContext listenerContext
-				= mSubredditSubscriptionListenerContext.get();
-
-		if(listenerContext != null) {
-			listenerContext.removeListener();
-		}
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(final Menu menu) {
-
-		final RedditAccount user = RedditAccountManager.getInstance(this)
-				.getDefaultAccount();
-		final SubredditSubscriptionState
-				subredditSubscriptionState;
-		final RedditSubredditSubscriptionManager subredditSubscriptionManager
-				= RedditSubredditSubscriptionManager.getSingleton(this, user);
-
-		if(!user.isAnonymous()
-				&& controller.isSubreddit()
-				&& subredditSubscriptionManager.areSubscriptionsReady()
-				&& fragment != null
-				&& fragment.getSubreddit() != null) {
-
-			subredditSubscriptionState = subredditSubscriptionManager.getSubscriptionState(
-					controller.subredditCanonicalName());
-
-		} else {
-			subredditSubscriptionState = null;
-		}
-
-		final String subredditDescription = fragment != null
-				&& fragment.getSubreddit() != null
-				? fragment.getSubreddit().description_html
-				: null;
-
-		Boolean subredditPinState = null;
-		Boolean subredditBlockedState = null;
-
-		if(controller.isSubreddit()
-				&& fragment != null
-				&& fragment.getSubreddit() != null) {
-
-			try {
-				subredditPinState = PrefsUtility.pref_pinned_subreddits_check(
-						fragment.getSubreddit().getCanonicalId());
-
-				subredditBlockedState = PrefsUtility.pref_blocked_subreddits_check(
-						fragment.getSubreddit().getCanonicalId());
-
-			} catch(final InvalidSubredditNameException e) {
-				subredditPinState = null;
-				subredditBlockedState = null;
-			}
-		}
-
-		OptionsMenuUtility.prepare(
-				this,
-				menu,
-				false,
-				true,
-				false,
-				controller.isSearchResults(),
-				controller.isUserPostListing(),
-				false,
-				controller.isSortable(),
-				true,
-				controller.isFrontPage(),
-				subredditSubscriptionState,
-				subredditDescription != null && !subredditDescription.isEmpty(),
-				false,
-				subredditPinState,
-				subredditBlockedState);
-
-		return true;
-	}
-
-	private void recreateSubscriptionListener() {
-
-		final RedditSubredditSubscriptionManager.ListenerContext oldContext
-				= mSubredditSubscriptionListenerContext.getAndSet(
-				RedditSubredditSubscriptionManager
-						.getSingleton(
-								this,
-								RedditAccountManager.getInstance(this)
-										.getDefaultAccount())
-						.addListener(this));
-
-		if(oldContext != null) {
-			oldContext.removeListener();
-		}
-	}
-
-	@Override
-	public void onRedditAccountChanged() {
-		recreateSubscriptionListener();
-		postInvalidateOptionsMenu();
-		requestRefresh(RefreshableFragment.ALL, false);
-	}
-
-	@Override
-	protected void doRefresh(
-			final RefreshableFragment which,
-			final boolean force,
-			final Bundle savedInstanceState) {
-
-		if(fragment != null) {
-			fragment.cancel();
-		}
-
-		fragment = controller.get(this, force, savedInstanceState);
-		fragment.setBaseActivityContent(this);
-	}
-
-	@Override
-	public void onPostSelected(final RedditPreparedPost post) {
-		LinkHandler.onLinkClicked(this, post.src.getUrl(), false, post.src.getSrc());
-	}
-
-	@Override
-	public void onPostCommentsSelected(final RedditPreparedPost post) {
-		LinkHandler.onLinkClicked(
-				this,
-				PostCommentListingURL.forPostId(post.src.getIdAlone()).toUriString(),
-				false);
-	}
-
-	@Override
-	public void onRefreshPosts() {
-		controller.setSession(null);
-		requestRefresh(RefreshableFragment.POSTS, true);
-	}
-
-	@Override
-	public void onPastPosts() {
-		final SessionListDialog sessionListDialog = SessionListDialog.newInstance(
-				controller.getUri(),
-				controller.getSession(),
-				SessionChangeType.POSTS);
-		sessionListDialog.show(getSupportFragmentManager(), "SessionListDialog");
-	}
-
-	@Override
-	public void onSubmitPost() {
-
-		final Intent intent = new Intent(this, PostSubmitActivity.class);
-
-		if(controller.isSubreddit()) {
-			intent.putExtra("subreddit", controller.subredditCanonicalName().toString());
-		}
-
-		startActivity(intent);
-	}
-
-	@Override
-	public void onSortSelected(final PostSort order) {
-		controller.setSort(order);
-		requestRefresh(RefreshableFragment.POSTS, false);
-		invalidateOptionsMenu();
-	}
-
-	@Override
-	public void onSearchPosts() {
-		onSearchPosts(controller, this);
-	}
-
-	public static void onSearchPosts(
-			final PostListingController controller,
-			final AppCompatActivity activity) {
-
-		DialogUtils.showSearchDialog(activity, query -> {
-			if(query == null) {
-				return;
-			}
-
-			final SearchPostListURL url;
-
-			if(controller != null && (controller.isSubreddit()
-					|| controller.isSubredditCombination()
-					|| controller.isSubredditSearchResults())) {
-
-				final SubredditCanonicalId subredditCanonicalId
-						= controller.subredditCanonicalName();
-
-				if(subredditCanonicalId == null) {
-					BugReportActivity.handleGlobalError(
-							activity,
-							new RuntimeException("Can't search post listing "
-									+ controller.getUri()));
-					return;
-				}
-
-				url = SearchPostListURL.build(
-						subredditCanonicalId.toString(),
-						query);
-			} else if(controller != null && controller.isMultireddit()) {
-
-				final String multiName = controller.multiredditName();
-				final String multiUsername = controller.multiredditUsername();
-
-				url = SearchPostListURL.build(multiUsername, multiName, query);
-			} else {
-				url = SearchPostListURL.build(null, query);
-			}
-
-			final Intent intent = new Intent(activity, PostListingActivity.class);
-			intent.setData(url.generateJsonUri());
-			activity.startActivity(intent);
-		});
-	}
-
-	@Override
-	public void onSubscribe() {
-		fragment.onSubscribe();
-	}
-
-	@Override
-	public void onUnsubscribe() {
-		fragment.onUnsubscribe();
-	}
-
-	@Override
-	public void onSidebar() {
-		if(fragment.getSubreddit() != null) {
-			final Intent intent = new Intent(this, HtmlViewActivity.class);
-			intent.putExtra(
-					"html",
-					fragment.getSubreddit()
-							.getSidebarHtml(PrefsUtility.isNightMode()));
-			intent.putExtra("title", String.format(Locale.US, "%s: %s",
-					getString(R.string.sidebar_activity_title),
-					fragment.getSubreddit().url));
-			startActivityForResult(intent, 1);
-		}
-	}
-
-	@Override
-	public void onPin() {
-
-		if(fragment == null) {
-			return;
-		}
-
-		if(fragment.getSubreddit() == null) {
-			BugReportActivity.handleGlobalError(
-					this,
-					new RuntimeException("Can't pin post listing "
-							+ fragment.getPostListingURL()));
-			return;
-		}
-
-		try {
-			PrefsUtility.pref_pinned_subreddits_add(
-					this,
-					fragment.getSubreddit().getCanonicalId());
-
-		} catch(final InvalidSubredditNameException e) {
-			throw new RuntimeException(e);
-		}
-
-		invalidateOptionsMenu();
-	}
-
-	@Override
-	public void onUnpin() {
-
-		if(fragment == null) {
-			return;
-		}
-
-		if(fragment.getSubreddit() == null) {
-			BugReportActivity.handleGlobalError(
-					this,
-					new RuntimeException("Can't unpin post listing "
-							+ fragment.getPostListingURL()));
-			return;
-		}
-
-		try {
-			PrefsUtility.pref_pinned_subreddits_remove(
-					this,
-					fragment.getSubreddit().getCanonicalId());
-
-		} catch(final InvalidSubredditNameException e) {
-			throw new RuntimeException(e);
-		}
-
-		invalidateOptionsMenu();
-	}
-
-	@Override
-	public void onBlock() {
-		if(fragment == null) {
-			return;
-		}
-
-		if(fragment.getSubreddit() == null) {
-			BugReportActivity.handleGlobalError(
-					this,
-					new RuntimeException("Can't block post listing "
-							+ fragment.getPostListingURL()));
-			return;
-		}
-
-		try {
-			PrefsUtility.pref_blocked_subreddits_add(
-					this,
-					fragment.getSubreddit().getCanonicalId());
-
-		} catch(final InvalidSubredditNameException e) {
-			throw new RuntimeException(e);
-		}
-
-		invalidateOptionsMenu();
-	}
-
-	@Override
-	public void onUnblock() {
-		if(fragment == null) {
-			return;
-		}
-
-		if(fragment.getSubreddit() == null) {
-			BugReportActivity.handleGlobalError(
-					this,
-					new RuntimeException("Can't unblock post listing "
-							+ fragment.getPostListingURL()));
-			return;
-		}
-
-		try {
-			PrefsUtility.pref_blocked_subreddits_remove(
-					this,
-					fragment.getSubreddit().getCanonicalId());
-
-		} catch(final InvalidSubredditNameException e) {
-			throw new RuntimeException(e);
-		}
-
-		invalidateOptionsMenu();
-	}
-
-	@Override
-	public void onSessionSelected(final UUID session, final SessionChangeType type) {
-		controller.setSession(session);
-		requestRefresh(RefreshableFragment.POSTS, false);
-	}
-
-	@Override
-	public void onSessionRefreshSelected(final SessionChangeType type) {
-		onRefreshPosts();
-	}
-
-	@Override
-	public void onSessionChanged(
-			final UUID session,
-			final SessionChangeType type,
-			final TimestampUTC timestamp) {
-		controller.setSession(session);
-	}
-
-	@Override
-	protected boolean baseActivityMustInterceptBack() {
-		return PrefsUtility.pref_behaviour_back_again();
-	}
-
-	@Override
-	protected boolean baseActivityOnBackPressed() {
-
-		if(PrefsUtility.pref_behaviour_back_again()
-				&& (mDoubleTapBack_lastTapMs < SystemClock.uptimeMillis() - 5000)) {
-
-			mDoubleTapBack_lastTapMs = SystemClock.uptimeMillis();
-			Toast.makeText(this, R.string.press_back_again, Toast.LENGTH_SHORT).show();
-			return true;
-		}
-
-		return false;
-	}
-
-	@Override
-	public void onSubredditSubscriptionListUpdated(
-			final RedditSubredditSubscriptionManager subredditSubscriptionManager) {
-		postInvalidateOptionsMenu();
-	}
-
-	@Override
-	public void onSubredditSubscriptionAttempted(
-			final RedditSubredditSubscriptionManager subredditSubscriptionManager) {
-		postInvalidateOptionsMenu();
-	}
-
-	@Override
-	public void onSubredditUnsubscriptionAttempted(
-			final RedditSubredditSubscriptionManager subredditSubscriptionManager) {
-		postInvalidateOptionsMenu();
-	}
-
-	private void postInvalidateOptionsMenu() {
-		runOnUiThread(this::invalidateOptionsMenu);
-	}
-
-	@Override
-	protected boolean baseActivityAllowToolbarHideOnScroll() {
-		return true;
-	}
-
-	@Override
-	public PostSort getPostSort() {
-		return controller.getSort();
-	}
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.activities
+
+import android.content.Intent
+import android.graphics.drawable.ColorDrawable
+import android.os.Bundle
+import android.os.SystemClock
+import android.view.Menu
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.account.RedditAccountChangeListener
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuPostsListener
+import org.quantumbadger.redreader.activities.SessionChangeListener.SessionChangeType
+import org.quantumbadger.redreader.common.DialogUtils
+import org.quantumbadger.redreader.common.DialogUtils.OnSearchListener
+import org.quantumbadger.redreader.common.LinkHandler.onLinkClicked
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.fragments.PostListingFragment
+import org.quantumbadger.redreader.fragments.SessionListDialog
+import org.quantumbadger.redreader.listingcontrollers.PostListingController
+import org.quantumbadger.redreader.reddit.PostSort
+import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager
+import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager.ListenerContext
+import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager.SubredditSubscriptionStateChangeListener
+import org.quantumbadger.redreader.reddit.api.SubredditSubscriptionState
+import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost
+import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
+import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
+import org.quantumbadger.redreader.reddit.url.PostListingURL
+import org.quantumbadger.redreader.reddit.url.RedditURLParser
+import org.quantumbadger.redreader.reddit.url.SearchPostListURL
+import org.quantumbadger.redreader.views.RedditPostView.PostSelectionListener
+import java.util.Locale
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
+
+
+class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
+    PostSelectionListener, OptionsMenuPostsListener, SessionChangeListener,
+    SubredditSubscriptionStateChangeListener {
+    private var fragment: PostListingFragment? = null
+    private var controller: PostListingController? = null
+
+    private val mSubredditSubscriptionListenerContext = AtomicReference<ListenerContext?>(null)
+
+    private var mDoubleTapBack_lastTapMs: Long = -1
+
+    public override fun onCreate(savedInstanceState: Bundle?) {
+        PrefsUtility.applyTheme(this)
+
+        super.onCreate(savedInstanceState)
+
+        val typedArray = obtainStyledAttributes(intArrayOf(R.attr.rrListBackgroundCol))
+
+        try {
+            getWindow().setBackgroundDrawable(
+                ColorDrawable(typedArray.getColor(0, 0))
+            )
+        } finally {
+            typedArray.recycle()
+        }
+
+        RedditAccountManager.Companion.getInstance(this).addUpdateListener(this)
+
+        if (getIntent() != null) {
+            val intent = getIntent()
+
+            val url = RedditURLParser.parseProbablePostListing(intent.getData())
+
+            if (url !is PostListingURL) {
+                throw RuntimeException(
+                    String.format(
+                        Locale.US,
+                        "'%s' is not a post listing URL!",
+                        url.generateJsonUri()
+                    )
+                )
+            }
+
+            controller = PostListingController(url, this)
+
+            var fragmentSavedInstanceState: Bundle? = null
+
+            if (savedInstanceState != null) {
+                if (savedInstanceState.containsKey(SAVEDSTATE_SESSION)) {
+                    controller!!.setSession(
+                        UUID.fromString(
+                            savedInstanceState.getString(
+                                SAVEDSTATE_SESSION
+                            )
+                        )
+                    )
+                }
+
+                if (savedInstanceState.containsKey(SAVEDSTATE_SORT)) {
+                    controller!!.setSort(
+                        PostSort.valueOf(
+                            savedInstanceState.getString(SAVEDSTATE_SORT)!!
+                        )
+                    )
+                }
+
+                if (savedInstanceState.containsKey(SAVEDSTATE_FRAGMENT)) {
+                    fragmentSavedInstanceState = savedInstanceState.getBundle(
+                        SAVEDSTATE_FRAGMENT
+                    )
+                }
+            }
+
+            setTitle(url.humanReadableName(this, false))
+
+            setBaseActivityListing(R.layout.main_single)
+            doRefresh(RefreshableFragment.POSTS, false, fragmentSavedInstanceState)
+        } else {
+            throw RuntimeException("Nothing to show!")
+        }
+
+        recreateSubscriptionListener()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        val session = controller!!.getSession()
+        if (session != null) {
+            outState.putString(SAVEDSTATE_SESSION, session.toString())
+        }
+
+        val sort = controller!!.getSort()
+        if (sort != null) {
+            outState.putString(SAVEDSTATE_SORT, sort.name)
+        }
+
+        if (fragment != null) {
+            outState.putBundle(SAVEDSTATE_FRAGMENT, fragment!!.onSaveInstanceState())
+        }
+    }
+
+    protected override fun onDestroy() {
+        super.onDestroy()
+
+        val listenerContext = mSubredditSubscriptionListenerContext.get()
+
+        if (listenerContext != null) {
+            listenerContext.removeListener()
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val user: RedditAccount = RedditAccountManager.Companion.getInstance(this)
+            .getDefaultAccount()
+        val subredditSubscriptionState: SubredditSubscriptionState?
+
+        val subredditSubscriptionManager
+                : RedditSubredditSubscriptionManager =
+            RedditSubredditSubscriptionManager.Companion.getSingleton(this, user)
+
+        if (!user.isAnonymous && controller!!.isSubreddit()
+            && subredditSubscriptionManager.areSubscriptionsReady()
+            && fragment != null && fragment!!.getSubreddit() != null
+        ) {
+            subredditSubscriptionState = subredditSubscriptionManager.getSubscriptionState(
+                controller!!.subredditCanonicalName()
+            )
+        } else {
+            subredditSubscriptionState = null
+        }
+
+        val subredditDescription = if (fragment != null
+            && fragment!!.getSubreddit() != null
+        )
+            fragment!!.getSubreddit()!!.description_html
+        else
+            null
+
+        var subredditPinState: Boolean? = null
+        var subredditBlockedState: Boolean? = null
+
+        if (controller!!.isSubreddit()
+            && fragment != null && fragment!!.getSubreddit() != null
+        ) {
+            try {
+                subredditPinState = PrefsUtility.pref_pinned_subreddits_check(
+                    fragment!!.getSubreddit()!!.getCanonicalId()
+                )
+
+                subredditBlockedState = PrefsUtility.pref_blocked_subreddits_check(
+                    fragment!!.getSubreddit()!!.getCanonicalId()
+                )
+            } catch (e: InvalidSubredditNameException) {
+                subredditPinState = null
+                subredditBlockedState = null
+            }
+        }
+
+        OptionsMenuUtility.prepare<PostListingActivity?>(
+            this,
+            menu,
+            false,
+            true,
+            false,
+            controller!!.isSearchResults(),
+            controller!!.isUserPostListing(),
+            false,
+            controller!!.isSortable(),
+            true,
+            controller!!.isFrontPage(),
+            subredditSubscriptionState,
+            subredditDescription != null && !subredditDescription.isEmpty(),
+            false,
+            subredditPinState,
+            subredditBlockedState
+        )
+
+        return true
+    }
+
+    private fun recreateSubscriptionListener() {
+        val oldContext = mSubredditSubscriptionListenerContext.getAndSet(
+            RedditSubredditSubscriptionManager.Companion.getSingleton(
+                this,
+                RedditAccountManager.Companion.getInstance(this)
+                    .getDefaultAccount()
+            )
+                .addListener(this)
+        )
+
+        if (oldContext != null) {
+            oldContext.removeListener()
+        }
+    }
+
+    override fun onRedditAccountChanged() {
+        recreateSubscriptionListener()
+        postInvalidateOptionsMenu()
+        requestRefresh(RefreshableFragment.ALL, false)
+    }
+
+    override fun doRefresh(
+        which: RefreshableFragment?,
+        force: Boolean,
+        savedInstanceState: Bundle?
+    ) {
+        if (fragment != null) {
+            fragment!!.cancel()
+        }
+
+        fragment = controller!!.get(this, force, savedInstanceState)
+        fragment!!.setBaseActivityContent(this)
+    }
+
+    override fun onPostSelected(post: RedditPreparedPost) {
+        onLinkClicked(this, post.src.url, false, post.src.src)
+    }
+
+    override fun onPostCommentsSelected(post: RedditPreparedPost) {
+        onLinkClicked(
+            this,
+            PostCommentListingURL.Companion.forPostId(post.src.getIdAlone()).toUriString(),
+            false
+        )
+    }
+
+    override fun onRefreshPosts() {
+        controller!!.setSession(null)
+        requestRefresh(RefreshableFragment.POSTS, true)
+    }
+
+    override fun onPastPosts() {
+        val sessionListDialog: SessionListDialog = SessionListDialog.Companion.newInstance(
+            controller!!.getUri(),
+            controller!!.getSession(),
+            SessionChangeType.POSTS
+        )
+        sessionListDialog.show(getSupportFragmentManager(), "SessionListDialog")
+    }
+
+    override fun onSubmitPost() {
+        val intent = Intent(this, PostSubmitActivity::class.java)
+
+        if (controller!!.isSubreddit()) {
+            intent.putExtra("subreddit", controller!!.subredditCanonicalName().toString())
+        }
+
+        startActivity(intent)
+    }
+
+    override fun onSortSelected(order: PostSort?) {
+        controller!!.setSort(order)
+        requestRefresh(RefreshableFragment.POSTS, false)
+        invalidateOptionsMenu()
+    }
+
+    override fun onSearchPosts() {
+        onSearchPosts(controller, this)
+    }
+
+    override fun onSubscribe() {
+        fragment!!.onSubscribe()
+    }
+
+    override fun onUnsubscribe() {
+        fragment!!.onUnsubscribe()
+    }
+
+    override fun onSidebar() {
+        if (fragment!!.getSubreddit() != null) {
+            val intent = Intent(this, HtmlViewActivity::class.java)
+            intent.putExtra(
+                "html",
+                fragment!!.getSubreddit()!!
+                    .getSidebarHtml(PrefsUtility.isNightMode())
+            )
+            intent.putExtra(
+                "title", String.format(
+                    Locale.US, "%s: %s",
+                    getString(string.sidebar_activity_title),
+                    fragment!!.getSubreddit()!!.url
+                )
+            )
+            startActivityForResult(intent, 1)
+        }
+    }
+
+    override fun onPin() {
+        if (fragment == null) {
+            return
+        }
+
+        if (fragment!!.getSubreddit() == null) {
+            handleGlobalError(
+                this,
+                RuntimeException(
+                    "Can't pin post listing "
+                            + fragment!!.getPostListingURL()
+                )
+            )
+            return
+        }
+
+        try {
+            PrefsUtility.pref_pinned_subreddits_add(
+                this,
+                fragment!!.getSubreddit()!!.getCanonicalId()
+            )
+        } catch (e: InvalidSubredditNameException) {
+            throw RuntimeException(e)
+        }
+
+        invalidateOptionsMenu()
+    }
+
+    override fun onUnpin() {
+        if (fragment == null) {
+            return
+        }
+
+        if (fragment!!.getSubreddit() == null) {
+            handleGlobalError(
+                this,
+                RuntimeException(
+                    "Can't unpin post listing "
+                            + fragment!!.getPostListingURL()
+                )
+            )
+            return
+        }
+
+        try {
+            PrefsUtility.pref_pinned_subreddits_remove(
+                this,
+                fragment!!.getSubreddit()!!.getCanonicalId()
+            )
+        } catch (e: InvalidSubredditNameException) {
+            throw RuntimeException(e)
+        }
+
+        invalidateOptionsMenu()
+    }
+
+    override fun onBlock() {
+        if (fragment == null) {
+            return
+        }
+
+        if (fragment!!.getSubreddit() == null) {
+            handleGlobalError(
+                this,
+                RuntimeException(
+                    "Can't block post listing "
+                            + fragment!!.getPostListingURL()
+                )
+            )
+            return
+        }
+
+        try {
+            PrefsUtility.pref_blocked_subreddits_add(
+                this,
+                fragment!!.getSubreddit()!!.getCanonicalId()
+            )
+        } catch (e: InvalidSubredditNameException) {
+            throw RuntimeException(e)
+        }
+
+        invalidateOptionsMenu()
+    }
+
+    override fun onUnblock() {
+        if (fragment == null) {
+            return
+        }
+
+        if (fragment!!.getSubreddit() == null) {
+            handleGlobalError(
+                this,
+                RuntimeException(
+                    "Can't unblock post listing "
+                            + fragment!!.getPostListingURL()
+                )
+            )
+            return
+        }
+
+        try {
+            PrefsUtility.pref_blocked_subreddits_remove(
+                this,
+                fragment!!.getSubreddit()!!.getCanonicalId()
+            )
+        } catch (e: InvalidSubredditNameException) {
+            throw RuntimeException(e)
+        }
+
+        invalidateOptionsMenu()
+    }
+
+    override fun onSessionSelected(session: UUID?, type: SessionChangeType?) {
+        controller!!.setSession(session)
+        requestRefresh(RefreshableFragment.POSTS, false)
+    }
+
+    override fun onSessionRefreshSelected(type: SessionChangeType?) {
+        onRefreshPosts()
+    }
+
+    override fun onSessionChanged(
+        session: UUID?,
+        type: SessionChangeType?,
+        timestamp: TimestampUTC?
+    ) {
+        controller!!.setSession(session)
+    }
+
+    override fun baseActivityMustInterceptBack(): Boolean {
+        return PrefsUtility.pref_behaviour_back_again()
+    }
+
+    override fun baseActivityOnBackPressed(): Boolean {
+        if (PrefsUtility.pref_behaviour_back_again()
+            && (mDoubleTapBack_lastTapMs < SystemClock.uptimeMillis() - 5000)
+        ) {
+            mDoubleTapBack_lastTapMs = SystemClock.uptimeMillis()
+            Toast.makeText(this, string.press_back_again, Toast.LENGTH_SHORT).show()
+            return true
+        }
+
+        return false
+    }
+
+    override fun onSubredditSubscriptionListUpdated(
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+    ) {
+        postInvalidateOptionsMenu()
+    }
+
+    override fun onSubredditSubscriptionAttempted(
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+    ) {
+        postInvalidateOptionsMenu()
+    }
+
+    override fun onSubredditUnsubscriptionAttempted(
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+    ) {
+        postInvalidateOptionsMenu()
+    }
+
+    private fun postInvalidateOptionsMenu() {
+        runOnUiThread(Runnable { this.invalidateOptionsMenu() })
+    }
+
+    override fun baseActivityAllowToolbarHideOnScroll(): Boolean {
+        return true
+    }
+
+    override fun getPostSort(): PostSort? {
+        return controller!!.getSort()
+    }
+
+    companion object {
+        private const val SAVEDSTATE_SESSION = "pla_session"
+        private const val SAVEDSTATE_SORT = "pla_sort"
+        private const val SAVEDSTATE_FRAGMENT = "pla_fragment"
+
+        fun onSearchPosts(
+            controller: PostListingController?,
+            activity: AppCompatActivity
+        ) {
+            DialogUtils.showSearchDialog(activity, OnSearchListener { query: String? ->
+                if (query == null) {
+                    return@showSearchDialog
+                }
+                val url: SearchPostListURL
+
+                if (controller != null && (controller.isSubreddit()
+                            || controller.isSubredditCombination()
+                            || controller.isSubredditSearchResults())
+                ) {
+                    val subredditCanonicalId = controller.subredditCanonicalName()
+
+                    if (subredditCanonicalId == null) {
+                        handleGlobalError(
+                            activity,
+                            RuntimeException(
+                                "Can't search post listing "
+                                        + controller.getUri()
+                            )
+                        )
+                        return@showSearchDialog
+                    }
+
+                    url = SearchPostListURL.Companion.build(
+                        subredditCanonicalId.toString(),
+                        query
+                    )
+                } else if (controller != null && controller.isMultireddit()) {
+                    val multiName = controller.multiredditName()
+                    val multiUsername = controller.multiredditUsername()
+
+                    url = SearchPostListURL.Companion.build(multiUsername, multiName, query)
+                } else {
+                    url = SearchPostListURL.Companion.build(null, query)
+                }
+
+                val intent = Intent(activity, PostListingActivity::class.java)
+                intent.setData(url.generateJsonUri())
+                activity.startActivity(intent)
+            })
+        }
+    }
 }

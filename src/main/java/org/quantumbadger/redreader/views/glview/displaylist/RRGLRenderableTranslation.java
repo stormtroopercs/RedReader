@@ -12,42 +12,33 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.displaylist
 
-package org.quantumbadger.redreader.views.glview.displaylist;
+import org.quantumbadger.redreader.common.MutableFloatPoint2D
+import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
 
-import org.quantumbadger.redreader.common.MutableFloatPoint2D;
-import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack;
+class RRGLRenderableTranslation(entity: RRGLRenderable?) : RRGLRenderableRenderHooks(entity) {
+    private var mPositionX = 0f
+    private var mPositionY = 0f
 
-public class RRGLRenderableTranslation extends RRGLRenderableRenderHooks {
+    fun setPosition(x: Float, y: Float) {
+        mPositionX = x
+        mPositionY = y
+    }
 
-	private float mPositionX;
-	private float mPositionY;
+    override fun preRender(stack: RRGLMatrixStack, time: Long) {
+        stack.pushAndTranslate(mPositionX, mPositionY)
+    }
 
-	public RRGLRenderableTranslation(final RRGLRenderable entity) {
-		super(entity);
+    override fun postRender(stack: RRGLMatrixStack, time: Long) {
+        stack.pop()
+    }
 
-	}
-
-	public void setPosition(final float x, final float y) {
-		mPositionX = x;
-		mPositionY = y;
-	}
-
-	@Override
-	protected void preRender(final RRGLMatrixStack stack, final long time) {
-		stack.pushAndTranslate(mPositionX, mPositionY);
-	}
-
-	@Override
-	protected void postRender(final RRGLMatrixStack stack, final long time) {
-		stack.pop();
-	}
-
-	public void setPosition(final MutableFloatPoint2D mPositionOffset) {
-		mPositionX = mPositionOffset.x;
-		mPositionY = mPositionOffset.y;
-	}
+    fun setPosition(mPositionOffset: MutableFloatPoint2D) {
+        mPositionX = mPositionOffset.x
+        mPositionY = mPositionOffset.y
+    }
 }

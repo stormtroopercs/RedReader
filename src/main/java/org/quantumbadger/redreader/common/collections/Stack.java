@@ -12,46 +12,37 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.collections
 
-package org.quantumbadger.redreader.common.collections;
+class Stack<E>(initialCapacity: Int) {
+    private val mData: ArrayList<E?>
 
-import androidx.annotation.Nullable;
+    init {
+        mData = ArrayList<E?>(initialCapacity)
+    }
 
-import java.util.ArrayList;
+    fun push(obj: E?) {
+        mData.add(obj)
+    }
 
-public class Stack<E> {
+    fun pop(): E? {
+        return mData.removeAt(mData.size - 1)
+    }
 
-	private final ArrayList<E> mData;
+    val isEmpty: Boolean
+        get() = mData.isEmpty()
 
-	public Stack(final int initialCapacity) {
-		mData = new ArrayList<>(initialCapacity);
-	}
+    fun remove(obj: E?): Boolean {
+        return mData.remove(obj)
+    }
 
-	public void push(final E obj) {
-		mData.add(obj);
-	}
+    fun peek(): E? {
+        if (this.isEmpty) {
+            return null
+        }
 
-	public E pop() {
-		return mData.remove(mData.size() - 1);
-	}
-
-	public boolean isEmpty() {
-		return mData.isEmpty();
-	}
-
-	public boolean remove(final E obj) {
-		return mData.remove(obj);
-	}
-
-	@Nullable
-	public E peek() {
-
-		if(isEmpty()) {
-			return null;
-		}
-
-		return mData.get(mData.size() - 1);
-	}
+        return mData.get(mData.size - 1)
+    }
 }

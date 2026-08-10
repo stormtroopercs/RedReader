@@ -12,52 +12,44 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.view.View
+import android.view.View.OnLongClickListener
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.LinkHandler.onLinkClicked
+import org.quantumbadger.redreader.common.LinkHandler.onLinkLongClicked
+import org.quantumbadger.redreader.reddit.prepared.html.HtmlRawElement.LinkButtonDetails
 
-import android.view.View;
+class BodyElementLinkButton(private val mDetails: LinkButtonDetails) : BodyElementBaseButton(
+    mDetails.getButtonTitle(), mDetails.getButtonSubtitle(), true
+) {
+    protected override fun generateOnClickListener(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View.OnClickListener {
+        return View.OnClickListener { button: View? ->
+            onLinkClicked(
+                activity,
+                mDetails.url,
+                false
+            )
+        }
+    }
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.LinkHandler;
-import org.quantumbadger.redreader.reddit.prepared.html.HtmlRawElement;
-
-public class BodyElementLinkButton extends BodyElementBaseButton {
-
-	@NonNull private final HtmlRawElement.LinkButtonDetails mDetails;
-
-	public BodyElementLinkButton(
-			@NonNull final HtmlRawElement.LinkButtonDetails details) {
-		super(details.getButtonTitle(), details.getButtonSubtitle(), true);
-		mDetails = details;
-	}
-
-	@NonNull
-	@Override
-	protected View.OnClickListener generateOnClickListener(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		return (button) -> LinkHandler.onLinkClicked(activity, mDetails.url, false);
-	}
-
-	@Nullable
-	@Override
-	protected View.OnLongClickListener generateOnLongClickListener(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		return (button) -> {
-			LinkHandler.onLinkLongClicked(activity, mDetails.url);
-			return true;
-		};
-	}
+    protected override fun generateOnLongClickListener(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): OnLongClickListener? {
+        return OnLongClickListener { button: View? ->
+            onLinkLongClicked(activity, mDetails.url)
+            true
+        }
+    }
 }

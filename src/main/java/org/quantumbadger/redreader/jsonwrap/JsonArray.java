@@ -12,163 +12,140 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.jsonwrap
 
-package org.quantumbadger.redreader.jsonwrap;
+import com.fasterxml.jackson.core.JsonParseException
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.JsonToken
+import org.quantumbadger.redreader.common.Consumer
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.jsonwrap.JsonObject.JsonDeserializable
+import java.lang.reflect.InvocationTargetException
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import org.quantumbadger.redreader.common.Consumer;
-import org.quantumbadger.redreader.common.Optional;
+class JsonArray(parser: JsonParser) : JsonValue(), Iterable<JsonValue?> {
+    private val mContents = ArrayList<JsonValue>(16)
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Iterator;
+    init {
+        if (parser.currentToken() != JsonToken.START_ARRAY) {
+            throw JsonParseException(
+                parser,
+                "Expecting array start, got " + parser.currentToken(),
+                parser.currentLocation()
+            )
+        }
 
+        parser.nextToken()
 
-public final class JsonArray extends JsonValue implements Iterable<JsonValue> {
+        while (parser.currentToken() != JsonToken.END_ARRAY) {
+            mContents.add(JsonValue.Companion.parse(parser))
+        }
 
-	private final ArrayList<JsonValue> mContents = new ArrayList<>(16);
+        parser.nextToken()
+    }
 
-	protected JsonArray(final JsonParser parser) throws IOException {
+    public override fun asArray(): JsonArray {
+        return this
+    }
 
-		if(parser.currentToken() != JsonToken.START_ARRAY) {
-			throw new JsonParseException(
-					parser,
-					"Expecting array start, got " + parser.currentToken(),
-					parser.currentLocation());
-		}
+    fun get(id: Int): JsonValue {
+        return mContents.get(id)
+    }
 
-		parser.nextToken();
+    fun getString(id: Int): String? {
+        return get(id).asString()
+    }
 
-		while(parser.currentToken() != JsonToken.END_ARRAY) {
-			mContents.add(JsonValue.parse(parser));
-		}
+    fun getLong(id: Int): Long? {
+        return get(id).asLong()
+    }
 
-		parser.nextToken();
-	}
+    fun getDouble(id: Int): Double? {
+        return get(id).asDouble()
+    }
 
-	@NonNull
-	@Override
-	public JsonArray asArray() {
-		return this;
-	}
+    fun getBoolean(id: Int): Boolean? {
+        return get(id).asBoolean()
+    }
 
-	@NonNull
-	public JsonValue get(final int id) {
-		return mContents.get(id);
-	}
+    fun getObject(id: Int): JsonObject? {
+        return get(id).asObject()
+    }
 
-	@Nullable
-	public String getString(final int id) {
-		return get(id).asString();
-	}
+    @Throws(
+        InstantiationException::class,
+        IllegalAccessException::class,
+        NoSuchMethodException::class,
+        InvocationTargetException::class
+    )
+    fun <E : JsonDeserializable?> getObject(
+        id: Int,
+        clazz: Class<E?>?
+    ): E? {
+        return get(id).asObject<E?>(clazz)
+    }
 
-	@Nullable
-	public Long getLong(final int id) {
-		return get(id).asLong();
-	}
+    fun getArray(id: Int): JsonArray? {
+        return get(id).asArray()
+    }
 
-	@Nullable
-	public Double getDouble(final int id) {
-		return get(id).asDouble();
-	}
+    override fun iterator(): MutableIterator<JsonValue?> {
+        return mContents.iterator()
+    }
 
-	@Nullable
-	public Boolean getBoolean(final int id) {
-		return get(id).asBoolean();
-	}
+    protected override fun prettyPrint(indent: Int, sb: StringBuilder) {
+        sb.append('[')
 
-	@Nullable
-	public JsonObject getObject(final int id) {
-		return get(id).asObject();
-	}
+        for (item in mContents.indices) {
+            if (item != 0) {
+                sb.append(',')
+            }
+            sb.append('\n')
+            for (i in 0..<indent + 1) {
+                sb.append("   ")
+            }
+            mContents.get(item).prettyPrint(indent + 1, sb)
+        }
 
-	@Nullable
-	public <E extends JsonObject.JsonDeserializable> E getObject(
-					final int id,
-					final Class<E> clazz) throws
-			InstantiationException,
-			IllegalAccessException,
-			NoSuchMethodException,
-			InvocationTargetException {
+        sb.append('\n')
+        for (i in 0..<indent) {
+            sb.append("   ")
+        }
+        sb.append(']')
+    }
 
-		return get(id).asObject(clazz);
-	}
+    fun size(): Int {
+        return mContents.size
+    }
 
-	@Nullable
-	public JsonArray getArray(final int id) {
-		return get(id).asArray();
-	}
+    fun forEachObject(consumer: Consumer<JsonObject?>) {
+        for (value in mContents) {
+            consumer.consume(value.asObject())
+        }
+    }
 
-	@Override
-	public Iterator<JsonValue> iterator() {
-		return mContents.iterator();
-	}
+    protected override fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue?> {
+        if (offset == keys.size) {
+            return Optional.Companion.of<JsonValue?>(this)
+        }
 
-	@Override
-	protected void prettyPrint(final int indent, final StringBuilder sb) {
+        if (keys[offset] !is Int) {
+            return Optional.Companion.empty<JsonValue?>()
+        }
 
-		sb.append('[');
+        val key = keys[offset] as Int
 
-		for(int item = 0; item < mContents.size(); item++) {
-			if(item != 0) {
-				sb.append(',');
-			}
-			sb.append('\n');
-			for(int i = 0; i < indent + 1; i++) {
-				sb.append("   ");
-			}
-			mContents.get(item).prettyPrint(indent + 1, sb);
-		}
+        if (key < 0 || key >= mContents.size) {
+            return Optional.Companion.empty<JsonValue?>()
+        }
 
-		sb.append('\n');
-		for(int i = 0; i < indent; i++) {
-			sb.append("   ");
-		}
-		sb.append(']');
-	}
+        val next = mContents.get(key)
 
-	public int size() {
-		return mContents.size();
-	}
+        if (next == null) {
+            return Optional.Companion.empty<JsonValue?>()
+        }
 
-	public void forEachObject(final Consumer<JsonObject> consumer) {
-
-		for(final JsonValue value : mContents) {
-			consumer.consume(value.asObject());
-		}
-	}
-
-	@NonNull
-	@Override
-	protected Optional<JsonValue> getAtPathInternal(final int offset, final Object... keys) {
-
-		if(offset == keys.length) {
-			return Optional.of(this);
-		}
-
-		if(!(keys[offset] instanceof Integer)) {
-			return Optional.empty();
-		}
-
-		final int key = (Integer)keys[offset];
-
-		if(key < 0 || key >= mContents.size()) {
-			return Optional.empty();
-		}
-
-		final JsonValue next = mContents.get(key);
-
-		if(next == null) {
-			return Optional.empty();
-		}
-
-		return next.getAtPathInternal(offset + 1, keys);
-	}
+        return next.getAtPathInternal(offset + 1, *keys)
+    }
 }

@@ -12,132 +12,121 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.program
 
-package org.quantumbadger.redreader.views.glview.program;
+import android.opengl.GLES20
+import java.util.Locale
 
-import android.opengl.GLES20;
+abstract class RRGLProgram(
+    vertexShaderSource: String?,
+    fragmentShaderSource: String?
+) {
+    val handle: Int
 
-import java.util.Locale;
+    private var mFragmentShaderHandle: Int? = null
+    private var mVertexShaderHandle: Int? = null
 
-public abstract class RRGLProgram {
+    init {
+        this.handle = GLES20.glCreateProgram()
 
-	private final int mHandle;
+        if (this.handle == 0) {
+            throw RuntimeException("Error creating program.")
+        }
 
-	private Integer mFragmentShaderHandle = null;
-	private Integer mVertexShaderHandle = null;
+        compileAndAttachShader(GLES20.GL_VERTEX_SHADER, vertexShaderSource)
+        compileAndAttachShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderSource)
 
-	public RRGLProgram(
-			final String vertexShaderSource,
-			final String fragmentShaderSource) {
+        link()
+    }
 
-		mHandle = GLES20.glCreateProgram();
+    private fun compileAndAttachShader(type: Int, source: String?) {
+        when (type) {
+            GLES20.GL_FRAGMENT_SHADER -> if (mFragmentShaderHandle != null) {
+                throw RuntimeException()
+            }
 
-		if(mHandle == 0) {
-			throw new RuntimeException("Error creating program.");
-		}
+            GLES20.GL_VERTEX_SHADER -> if (mVertexShaderHandle != null) {
+                throw RuntimeException()
+            }
 
-		compileAndAttachShader(GLES20.GL_VERTEX_SHADER, vertexShaderSource);
-		compileAndAttachShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderSource);
+            else -> throw RuntimeException("Unknown shader type.")
+        }
 
-		link();
-	}
+        val shaderHandle = GLES20.glCreateShader(type)
+        if (shaderHandle == 0) {
+            throw RuntimeException("Error creating shader.")
+        }
 
-	private void compileAndAttachShader(final int type, final String source) {
+        GLES20.glShaderSource(shaderHandle, source)
+        GLES20.glCompileShader(shaderHandle)
 
-		switch(type) {
-			case GLES20.GL_FRAGMENT_SHADER:
-				if(mFragmentShaderHandle != null) {
-					throw new RuntimeException();
-				}
-				break;
-			case GLES20.GL_VERTEX_SHADER:
-				if(mVertexShaderHandle != null) {
-					throw new RuntimeException();
-				}
-				break;
-			default:
-				throw new RuntimeException("Unknown shader type.");
-		}
+        val compileStatus = IntArray(1)
+        GLES20.glGetShaderiv(shaderHandle, GLES20.GL_COMPILE_STATUS, compileStatus, 0)
 
-		final int shaderHandle = GLES20.glCreateShader(type);
-		if(shaderHandle == 0) {
-			throw new RuntimeException("Error creating shader.");
-		}
+        if (compileStatus[0] == 0) {
+            val log = GLES20.glGetShaderInfoLog(this.handle)
+            GLES20.glDeleteShader(shaderHandle)
+            throw RuntimeException(
+                String.format(
+                    Locale.US,
+                    "Shader compile error: \"%s\".",
+                    log
+                )
+            )
+        }
 
-		GLES20.glShaderSource(shaderHandle, source);
-		GLES20.glCompileShader(shaderHandle);
+        GLES20.glAttachShader(this.handle, shaderHandle)
 
-		final int[] compileStatus = new int[1];
-		GLES20.glGetShaderiv(shaderHandle, GLES20.GL_COMPILE_STATUS, compileStatus, 0);
+        when (type) {
+            GLES20.GL_FRAGMENT_SHADER -> mFragmentShaderHandle = shaderHandle
+            GLES20.GL_VERTEX_SHADER -> mVertexShaderHandle = shaderHandle
+            else -> throw RuntimeException("Unknown shader type.")
+        }
+    }
 
-		if(compileStatus[0] == 0) {
-			final String log = GLES20.glGetShaderInfoLog(mHandle);
-			GLES20.glDeleteShader(shaderHandle);
-			throw new RuntimeException(String.format(
-					Locale.US,
-					"Shader compile error: \"%s\".",
-					log));
-		}
+    private fun link() {
+        if (mFragmentShaderHandle == null || mVertexShaderHandle == null) {
+            throw RuntimeException()
+        }
 
-		GLES20.glAttachShader(mHandle, shaderHandle);
+        GLES20.glLinkProgram(this.handle)
 
-		switch(type) {
-			case GLES20.GL_FRAGMENT_SHADER:
-				mFragmentShaderHandle = shaderHandle;
-				break;
-			case GLES20.GL_VERTEX_SHADER:
-				mVertexShaderHandle = shaderHandle;
-				break;
-			default:
-				throw new RuntimeException("Unknown shader type.");
-		}
-	}
+        val linkStatus = IntArray(1)
+        GLES20.glGetProgramiv(this.handle, GLES20.GL_LINK_STATUS, linkStatus, 0)
 
-	private void link() {
+        if (linkStatus[0] == 0) {
+            val log = GLES20.glGetProgramInfoLog(this.handle)
+            GLES20.glDeleteProgram(this.handle)
+            throw RuntimeException(
+                String.format(
+                    Locale.US,
+                    "Linker error: \"%s\".",
+                    log
+                )
+            )
+        }
 
-		if(mFragmentShaderHandle == null || mVertexShaderHandle == null) {
-			throw new RuntimeException();
-		}
+        GLES20.glDetachShader(this.handle, mFragmentShaderHandle!!)
+        GLES20.glDetachShader(this.handle, mVertexShaderHandle!!)
 
-		GLES20.glLinkProgram(mHandle);
+        GLES20.glDeleteShader(mFragmentShaderHandle!!)
+        GLES20.glDeleteShader(mVertexShaderHandle!!)
 
-		final int[] linkStatus = new int[1];
-		GLES20.glGetProgramiv(mHandle, GLES20.GL_LINK_STATUS, linkStatus, 0);
+        mFragmentShaderHandle = null
+        mVertexShaderHandle = null
+    }
 
-		if(linkStatus[0] == 0) {
-			final String log = GLES20.glGetProgramInfoLog(mHandle);
-			GLES20.glDeleteProgram(mHandle);
-			throw new RuntimeException(String.format(
-					Locale.US,
-					"Linker error: \"%s\".",
-					log));
-		}
+    fun getAttributeHandle(name: String?): Int {
+        return GLES20.glGetAttribLocation(this.handle, name)
+    }
 
-		GLES20.glDetachShader(mHandle, mFragmentShaderHandle);
-		GLES20.glDetachShader(mHandle, mVertexShaderHandle);
+    fun getUniformHandle(name: String?): Int {
+        return GLES20.glGetUniformLocation(this.handle, name)
+    }
 
-		GLES20.glDeleteShader(mFragmentShaderHandle);
-		GLES20.glDeleteShader(mVertexShaderHandle);
+    abstract fun onActivated()
 
-		mFragmentShaderHandle = null;
-		mVertexShaderHandle = null;
-	}
-
-	public int getAttributeHandle(final String name) {
-		return GLES20.glGetAttribLocation(mHandle, name);
-	}
-
-	public int getUniformHandle(final String name) {
-		return GLES20.glGetUniformLocation(mHandle, name);
-	}
-
-	public int getHandle() {
-		return mHandle;
-	}
-
-	public abstract void onActivated();
-
-	public abstract void onDeactivated();
+    abstract fun onDeactivated()
 }

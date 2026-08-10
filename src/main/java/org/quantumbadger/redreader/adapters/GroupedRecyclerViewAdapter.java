@@ -12,314 +12,283 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.adapters
+
+import android.view.ViewGroup
+import android.view.ViewGroup.MarginLayoutParams
+import androidx.recyclerview.widget.RecyclerView
+import java.util.concurrent.atomic.AtomicLong
+
+class GroupedRecyclerViewAdapter(groups: Int) : RecyclerView.Adapter<RecyclerView.ViewHolder?>() {
+    abstract class Item<VH : RecyclerView.ViewHolder?> {
+        private val mUniqueId: Long = ITEM_UNIQUE_ID_GENERATOR.incrementAndGet()
+        private var mCurrentlyHidden = false
+
+        abstract val viewType: Class<*>?
+
+        abstract fun onCreateViewHolder(viewGroup: ViewGroup?): VH?
+
+        abstract fun onBindViewHolder(viewHolder: VH?)
+
+        abstract val isHidden: Boolean
+
+        private fun onBindViewHolderInner(
+            viewHolder: RecyclerView.ViewHolder?
+        ) {
+            onBindViewHolder(viewHolder as VH?)
+        }
+    }
+
+    private val mItems: Array<ArrayList<Item<*>?>>
+    private val mItemViewTypeMap = HashMap<Class<*>?, Int?>()
+    private val mViewTypeItemMap = HashMap<Int?, Item<*>?>()
+
+    init {
+        mItems = arrayOfNulls<ArrayList<*>>(groups) as Array<ArrayList<Item<*>?>>
+
+        for (i in 0..<groups) {
+            mItems[i] = ArrayList<Item<*>?>()
+        }
+
+        setHasStableIds(true)
+    }
+
+    private fun getItemPositionInternal(groupId: Int, item: Item<*>?): Int {
+        val group = mItems[groupId]
+
+        for (i in group.indices) {
+            if (group.get(i) === item) {
+                return getItemPositionInternal(groupId, i)
+            }
+        }
+
+        throw RuntimeException("Item not found")
+    }
+
+    // "positionInGroup" should include both hidden and visible items
+    private fun getItemPositionInternal(group: Int, positionInGroup: Int): Int {
+        var result = 0
+
+        for (i in 0..<group) {
+            result += getGroupUnhiddenCount(i)
+        }
+
+        for (i in 0..<positionInGroup) {
+            if (!mItems[group].get(i).mCurrentlyHidden) {
+                result++
+            }
+        }
+
+        return result
+    }
+
+    private fun getItemInternal(desiredPosition: Int): Item<*> {
+        if (desiredPosition < 0) {
+            throw RuntimeException(
+                ("Item desiredPosition "
+                        + desiredPosition
+                        + " is too low")
+            )
+        }
+
+        var currentPosition = 0
+
+        for (groupId in mItems.indices) {
+            val group = mItems[groupId]
+
+            for (positionInGroup in group.indices) {
+                val item: Item<*> = group.get(positionInGroup)!!
+
+                if (!item.mCurrentlyHidden) {
+                    if (currentPosition == desiredPosition) {
+                        return item
+                    }
+
+                    currentPosition++
+                }
+            }
+        }
+
+        throw RuntimeException(
+            ("Item desiredPosition "
+                    + desiredPosition
+                    + " is too high")
+        )
+    }
+
+    override fun onCreateViewHolder(
+        viewGroup: ViewGroup,
+        viewType: Int
+    ): RecyclerView.ViewHolder {
+        val viewHolder: RecyclerView.ViewHolder = mViewTypeItemMap.get(viewType)!!
+            .onCreateViewHolder(viewGroup)!!
 
-package org.quantumbadger.redreader.adapters;
+        val layoutParams = RecyclerView.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
 
-import android.view.ViewGroup;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+        if (viewHolder.itemView.getLayoutParams() is MarginLayoutParams) {
+            val oldLayoutParams = viewHolder.itemView.getLayoutParams() as MarginLayoutParams
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicLong;
+            layoutParams.setMargins(
+                oldLayoutParams.leftMargin,
+                oldLayoutParams.topMargin,
+                oldLayoutParams.rightMargin,
+                oldLayoutParams.bottomMargin
+            )
+        }
 
-@SuppressWarnings("ForLoopReplaceableByForEach")
-public class GroupedRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+        viewHolder.itemView.setLayoutParams(layoutParams)
 
-	private static final AtomicLong ITEM_UNIQUE_ID_GENERATOR = new AtomicLong(100_000);
+        return viewHolder
+    }
 
-	public static abstract class Item<VH extends RecyclerView.ViewHolder> {
+    override fun onBindViewHolder(
+        viewHolder: RecyclerView.ViewHolder,
+        position: Int
+    ) {
+        getItemInternal(position).onBindViewHolderInner(viewHolder)
+    }
 
-		private final long mUniqueId = ITEM_UNIQUE_ID_GENERATOR.incrementAndGet();
-		private boolean mCurrentlyHidden = false;
+    override fun getItemViewType(position: Int): Int {
+        val item = getItemInternal(position)
+        val viewTypeClass = item.viewType
 
-		public abstract Class<?> getViewType();
+        var typeId = mItemViewTypeMap.get(viewTypeClass)
 
-		public abstract VH onCreateViewHolder(final ViewGroup viewGroup);
+        if (typeId == null) {
+            typeId = mItemViewTypeMap.size
+            mItemViewTypeMap.put(viewTypeClass, typeId)
+            mViewTypeItemMap.put(typeId, item)
+        }
 
-		public abstract void onBindViewHolder(final VH viewHolder);
+        return typeId
+    }
 
-		public abstract boolean isHidden();
+    private fun getGroupUnhiddenCount(groupId: Int): Int {
+        val group = mItems[groupId]
 
-		private void onBindViewHolderInner(
-				final RecyclerView.ViewHolder viewHolder) {
-			//noinspection unchecked
-			onBindViewHolder((VH)viewHolder);
-		}
-	}
+        var result = 0
 
-	private final ArrayList<Item<?>>[] mItems;
-	private final HashMap<Class<?>, Integer> mItemViewTypeMap = new HashMap<>();
-	private final HashMap<Integer, Item<?>> mViewTypeItemMap = new HashMap<>();
+        for (i in group.indices) {
+            if (!group.get(i).mCurrentlyHidden) {
+                result++
+            }
+        }
 
-	public GroupedRecyclerViewAdapter(final int groups) {
-		//noinspection unchecked
-		mItems = (ArrayList<Item<?>>[])new ArrayList[groups];
+        return result
+    }
 
-		for(int i = 0; i < groups; i++) {
-			mItems[i] = new ArrayList<>();
-		}
+    override fun getItemId(position: Int): Long {
+        return getItemInternal(position).mUniqueId
+    }
 
-		setHasStableIds(true);
-	}
+    override fun getItemCount(): Int {
+        var count = 0
 
-	private int getItemPositionInternal(final int groupId, final Item<?> item) {
+        for (i in mItems.indices) {
+            count += getGroupUnhiddenCount(i)
+        }
 
-		final ArrayList<Item<?>> group = mItems[groupId];
+        return count
+    }
 
-		for(int i = 0; i < group.size(); i++) {
-			if(group.get(i) == item) {
-				return getItemPositionInternal(groupId, i);
-			}
-		}
+    fun getItemAtPosition(position: Int): Item<*> {
+        return getItemInternal(position)
+    }
 
-		throw new RuntimeException("Item not found");
-	}
+    fun appendToGroup(group: Int, item: Item<*>) {
+        val position = getItemPositionInternal(group + 1, 0)
 
-	// "positionInGroup" should include both hidden and visible items
-	private int getItemPositionInternal(final int group, final int positionInGroup) {
+        mItems[group].add(item)
 
-		int result = 0;
+        if (!item.mCurrentlyHidden) {
+            notifyItemInserted(position)
+        }
+    }
 
-		for(int i = 0; i < group; i++) {
-			result += getGroupUnhiddenCount(i);
-		}
+    fun appendToGroup(group: Int, items: MutableCollection<Item<*>>) {
+        val position = getItemPositionInternal(group + 1, 0)
 
-		for(int i = 0; i < positionInGroup; i++) {
-			if(!mItems[group].get(i).mCurrentlyHidden) {
-				result++;
-			}
-		}
+        mItems[group].addAll(items)
 
-		return result;
-	}
+        for (item in items) {
+            item.mCurrentlyHidden = false
+        }
 
-	private Item<?> getItemInternal(final int desiredPosition) {
+        notifyItemRangeInserted(position, items.size)
+    }
 
-		if(desiredPosition < 0) {
-			throw new RuntimeException("Item desiredPosition "
-					+ desiredPosition
-					+ " is too low");
-		}
+    fun removeAllFromGroup(groupId: Int) {
+        val group = mItems[groupId]
 
-		int currentPosition = 0;
+        for (i in group.indices.reversed()) {
+            val item: Item<*> = group.get(i)!!
+            val position = getItemPositionInternal(groupId, i)
 
-		for(int groupId = 0; groupId < mItems.length; groupId++) {
+            group.removeAt(i)
 
-			final ArrayList<Item<?>> group = mItems[groupId];
+            if (!item.mCurrentlyHidden) {
+                notifyItemRemoved(position)
+            }
+        }
+    }
 
-			for(int positionInGroup = 0;
-				positionInGroup < group.size();
-				positionInGroup++) {
+    fun removeFromGroup(groupId: Int, item: Item<*>) {
+        val group = mItems[groupId]
 
-				final Item<?> item = group.get(positionInGroup);
+        for (i in group.indices) {
+            if (group.get(i) === item) {
+                val position = getItemPositionInternal(groupId, i)
 
-				if(!item.mCurrentlyHidden) {
+                group.removeAt(i)
 
-					if(currentPosition == desiredPosition) {
-						return item;
-					}
+                if (!item.mCurrentlyHidden) {
+                    notifyItemRemoved(position)
+                }
 
-					currentPosition++;
-				}
-			}
-		}
+                return
+            }
+        }
 
-		throw new RuntimeException("Item desiredPosition "
-				+ desiredPosition
-				+ " is too high");
-	}
+        throw RuntimeException("Item not found")
+    }
 
-	@NonNull
-	@Override
-	public RecyclerView.ViewHolder onCreateViewHolder(
-			@NonNull final ViewGroup viewGroup,
-			final int viewType) {
+    fun updateHiddenStatus() {
+        var position = 0
 
-		final RecyclerView.ViewHolder viewHolder = mViewTypeItemMap.get(viewType)
-				.onCreateViewHolder(viewGroup);
+        for (groupId in mItems.indices) {
+            val group = mItems[groupId]
 
-		final RecyclerView.LayoutParams layoutParams = new RecyclerView.LayoutParams(
-				ViewGroup.LayoutParams.MATCH_PARENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT);
+            for (positionInGroup in group.indices) {
+                val item: Item<*> = group.get(positionInGroup)!!
 
-		if(viewHolder.itemView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                val wasHidden = item.mCurrentlyHidden
+                val isHidden = item.isHidden
+                item.mCurrentlyHidden = isHidden
 
-			final ViewGroup.MarginLayoutParams oldLayoutParams
-					= (ViewGroup.MarginLayoutParams)viewHolder.itemView.getLayoutParams();
+                if (isHidden && !wasHidden) {
+                    notifyItemRemoved(position)
+                } else if (!isHidden && wasHidden) {
+                    notifyItemInserted(position)
+                }
 
-			layoutParams.setMargins(
-					oldLayoutParams.leftMargin,
-					oldLayoutParams.topMargin,
-					oldLayoutParams.rightMargin,
-					oldLayoutParams.bottomMargin);
-		}
+                if (!isHidden) {
+                    position++
+                }
+            }
+        }
+    }
 
-		viewHolder.itemView.setLayoutParams(layoutParams);
+    fun notifyItemChanged(groupId: Int, item: Item<*>?) {
+        val position = getItemPositionInternal(groupId, item)
+        notifyItemChanged(position)
+    }
 
-		return viewHolder;
-	}
-
-	@Override
-	public void onBindViewHolder(
-			@NonNull final RecyclerView.ViewHolder viewHolder,
-			final int position) {
-		getItemInternal(position).onBindViewHolderInner(viewHolder);
-	}
-
-	@Override
-	public int getItemViewType(final int position) {
-
-		final Item<?> item = getItemInternal(position);
-		final Class<?> viewTypeClass = item.getViewType();
-
-		Integer typeId = mItemViewTypeMap.get(viewTypeClass);
-
-		if(typeId == null) {
-			typeId = mItemViewTypeMap.size();
-			mItemViewTypeMap.put(viewTypeClass, typeId);
-			mViewTypeItemMap.put(typeId, item);
-		}
-
-		return typeId;
-	}
-
-	private int getGroupUnhiddenCount(final int groupId) {
-
-		final ArrayList<Item<?>> group = mItems[groupId];
-
-		int result = 0;
-
-		for(int i = 0; i < group.size(); i++) {
-			if(!group.get(i).mCurrentlyHidden) {
-				result++;
-			}
-		}
-
-		return result;
-	}
-
-	@Override
-	public long getItemId(final int position) {
-		return getItemInternal(position).mUniqueId;
-	}
-
-	@Override
-	public int getItemCount() {
-
-		int count = 0;
-
-		for(int i = 0; i < mItems.length; i++) {
-			count += getGroupUnhiddenCount(i);
-		}
-
-		return count;
-	}
-
-	public Item<?> getItemAtPosition(final int position) {
-		return getItemInternal(position);
-	}
-
-	public void appendToGroup(final int group, final Item<?> item) {
-
-		final int position = getItemPositionInternal(group + 1, 0);
-
-		mItems[group].add(item);
-
-		if(!item.mCurrentlyHidden) {
-			notifyItemInserted(position);
-		}
-	}
-
-	public void appendToGroup(final int group, final Collection<Item<?>> items) {
-
-		final int position = getItemPositionInternal(group + 1, 0);
-
-		mItems[group].addAll(items);
-
-		for(final Item<?> item : items) {
-			item.mCurrentlyHidden = false;
-		}
-
-		notifyItemRangeInserted(position, items.size());
-	}
-
-	public void removeAllFromGroup(final int groupId) {
-
-		final ArrayList<Item<?>> group = mItems[groupId];
-
-		for(int i = group.size() - 1; i >= 0; i--) {
-
-			final Item<?> item = group.get(i);
-			final int position = getItemPositionInternal(groupId, i);
-
-			group.remove(i);
-
-			if(!item.mCurrentlyHidden) {
-				notifyItemRemoved(position);
-			}
-		}
-	}
-
-	public void removeFromGroup(final int groupId, final Item<?> item) {
-
-		final ArrayList<Item<?>> group = mItems[groupId];
-
-		for(int i = 0; i < group.size(); i++) {
-			if(group.get(i) == item) {
-
-				final int position = getItemPositionInternal(groupId, i);
-
-				group.remove(i);
-
-				if(!item.mCurrentlyHidden) {
-					notifyItemRemoved(position);
-				}
-
-				return;
-			}
-		}
-
-		throw new RuntimeException("Item not found");
-	}
-
-	public void updateHiddenStatus() {
-
-		int position = 0;
-
-		for(int groupId = 0; groupId < mItems.length; groupId++) {
-
-			final ArrayList<Item<?>> group = mItems[groupId];
-
-			for(int positionInGroup = 0;
-				positionInGroup < group.size();
-				positionInGroup++) {
-
-				final Item<?> item = group.get(positionInGroup);
-
-				final boolean wasHidden = item.mCurrentlyHidden;
-				final boolean isHidden = item.isHidden();
-				item.mCurrentlyHidden = isHidden;
-
-				if(isHidden && !wasHidden) {
-					notifyItemRemoved(position);
-
-				} else if(!isHidden && wasHidden) {
-					notifyItemInserted(position);
-				}
-
-				if(!isHidden) {
-					position++;
-				}
-			}
-		}
-	}
-
-	public void notifyItemChanged(final int groupId, final Item<?> item) {
-		final int position = getItemPositionInternal(groupId, item);
-		notifyItemChanged(position);
-	}
+    companion object {
+        private val ITEM_UNIQUE_ID_GENERATOR = AtomicLong(100000)
+    }
 }

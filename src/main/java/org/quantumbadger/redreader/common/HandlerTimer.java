@@ -12,60 +12,48 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.os.Handler
+import android.util.SparseBooleanArray
+import androidx.annotation.UiThread
 
-import android.os.Handler;
-import android.util.SparseBooleanArray;
-import androidx.annotation.UiThread;
+class HandlerTimer(private val mHandler: Handler) {
+    private var mNextId = 0
 
-public class HandlerTimer {
+    private val mTimers = SparseBooleanArray()
 
-	private final Handler mHandler;
+    private val nextId: Int
+        get() {
+            mNextId++
 
-	private int mNextId = 0;
+            while (mTimers.get(mNextId, false) || mNextId == 0) {
+                mNextId++
+            }
 
-	private final SparseBooleanArray mTimers = new SparseBooleanArray();
+            return mNextId
+        }
 
-	public HandlerTimer(final Handler handler) {
-		mHandler = handler;
-	}
+    // Should never return 0
+    @UiThread
+    fun setTimer(delayMs: Long, runnable: Runnable): Int {
+        val id = this.nextId
+        mTimers.put(id, true)
 
-	private int getNextId() {
+        mHandler.postDelayed(Runnable {
+            if (!mTimers.get(id, false)) {
+                return@postDelayed
+            }
+            mTimers.delete(id)
+            runnable.run()
+        }, delayMs)
 
-		mNextId++;
+        return id
+    }
 
-		while(mTimers.get(mNextId, false) || mNextId == 0) {
-			mNextId++;
-		}
-
-		return mNextId;
-	}
-
-	// Should never return 0
-	@UiThread
-	public int setTimer(final long delayMs, final Runnable runnable) {
-
-		final int id = getNextId();
-		mTimers.put(id, true);
-
-		mHandler.postDelayed(() -> {
-
-			if(!mTimers.get(id, false)) {
-				return;
-			}
-
-			mTimers.delete(id);
-
-			runnable.run();
-		}, delayMs);
-
-		return id;
-	}
-
-	public void cancelTimer(final int timerId) {
-		mTimers.delete(timerId);
-	}
+    fun cancelTimer(timerId: Int) {
+        mTimers.delete(timerId)
+    }
 }

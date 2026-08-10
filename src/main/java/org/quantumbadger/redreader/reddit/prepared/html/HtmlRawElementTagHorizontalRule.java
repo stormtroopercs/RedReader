@@ -12,40 +12,32 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementHorizontalRule
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementHorizontalRule;
+class HtmlRawElementTagHorizontalRule : HtmlRawElement() {
+    override fun getPlainText(stringBuilder: StringBuilder) {
+        // Nothing to do
+    }
 
-import java.util.ArrayList;
+    override fun reduce(
+        activeAttributes: HtmlTextAttributes,
+        activity: AppCompatActivity,
+        destination: ArrayList<HtmlRawElement?>,
+        linkButtons: ArrayList<LinkButtonDetails?>
+    ) {
+        destination.add(this)
+    }
 
-public class HtmlRawElementTagHorizontalRule extends HtmlRawElement {
-
-	@Override
-	public void getPlainText(@NonNull final StringBuilder stringBuilder) {
-		// Nothing to do
-	}
-
-	@Override
-	public void reduce(
-			@NonNull final HtmlTextAttributes activeAttributes,
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<HtmlRawElement> destination,
-			@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
-
-		destination.add(this);
-	}
-
-	@Override
-	public void generate(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<BodyElement> destination) {
-
-		destination.add(new BodyElementHorizontalRule());
-	}
+    override fun generate(
+        activity: AppCompatActivity,
+        destination: ArrayList<BodyElement?>
+    ) {
+        destination.add(BodyElementHorizontalRule())
+    }
 }

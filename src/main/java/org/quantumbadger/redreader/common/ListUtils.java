@@ -12,25 +12,16 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+object ListUtils {
+    fun <E> getLast(list: MutableList<E?>): E? {
+        if (list.isEmpty()) {
+            return null
+        }
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import java.util.List;
-
-public class ListUtils {
-
-	@Nullable
-	public static <E> E getLast(@NonNull final List<E> list) {
-
-		if(list.isEmpty()) {
-			return null;
-		}
-
-		return list.get(list.size() - 1);
-	}
+        return list.get(list.size - 1)
+    }
 }

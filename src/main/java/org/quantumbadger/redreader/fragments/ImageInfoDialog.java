@@ -12,79 +12,85 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.fragments
 
-package org.quantumbadger.redreader.fragments;
+import android.content.Context
+import android.os.Bundle
+import android.widget.LinearLayout
+import androidx.core.os.BundleCompat
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.image.ImageInfo
+import java.util.Objects
 
-import android.content.Context;
-import android.os.Bundle;
-import android.widget.LinearLayout;
+class ImageInfoDialog : PropertiesDialog() {
+    override fun getTitle(context: Context): String {
+        return context.getString(string.props_image_title)
+    }
 
-import androidx.annotation.NonNull;
-import androidx.core.os.BundleCompat;
+    override fun prepare(
+        context: BaseActivity,
+        items: LinearLayout
+    ) {
+        val info = Objects.requireNonNull<ImageInfo>(
+            BundleCompat.getParcelable<ImageInfo?>(
+                requireArguments(),
+                "info",
+                ImageInfo::class.java
+            )
+        )
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.image.ImageInfo;
+        var first = true
 
-import java.util.Objects;
+        if (info.title != null && !info.title.trim { it <= ' ' }.isEmpty()) {
+            items.addView(
+                propView(
+                    context,
+                    string.props_title,
+                    info.title.trim { it <= ' ' },
+                    first
+                )
+            )
+            first = false
+        }
 
-public final class ImageInfoDialog extends PropertiesDialog {
+        if (info.caption != null && !info.caption.trim { it <= ' ' }.isEmpty()) {
+            items.addView(
+                propView(
+                    context,
+                    string.props_caption,
+                    info.caption.trim { it <= ' ' },
+                    first
+                )
+            )
+            first = false
+        }
 
-	public static ImageInfoDialog newInstance(final ImageInfo info) {
+        items.addView(propView(context, string.props_url, info.original.url.value, first))
 
-		final ImageInfoDialog pp = new ImageInfoDialog();
+        if (info.original.size != null) {
+            items.addView(
+                propView(
+                    context,
+                    string.props_resolution,
+                    info.original.size.width.toString() + " x " + info.original.size.height,
+                    false
+                )
+            )
+        }
+    }
 
-		final Bundle args = new Bundle();
-		args.putParcelable("info", info);
-		pp.setArguments(args);
+    companion object {
+        fun newInstance(info: ImageInfo?): ImageInfoDialog {
+            val pp = ImageInfoDialog()
 
-		return pp;
-	}
+            val args = Bundle()
+            args.putParcelable("info", info)
+            pp.setArguments(args)
 
-	@Override
-	protected String getTitle(final Context context) {
-		return context.getString(R.string.props_image_title);
-	}
-
-	@Override
-	protected void prepare(
-			@NonNull final BaseActivity context,
-			@NonNull final LinearLayout items) {
-
-		final ImageInfo info = Objects.requireNonNull(BundleCompat.getParcelable(requireArguments(),
-				"info",
-				ImageInfo.class));
-
-		boolean first = true;
-
-		if(info.title != null && !info.title.trim().isEmpty()) {
-			items.addView(propView(
-					context,
-					R.string.props_title,
-					info.title.trim(),
-					first));
-			first = false;
-		}
-
-		if(info.caption != null && !info.caption.trim().isEmpty()) {
-			items.addView(propView(
-					context,
-					R.string.props_caption,
-					info.caption.trim(),
-					first));
-			first = false;
-		}
-
-		items.addView(propView(context, R.string.props_url, info.original.url.value, first));
-
-		if (info.original.size != null) {
-			items.addView(propView(
-					context,
-					R.string.props_resolution,
-					info.original.size.getWidth() + " x " + info.original.size.getHeight(),
-					false));
-		}
-	}
+            return pp
+        }
+    }
 }

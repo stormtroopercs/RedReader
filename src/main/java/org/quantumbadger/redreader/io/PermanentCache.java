@@ -12,211 +12,184 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.io
 
-package org.quantumbadger.redreader.io;
+import org.quantumbadger.redreader.common.TimestampBound
+import org.quantumbadger.redreader.common.collections.WeakReferenceListManager
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.oldest
 
-import org.quantumbadger.redreader.common.TimestampBound;
-import org.quantumbadger.redreader.common.collections.WeakReferenceListManager;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
+class PermanentCache<K, V : WritableObject<K?>?, F>
+    (private val cacheDataSource: CacheDataSource<K?, V?, F?>) : CacheDataSource<K?, V?, F?> {
+    private val cached: HashMap<K?, CacheEntry?> = HashMap<K?, CacheEntry?>()
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
+    private val updatedVersionListenerNotifier = UpdatedVersionListenerNotifier<K?, V?>()
 
-public final class PermanentCache<K, V extends WritableObject<K>, F>
-		implements CacheDataSource<K, V, F> {
+    override fun performRequest(
+        key: K?,
+        timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<V?, F?>
+    ) {
+        performRequest(key, timestampBound, handler, null)
+    }
 
-	private final HashMap<K, CacheEntry> cached = new HashMap<>();
-	private final CacheDataSource<K, V, F> cacheDataSource;
+    @Synchronized
+    override fun performRequest(
+        keys: MutableCollection<K?>, timestampBound: TimestampBound,
+        handler: RequestResponseHandler<HashMap<K?, V?>?, F?>
+    ) {
+        val keysRemaining = HashSet<K?>(keys)
+        val cacheResult = HashMap<K?, V?>(keys.size)
+        var oldestTimestamp: TimestampUTC? = null
 
-	private final UpdatedVersionListenerNotifier<K, V> updatedVersionListenerNotifier
-			= new UpdatedVersionListenerNotifier<>();
+        for (key in keys) {
+            val entry: CacheEntry? = cached.get(key)
+            if (entry != null) {
+                val value: V? = entry.data
+                if (timestampBound.verifyTimestamp(value!!.getTimestamp())) {
+                    keysRemaining.remove(key)
+                    cacheResult.put(key, value)
+                    if (oldestTimestamp == null) {
+                        oldestTimestamp = value.getTimestamp()
+                    } else {
+                        oldestTimestamp = oldest(
+                            oldestTimestamp,
+                            value.getTimestamp()
+                        )
+                    }
+                }
+            }
+        }
 
-	public PermanentCache(final CacheDataSource<K, V, F> cacheDataSource) {
-		this.cacheDataSource = cacheDataSource;
-	}
+        if (!keysRemaining.isEmpty()) {
+            val outerOldestTimestamp = oldestTimestamp
 
-	@Override
-	public void performRequest(
-			final K key,
-			final TimestampBound timestampBound,
-			final RequestResponseHandler<V, F> handler) {
-		performRequest(key, timestampBound, handler, null);
-	}
+            cacheDataSource.performRequest(
+                keysRemaining,
+                timestampBound,
+                object : RequestResponseHandler<HashMap<K?, V?>?, F?> {
+                    override fun onRequestFailed(failureReason: F?) {
+                        handler.onRequestFailed(failureReason)
+                    }
 
-	@Override
-	public synchronized void performRequest(
-			final Collection<K> keys, final TimestampBound timestampBound,
-			final RequestResponseHandler<HashMap<K, V>, F> handler) {
+                    override fun onRequestSuccess(
+                        result: HashMap<K?, V?>,
+                        timeCached: TimestampUTC
+                    ) {
+                        cacheResult.putAll(result)
 
-		final HashSet<K> keysRemaining = new HashSet<>(keys);
-		final HashMap<K, V> cacheResult = new HashMap<>(keys.size());
-		TimestampUTC oldestTimestamp = null;
+                        val timestamp: TimestampUTC? = if (outerOldestTimestamp == null)
+                            timeCached
+                        else
+                            oldest(outerOldestTimestamp, timeCached)
 
-		for(final K key : keys) {
+                        handler.onRequestSuccess(
+                            cacheResult,
+                            timestamp
+                        )
+                    }
+                })
+        } else {
+            handler.onRequestSuccess(cacheResult, oldestTimestamp)
+        }
+    }
 
-			final CacheEntry entry = cached.get(key);
-			if(entry != null) {
+    @Synchronized
+    override fun performWrite(value: V?) {
+        put(value, true)
+    }
 
-				final V value = entry.data;
-				if(timestampBound.verifyTimestamp(value.getTimestamp())) {
-					keysRemaining.remove(key);
-					cacheResult.put(key, value);
-					if(oldestTimestamp == null) {
-						oldestTimestamp = value.getTimestamp();
-					} else {
-						oldestTimestamp = TimestampUTC.oldest(
-								oldestTimestamp,
-								value.getTimestamp());
-					}
-				}
-			}
-		}
+    override fun performWrite(values: MutableCollection<V?>) {
+        put(values, true)
+    }
 
-		if(!keysRemaining.isEmpty()) {
+    @Synchronized
+    fun performRequest(
+        key: K?, timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<V?, F?>,
+        updatedVersionListener: UpdatedVersionListener<K?, V?>?
+    ) {
+        if (timestampBound != null) {
+            val existingEntry: CacheEntry? = cached.get(key)
+            if (existingEntry != null) {
+                val existing: V? = existingEntry.data
+                if (timestampBound.verifyTimestamp(existing!!.getTimestamp())) {
+                    handler.onRequestSuccess(existing, existing.getTimestamp())
+                    return
+                }
+            }
+        }
 
-			final TimestampUTC outerOldestTimestamp = oldestTimestamp;
+        cacheDataSource.performRequest(
+            key,
+            timestampBound,
+            object : RequestResponseHandler<V?, F?> {
+                override fun onRequestFailed(failureReason: F?) {
+                    handler.onRequestFailed(failureReason)
+                }
 
-			cacheDataSource.performRequest(
-					keysRemaining,
-					timestampBound,
-					new RequestResponseHandler<HashMap<K, V>, F>() {
-						@Override
-						public void onRequestFailed(final F failureReason) {
-							handler.onRequestFailed(failureReason);
-						}
+                override fun onRequestSuccess(result: V?, timeCached: TimestampUTC?) {
+                    synchronized(this@PermanentCache) {
+                        put(result, false)
+                        if (updatedVersionListener != null) {
+                            cached.get(key).listeners.add(updatedVersionListener)
+                        }
+                        handler.onRequestSuccess(result, timeCached)
+                    }
+                }
+            })
+    }
 
-						@Override
-						public void onRequestSuccess(
-								final HashMap<K, V> result,
-								final TimestampUTC timeCached) {
-							cacheResult.putAll(result);
+    @Synchronized
+    fun forceUpdate(key: K?) {
+        cacheDataSource.performRequest(key, null, object : RequestResponseHandler<V?, F?> {
+            override fun onRequestFailed(failureReason: F?) {
+            }
 
-							final TimestampUTC timestamp = outerOldestTimestamp == null
-									? timeCached
-									: TimestampUTC.oldest(outerOldestTimestamp, timeCached);
+            override fun onRequestSuccess(result: V?, timeCached: TimestampUTC?) {
+                put(result, false)
+            }
+        })
+    }
 
-							handler.onRequestSuccess(
-									cacheResult,
-									timestamp);
-						}
-					});
+    @Synchronized
+    private fun put(value: V?, writeDown: Boolean) {
+        val oldEntry: CacheEntry? = cached.get(value!!.getKey())
 
-		} else {
-			handler.onRequestSuccess(cacheResult, oldestTimestamp);
-		}
-	}
+        if (oldEntry != null) {
+            cached.put(value.getKey(), PermanentCache.CacheEntry(value, oldEntry.listeners))
+            oldEntry.listeners.map<V?>(updatedVersionListenerNotifier, value)
+        } else {
+            cached.put(value.getKey(), PermanentCache.CacheEntry(value))
+        }
 
-	@Override
-	public synchronized void performWrite(final V value) {
-		put(value, true);
-	}
+        if (writeDown) {
+            cacheDataSource.performWrite(value)
+        }
+    }
 
-	@Override
-	public void performWrite(final Collection<V> values) {
-		put(values, true);
-	}
+    @Synchronized
+    private fun put(values: MutableCollection<V?>, writeDown: Boolean) {
+        for (value in values) {
+            val oldEntry: CacheEntry? = cached.get(value!!.getKey())
 
-	public synchronized void performRequest(
-			final K key, final TimestampBound timestampBound,
-			final RequestResponseHandler<V, F> handler,
-			final UpdatedVersionListener<K, V> updatedVersionListener) {
-		if(timestampBound != null) {
-			final CacheEntry existingEntry = cached.get(key);
-			if(existingEntry != null) {
-				final V existing = existingEntry.data;
-				if(timestampBound.verifyTimestamp(existing.getTimestamp())) {
-					handler.onRequestSuccess(existing, existing.getTimestamp());
-					return;
-				}
-			}
-		}
+            if (oldEntry != null) {
+                cached.put(value.getKey(), PermanentCache.CacheEntry(value, oldEntry.listeners))
+                oldEntry.listeners.map<V?>(updatedVersionListenerNotifier, value)
+            } else {
+                cached.put(value.getKey(), PermanentCache.CacheEntry(value))
+            }
+        }
 
-		cacheDataSource.performRequest(
-				key,
-				timestampBound,
-				new RequestResponseHandler<V, F>() {
+        if (writeDown) {
+            cacheDataSource.performWrite(values)
+        }
+    }
 
-					@Override
-					public void onRequestFailed(final F failureReason) {
-						handler.onRequestFailed(failureReason);
-					}
-
-					@Override
-					public void onRequestSuccess(final V result, final TimestampUTC timeCached) {
-						synchronized(PermanentCache.this) {
-							put(result, false);
-							if(updatedVersionListener != null) {
-								cached.get(key).listeners.add(updatedVersionListener);
-							}
-							handler.onRequestSuccess(result, timeCached);
-						}
-					}
-				});
-	}
-
-	public synchronized void forceUpdate(final K key) {
-		cacheDataSource.performRequest(key, null, new RequestResponseHandler<V, F>() {
-
-			@Override
-			public void onRequestFailed(final F failureReason) {
-			}
-
-			@Override
-			public void onRequestSuccess(final V result, final TimestampUTC timeCached) {
-				put(result, false);
-			}
-		});
-	}
-
-	private synchronized void put(final V value, final boolean writeDown) {
-		final CacheEntry oldEntry = cached.get(value.getKey());
-
-		if(oldEntry != null) {
-			cached.put(value.getKey(), new CacheEntry(value, oldEntry.listeners));
-			oldEntry.listeners.map(updatedVersionListenerNotifier, value);
-		} else {
-			cached.put(value.getKey(), new CacheEntry(value));
-		}
-
-		if(writeDown) {
-			cacheDataSource.performWrite(value);
-		}
-	}
-
-	private synchronized void put(final Collection<V> values, final boolean writeDown) {
-
-		for(final V value : values) {
-			final CacheEntry oldEntry = cached.get(value.getKey());
-
-			if(oldEntry != null) {
-				cached.put(value.getKey(), new CacheEntry(value, oldEntry.listeners));
-				oldEntry.listeners.map(updatedVersionListenerNotifier, value);
-			} else {
-				cached.put(value.getKey(), new CacheEntry(value));
-			}
-		}
-
-		if(writeDown) {
-			cacheDataSource.performWrite(values);
-		}
-	}
-
-	private final class CacheEntry {
-		public final V data;
-		public final WeakReferenceListManager<UpdatedVersionListener<K, V>> listeners;
-
-		private CacheEntry(
-				final V data,
-				final WeakReferenceListManager<UpdatedVersionListener<K, V>> listeners) {
-			this.data = data;
-			this.listeners = listeners;
-		}
-
-		private CacheEntry(final V data) {
-			this(data, new WeakReferenceListManager<UpdatedVersionListener<K, V>>());
-		}
-	}
+    private inner class CacheEntry(
+        val data: V?,
+        val listeners: WeakReferenceListManager<UpdatedVersionListener<K?, V?>?> = WeakReferenceListManager<UpdatedVersionListener<K?, V?>?>()
+    )
 }

@@ -12,54 +12,49 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview
 
-package org.quantumbadger.redreader.views.glview;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.opengl.GLSurfaceView
+import android.view.MotionEvent
+import org.quantumbadger.redreader.views.glview.displaylist.RRGLDisplayListRenderer
+import org.quantumbadger.redreader.views.glview.displaylist.RRGLDisplayListRenderer.DisplayListManager
+import org.quantumbadger.redreader.views.imageview.FingerTracker
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.opengl.GLSurfaceView;
-import android.view.MotionEvent;
-import org.quantumbadger.redreader.views.glview.displaylist.RRGLDisplayListRenderer;
-import org.quantumbadger.redreader.views.imageview.FingerTracker;
+class RRGLSurfaceView(
+    context: Context?,
+    displayListManager: DisplayListManager
+) : GLSurfaceView(context) {
+    private val mFingerTracker: FingerTracker
+    private val mDisplayListManager: DisplayListManager
 
-public class RRGLSurfaceView extends GLSurfaceView {
+    init {
+        setEGLContextClientVersion(2)
+        setEGLConfigChooser(8, 8, 8, 8, 0, 0)
+        setRenderer(RRGLDisplayListRenderer(displayListManager, this))
+        setRenderMode(RENDERMODE_WHEN_DIRTY)
 
-	private final FingerTracker mFingerTracker;
-	private final RRGLDisplayListRenderer.DisplayListManager mDisplayListManager;
+        mFingerTracker = FingerTracker(displayListManager)
+        mDisplayListManager = displayListManager
+    }
 
-	public RRGLSurfaceView(
-			final Context context,
-			final RRGLDisplayListRenderer.DisplayListManager displayListManager) {
-		super(context);
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        mFingerTracker.onTouchEvent(event)
+        requestRender()
+        return true
+    }
 
-		setEGLContextClientVersion(2);
-		setEGLConfigChooser(8, 8, 8, 8, 0, 0);
-		setRenderer(new RRGLDisplayListRenderer(displayListManager, this));
-		setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        mDisplayListManager.onUIAttach()
+    }
 
-		mFingerTracker = new FingerTracker(displayListManager);
-		mDisplayListManager = displayListManager;
-	}
-
-	@SuppressLint("ClickableViewAccessibility")
-	@Override
-	public boolean onTouchEvent(final MotionEvent event) {
-		mFingerTracker.onTouchEvent(event);
-		requestRender();
-		return true;
-	}
-
-	@Override
-	protected void onAttachedToWindow() {
-		super.onAttachedToWindow();
-		mDisplayListManager.onUIAttach();
-	}
-
-	@Override
-	protected void onDetachedFromWindow() {
-		super.onDetachedFromWindow();
-		mDisplayListManager.onUIDetach();
-	}
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        mDisplayListManager.onUIDetach()
+    }
 }

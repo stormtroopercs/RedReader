@@ -12,14 +12,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
 
-package org.quantumbadger.redreader.reddit.url;
+import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 
-public abstract class CommentListingURL extends RedditURLParser.RedditURL {
+abstract class CommentListingURL : RedditURL() {
+    abstract fun after(after: String?): CommentListingURL?
 
-	public abstract CommentListingURL after(String after);
-
-	public abstract CommentListingURL limit(Integer limit);
+    abstract fun limit(limit: Int?): CommentListingURL?
 }

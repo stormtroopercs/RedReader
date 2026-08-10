@@ -12,289 +12,270 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
 
-package org.quantumbadger.redreader.reddit.url;
+import android.content.Context
+import android.net.Uri
+import androidx.annotation.IntDef
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.common.UriString
 
-import android.content.Context;
-import android.net.Uri;
+object RedditURLParser {
+    const val SUBREDDIT_POST_LISTING_URL: Int = 0
+    const val USER_POST_LISTING_URL: Int = 1
+    const val SEARCH_POST_LISTING_URL: Int = 2
+    const val UNKNOWN_POST_LISTING_URL: Int = 3
+    const val USER_PROFILE_URL: Int = 4
+    const val USER_COMMENT_LISTING_URL: Int = 5
+    const val UNKNOWN_COMMENT_LISTING_URL: Int = 6
+    const val POST_COMMENT_LISTING_URL: Int = 7
+    const val MULTIREDDIT_POST_LISTING_URL: Int = 8
+    const val COMPOSE_MESSAGE_URL: Int = 9
+    const val OPAQUE_SHARED_URL: Int = 10
 
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    private fun tryGetRedditUri(uri: Uri?): Optional<Uri> {
+        if (uri == null || uri.getHost() == null || uri.getPath() == null) {
+            return Optional.Companion.empty<Uri?>()
+        }
 
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.common.UriString;
+        if ("reddit" == uri.getScheme() && "reddit" == uri.getHost()) {
+            return Optional.Companion.of<Uri?>(
+                uri.buildUpon()
+                    .scheme("https")
+                    .authority("reddit.com")
+                    .build()
+            )
+        }
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+        if ("reddit.app.link" == uri.getHost()) {
+            val redirect = uri.getQueryParameter("\$og_redirect")
 
-public class RedditURLParser {
+            if (redirect != null) {
+                return Optional.Companion.ofNullable<Uri?>(Uri.parse(redirect))
+            }
+        }
 
-	public static final int SUBREDDIT_POST_LISTING_URL = 0;
-	public static final int USER_POST_LISTING_URL = 1;
-	public static final int SEARCH_POST_LISTING_URL = 2;
-	public static final int UNKNOWN_POST_LISTING_URL = 3;
-	public static final int USER_PROFILE_URL = 4;
-	public static final int USER_COMMENT_LISTING_URL = 5;
-	public static final int UNKNOWN_COMMENT_LISTING_URL = 6;
-	public static final int POST_COMMENT_LISTING_URL = 7;
-	public static final int MULTIREDDIT_POST_LISTING_URL = 8;
-	public static final int COMPOSE_MESSAGE_URL = 9;
-	public static final int OPAQUE_SHARED_URL = 10;
+        val ampPrefix = "/amp/s/amp.reddit.com"
 
-	@IntDef({
-			SUBREDDIT_POST_LISTING_URL,
-			USER_POST_LISTING_URL,
-			SEARCH_POST_LISTING_URL,
-			UNKNOWN_POST_LISTING_URL,
-			USER_PROFILE_URL,
-			USER_COMMENT_LISTING_URL,
-			UNKNOWN_COMMENT_LISTING_URL,
-			POST_COMMENT_LISTING_URL,
-			MULTIREDDIT_POST_LISTING_URL,
-			COMPOSE_MESSAGE_URL,
-			OPAQUE_SHARED_URL
-	})
-	@Retention(RetentionPolicy.SOURCE)
-	public @interface PathType {
-	}
+        if ((("google.com" == uri.getHost()
+                    || uri.getHost()!!.endsWith(".google.com"))
+                    && uri.getPath()!!.startsWith(ampPrefix))
+        ) {
+            return Optional.Companion.ofNullable<Uri?>(
+                Uri.parse(
+                    "https://reddit.com" + uri.getPath()!!.substring(ampPrefix.length)
+                )
+            )
+        }
 
-	private static Optional<Uri> tryGetRedditUri(final Uri uri) {
+        val hostSegments: Array<String?> =
+            StringUtils.asciiLowercase(uri.getHost()!!).split("\\.".toRegex())
+                .dropLastWhile { it.isEmpty() }.toTypedArray()
 
-		if(uri == null || uri.getHost() == null || uri.getPath() == null) {
-			return Optional.empty();
-		}
+        if (hostSegments.size < 2) {
+            return Optional.Companion.empty<Uri?>()
+        }
 
-		if("reddit".equals(uri.getScheme()) && "reddit".equals(uri.getHost())) {
-			return Optional.of(uri.buildUpon()
-					.scheme("https")
-					.authority("reddit.com")
-					.build());
-		}
+        if (hostSegments[hostSegments.size - 1] == "com"
+            && hostSegments[hostSegments.size - 2] == "reddit"
+        ) {
+            return Optional.Companion.of<Uri?>(uri)
+        }
 
-		if("reddit.app.link".equals(uri.getHost())) {
-			final String redirect = uri.getQueryParameter("$og_redirect");
+        if (hostSegments[hostSegments.size - 1] == "it"
+            && hostSegments[hostSegments.size - 2] == "redd"
+        ) {
+            return Optional.Companion.of<Uri?>(uri)
+        }
 
-			if(redirect != null) {
-				return Optional.ofNullable(Uri.parse(redirect));
-			}
-		}
+        return Optional.Companion.empty<Uri?>()
+    }
 
-		final String ampPrefix = "/amp/s/amp.reddit.com";
+    fun parse(rawUri: Uri?): RedditURL? {
+        if (rawUri == null) {
+            return null
+        }
 
-		if((("google.com".equals(uri.getHost())
-				|| uri.getHost().endsWith(".google.com"))
-						&& uri.getPath().startsWith(ampPrefix))) {
+        val optionalUri = tryGetRedditUri(rawUri)
 
-			return Optional.ofNullable(Uri.parse(
-					"https://reddit.com" + uri.getPath().substring(ampPrefix.length())));
-		}
+        if (optionalUri.isEmpty()) {
+            return null
+        }
 
-		final String[] hostSegments = StringUtils.asciiLowercase(uri.getHost()).split("\\.");
+        val uri = optionalUri.get()
 
-		if(hostSegments.length < 2) {
-			return Optional.empty();
-		}
+        run {
+            val opaqueSharedURL: OpaqueSharedURL? = OpaqueSharedURL.Companion.parse(uri)
+            if (opaqueSharedURL != null) {
+                return opaqueSharedURL
+            }
+        }
 
-		if(hostSegments[hostSegments.length - 1].equals("com")
-				&& hostSegments[hostSegments.length - 2].equals("reddit")) {
-			return Optional.of(uri);
-		}
+        run {
+            val subredditPostListURL: SubredditPostListURL? =
+                SubredditPostListURL.Companion.parse(uri)
+            if (subredditPostListURL != null) {
+                return subredditPostListURL
+            }
+        }
 
-		if(hostSegments[hostSegments.length - 1].equals("it")
-				&& hostSegments[hostSegments.length - 2].equals("redd")) {
-			return Optional.of(uri);
-		}
+        run {
+            val multiredditPostListURL
+                    : MultiredditPostListURL? = MultiredditPostListURL.Companion.parse(uri)
+            if (multiredditPostListURL != null) {
+                return multiredditPostListURL
+            }
+        }
 
-		return Optional.empty();
-	}
+        run {
+            val searchPostListURL: SearchPostListURL? = SearchPostListURL.Companion.parse(uri)
+            if (searchPostListURL != null) {
+                return searchPostListURL
+            }
+        }
 
-	@Nullable
-	public static RedditURL parse(final Uri rawUri) {
+        run {
+            val userPostListURL: UserPostListingURL? = UserPostListingURL.Companion.parse(uri)
+            if (userPostListURL != null) {
+                return userPostListURL
+            }
+        }
 
-		if(rawUri == null) {
-			return null;
-		}
+        run {
+            val userCommentListURL: UserCommentListingURL? = UserCommentListingURL.Companion.parse(
+                uri
+            )
+            if (userCommentListURL != null) {
+                return userCommentListURL
+            }
+        }
 
-		final Optional<Uri> optionalUri = tryGetRedditUri(rawUri);
+        run {
+            val commentListingURL: PostCommentListingURL? = PostCommentListingURL.Companion.parse(
+                uri
+            )
+            if (commentListingURL != null) {
+                return commentListingURL
+            }
+        }
 
-		if(optionalUri.isEmpty()) {
-			return null;
-		}
+        run {
+            val userProfileURL: UserProfileURL? = UserProfileURL.Companion.parse(uri)
+            if (userProfileURL != null) {
+                return userProfileURL
+            }
+        }
 
-		final Uri uri = optionalUri.get();
+        run {
+            val composeMessageURL: ComposeMessageURL? = ComposeMessageURL.Companion.parse(uri)
+            if (composeMessageURL != null) {
+                return composeMessageURL
+            }
+        }
 
-		{
-			final OpaqueSharedURL opaqueSharedURL = OpaqueSharedURL.parse(uri);
-			if(opaqueSharedURL != null) {
-				return opaqueSharedURL;
-			}
-		}
+        return null
+    }
 
-		{
-			final SubredditPostListURL subredditPostListURL = SubredditPostListURL.parse(uri);
-			if(subredditPostListURL != null) {
-				return subredditPostListURL;
-			}
-		}
+    fun parseProbableCommentListing(uri: Uri?): RedditURL {
+        val matchURL = parse(uri)
+        if (matchURL != null) {
+            return matchURL
+        }
 
-		{
-			final MultiredditPostListURL multiredditPostListURL
-					= MultiredditPostListURL.parse(uri);
-			if(multiredditPostListURL != null) {
-				return multiredditPostListURL;
-			}
-		}
+        return UnknownCommentListURL(uri)
+    }
 
-		{
-			final SearchPostListURL searchPostListURL = SearchPostListURL.parse(uri);
-			if(searchPostListURL != null) {
-				return searchPostListURL;
-			}
-		}
+    fun parseProbablePostListing(uri: Uri?): RedditURL {
+        val matchURL = parse(uri)
+        if (matchURL != null) {
+            return matchURL
+        }
 
-		{
-			final UserPostListingURL userPostListURL = UserPostListingURL.parse(uri);
-			if(userPostListURL != null) {
-				return userPostListURL;
-			}
-		}
+        return UnknownPostListURL(uri)
+    }
 
-		{
-			final UserCommentListingURL userCommentListURL = UserCommentListingURL.parse(
-					uri);
-			if(userCommentListURL != null) {
-				return userCommentListURL;
-			}
-		}
+    @IntDef(
+        [SUBREDDIT_POST_LISTING_URL, USER_POST_LISTING_URL, SEARCH_POST_LISTING_URL, UNKNOWN_POST_LISTING_URL, USER_PROFILE_URL, USER_COMMENT_LISTING_URL, UNKNOWN_COMMENT_LISTING_URL, POST_COMMENT_LISTING_URL, MULTIREDDIT_POST_LISTING_URL, COMPOSE_MESSAGE_URL, OPAQUE_SHARED_URL
+        ]
+    )
+    @Retention(AnnotationRetention.SOURCE)
+    annotation class PathType
 
-		{
-			final PostCommentListingURL commentListingURL = PostCommentListingURL.parse(
-					uri);
-			if(commentListingURL != null) {
-				return commentListingURL;
-			}
-		}
+    abstract class RedditURL {
+        abstract fun generateJsonUri(): Uri
 
-		{
-			final UserProfileURL userProfileURL = UserProfileURL.parse(uri);
-			if(userProfileURL != null) {
-				return userProfileURL;
-			}
-		}
+        @PathType
+        abstract fun pathType(): Int
 
-		{
-			final ComposeMessageURL composeMessageURL = ComposeMessageURL.parse(uri);
-			//noinspection RedundantIfStatement
-			if(composeMessageURL != null) {
-				return composeMessageURL;
-			}
-		}
+        fun asSubredditPostListURL(): SubredditPostListURL {
+            return this as SubredditPostListURL
+        }
 
-		return null;
-	}
+        fun asMultiredditPostListURL(): MultiredditPostListURL {
+            return this as MultiredditPostListURL
+        }
 
-	public static RedditURL parseProbableCommentListing(final Uri uri) {
+        fun asSearchPostListURL(): SearchPostListURL {
+            return this as SearchPostListURL
+        }
 
-		final RedditURL matchURL = parse(uri);
-		if(matchURL != null) {
-			return matchURL;
-		}
+        fun asUserPostListURL(): UserPostListingURL {
+            return this as UserPostListingURL
+        }
 
-		return new UnknownCommentListURL(uri);
-	}
+        fun asUserProfileURL(): UserProfileURL {
+            return this as UserProfileURL
+        }
 
-	@NonNull
-	public static RedditURL parseProbablePostListing(final Uri uri) {
+        fun asPostCommentListURL(): PostCommentListingURL {
+            return this as PostCommentListingURL
+        }
 
-		final RedditURL matchURL = parse(uri);
-		if(matchURL != null) {
-			return matchURL;
-		}
+        fun asUserCommentListURL(): UserCommentListingURL {
+            return this as UserCommentListingURL
+        }
 
-		return new UnknownPostListURL(uri);
-	}
+        fun asComposeMessageURL(): ComposeMessageURL {
+            return this as ComposeMessageURL
+        }
 
-	public static abstract class RedditURL {
-		public abstract Uri generateJsonUri();
+        open fun humanReadableName(context: Context?, shorter: Boolean): String {
+            return humanReadablePath()
+        }
 
-		public abstract @PathType
-		int pathType();
+        fun humanReadableUrl(): String {
+            return "reddit.com" + humanReadablePath()
+        }
 
-		public final SubredditPostListURL asSubredditPostListURL() {
-			return (SubredditPostListURL)this;
-		}
+        open fun humanReadablePath(): String {
+            val src = generateJsonUri()
 
-		public final MultiredditPostListURL asMultiredditPostListURL() {
-			return (MultiredditPostListURL)this;
-		}
+            val builder = StringBuilder()
 
-		public final SearchPostListURL asSearchPostListURL() {
-			return (SearchPostListURL)this;
-		}
+            for (pathElement in src.getPathSegments()) {
+                if (pathElement != ".json") {
+                    builder.append("/")
+                    builder.append(pathElement)
+                }
+            }
 
-		public final UserPostListingURL asUserPostListURL() {
-			return (UserPostListingURL)this;
-		}
+            return builder.toString()
+        }
 
-		public UserProfileURL asUserProfileURL() {
-			return (UserProfileURL)this;
-		}
+        fun browserUrl(): UriString {
+            return UriString(Reddit.SCHEME_HTTPS + "://" + humanReadableUrl())
+        }
 
-		public PostCommentListingURL asPostCommentListURL() {
-			return (PostCommentListingURL)this;
-		}
+        override fun toString(): String {
+            return generateJsonUri().toString()
+        }
 
-		public UserCommentListingURL asUserCommentListURL() {
-			return (UserCommentListingURL)this;
-		}
-
-		public ComposeMessageURL asComposeMessageURL() {
-			return (ComposeMessageURL)this;
-		}
-
-		public String humanReadableName(final Context context, final boolean shorter) {
-			return humanReadablePath();
-		}
-
-		public String humanReadableUrl() {
-			return "reddit.com" + humanReadablePath();
-		}
-
-		public String humanReadablePath() {
-
-			final Uri src = generateJsonUri();
-
-			final StringBuilder builder = new StringBuilder();
-
-			for(final String pathElement : src.getPathSegments()) {
-				if(!pathElement.equals(".json")) {
-					builder.append("/");
-					builder.append(pathElement);
-				}
-			}
-
-			return builder.toString();
-		}
-
-		@NonNull
-		public UriString browserUrl() {
-			return new UriString(Constants.Reddit.SCHEME_HTTPS + "://" + humanReadableUrl());
-		}
-
-		@Override
-		@NonNull
-		public String toString() {
-			return generateJsonUri().toString();
-		}
-
-		@NonNull
-		public UriString toUriString() {
-			return new UriString(toString());
-		}
-	}
+        fun toUriString(): UriString {
+            return UriString(toString())
+        }
+    }
 }

@@ -12,147 +12,157 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.app.Activity
+import android.content.Context
+import android.content.DialogInterface
+import android.view.KeyEvent
+import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.TextView.OnEditorActionListener
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.common.AndroidCommon.runOnUiThread
+import java.util.Objects
+import java.util.concurrent.atomic.AtomicReference
 
-import android.app.Activity;
-import android.content.Context;
-import android.view.WindowManager;
-import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
-import android.widget.TextView;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.StringRes;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
-import org.quantumbadger.redreader.R;
+object DialogUtils {
+    fun showSearchDialog(
+        context: Context,
+        listener: OnSearchListener
+    ) {
+        showSearchDialog(context, string.action_search, listener)
+    }
 
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
+    fun showSearchDialog(
+        context: Context,
+        @StringRes titleRes: Int,
+        listener: OnSearchListener
+    ) {
+        val alertBuilder = MaterialAlertDialogBuilder(context)
+        val editTextRef = AtomicReference<EditText?>()
 
-public class DialogUtils {
-	public interface OnSearchListener {
-		void onSearch(@Nullable String query);
-	}
+        alertBuilder.setView(R.layout.dialog_editbox)
 
-	public static void showSearchDialog(
-			final Context context,
-			final OnSearchListener listener) {
-		showSearchDialog(context, R.string.action_search, listener);
-	}
+        alertBuilder.setPositiveButton(
+            string.action_search,
+            DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
+                DialogUtils.performSearch(
+                    editTextRef.get()!!,
+                    listener
+                )
+            })
 
-	public static void showSearchDialog(
-			final Context context,
-			@StringRes final int titleRes,
-			final OnSearchListener listener) {
-		final MaterialAlertDialogBuilder alertBuilder = new MaterialAlertDialogBuilder(context);
-		final AtomicReference<EditText> editTextRef = new AtomicReference<>();
+        alertBuilder.setNegativeButton(string.dialog_cancel, null)
 
-		alertBuilder.setView(R.layout.dialog_editbox);
+        val alertDialog = alertBuilder.create()
+        alertDialog.getWindow()!!
+            .setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+                        or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
+            )
+        alertDialog.show()
 
-		alertBuilder.setPositiveButton(
-				R.string.action_search,
-				(dialog, which) -> performSearch(editTextRef.get(), listener));
+        val editText =
+            Objects.requireNonNull<TextInputEditText>(alertDialog.findViewById<TextInputEditText?>(R.id.editbox))
 
-		alertBuilder.setNegativeButton(R.string.dialog_cancel, null);
+        val editTextLayout =
+            Objects.requireNonNull<TextInputLayout>(alertDialog.findViewById<TextInputLayout?>(R.id.editbox_layout))
 
-		final AlertDialog alertDialog = alertBuilder.create();
-		alertDialog.getWindow()
-				.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
-						| WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
-		alertDialog.show();
+        editTextRef.set(editText)
 
-		final TextInputEditText editText
-				= Objects.requireNonNull(alertDialog.findViewById(R.id.editbox));
+        val onEnter = OnEditorActionListener { v: TextView?, actionId: Int, event: KeyEvent? ->
+            performSearch(editText, listener)
+            true
+        }
+        editText.setImeOptions(EditorInfo.IME_ACTION_SEARCH)
+        editText.setOnEditorActionListener(onEnter)
+        editText.requestFocus()
 
-		final TextInputLayout editTextLayout
-				= Objects.requireNonNull(alertDialog.findViewById(R.id.editbox_layout));
+        editTextLayout.setHint(titleRes)
+    }
 
-		editTextRef.set(editText);
+    private fun performSearch(
+        editText: EditText,
+        listener: OnSearchListener
+    ) {
+        val query = editText.getText().toString().trim { it <= ' ' }
+        if (StringUtils.isEmpty(query)) {
+            listener.onSearch(null)
+        } else {
+            listener.onSearch(query)
+        }
+    }
 
-		final TextView.OnEditorActionListener onEnter = (v, actionId, event) -> {
-			performSearch(editText, listener);
-			return true;
-		};
-		editText.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
-		editText.setOnEditorActionListener(onEnter);
-		editText.requestFocus();
+    fun showDialogPositiveNegative(
+        activity: AppCompatActivity,
+        title: String,
+        message: String,
+        @StringRes positiveText: Int,
+        @StringRes negativeText: Int,
+        positiveAction: Runnable,
+        negativeAction: Runnable
+    ) {
+        runOnUiThread(Runnable {
+            MaterialAlertDialogBuilder(activity)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(
+                    positiveText,
+                    DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> positiveAction.run() })
+                .setNegativeButton(
+                    negativeText,
+                    DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> negativeAction.run() })
+                .create()
+                .show()
+        })
+    }
 
-		editTextLayout.setHint(titleRes);
-	}
+    fun showDialog(
+        activity: Activity,
+        title: String,
+        message: String
+    ) {
+        runOnUiThread(Runnable {
+            MaterialAlertDialogBuilder(activity)
+                .setTitle(title)
+                .setMessage(message)
+                .setNeutralButton(
+                    string.dialog_close,
+                    DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> })
+                .create()
+                .show()
+        })
+    }
 
-	private static void performSearch(
-			final EditText editText,
-			final OnSearchListener listener) {
-		final String query = editText.getText().toString().trim();
-		if(StringUtils.isEmpty(query)) {
-			listener.onSearch(null);
-		} else {
-			listener.onSearch(query);
-		}
-	}
+    fun showDialog(
+        activity: Activity,
+        @StringRes title: Int,
+        @StringRes message: Int
+    ) {
+        runOnUiThread(Runnable {
+            MaterialAlertDialogBuilder(activity)
+                .setTitle(title)
+                .setMessage(message)
+                .setNeutralButton(
+                    string.dialog_close,
+                    DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> })
+                .create()
+                .show()
+        })
+    }
 
-	public static void showDialogPositiveNegative(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final String title,
-			@NonNull final String message,
-			@StringRes final int positiveText,
-			@StringRes final int negativeText,
-			@NonNull final Runnable positiveAction,
-			@NonNull final Runnable negativeAction) {
-
-		AndroidCommon.runOnUiThread(() -> {
-			new MaterialAlertDialogBuilder(activity)
-					.setTitle(title)
-					.setMessage(message)
-					.setPositiveButton(
-							positiveText,
-							(dialog, which) -> positiveAction.run())
-					.setNegativeButton(
-							negativeText,
-							(dialog, which) -> negativeAction.run())
-					.create()
-					.show();
-		});
-	}
-
-	public static void showDialog(
-			@NonNull final Activity activity,
-			@NonNull final String title,
-			@NonNull final String message) {
-
-		AndroidCommon.runOnUiThread(() -> {
-			new MaterialAlertDialogBuilder(activity)
-					.setTitle(title)
-					.setMessage(message)
-					.setNeutralButton(
-							R.string.dialog_close,
-							(dialog, which) -> {})
-					.create()
-					.show();
-		});
-	}
-
-	public static void showDialog(
-			@NonNull final Activity activity,
-			@StringRes final int title,
-			@StringRes final int message) {
-
-		AndroidCommon.runOnUiThread(() -> {
-			new MaterialAlertDialogBuilder(activity)
-					.setTitle(title)
-					.setMessage(message)
-					.setNeutralButton(
-							R.string.dialog_close,
-							(dialog, which) -> {})
-					.create()
-					.show();
-		});
-	}
+    interface OnSearchListener {
+        fun onSearch(query: String?)
+    }
 }

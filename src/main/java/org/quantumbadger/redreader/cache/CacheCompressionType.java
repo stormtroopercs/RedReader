@@ -12,33 +12,23 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache
 
-package org.quantumbadger.redreader.cache;
+enum class CacheCompressionType(val databaseId: Int) {
+    NONE(0),
+    ZSTD(1);
 
-import androidx.annotation.NonNull;
+    companion object {
+        fun fromDatabaseId(databaseId: Int): CacheCompressionType {
+            for (type in entries) {
+                if (type.databaseId == databaseId) {
+                    return type
+                }
+            }
 
-public enum CacheCompressionType {
-
-	NONE(0),
-	ZSTD(1);
-
-	public final int databaseId;
-
-	CacheCompressionType(final int databaseId) {
-		this.databaseId = databaseId;
-	}
-
-	@NonNull
-	public static CacheCompressionType fromDatabaseId(final int databaseId) {
-
-		for(final CacheCompressionType type : values()) {
-			if(type.databaseId == databaseId) {
-				return type;
-			}
-		}
-
-		throw new RuntimeException("Unknown compression type " + databaseId);
-	}
+            throw RuntimeException("Unknown compression type " + databaseId)
+        }
+    }
 }

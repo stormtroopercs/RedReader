@@ -12,40 +12,30 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+class HtmlReaderPeekable(private val mHtmlReader: HtmlReader) {
+    private var mNext: HtmlReader.Token
 
-import androidx.annotation.NonNull;
+    init {
+        mNext = mHtmlReader.readNext()
+    }
 
-public class HtmlReaderPeekable {
+    fun peek(): HtmlReader.Token {
+        return mNext
+    }
 
-	@NonNull private final HtmlReader mHtmlReader;
+    @Throws(MalformedHtmlException::class)
+    fun advance(): HtmlReader.Token {
+        mNext = mHtmlReader.readNext()
+        return mNext
+    }
 
-	@NonNull private HtmlReader.Token mNext;
+    val html: String
+        get() = mHtmlReader.getHtml()
 
-	public HtmlReaderPeekable(@NonNull final HtmlReader htmlReader) throws
-			MalformedHtmlException {
-		mHtmlReader = htmlReader;
-		mNext = mHtmlReader.readNext();
-	}
-
-	public HtmlReader.Token peek() {
-		return mNext;
-	}
-
-	public HtmlReader.Token advance() throws MalformedHtmlException {
-		mNext = mHtmlReader.readNext();
-		return mNext;
-	}
-
-	@NonNull
-	public String getHtml() {
-		return mHtmlReader.getHtml();
-	}
-
-	public int getPos() {
-		return mHtmlReader.getPos();
-	}
+    val pos: Int
+        get() = mHtmlReader.getPos()
 }

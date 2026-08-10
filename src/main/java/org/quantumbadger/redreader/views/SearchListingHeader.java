@@ -12,94 +12,107 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.view.KeyEvent
+import android.view.LayoutInflater
+import android.view.inputmethod.EditorInfo
+import android.widget.Button
+import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.TextView
+import android.widget.TextView.OnEditorActionListener
+import org.apache.commons.lang3.StringUtils
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.activities.PostListingActivity
+import org.quantumbadger.redreader.common.General.findViewById
+import org.quantumbadger.redreader.reddit.url.SearchPostListURL
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.view.LayoutInflater;
-import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.TextView;
-import org.apache.commons.lang3.StringUtils;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.PostListingActivity;
-import org.quantumbadger.redreader.reddit.url.SearchPostListURL;
+class SearchListingHeader(
+    parentActivity: Activity,
+    url: SearchPostListURL
+) : FrameLayout(parentActivity) {
+    val mUrl: SearchPostListURL?
+    val mQuery: EditText
+    val mLocation: EditText
+    val mSearchButton: Button
 
+    init {
+        mUrl = url
 
-public final class SearchListingHeader extends FrameLayout {
+        val layoutInflater = parentActivity.getSystemService(
+            Context.LAYOUT_INFLATER_SERVICE
+        ) as LayoutInflater
+        layoutInflater.inflate(R.layout.search_listing_header, this, true)
 
-	final SearchPostListURL mUrl;
-	final EditText mQuery;
-	final EditText mLocation;
-	final Button mSearchButton;
+            .also {
+                mQuery = it
+            }<EditText> findViewById < android . view . View ? > (R.id.search_listing_header_query_editText)
+        mQuery.setText(url.query)
+        mQuery.setImeOptions(EditorInfo.IME_ACTION_NEXT)
 
-	public SearchListingHeader(
-			final Activity parentActivity,
-			final SearchPostListURL url) {
-		super(parentActivity);
-		mUrl = url;
+            .also {
+                mLocation = it
+            }<EditText> findViewById < android . view . View ? > (R.id.search_listing_header_sub_editText)
 
-		final LayoutInflater layoutInflater = (LayoutInflater)parentActivity.getSystemService(
-				Context.LAYOUT_INFLATER_SERVICE);
-		layoutInflater.inflate(R.layout.search_listing_header, this, true);
+        if (url.type == SearchPostListURL.Type.SUB_OR_SUB_COMBO && url.subreddit != null) {
+            mLocation.setText(url.subreddit)
+        } else if (url.type == SearchPostListURL.Type.MULTI && url.name != null) {
+            if (url.username != null) {
+                mLocation.setText("/u/" + url.username + "/m/" + url.name)
+            } else {
+                mLocation.setText("/me/m/" + url.name)
+            }
+        } else {
+            // null and "all" are isomorphic; but SearchPostListURL takes null
+            mLocation.setText("all")
+        }
 
-		mQuery = findViewById(R.id.search_listing_header_query_editText);
-		mQuery.setText(url.query);
-		mQuery.setImeOptions(EditorInfo.IME_ACTION_NEXT);
+        val onEnter = OnEditorActionListener { v: TextView?, actionId: Int, event: KeyEvent? ->
+            performSearch(parentActivity, mLocation, mQuery)
+            true
+        }
+        mLocation.setImeOptions(EditorInfo.IME_ACTION_SEARCH)
+        mLocation.setOnEditorActionListener(onEnter)
 
-		mLocation = findViewById(R.id.search_listing_header_sub_editText);
+            .also {
+                mSearchButton = it
+            }<Button> findViewById < android . view . View ? > (R.id.search_listing_header_search)
+        mSearchButton.setOnClickListener(OnClickListener { v: View? ->
+            performSearch(
+                parentActivity,
+                mLocation,
+                mQuery
+            )
+        })
+    }
 
-		if(url.type == SearchPostListURL.Type.SUB_OR_SUB_COMBO && url.subreddit != null) {
-			mLocation.setText(url.subreddit);
-		} else if(url.type == SearchPostListURL.Type.MULTI && url.name != null) {
-			if(url.username != null) {
-				//noinspection SetTextI18n
-				mLocation.setText("/u/" + url.username + "/m/" + url.name);
-			} else {
-				//noinspection SetTextI18n
-				mLocation.setText("/me/m/" + url.name);
-			}
-		} else {
-			// null and "all" are isomorphic; but SearchPostListURL takes null
-			//noinspection SetTextI18n
-			mLocation.setText("all");
-		}
+    companion object {
+        private fun performSearch(
+            parentActivity: Activity,
+            mLocation: EditText,
+            mQuery: EditText
+        ) {
+            var location: String? = mLocation.getText().toString().trim { it <= ' ' }
+            if (StringUtils.isEmpty(location)) {
+                location = null
+            }
+            val url: SearchPostListURL = SearchPostListURL.Companion.build(
+                location,
+                mQuery.getText().toString().trim { it <= ' ' })
 
-		final TextView.OnEditorActionListener onEnter = (v, actionId, event) -> {
-			performSearch(parentActivity, mLocation, mQuery);
-			return true;
-		};
-		mLocation.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
-		mLocation.setOnEditorActionListener(onEnter);
+            val intent = Intent(parentActivity, PostListingActivity::class.java)
+            intent.setData(url.generateJsonUri())
 
-		mSearchButton = findViewById(R.id.search_listing_header_search);
-		mSearchButton.setOnClickListener(v -> performSearch(parentActivity, mLocation, mQuery));
-	}
-
-	private static void performSearch(
-			final Activity parentActivity,
-			final EditText mLocation,
-			final EditText mQuery) {
-		String location = mLocation.getText().toString().trim();
-		if(StringUtils.isEmpty(location)) {
-			location = null;
-		}
-		final SearchPostListURL url = SearchPostListURL.build(
-				location,
-				mQuery.getText().toString().trim());
-
-		final Intent intent = new Intent(parentActivity, PostListingActivity.class);
-		intent.setData(url.generateJsonUri());
-
-		// Use a startActivity/finish combination to replace this activity with the new
-		// search activity
-		parentActivity.startActivity(intent);
-		parentActivity.finish();
-	}
+            // Use a startActivity/finish combination to replace this activity with the new
+            // search activity
+            parentActivity.startActivity(intent)
+            parentActivity.finish()
+        }
+    }
 }

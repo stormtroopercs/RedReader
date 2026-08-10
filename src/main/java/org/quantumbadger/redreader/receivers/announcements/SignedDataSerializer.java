@@ -12,73 +12,67 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.receivers.announcements
 
-package org.quantumbadger.redreader.receivers.announcements;
+import org.quantumbadger.redreader.common.HexUtils
+import org.quantumbadger.redreader.receivers.announcements.SignatureHandler.SignatureInvalidException
+import java.io.IOException
+import java.security.InvalidKeyException
+import java.security.NoSuchAlgorithmException
+import java.security.PrivateKey
+import java.security.PublicKey
+import java.security.SignatureException
 
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.common.HexUtils;
+object SignedDataSerializer {
+    private const val MARKER_START = "START"
+    private const val MARKER_END = "END"
 
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SignatureException;
+    @Throws(NoSuchAlgorithmException::class, InvalidKeyException::class, SignatureException::class)
+    fun serialize(
+        privateKey: PrivateKey,
+        data: ByteArray
+    ): String {
+        return (MARKER_START
+                + HexUtils.toHex(SignatureHandler.generateSignedPayload(privateKey, data))
+                + MARKER_END)
+    }
 
-public final class SignedDataSerializer {
+    @JvmStatic
+    @Throws(
+        NoSuchAlgorithmException::class,
+        InvalidKeyException::class,
+        SignatureException::class,
+        IOException::class,
+        SignatureInvalidException::class
+    )
+    fun deserialize(
+        publicKey: PublicKey,
+        data: String
+    ): ByteArray {
+        val startMarkerIndex = data.indexOf(MARKER_START)
+        val endMarkerIndex = data.indexOf(MARKER_END)
 
-	private static final String MARKER_START = "START";
-	private static final String MARKER_END = "END";
+        if (startMarkerIndex == -1) {
+            throw IOException("Start marker not found")
+        }
 
-	private SignedDataSerializer() {}
+        if (endMarkerIndex == -1) {
+            throw IOException("End marker not found")
+        }
 
-	@NonNull
-	public static String serialize(
-			@NonNull final PrivateKey privateKey,
-			@NonNull final byte[] data) throws
-					NoSuchAlgorithmException,
-					InvalidKeyException,
-					SignatureException {
+        val start = startMarkerIndex + MARKER_START.length
+        val length = endMarkerIndex - start
 
-		return MARKER_START
-				+ HexUtils.toHex(SignatureHandler.generateSignedPayload(privateKey, data))
-				+ MARKER_END;
-	}
+        if (length < 0) {
+            throw IOException("Negative length")
+        }
 
-	@NonNull
-	public static byte[] deserialize(
-			@NonNull final PublicKey publicKey,
-			@NonNull final String data) throws
-					NoSuchAlgorithmException,
-					InvalidKeyException,
-					SignatureException,
-					IOException,
-					SignatureHandler.SignatureInvalidException {
+        val hexData = data.substring(start, endMarkerIndex)
 
-		final int startMarkerIndex = data.indexOf(MARKER_START);
-		final int endMarkerIndex = data.indexOf(MARKER_END);
+        val signedPayload = HexUtils.fromHex(hexData)
 
-		if(startMarkerIndex == -1) {
-			throw new IOException("Start marker not found");
-		}
-
-		if(endMarkerIndex == -1) {
-			throw new IOException("End marker not found");
-		}
-
-		final int start = startMarkerIndex + MARKER_START.length();
-		final int length = endMarkerIndex - start;
-
-		if(length < 0) {
-			throw new IOException("Negative length");
-		}
-
-		final String hexData = data.substring(start, endMarkerIndex);
-
-		final byte[] signedPayload = HexUtils.fromHex(hexData);
-
-		return SignatureHandler.readAndVerifySignedPayload(publicKey, signedPayload);
-	}
+        return SignatureHandler.readAndVerifySignedPayload(publicKey, signedPayload)
+    }
 }

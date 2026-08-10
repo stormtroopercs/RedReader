@@ -12,92 +12,84 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.activities
 
-package org.quantumbadger.redreader.activities;
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.fragments.WebViewFragment
+import java.io.ByteArrayOutputStream
+import java.io.IOException
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
+class HtmlViewActivity : ViewsBaseActivity() {
+    private var webView: WebViewFragment? = null
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.fragments.WebViewFragment;
+    public override fun onCreate(savedInstanceState: Bundle?) {
+        PrefsUtility.applyTheme(this)
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+        super.onCreate(savedInstanceState)
 
-public class HtmlViewActivity extends ViewsBaseActivity {
+        val intent = getIntent()
 
-	private WebViewFragment webView;
+        val html = intent.getStringExtra("html")
+        val title = intent.getStringExtra("title")
+        setTitle(title)
 
-	public static void showAsset(
-			final Context context,
-			final String filename) {
+        if (html == null) {
+            handleGlobalError(this, "No HTML")
+        }
 
-		final String html;
+        webView = WebViewFragment.Companion.newInstanceHtml(html)
 
-		try(InputStream asset = context.getAssets().open(filename)) {
+        setBaseActivityListing(View.inflate(this, R.layout.main_single, null))
 
-			final ByteArrayOutputStream baos = new ByteArrayOutputStream(16_384);
+        getSupportFragmentManager().beginTransaction()
+            .add(R.id.main_single_frame, webView!!)
+            .commit()
+    }
 
-			final byte[] buf = new byte[8192];
-			int bytesRead;
+    override fun baseActivityMustInterceptBack(): Boolean {
+        // Always intercept, as the WebView may need to navigate back through
+        // its history. See the equivalent method in WebViewActivity.
+        return true
+    }
 
-			while((bytesRead = asset.read(buf)) > 0) {
-				baos.write(buf, 0, bytesRead);
-			}
+    override fun baseActivityOnBackPressed(): Boolean {
+        return webView!!.onBackButtonPressed()
+    }
 
-			html = baos.toString("UTF-8");
+    companion object {
+        fun showAsset(
+            context: Context,
+            filename: String
+        ) {
+            val html: String
 
-		} catch(final IOException e) {
-			BugReportActivity.handleGlobalError(context, e);
-			return;
-		}
+            try {
+                context.getAssets().open(filename).use { asset ->
+                    val baos = ByteArrayOutputStream(16384)
+                    val buf = ByteArray(8192)
+                    var bytesRead: Int
 
-		final Intent intent = new Intent(context, HtmlViewActivity.class);
-		intent.putExtra("html", html);
-		context.startActivity(intent);
-	}
+                    while ((asset.read(buf).also { bytesRead = it }) > 0) {
+                        baos.write(buf, 0, bytesRead)
+                    }
+                    html = baos.toString("UTF-8")
+                }
+            } catch (e: IOException) {
+                handleGlobalError(context, e)
+                return
+            }
 
-	@Override
-	public void onCreate(final Bundle savedInstanceState) {
-
-		PrefsUtility.applyTheme(this);
-
-		super.onCreate(savedInstanceState);
-
-		final Intent intent = getIntent();
-
-		final String html = intent.getStringExtra("html");
-		final String title = intent.getStringExtra("title");
-		setTitle(title);
-
-		if(html == null) {
-			BugReportActivity.handleGlobalError(this, "No HTML");
-		}
-
-		webView = WebViewFragment.newInstanceHtml(html);
-
-		setBaseActivityListing(View.inflate(this, R.layout.main_single, null));
-
-		getSupportFragmentManager().beginTransaction()
-				.add(R.id.main_single_frame, webView)
-				.commit();
-	}
-
-	@Override
-	protected boolean baseActivityMustInterceptBack() {
-		// Always intercept, as the WebView may need to navigate back through
-		// its history. See the equivalent method in WebViewActivity.
-		return true;
-	}
-
-	@Override
-	protected boolean baseActivityOnBackPressed() {
-		return webView.onBackButtonPressed();
-	}
+            val intent = Intent(context, HtmlViewActivity::class.java)
+            intent.putExtra("html", html)
+            context.startActivity(intent)
+        }
+    }
 }

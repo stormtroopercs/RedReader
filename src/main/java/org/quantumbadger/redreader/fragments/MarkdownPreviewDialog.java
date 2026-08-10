@@ -12,56 +12,49 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.fragments
 
-package org.quantumbadger.redreader.fragments;
+import android.content.Context
+import android.os.Bundle
+import android.widget.LinearLayout
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.reddit.prepared.markdown.MarkdownParser
 
-import android.content.Context;
-import android.os.Bundle;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
+class MarkdownPreviewDialog : PropertiesDialog() {
+    override fun getTitle(context: Context): String {
+        return context.getString(string.comment_reply_preview)
+    }
 
-import androidx.annotation.NonNull;
+    override fun prepare(
+        activity: BaseActivity,
+        items: LinearLayout
+    ) {
+        val parsedGen = MarkdownParser.parse(
+            getArguments()!!.getString("markdown")!!
+                .toCharArray()
+        )
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.reddit.prepared.markdown.MarkdownParagraphGroup;
-import org.quantumbadger.redreader.reddit.prepared.markdown.MarkdownParser;
+        val parsed = parsedGen.buildView(activity, null, 14f, false)
 
-public class MarkdownPreviewDialog extends PropertiesDialog {
+        val paddingPx = dpToPixels(activity, 10f)
+        parsed.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
 
-	public static MarkdownPreviewDialog newInstance(final String markdown) {
+        items.addView(parsed)
+    }
 
-		final MarkdownPreviewDialog dialog = new MarkdownPreviewDialog();
+    companion object {
+        fun newInstance(markdown: String?): MarkdownPreviewDialog {
+            val dialog = MarkdownPreviewDialog()
 
-		final Bundle args = new Bundle(1);
-		args.putString("markdown", markdown);
-		dialog.setArguments(args);
+            val args = Bundle(1)
+            args.putString("markdown", markdown)
+            dialog.setArguments(args)
 
-		return dialog;
-	}
-
-	@Override
-	protected String getTitle(final Context context) {
-		return context.getString(R.string.comment_reply_preview);
-	}
-
-	@Override
-	protected void prepare(
-			@NonNull final BaseActivity activity,
-			@NonNull final LinearLayout items) {
-
-		final MarkdownParagraphGroup parsedGen
-				= MarkdownParser.parse(getArguments().getString("markdown")
-				.toCharArray());
-
-		final ViewGroup parsed = parsedGen.buildView(activity, null, 14f, false);
-
-		final int paddingPx = General.dpToPixels(activity, 10);
-		parsed.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-
-		items.addView(parsed);
-	}
+            return dialog
+        }
+    }
 }

@@ -12,129 +12,106 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.listingcontrollers
 
-package org.quantumbadger.redreader.listingcontrollers;
-
-import android.net.Uri;
-import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.activities.OptionsMenuUtility;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.fragments.CommentListingFragment;
-import org.quantumbadger.redreader.reddit.PostCommentSort;
-import org.quantumbadger.redreader.reddit.UserCommentSort;
-import org.quantumbadger.redreader.reddit.url.CommentListingURL;
-import org.quantumbadger.redreader.reddit.url.RedditURLParser;
-
-import java.util.UUID;
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.activities.OptionsMenuUtility
+import org.quantumbadger.redreader.common.General.listOfOne
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.fragments.CommentListingFragment
+import org.quantumbadger.redreader.reddit.PostCommentSort
+import org.quantumbadger.redreader.reddit.UserCommentSort
+import org.quantumbadger.redreader.reddit.url.CommentListingURL
+import org.quantumbadger.redreader.reddit.url.RedditURLParser
+import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
+import java.util.UUID
 
 // TODO add notification/header for abnormal sort order
-public class CommentListingController {
+class CommentListingController(url: RedditURL) {
+    var commentListingUrl: CommentListingURL
+        private set
+    var session: UUID? = null
+    var searchString: String? = null
 
-	private CommentListingURL mUrl;
-	private UUID mSession = null;
-	private String mSearchString = null;
+    init {
+        var url = url
+        if (url.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL) {
+            if (url.asPostCommentListURL().order == null) {
+                url = url.asPostCommentListURL().order(defaultOrder())
+            }
+        } else if (url.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL) {
+            if (url.asUserCommentListURL().order == null) {
+                url = url.asUserCommentListURL().order(defaultUserOrder())
+            }
+            url = url.asUserCommentListURL().limit(100)
+        }
 
-	public UUID getSession() {
-		return mSession;
-	}
+        if (url !is CommentListingURL) {
+            throw RuntimeException("Not comment listing URL")
+        }
 
-	public void setSession(final UUID session) {
-		mSession = session;
-	}
+        this.commentListingUrl = url
+    }
 
-	public CommentListingController(RedditURLParser.RedditURL url) {
+    private fun defaultOrder(): PostCommentSort? {
+        return PrefsUtility.pref_behaviour_commentsort()
+    }
 
-		if(url.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL) {
-			if(url.asPostCommentListURL().order == null) {
-				url = url.asPostCommentListURL().order(defaultOrder());
-			}
-		} else if(url.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL) {
-			if(url.asUserCommentListURL().order == null) {
-				url = url.asUserCommentListURL().order(defaultUserOrder());
-			}
-			url = url.asUserCommentListURL().limit(100);
-		}
+    private fun defaultUserOrder(): UserCommentSort? {
+        return PrefsUtility.pref_behaviour_user_commentsort()
+    }
 
-		if(!(url instanceof CommentListingURL)) {
-			throw new RuntimeException("Not comment listing URL");
-		}
+    fun setSort(s: PostCommentSort?) {
+        if (commentListingUrl.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL) {
+            this.commentListingUrl = commentListingUrl.asPostCommentListURL().order(s)
+        }
+    }
 
-		this.mUrl = (CommentListingURL)url;
-	}
+    fun setSort(s: UserCommentSort?) {
+        if (commentListingUrl.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL) {
+            this.commentListingUrl = commentListingUrl.asUserCommentListURL().order(s)
+        }
+    }
 
-	private PostCommentSort defaultOrder() {
-		return PrefsUtility.pref_behaviour_commentsort();
-	}
+    val sort: OptionsMenuUtility.Sort?
+        get() {
+            if (commentListingUrl.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL) {
+                return commentListingUrl.asPostCommentListURL().order
+            } else if (commentListingUrl.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL) {
+                return commentListingUrl.asUserCommentListURL().order
+            }
 
-	private UserCommentSort defaultUserOrder() {
-		return PrefsUtility.pref_behaviour_user_commentsort();
-	}
+            return null
+        }
 
-	public void setSort(final PostCommentSort s) {
-		if(mUrl.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL) {
-			mUrl = mUrl.asPostCommentListURL().order(s);
-		}
-	}
+    val uri: Uri?
+        get() = commentListingUrl.generateJsonUri()
 
-	public void setSort(final UserCommentSort s) {
-		if(mUrl.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL) {
-			mUrl = mUrl.asUserCommentListURL().order(s);
-		}
-	}
+    fun get(
+        parent: AppCompatActivity?,
+        force: Boolean,
+        savedInstanceState: Bundle?
+    ): CommentListingFragment {
+        if (force) {
+            this.session = null
+        }
+        return CommentListingFragment(
+            parent,
+            savedInstanceState,
+            listOfOne<RedditURL?>(this.commentListingUrl),
+            this.session,
+            this.searchString,
+            force
+        )
+    }
 
-	public OptionsMenuUtility.Sort getSort() {
+    val isSortable: Boolean
+        get() = commentListingUrl.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL
+                || commentListingUrl.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL
 
-		if(mUrl.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL) {
-			return mUrl.asPostCommentListURL().order;
-		} else if(mUrl.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL) {
-			return mUrl.asUserCommentListURL().order;
-		}
-
-		return null;
-	}
-
-	public void setSearchString(final String searchString) {
-		mSearchString = searchString;
-	}
-
-	public String getSearchString() {
-		return mSearchString;
-	}
-
-	public Uri getUri() {
-		return mUrl.generateJsonUri();
-	}
-
-	public CommentListingURL getCommentListingUrl() {
-		return mUrl;
-	}
-
-	public CommentListingFragment get(
-			final AppCompatActivity parent,
-			final boolean force,
-			final Bundle savedInstanceState) {
-		if(force) {
-			mSession = null;
-		}
-		return new CommentListingFragment(
-				parent,
-				savedInstanceState,
-				General.listOfOne(mUrl),
-				mSession,
-				mSearchString,
-				force);
-	}
-
-	public boolean isSortable() {
-		return mUrl.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL
-				|| mUrl.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL;
-	}
-
-	public boolean isUserCommentListing() {
-		return mUrl.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL;
-	}
+    val isUserCommentListing: Boolean
+        get() = commentListingUrl.pathType() == RedditURLParser.USER_COMMENT_LISTING_URL
 }

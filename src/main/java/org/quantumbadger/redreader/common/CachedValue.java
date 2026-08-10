@@ -12,63 +12,32 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.os.SystemClock
+import java.util.concurrent.atomic.AtomicReference
 
-import android.os.SystemClock;
-import androidx.annotation.NonNull;
+class CachedValue<E>(
+    private val mFactory: GenericFactory<E?, RuntimeException?>,
+    private val mMaxAgeMs: Long
+) {
+    private class CacheEntry<E>(val value: E, val lastUpdateMs: Long)
 
-import java.util.concurrent.atomic.AtomicReference;
+    private val mEntry = AtomicReference<CacheEntry<E?>?>(null)
 
-public class CachedValue<E> {
+    fun get(): E {
+        val timeNow = SystemClock.uptimeMillis()
 
-	private static class CacheEntry<E> {
-		@NonNull private final E mValue;
-		private final long mLastUpdateMs;
+        val entry = mEntry.get()
 
-		private CacheEntry(@NonNull final E value, final long lastUpdateMs) {
-			mValue = value;
-			mLastUpdateMs = lastUpdateMs;
-		}
+        if (entry != null && timeNow - entry.lastUpdateMs < mMaxAgeMs) {
+            return entry.value
+        }
 
-		@NonNull
-		public E getValue() {
-			return mValue;
-		}
-
-		public long getLastUpdateMs() {
-			return mLastUpdateMs;
-		}
-	}
-
-	@NonNull private final GenericFactory<E, RuntimeException> mFactory;
-	private final long mMaxAgeMs;
-
-	private final AtomicReference<CacheEntry<E>> mEntry = new AtomicReference<>(null);
-
-	public CachedValue(
-			@NonNull final GenericFactory<E, RuntimeException> factory,
-			final long maxAgeMs) {
-
-		mFactory = factory;
-		mMaxAgeMs = maxAgeMs;
-	}
-
-	@NonNull
-	public E get() {
-
-		final long timeNow = SystemClock.uptimeMillis();
-
-		final CacheEntry<E> entry = mEntry.get();
-
-		if(entry != null && timeNow - entry.getLastUpdateMs() < mMaxAgeMs) {
-			return entry.getValue();
-		}
-
-		final E newValue = mFactory.create();
-		mEntry.set(new CacheEntry<>(newValue, timeNow));
-		return newValue;
-	}
+        val newValue: E? = mFactory.create()
+        mEntry.set(CacheEntry<E?>(newValue, timeNow))
+        return newValue
+    }
 }

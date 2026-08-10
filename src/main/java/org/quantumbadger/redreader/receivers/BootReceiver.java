@@ -12,29 +12,26 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.receivers
 
-package org.quantumbadger.redreader.receivers;
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.util.Log
+import org.quantumbadger.redreader.common.Alarms
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.util.Log;
-import org.quantumbadger.redreader.common.Alarms;
+class BootReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+        if (intent == null || Intent.ACTION_BOOT_COMPLETED != intent.getAction()) {
+            Log.e(
+                "BootReceiver",
+                "Got invalid intent: " + (if (intent == null) "null" else intent.getAction())
+            )
+            return
+        }
 
-public class BootReceiver extends BroadcastReceiver {
-
-	@Override
-	public void onReceive(final Context context, final Intent intent) {
-
-		if(intent == null || !Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
-			Log.e(
-					"BootReceiver",
-					"Got invalid intent: " + (intent == null ? "null" : intent.getAction()));
-			return;
-		}
-
-		Alarms.onBoot(context);
-	}
+        Alarms.onBoot(context)
+    }
 }

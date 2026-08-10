@@ -12,193 +12,175 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.jsonwrap
 
-package org.quantumbadger.redreader.jsonwrap;
+import com.fasterxml.jackson.core.JsonFactory
+import com.fasterxml.jackson.core.JsonParseException
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.JsonToken
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.jsonwrap.JsonObject.JsonDeserializable
+import java.io.IOException
+import java.io.InputStream
+import java.lang.reflect.InvocationTargetException
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import org.quantumbadger.redreader.common.Optional;
+abstract class JsonValue {
+    open fun asObject(): JsonObject? {
+        // Default implementation
+        return null
+    }
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
+    @Throws(
+        InstantiationException::class,
+        IllegalAccessException::class,
+        NoSuchMethodException::class,
+        InvocationTargetException::class
+    )
+    open fun <E : JsonDeserializable?> asObject(clazz: Class<E?>?): E? {
+        // Default implementation
 
+        return null
+    }
 
-public abstract class JsonValue {
+    open fun asArray(): JsonArray? {
+        // Default implementation
+        return null
+    }
 
-	@NonNull
-	public static JsonValue parse(final InputStream source) throws IOException {
-		return parse(new JsonFactory().createParser(source));
-	}
+    open fun asBoolean(): Boolean? {
+        // Default implementation
+        return null
+    }
 
-	@NonNull
-	public static JsonValue parse(final JsonParser parser) throws IOException {
+    open fun asString(): String? {
+        // Default implementation
+        return null
+    }
 
-		if(parser.currentToken() == null) {
-			parser.nextToken();
-		}
+    open fun asDouble(): Double? {
+        // Default implementation
+        return null
+    }
 
-		if(parser.currentToken() == null) {
-			throw new IOException("Invalid input: no JSON tokens available");
-		}
+    open fun asLong(): Long? {
+        // Default implementation
+        return null
+    }
 
-		switch(parser.currentToken()) {
+    override fun toString(): String {
+        val sb = StringBuilder()
+        prettyPrint(0, sb)
+        return sb.toString()
+    }
 
-			case START_OBJECT:
-				return new JsonObject(parser);
+    abstract fun prettyPrint(indent: Int, sb: StringBuilder?)
 
-			case START_ARRAY:
-				return new JsonArray(parser);
+    fun getAtPath(vararg keys: Any?): Optional<JsonValue?> {
+        return getAtPathInternal(0, *keys)
+    }
 
-			case VALUE_FALSE:
-				parser.nextToken();
-				return JsonBoolean.FALSE;
+    fun getObjectAtPath(vararg keys: Any?): Optional<JsonObject?> {
+        val result = getAtPath(*keys)
 
-			case VALUE_TRUE:
-				parser.nextToken();
-				return JsonBoolean.TRUE;
+        if (result.isEmpty()) {
+            return Optional.Companion.empty<JsonObject?>()
+        }
 
-			case VALUE_NULL:
-				parser.nextToken();
-				return JsonNull.INSTANCE;
+        return Optional.Companion.ofNullable<JsonObject?>(result.get().asObject())
+    }
 
-			case VALUE_STRING: {
-				final JsonString result = new JsonString(parser.getValueAsString());
-				parser.nextToken();
-				return result;
-			}
+    fun getArrayAtPath(vararg keys: Any?): Optional<JsonArray?> {
+        val result = getAtPath(*keys)
 
-			case VALUE_NUMBER_FLOAT: {
-				final JsonDouble result = new JsonDouble(parser.getValueAsDouble());
-				parser.nextToken();
-				return result;
-			}
+        if (result.isEmpty()) {
+            return Optional.Companion.empty<JsonArray?>()
+        }
 
-			case VALUE_NUMBER_INT: {
-				final JsonLong result = new JsonLong(parser.getValueAsLong());
-				parser.nextToken();
-				return result;
-			}
+        return Optional.Companion.ofNullable<JsonArray?>(result.get().asArray())
+    }
 
-			default:
-				throw new JsonParseException(
-						parser,
-						"Expecting an object, literal, or array, got: " + parser.currentToken(),
-						parser.currentLocation());
-		}
-	}
+    fun getStringAtPath(vararg keys: Any?): Optional<String?> {
+        val result = getAtPath(*keys)
 
-	@Nullable
-	public JsonObject asObject() {
-		// Default implementation
-		return null;
-	}
+        if (result.isEmpty()) {
+            return Optional.Companion.empty<String?>()
+        }
 
-	@Nullable
-	public <E extends JsonObject.JsonDeserializable> E asObject(final Class<E> clazz) throws
-			InstantiationException,
-			IllegalAccessException,
-			NoSuchMethodException,
-			InvocationTargetException {
+        return Optional.Companion.ofNullable<String?>(result.get().asString())
+    }
 
-		// Default implementation
-		return null;
-	}
+    open fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue?> {
+        // Default implementation
 
-	@Nullable
-	public JsonArray asArray() {
-		// Default implementation
-		return null;
-	}
+        if (offset == keys.size) {
+            return Optional.Companion.of<JsonValue?>(this)
+        }
 
-	@Nullable
-	public Boolean asBoolean() {
-		// Default implementation
-		return null;
-	}
+        return Optional.Companion.empty<JsonValue?>()
+    }
 
-	@Nullable
-	public String asString() {
-		// Default implementation
-		return null;
-	}
+    companion object {
+        @Throws(IOException::class)
+        fun parse(source: InputStream?): JsonValue {
+            return parse(JsonFactory().createParser(source))
+        }
 
-	@Nullable
-	public Double asDouble() {
-		// Default implementation
-		return null;
-	}
+        @Throws(IOException::class)
+        fun parse(parser: JsonParser): JsonValue {
+            if (parser.currentToken() == null) {
+                parser.nextToken()
+            }
 
-	@Nullable
-	public Long asLong() {
-		// Default implementation
-		return null;
-	}
+            if (parser.currentToken() == null) {
+                throw IOException("Invalid input: no JSON tokens available")
+            }
 
-	@Override
-	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		prettyPrint(0, sb);
-		return sb.toString();
-	}
+            when (parser.currentToken()) {
+                JsonToken.START_OBJECT -> return JsonObject(parser)
 
-	protected abstract void prettyPrint(int indent, StringBuilder sb);
+                JsonToken.START_ARRAY -> return JsonArray(parser)
 
-	@NonNull
-	public final Optional<JsonValue> getAtPath(final Object... keys) {
-		return getAtPathInternal(0, keys);
-	}
+                JsonToken.VALUE_FALSE -> {
+                    parser.nextToken()
+                    return JsonBoolean.Companion.FALSE
+                }
 
-	@NonNull
-	public final Optional<JsonObject> getObjectAtPath(final Object... keys) {
+                JsonToken.VALUE_TRUE -> {
+                    parser.nextToken()
+                    return JsonBoolean.Companion.TRUE
+                }
 
-		final Optional<JsonValue> result = getAtPath(keys);
+                JsonToken.VALUE_NULL -> {
+                    parser.nextToken()
+                    return JsonNull.Companion.INSTANCE
+                }
 
-		if(result.isEmpty()) {
-			return Optional.empty();
-		}
+                JsonToken.VALUE_STRING -> {
+                    val result = JsonString(parser.getValueAsString())
+                    parser.nextToken()
+                    return result
+                }
 
-		return Optional.ofNullable(result.get().asObject());
-	}
+                JsonToken.VALUE_NUMBER_FLOAT -> {
+                    val result = JsonDouble(parser.getValueAsDouble())
+                    parser.nextToken()
+                    return result
+                }
 
-	@NonNull
-	public final Optional<JsonArray> getArrayAtPath(final Object... keys) {
+                JsonToken.VALUE_NUMBER_INT -> {
+                    val result = JsonLong(parser.getValueAsLong())
+                    parser.nextToken()
+                    return result
+                }
 
-		final Optional<JsonValue> result = getAtPath(keys);
-
-		if(result.isEmpty()) {
-			return Optional.empty();
-		}
-
-		return Optional.ofNullable(result.get().asArray());
-	}
-
-	@NonNull
-	public final Optional<String> getStringAtPath(final Object... keys) {
-
-		final Optional<JsonValue> result = getAtPath(keys);
-
-		if(result.isEmpty()) {
-			return Optional.empty();
-		}
-
-		return Optional.ofNullable(result.get().asString());
-	}
-
-	@NonNull
-	protected Optional<JsonValue> getAtPathInternal(final int offset, final Object... keys) {
-
-		// Default implementation
-
-		if(offset == keys.length) {
-			return Optional.of(this);
-		}
-
-		return Optional.empty();
-	}
+                else -> throw JsonParseException(
+                    parser,
+                    "Expecting an object, literal, or array, got: " + parser.currentToken(),
+                    parser.currentLocation()
+                )
+            }
+        }
+    }
 }

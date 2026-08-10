@@ -12,426 +12,381 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
-package org.quantumbadger.redreader.reddit.prepared.html;
-
-import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
-import org.apache.commons.text.StringEscapeUtils;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BlockType;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementRRError;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementVerticalSequence;
-
-import java.util.ArrayList;
-
-public class HtmlReader {
-
-	public enum TokenType {
-		TAG_START,
-		TAG_END,
-		TAG_START_AND_END,
-		TEXT,
-		EOF
-	}
-
-	public static class Token {
-
-		public static final Token EOF = new Token(TokenType.EOF, "", null, null, null);
-
-		@NonNull public final TokenType type;
-		@NonNull public final String text;
-		@Nullable public final String href;
-		@Nullable public final String cssClass;
-		@Nullable public final String title;
-		@Nullable public final UriString src;
-
-		public Token(
-				@NonNull final TokenType type,
-				@NonNull final String text,
-				@Nullable final String href,
-				@Nullable final String cssClass,
-				@Nullable final String title) {
-			this.type = type;
-			this.text = text;
-			this.href = href;
-			this.cssClass = cssClass;
-			this.title = title;
-			this.src = null;
-		}
-
-		public Token(
-				@NonNull final TokenType type,
-				@NonNull final String text,
-				@Nullable final String href,
-				@Nullable final String cssClass,
-				@Nullable final String title,
-				@Nullable final UriString src) {
-			this.type = type;
-			this.text = text;
-			this.href = href;
-			this.cssClass = cssClass;
-			this.title = title;
-			this.src = src;
-		}
-
-		@NonNull
-		@Override
-		public String toString() {
-			return type.name() + "(" + text + ")";
-		}
-	}
-
-	@NonNull private final String mHtml;
-	private int mPos = 0;
-
-	private boolean mPreformattedTextPending = false;
-
-	public HtmlReader(@NonNull final String html) {
-		mHtml = html;
-	}
-
-	private static String normaliseWhitespace(@NonNull final String html) {
-
-		final StringBuilder result = new StringBuilder(html.length());
-
-		boolean lastCharWasWhitespace = false;
-
-		for(int i = 0; i < html.length(); i++) {
-
-			final char c = html.charAt(i);
-
-			if(c != '\n' && c != '\r') {
-				if(isWhitespace(c)) {
-					if(!lastCharWasWhitespace) {
-						result.append(" ");
-						lastCharWasWhitespace = true;
-					}
-
-				} else {
-					lastCharWasWhitespace = false;
-					result.append(c);
-				}
-			}
-		}
-
-		return result.toString();
-	}
-
-	private static boolean isWhitespace(final char c) {
-		return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-	}
-
-	private static boolean isNameChar(final char c) {
-
-		switch(c) {
-			case 0:
-			case ' ':
-			case '\'':
-			case '"':
-			case '>':
-			case '/':
-			case '=':
-				return false;
-
-			default:
-				return true;
-		}
-	}
-
-	private String readName() throws MalformedHtmlException {
-
-		final StringBuilder result = new StringBuilder(16);
-
-		try {
-			while(isNameChar(mHtml.charAt(mPos))) {
-				result.append(mHtml.charAt(mPos));
-				mPos++;
-			}
-
-		} catch(final IndexOutOfBoundsException e) {
-			throw new MalformedHtmlException(
-					"Reached EOF while reading name",
-					mHtml,
-					mPos,
-					e);
-		}
-
-		if(result.length() == 0) {
-			throw new MalformedHtmlException("Got zero-length name", mHtml, mPos);
-		}
-
-		return result.toString();
-	}
-
-	private String readAndUnescapeUntil(final char endChar) {
-
-		final StringBuilder result = new StringBuilder(64);
-
-		while(mPos < mHtml.length() && mHtml.charAt(mPos) != endChar) {
-			result.append(mHtml.charAt(mPos));
-			mPos++;
-		}
-
-		return StringEscapeUtils.unescapeHtml4(result.toString());
-	}
-
-	private boolean tryAccept(final char c) {
-
-		if(mPos < mHtml.length() && mHtml.charAt(mPos) == c) {
-			mPos++;
-			return true;
-		}
-
-		return false;
-	}
-
-	private void accept(final char c) throws MalformedHtmlException {
-
-		try {
-			if(mHtml.charAt(mPos) != c) {
-				throw new MalformedHtmlException("Expecting " + c, mHtml, mPos);
-			}
-
-		} catch(final IndexOutOfBoundsException e) {
-			throw new MalformedHtmlException("Unexpected EOF", mHtml, mPos, e);
-		}
-
-		mPos++;
-	}
-
-	private void skipWhitespace() {
-
-		while(mPos < mHtml.length() && isWhitespace(mHtml.charAt(mPos))) {
-			mPos++;
-		}
-	}
-
-	private void skipNewlines() {
-
-		while(mPos < mHtml.length() && mHtml.charAt(mPos) == '\n') {
-			mPos++;
-		}
-	}
-
-	@NonNull
-	public Token readNext() throws MalformedHtmlException {
-
-		try {
-
-			mainLoop:
-			while(true) {
-
-				skipNewlines();
-
-				if(mPos >= mHtml.length()) {
-					// End of data
-					return Token.EOF;
-				}
-
-				if(mHtml.charAt(mPos) == '<') {
-
-					mPos++;
-					skipWhitespace();
-
-					TokenType type;
-
-					if(mHtml.charAt(mPos) == '!') {
-
-						// Comment
-						mPos++;
-						accept('-');
-						accept('-');
-
-						while(true) {
-
-							if(mHtml.charAt(mPos) == '-'
-									&& mHtml.charAt(mPos + 1) == '-'
-									&& mHtml.charAt(mPos + 2) == '>') {
-
-								mPos += 3;
-								continue mainLoop;
-
-							} else {
-								mPos++;
-							}
-						}
-
-					}
-
-					if(mHtml.charAt(mPos) == '/') {
-						type = TokenType.TAG_END;
-						mPos++;
-						skipWhitespace();
-
-					} else {
-						type = TokenType.TAG_START;
-					}
-
-					final String tagName = readName();
-					@Nullable String href = null;
-					@Nullable String cssClass = null;
-					@Nullable String title = null;
-					@Nullable UriString src = null;
-
-					if(tagName.equalsIgnoreCase("pre")) {
-						mPreformattedTextPending = true;
-					}
-
-					skipWhitespace();
-
-					while(mHtml.charAt(mPos) != '>') {
-
-						if(tryAccept('/')) {
-							skipWhitespace();
-							accept('>');
-							return new Token(
-									TokenType.TAG_START_AND_END,
-									tagName,
-									href,
-									cssClass,
-									title);
-						}
-
-						final String propertyName = readName();
-
-						if(tryAccept('=')) {
-							accept('"');
-							final String value = readAndUnescapeUntil('"');
-							accept('"');
-							skipWhitespace();
-
-							if(propertyName.equalsIgnoreCase("href")) {
-								href = value;
-							} else if(propertyName.equalsIgnoreCase("class")) {
-								cssClass = value;
-							} else if(propertyName.equalsIgnoreCase("title")) {
-								title = value;
-							} else if(propertyName.equalsIgnoreCase("src")) {
-								src = new UriString(value);
-							}
-						}
-					}
-
-					accept('>');
-
-					// Reddit doesn't provide an end tag with their img tags for some reason
-					// Need this to show multiple concurrent images correctly
-					if (tagName.equals("img")) {
-						type = TokenType.TAG_START_AND_END;
-					}
-
-					return new Token(type, tagName, href, cssClass, title, src);
-
-				} else {
-
-					if(mPreformattedTextPending) {
-
-						mPreformattedTextPending = false;
-
-						String preformattedText = readAndUnescapeUntil('<');
-
-						if(preformattedText.endsWith("\n")) {
-							preformattedText = preformattedText.substring(
-									0,
-									preformattedText.length() - 1);
-						}
-
-						return new Token(
-								TokenType.TEXT,
-								preformattedText,
-								null,
-								null,
-								null);
-					}
-
-					// Raw text
-					return new Token(
-							TokenType.TEXT,
-							normaliseWhitespace(readAndUnescapeUntil('<')),
-							null,
-							null,
-							null);
-				}
-			}
-
-		} catch(final IndexOutOfBoundsException e) {
-			throw new MalformedHtmlException("Unexpected EOF", mHtml, mPos, e);
-		}
-	}
-
-	public static BodyElement parse(
-			@Nullable String html,
-			@NonNull final AppCompatActivity activity) {
-
-		if(html == null) {
-			html = "";
-		}
-
-		final Context applicationContext = activity.getApplicationContext();
-
-		try {
-			final HtmlReaderPeekable reader
-					= new HtmlReaderPeekable(new HtmlReader(html));
-
-			HtmlRawElement rootElement;
-
-			if(reader.peek().type == TokenType.EOF) {
-				// Empty comment
-				rootElement = new HtmlRawElementPlainText("");
-
-			} else {
-				rootElement = HtmlRawElement.readFrom(reader);
-			}
-
-			if(!(rootElement instanceof HtmlRawElementBlock)) {
-				rootElement = new HtmlRawElementBlock(BlockType.NORMAL_TEXT, rootElement);
-			}
-
-			final HtmlRawElementBlock reduced
-					= ((HtmlRawElementBlock)rootElement).reduce(
-					new HtmlTextAttributes(),
-					activity);
-
-			final ArrayList<BodyElement> generated = new ArrayList<>();
-
-			reduced.generate(activity, generated);
-
-			return new BodyElementVerticalSequence(generated);
-
-		} catch(final MalformedHtmlException e) {
-			return new BodyElementRRError(
-					new RRError(
-							applicationContext.getString(R.string.error_title_malformed_html),
-							applicationContext.getString(R.string.error_message_malformed_html),
-							true,
-							e));
-
-		} catch(final Exception e) {
-			return new BodyElementRRError(
-					new RRError(
-							applicationContext.getString(R.string.error_parse_title),
-							applicationContext.getString(R.string.error_parse_message),
-							true,
-							e));
-		}
-	}
-
-	@NonNull
-	public String getHtml() {
-		return mHtml;
-	}
-
-	public int getPos() {
-		return mPos;
-	}
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
+
+import androidx.appcompat.app.AppCompatActivity
+import org.apache.commons.text.StringEscapeUtils
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BlockType
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementRRError
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementVerticalSequence
+
+class HtmlReader(val html: String) {
+    enum class TokenType {
+        TAG_START,
+        TAG_END,
+        TAG_START_AND_END,
+        TEXT,
+        EOF
+    }
+
+    class Token {
+        val type: TokenType
+        val text: String
+        val href: String?
+        val cssClass: String?
+        val title: String?
+        val src: UriString?
+
+        constructor(
+            type: TokenType,
+            text: String,
+            href: String?,
+            cssClass: String?,
+            title: String?
+        ) {
+            this.type = type
+            this.text = text
+            this.href = href
+            this.cssClass = cssClass
+            this.title = title
+            this.src = null
+        }
+
+        constructor(
+            type: TokenType,
+            text: String,
+            href: String?,
+            cssClass: String?,
+            title: String?,
+            src: UriString?
+        ) {
+            this.type = type
+            this.text = text
+            this.href = href
+            this.cssClass = cssClass
+            this.title = title
+            this.src = src
+        }
+
+        override fun toString(): String {
+            return type.name + "(" + text + ")"
+        }
+
+        companion object {
+            val EOF: Token = Token(TokenType.EOF, "", null, null, null)
+        }
+    }
+
+    var pos: Int = 0
+        private set
+
+    private var mPreformattedTextPending = false
+
+    @Throws(MalformedHtmlException::class)
+    private fun readName(): String {
+        val result = StringBuilder(16)
+
+        try {
+            while (isNameChar(html.get(this.pos))) {
+                result.append(html.get(this.pos))
+                this.pos++
+            }
+        } catch (e: IndexOutOfBoundsException) {
+            throw MalformedHtmlException(
+                "Reached EOF while reading name",
+                this.html,
+                this.pos,
+                e
+            )
+        }
+
+        if (result.length == 0) {
+            throw MalformedHtmlException("Got zero-length name", this.html, this.pos)
+        }
+
+        return result.toString()
+    }
+
+    private fun readAndUnescapeUntil(endChar: Char): String {
+        val result = StringBuilder(64)
+
+        while (this.pos < html.length && html.get(this.pos) != endChar) {
+            result.append(html.get(this.pos))
+            this.pos++
+        }
+
+        return StringEscapeUtils.unescapeHtml4(result.toString())
+    }
+
+    private fun tryAccept(c: Char): Boolean {
+        if (this.pos < html.length && html.get(this.pos) == c) {
+            this.pos++
+            return true
+        }
+
+        return false
+    }
+
+    @Throws(MalformedHtmlException::class)
+    private fun accept(c: Char) {
+        try {
+            if (html.get(this.pos) != c) {
+                throw MalformedHtmlException("Expecting " + c, this.html, this.pos)
+            }
+        } catch (e: IndexOutOfBoundsException) {
+            throw MalformedHtmlException("Unexpected EOF", this.html, this.pos, e)
+        }
+
+        this.pos++
+    }
+
+    private fun skipWhitespace() {
+        while (this.pos < html.length && isWhitespace(html.get(this.pos))) {
+            this.pos++
+        }
+    }
+
+    private fun skipNewlines() {
+        while (this.pos < html.length && html.get(this.pos) == '\n') {
+            this.pos++
+        }
+    }
+
+    @Throws(MalformedHtmlException::class)
+    fun readNext(): Token {
+        try {
+            mainLoop@ while (true) {
+                skipNewlines()
+
+                if (this.pos >= html.length) {
+                    // End of data
+                    return Token.Companion.EOF
+                }
+
+                if (html.get(this.pos) == '<') {
+                    this.pos++
+                    skipWhitespace()
+
+                    var type: TokenType?
+
+                    if (html.get(this.pos) == '!') {
+                        // Comment
+
+                        this.pos++
+                        accept('-')
+                        accept('-')
+
+                        while (true) {
+                            if (html.get(this.pos) == '-' && html.get(this.pos + 1) == '-' && html.get(
+                                    this.pos + 2
+                                ) == '>'
+                            ) {
+                                this.pos += 3
+                                continue@mainLoop
+                            } else {
+                                this.pos++
+                            }
+                        }
+                    }
+
+                    if (html.get(this.pos) == '/') {
+                        type = TokenType.TAG_END
+                        this.pos++
+                        skipWhitespace()
+                    } else {
+                        type = TokenType.TAG_START
+                    }
+
+                    val tagName = readName()
+                    var href: String? = null
+                    var cssClass: String? = null
+                    var title: String? = null
+                    var src: UriString? = null
+
+                    if (tagName.equals("pre", ignoreCase = true)) {
+                        mPreformattedTextPending = true
+                    }
+
+                    skipWhitespace()
+
+                    while (html.get(this.pos) != '>') {
+                        if (tryAccept('/')) {
+                            skipWhitespace()
+                            accept('>')
+                            return Token(
+                                TokenType.TAG_START_AND_END,
+                                tagName,
+                                href,
+                                cssClass,
+                                title
+                            )
+                        }
+
+                        val propertyName = readName()
+
+                        if (tryAccept('=')) {
+                            accept('"')
+                            val value = readAndUnescapeUntil('"')
+                            accept('"')
+                            skipWhitespace()
+
+                            if (propertyName.equals("href", ignoreCase = true)) {
+                                href = value
+                            } else if (propertyName.equals("class", ignoreCase = true)) {
+                                cssClass = value
+                            } else if (propertyName.equals("title", ignoreCase = true)) {
+                                title = value
+                            } else if (propertyName.equals("src", ignoreCase = true)) {
+                                src = UriString(value)
+                            }
+                        }
+                    }
+
+                    accept('>')
+
+                    // Reddit doesn't provide an end tag with their img tags for some reason
+                    // Need this to show multiple concurrent images correctly
+                    if (tagName == "img") {
+                        type = TokenType.TAG_START_AND_END
+                    }
+
+                    return Token(type, tagName, href, cssClass, title, src)
+                } else {
+                    if (mPreformattedTextPending) {
+                        mPreformattedTextPending = false
+
+                        var preformattedText = readAndUnescapeUntil('<')
+
+                        if (preformattedText.endsWith("\n")) {
+                            preformattedText = preformattedText.substring(
+                                0,
+                                preformattedText.length - 1
+                            )
+                        }
+
+                        return Token(
+                            TokenType.TEXT,
+                            preformattedText,
+                            null,
+                            null,
+                            null
+                        )
+                    }
+
+                    // Raw text
+                    return Token(
+                        TokenType.TEXT,
+                        normaliseWhitespace(readAndUnescapeUntil('<')),
+                        null,
+                        null,
+                        null
+                    )
+                }
+            }
+        } catch (e: IndexOutOfBoundsException) {
+            throw MalformedHtmlException("Unexpected EOF", this.html, this.pos, e)
+        }
+    }
+
+    companion object {
+        private fun normaliseWhitespace(html: String): String {
+            val result = StringBuilder(html.length)
+
+            var lastCharWasWhitespace = false
+
+            for (i in 0..<html.length) {
+                val c = html.get(i)
+
+                if (c != '\n' && c != '\r') {
+                    if (isWhitespace(c)) {
+                        if (!lastCharWasWhitespace) {
+                            result.append(" ")
+                            lastCharWasWhitespace = true
+                        }
+                    } else {
+                        lastCharWasWhitespace = false
+                        result.append(c)
+                    }
+                }
+            }
+
+            return result.toString()
+        }
+
+        private fun isWhitespace(c: Char): Boolean {
+            return c == ' ' || c == '\t' || c == '\r' || c == '\n'
+        }
+
+        private fun isNameChar(c: Char): Boolean {
+            when (c) {
+                0, ' ', '\'', '"', '>', '/', '=' -> return false
+
+                else -> return true
+            }
+        }
+
+        fun parse(
+            html: String?,
+            activity: AppCompatActivity
+        ): BodyElement {
+            var html = html
+            if (html == null) {
+                html = ""
+            }
+
+            val applicationContext = activity.getApplicationContext()
+
+            try {
+                val reader = HtmlReaderPeekable(HtmlReader(html))
+
+                var rootElement: HtmlRawElement?
+
+                if (reader.peek().type == TokenType.EOF) {
+                    // Empty comment
+                    rootElement = HtmlRawElementPlainText("")
+                } else {
+                    rootElement = HtmlRawElement.Companion.readFrom(reader)
+                }
+
+                if (rootElement !is HtmlRawElementBlock) {
+                    rootElement = HtmlRawElementBlock(BlockType.NORMAL_TEXT, rootElement)
+                }
+
+                val reduced = rootElement.reduce(
+                    HtmlTextAttributes(),
+                    activity
+                )
+
+                val generated = ArrayList<BodyElement?>()
+
+                reduced.generate(activity, generated)
+
+                return BodyElementVerticalSequence(generated)
+            } catch (e: MalformedHtmlException) {
+                return BodyElementRRError(
+                    RRError(
+                        applicationContext.getString(string.error_title_malformed_html),
+                        applicationContext.getString(string.error_message_malformed_html),
+                        true,
+                        e
+                    )
+                )
+            } catch (e: Exception) {
+                return BodyElementRRError(
+                    RRError(
+                        applicationContext.getString(string.error_parse_title),
+                        applicationContext.getString(string.error_parse_message),
+                        true,
+                        e
+                    )
+                )
+            }
+        }
+    }
 }

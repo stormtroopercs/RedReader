@@ -12,120 +12,112 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.view.LayoutInflater
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.common.General.dpToPixels
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+object ChangelogManager {
+    fun generateViews(
+        context: AppCompatActivity,
+        items: LinearLayout,
+        showAll: Boolean
+    ) {
+        val attr = RRThemeAttributes(context)
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.AccessibilityDelegateCompat;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
+        val outerPaddingPx = dpToPixels(context, 12f)
+        items.setPadding(outerPaddingPx, 0, outerPaddingPx, outerPaddingPx)
 
-import org.quantumbadger.redreader.R;
+        val filename: String
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+        if (context.getPackageName().contains("alpha")) {
+            filename = "changelog-alpha.txt"
+        } else {
+            filename = "changelog.txt"
+        }
 
-public class ChangelogManager {
+        try {
+            BufferedReader(
+                InputStreamReader(context.getAssets().open(filename)),
+                128 * 1024
+            ).use { br ->
+                var curVersionName: String? = null
+                var itemsToShow = 10
 
-	public static void generateViews(
-			final AppCompatActivity context,
-			final LinearLayout items,
-			final boolean showAll) {
+                var line: String?
+                while ((br.readLine().also { line = it }) != null) {
+                    if (line!!.isEmpty()) {
+                        curVersionName = null
 
-		final RRThemeAttributes attr = new RRThemeAttributes(context);
+                        if (!showAll) {
+                            itemsToShow--
+                            if (itemsToShow <= 0) {
+                                break
+                            }
+                        }
+                    } else if (curVersionName == null) {
+                        val lineSplit: Array<String?> =
+                            line.split("/".toRegex()).dropLastWhile { it.isEmpty() }
+                                .toTypedArray()
+                        curVersionName = lineSplit[1]
 
-		final int outerPaddingPx = General.dpToPixels(context, 12);
-		items.setPadding(outerPaddingPx, 0, outerPaddingPx, outerPaddingPx);
+                        val header = LayoutInflater.from(context)
+                            .inflate(
+                                R.layout.list_sectionheader,
+                                items,
+                                false
+                            ) as TextView
+                        header.setText(curVersionName)
+                        header.setTextColor(attr.colorAccent)
 
-		final String filename;
+                        //From https://stackoverflow.com/a/54082384
+                        ViewCompat.setAccessibilityDelegate(
+                            header,
+                            object : AccessibilityDelegateCompat() {
+                                override fun onInitializeAccessibilityNodeInfo(
+                                    host: View,
+                                    info: AccessibilityNodeInfoCompat
+                                ) {
+                                    super.onInitializeAccessibilityNodeInfo(host, info)
+                                    info.setHeading(true)
+                                }
+                            })
 
-		if(context.getPackageName().contains("alpha")) {
-			filename = "changelog-alpha.txt";
-		} else {
-			filename = "changelog.txt";
-		}
+                        items.addView(header)
+                    } else {
+                        val bulletItem = LinearLayout(context)
+                        val paddingPx = dpToPixels(context, 6f)
+                        bulletItem.setPadding(paddingPx, paddingPx, paddingPx, 0)
+                        bulletItem.setFocusable(true)
 
-		try(BufferedReader br = new BufferedReader(
-				new InputStreamReader(context.getAssets().open(filename)),
-				128 * 1024)) {
+                        val bullet = TextView(context)
+                        bullet.setText("•  ")
+                        bullet.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO)
+                        bulletItem.addView(bullet)
 
-			String curVersionName = null;
+                        val text = TextView(context)
+                        text.setText(line)
+                        bulletItem.addView(text)
 
-			int itemsToShow = 10;
-
-			String line;
-			while((line = br.readLine()) != null) {
-
-				if(line.isEmpty()) {
-
-					curVersionName = null;
-
-					if(!showAll) {
-						itemsToShow--;
-						if(itemsToShow <= 0) {
-							break;
-						}
-					}
-
-				} else if(curVersionName == null) {
-
-					final String[] lineSplit = line.split("/");
-					curVersionName = lineSplit[1];
-
-					final TextView header = (TextView)LayoutInflater.from(context)
-							.inflate(
-									R.layout.list_sectionheader,
-									items,
-									false);
-					header.setText(curVersionName);
-					header.setTextColor(attr.colorAccent);
-
-					//From https://stackoverflow.com/a/54082384
-					ViewCompat.setAccessibilityDelegate(
-							header,
-							new AccessibilityDelegateCompat() {
-								@Override
-								public void onInitializeAccessibilityNodeInfo(
-										final View host,
-										final AccessibilityNodeInfoCompat info) {
-									super.onInitializeAccessibilityNodeInfo(host, info);
-									info.setHeading(true);
-								}
-							});
-
-					items.addView(header);
-
-				} else {
-
-					final LinearLayout bulletItem = new LinearLayout(context);
-					final int paddingPx = General.dpToPixels(context, 6);
-					bulletItem.setPadding(paddingPx, paddingPx, paddingPx, 0);
-					bulletItem.setFocusable(true);
-
-					final TextView bullet = new TextView(context);
-					bullet.setText("•  ");
-					bullet.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-					bulletItem.addView(bullet);
-
-					final TextView text = new TextView(context);
-					text.setText(line);
-					bulletItem.addView(text);
-
-					items.addView(bulletItem);
-				}
-
-			}
-
-		} catch(final IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+                        items.addView(bulletItem)
+                    }
+                }
+            }
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
+    }
 }

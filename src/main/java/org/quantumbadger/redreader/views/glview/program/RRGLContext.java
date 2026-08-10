@@ -12,118 +12,113 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.program
 
-package org.quantumbadger.redreader.views.glview.program;
+import android.content.Context
+import android.opengl.GLES20
+import org.quantumbadger.redreader.common.General.dpToPixels
+import java.nio.FloatBuffer
 
-import android.content.Context;
-import android.opengl.GLES20;
-import org.quantumbadger.redreader.common.General;
+class RRGLContext(context: Context) {
+    private val mProgramTexture: RRGLProgramTexture
+    private val mProgramColour: RRGLProgramColour
 
-import java.nio.FloatBuffer;
+    private var mPixelMatrix: FloatArray?
+    private var mPixelMatrixOffset = 0
 
-public final class RRGLContext {
+    private var mProgramCurrent: RRGLProgramVertices? = null
 
-	private final RRGLProgramTexture mProgramTexture;
-	private final RRGLProgramColour mProgramColour;
+    private val mContext: Context
 
-	private float[] mPixelMatrix;
-	private int mPixelMatrixOffset;
+    init {
+        mProgramTexture = RRGLProgramTexture()
+        mProgramColour = RRGLProgramColour()
+        mContext = context
+    }
 
-	private RRGLProgramVertices mProgramCurrent;
+    fun dpToPixels(dp: Float): Int {
+        return dpToPixels(mContext, dp)
+    }
 
-	private final Context mContext;
+    val screenDensity: Float
+        get() = mContext.getResources().getDisplayMetrics().density
 
-	public RRGLContext(final Context context) {
-		mProgramTexture = new RRGLProgramTexture();
-		mProgramColour = new RRGLProgramColour();
-		mContext = context;
-	}
+    fun activateProgramColour() {
+        if (mProgramCurrent !== mProgramColour) {
+            activateProgram(mProgramColour)
+        }
+    }
 
-	public int dpToPixels(final float dp) {
-		return General.dpToPixels(mContext, dp);
-	}
+    fun activateProgramTexture() {
+        if (mProgramCurrent !== mProgramTexture) {
+            activateProgram(mProgramTexture)
+        }
+    }
 
-	public float getScreenDensity() {
-		return mContext.getResources().getDisplayMetrics().density;
-	}
+    private fun activateProgram(program: RRGLProgramVertices) {
+        if (mProgramCurrent != null) {
+            mProgramCurrent!!.onDeactivated()
+        }
 
-	public void activateProgramColour() {
-		if(mProgramCurrent != mProgramColour) {
-			activateProgram(mProgramColour);
-		}
-	}
+        GLES20.glUseProgram(program.getHandle())
+        mProgramCurrent = program
 
-	public void activateProgramTexture() {
-		if(mProgramCurrent != mProgramTexture) {
-			activateProgram(mProgramTexture);
-		}
-	}
+        program.onActivated()
 
-	private void activateProgram(final RRGLProgramVertices program) {
+        if (mPixelMatrix != null) {
+            program.activatePixelMatrix(mPixelMatrix, mPixelMatrixOffset)
+        }
+    }
 
-		if(mProgramCurrent != null) {
-			mProgramCurrent.onDeactivated();
-		}
+    fun activateTextureByHandle(textureHandle: Int) {
+        mProgramTexture.activateTextureByHandle(textureHandle)
+    }
 
-		GLES20.glUseProgram(program.getHandle());
-		mProgramCurrent = program;
+    fun activateVertexBuffer(vertexBuffer: FloatBuffer?) {
+        mProgramCurrent!!.activateVertexBuffer(vertexBuffer)
+    }
 
-		program.onActivated();
+    fun activateColour(
+        r: Float,
+        g: Float,
+        b: Float,
+        a: Float
+    ) {
+        mProgramColour.activateColour(r, g, b, a)
+    }
 
-		if(mPixelMatrix != null) {
-			program.activatePixelMatrix(mPixelMatrix, mPixelMatrixOffset);
-		}
-	}
+    fun activateUVBuffer(uvBuffer: FloatBuffer?) {
+        mProgramTexture.activateUVBuffer(uvBuffer)
+    }
 
-	void activateTextureByHandle(final int textureHandle) {
-		mProgramTexture.activateTextureByHandle(textureHandle);
-	}
+    fun drawTriangleStrip(vertices: Int) {
+        mProgramCurrent!!.drawTriangleStrip(vertices)
+    }
 
-	public void activateVertexBuffer(final FloatBuffer vertexBuffer) {
-		mProgramCurrent.activateVertexBuffer(vertexBuffer);
-	}
+    fun activateMatrix(buf: FloatArray?, offset: Int) {
+        mProgramCurrent!!.activateMatrix(buf, offset)
+    }
 
-	public void activateColour(
-			final float r,
-			final float g,
-			final float b,
-			final float a) {
-		mProgramColour.activateColour(r, g, b, a);
-	}
+    fun activatePixelMatrix(buf: FloatArray?, offset: Int) {
+        mPixelMatrix = buf
+        mPixelMatrixOffset = offset
 
-	public void activateUVBuffer(final FloatBuffer uvBuffer) {
-		mProgramTexture.activateUVBuffer(uvBuffer);
-	}
+        if (mProgramCurrent != null) {
+            mProgramCurrent!!.activatePixelMatrix(buf, offset)
+        }
+    }
 
-	public void drawTriangleStrip(final int vertices) {
-		mProgramCurrent.drawTriangleStrip(vertices);
-	}
+    fun setClearColor(r: Float, g: Float, b: Float, a: Float) {
+        GLES20.glClearColor(r, g, b, a)
+    }
 
-	public void activateMatrix(final float[] buf, final int offset) {
-		mProgramCurrent.activateMatrix(buf, offset);
-	}
+    fun clear() {
+        GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT or GLES20.GL_COLOR_BUFFER_BIT)
+    }
 
-	public void activatePixelMatrix(final float[] buf, final int offset) {
-
-		mPixelMatrix = buf;
-		mPixelMatrixOffset = offset;
-
-		if(mProgramCurrent != null) {
-			mProgramCurrent.activatePixelMatrix(buf, offset);
-		}
-	}
-
-	public void setClearColor(final float r, final float g, final float b, final float a) {
-		GLES20.glClearColor(r, g, b, a);
-	}
-
-	public void clear() {
-		GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
-	}
-
-	public void setViewport(final int width, final int height) {
-		GLES20.glViewport(0, 0, width, height);
-	}
+    fun setViewport(width: Int, height: Int) {
+        GLES20.glViewport(0, 0, width, height)
+    }
 }

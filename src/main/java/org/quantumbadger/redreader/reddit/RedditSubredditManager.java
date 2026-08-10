@@ -12,115 +12,109 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
 
-package org.quantumbadger.redreader.reddit;
+import android.content.Context
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.common.General.sha1
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.TimestampBound
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.io.RawObjectDB
+import org.quantumbadger.redreader.io.RequestResponseHandler
+import org.quantumbadger.redreader.io.ThreadedRawObjectDB
+import org.quantumbadger.redreader.io.UpdatedVersionListener
+import org.quantumbadger.redreader.io.WeakCache
+import org.quantumbadger.redreader.reddit.api.RedditAPIIndividualSubredditDataRequester
+import org.quantumbadger.redreader.reddit.things.RedditSubreddit
+import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 
-import android.content.Context;
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.TimestampBound;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.io.RawObjectDB;
-import org.quantumbadger.redreader.io.RequestResponseHandler;
-import org.quantumbadger.redreader.io.ThreadedRawObjectDB;
-import org.quantumbadger.redreader.io.UpdatedVersionListener;
-import org.quantumbadger.redreader.io.WeakCache;
-import org.quantumbadger.redreader.reddit.api.RedditAPIIndividualSubredditDataRequester;
-import org.quantumbadger.redreader.reddit.things.RedditSubreddit;
-import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
+class RedditSubredditManager private constructor(context: Context, user: RedditAccount) {
+    fun offerRawSubredditData(
+        toWrite: MutableCollection<RedditSubreddit?>?,
+        timestamp: TimestampUTC?
+    ) {
+        subredditCache.performWrite(toWrite)
+    }
 
-import java.util.Collection;
-import java.util.HashMap;
+    // TODO need way to cancel web update and start again?
+    // TODO anonymous user
+    // TODO Ability to temporarily flag subreddits as subscribed/unsubscribed
+    // TODO Ability to temporarily add/remove subreddits from multireddits
+    // TODO store favourites in preference
+    enum class SubredditListType {
+        SUBSCRIBED,
+        MODERATED,
+        MULTIREDDITS,
+        MOST_POPULAR,
+        DEFAULTS
+    }
 
-public class RedditSubredditManager {
+    private val subredditCache: WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>
 
-	public void offerRawSubredditData(
-			final Collection<RedditSubreddit> toWrite,
-			final TimestampUTC timestamp) {
-		subredditCache.performWrite(toWrite);
-	}
 
-	// TODO need way to cancel web update and start again?
-	// TODO anonymous user
+    init {
+        // Subreddit cache
 
-	// TODO Ability to temporarily flag subreddits as subscribed/unsubscribed
-	// TODO Ability to temporarily add/remove subreddits from multireddits
+        val subredditDb = RawObjectDB<SubredditCanonicalId?, RedditSubreddit?>(
+            context,
+            getDbFilename("subreddits", user),
+            RedditSubreddit::class.java
+        )
 
-	// TODO store favourites in preference
+        val subredditDbWrapper =
+            ThreadedRawObjectDB<SubredditCanonicalId?, RedditSubreddit?, RRError?>(
+                subredditDb,
+                RedditAPIIndividualSubredditDataRequester(context, user)
+            )
 
-	public enum SubredditListType {
-		SUBSCRIBED,
-		MODERATED,
-		MULTIREDDITS,
-		MOST_POPULAR,
-		DEFAULTS
-	}
+        subredditCache =
+            WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>(subredditDbWrapper)
+    }
 
-	private static RedditSubredditManager singleton;
-	private static RedditAccount singletonUser;
+    fun getSubreddit(
+        subredditCanonicalId: SubredditCanonicalId?,
+        timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<RedditSubreddit?, RRError?>?,
+        updatedVersionListener: UpdatedVersionListener<SubredditCanonicalId?, RedditSubreddit?>?
+    ) {
+        subredditCache.performRequest(
+            subredditCanonicalId,
+            timestampBound,
+            handler,
+            updatedVersionListener
+        )
+    }
 
-	private final WeakCache<SubredditCanonicalId, RedditSubreddit, RRError>
-			subredditCache;
+    fun getSubreddits(
+        ids: MutableCollection<SubredditCanonicalId?>?,
+        timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<HashMap<SubredditCanonicalId?, RedditSubreddit?>?, RRError?>?
+    ) {
+        subredditCache.performRequest(ids, timestampBound, handler)
+    }
 
-	public static synchronized RedditSubredditManager getInstance(
-			final Context context,
-			final RedditAccount user) {
+    companion object {
+        private var singleton: RedditSubredditManager? = null
+        private var singletonUser: RedditAccount? = null
 
-		if(singleton == null || !user.equals(singletonUser)) {
-			singletonUser = user;
-			singleton = new RedditSubredditManager(context, user);
-		}
+        @Synchronized
+        fun getInstance(
+            context: Context,
+            user: RedditAccount
+        ): RedditSubredditManager {
+            if (singleton == null || !user.equals(singletonUser)) {
+                singletonUser = user
+                singleton = RedditSubredditManager(context, user)
+            }
 
-		return singleton;
-	}
+            return singleton!!
+        }
 
-	private RedditSubredditManager(final Context context, final RedditAccount user) {
-
-		// Subreddit cache
-
-		final RawObjectDB<SubredditCanonicalId, RedditSubreddit> subredditDb
-				= new RawObjectDB<>(
-				context,
-				getDbFilename("subreddits", user),
-				RedditSubreddit.class);
-
-		final ThreadedRawObjectDB<SubredditCanonicalId, RedditSubreddit, RRError>
-				subredditDbWrapper
-				= new ThreadedRawObjectDB<>(
-				subredditDb,
-				new RedditAPIIndividualSubredditDataRequester(context, user));
-
-		subredditCache = new WeakCache<>(subredditDbWrapper);
-	}
-
-	private static String getDbFilename(final String type, final RedditAccount user) {
-		return General.sha1(user.username.getBytes()) + "_" + type + "_subreddits.db";
-	}
-
-	public void getSubreddit(
-			final SubredditCanonicalId subredditCanonicalId,
-			final TimestampBound timestampBound,
-			final RequestResponseHandler<RedditSubreddit, RRError> handler,
-			final UpdatedVersionListener<
-					SubredditCanonicalId, RedditSubreddit> updatedVersionListener) {
-
-		subredditCache.performRequest(
-				subredditCanonicalId,
-				timestampBound,
-				handler,
-				updatedVersionListener);
-	}
-
-	public void getSubreddits(
-			final Collection<SubredditCanonicalId> ids,
-			final TimestampBound timestampBound,
-			final RequestResponseHandler<
-					HashMap<SubredditCanonicalId, RedditSubreddit>,
-					RRError> handler) {
-
-		subredditCache.performRequest(ids, timestampBound, handler);
-	}
+        private fun getDbFilename(type: String?, user: RedditAccount): String {
+            return sha1(user.username.toByteArray()) + "_" + type + "_subreddits.db"
+        }
+    }
 }

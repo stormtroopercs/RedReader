@@ -12,326 +12,314 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache
 
-package org.quantumbadger.redreader.cache;
+import android.content.Context
+import android.util.Log
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.addGlobalError
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.cache.CacheManager.ReadableCacheFile
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategy
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.GenericFactory
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.common.datastream.SeekableInputStream
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.http.body.HTTPRequestBody
+import java.io.IOException
+import java.util.UUID
 
-import android.content.Context;
-import android.util.Log;
+class CacheRequest private constructor(
+    url: UriString,
+    user: RedditAccount,
+    requestSession: UUID?,
+    priority: Priority,
+    downloadStrategy: DownloadStrategy,
+    fileType: Int,
+    queueType: DownloadQueueType?,
+    requestBody: HTTPRequestBody?,
+    cache: Boolean,
+    context: Context,
+    private val mCallbacks: CacheRequestCallbacks
+) : Comparable<CacheRequest?> {
+    enum class DownloadQueueType {
+        REDDIT_API,
+        IMGUR_API,
+        IMMEDIATE,
+        IMAGE_PRECACHE,
+        REDGIFS_API_V2
+    }
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    enum class RequestFailureType {
+        CONNECTION,
+        REQUEST,
+        STORAGE,
+        CACHE_MISS,
+        CANCELLED,
+        MALFORMED_URL,
+        PARSE,
+        DISK_SPACE,
+        REDDIT_REDIRECT,
+        PARSE_IMGUR,
+        UPLOAD_FAIL_IMGUR,
+        CACHE_DIR_DOES_NOT_EXIST
+    }
 
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.activities.BugReportActivity;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategy;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.GenericFactory;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.Priority;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.datastream.SeekableInputStream;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.http.body.HTTPRequestBody;
+    val url: UriString
+    val user: RedditAccount
+    val requestSession: UUID?
 
-import java.io.IOException;
-import java.util.UUID;
+    val priority: Priority
 
-public final class CacheRequest implements Comparable<CacheRequest> {
+    val downloadStrategy: DownloadStrategy
 
-	public enum DownloadQueueType {
-		REDDIT_API,
-		IMGUR_API,
-		IMMEDIATE,
-		IMAGE_PRECACHE,
-		REDGIFS_API_V2
-	}
+    val fileType: Int
 
-	public enum RequestFailureType {
-		CONNECTION,
-		REQUEST,
-		STORAGE,
-		CACHE_MISS,
-		CANCELLED,
-		MALFORMED_URL,
-		PARSE,
-		DISK_SPACE,
-		REDDIT_REDIRECT,
-		PARSE_IMGUR,
-		UPLOAD_FAIL_IMGUR,
-		CACHE_DIR_DOES_NOT_EXIST
-	}
+    val queueType: DownloadQueueType?
+    val requestBody: Optional<HTTPRequestBody?>
 
-	public final UriString url;
-	public final RedditAccount user;
-	public final UUID requestSession;
+    val cache: Boolean
 
-	@NonNull public final Priority priority;
+    private var download: CacheDownload? = null
+    private var cancelled = false
 
-	@NonNull public final DownloadStrategy downloadStrategy;
+    val context: Context
 
-	public final int fileType;
+    // Called by CacheDownload
+    @Synchronized
+    fun setDownload(download: CacheDownload?): Boolean {
+        if (cancelled) {
+            return false
+        }
+        this.download = download
+        return true
+    }
 
-	public final DownloadQueueType queueType;
-	@NonNull public final Optional<HTTPRequestBody> requestBody;
+    // Can be called to cancel the request
+    @Synchronized
+    fun cancel() {
+        cancelled = true
 
-	public final boolean cache;
+        if (download != null) {
+            download!!.cancel()
+            download = null
+        }
+    }
 
-	@Nullable private CacheDownload download;
-	private boolean cancelled;
+    constructor(
+        url: UriString,
+        user: RedditAccount,
+        requestSession: UUID?,
+        priority: Priority,
+        downloadStrategy: DownloadStrategy,
+        fileType: Int,
+        queueType: DownloadQueueType?,
+        cache: Boolean,
+        context: Context,
+        callbacks: CacheRequestCallbacks
+    ) : this(
+        url,
+        user,
+        requestSession,
+        priority,
+        downloadStrategy,
+        fileType,
+        queueType,
+        null,
+        cache,
+        context,
+        callbacks
+    )
 
-	public final Context context;
+    constructor(
+        url: UriString,
+        user: RedditAccount,
+        requestSession: UUID?,
+        priority: Priority,
+        downloadStrategy: DownloadStrategy,
+        fileType: Int,
+        queueType: DownloadQueueType?,
+        context: Context,
+        callbacks: CacheRequestCallbacks
+    ) : this(
+        url,
+        user,
+        requestSession,
+        priority,
+        downloadStrategy,
+        fileType,
+        queueType,
+        true,
+        context,
+        callbacks
+    )
 
-	private final CacheRequestCallbacks mCallbacks;
+    constructor(
+        url: UriString,
+        user: RedditAccount,
+        requestSession: UUID?,
+        priority: Priority,
+        downloadStrategy: DownloadStrategy,
+        fileType: Int,
+        queueType: DownloadQueueType?,
+        requestBody: HTTPRequestBody?,
+        context: Context,
+        callbacks: CacheRequestCallbacks
+    ) : this(
+        url,
+        user,
+        requestSession,
+        priority,
+        downloadStrategy,
+        fileType,
+        queueType,
+        requestBody,
+        false,
+        context,
+        callbacks
+    )
 
-	// Called by CacheDownload
-	synchronized boolean setDownload(final CacheDownload download) {
-		if(cancelled) {
-			return false;
-		}
-		this.download = download;
-		return true;
-	}
+    // TODO remove this huge constructor, make mutable
+    init {
+        this.context = context.getApplicationContext()
 
-	// Can be called to cancel the request
-	public synchronized void cancel() {
+        if (user == null) {
+            throw NullPointerException(
+                "User was null - set to empty string for anonymous"
+            )
+        }
 
-		cancelled = true;
+        require(!(!downloadStrategy.shouldDownloadWithoutCheckingCache() && requestBody != null)) { "Should not perform cache lookup for POST requests" }
 
-		if(download != null) {
-			download.cancel();
-			download = null;
-		}
-	}
+        this.url = url
+        this.user = user
+        this.requestSession = requestSession
+        this.priority = priority
+        this.downloadStrategy = downloadStrategy
+        this.fileType = fileType
+        this.queueType = queueType
+        this.requestBody = Optional.Companion.ofNullable<HTTPRequestBody?>(requestBody)
+        this.cache = (requestBody == null) && cache
 
-	public CacheRequest(
-			@NonNull final UriString url,
-			@NonNull final RedditAccount user,
-			@Nullable final UUID requestSession,
-			@NonNull final Priority priority,
-			@NonNull final DownloadStrategy downloadStrategy,
-			final int fileType,
-			final DownloadQueueType queueType,
-			final boolean cache,
-			@NonNull final Context context,
-			@NonNull final CacheRequestCallbacks callbacks) {
+        if (url == null) {
+            notifyFailure(
+                getGeneralErrorForFailure(
+                    this.context,
+                    RequestFailureType.MALFORMED_URL,
+                    null,
+                    null,
+                    null,
+                    Optional.Companion.empty<FailedRequestBody>()
+                )
+            )
+            cancel()
+        }
+    }
 
-		this(
-				url,
-				user,
-				requestSession,
-				priority,
-				downloadStrategy,
-				fileType,
-				queueType,
-				null,
-				cache,
-				context,
-				callbacks);
-	}
+    // Queue helpers
+    override fun compareTo(another: CacheRequest): Int {
+        return if (priority.isHigherPriorityThan(another.priority))
+            -1
+        else
+            (if (another.priority.isHigherPriorityThan(priority)) 1 else 0)
+    }
 
-	public CacheRequest(
-			@NonNull final UriString url,
-			@NonNull final RedditAccount user,
-			@Nullable final UUID requestSession,
-			@NonNull final Priority priority,
-			@NonNull final DownloadStrategy downloadStrategy,
-			final int fileType,
-			final DownloadQueueType queueType,
-			@NonNull final Context context,
-			@NonNull final CacheRequestCallbacks callbacks) {
+    // Callbacks
+    private fun onCallbackException(t: Throwable) {
+        Log.e("CacheRequest", "Exception thrown from callback", t)
+        handleGlobalError(context, t)
+    }
 
-		this(
-				url,
-				user,
-				requestSession,
-				priority,
-				downloadStrategy,
-				fileType,
-				queueType,
-				true,
-				context,
-				callbacks);
-	}
+    fun notifyDataStreamAvailable(
+        streamFactory: GenericFactory<SeekableInputStream?, IOException?>,
+        timestamp: TimestampUTC?,
+        session: UUID,
+        fromCache: Boolean,
+        mimetype: String?
+    ) {
+        mCallbacks.onDataStreamAvailable(streamFactory, timestamp, session, fromCache, mimetype)
+    }
 
-	public CacheRequest(
-			@NonNull final UriString url,
-			@NonNull final RedditAccount user,
-			@Nullable final UUID requestSession,
-			@NonNull final Priority priority,
-			@NonNull final DownloadStrategy downloadStrategy,
-			final int fileType,
-			final DownloadQueueType queueType,
-			@Nullable final HTTPRequestBody requestBody,
-			@NonNull final Context context,
-			@NonNull final CacheRequestCallbacks callbacks) {
+    fun notifyDataStreamComplete(
+        streamFactory: GenericFactory<SeekableInputStream?, IOException?>,
+        timestamp: TimestampUTC?,
+        session: UUID,
+        fromCache: Boolean,
+        mimetype: String?
+    ) {
+        mCallbacks.onDataStreamComplete(streamFactory, timestamp, session, fromCache, mimetype)
+    }
 
-		this(
-				url,
-				user,
-				requestSession,
-				priority,
-				downloadStrategy,
-				fileType,
-				queueType,
-				requestBody,
-				false,
-				context,
-				callbacks);
-	}
+    fun notifyFailure(error: RRError) {
+        try {
+            mCallbacks.onFailure(error)
+        } catch (t1: Throwable) {
+            onCallbackException(t1)
+        }
+    }
 
-	// TODO remove this huge constructor, make mutable
-	private CacheRequest(
-			@NonNull final UriString url,
-			@NonNull final RedditAccount user,
-			@Nullable final UUID requestSession,
-			@NonNull final Priority priority,
-			@NonNull final DownloadStrategy downloadStrategy,
-			final int fileType,
-			final DownloadQueueType queueType,
-			@Nullable final HTTPRequestBody requestBody,
-			final boolean cache,
-			@NonNull final Context context,
-			@NonNull final CacheRequestCallbacks callbacks) {
+    fun notifyProgress(
+        authorizationInProgress: Boolean,
+        bytesRead: Long,
+        totalBytes: Long
+    ) {
+        try {
+            mCallbacks.onProgress(authorizationInProgress, bytesRead, totalBytes)
+        } catch (t: Throwable) {
+            onCallbackException(t)
+        }
+    }
 
-		this.context = context.getApplicationContext();
-		mCallbacks = callbacks;
+    fun notifyCacheFileWritten(
+        cacheFile: ReadableCacheFile,
+        timestamp: TimestampUTC?,
+        session: UUID,
+        fromCache: Boolean,
+        mimetype: String?
+    ) {
+        try {
+            mCallbacks.onCacheFileWritten(cacheFile, timestamp, session, fromCache, mimetype)
+        } catch (t: Throwable) {
+            onCallbackException(t)
+        }
+    }
 
-		if(user == null) {
-			throw new NullPointerException(
-					"User was null - set to empty string for anonymous");
-		}
+    fun notifyDownloadNecessary() {
+        try {
+            mCallbacks.onDownloadNecessary()
+        } catch (t1: Throwable) {
+            Log.e("CacheRequest", "Exception thrown by onDownloadNecessary", t1)
 
-		if(!downloadStrategy.shouldDownloadWithoutCheckingCache() && requestBody != null) {
-			throw new IllegalArgumentException(
-					"Should not perform cache lookup for POST requests");
-		}
+            try {
+                onCallbackException(t1)
+            } catch (t2: Throwable) {
+                Log.e("CacheRequest", "Exception thrown by onCallbackException", t2)
+                addGlobalError(RRError(null, null, true, t1))
+                handleGlobalError(context, t2)
+            }
+        }
+    }
 
-		this.url = url;
-		this.user = user;
-		this.requestSession = requestSession;
-		this.priority = priority;
-		this.downloadStrategy = downloadStrategy;
-		this.fileType = fileType;
-		this.queueType = queueType;
-		this.requestBody = Optional.ofNullable(requestBody);
-		this.cache = (requestBody == null) && cache;
+    fun notifyDownloadStarted() {
+        try {
+            mCallbacks.onDownloadStarted()
+        } catch (t1: Throwable) {
+            Log.e("CacheRequest", "Exception thrown by onDownloadStarted", t1)
 
-		if(url == null) {
-			notifyFailure(General.getGeneralErrorForFailure(
-					this.context,
-					RequestFailureType.MALFORMED_URL,
-					null,
-					null,
-					null,
-					Optional.empty()));
-			cancel();
-		}
-	}
-
-	// Queue helpers
-
-	@Override
-	public int compareTo(final CacheRequest another) {
-		return priority.isHigherPriorityThan(another.priority)
-				? -1
-				: (another.priority.isHigherPriorityThan(priority) ? 1 : 0);
-	}
-
-	// Callbacks
-
-	private void onCallbackException(@NonNull final Throwable t) {
-		Log.e("CacheRequest", "Exception thrown from callback", t);
-		BugReportActivity.handleGlobalError(context, t);
-	}
-
-	public void notifyDataStreamAvailable(
-			@NonNull final GenericFactory<SeekableInputStream, IOException> streamFactory,
-			final TimestampUTC timestamp,
-			@NonNull final UUID session,
-			final boolean fromCache,
-			@Nullable final String mimetype) {
-
-		mCallbacks.onDataStreamAvailable(streamFactory, timestamp, session, fromCache, mimetype);
-	}
-
-	public void notifyDataStreamComplete(
-			@NonNull final GenericFactory<SeekableInputStream, IOException> streamFactory,
-			final TimestampUTC timestamp,
-			@NonNull final UUID session,
-			final boolean fromCache,
-			@Nullable final String mimetype) {
-
-		mCallbacks.onDataStreamComplete(streamFactory, timestamp, session, fromCache, mimetype);
-	}
-
-	public void notifyFailure(@NonNull final RRError error) {
-
-		try {
-			mCallbacks.onFailure(error);
-
-		} catch(final Throwable t1) {
-			onCallbackException(t1);
-		}
-	}
-
-	public void notifyProgress(
-			final boolean authorizationInProgress,
-			final long bytesRead,
-			final long totalBytes) {
-		try {
-			mCallbacks.onProgress(authorizationInProgress, bytesRead, totalBytes);
-		} catch(final Throwable t) {
-			onCallbackException(t);
-		}
-	}
-
-	public void notifyCacheFileWritten(
-			final CacheManager.ReadableCacheFile cacheFile,
-			final TimestampUTC timestamp,
-			final UUID session,
-			final boolean fromCache,
-			final String mimetype) {
-		try {
-			mCallbacks.onCacheFileWritten(cacheFile, timestamp, session, fromCache, mimetype);
-		} catch(final Throwable t) {
-			onCallbackException(t);
-		}
-	}
-
-	public void notifyDownloadNecessary() {
-		try {
-			mCallbacks.onDownloadNecessary();
-		} catch(final Throwable t1) {
-
-			Log.e("CacheRequest", "Exception thrown by onDownloadNecessary", t1);
-
-			try {
-				onCallbackException(t1);
-			} catch(final Throwable t2) {
-				Log.e("CacheRequest", "Exception thrown by onCallbackException", t2);
-				BugReportActivity.addGlobalError(new RRError(null, null, true, t1));
-				BugReportActivity.handleGlobalError(context, t2);
-			}
-		}
-	}
-
-	public void notifyDownloadStarted() {
-		try {
-			mCallbacks.onDownloadStarted();
-		} catch(final Throwable t1) {
-
-			Log.e("CacheRequest", "Exception thrown by onDownloadStarted", t1);
-
-			try {
-				onCallbackException(t1);
-			} catch(final Throwable t2) {
-				Log.e("CacheRequest", "Exception thrown by onCallbackException", t2);
-				BugReportActivity.addGlobalError(new RRError(null, null, true, t1));
-				BugReportActivity.handleGlobalError(context, t2);
-			}
-		}
-	}
+            try {
+                onCallbackException(t1)
+            } catch (t2: Throwable) {
+                Log.e("CacheRequest", "Exception thrown by onCallbackException", t2)
+                addGlobalError(RRError(null, null, true, t1))
+                handleGlobalError(context, t2)
+            }
+        }
+    }
 }

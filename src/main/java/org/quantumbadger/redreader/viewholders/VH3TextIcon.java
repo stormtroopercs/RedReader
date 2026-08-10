@@ -12,68 +12,62 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.viewholders
 
-package org.quantumbadger.redreader.viewholders;
-
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import androidx.appcompat.widget.LinearLayoutCompat;
-import androidx.recyclerview.widget.RecyclerView;
-
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.RRThemeAttributes;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementLinkButton;
-import org.quantumbadger.redreader.reddit.prepared.html.HtmlRawElement;
+import android.view.View
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.widget.LinearLayoutCompat
+import androidx.recyclerview.widget.RecyclerView
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.RRThemeAttributes
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementLinkButton
+import org.quantumbadger.redreader.reddit.prepared.html.HtmlRawElement.LinkButtonDetails
 
 /**
  * A view holder for a three line, text and icon list item, which can have link buttons.
  */
-public class VH3TextIcon extends RecyclerView.ViewHolder {
+class VH3TextIcon(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    val textHoldingLayout: LinearLayout?
 
-	public final LinearLayout textHoldingLayout;
+    val text: TextView?
+    val text2: TextView?
+    val text3: TextView?
+    val icon: ImageView?
+    val extra: LinearLayoutCompat
 
-	public final TextView text;
-	public final TextView text2;
-	public final TextView text3;
-	public final ImageView icon;
-	public final LinearLayoutCompat extra;
+    var bindingId: Long = 0
 
-	public long bindingId = 0;
+    init {
+        textHoldingLayout = itemView.findViewById<LinearLayout?>(R.id.recycler_text_layout)
 
-	public VH3TextIcon(final View itemView) {
-		super(itemView);
+        text = itemView.findViewById<TextView?>(R.id.recycler_item_text)
+        text2 = itemView.findViewById<TextView?>(R.id.recycler_item_2_text)
+        text3 = itemView.findViewById<TextView?>(R.id.recycler_item_3_text)
+        icon = itemView.findViewById<ImageView?>(R.id.recycler_item_icon)
+        extra = itemView.findViewById<LinearLayoutCompat>(R.id.recycler_item_extra)
+    }
 
-		textHoldingLayout = itemView.findViewById(R.id.recycler_text_layout);
+    fun removeExtras() {
+        extra.removeAllViews()
+    }
 
-		text = itemView.findViewById(R.id.recycler_item_text);
-		text2 = itemView.findViewById(R.id.recycler_item_2_text);
-		text3 = itemView.findViewById(R.id.recycler_item_3_text);
-		icon = itemView.findViewById(R.id.recycler_item_icon);
-		extra = itemView.findViewById(R.id.recycler_item_extra);
-	}
+    fun addLinkButton(activity: BaseActivity, url: UriString) {
+        val linkButton = BodyElementLinkButton(LinkButtonDetails(url.value, url))
 
-	public void removeExtras() {
-		extra.removeAllViews();
-	}
+        val linkButtonView =
+            linkButton.generateView(
+                activity,
+                RRThemeAttributes(activity.getApplicationContext()).rrCommentBodyCol,
+                13.0f,
+                true
+            )
 
-	public void addLinkButton(final BaseActivity activity, final UriString url) {
-		final BodyElementLinkButton linkButton
-				= new BodyElementLinkButton(new HtmlRawElement.LinkButtonDetails(url.value, url));
-
-		final View linkButtonView =
-				linkButton.generateView(
-						activity,
-						new RRThemeAttributes(activity.getApplicationContext()).rrCommentBodyCol,
-						13.0f,
-						true);
-
-		extra.addView(linkButtonView);
-	}
+        extra.addView(linkButtonView)
+    }
 }

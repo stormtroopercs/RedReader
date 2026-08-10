@@ -12,102 +12,94 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.liststatus
 
-package org.quantumbadger.redreader.views.liststatus;
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
+import android.text.TextUtils
+import android.widget.LinearLayout
+import android.widget.TextView
+import org.quantumbadger.redreader.R.string
+import java.util.Locale
 
-import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.text.TextUtils;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.R;
+class LoadingView(
+    context: Context?,
+    initialText: String,
+    progressBarEnabled: Boolean,
+    indeterminate: Boolean
+) : StatusListItemView(context) {
+    private val textView: TextView?
 
-import java.util.Locale;
+    private val loadingHandler: Handler = object : Handler(Looper.getMainLooper()) {
+        override fun handleMessage(msg: Message) {
+            if (textView != null) {
+                textView.setText((msg.obj as String).uppercase(Locale.getDefault()))
+            }
 
-public final class LoadingView extends StatusListItemView {
+            if (msg.what == LOADING_DONE) {
+                hideNoAnim()
+            }
+        }
+    }
 
-	private final TextView textView;
+    fun setIndeterminate(textRes: Int) {
+        sendMessage(getContext().getString(textRes), LOADING_INDETERMINATE)
+    }
 
-	private static final int LOADING_INDETERMINATE = -1;
-	private static final int LOADING_DONE = -2;
+    fun setProgress(textRes: Int, fraction: Float) {
+        sendMessage(getContext().getString(textRes), Math.round(fraction * 100))
+    }
 
-	private final Handler loadingHandler = new Handler(Looper.getMainLooper()) {
-		@Override
-		public void handleMessage(@NonNull final Message msg) {
+    fun setDone(textRes: Int) {
+        sendMessage(getContext().getString(textRes), LOADING_DONE)
+    }
 
-			if(textView != null) {
-				textView.setText(((String)msg.obj).toUpperCase(Locale.getDefault()));
-			}
+    private fun sendMessage(text: String?, what: Int) {
+        val msg = Message.obtain()
+        msg.obj = text
+        msg.what = what
+        loadingHandler.sendMessage(msg)
+    }
 
-			if(msg.what == LOADING_DONE) {
-				hideNoAnim();
-			}
-		}
-	};
+    @JvmOverloads
+    constructor(
+        context: Context,
+        initialTextRes: Int = string.download_waiting,
+        progressBarEnabled: Boolean = true,
+        indeterminate: Boolean = true
+    ) : this(
+        context,
+        context.getString(initialTextRes),
+        progressBarEnabled,
+        indeterminate
+    )
 
-	public void setIndeterminate(final int textRes) {
-		sendMessage(getContext().getString(textRes), LOADING_INDETERMINATE);
-	}
+    init {
+        val layout = LinearLayout(context)
+        layout.setOrientation(LinearLayout.VERTICAL)
 
-	public void setProgress(final int textRes, final float fraction) {
-		sendMessage(getContext().getString(textRes), Math.round(fraction * 100));
-	}
+        textView = TextView(context)
+        textView.setText(initialText.uppercase(Locale.getDefault()))
+        textView.setTextSize(13.0f)
+        textView.setPadding(
+            (15 * dpScale).toInt(),
+            (10 * dpScale).toInt(),
+            (10 * dpScale).toInt(),
+            (10 * dpScale).toInt()
+        )
+        textView.setSingleLine(true)
+        textView.setEllipsize(TextUtils.TruncateAt.END)
+        layout.addView(textView)
 
-	public void setDone(final int textRes) {
-		sendMessage(getContext().getString(textRes), LOADING_DONE);
-	}
+        setContents(layout)
+    }
 
-	private void sendMessage(final String text, final int what) {
-		final Message msg = Message.obtain();
-		msg.obj = text;
-		msg.what = what;
-		loadingHandler.sendMessage(msg);
-	}
-
-	public LoadingView(final Context context) {
-		this(context, R.string.download_waiting, true, true);
-	}
-
-	public LoadingView(
-			final Context context,
-			final int initialTextRes,
-			final boolean progressBarEnabled,
-			final boolean indeterminate) {
-		this(
-				context,
-				context.getString(initialTextRes),
-				progressBarEnabled,
-				indeterminate);
-	}
-
-	public LoadingView(
-			final Context context,
-			final String initialText,
-			final boolean progressBarEnabled,
-			final boolean indeterminate) {
-
-		super(context);
-
-		final LinearLayout layout = new LinearLayout(context);
-		layout.setOrientation(LinearLayout.VERTICAL);
-
-		textView = new TextView(context);
-		textView.setText(initialText.toUpperCase(Locale.getDefault()));
-		textView.setTextSize(13.0f);
-		textView.setPadding(
-				(int)(15 * dpScale),
-				(int)(10 * dpScale),
-				(int)(10 * dpScale),
-				(int)(10 * dpScale));
-		textView.setSingleLine(true);
-		textView.setEllipsize(TextUtils.TruncateAt.END);
-		layout.addView(textView);
-
-		setContents(layout);
-	}
+    companion object {
+        private val LOADING_INDETERMINATE = -1
+        private val LOADING_DONE = -2
+    }
 }

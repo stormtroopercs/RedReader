@@ -12,83 +12,80 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.content.Context
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.common.PrefsUtility.AppearanceCommentHeaderItem
+import java.util.EnumSet
 
-import android.content.Context;
-import android.content.res.TypedArray;
+class RRThemeAttributes(context: Context) {
+    val rrCommentHeaderBoldCol: Int
+    val rrCommentHeaderAuthorCol: Int
+    val rrPostSubtitleUpvoteCol: Int
+    val rrPostSubtitleDownvoteCol: Int
+    val rrFlairBackCol: Int
+    val rrFlairTextCol: Int
+    val rrGoldBackCol: Int
+    val rrGoldTextCol: Int
+    val rrCommentHeaderCol: Int
+    val rrCommentBodyCol: Int
+    val rrMainTextCol: Int
+    val colorAccent: Int
+    val rrCrosspostBackCol: Int
+    val rrCrosspostTextCol: Int
 
-import org.quantumbadger.redreader.R;
+    private val mCommentHeaderItems: EnumSet<AppearanceCommentHeaderItem?>
 
-import java.util.EnumSet;
+    val rrCommentFontScale: Float
+    val rrCommentHeaderFontScale: Float
 
-public class RRThemeAttributes {
+    init {
+        val appearance = context.obtainStyledAttributes(
+            intArrayOf(
+                R.attr.rrCommentHeaderBoldCol,
+                R.attr.rrCommentHeaderAuthorCol,
+                R.attr.rrPostSubtitleUpvoteCol,
+                R.attr.rrPostSubtitleDownvoteCol,
+                R.attr.rrFlairBackCol,
+                R.attr.rrFlairTextCol,
+                R.attr.rrGoldBackCol,
+                R.attr.rrGoldTextCol,
+                R.attr.rrCommentHeaderCol,
+                R.attr.rrCommentBodyCol,
+                R.attr.rrMainTextCol,
+                androidx.appcompat.R.attr.colorAccent,
+                R.attr.rrCrosspostBackCol,
+                R.attr.rrCrosspostTextCol
+            )
+        )
 
-	public final int rrCommentHeaderBoldCol;
-	public final int rrCommentHeaderAuthorCol;
-	public final int rrPostSubtitleUpvoteCol;
-	public final int rrPostSubtitleDownvoteCol;
-	public final int rrFlairBackCol;
-	public final int rrFlairTextCol;
-	public final int rrGoldBackCol;
-	public final int rrGoldTextCol;
-	public final int rrCommentHeaderCol;
-	public final int rrCommentBodyCol;
-	public final int rrMainTextCol;
-	public final int colorAccent;
-	public final int rrCrosspostBackCol;
-	public final int rrCrosspostTextCol;
+        rrCommentHeaderBoldCol = appearance.getColor(0, 255)
+        rrCommentHeaderAuthorCol = appearance.getColor(1, 255)
+        rrPostSubtitleUpvoteCol = appearance.getColor(2, 255)
+        rrPostSubtitleDownvoteCol = appearance.getColor(3, 255)
+        rrFlairBackCol = appearance.getColor(4, 0)
+        rrFlairTextCol = appearance.getColor(5, 255)
+        rrGoldBackCol = appearance.getColor(6, 0)
+        rrGoldTextCol = appearance.getColor(7, 255)
+        rrCommentHeaderCol = appearance.getColor(8, 255)
+        rrCommentBodyCol = appearance.getColor(9, 255)
+        rrMainTextCol = appearance.getColor(10, 255)
+        colorAccent = appearance.getColor(11, 255)
+        rrCrosspostBackCol = appearance.getColor(12, 255)
+        rrCrosspostTextCol = appearance.getColor(13, 255)
 
-	private final EnumSet<PrefsUtility.AppearanceCommentHeaderItem> mCommentHeaderItems;
+        appearance.recycle()
 
-	public final float rrCommentFontScale;
-	public final float rrCommentHeaderFontScale;
+        mCommentHeaderItems = PrefsUtility.appearance_comment_header_items()
 
-	public RRThemeAttributes(final Context context) {
+        rrCommentFontScale = PrefsUtility.appearance_fontscale_bodytext()
+        rrCommentHeaderFontScale = PrefsUtility.appearance_fontscale_comment_headers()
+    }
 
-		final TypedArray appearance = context.obtainStyledAttributes(new int[] {
-				R.attr.rrCommentHeaderBoldCol,
-				R.attr.rrCommentHeaderAuthorCol,
-				R.attr.rrPostSubtitleUpvoteCol,
-				R.attr.rrPostSubtitleDownvoteCol,
-				R.attr.rrFlairBackCol,
-				R.attr.rrFlairTextCol,
-				R.attr.rrGoldBackCol,
-				R.attr.rrGoldTextCol,
-				R.attr.rrCommentHeaderCol,
-				R.attr.rrCommentBodyCol,
-				R.attr.rrMainTextCol,
-				androidx.appcompat.R.attr.colorAccent,
-				R.attr.rrCrosspostBackCol,
-				R.attr.rrCrosspostTextCol
-		});
-
-		rrCommentHeaderBoldCol = appearance.getColor(0, 255);
-		rrCommentHeaderAuthorCol = appearance.getColor(1, 255);
-		rrPostSubtitleUpvoteCol = appearance.getColor(2, 255);
-		rrPostSubtitleDownvoteCol = appearance.getColor(3, 255);
-		rrFlairBackCol = appearance.getColor(4, 0);
-		rrFlairTextCol = appearance.getColor(5, 255);
-		rrGoldBackCol = appearance.getColor(6, 0);
-		rrGoldTextCol = appearance.getColor(7, 255);
-		rrCommentHeaderCol = appearance.getColor(8, 255);
-		rrCommentBodyCol = appearance.getColor(9, 255);
-		rrMainTextCol = appearance.getColor(10, 255);
-		colorAccent = appearance.getColor(11, 255);
-		rrCrosspostBackCol = appearance.getColor(12, 255);
-		rrCrosspostTextCol = appearance.getColor(13, 255);
-
-		appearance.recycle();
-
-		mCommentHeaderItems = PrefsUtility.appearance_comment_header_items();
-
-		rrCommentFontScale = PrefsUtility.appearance_fontscale_bodytext();
-		rrCommentHeaderFontScale = PrefsUtility.appearance_fontscale_comment_headers();
-	}
-
-	public boolean shouldShow(final PrefsUtility.AppearanceCommentHeaderItem type) {
-		return mCommentHeaderItems.contains(type);
-	}
+    fun shouldShow(type: AppearanceCommentHeaderItem?): Boolean {
+        return mCommentHeaderItems.contains(type)
+    }
 }

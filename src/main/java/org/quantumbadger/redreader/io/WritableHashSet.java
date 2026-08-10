@@ -12,165 +12,158 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.io
 
-package org.quantumbadger.redreader.io;
+import org.quantumbadger.redreader.common.UnexpectedInternalStateException
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.fromUtcMs
+import org.quantumbadger.redreader.io.WritableObject.WritableField
+import org.quantumbadger.redreader.io.WritableObject.WritableObjectKey
+import org.quantumbadger.redreader.io.WritableObject.WritableObjectTimestamp
+import org.quantumbadger.redreader.io.WritableObject.WritableObjectVersion
+import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
+import kotlin.collections.Iterable
+import kotlin.collections.MutableCollection
+import kotlin.collections.MutableIterator
 
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.common.UnexpectedInternalStateException;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
+class WritableHashSet : WritableObject<String?>, Iterable<String?> {
+    @Transient
+    private var hashSet: HashSet<String>? = null
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
+    @WritableField
+    private var serialised: String? = null
 
-public class WritableHashSet implements WritableObject<String>, Iterable<String> {
+    @WritableObjectKey
+    private val key: String?
 
-	@WritableObjectVersion
-	public static int DB_VERSION = 1;
+    @WritableObjectTimestamp
+    private val timestamp: Long
 
-	private transient HashSet<String> hashSet = null;
-	@WritableField
-	private String serialised;
+    constructor(
+        data: HashSet<String>?,
+        timestamp: TimestampUTC,
+        key: String?
+    ) {
+        this.hashSet = data
+        this.timestamp = timestamp.toUtcMs()
+        this.key = key
+        serialised = Companion.listToEscapedString(hashSet!!)
+    }
 
-	@WritableObjectKey
-	private final String key;
-	@WritableObjectTimestamp
-	private final long timestamp;
+    private constructor(serializedData: String?, timestamp: Long, key: String?) {
+        this.timestamp = timestamp
+        this.key = key
+        serialised = serializedData
+    }
 
-	public WritableHashSet(
-			final HashSet<String> data,
-			final TimestampUTC timestamp,
-			final String key) {
+    constructor(creationData: WritableObject.CreationData) {
+        this.timestamp = creationData.timestamp
+        this.key = creationData.key
+    }
 
-		this.hashSet = data;
-		this.timestamp = timestamp.toUtcMs();
-		this.key = key;
-		serialised = listToEscapedString(hashSet);
-	}
+    override fun toString(): String {
+        throw UnexpectedInternalStateException(
+            "Using toString() is the wrong way to serialise a WritableHashSet"
+        )
+    }
 
-	private WritableHashSet(final String serializedData, final long timestamp, final String key) {
-		this.timestamp = timestamp;
-		this.key = key;
-		serialised = serializedData;
-	}
+    fun serializeWithMetadata(): String {
+        val result = ArrayList<String>(3)
+        result.add(serialised!!)
+        result.add(timestamp.toString())
+        result.add(key!!)
+        return listToEscapedString(result)
+    }
 
-	public WritableHashSet(final CreationData creationData) {
-		this.timestamp = creationData.timestamp;
-		this.key = creationData.key;
-	}
+    @Synchronized
+    fun toHashset(): HashSet<String> {
+        if (hashSet != null) {
+            return hashSet!!
+        }
+        return (HashSet<String>(escapedStringToList(serialised)).also { hashSet = it })
+    }
 
-	@Override
-	public String toString() {
-		throw new UnexpectedInternalStateException(
-				"Using toString() is the wrong way to serialise a WritableHashSet");
-	}
+    override fun getKey(): String? {
+        return key
+    }
 
-	public String serializeWithMetadata() {
-		final ArrayList<String> result = new ArrayList<>(3);
-		result.add(serialised);
-		result.add(String.valueOf(timestamp));
-		result.add(key);
-		return listToEscapedString(result);
-	}
+    override fun getTimestamp(): TimestampUTC {
+        return fromUtcMs(timestamp)
+    }
 
-	public static WritableHashSet unserializeWithMetadata(final String raw) {
-		final ArrayList<String> data = escapedStringToList(raw);
-		return new WritableHashSet(data.get(0), Long.valueOf(data.get(1)), data.get(2));
-	}
+    override fun iterator(): MutableIterator<String?> {
+        return toHashset().iterator()
+    }
 
-	public synchronized HashSet<String> toHashset() {
-		if(hashSet != null) {
-			return hashSet;
-		}
-		return (hashSet = new HashSet<>(escapedStringToList(serialised)));
-	}
+    companion object {
+        @WritableObjectVersion
+        var DB_VERSION: Int = 1
 
-	@Override
-	public String getKey() {
-		return key;
-	}
+        fun unserializeWithMetadata(raw: String?): WritableHashSet {
+            val data: ArrayList<String?> = escapedStringToList(raw)
+            return WritableHashSet(data.get(0), data.get(1)!!.toLong(), data.get(2))
+        }
 
-	@Override
-	public TimestampUTC getTimestamp() {
-		return TimestampUTC.fromUtcMs(timestamp);
-	}
+        fun listToEscapedString(list: MutableCollection<String>): String {
+            if (list.isEmpty()) {
+                return ""
+            }
 
-	public static String listToEscapedString(final Collection<String> list) {
+            val sb = StringBuilder()
 
-		if(list.isEmpty()) {
-			return "";
-		}
+            for (str in list) {
+                for (i in 0..<str.length) {
+                    val c = str.get(i)
 
-		final StringBuilder sb = new StringBuilder();
+                    when (c) {
+                        '\\' -> sb.append("\\\\")
+                        ';' -> sb.append("\\;")
+                        else -> sb.append(c)
+                    }
+                }
 
-		for(final String str : list) {
-			for(int i = 0; i < str.length(); i++) {
+                sb.append(';')
+            }
 
-				final char c = str.charAt(i);
+            return sb.toString()
+        }
 
-				switch(c) {
-					case '\\':
-						sb.append("\\\\");
-						break;
-					case ';':
-						sb.append("\\;");
-						break;
-					default:
-						sb.append(c);
-						break;
-				}
-			}
+        fun escapedStringToList(str: String?): ArrayList<String?> {
+            var str = str
+            val result = ArrayList<String?>()
 
-			sb.append(';');
-		}
+            if (str != null) {
+                // Workaround to improve parsing of lists saved by older versions of the app
 
-		return sb.toString();
-	}
+                if (!str.isEmpty() && !str.endsWith(";")) {
+                    str += ";"
+                }
 
-	public static ArrayList<String> escapedStringToList(String str) {
+                var isEscaped = false
+                val sb = StringBuilder()
 
-		final ArrayList<String> result = new ArrayList<>();
+                for (i in 0..<str.length) {
+                    val c = str.get(i)
 
-		if(str != null) {
+                    if (c == ';' && !isEscaped) {
+                        result.add(sb.toString())
+                        sb.setLength(0)
+                    } else if (c == '\\') {
+                        if (isEscaped) {
+                            sb.append('\\')
+                        }
+                    } else {
+                        sb.append(c)
+                    }
 
-			// Workaround to improve parsing of lists saved by older versions of the app
-			if(!str.isEmpty() && !str.endsWith(";")) {
-				str += ";";
-			}
+                    isEscaped = c == '\\' && !isEscaped
+                }
+            }
 
-			boolean isEscaped = false;
-			final StringBuilder sb = new StringBuilder();
-
-			for(int i = 0; i < str.length(); i++) {
-
-				final char c = str.charAt(i);
-
-				if(c == ';' && !isEscaped) {
-					result.add(sb.toString());
-					sb.setLength(0);
-
-				} else if(c == '\\') {
-					if(isEscaped) {
-						sb.append('\\');
-					}
-
-				} else {
-					sb.append(c);
-				}
-
-				isEscaped = c == '\\' && !isEscaped;
-			}
-		}
-
-		return result;
-	}
-
-	@NonNull
-	@Override
-	public Iterator<String> iterator() {
-		return toHashset().iterator();
-	}
+            return result
+        }
+    }
 }

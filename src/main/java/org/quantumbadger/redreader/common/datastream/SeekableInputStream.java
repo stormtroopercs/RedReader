@@ -12,39 +12,36 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.datastream
 
-package org.quantumbadger.redreader.common.datastream;
+import java.io.IOException
+import java.io.InputStream
 
-import androidx.annotation.NonNull;
+abstract class SeekableInputStream : InputStream() {
+    private var mMark = 0
 
-import java.io.IOException;
-import java.io.InputStream;
+    abstract val position: Long
 
-public abstract class SeekableInputStream extends InputStream {
+    @Throws(IOException::class)
+    abstract fun seek(position: Long)
 
-	private int mMark;
+    override fun mark(readlimit: Int) {
+        mMark = this.position.toInt()
+    }
 
-	public abstract long getPosition();
+    @Throws(IOException::class)
+    override fun reset() {
+        seek(mMark.toLong())
+    }
 
-	public abstract void seek(long position) throws IOException;
+    override fun markSupported(): Boolean {
+        return true
+    }
 
-	@Override
-	public final void mark(final int readlimit) {
-		mMark = (int)getPosition();
-	}
-
-	@Override
-	public final void reset() throws IOException {
-		seek(mMark);
-	}
-
-	@Override
-	public final boolean markSupported() {
-		return true;
-	}
-
-	public abstract void readRemainingAsBytes(
-			@NonNull ByteArrayCallback callback) throws IOException;
+    @Throws(IOException::class)
+    abstract fun readRemainingAsBytes(
+        callback: ByteArrayCallback
+    )
 }

@@ -12,58 +12,52 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+abstract class RRAnimation : RRChoreographer.Callback {
+    private var mFirstFrameNanos: Long = -1
 
-public abstract class RRAnimation implements RRChoreographer.Callback {
+    private var mStarted = false
+    private var mStopped = false
 
-	private long mFirstFrameNanos = -1;
+    fun start() {
+        if (mStarted) {
+            throw RuntimeException("Attempted to start animation twice!")
+        }
 
-	private boolean mStarted = false;
-	private boolean mStopped = false;
+        mStarted = true
 
-	public final void start() {
+        RRChoreographer.Companion.INSTANCE.postFrameCallback(this)
+    }
 
-		if(mStarted) {
-			throw new RuntimeException("Attempted to start animation twice!");
-		}
+    fun stop() {
+        if (!mStarted) {
+            throw RuntimeException("Attempted to stop animation before it's started!")
+        }
 
-		mStarted = true;
+        if (mStopped) {
+            throw RuntimeException("Attempted to stop animation twice!")
+        }
 
-		RRChoreographer.INSTANCE.postFrameCallback(this);
-	}
+        mStopped = true
+    }
 
-	public final void stop() {
+    // Return true to continue animating
+    protected abstract fun handleFrame(nanosSinceAnimationStart: Long): Boolean
 
-		if(!mStarted) {
-			throw new RuntimeException("Attempted to stop animation before it's started!");
-		}
+    override fun doFrame(frameTimeNanos: Long) {
+        if (mStopped) {
+            return
+        }
 
-		if(mStopped) {
-			throw new RuntimeException("Attempted to stop animation twice!");
-		}
+        if (mFirstFrameNanos == -1L) {
+            mFirstFrameNanos = frameTimeNanos
+        }
 
-		mStopped = true;
-	}
-
-	// Return true to continue animating
-	protected abstract boolean handleFrame(final long nanosSinceAnimationStart);
-
-	@Override
-	public final void doFrame(final long frameTimeNanos) {
-
-		if(mStopped) {
-			return;
-		}
-
-		if(mFirstFrameNanos == -1) {
-			mFirstFrameNanos = frameTimeNanos;
-		}
-
-		if(handleFrame(frameTimeNanos - mFirstFrameNanos)) {
-			RRChoreographer.INSTANCE.postFrameCallback(this);
-		}
-	}
+        if (handleFrame(frameTimeNanos - mFirstFrameNanos)) {
+            RRChoreographer.Companion.INSTANCE.postFrameCallback(this)
+        }
+    }
 }

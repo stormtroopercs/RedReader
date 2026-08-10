@@ -12,209 +12,184 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
 
-package org.quantumbadger.redreader.reddit;
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.adapters.GroupedRecyclerViewAdapter
+import org.quantumbadger.redreader.common.RRThemeAttributes
+import org.quantumbadger.redreader.fragments.CommentListingFragment
+import org.quantumbadger.redreader.reddit.kthings.RedditMore
+import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
+import org.quantumbadger.redreader.reddit.prepared.RedditRenderableComment
+import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
+import org.quantumbadger.redreader.views.LoadMoreCommentsView
+import org.quantumbadger.redreader.views.RedditCommentView
 
-import android.content.Context;
-import android.view.View;
-import android.view.ViewGroup;
+class RedditCommentListItem
 
-import androidx.recyclerview.widget.RecyclerView;
+    : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder?> {
+    enum class Type {
+        COMMENT, LOAD_MORE
+    }
 
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.adapters.GroupedRecyclerViewAdapter;
-import org.quantumbadger.redreader.common.RRThemeAttributes;
-import org.quantumbadger.redreader.fragments.CommentListingFragment;
-import org.quantumbadger.redreader.reddit.kthings.RedditMore;
-import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
-import org.quantumbadger.redreader.reddit.prepared.RedditRenderableComment;
-import org.quantumbadger.redreader.reddit.url.RedditURLParser;
-import org.quantumbadger.redreader.views.LoadMoreCommentsView;
-import org.quantumbadger.redreader.views.RedditCommentView;
+    private val mType: Type
 
-public class RedditCommentListItem
-		extends GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder> {
+    val indent: Int
+    val parent: RedditCommentListItem?
+    private val mFragment: CommentListingFragment?
+    private val mActivity: BaseActivity?
+    private val mCommentListingUrl: RedditURL?
 
-	public enum Type {
-		COMMENT, LOAD_MORE
-	}
+    private val mComment: RedditRenderableComment?
+    private val mMoreComments: RedditMore?
 
-	private final Type mType;
+    private val mChangeDataManager: RedditChangeDataManager
 
-	private final int mIndent;
-	private final RedditCommentListItem mParent;
-	private final CommentListingFragment mFragment;
-	private final BaseActivity mActivity;
-	private final RedditURLParser.RedditURL mCommentListingUrl;
+    constructor(
+        comment: RedditRenderableComment?,
+        parent: RedditCommentListItem?,
+        fragment: CommentListingFragment?,
+        activity: BaseActivity?,
+        commentListingUrl: RedditURL?
+    ) {
+        this.parent = parent
+        mFragment = fragment
+        mActivity = activity
+        mCommentListingUrl = commentListingUrl
+        mType = Type.COMMENT
+        mComment = comment
+        mMoreComments = null
 
-	private final RedditRenderableComment mComment;
-	private final RedditMore mMoreComments;
+        if (parent == null) {
+            this.indent = 0
+        } else {
+            this.indent = parent.indent + 1
+        }
 
-	private final RedditChangeDataManager mChangeDataManager;
+        mChangeDataManager = RedditChangeDataManager.Companion.getInstance(
+            RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
+        )
+    }
 
-	public RedditCommentListItem(
-			final RedditRenderableComment comment,
-			final RedditCommentListItem parent,
-			final CommentListingFragment fragment,
-			final BaseActivity activity,
-			final RedditURLParser.RedditURL commentListingUrl) {
+    constructor(
+        moreComments: RedditMore?,
+        parent: RedditCommentListItem?,
+        fragment: CommentListingFragment?,
+        activity: BaseActivity?,
+        commentListingUrl: RedditURL?
+    ) {
+        this.parent = parent
+        mFragment = fragment
+        mActivity = activity
+        mCommentListingUrl = commentListingUrl
+        mType = Type.LOAD_MORE
+        mComment = null
+        mMoreComments = moreComments
 
-		mParent = parent;
-		mFragment = fragment;
-		mActivity = activity;
-		mCommentListingUrl = commentListingUrl;
-		mType = Type.COMMENT;
-		mComment = comment;
-		mMoreComments = null;
+        if (parent == null) {
+            this.indent = 0
+        } else {
+            this.indent = parent.indent + 1
+        }
 
-		if(parent == null) {
-			mIndent = 0;
-		} else {
-			mIndent = parent.getIndent() + 1;
-		}
+        mChangeDataManager = RedditChangeDataManager.Companion.getInstance(
+            RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
+        )
+    }
 
-		mChangeDataManager = RedditChangeDataManager.getInstance(
-				RedditAccountManager.getInstance(activity).getDefaultAccount());
-	}
+    val isComment: Boolean
+        get() = mType == Type.COMMENT
 
-	public RedditCommentListItem(
-			final RedditMore moreComments,
-			final RedditCommentListItem parent,
-			final CommentListingFragment fragment,
-			final BaseActivity activity,
-			final RedditURLParser.RedditURL commentListingUrl) {
+    val isLoadMore: Boolean
+        get() = mType == Type.LOAD_MORE
 
-		mParent = parent;
-		mFragment = fragment;
-		mActivity = activity;
-		mCommentListingUrl = commentListingUrl;
-		mType = Type.LOAD_MORE;
-		mComment = null;
-		mMoreComments = moreComments;
+    fun asComment(): RedditRenderableComment? {
+        if (!this.isComment) {
+            throw RuntimeException("Called asComment() on non-comment item")
+        }
 
-		if(parent == null) {
-			mIndent = 0;
-		} else {
-			mIndent = parent.getIndent() + 1;
-		}
+        return mComment
+    }
 
-		mChangeDataManager = RedditChangeDataManager.getInstance(
-				RedditAccountManager.getInstance(activity).getDefaultAccount());
-	}
+    fun asLoadMore(): RedditMore? {
+        if (!this.isLoadMore) {
+            throw RuntimeException("Called asLoadMore() on non-load-more item")
+        }
 
-	public boolean isComment() {
-		return mType == Type.COMMENT;
-	}
+        return mMoreComments
+    }
 
-	public boolean isLoadMore() {
-		return mType == Type.LOAD_MORE;
-	}
+    fun isCollapsed(changeDataManager: RedditChangeDataManager): Boolean {
+        if (!this.isComment) {
+            return false
+        }
 
-	public RedditRenderableComment asComment() {
+        return mComment!!.isCollapsed(changeDataManager)
+    }
 
-		if(!isComment()) {
-			throw new RuntimeException("Called asComment() on non-comment item");
-		}
+    fun isHidden(changeDataManager: RedditChangeDataManager): Boolean {
+        if (this.parent != null) {
+            return parent.isCollapsed(changeDataManager) || parent.isHidden(
+                changeDataManager
+            )
+        }
 
-		return mComment;
-	}
+        return false
+    }
 
-	public RedditMore asLoadMore() {
+    override fun getViewType(): Class<*> {
+        if (this.isComment) {
+            return RedditCommentView::class.java
+        }
 
-		if(!isLoadMore()) {
-			throw new RuntimeException("Called asLoadMore() on non-load-more item");
-		}
+        if (this.isLoadMore) {
+            return LoadMoreCommentsView::class.java
+        }
 
-		return mMoreComments;
-	}
+        throw RuntimeException("Unknown item type")
+    }
 
-	public int getIndent() {
-		return mIndent;
-	}
+    override fun onCreateViewHolder(viewGroup: ViewGroup): RecyclerView.ViewHolder {
+        val context = viewGroup.getContext()
+        val view: View
 
-	public RedditCommentListItem getParent() {
-		return mParent;
-	}
+        if (this.isComment) {
+            view = RedditCommentView(
+                mActivity,
+                RRThemeAttributes(context),
+                mFragment,
+                mFragment
+            )
+        } else if (this.isLoadMore) {
+            view = LoadMoreCommentsView(
+                context,
+                mCommentListingUrl
+            )
+        } else {
+            throw RuntimeException("Unknown item type")
+        }
 
-	public boolean isCollapsed(final RedditChangeDataManager changeDataManager) {
+        return object : RecyclerView.ViewHolder(view) {}
+    }
 
-		if(!isComment()) {
-			return false;
-		}
+    override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder) {
+        if (this.isComment) {
+            (viewHolder.itemView as RedditCommentView).reset(mActivity, this)
+        } else if (this.isLoadMore) {
+            (viewHolder.itemView as LoadMoreCommentsView).reset(this)
+        } else {
+            throw RuntimeException("Unknown item type")
+        }
+    }
 
-		return mComment.isCollapsed(changeDataManager);
-
-	}
-
-	public boolean isHidden(final RedditChangeDataManager changeDataManager) {
-
-		if(mParent != null) {
-			return mParent.isCollapsed(changeDataManager) || mParent.isHidden(
-					changeDataManager);
-		}
-
-		return false;
-	}
-
-	@Override
-	public Class getViewType() {
-
-		if(isComment()) {
-			return RedditCommentView.class;
-		}
-
-		if(isLoadMore()) {
-			return LoadMoreCommentsView.class;
-		}
-
-		throw new RuntimeException("Unknown item type");
-	}
-
-	@Override
-	public RecyclerView.ViewHolder onCreateViewHolder(final ViewGroup viewGroup) {
-
-		final Context context = viewGroup.getContext();
-		final View view;
-
-		if(isComment()) {
-			view = new RedditCommentView(
-					mActivity,
-					new RRThemeAttributes(context),
-					mFragment,
-					mFragment);
-
-		} else if(isLoadMore()) {
-			view = new LoadMoreCommentsView(
-					context,
-					mCommentListingUrl);
-
-		} else {
-			throw new RuntimeException("Unknown item type");
-		}
-
-		return new RecyclerView.ViewHolder(view) {};
-	}
-
-	@Override
-	public void onBindViewHolder(final RecyclerView.ViewHolder viewHolder) {
-
-		if(isComment()) {
-			((RedditCommentView)viewHolder.itemView).reset(mActivity, this);
-
-		} else if(isLoadMore()) {
-			((LoadMoreCommentsView)viewHolder.itemView).reset(this);
-
-		} else {
-			throw new RuntimeException("Unknown item type");
-		}
-	}
-
-	@Override
-	public boolean isHidden() {
-		return isHidden(mChangeDataManager);
-	}
-
+    override fun isHidden(): Boolean {
+        return isHidden(mChangeDataManager)
+    }
 }

@@ -12,28 +12,20 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.displaylist
 
-package org.quantumbadger.redreader.views.glview.displaylist;
+import android.opengl.GLES20
+import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
-import android.opengl.GLES20;
-import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack;
+class RRGLRenderableBlend(entity: RRGLRenderable?) : RRGLRenderableRenderHooks(entity) {
+    override fun preRender(stack: RRGLMatrixStack?, time: Long) {
+        GLES20.glEnable(GLES20.GL_BLEND)
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+    }
 
-public class RRGLRenderableBlend extends RRGLRenderableRenderHooks {
-
-	public RRGLRenderableBlend(final RRGLRenderable entity) {
-		super(entity);
-	}
-
-	@Override
-	protected void preRender(final RRGLMatrixStack stack, final long time) {
-		GLES20.glEnable(GLES20.GL_BLEND);
-		GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-	}
-
-	@Override
-	protected void postRender(final RRGLMatrixStack stack, final long time) {
-		GLES20.glDisable(GLES20.GL_BLEND);
-	}
+    override fun postRender(stack: RRGLMatrixStack?, time: Long) {
+        GLES20.glDisable(GLES20.GL_BLEND)
+    }
 }

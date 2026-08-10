@@ -12,31 +12,20 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.adapters
 
-package org.quantumbadger.redreader.adapters;
+import android.content.Context
+import org.quantumbadger.redreader.reddit.RedditPostListItem
+import java.util.Collections
 
-import android.content.Context;
-import org.quantumbadger.redreader.reddit.RedditPostListItem;
+class PostListingManager(context: Context?) : RedditListingManager(context) {
+    var postCount: Int = 0
+        private set
 
-import java.util.Collection;
-import java.util.Collections;
-
-public class PostListingManager extends RedditListingManager {
-
-	private int mPostCount;
-
-	public PostListingManager(final Context context) {
-		super(context);
-	}
-
-	public void addPosts(final Collection<RedditPostListItem> posts) {
-		addItems(Collections.unmodifiableCollection(posts));
-		mPostCount += posts.size();
-	}
-
-	public int getPostCount() {
-		return mPostCount;
-	}
+    fun addPosts(posts: MutableCollection<RedditPostListItem?>) {
+        addItems(Collections.unmodifiableCollection<GroupedRecyclerViewAdapter.Item<*>?>(posts))
+        this.postCount += posts.size
+    }
 }

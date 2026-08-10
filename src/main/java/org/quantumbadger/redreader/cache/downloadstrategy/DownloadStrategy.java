@@ -12,21 +12,18 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache.downloadstrategy
 
-package org.quantumbadger.redreader.cache.downloadstrategy;
-
-import androidx.compose.runtime.Immutable;
-
-import org.quantumbadger.redreader.cache.CacheEntry;
+import androidx.compose.runtime.Immutable
+import org.quantumbadger.redreader.cache.CacheEntry
 
 @Immutable
-public interface DownloadStrategy {
+interface DownloadStrategy {
+    fun shouldDownloadWithoutCheckingCache(): Boolean
 
-	boolean shouldDownloadWithoutCheckingCache();
+    fun shouldDownloadIfCacheEntryFound(entry: CacheEntry?): Boolean
 
-	boolean shouldDownloadIfCacheEntryFound(final CacheEntry entry);
-
-	boolean shouldDownloadIfNotCached();
+    fun shouldDownloadIfNotCached(): Boolean
 }

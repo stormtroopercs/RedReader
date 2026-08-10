@@ -12,270 +12,221 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
 
-package org.quantumbadger.redreader.reddit.url;
+import android.content.Context
+import android.net.Uri
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.General.getUriQueryParameterNames
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.reddit.PostSort
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 
-import android.content.Context;
-import android.net.Uri;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.reddit.PostSort;
-import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType;
+class UserPostListingURL internal constructor(
+    val type: Type,
+    val user: String?,
+    order: PostSort?,
+    val limit: Int?,
+    val before: String?,
+    val after: RedditIdAndType?
+) : PostListingURL() {
+    val order: PostSort?
 
-import java.util.ArrayList;
-import java.util.List;
+    init {
+        this.order = if (order == PostSort.RISING) PostSort.NEW else order
+    }
 
-public class UserPostListingURL extends PostListingURL {
+    enum class Type {
+        SAVED, HIDDEN, UPVOTED, DOWNVOTED, SUBMITTED
+    }
 
-	public static UserPostListingURL getSaved(final String username) {
-		return new UserPostListingURL(Type.SAVED, username, null, null, null, null);
-	}
+    override fun after(newAfter: RedditIdAndType?): UserPostListingURL {
+        return UserPostListingURL(type, user, order, limit, before, newAfter)
+    }
 
-	public static UserPostListingURL getHidden(final String username) {
-		return new UserPostListingURL(Type.HIDDEN, username, null, null, null, null);
-	}
+    override fun limit(newLimit: Int?): UserPostListingURL {
+        return UserPostListingURL(type, user, order, newLimit, before, after)
+    }
 
-	public static UserPostListingURL getLiked(final String username) {
-		return new UserPostListingURL(Type.UPVOTED, username, null, null, null, null);
-	}
+    fun sort(newOrder: PostSort?): UserPostListingURL {
+        return UserPostListingURL(type, user, newOrder, limit, before, after)
+    }
 
-	public static UserPostListingURL getDisliked(final String username) {
-		return new UserPostListingURL(Type.DOWNVOTED, username, null, null, null, null);
-	}
+    override fun getOrder(): PostSort? {
+        return order
+    }
 
-	public static UserPostListingURL getSubmitted(final String username) {
-		return new UserPostListingURL(Type.SUBMITTED, username, null, null, null, null);
-	}
+    override fun generateJsonUri(): Uri? {
+        val builder = Uri.Builder()
+        builder.scheme(Reddit.getScheme())
+            .authority(Reddit.getDomain())
 
-	public final Type type;
-	public final String user;
-	public final PostSort order;
-	public final Integer limit;
-	public final String before;
-	public final RedditIdAndType after;
+        builder.appendEncodedPath("user")
+        builder.appendPath(user)
+        builder.appendEncodedPath(StringUtils.asciiLowercase(type.name))
 
-	UserPostListingURL(
-			final Type type,
-			final String user,
-			final PostSort order,
-			final Integer limit,
-			final String before,
-			final RedditIdAndType after) {
-		this.type = type;
-		this.user = user;
-		this.order = order == PostSort.RISING ? PostSort.NEW : order;
-		this.limit = limit;
-		this.before = before;
-		this.after = after;
-	}
+        if (order != null) {
+            order.addToUserPostListingUri(builder)
+        }
 
-	public enum Type {
-		SAVED, HIDDEN, UPVOTED, DOWNVOTED, SUBMITTED
-	}
+        if (before != null) {
+            builder.appendQueryParameter("before", before)
+        }
 
-	@Override
-	public UserPostListingURL after(final RedditIdAndType newAfter) {
-		return new UserPostListingURL(type, user, order, limit, before, newAfter);
-	}
+        if (after != null) {
+            builder.appendQueryParameter("after", after.value)
+        }
 
-	@Override
-	public UserPostListingURL limit(final Integer newLimit) {
-		return new UserPostListingURL(type, user, order, newLimit, before, after);
-	}
+        if (limit != null) {
+            builder.appendQueryParameter("limit", limit.toString())
+        }
 
-	public UserPostListingURL sort(final PostSort newOrder) {
-		return new UserPostListingURL(type, user, newOrder, limit, before, after);
-	}
+        builder.appendEncodedPath(".json")
 
-	@Override
-	public PostSort getOrder() {
-		return order;
-	}
+        return builder.build()
+    }
 
-	public static UserPostListingURL parse(final Uri uri) {
+    @RedditURLParser.PathType
+    override fun pathType(): Int {
+        return RedditURLParser.USER_POST_LISTING_URL
+    }
 
-		Integer limit = null;
-		String before = null;
-		RedditIdAndType after = null;
+    override fun humanReadablePath(): String? {
+        val path = super.humanReadablePath()
 
-		for(final String parameterKey : General.getUriQueryParameterNames(uri)) {
+        if (order == null || type != Type.SUBMITTED) {
+            return path
+        }
 
-			if(parameterKey.equalsIgnoreCase("after")) {
-				after = new RedditIdAndType(uri.getQueryParameter(parameterKey));
+        when (order) {
+            PostSort.CONTROVERSIAL_HOUR, PostSort.CONTROVERSIAL_DAY, PostSort.CONTROVERSIAL_WEEK, PostSort.CONTROVERSIAL_MONTH, PostSort.CONTROVERSIAL_YEAR, PostSort.CONTROVERSIAL_ALL, PostSort.TOP_HOUR, PostSort.TOP_DAY, PostSort.TOP_WEEK, PostSort.TOP_MONTH, PostSort.TOP_YEAR, PostSort.TOP_ALL -> {
+                val parts: Array<String?> =
+                    order.name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                return (path + "?sort=" + StringUtils.asciiLowercase(parts[0]!!)
+                        + "&t=" + StringUtils.asciiLowercase(parts[1]!!))
+            }
 
-			} else if(parameterKey.equalsIgnoreCase("before")) {
-				before = uri.getQueryParameter(parameterKey);
+            else -> return path + "?sort=" + StringUtils.asciiLowercase(order.name)
+        }
+    }
 
-			} else if(parameterKey.equalsIgnoreCase("limit")) {
-				try {
-					limit = Integer.parseInt(uri.getQueryParameter(parameterKey));
-				} catch(final Throwable ignored) {
-				}
-			}
-		}
+    override fun humanReadableName(context: Context, shorter: Boolean): String? {
+        val name: String
 
-		final String[] pathSegments;
-		{
-			final List<String> pathSegmentsList = uri.getPathSegments();
+        when (type) {
+            Type.SAVED -> name = context.getString(string.mainmenu_saved)
+            Type.HIDDEN -> name = context.getString(string.mainmenu_hidden)
+            Type.UPVOTED -> name = context.getString(string.mainmenu_upvoted)
+            Type.DOWNVOTED -> name = context.getString(string.mainmenu_downvoted)
+            Type.SUBMITTED -> name = context.getString(string.mainmenu_submitted)
+            else -> return super.humanReadableName(context, shorter)
+        }
 
-			final ArrayList<String> pathSegmentsFiltered = new ArrayList<>(
-					pathSegmentsList.size());
-			for(String segment : pathSegmentsList) {
+        if (shorter) {
+            return name
+        } else {
+            return String.format("%s (%s)", name, user)
+        }
+    }
 
-				while(StringUtils.asciiLowercase(segment).endsWith(".json")
-						|| StringUtils.asciiLowercase(segment).endsWith(".xml")) {
-					segment = segment.substring(0, segment.lastIndexOf('.'));
-				}
+    companion object {
+        fun getSaved(username: String?): UserPostListingURL {
+            return UserPostListingURL(Type.SAVED, username, null, null, null, null)
+        }
 
-				if(!segment.isEmpty()) {
-					pathSegmentsFiltered.add(segment);
-				}
-			}
+        fun getHidden(username: String?): UserPostListingURL {
+            return UserPostListingURL(Type.HIDDEN, username, null, null, null, null)
+        }
 
-			pathSegments
-					= pathSegmentsFiltered.toArray(new String[0]);
-		}
+        fun getLiked(username: String?): UserPostListingURL {
+            return UserPostListingURL(Type.UPVOTED, username, null, null, null, null)
+        }
 
-		final PostSort order;
-		if(pathSegments.length > 0) {
-			order = PostSort.parse(
-					uri.getQueryParameter("sort"),
-					uri.getQueryParameter("t"));
-		} else {
-			order = null;
-		}
+        fun getDisliked(username: String?): UserPostListingURL {
+            return UserPostListingURL(Type.DOWNVOTED, username, null, null, null, null)
+        }
 
-		if(pathSegments.length < 3) {
-			return null;
-		}
+        fun getSubmitted(username: String?): UserPostListingURL {
+            return UserPostListingURL(Type.SUBMITTED, username, null, null, null, null)
+        }
 
-		if(!pathSegments[0].equalsIgnoreCase("user") && !pathSegments[0].equalsIgnoreCase(
-				"u")) {
-			return null;
-		}
+        fun parse(uri: Uri): UserPostListingURL? {
+            var limit: Int? = null
+            var before: String? = null
+            var after: RedditIdAndType? = null
 
-		// TODO validate username with regex
-		final String username = pathSegments[1];
-		final String typeName = StringUtils.asciiUppercase(pathSegments[2]);
-		final Type type;
+            for (parameterKey in getUriQueryParameterNames(uri)) {
+                if (parameterKey.equals("after", ignoreCase = true)) {
+                    after = RedditIdAndType(uri.getQueryParameter(parameterKey)!!)
+                } else if (parameterKey.equals("before", ignoreCase = true)) {
+                    before = uri.getQueryParameter(parameterKey)
+                } else if (parameterKey.equals("limit", ignoreCase = true)) {
+                    try {
+                        limit = uri.getQueryParameter(parameterKey)!!.toInt()
+                    } catch (ignored: Throwable) {
+                    }
+                }
+            }
 
-		try {
-			type = Type.valueOf(typeName);
-		} catch(final Throwable t) {
-			return null;
-		}
+            val pathSegments: Array<String?>
+            run {
+                val pathSegmentsList = uri.getPathSegments()
+                val pathSegmentsFiltered = ArrayList<String?>(
+                    pathSegmentsList.size
+                )
+                for (segment in pathSegmentsList) {
+                    var segment = segment
+                    while (StringUtils.asciiLowercase(segment).endsWith(".json")
+                        || StringUtils.asciiLowercase(segment).endsWith(".xml")
+                    ) {
+                        segment = segment.substring(0, segment.lastIndexOf('.'))
+                    }
 
-		return new UserPostListingURL(type, username, order, limit, before, after);
-	}
+                    if (!segment.isEmpty()) {
+                        pathSegmentsFiltered.add(segment)
+                    }
+                }
 
-	@Override
-	public Uri generateJsonUri() {
+                pathSegments
+                = pathSegmentsFiltered.toTypedArray<String?>()
+            }
 
-		final Uri.Builder builder = new Uri.Builder();
-		builder.scheme(Constants.Reddit.getScheme())
-				.authority(Constants.Reddit.getDomain());
+            val order: PostSort?
+            if (pathSegments.size > 0) {
+                order = PostSort.Companion.parse(
+                    uri.getQueryParameter("sort"),
+                    uri.getQueryParameter("t")
+                )
+            } else {
+                order = null
+            }
 
-		builder.appendEncodedPath("user");
-		builder.appendPath(user);
-		builder.appendEncodedPath(StringUtils.asciiLowercase(type.name()));
+            if (pathSegments.size < 3) {
+                return null
+            }
 
-		if(order != null) {
-			order.addToUserPostListingUri(builder);
-		}
+            if (!pathSegments[0].equals("user", ignoreCase = true) && !pathSegments[0].equals(
+                    "u", ignoreCase = true
+                )
+            ) {
+                return null
+            }
 
-		if(before != null) {
-			builder.appendQueryParameter("before", before);
-		}
+            // TODO validate username with regex
+            val username = pathSegments[1]
+            val typeName = StringUtils.asciiUppercase(pathSegments[2]!!)
+            val type: Type
 
-		if(after != null) {
-			builder.appendQueryParameter("after", after.getValue());
-		}
+            try {
+                type = Type.valueOf(typeName)
+            } catch (t: Throwable) {
+                return null
+            }
 
-		if(limit != null) {
-			builder.appendQueryParameter("limit", String.valueOf(limit));
-		}
-
-		builder.appendEncodedPath(".json");
-
-		return builder.build();
-	}
-
-	@Override
-	public @RedditURLParser.PathType
-	int pathType() {
-		return RedditURLParser.USER_POST_LISTING_URL;
-	}
-
-	@Override
-	public String humanReadablePath() {
-
-		final String path = super.humanReadablePath();
-
-		if(order == null || type != Type.SUBMITTED) {
-			return path;
-		}
-
-		switch(order) {
-			case CONTROVERSIAL_HOUR:
-			case CONTROVERSIAL_DAY:
-			case CONTROVERSIAL_WEEK:
-			case CONTROVERSIAL_MONTH:
-			case CONTROVERSIAL_YEAR:
-			case CONTROVERSIAL_ALL:
-			case TOP_HOUR:
-			case TOP_DAY:
-			case TOP_WEEK:
-			case TOP_MONTH:
-			case TOP_YEAR:
-			case TOP_ALL:
-				final String[] parts = order.name().split("_");
-				return path + "?sort=" + StringUtils.asciiLowercase(parts[0])
-						+ "&t=" + StringUtils.asciiLowercase(parts[1]);
-
-			default:
-				return path + "?sort=" + StringUtils.asciiLowercase(order.name());
-		}
-	}
-
-	@Override
-	public String humanReadableName(final Context context, final boolean shorter) {
-
-		final String name;
-
-		switch(type) {
-
-			case SAVED:
-				name = context.getString(R.string.mainmenu_saved);
-				break;
-
-			case HIDDEN:
-				name = context.getString(R.string.mainmenu_hidden);
-				break;
-
-			case UPVOTED:
-				name = context.getString(R.string.mainmenu_upvoted);
-				break;
-
-			case DOWNVOTED:
-				name = context.getString(R.string.mainmenu_downvoted);
-				break;
-
-			case SUBMITTED:
-				name = context.getString(R.string.mainmenu_submitted);
-				break;
-
-			default:
-				return super.humanReadableName(context, shorter);
-		}
-
-		if(shorter) {
-			return name;
-		} else {
-			return String.format("%s (%s)", name, user);
-		}
-	}
+            return UserPostListingURL(type, username, order, limit, before, after)
+        }
+    }
 }

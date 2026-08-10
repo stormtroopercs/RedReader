@@ -12,65 +12,54 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+class TriggerableThread(private val task: Runnable, private val initialDelay: Long) {
+    private var thread: InternalTriggerableThread? = null
+    private var allowRetrigger = false
+    private var shouldRetrigger = false
 
-public class TriggerableThread {
+    @Synchronized
+    fun trigger() {
+        if (thread == null) {
+            thread = InternalTriggerableThread()
+            thread!!.start()
+        } else if (allowRetrigger) {
+            shouldRetrigger = true
+        }
+    }
 
-	private final Runnable task;
-	private final long initialDelay;
+    @Synchronized
+    private fun onSleepEnd() {
+        allowRetrigger = true
+    }
 
-	private InternalTriggerableThread thread;
-	private boolean allowRetrigger = false;
-	private boolean shouldRetrigger = false;
+    @Synchronized
+    private fun shouldThreadContinue(): Boolean {
+        if (shouldRetrigger) {
+            shouldRetrigger = false
+            return true
+        } else {
+            thread = null
+            allowRetrigger = false
+            return false
+        }
+    }
 
-	public TriggerableThread(final Runnable task, final long initialDelay) {
-		this.task = task;
-		this.initialDelay = initialDelay;
-	}
+    private inner class InternalTriggerableThread : Thread() {
+        override fun run() {
+            do {
+                try {
+                    sleep(initialDelay)
+                } catch (e: InterruptedException) {
+                    throw RuntimeException(e)
+                }
 
-	public synchronized void trigger() {
-
-		if(thread == null) {
-			thread = new InternalTriggerableThread();
-			thread.start();
-
-		} else if(allowRetrigger) {
-			shouldRetrigger = true;
-		}
-	}
-
-	private synchronized void onSleepEnd() {
-		allowRetrigger = true;
-	}
-
-	private synchronized boolean shouldThreadContinue() {
-		if(shouldRetrigger) {
-			shouldRetrigger = false;
-			return true;
-
-		} else {
-			thread = null;
-			allowRetrigger = false;
-			return false;
-		}
-	}
-
-	private final class InternalTriggerableThread extends Thread {
-		@Override
-		public void run() {
-			do {
-				try {
-					Thread.sleep(initialDelay);
-				} catch(final InterruptedException e) {
-					throw new RuntimeException(e);
-				}
-
-				onSleepEnd();
-				task.run();
-			} while(shouldThreadContinue());
-		}
-	}
+                onSleepEnd()
+                task.run()
+            } while (shouldThreadContinue())
+        }
+    }
 }

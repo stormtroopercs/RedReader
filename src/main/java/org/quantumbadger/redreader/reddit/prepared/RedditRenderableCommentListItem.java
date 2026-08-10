@@ -12,46 +12,43 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared
 
-package org.quantumbadger.redreader.reddit.prepared;
+import android.content.Context
+import android.view.View
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.BetterSSB
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.RRThemeAttributes
+import org.quantumbadger.redreader.common.time.TimestampUTC
 
-import android.content.Context;
-import android.view.View;
+interface RedditRenderableCommentListItem {
+    fun getHeader(
+        theme: RRThemeAttributes?,
+        changeDataManager: RedditChangeDataManager?,
+        context: Context?,
+        commentAgeUnits: Int,
+        postCreated: TimestampUTC?,
+        parentCommentCreated: TimestampUTC?
+    ): BetterSSB?
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    fun getAccessibilityHeader(
+        theme: RRThemeAttributes?,
+        changeDataManager: RedditChangeDataManager?,
+        context: Context?,
+        commentAgeUnits: Int,
+        postCreated: TimestampUTC?,
+        parentCommentCreated: TimestampUTC?,
+        collapsed: Boolean,
+        indentLevel: Optional<Int?>
+    ): String?
 
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.BetterSSB;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.RRThemeAttributes;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-
-public interface RedditRenderableCommentListItem {
-
-	BetterSSB getHeader(
-			final RRThemeAttributes theme,
-			final RedditChangeDataManager changeDataManager,
-			final Context context,
-			final int commentAgeUnits,
-			@Nullable final TimestampUTC postCreated,
-			@Nullable final TimestampUTC parentCommentCreated);
-
-	String getAccessibilityHeader(
-			final RRThemeAttributes theme,
-			final RedditChangeDataManager changeDataManager,
-			final Context context,
-			final int commentAgeUnits,
-			@Nullable final TimestampUTC postCreated,
-			@Nullable final TimestampUTC parentCommentCreated,
-			final boolean collapsed,
-			@NonNull final Optional<Integer> indentLevel);
-
-	View getBody(
-			final BaseActivity activity,
-			final Integer textColor,
-			final Float textSize,
-			final boolean showLinkButtons);
+    fun getBody(
+        activity: BaseActivity?,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View?
 }

@@ -12,76 +12,59 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.adapters
 
-package org.quantumbadger.redreader.adapters;
+import android.content.Context
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.reddit.RedditCommentListItem
+import java.util.Collections
 
-import android.content.Context;
-import androidx.annotation.Nullable;
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.reddit.RedditCommentListItem;
-import org.quantumbadger.redreader.reddit.kthings.UrlEncodedString;
+class FilteredCommentListingManager(
+    context: Context?,
+    private val mSearchString: String?
+) : RedditListingManager(context) {
+    var commentCount: Int = 0
+        private set
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+    fun addComments(comments: MutableCollection<RedditCommentListItem>) {
+        val filteredComments = filter(
+            comments
+        )
+        addItems(filteredComments)
+        this.commentCount += filteredComments.size
+    }
 
-public class FilteredCommentListingManager extends RedditListingManager {
+    private fun filter(
+        comments: MutableCollection<RedditCommentListItem>
+    ): MutableCollection<GroupedRecyclerViewAdapter.Item<*>?> {
+        val searchComments: MutableCollection<RedditCommentListItem>
 
-	@Nullable
-	private final String mSearchString;
+        if (mSearchString == null) {
+            searchComments = comments
+        } else {
+            searchComments = ArrayList<RedditCommentListItem>()
+            for (comment in comments) {
+                if (!comment.isComment()) {
+                    continue
+                }
+                val body = comment.asComment()
+                    .getParsedComment()
+                    .getRawComment().body
+                if (body != null) {
+                    if (StringUtils.asciiLowercase(body.decoded).contains(mSearchString)) {
+                        searchComments.add(comment)
+                    }
+                }
+            }
+        }
 
-	private int mCommentCount;
+        return Collections.unmodifiableCollection<GroupedRecyclerViewAdapter.Item<*>?>(
+            searchComments
+        )
+    }
 
-	public FilteredCommentListingManager(
-			final Context context,
-			@Nullable final String searchString) {
-
-		super(context);
-		mSearchString = searchString;
-	}
-
-	public void addComments(final Collection<RedditCommentListItem> comments) {
-		final Collection<GroupedRecyclerViewAdapter.Item<?>> filteredComments = filter(
-				comments);
-		addItems(filteredComments);
-		mCommentCount += filteredComments.size();
-	}
-
-	private Collection<GroupedRecyclerViewAdapter.Item<?>> filter(
-			final Collection<RedditCommentListItem> comments) {
-
-		final Collection<RedditCommentListItem> searchComments;
-
-		if(mSearchString == null) {
-			searchComments = comments;
-
-		} else {
-			searchComments = new ArrayList<>();
-			for(final RedditCommentListItem comment : comments) {
-				if(!comment.isComment()) {
-					continue;
-				}
-				final UrlEncodedString body = comment.asComment()
-						.getParsedComment()
-						.getRawComment().getBody();
-				if(body != null) {
-					if(StringUtils.asciiLowercase(body.getDecoded()).contains(mSearchString)) {
-						searchComments.add(comment);
-					}
-				}
-			}
-		}
-
-		return Collections.unmodifiableCollection(searchComments);
-	}
-
-	public boolean isSearchListing() {
-		return mSearchString != null;
-	}
-
-	public int getCommentCount() {
-		return mCommentCount;
-	}
+    val isSearchListing: Boolean
+        get() = mSearchString != null
 }

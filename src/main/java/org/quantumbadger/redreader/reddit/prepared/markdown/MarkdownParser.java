@@ -12,106 +12,80 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.markdown
 
-package org.quantumbadger.redreader.reddit.prepared.markdown;
+object MarkdownParser {
+    fun parse(raw: CharArray?): MarkdownParagraphGroup {
+        val rawLines: Array<CharArrSubstring?> = CharArrSubstring.Companion.generateFromLines(raw)
 
-import java.util.ArrayList;
+        val lines = arrayOfNulls<MarkdownLine>(rawLines.size)
 
-public final class MarkdownParser {
+        for (i in rawLines.indices) {
+            lines[i] = MarkdownLine.Companion.generate(rawLines[i])
+        }
 
-	public enum MarkdownParagraphType {
-		TEXT, CODE, BULLET, NUMBERED, QUOTE, HEADER, HLINE, EMPTY
-	}
+        val mergedLines = ArrayList<MarkdownLine>(rawLines.size)
+        var currentLine: MarkdownLine? = null
 
-	public static MarkdownParagraphGroup parse(final char[] raw) {
+        for (i in lines.indices) {
+            if (currentLine != null) {
+                when (lines[i]!!.type) {
+                    MarkdownParagraphType.BULLET, MarkdownParagraphType.NUMBERED, MarkdownParagraphType.HEADER, MarkdownParagraphType.CODE, MarkdownParagraphType.HLINE, MarkdownParagraphType.QUOTE -> {
+                        mergedLines.add(currentLine)
+                        currentLine = lines[i]
+                    }
 
-		final CharArrSubstring[] rawLines = CharArrSubstring.generateFromLines(raw);
+                    MarkdownParagraphType.EMPTY -> {
+                        mergedLines.add(currentLine)
+                        currentLine = null
+                    }
 
-		final MarkdownLine[] lines = new MarkdownLine[rawLines.length];
+                    MarkdownParagraphType.TEXT -> when (lines[i - 1]!!.type) {
+                        MarkdownParagraphType.QUOTE, MarkdownParagraphType.BULLET, MarkdownParagraphType.NUMBERED, MarkdownParagraphType.TEXT -> if (lines[i - 1]!!.spacesAtEnd >= 2) {
+                            mergedLines.add(currentLine)
+                            currentLine = lines[i]
+                        } else {
+                            currentLine = currentLine.rejoin(lines[i])
+                        }
 
-		for(int i = 0; i < rawLines.length; i++) {
-			lines[i] = MarkdownLine.generate(rawLines[i]);
-		}
+                        MarkdownParagraphType.CODE, MarkdownParagraphType.HEADER, MarkdownParagraphType.HLINE -> {
+                            mergedLines.add(currentLine)
+                            currentLine = lines[i]
+                        }
+                    }
 
-		final ArrayList<MarkdownLine> mergedLines = new ArrayList<>(rawLines.length);
-		MarkdownLine currentLine = null;
+                }
+            } else if (lines[i]!!.type != MarkdownParagraphType.EMPTY) {
+                currentLine = lines[i]
+            }
+        }
 
-		for(int i = 0; i < lines.length; i++) {
+        if (currentLine != null) {
+            mergedLines.add(currentLine)
+        }
 
-			if(currentLine != null) {
+        val outputParagraphs =
+            ArrayList<MarkdownParagraph?>(mergedLines.size)
 
-				switch(lines[i].type) {
-					case BULLET:
-					case NUMBERED:
-					case HEADER:
-					case CODE:
-					case HLINE:
-					case QUOTE:
+        for (line in mergedLines) {
+            val lastParagraph = if (outputParagraphs.isEmpty())
+                null
+            else
+                outputParagraphs.get(outputParagraphs.size - 1)
 
-						mergedLines.add(currentLine);
-						currentLine = lines[i];
-						break;
+            val paragraph = line.tokenize(lastParagraph)
 
-					case EMPTY:
-						mergedLines.add(currentLine);
-						currentLine = null;
-						break;
+            if (!paragraph.isEmpty()) {
+                outputParagraphs.add(paragraph)
+            }
+        }
 
-					case TEXT:
+        return MarkdownParagraphGroup(outputParagraphs.toTypedArray<MarkdownParagraph?>())
+    }
 
-						switch(lines[i - 1].type) {
-							case QUOTE:
-							case BULLET:
-							case NUMBERED:
-							case TEXT:
-
-								if(lines[i - 1].spacesAtEnd >= 2) {
-									mergedLines.add(currentLine);
-									currentLine = lines[i];
-
-								} else {
-									currentLine = currentLine.rejoin(lines[i]);
-								}
-								break;
-
-							case CODE:
-							case HEADER:
-							case HLINE:
-								mergedLines.add(currentLine);
-								currentLine = lines[i];
-								break;
-						}
-
-						break;
-				}
-			} else if(lines[i].type != MarkdownParagraphType.EMPTY) {
-				currentLine = lines[i];
-			}
-		}
-
-		if(currentLine != null) {
-			mergedLines.add(currentLine);
-		}
-
-		final ArrayList<MarkdownParagraph> outputParagraphs =
-				new ArrayList<>(mergedLines.size());
-
-		for(final MarkdownLine line : mergedLines) {
-
-			final MarkdownParagraph lastParagraph = outputParagraphs.isEmpty()
-					? null
-					: outputParagraphs.get(outputParagraphs.size() - 1);
-
-			final MarkdownParagraph paragraph = line.tokenize(lastParagraph);
-
-			if(!paragraph.isEmpty()) {
-				outputParagraphs.add(paragraph);
-			}
-		}
-
-		return new MarkdownParagraphGroup(outputParagraphs.toArray(
-				new MarkdownParagraph[0]));
-	}
+    enum class MarkdownParagraphType {
+        TEXT, CODE, BULLET, NUMBERED, QUOTE, HEADER, HLINE, EMPTY
+    }
 }

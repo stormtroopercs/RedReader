@@ -12,87 +12,83 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
 
-package org.quantumbadger.redreader.reddit;
+import android.content.Intent
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.HtmlViewActivity
+import org.quantumbadger.redreader.common.HasUniqueId
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
+import org.quantumbadger.redreader.reddit.things.RedditSubreddit
+import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
+import java.util.Locale
 
-import android.content.Intent;
+class SubredditDetails : HasUniqueId {
+    val id: SubredditCanonicalId
+    val name: String
+    val url: UriString
+    val publicDescriptionHtmlEscaped: String?
+    val subscribers: Int?
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+    constructor(subreddit: RedditSubreddit) {
+        id = subreddit.getCanonicalId()
+        name = subreddit.display_name
+        url = subreddit.getUrl()
+        publicDescriptionHtmlEscaped = subreddit.public_description_html
+        subscribers = subreddit.subscribers
+    }
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.HtmlViewActivity;
-import org.quantumbadger.redreader.common.HasUniqueId;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException;
-import org.quantumbadger.redreader.reddit.things.RedditSubreddit;
-import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
+    constructor(subreddit: SubredditCanonicalId) {
+        id = subreddit
+        name = subreddit.getDisplayNameLowercase()
+        url = UriString(subreddit.toString())
+        publicDescriptionHtmlEscaped = null
+        subscribers = null
+    }
 
-import java.util.Locale;
+    override fun getUniqueId(): String {
+        return id.toString()
+    }
 
-public class SubredditDetails implements HasUniqueId {
+    fun hasSidebar(): Boolean {
+        return publicDescriptionHtmlEscaped != null && !publicDescriptionHtmlEscaped.isEmpty()
+    }
 
-	@NonNull public final SubredditCanonicalId id;
-	@NonNull public final String name;
-	@NonNull public final UriString url;
-	@Nullable public final String publicDescriptionHtmlEscaped;
-	@Nullable public final Integer subscribers;
+    fun showSidebarActivity(context: AppCompatActivity) {
+        val intent = Intent(context, HtmlViewActivity::class.java)
 
-	public SubredditDetails(
-			@NonNull final RedditSubreddit subreddit) throws InvalidSubredditNameException {
-		id = subreddit.getCanonicalId();
-		name = subreddit.display_name;
-		url = subreddit.getUrl();
-		publicDescriptionHtmlEscaped = subreddit.public_description_html;
-		subscribers = subreddit.subscribers;
-	}
+        intent.putExtra(
+            "html", RedditSubreddit.Companion.getSidebarHtmlStatic(
+                PrefsUtility.isNightMode(),
+                publicDescriptionHtmlEscaped
+            )
+        )
 
-	public SubredditDetails(@NonNull final SubredditCanonicalId subreddit) {
-		id = subreddit;
-		name = subreddit.getDisplayNameLowercase();
-		url = new UriString(subreddit.toString());
-		publicDescriptionHtmlEscaped = null;
-		subscribers = null;
-	}
+        intent.putExtra(
+            "title", String.format(
+                Locale.US, "%s: %s",
+                context.getString(string.sidebar_activity_title),
+                url
+            )
+        )
 
-	@NonNull
-	public static SubredditDetails newWithRuntimeException(
-			@NonNull final RedditSubreddit subreddit) {
+        context.startActivityForResult(intent, 1)
+    }
 
-		try {
-			return new SubredditDetails(subreddit);
-		} catch(final InvalidSubredditNameException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@NonNull
-	@Override
-	public String getUniqueId() {
-		return id.toString();
-	}
-
-	public boolean hasSidebar() {
-		return publicDescriptionHtmlEscaped != null && !publicDescriptionHtmlEscaped.isEmpty();
-	}
-
-	public void showSidebarActivity(final AppCompatActivity context) {
-
-		final Intent intent = new Intent(context, HtmlViewActivity.class);
-
-		intent.putExtra("html", RedditSubreddit.getSidebarHtmlStatic(
-				PrefsUtility.isNightMode(),
-				publicDescriptionHtmlEscaped));
-
-		intent.putExtra("title", String.format(
-				Locale.US, "%s: %s",
-				context.getString(R.string.sidebar_activity_title),
-				url));
-
-		context.startActivityForResult(intent, 1);
-	}
+    companion object {
+        fun newWithRuntimeException(
+            subreddit: RedditSubreddit
+        ): SubredditDetails {
+            try {
+                return SubredditDetails(subreddit)
+            } catch (e: InvalidSubredditNameException) {
+                throw RuntimeException(e)
+            }
+        }
+    }
 }

@@ -12,63 +12,57 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.program
 
-package org.quantumbadger.redreader.views.glview.program;
+import android.opengl.GLES20
 
-import android.opengl.GLES20;
+class RRGLProgramColour : RRGLProgramVertices(vertexShaderSource, fragmentShaderSource) {
+    private val mColorHandle: Int
 
-public class RRGLProgramColour extends RRGLProgramVertices {
+    fun activateColour(
+        r: Float,
+        g: Float,
+        b: Float,
+        a: Float
+    ) {
+        GLES20.glUniform4f(mColorHandle, r, g, b, a)
+    }
 
-	private final int mColorHandle;
+    public override fun onActivated() {
+        super.onActivated()
+        GLES20.glEnableVertexAttribArray(mColorHandle)
+    }
 
-	public RRGLProgramColour() {
+    public override fun onDeactivated() {
+        super.onDeactivated()
+        GLES20.glDisableVertexAttribArray(mColorHandle)
+    }
 
-		super(vertexShaderSource, fragmentShaderSource);
+    init {
+        setVertexBufferHandle(getAttributeHandle("a_Position"))
+        setMatrixUniformHandle(getUniformHandle("u_Matrix"))
+        setPixelMatrixHandle(getUniformHandle("u_PixelMatrix"))
 
-		setVertexBufferHandle(getAttributeHandle("a_Position"));
-		setMatrixUniformHandle(getUniformHandle("u_Matrix"));
-		setPixelMatrixHandle(getUniformHandle("u_PixelMatrix"));
+        mColorHandle = getUniformHandle("u_Color")
+    }
 
-		mColorHandle = getUniformHandle("u_Color");
-	}
+    companion object {
+        private val vertexShaderSource = ("uniform mat4 u_Matrix; \n"
+                + "uniform mat4 u_PixelMatrix; \n"
+                + "attribute vec4 a_Position; \n"
+                + "attribute vec2 a_TexCoordinate; \n"
+                + "varying vec2 v_TexCoordinate; \n"
+                + "void main() {\n"
+                + "  v_TexCoordinate = a_TexCoordinate; \n"
+                + "  gl_Position = u_PixelMatrix * (u_Matrix * a_Position);\n"
+                + "} \n")
 
-	public void activateColour(
-			final float r,
-			final float g,
-			final float b,
-			final float a) {
-		GLES20.glUniform4f(mColorHandle, r, g, b, a);
-	}
-
-	@Override
-	public void onActivated() {
-		super.onActivated();
-		GLES20.glEnableVertexAttribArray(mColorHandle);
-	}
-
-	@Override
-	public void onDeactivated() {
-		super.onDeactivated();
-		GLES20.glDisableVertexAttribArray(mColorHandle);
-	}
-
-	private static final String vertexShaderSource =
-			"uniform mat4 u_Matrix; \n"
-					+ "uniform mat4 u_PixelMatrix; \n"
-					+ "attribute vec4 a_Position; \n"
-					+ "attribute vec2 a_TexCoordinate; \n"
-					+ "varying vec2 v_TexCoordinate; \n"
-					+ "void main() {\n"
-					+ "  v_TexCoordinate = a_TexCoordinate; \n"
-					+ "  gl_Position = u_PixelMatrix * (u_Matrix * a_Position);\n"
-					+ "} \n";
-
-	private static final String fragmentShaderSource =
-			"precision mediump float; \n"
-					+ "uniform vec4 u_Color; \n"
-					+ "void main() { \n"
-					+ "  gl_FragColor = u_Color; \n"
-					+ "} \n";
+        private val fragmentShaderSource = ("precision mediump float; \n"
+                + "uniform vec4 u_Color; \n"
+                + "void main() { \n"
+                + "  gl_FragColor = u_Color; \n"
+                + "} \n")
+    }
 }

@@ -12,41 +12,24 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.jsonwrap
 
-package org.quantumbadger.redreader.jsonwrap;
+class JsonLong(private val mValue: Long) : JsonValue() {
+    protected override fun prettyPrint(indent: Int, sb: StringBuilder) {
+        sb.append(mValue)
+    }
 
-import androidx.annotation.NonNull;
+    public override fun asString(): String {
+        return mValue.toString()
+    }
 
-public class JsonLong extends JsonValue {
+    public override fun asDouble(): Double {
+        return mValue.toDouble()
+    }
 
-	private final long mValue;
-
-	public JsonLong(final long value) {
-		mValue = value;
-	}
-
-	@Override
-	protected void prettyPrint(final int indent, final StringBuilder sb) {
-		sb.append(mValue);
-	}
-
-	@NonNull
-	@Override
-	public String asString() {
-		return String.valueOf(mValue);
-	}
-
-	@NonNull
-	@Override
-	public Double asDouble() {
-		return (double)mValue;
-	}
-
-	@NonNull
-	@Override
-	public Long asLong() {
-		return mValue;
-	}
+    public override fun asLong(): Long {
+        return mValue
+    }
 }

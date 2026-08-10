@@ -12,33 +12,27 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache.downloadstrategy
 
-package org.quantumbadger.redreader.cache.downloadstrategy;
+import org.quantumbadger.redreader.cache.CacheEntry
 
-import org.quantumbadger.redreader.cache.CacheEntry;
+class DownloadStrategyIfNotCached private constructor() : DownloadStrategy {
+    override fun shouldDownloadWithoutCheckingCache(): Boolean {
+        return false
+    }
 
-public class DownloadStrategyIfNotCached implements DownloadStrategy {
+    override fun shouldDownloadIfCacheEntryFound(entry: CacheEntry?): Boolean {
+        return false
+    }
 
-	public static final DownloadStrategyIfNotCached INSTANCE
-			= new DownloadStrategyIfNotCached();
+    override fun shouldDownloadIfNotCached(): Boolean {
+        return true
+    }
 
-	private DownloadStrategyIfNotCached() {
-	}
-
-	@Override
-	public boolean shouldDownloadWithoutCheckingCache() {
-		return false;
-	}
-
-	@Override
-	public boolean shouldDownloadIfCacheEntryFound(final CacheEntry entry) {
-		return false;
-	}
-
-	@Override
-	public boolean shouldDownloadIfNotCached() {
-		return true;
-	}
+    companion object {
+        val INSTANCE
+                : DownloadStrategyIfNotCached = DownloadStrategyIfNotCached()
+    }
 }

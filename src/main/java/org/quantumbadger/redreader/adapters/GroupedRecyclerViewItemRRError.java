@@ -12,63 +12,43 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.adapters
 
-package org.quantumbadger.redreader.adapters;
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
+import org.quantumbadger.redreader.adapters.GroupedRecyclerViewItemRRError.ErrorHolder
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.views.liststatus.ErrorView
 
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.views.liststatus.ErrorView;
+class GroupedRecyclerViewItemRRError(
+    private val mActivity: AppCompatActivity,
+    private val mError: RRError
+) : GroupedRecyclerViewAdapter.Item<ErrorHolder?>() {
+    inner class ErrorHolder : RecyclerView.ViewHolder(FrameLayout(mActivity)) {
+        fun bind(error: RRError) {
+            val itemView = this.itemView as FrameLayout
+            itemView.removeAllViews()
+            itemView.addView(ErrorView(mActivity, error))
+        }
+    }
 
-public class GroupedRecyclerViewItemRRError extends GroupedRecyclerViewAdapter.Item<
-		GroupedRecyclerViewItemRRError.ErrorHolder> {
+    override fun getViewType(): Class<*> {
+        return GroupedRecyclerViewItemRRError::class.java
+    }
 
-	@NonNull private final AppCompatActivity mActivity;
-	@NonNull private final RRError mError;
+    override fun onCreateViewHolder(viewGroup: ViewGroup?): ErrorHolder {
+        return ErrorHolder()
+    }
 
-	public class ErrorHolder extends RecyclerView.ViewHolder {
+    override fun onBindViewHolder(viewHolder: ErrorHolder) {
+        viewHolder.bind(mError)
+    }
 
-		public ErrorHolder() {
-			super(new FrameLayout(mActivity));
-		}
-
-		public void bind(@NonNull final RRError error) {
-			final FrameLayout itemView = (FrameLayout)this.itemView;
-			itemView.removeAllViews();
-			itemView.addView(new ErrorView(mActivity, error));
-		}
-	}
-
-	public GroupedRecyclerViewItemRRError(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final RRError error) {
-
-		mActivity = activity;
-		mError = error;
-	}
-
-	@Override
-	public Class<?> getViewType() {
-		return GroupedRecyclerViewItemRRError.class;
-	}
-
-	@Override
-	public ErrorHolder onCreateViewHolder(final ViewGroup viewGroup) {
-		return new ErrorHolder();
-	}
-
-	@Override
-	public void onBindViewHolder(final ErrorHolder viewHolder) {
-		viewHolder.bind(mError);
-	}
-
-	@Override
-	public boolean isHidden() {
-		return false;
-	}
+    override fun isHidden(): Boolean {
+        return false
+    }
 }

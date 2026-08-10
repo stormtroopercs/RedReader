@@ -12,158 +12,119 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.imageview
 
-package org.quantumbadger.redreader.views.imageview;
+import android.graphics.Bitmap
+import android.util.Log
+import androidx.annotation.UiThread
+import org.quantumbadger.redreader.common.AndroidCommon
 
-import android.graphics.Bitmap;
-import android.util.Log;
-import androidx.annotation.UiThread;
-import org.quantumbadger.redreader.common.AndroidCommon;
+class ImageViewTileLoader(
+    private val mSource: ImageTileSource,
+    private val mThread: ImageViewTileLoaderThread,
+    private val mX: Int,
+    private val mY: Int,
+    private val mSampleSize: Int,
+    private val mListener: Listener,
+    private val mLock: Any
+) {
+    @UiThread
+    interface Listener {
+        fun onTileLoaded(x: Int, y: Int, sampleSize: Int)
 
-public class ImageViewTileLoader {
+        fun onTileLoaderOutOfMemory()
 
-	@UiThread
-	public interface Listener {
-		void onTileLoaded(int x, int y, int sampleSize);
+        fun onTileLoaderException(t: Throwable?)
+    }
 
-		void onTileLoaderOutOfMemory();
+    private var mWanted = false
 
-		void onTileLoaderException(Throwable t);
-	}
+    private var mResult: Bitmap? = null
 
-	private final ImageTileSource mSource;
-	private final ImageViewTileLoaderThread mThread;
-	private final int mX;
-	private final int mY;
-	private final int mSampleSize;
+    private val mNotifyRunnable: Runnable
 
-	private boolean mWanted;
+    init {
+        mNotifyRunnable = Runnable { mListener.onTileLoaded(mX, mY, mSampleSize) }
+    }
 
-	private Bitmap mResult;
+    // Caller must synchronize on mLock
+    fun markAsWanted() {
+        if (mWanted) {
+            return
+        }
 
-	private final Listener mListener;
+        if (mResult != null) {
+            throw RuntimeException("Not wanted, but the image is loaded anyway!")
+        }
 
-	private final Runnable mNotifyRunnable;
+        mThread.enqueue(this)
+        mWanted = true
+    }
 
-	private final Object mLock;
+    fun doPrepare() {
+        synchronized(mLock) {
+            if (!mWanted) {
+                return
+            }
+            if (mResult != null) {
+                return
+            }
+        }
 
-	public ImageViewTileLoader(
-			final ImageTileSource source,
-			final ImageViewTileLoaderThread thread,
-			final int x,
-			final int y,
-			final int sampleSize,
-			final Listener listener,
-			final Object lock) {
+        val tile: Bitmap?
 
-		mSource = source;
-		mThread = thread;
-		mX = x;
-		mY = y;
-		mSampleSize = sampleSize;
-		mListener = listener;
-		mLock = lock;
+        try {
+            tile = mSource.getTile(mSampleSize, mX, mY)
+        } catch (e: OutOfMemoryError) {
+            AndroidCommon.UI_THREAD_HANDLER.post(NotifyOOMRunnable())
+            return
+        } catch (t: Throwable) {
+            Log.e("ImageViewTileLoader", "Exception in getTile()", t)
+            AndroidCommon.UI_THREAD_HANDLER.post(NotifyErrorRunnable(t))
+            return
+        }
 
-		mNotifyRunnable = () -> mListener.onTileLoaded(mX, mY, mSampleSize);
-	}
+        synchronized(mLock) {
+            if (mWanted) {
+                mResult = tile
+            } else if (tile != null) {
+                tile.recycle()
+            }
+        }
 
-	// Caller must synchronize on mLock
-	public void markAsWanted() {
+        AndroidCommon.UI_THREAD_HANDLER.post(mNotifyRunnable)
+    }
 
-		if(mWanted) {
-			return;
-		}
+    fun get(): Bitmap? {
+        synchronized(mLock) {
+            if (!mWanted) {
+                throw RuntimeException("Attempted to get unwanted image!")
+            }
+            return mResult
+        }
+    }
 
-		if(mResult != null) {
-			throw new RuntimeException("Not wanted, but the image is loaded anyway!");
-		}
+    // Caller must synchronize on mLock
+    fun markAsUnwanted() {
+        mWanted = false
 
-		mThread.enqueue(this);
-		mWanted = true;
-	}
+        if (mResult != null) {
+            mResult!!.recycle()
+            mResult = null
+        }
+    }
 
-	public void doPrepare() {
+    private inner class NotifyOOMRunnable : Runnable {
+        override fun run() {
+            mListener.onTileLoaderOutOfMemory()
+        }
+    }
 
-		synchronized(mLock) {
-
-			if(!mWanted) {
-				return;
-			}
-
-			if(mResult != null) {
-				return;
-			}
-		}
-
-		final Bitmap tile;
-
-		try {
-			tile = mSource.getTile(mSampleSize, mX, mY);
-
-		} catch(final OutOfMemoryError e) {
-			AndroidCommon.UI_THREAD_HANDLER.post(new NotifyOOMRunnable());
-			return;
-
-		} catch(final Throwable t) {
-			Log.e("ImageViewTileLoader", "Exception in getTile()", t);
-			AndroidCommon.UI_THREAD_HANDLER.post(new NotifyErrorRunnable(t));
-			return;
-		}
-
-		synchronized(mLock) {
-			if(mWanted) {
-				mResult = tile;
-			} else if(tile != null) {
-				tile.recycle();
-			}
-		}
-
-		AndroidCommon.UI_THREAD_HANDLER.post(mNotifyRunnable);
-	}
-
-	public Bitmap get() {
-
-		synchronized(mLock) {
-
-			if(!mWanted) {
-				throw new RuntimeException("Attempted to get unwanted image!");
-			}
-
-			return mResult;
-		}
-	}
-
-	// Caller must synchronize on mLock
-	public void markAsUnwanted() {
-
-		mWanted = false;
-
-		if(mResult != null) {
-			mResult.recycle();
-			mResult = null;
-		}
-	}
-
-	private class NotifyOOMRunnable implements Runnable {
-		@Override
-		public void run() {
-			mListener.onTileLoaderOutOfMemory();
-		}
-	}
-
-	private class NotifyErrorRunnable implements Runnable {
-
-		private final Throwable mError;
-
-		private NotifyErrorRunnable(final Throwable mError) {
-			this.mError = mError;
-		}
-
-		@Override
-		public void run() {
-			mListener.onTileLoaderException(mError);
-		}
-	}
+    private inner class NotifyErrorRunnable(private val mError: Throwable?) : Runnable {
+        override fun run() {
+            mListener.onTileLoaderException(mError)
+        }
+    }
 }

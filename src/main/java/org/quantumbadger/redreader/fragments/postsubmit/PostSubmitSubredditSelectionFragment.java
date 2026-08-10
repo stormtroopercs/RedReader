@@ -12,323 +12,298 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
-package org.quantumbadger.redreader.fragments.postsubmit;
-
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.os.BundleCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import com.google.android.material.textfield.MaterialAutoCompleteTextView;
-import com.google.android.material.textfield.TextInputEditText;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.common.AndroidCommon;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.common.streams.Stream;
-import org.quantumbadger.redreader.reddit.RedditSubredditHistory;
-import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException;
-import org.quantumbadger.redreader.reddit.things.RedditSubreddit;
-import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
-import org.quantumbadger.redreader.viewholders.VH1Text;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Objects;
-
-public class PostSubmitSubredditSelectionFragment extends Fragment {
-
-	public static class Args {
-
-		@NonNull private static final String KEY_SUBREDDIT = "subreddit";
-
-		@Nullable public final SubredditCanonicalId subreddit;
-
-		public Args(@Nullable final SubredditCanonicalId subreddit) {
-			this.subreddit = subreddit;
-		}
-
-		@NonNull
-		public Bundle toBundle() {
-			final Bundle result = new Bundle(1);
-			if(subreddit != null) {
-				result.putParcelable(KEY_SUBREDDIT, subreddit);
-			}
-			return result;
-		}
-
-		@NonNull
-		public static Args fromBundle(@NonNull final Bundle bundle) {
-			return new Args(BundleCompat.getParcelable(bundle,
-					KEY_SUBREDDIT,
-					SubredditCanonicalId.class));
-		}
-	}
-
-	public interface Listener {
-
-		void onSubredditSelected(
-				@NonNull String username,
-				@NonNull SubredditCanonicalId subreddit);
-
-		void onNotLoggedIn();
-	}
-
-	private static class AutocompleteEntry {
-
-		public final long listId;
-		@NonNull public final String nameWithoutPrefix;
-
-		private AutocompleteEntry(final long listId, @NonNull final String nameWithoutPrefix) {
-			this.listId = listId;
-			this.nameWithoutPrefix = nameWithoutPrefix;
-		}
-	}
-
-	private class AutocompleteAdapter extends RecyclerView.Adapter<VH1Text> {
-
-		@NonNull private final ArrayList<AutocompleteEntry>
-				mAllSuggestions = new ArrayList<>();
-
-		@NonNull private final ArrayList<AutocompleteEntry> mCurrentSuggestions = new ArrayList<>();
-
-		public AutocompleteAdapter(final Context context) {
-
-			super();
-
-			setHasStableIds(true);
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.fragments.postsubmit
+
+import android.annotation.SuppressLint
+import android.content.Context
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.BundleCompat
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import com.google.android.material.textfield.TextInputEditText
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.common.AndroidCommon
+import org.quantumbadger.redreader.common.Consumer
+import org.quantumbadger.redreader.common.General.showResultDialog
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.common.UriString.Companion.from
+import org.quantumbadger.redreader.common.streams.Stream
+import org.quantumbadger.redreader.reddit.RedditSubredditHistory
+import org.quantumbadger.redreader.reddit.api.RedditPostActions.ActionDescriptionPair.Companion.from
+import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
+import org.quantumbadger.redreader.reddit.things.RedditSubreddit
+import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
+import org.quantumbadger.redreader.viewholders.VH1Text
+import java.util.Objects
+
+class PostSubmitSubredditSelectionFragment : Fragment() {
+    class Args(val subreddit: SubredditCanonicalId?) {
+        fun toBundle(): Bundle {
+            val result = Bundle(1)
+            if (subreddit != null) {
+                result.putParcelable(KEY_SUBREDDIT, subreddit)
+            }
+            return result
+        }
+
+        companion object {
+            private const val KEY_SUBREDDIT = "subreddit"
+
+            fun fromBundle(bundle: Bundle): Args {
+                return Args(
+                    BundleCompat.getParcelable<SubredditCanonicalId?>(
+                        bundle,
+                        KEY_SUBREDDIT,
+                        SubredditCanonicalId::class.java
+                    )
+                )
+            }
+        }
+    }
+
+    interface Listener {
+        fun onSubredditSelected(
+            username: String,
+            subreddit: SubredditCanonicalId
+        )
+
+        fun onNotLoggedIn()
+    }
+
+    private class AutocompleteEntry(val listId: Long, val nameWithoutPrefix: String)
+
+    private inner class AutocompleteAdapter(context: Context?) : RecyclerView.Adapter<VH1Text?>() {
+        private val mAllSuggestions: ArrayList<AutocompleteEntry?> = ArrayList<AutocompleteEntry?>()
+
+        private val mCurrentSuggestions: ArrayList<AutocompleteEntry?> =
+            ArrayList<AutocompleteEntry?>()
+
+        init {
+            setHasStableIds(true)
+
+            val allSuggestions = RedditSubredditHistory.getSubredditsSorted(
+                RedditAccountManager.Companion.getInstance(context)
+                    .getDefaultAccount()
+            )
+
+            for (i in allSuggestions.indices) {
+                mAllSuggestions.add(
+                    AutocompleteEntry(
+                        i.toLong(),
+                        allSuggestions.get(i)!!.getDisplayNameLowercase()
+                    )
+                )
+            }
+
+            mCurrentSuggestions.addAll(mAllSuggestions)
+        }
+
+        @SuppressLint("NotifyDataSetChanged")
+        fun updateSuggestions() {
+            mCurrentSuggestions.clear()
+
+            val currentText = StringUtils.asciiLowercase(
+                mSubredditBox!!.getText().toString().trim { it <= ' ' })
+
+            val searchString: String
+
+            try {
+                searchString = RedditSubreddit.Companion.stripRPrefix(currentText)
+            } catch (e: InvalidSubredditNameException) {
+                mCurrentSuggestions.addAll(mAllSuggestions)
+                notifyDataSetChanged()
+                return
+            }
+
+            val possibleSuggestions
+                    : ArrayList<AutocompleteEntry?> = ArrayList<AutocompleteEntry?>(mAllSuggestions)
+
+            run {
+                val it: MutableIterator<AutocompleteEntry> = possibleSuggestions.iterator()
+                while (it.hasNext()) {
+                    val entry = it.next()
 
-			final ArrayList<SubredditCanonicalId> allSuggestions
-					= RedditSubredditHistory.getSubredditsSorted(
-					RedditAccountManager.getInstance(context)
-							.getDefaultAccount());
+                    if (entry.nameWithoutPrefix.startsWith(searchString)) {
+                        mCurrentSuggestions.add(entry)
+                        it.remove()
+                    }
+                }
+            }
 
-			for(int i = 0; i < allSuggestions.size(); i++) {
-				mAllSuggestions.add(new AutocompleteEntry(
-						i,
-						allSuggestions.get(i).getDisplayNameLowercase()));
-			}
+            run {
+                val it: MutableIterator<AutocompleteEntry> = possibleSuggestions.iterator()
+                while (it.hasNext()) {
+                    val entry = it.next()
 
-			mCurrentSuggestions.addAll(mAllSuggestions);
-		}
+                    if (entry.nameWithoutPrefix.contains(searchString)) {
+                        mCurrentSuggestions.add(entry)
+                        it.remove()
+                    }
+                }
+            }
 
-		@SuppressLint("NotifyDataSetChanged")
-		public void updateSuggestions() {
+            mCurrentSuggestions.addAll(possibleSuggestions)
 
-			mCurrentSuggestions.clear();
+            notifyDataSetChanged()
+            scrollToTop()
+        }
 
-			final String currentText = StringUtils.asciiLowercase(
-					mSubredditBox.getText().toString().trim());
+        override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): VH1Text {
+            val view = LayoutInflater.from(viewGroup.getContext())
+                .inflate(R.layout.list_item_1_text, viewGroup, false)
 
-			final String searchString;
+            val result = VH1Text(view)
 
-			try {
-				searchString = RedditSubreddit.stripRPrefix(currentText);
+            view.setOnClickListener(View.OnClickListener { v: View? ->
+                mSubredditBox!!.setText(
+                    result.text.getText()
+                )
+            })
 
-			} catch(final InvalidSubredditNameException e) {
-				mCurrentSuggestions.addAll(mAllSuggestions);
-				notifyDataSetChanged();
-				return;
-			}
+            return result
+        }
 
-			final ArrayList<AutocompleteEntry> possibleSuggestions
-					= new ArrayList<>(mAllSuggestions);
+        override fun onBindViewHolder(
+            viewHolder: VH1Text,
+            i: Int
+        ) {
+            viewHolder.text.setText(mCurrentSuggestions.get(i)!!.nameWithoutPrefix)
+        }
 
-			{
-				final Iterator<AutocompleteEntry> it = possibleSuggestions.iterator();
+        override fun getItemCount(): Int {
+            return mCurrentSuggestions.size
+        }
 
-				while(it.hasNext()) {
-					final AutocompleteEntry entry = it.next();
+        override fun getItemId(position: Int): Long {
+            return mCurrentSuggestions.get(position)!!.listId
+        }
+    }
 
-					if(entry.nameWithoutPrefix.startsWith(searchString)) {
-						mCurrentSuggestions.add(entry);
-						it.remove();
-					}
-				}
-			}
+    private var mUsernameSpinner: MaterialAutoCompleteTextView? = null
+    private var mSubredditBox: TextInputEditText? = null
 
-			{
-				final Iterator<AutocompleteEntry> it = possibleSuggestions.iterator();
+    private var mAutocompleteSuggestions: RecyclerView? = null
+    private var mAutocompleteSuggestionsLayout: RecyclerView.LayoutManager? = null
+
+    override fun onResume() {
+        super.onResume()
+
+        val activity = getActivity()
 
-				while(it.hasNext()) {
-					final AutocompleteEntry entry = it.next();
-
-					if(entry.nameWithoutPrefix.contains(searchString)) {
-						mCurrentSuggestions.add(entry);
-						it.remove();
-					}
-				}
-			}
-
-			mCurrentSuggestions.addAll(possibleSuggestions);
-
-			notifyDataSetChanged();
-			scrollToTop();
-		}
-
-		@NonNull
-		@Override
-		public VH1Text onCreateViewHolder(@NonNull final ViewGroup viewGroup, final int i) {
-
-			final View view = LayoutInflater.from(viewGroup.getContext())
-					.inflate(R.layout.list_item_1_text, viewGroup, false);
-
-			final VH1Text result = new VH1Text(view);
-
-			view.setOnClickListener(v -> mSubredditBox.setText(result.text.getText()));
-
-			return result;
-		}
-
-		@Override
-		public void onBindViewHolder(
-				@NonNull final VH1Text viewHolder,
-				final int i) {
-
-			viewHolder.text.setText(mCurrentSuggestions.get(i).nameWithoutPrefix);
-		}
-
-		@Override
-		public int getItemCount() {
-			return mCurrentSuggestions.size();
-		}
-
-		@Override
-		public long getItemId(final int position) {
-			return mCurrentSuggestions.get(position).listId;
-		}
-	}
-
-	private MaterialAutoCompleteTextView mUsernameSpinner;
-	private TextInputEditText mSubredditBox;
-
-	private RecyclerView mAutocompleteSuggestions;
-	private RecyclerView.LayoutManager mAutocompleteSuggestionsLayout;
-
-	@Override
-	public void onResume() {
-		super.onResume();
-
-		final FragmentActivity activity = getActivity();
-
-		if(activity != null) {
-			activity.setTitle(R.string.subreddit_selector_title);
-		}
-	}
-
-	@Nullable
-	@Override
-	public View onCreateView(
-			@NonNull final LayoutInflater inflater,
-			@Nullable final ViewGroup container,
-			@Nullable final Bundle savedInstanceState) {
-
-		final Args args = Args.fromBundle(requireArguments());
-
-		final Context context = Objects.requireNonNull(container).getContext();
-
-		final View root = inflater.inflate(R.layout.subreddit_selection, container, false);
-
-		mUsernameSpinner = root.findViewById(R.id.subreddit_selection_account);
-		mSubredditBox = root.findViewById(R.id.subreddit_selection_textbox);
-
-		mAutocompleteSuggestions = root.findViewById(R.id.subreddit_selection_autocomplete);
-		mAutocompleteSuggestionsLayout
-				= new LinearLayoutManager(context, RecyclerView.VERTICAL, false);
-
-		mAutocompleteSuggestions.setLayoutManager(mAutocompleteSuggestionsLayout);
-
-		final AutocompleteAdapter adapter = new AutocompleteAdapter(context);
-
-		mAutocompleteSuggestions.setAdapter(adapter);
-
-		AndroidCommon.onTextChanged(mSubredditBox, adapter::updateSuggestions);
-		AndroidCommon.onTextChanged(mUsernameSpinner, adapter::updateSuggestions);
-
-		final RedditAccountManager accountManager = RedditAccountManager.getInstance(context);
-
-		final ArrayList<String> usernames = new ArrayList<>();
-
-		Stream.from(accountManager.getAccounts())
-				.filter(RedditAccount::isNotAnonymous)
-				.forEach(account -> usernames.add(account.username));
-
-		if(usernames.isEmpty()) {
-			final FragmentActivity activity = getActivity();
-
-			if(activity != null) {
-				((Listener)activity).onNotLoggedIn();
-			}
-
-			return null;
-		}
-
-		AndroidCommon.setAutoCompleteTextViewItemsNoFilter(mUsernameSpinner, usernames);
-
-		mUsernameSpinner.setText(accountManager.getDefaultAccount().username);
-
-		{
-			final Button continueButton
-					= root.findViewById(R.id.subreddit_selection_button_continue);
-
-			continueButton.setOnClickListener(v -> {
-
-				final FragmentActivity activity = getActivity();
-
-				if(activity == null) {
-					return;
-				}
-
-				final SubredditCanonicalId subreddit;
-
-
-				try {
-					subreddit = new SubredditCanonicalId(mSubredditBox.getText().toString());
-
-				} catch(final InvalidSubredditNameException e) {
-
-					final Context applicationContext = activity.getApplicationContext();
-
-					General.showResultDialog((AppCompatActivity)activity, new RRError(
-							applicationContext.getString(R.string.invalid_subreddit_name),
-							applicationContext.getString(R.string.invalid_subreddit_name_message),
-							false,
-							e));
-
-					return;
-				}
-
-				((Listener)activity).onSubredditSelected(
-						mUsernameSpinner.getText().toString(),
-						subreddit);
-			});
-		}
-
-		if(args.subreddit != null) {
-			mSubredditBox.setText(args.subreddit.getDisplayNameLowercase());
-			adapter.updateSuggestions();
-		}
-
-		return root;
-	}
-
-	private void scrollToTop() {
-		mAutocompleteSuggestionsLayout.smoothScrollToPosition(mAutocompleteSuggestions, null, 0);
-	}
+        if (activity != null) {
+            activity.setTitle(string.subreddit_selector_title)
+        }
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val args: Args = Args.Companion.fromBundle(requireArguments())
+
+        val context = Objects.requireNonNull<ViewGroup?>(container).getContext()
+
+        val root = inflater.inflate(R.layout.subreddit_selection, container, false)
+
+        mUsernameSpinner =
+            root.findViewById<MaterialAutoCompleteTextView>(R.id.subreddit_selection_account)
+        mSubredditBox = root.findViewById<TextInputEditText>(R.id.subreddit_selection_textbox)
+
+        mAutocompleteSuggestions =
+            root.findViewById<RecyclerView>(R.id.subreddit_selection_autocomplete)
+        mAutocompleteSuggestionsLayout
+        = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+
+        mAutocompleteSuggestions!!.setLayoutManager(mAutocompleteSuggestionsLayout)
+
+        val adapter = AutocompleteAdapter(context)
+
+        mAutocompleteSuggestions!!.setAdapter(adapter)
+
+        AndroidCommon.onTextChanged(mSubredditBox!!, Runnable { adapter.updateSuggestions() })
+        AndroidCommon.onTextChanged(mUsernameSpinner!!, Runnable { adapter.updateSuggestions() })
+
+        val accountManager: RedditAccountManager =
+            RedditAccountManager.Companion.getInstance(context)
+
+        val usernames = ArrayList<String?>()
+
+        Stream.Companion.from<RedditAccount?>(accountManager.getAccounts())
+            .filter(RedditAccount::isNotAnonymous)
+            .forEach(Consumer { account: RedditAccount? -> usernames.add(account!!.username) })
+
+        if (usernames.isEmpty()) {
+            val activity = getActivity()
+
+            if (activity != null) {
+                (activity as Listener).onNotLoggedIn()
+            }
+
+            return null
+        }
+
+        AndroidCommon.setAutoCompleteTextViewItemsNoFilter(mUsernameSpinner!!, usernames)
+
+        mUsernameSpinner!!.setText(accountManager.getDefaultAccount().username)
+
+        run {
+            val continueButton = root.findViewById<Button>(R.id.subreddit_selection_button_continue)
+            continueButton.setOnClickListener(View.OnClickListener { v: View? ->
+                val activity = getActivity()
+                if (activity == null) {
+                    return@setOnClickListener
+                }
+
+                val subreddit: SubredditCanonicalId
+
+
+                try {
+                    subreddit = SubredditCanonicalId(mSubredditBox!!.getText().toString())
+                } catch (e: InvalidSubredditNameException) {
+                    val applicationContext = activity.getApplicationContext()
+
+                    showResultDialog(
+                        activity as AppCompatActivity, RRError(
+                            applicationContext.getString(string.invalid_subreddit_name),
+                            applicationContext.getString(string.invalid_subreddit_name_message),
+                            false,
+                            e
+                        )
+                    )
+
+                    return@setOnClickListener
+                }
+                (activity as Listener).onSubredditSelected(
+                    mUsernameSpinner!!.getText().toString(),
+                    subreddit
+                )
+            })
+        }
+
+        if (args.subreddit != null) {
+            mSubredditBox!!.setText(args.subreddit.getDisplayNameLowercase())
+            adapter.updateSuggestions()
+        }
+
+        return root
+    }
+
+    private fun scrollToTop() {
+        mAutocompleteSuggestionsLayout!!.smoothScrollToPosition(mAutocompleteSuggestions, null, 0)
+    }
 }

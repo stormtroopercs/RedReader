@@ -12,165 +12,142 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
 
-package org.quantumbadger.redreader.reddit;
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.addGlobalError
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.reddit.things.RedditUser
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.activities.BugReportActivity;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.http.FailedRequestBody;
-import org.quantumbadger.redreader.reddit.things.RedditUser;
+abstract class APIResponseHandler private constructor(val context: AppCompatActivity) {
+    enum class APIFailureType {
+        INVALID_USER,
+        BAD_CAPTCHA,
+        NOTALLOWED,
+        SUBREDDIT_REQUIRED,
+        URL_REQUIRED,
+        UNKNOWN,
+        TOO_FAST,
+        TOO_LONG,
+        ALREADY_SUBMITTED,
+        POST_FLAIR_REQUIRED
+    }
 
-import java.util.ArrayList;
+    abstract fun onCallbackException(t: Throwable?)
 
-public abstract class APIResponseHandler {
+    abstract fun onFailure(error: RRError)
 
-	protected final AppCompatActivity context;
+    fun notifyFailure(error: RRError) {
+        try {
+            onFailure(error)
+        } catch (t1: Throwable) {
+            try {
+                onCallbackException(t1)
+            } catch (t2: Throwable) {
+                addGlobalError(RRError(null, null, true, t1))
+                handleGlobalError(context, t2)
+            }
+        }
+    }
 
-	public enum APIFailureType {
-		INVALID_USER,
-		BAD_CAPTCHA,
-		NOTALLOWED,
-		SUBREDDIT_REQUIRED,
-		URL_REQUIRED,
-		UNKNOWN,
-		TOO_FAST,
-		TOO_LONG,
-		ALREADY_SUBMITTED,
-		POST_FLAIR_REQUIRED
-	}
+    fun notifyFailure(
+        type: APIFailureType,
+        debuggingContext: String?,
+        response: Optional<FailedRequestBody?>
+    ) {
+        notifyFailure(
+            General.getGeneralErrorForFailure(
+                context,
+                type,
+                debuggingContext,
+                response
+            )
+        )
+    }
 
-	private APIResponseHandler(final AppCompatActivity context) {
-		this.context = context;
-	}
+    abstract class SubmitResponseHandler protected constructor(context: AppCompatActivity) :
+        APIResponseHandler(context) {
+        abstract fun onSubmitErrors(errors: ArrayList<String?>)
 
-	protected abstract void onCallbackException(Throwable t);
+        abstract fun onSuccess(
+            redirectUrl: Optional<String?>,
+            thingId: Optional<String?>
+        )
+    }
 
-	protected abstract void onFailure(@NonNull RRError error);
+    abstract class ActionResponseHandler protected constructor(context: AppCompatActivity) :
+        APIResponseHandler(context) {
+        fun notifySuccess() {
+            try {
+                onSuccess()
+            } catch (t1: Throwable) {
+                try {
+                    onCallbackException(t1)
+                } catch (t2: Throwable) {
+                    addGlobalError(RRError(null, null, true, t1))
+                    handleGlobalError(context, t2)
+                }
+            }
+        }
 
-	public final void notifyFailure(@NonNull final RRError error) {
-		try {
-			onFailure(error);
-		} catch(final Throwable t1) {
-			try {
-				onCallbackException(t1);
-			} catch(final Throwable t2) {
-				BugReportActivity.addGlobalError(new RRError(null, null, true, t1));
-				BugReportActivity.handleGlobalError(context, t2);
-			}
-		}
-	}
+        protected abstract fun onSuccess()
+    }
 
-	public final void notifyFailure(
-			@NonNull final APIFailureType type,
-			@Nullable final String debuggingContext,
-			@NonNull final Optional<FailedRequestBody> response) {
+    abstract class ValueResponseHandler<E> protected constructor(context: AppCompatActivity) :
+        APIResponseHandler(context) {
+        fun notifySuccess(value: E) {
+            try {
+                onSuccess(value)
+            } catch (t1: Throwable) {
+                try {
+                    onCallbackException(t1)
+                } catch (t2: Throwable) {
+                    addGlobalError(RRError(null, null, true, t1))
+                    handleGlobalError(context, t2)
+                }
+            }
+        }
 
-		notifyFailure(General.getGeneralErrorForFailure(
-				context,
-				type,
-				debuggingContext,
-				response));
-	}
+        abstract fun onSuccess(value: E)
+    }
 
-	public static abstract class SubmitResponseHandler extends APIResponseHandler {
+    abstract class UserResponseHandler protected constructor(context: AppCompatActivity) :
+        APIResponseHandler(context) {
+        fun notifySuccess(result: RedditUser?, timestamp: TimestampUTC?) {
+            try {
+                onSuccess(result, timestamp)
+            } catch (t1: Throwable) {
+                try {
+                    onCallbackException(t1)
+                } catch (t2: Throwable) {
+                    addGlobalError(RRError(null, null, true, t1))
+                    handleGlobalError(context, t2)
+                }
+            }
+        }
 
-		protected SubmitResponseHandler(@NonNull final AppCompatActivity context) {
-			super(context);
-		}
+        fun notifyDownloadStarted() {
+            try {
+                onDownloadStarted()
+            } catch (t1: Throwable) {
+                try {
+                    onCallbackException(t1)
+                } catch (t2: Throwable) {
+                    addGlobalError(RRError(null, null, true, t1))
+                    handleGlobalError(context, t2)
+                }
+            }
+        }
 
-		public abstract void onSubmitErrors(@NonNull final ArrayList<String> errors);
+        protected abstract fun onDownloadStarted()
 
-		public abstract void onSuccess(
-				@NonNull final Optional<String> redirectUrl,
-				@NonNull final Optional<String> thingId);
-	}
-
-	public static abstract class ActionResponseHandler extends APIResponseHandler {
-
-		protected ActionResponseHandler(final AppCompatActivity context) {
-			super(context);
-		}
-
-		public final void notifySuccess() {
-			try {
-				onSuccess();
-			} catch(final Throwable t1) {
-				try {
-					onCallbackException(t1);
-				} catch(final Throwable t2) {
-					BugReportActivity.addGlobalError(new RRError(null, null, true, t1));
-					BugReportActivity.handleGlobalError(context, t2);
-				}
-			}
-		}
-
-		protected abstract void onSuccess();
-	}
-
-	public static abstract class ValueResponseHandler<E> extends APIResponseHandler {
-
-		protected ValueResponseHandler(final AppCompatActivity context) {
-			super(context);
-		}
-
-		public final void notifySuccess(@NonNull final E value) {
-			try {
-				onSuccess(value);
-			} catch(final Throwable t1) {
-				try {
-					onCallbackException(t1);
-				} catch(final Throwable t2) {
-					BugReportActivity.addGlobalError(new RRError(null, null, true, t1));
-					BugReportActivity.handleGlobalError(context, t2);
-				}
-			}
-		}
-
-		protected abstract void onSuccess(@NonNull final E value);
-	}
-
-	public static abstract class UserResponseHandler extends APIResponseHandler {
-
-		protected UserResponseHandler(final AppCompatActivity context) {
-			super(context);
-		}
-
-		public final void notifySuccess(final RedditUser result, final TimestampUTC timestamp) {
-			try {
-				onSuccess(result, timestamp);
-			} catch(final Throwable t1) {
-				try {
-					onCallbackException(t1);
-				} catch(final Throwable t2) {
-					BugReportActivity.addGlobalError(new RRError(null, null, true, t1));
-					BugReportActivity.handleGlobalError(context, t2);
-				}
-			}
-		}
-
-		public final void notifyDownloadStarted() {
-			try {
-				onDownloadStarted();
-			} catch(final Throwable t1) {
-				try {
-					onCallbackException(t1);
-				} catch(final Throwable t2) {
-					BugReportActivity.addGlobalError(new RRError(null, null, true, t1));
-					BugReportActivity.handleGlobalError(context, t2);
-				}
-			}
-		}
-
-		protected abstract void onDownloadStarted();
-
-		protected abstract void onSuccess(RedditUser result, TimestampUTC timestamp);
-	}
+        protected abstract fun onSuccess(result: RedditUser?, timestamp: TimestampUTC?)
+    }
 }

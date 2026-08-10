@@ -12,67 +12,51 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.CharacterStyle
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
 
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.CharacterStyle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
+class HtmlRawElementStyledText(
+    private val mText: String,
+    private val mSpans: ArrayList<CharacterStyle?>?
+) : HtmlRawElement() {
+    override fun getPlainText(stringBuilder: StringBuilder) {
+        stringBuilder.append(mText)
+    }
 
-import java.util.ArrayList;
+    fun writeTo(ssb: SpannableStringBuilder) {
+        val textStart = ssb.length
+        ssb.append(mText)
+        val textEnd = ssb.length
 
-public class HtmlRawElementStyledText extends HtmlRawElement {
+        if (mSpans != null) {
+            for (span in mSpans) {
+                ssb.setSpan(span, textStart, textEnd, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
+            }
+        }
+    }
 
-	@NonNull private final String mText;
-	@Nullable private final ArrayList<CharacterStyle> mSpans;
+    override fun reduce(
+        activeAttributes: HtmlTextAttributes,
+        activity: AppCompatActivity,
+        destination: ArrayList<HtmlRawElement?>,
+        linkButtons: ArrayList<LinkButtonDetails?>
+    ) {
+        destination.add(this)
+    }
 
-	public HtmlRawElementStyledText(
-			@NonNull final String text,
-			@Nullable final ArrayList<CharacterStyle> spans) {
-		mText = text;
-		mSpans = spans;
-	}
-
-	@Override
-	public void getPlainText(@NonNull final StringBuilder stringBuilder) {
-		stringBuilder.append(mText);
-	}
-
-	public final void writeTo(@NonNull final SpannableStringBuilder ssb) {
-
-		final int textStart = ssb.length();
-		ssb.append(mText);
-		final int textEnd = ssb.length();
-
-		if(mSpans != null) {
-			for(final CharacterStyle span : mSpans) {
-				ssb.setSpan(span, textStart, textEnd, Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-			}
-		}
-	}
-
-	@Override
-	public void reduce(
-			@NonNull final HtmlTextAttributes activeAttributes,
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<HtmlRawElement> destination,
-			@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
-
-		destination.add(this);
-	}
-
-	@Override
-	public void generate(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<BodyElement> destination) {
-
-		throw new RuntimeException(
-				"Attempt to call generate() on styled text: should be inside a block");
-	}
+    override fun generate(
+        activity: AppCompatActivity,
+        destination: ArrayList<BodyElement?>
+    ) {
+        throw RuntimeException(
+            "Attempt to call generate() on styled text: should be inside a block"
+        )
+    }
 }

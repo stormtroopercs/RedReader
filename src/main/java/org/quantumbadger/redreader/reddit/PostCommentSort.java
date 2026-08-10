@@ -12,68 +12,70 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
 
-package org.quantumbadger.redreader.reddit;
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.OptionsMenuUtility
+import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuCommentsListener
+import org.quantumbadger.redreader.common.StringUtils
 
-import androidx.annotation.StringRes;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.OptionsMenuUtility;
-import org.quantumbadger.redreader.common.StringUtils;
+enum class PostCommentSort(
+    key: String,
+    @StringRes menuTitle: Int,
+    @StringRes suggestedTitle: Int
+) : OptionsMenuUtility.Sort {
+    BEST("confidence", string.sort_comments_best, string.sort_comments_best_suggested),
+    HOT("hot", string.sort_comments_hot, string.sort_comments_hot_suggested),
+    NEW("new", string.sort_comments_new, string.sort_comments_new_suggested),
+    OLD("old", string.sort_comments_old, string.sort_comments_old_suggested),
+    TOP("top", string.sort_comments_top, string.sort_comments_top_suggested),
+    CONTROVERSIAL(
+        "controversial",
+        string.sort_comments_controversial,
+        string.sort_comments_controversial_suggested
+    ),
+    QA("qa", string.sort_comments_qa, string.sort_comments_qa_suggested);
 
-public enum PostCommentSort implements OptionsMenuUtility.Sort {
+    val key: String?
 
-	BEST("confidence", R.string.sort_comments_best, R.string.sort_comments_best_suggested),
-	HOT("hot", R.string.sort_comments_hot, R.string.sort_comments_hot_suggested),
-	NEW("new", R.string.sort_comments_new, R.string.sort_comments_new_suggested),
-	OLD("old", R.string.sort_comments_old, R.string.sort_comments_old_suggested),
-	TOP("top", R.string.sort_comments_top, R.string.sort_comments_top_suggested),
-	CONTROVERSIAL("controversial",
-			R.string.sort_comments_controversial,
-			R.string.sort_comments_controversial_suggested),
-	QA("qa", R.string.sort_comments_qa, R.string.sort_comments_qa_suggested);
+    @StringRes
+    private val menuTitle: Int
 
-	public final String key;
-	@StringRes private final int menuTitle;
-	@StringRes private final int suggestedTitle;
+    @StringRes
+    val suggestedTitle: Int
 
-	PostCommentSort(
-			final String key,
-			@StringRes final int menuTitle,
-			@StringRes final int suggestedTitle) {
-		this.key = key;
-		this.menuTitle = menuTitle;
-		this.suggestedTitle = suggestedTitle;
-	}
+    init {
+        this.key = key
+        this.menuTitle = menuTitle
+        this.suggestedTitle = suggestedTitle
+    }
 
-	public static PostCommentSort lookup(String name) {
+    override fun getMenuTitle(): Int {
+        return menuTitle
+    }
 
-		name = StringUtils.asciiUppercase(name);
+    override fun onSortSelected(activity: AppCompatActivity) {
+        (activity as OptionsMenuCommentsListener).onSortSelected(this)
+    }
 
-		if (name.equals("CONFIDENCE")) {
-			return BEST; // oh, reddit...
-		}
+    companion object {
+        fun lookup(name: String): PostCommentSort? {
+            var name = name
+            name = StringUtils.asciiUppercase(name)
 
-		try {
-			return PostCommentSort.valueOf(name);
-		} catch (final IllegalArgumentException e) {
-			return null;
-		}
-	}
+            if (name == "CONFIDENCE") {
+                return PostCommentSort.BEST // oh, reddit...
+            }
 
-	@Override
-	public int getMenuTitle() {
-		return menuTitle;
-	}
-
-	public int getSuggestedTitle() {
-		return suggestedTitle;
-	}
-
-	@Override
-	public void onSortSelected(final AppCompatActivity activity) {
-		((OptionsMenuUtility.OptionsMenuCommentsListener)activity).onSortSelected(this);
-	}
+            try {
+                return valueOf(name)
+            } catch (e: IllegalArgumentException) {
+                return null
+            }
+        }
+    }
 }

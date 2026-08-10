@@ -12,95 +12,80 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import android.view.ViewGroup.MarginLayoutParams
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.views.LinkDetailsView
 
-import android.view.View;
-import android.view.ViewGroup;
+abstract class BodyElementBaseButton(
+    private val mText: String,
+    private val mSubtitle: String?, private val mIsLinkButton: Boolean
+) : BodyElement(BlockType.BUTTON) {
+    protected abstract fun generateOnClickListener(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View.OnClickListener
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    protected abstract fun generateOnLongClickListener(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): OnLongClickListener?
 
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.views.LinkDetailsView;
+    override fun generateView(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View {
+        if (mIsLinkButton && !showLinkButtons) {
+            // Don't show
+            val result = View(activity)
+            result.setVisibility(View.GONE)
+            return result
+        }
 
-public abstract class BodyElementBaseButton extends BodyElement {
+        val ldv = LinkDetailsView(
+            activity,
+            mText,
+            mSubtitle
+        )
 
-	@NonNull private final String mText;
-	@Nullable private final String mSubtitle;
+        val linkMarginPx = dpToPixels(activity, 8f)
 
-	private final boolean mIsLinkButton;
+        val layoutParams = MarginLayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
 
-	@NonNull
-	protected abstract View.OnClickListener generateOnClickListener(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons);
+        layoutParams.setMargins(0, linkMarginPx, 0, linkMarginPx)
+        ldv.setLayoutParams(layoutParams)
 
-	@Nullable
-	protected abstract View.OnLongClickListener generateOnLongClickListener(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons);
+        ldv.setOnClickListener(
+            generateOnClickListener(activity, textColor, textSize, showLinkButtons)
+        )
 
-	public BodyElementBaseButton(
-			@NonNull final String text,
-			@Nullable final String subtitle, final boolean isLinkButton) {
+        val longClickListener = generateOnLongClickListener(
+            activity,
+            textColor,
+            textSize,
+            showLinkButtons
+        )
 
-		super(BlockType.BUTTON);
-		mText = text;
-		mSubtitle = subtitle;
-		mIsLinkButton = isLinkButton;
-	}
+        if (longClickListener != null) {
+            ldv.setOnLongClickListener(longClickListener)
+        }
 
-	@Override
-	public final View generateView(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		if(mIsLinkButton && !showLinkButtons) {
-			// Don't show
-			final View result = new View(activity);
-			result.setVisibility(View.GONE);
-			return result;
-		}
-
-		final LinkDetailsView ldv = new LinkDetailsView(
-				activity,
-				mText,
-				mSubtitle);
-
-		final int linkMarginPx = General.dpToPixels(activity, 8);
-
-		final ViewGroup.MarginLayoutParams layoutParams
-				= new ViewGroup.MarginLayoutParams(
-						ViewGroup.LayoutParams.MATCH_PARENT,
-						ViewGroup.LayoutParams.WRAP_CONTENT);
-
-		layoutParams.setMargins(0, linkMarginPx, 0, linkMarginPx);
-		ldv.setLayoutParams(layoutParams);
-
-		ldv.setOnClickListener(
-				generateOnClickListener(activity, textColor, textSize, showLinkButtons));
-
-		final View.OnLongClickListener longClickListener
-				= generateOnLongClickListener(
-				activity,
-				textColor,
-				textSize,
-				showLinkButtons);
-
-		if(longClickListener != null) {
-			ldv.setOnLongClickListener(longClickListener);
-		}
-
-		return ldv;
-	}
+        return ldv
+    }
 }

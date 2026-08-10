@@ -12,266 +12,243 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.fragments
 
-package org.quantumbadger.redreader.fragments;
+import android.content.Context
+import android.graphics.drawable.ColorDrawable
+import android.os.Bundle
+import android.view.View
+import androidx.annotation.IntDef
+import androidx.appcompat.app.AppCompatActivity
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuSubredditsListener
+import org.quantumbadger.redreader.adapters.MainMenuListingManager
+import org.quantumbadger.redreader.adapters.MainMenuSelectionListener
+import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.TimestampBound
+import org.quantumbadger.redreader.common.TimestampBound.MoreRecentThanBound
+import org.quantumbadger.redreader.common.time.TimeDuration.Companion.hours
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.io.RequestResponseHandler
+import org.quantumbadger.redreader.reddit.api.RedditMultiredditSubscriptionManager
+import org.quantumbadger.redreader.reddit.api.RedditMultiredditSubscriptionManager.MultiredditListChangeListener
+import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager
+import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager.SubredditSubscriptionStateChangeListener
+import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
+import org.quantumbadger.redreader.reddit.url.PostListingURL
+import org.quantumbadger.redreader.views.ScrollbarRecyclerViewManager
+import org.quantumbadger.redreader.views.liststatus.ErrorView
 
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.drawable.ColorDrawable;
-import android.os.Bundle;
-import android.view.View;
-import androidx.annotation.IntDef;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.activities.OptionsMenuUtility;
-import org.quantumbadger.redreader.adapters.MainMenuListingManager;
-import org.quantumbadger.redreader.adapters.MainMenuSelectionListener;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.TimestampBound;
-import org.quantumbadger.redreader.common.time.TimeDuration;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.io.RequestResponseHandler;
-import org.quantumbadger.redreader.reddit.api.RedditMultiredditSubscriptionManager;
-import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager;
-import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
-import org.quantumbadger.redreader.reddit.url.PostListingURL;
-import org.quantumbadger.redreader.views.ScrollbarRecyclerViewManager;
-import org.quantumbadger.redreader.views.liststatus.ErrorView;
+class MainMenuFragment(
+    parent: AppCompatActivity,
+    savedInstanceState: Bundle?,
+    force: Boolean
+) : RRFragment(parent, savedInstanceState), MainMenuSelectionListener,
+    SubredditSubscriptionStateChangeListener, MultiredditListChangeListener {
+    @IntDef(
+        [MENU_MENU_ACTION_FRONTPAGE, MENU_MENU_ACTION_PROFILE, MENU_MENU_ACTION_INBOX, MENU_MENU_ACTION_SUBMITTED, MENU_MENU_ACTION_SUBMITTED_COMMENTS, MENU_MENU_ACTION_UPVOTED, MENU_MENU_ACTION_DOWNVOTED, MENU_MENU_ACTION_SAVED, MENU_MENU_ACTION_MODMAIL, MENU_MENU_ACTION_HIDDEN, MENU_MENU_ACTION_CUSTOM, MENU_MENU_ACTION_ALL, MENU_MENU_ACTION_POPULAR, MENU_MENU_ACTION_SENT_MESSAGES, MENU_MENU_ACTION_FIND_SUBREDDIT]
+    )
+    @Retention(AnnotationRetention.SOURCE)
+    annotation class MainMenuAction
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.util.Collection;
-import java.util.HashSet;
+    private val mManager: MainMenuListingManager
 
-public class MainMenuFragment extends RRFragment implements
-		MainMenuSelectionListener,
-		RedditSubredditSubscriptionManager.SubredditSubscriptionStateChangeListener,
-		RedditMultiredditSubscriptionManager.MultiredditListChangeListener {
+    private val mOuter: View?
 
-	public static final int MENU_MENU_ACTION_FRONTPAGE = 0;
-	public static final int MENU_MENU_ACTION_PROFILE = 1;
-	public static final int MENU_MENU_ACTION_INBOX = 2;
-	public static final int MENU_MENU_ACTION_SUBMITTED = 3;
-	public static final int MENU_MENU_ACTION_SUBMITTED_COMMENTS = 4;
-	public static final int MENU_MENU_ACTION_UPVOTED = 5;
-	public static final int MENU_MENU_ACTION_DOWNVOTED = 6;
-	public static final int MENU_MENU_ACTION_SAVED = 7;
-	public static final int MENU_MENU_ACTION_MODMAIL = 8;
-	public static final int MENU_MENU_ACTION_HIDDEN = 9;
-	public static final int MENU_MENU_ACTION_CUSTOM = 10;
-	public static final int MENU_MENU_ACTION_ALL = 11;
-	public static final int MENU_MENU_ACTION_POPULAR = 12;
-	public static final int MENU_MENU_ACTION_SENT_MESSAGES = 13;
-	public static final int MENU_MENU_ACTION_FIND_SUBREDDIT = 14;
+    init {
+        val context: Context = getActivity()
 
-	@IntDef({
-			MENU_MENU_ACTION_FRONTPAGE,
-			MENU_MENU_ACTION_PROFILE,
-			MENU_MENU_ACTION_INBOX,
-			MENU_MENU_ACTION_SUBMITTED,
-			MENU_MENU_ACTION_SUBMITTED_COMMENTS,
-			MENU_MENU_ACTION_UPVOTED,
-			MENU_MENU_ACTION_DOWNVOTED,
-			MENU_MENU_ACTION_SAVED,
-			MENU_MENU_ACTION_MODMAIL,
-			MENU_MENU_ACTION_HIDDEN,
-			MENU_MENU_ACTION_CUSTOM,
-			MENU_MENU_ACTION_ALL,
-			MENU_MENU_ACTION_POPULAR,
-			MENU_MENU_ACTION_SENT_MESSAGES,
-			MENU_MENU_ACTION_FIND_SUBREDDIT})
-	@Retention(RetentionPolicy.SOURCE)
-	public @interface MainMenuAction {
-	}
+        val user: RedditAccount = RedditAccountManager.Companion.getInstance(context)
+            .getDefaultAccount()
 
-	private final MainMenuListingManager mManager;
+        val recyclerViewManager = ScrollbarRecyclerViewManager(parent, null, false)
 
-	private final View mOuter;
+        mOuter = recyclerViewManager.getOuterView()
+        val recyclerView = recyclerViewManager.getRecyclerView()
 
-	public MainMenuFragment(
-			final AppCompatActivity parent,
-			final Bundle savedInstanceState,
-			final boolean force) {
+        if (parent is OptionsMenuSubredditsListener
+            && PrefsUtility.pref_behaviour_enable_swipe_refresh()
+        ) {
+            recyclerViewManager.enablePullToRefresh(
+                OnRefreshListener {
+                    (parent as OptionsMenuSubredditsListener)
+                        .onRefreshSubreddits()
+                })
+        }
 
-		super(parent, savedInstanceState);
-		final Context context = getActivity();
+        mManager = MainMenuListingManager(getActivity(), this, user)
 
-		final RedditAccount user = RedditAccountManager.getInstance(context)
-				.getDefaultAccount();
+        recyclerView.setAdapter(mManager.getAdapter())
 
-		final ScrollbarRecyclerViewManager recyclerViewManager
-				= new ScrollbarRecyclerViewManager(parent, null, false);
+        val paddingPx = dpToPixels(context, 8f)
+        recyclerView.setPadding(paddingPx, 0, paddingPx, 0)
+        recyclerView.setClipToPadding(false)
 
-		mOuter = recyclerViewManager.getOuterView();
-		final RecyclerView recyclerView = recyclerViewManager.getRecyclerView();
+        run {
+            val appearance =
+                context.obtainStyledAttributes(intArrayOf(R.attr.rrListItemBackgroundCol))
+            getActivity().getWindow().setBackgroundDrawable(
+                ColorDrawable(appearance.getColor(0, General.COLOR_INVALID))
+            )
+            appearance.recycle()
+        }
 
-		if(parent instanceof OptionsMenuUtility.OptionsMenuSubredditsListener
-				&& PrefsUtility.pref_behaviour_enable_swipe_refresh()) {
+        val multiredditSubscriptionManager
+                : RedditMultiredditSubscriptionManager =
+            RedditMultiredditSubscriptionManager.Companion.getSingleton(context, user)
 
-			recyclerViewManager.enablePullToRefresh(
-					((OptionsMenuUtility.OptionsMenuSubredditsListener)parent)
-							::onRefreshSubreddits);
-		}
+        val subredditSubscriptionManager
+                : RedditSubredditSubscriptionManager =
+            RedditSubredditSubscriptionManager.Companion.getSingleton(context, user)
 
-		mManager = new MainMenuListingManager(getActivity(), this, user);
+        if (force) {
+            multiredditSubscriptionManager.triggerUpdate(
+                object : RequestResponseHandler<HashSet<String?>?, RRError?> {
+                    override fun onRequestFailed(failureReason: RRError) {
+                        onMultiredditError(failureReason)
+                    }
 
-		recyclerView.setAdapter(mManager.getAdapter());
+                    override fun onRequestSuccess(
+                        result: HashSet<String?>?,
+                        timeCached: TimestampUTC?
+                    ) {
+                        multiredditSubscriptionManager.addListener(this@MainMenuFragment)
+                        onMultiredditSubscriptionsChanged(result)
+                    }
+                }, TimestampBound.Companion.NONE
+            )
 
-		final int paddingPx = General.dpToPixels(context, 8);
-		recyclerView.setPadding(paddingPx, 0, paddingPx, 0);
-		recyclerView.setClipToPadding(false);
+            subredditSubscriptionManager.triggerUpdate(
+                object : RequestResponseHandler<HashSet<SubredditCanonicalId?>?, RRError?> {
+                    override fun onRequestFailed(failureReason: RRError) {
+                        onSubredditError(failureReason)
+                    }
 
-		{
-			final TypedArray appearance = context.obtainStyledAttributes(new int[] {
-					R.attr.rrListItemBackgroundCol});
+                    override fun onRequestSuccess(
+                        result: HashSet<SubredditCanonicalId?>?,
+                        timeCached: TimestampUTC?
+                    ) {
+                        subredditSubscriptionManager.addListener(this@MainMenuFragment)
+                        onSubredditSubscriptionsChanged(result)
+                    }
+                }, TimestampBound.Companion.NONE
+            )
+        } else {
+            multiredditSubscriptionManager.addListener(this)
+            subredditSubscriptionManager.addListener(this)
 
-			getActivity().getWindow().setBackgroundDrawable(
-					new ColorDrawable(appearance.getColor(0, General.COLOR_INVALID)));
+            if (multiredditSubscriptionManager.areSubscriptionsReady()) {
+                onMultiredditSubscriptionsChanged(
+                    multiredditSubscriptionManager.getSubscriptionList()
+                )
+            }
 
-			appearance.recycle();
-		}
+            if (subredditSubscriptionManager.areSubscriptionsReady()) {
+                onSubredditSubscriptionsChanged(
+                    subredditSubscriptionManager.getSubscriptionList()
+                )
+            }
 
-		final RedditMultiredditSubscriptionManager multiredditSubscriptionManager
-				= RedditMultiredditSubscriptionManager.getSingleton(context, user);
+            val oneHour
+                    : MoreRecentThanBound = TimestampBound.Companion.notOlderThan(hours(1))
+            multiredditSubscriptionManager.triggerUpdate(null, oneHour)
+            subredditSubscriptionManager.triggerUpdate(null, oneHour)
+        }
+    }
 
-		final RedditSubredditSubscriptionManager subredditSubscriptionManager
-				= RedditSubredditSubscriptionManager.getSingleton(context, user);
+    enum class MainMenuUserItems {
+        PROFILE, INBOX, SUBMITTED, SUBMITTED_COMMENTS, SAVED,
+        HIDDEN, UPVOTED, DOWNVOTED, MODMAIL, SENT_MESSAGES
+    }
 
-		if(force) {
-			multiredditSubscriptionManager.triggerUpdate(
-					new RequestResponseHandler<HashSet<String>, RRError>() {
+    enum class MainMenuShortcutItems {
+        FRONTPAGE, POPULAR, ALL, SUBREDDIT_SEARCH, CUSTOM
+    }
 
-						@Override
-						public void onRequestFailed(final RRError failureReason) {
-							onMultiredditError(failureReason);
-						}
+    override fun getListingView(): View? {
+        return mOuter
+    }
 
-						@Override
-						public void onRequestSuccess(
-								final HashSet<String> result,
-								final TimestampUTC timeCached) {
+    override fun onSaveInstanceState(): Bundle? {
+        return null
+    }
 
-							multiredditSubscriptionManager.addListener(MainMenuFragment.this);
-							onMultiredditSubscriptionsChanged(result);
-						}
-					}, TimestampBound.NONE);
+    fun onSubredditSubscriptionsChanged(
+        subscriptions: MutableCollection<SubredditCanonicalId?>?
+    ) {
+        mManager.setSubreddits(subscriptions)
+    }
 
-			subredditSubscriptionManager.triggerUpdate(
-					new RequestResponseHandler<
-							HashSet<SubredditCanonicalId>,
-							RRError>() {
-						@Override
-						public void onRequestFailed(final RRError failureReason) {
-							onSubredditError(failureReason);
-						}
+    fun onMultiredditSubscriptionsChanged(subscriptions: MutableCollection<String?>?) {
+        mManager.setMultireddits(subscriptions)
+    }
 
-						@Override
-						public void onRequestSuccess(
-								final HashSet<SubredditCanonicalId> result,
-								final TimestampUTC timeCached) {
-							subredditSubscriptionManager.addListener(MainMenuFragment.this);
-							onSubredditSubscriptionsChanged(result);
-						}
-					}, TimestampBound.NONE);
+    private fun onSubredditError(error: RRError) {
+        mManager.setSubredditsError(ErrorView(getActivity(), error))
+    }
 
-		} else {
+    private fun onMultiredditError(error: RRError) {
+        mManager.setMultiredditsError(ErrorView(getActivity(), error))
+    }
 
-			multiredditSubscriptionManager.addListener(this);
-			subredditSubscriptionManager.addListener(this);
+    override fun onSelected(@MainMenuAction type: Int) {
+        (getActivity() as MainMenuSelectionListener).onSelected(type)
+    }
 
-			if(multiredditSubscriptionManager.areSubscriptionsReady()) {
-				onMultiredditSubscriptionsChanged(
-						multiredditSubscriptionManager.getSubscriptionList());
-			}
+    override fun onSelected(postListingURL: PostListingURL?) {
+        (getActivity() as MainMenuSelectionListener).onSelected(postListingURL)
+    }
 
-			if(subredditSubscriptionManager.areSubscriptionsReady()) {
-				onSubredditSubscriptionsChanged(
-						subredditSubscriptionManager.getSubscriptionList());
-			}
+    override fun onSubredditSubscriptionListUpdated(
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager
+    ) {
+        onSubredditSubscriptionsChanged(subredditSubscriptionManager.getSubscriptionList())
+    }
 
-			final TimestampBound.MoreRecentThanBound oneHour
-					= TimestampBound.notOlderThan(TimeDuration.hours(1));
-			multiredditSubscriptionManager.triggerUpdate(null, oneHour);
-			subredditSubscriptionManager.triggerUpdate(null, oneHour);
-		}
-	}
+    override fun onMultiredditListUpdated(
+        multiredditSubscriptionManager: RedditMultiredditSubscriptionManager
+    ) {
+        onMultiredditSubscriptionsChanged(multiredditSubscriptionManager.getSubscriptionList())
+    }
 
-	public enum MainMenuUserItems {
-		PROFILE, INBOX, SUBMITTED, SUBMITTED_COMMENTS, SAVED,
-		HIDDEN, UPVOTED, DOWNVOTED, MODMAIL, SENT_MESSAGES
-	}
+    override fun onSubredditSubscriptionAttempted(
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+    ) {
+    }
 
-	public enum MainMenuShortcutItems {
-		FRONTPAGE, POPULAR, ALL, SUBREDDIT_SEARCH, CUSTOM
-	}
+    override fun onSubredditUnsubscriptionAttempted(
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+    ) {
+    }
 
-	@Override
-	public View getListingView() {
-		return mOuter;
-	}
+    fun onUpdateAnnouncement() {
+        mManager.onUpdateAnnouncement()
+    }
 
-	@Override
-	public Bundle onSaveInstanceState() {
-		return null;
-	}
-
-	public void onSubredditSubscriptionsChanged(
-			final Collection<SubredditCanonicalId> subscriptions) {
-		mManager.setSubreddits(subscriptions);
-	}
-
-	public void onMultiredditSubscriptionsChanged(final Collection<String> subscriptions) {
-		mManager.setMultireddits(subscriptions);
-	}
-
-	private void onSubredditError(final RRError error) {
-		mManager.setSubredditsError(new ErrorView(getActivity(), error));
-	}
-
-	private void onMultiredditError(final RRError error) {
-		mManager.setMultiredditsError(new ErrorView(getActivity(), error));
-	}
-
-	@Override
-	public void onSelected(final @MainMenuAction int type) {
-		((MainMenuSelectionListener)getActivity()).onSelected(type);
-	}
-
-	@Override
-	public void onSelected(final PostListingURL postListingURL) {
-		((MainMenuSelectionListener)getActivity()).onSelected(postListingURL);
-	}
-
-	@Override
-	public void onSubredditSubscriptionListUpdated(
-			final RedditSubredditSubscriptionManager subredditSubscriptionManager) {
-		onSubredditSubscriptionsChanged(subredditSubscriptionManager.getSubscriptionList());
-	}
-
-	@Override
-	public void onMultiredditListUpdated(
-			final RedditMultiredditSubscriptionManager multiredditSubscriptionManager) {
-		onMultiredditSubscriptionsChanged(multiredditSubscriptionManager.getSubscriptionList());
-	}
-
-	@Override
-	public void onSubredditSubscriptionAttempted(
-			final RedditSubredditSubscriptionManager subredditSubscriptionManager) {
-	}
-
-	@Override
-	public void onSubredditUnsubscriptionAttempted(
-			final RedditSubredditSubscriptionManager subredditSubscriptionManager) {
-	}
-
-	public void onUpdateAnnouncement() {
-		mManager.onUpdateAnnouncement();
-	}
+    companion object {
+        const val MENU_MENU_ACTION_FRONTPAGE: Int = 0
+        const val MENU_MENU_ACTION_PROFILE: Int = 1
+        const val MENU_MENU_ACTION_INBOX: Int = 2
+        const val MENU_MENU_ACTION_SUBMITTED: Int = 3
+        const val MENU_MENU_ACTION_SUBMITTED_COMMENTS: Int = 4
+        const val MENU_MENU_ACTION_UPVOTED: Int = 5
+        const val MENU_MENU_ACTION_DOWNVOTED: Int = 6
+        const val MENU_MENU_ACTION_SAVED: Int = 7
+        const val MENU_MENU_ACTION_MODMAIL: Int = 8
+        const val MENU_MENU_ACTION_HIDDEN: Int = 9
+        const val MENU_MENU_ACTION_CUSTOM: Int = 10
+        const val MENU_MENU_ACTION_ALL: Int = 11
+        const val MENU_MENU_ACTION_POPULAR: Int = 12
+        const val MENU_MENU_ACTION_SENT_MESSAGES: Int = 13
+        const val MENU_MENU_ACTION_FIND_SUBREDDIT: Int = 14
+    }
 }

@@ -12,32 +12,22 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import java.util.concurrent.atomic.AtomicBoolean
 
-import androidx.annotation.NonNull;
+class RunnableOnce(private val mRunnable: Runnable) : Runnable {
+    private val mAlreadyRun = AtomicBoolean(false)
 
-import java.util.concurrent.atomic.AtomicBoolean;
+    override fun run() {
+        if (!mAlreadyRun.getAndSet(true)) {
+            mRunnable.run()
+        }
+    }
 
-public class RunnableOnce implements Runnable {
-
-	public static final RunnableOnce DO_NOTHING = new RunnableOnce(() -> {});
-
-	private final AtomicBoolean mAlreadyRun = new AtomicBoolean(false);
-
-	@NonNull private final Runnable mRunnable;
-
-	public RunnableOnce(@NonNull final Runnable runnable) {
-		mRunnable = runnable;
-	}
-
-	@Override
-	public final void run() {
-
-		if(!mAlreadyRun.getAndSet(true)) {
-			mRunnable.run();
-		}
-	}
+    companion object {
+        val DO_NOTHING: RunnableOnce = RunnableOnce(Runnable {})
+    }
 }

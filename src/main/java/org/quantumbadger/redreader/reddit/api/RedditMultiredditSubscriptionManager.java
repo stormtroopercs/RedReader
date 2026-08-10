@@ -12,155 +12,147 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.api
 
-package org.quantumbadger.redreader.reddit.api;
+import android.annotation.SuppressLint
+import android.content.Context
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.TimestampBound
+import org.quantumbadger.redreader.common.collections.WeakReferenceListManager
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.io.RawObjectDB
+import org.quantumbadger.redreader.io.RequestResponseHandler
+import org.quantumbadger.redreader.io.WritableHashSet
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.TimestampBound;
-import org.quantumbadger.redreader.common.collections.WeakReferenceListManager;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.io.RawObjectDB;
-import org.quantumbadger.redreader.io.RequestResponseHandler;
-import org.quantumbadger.redreader.io.WritableHashSet;
+class RedditMultiredditSubscriptionManager private constructor(
+    private val mUser: RedditAccount,
+    private val mContext: Context
+) {
+    private val notifier = MultiredditListChangeNotifier()
+    private val listeners = WeakReferenceListManager<MultiredditListChangeListener?>()
 
-import java.util.ArrayList;
-import java.util.HashSet;
+    private var mMultireddits: WritableHashSet?
 
-public class RedditMultiredditSubscriptionManager {
+    init {
+        mMultireddits = db!!.getById(mUser.canonicalUsername)
+    }
 
-	private final MultiredditListChangeNotifier notifier
-			= new MultiredditListChangeNotifier();
-	private final WeakReferenceListManager<MultiredditListChangeListener> listeners
-			= new WeakReferenceListManager<>();
+    fun addListener(listener: MultiredditListChangeListener) {
+        listeners.add(listener)
+    }
 
-	@SuppressLint("StaticFieldLeak") private static RedditMultiredditSubscriptionManager singleton;
-	private static RedditAccount singletonAccount;
+    @Synchronized
+    fun areSubscriptionsReady(): Boolean {
+        return mMultireddits != null
+    }
 
-	@NonNull private final RedditAccount mUser;
-	@NonNull private final Context mContext;
+    @Synchronized
+    private fun onNewSubscriptionListReceived(
+        newSubscriptions: HashSet<String?>?,
+        timestamp: TimestampUTC
+    ) {
+        mMultireddits = WritableHashSet(
+            newSubscriptions,
+            timestamp,
+            mUser.canonicalUsername
+        )
 
-	private static RawObjectDB<String, WritableHashSet> db = null;
+        listeners.map(notifier)
 
-	private WritableHashSet mMultireddits;
+        // TODO threaded? or already threaded due to cache manager
+        db!!.put(mMultireddits)
+    }
 
-	public static synchronized RedditMultiredditSubscriptionManager getSingleton(
-			@NonNull final Context context,
-			@NonNull final RedditAccount account) {
+    @get:Synchronized
+    val subscriptionList: ArrayList<String?>
+        get() = java.util.ArrayList<String?>(mMultireddits!!.toHashset())
 
-		if(db == null) {
-			db = new RawObjectDB<>(
-					context.getApplicationContext(),
-					"rr_multireddit_subscriptions.db",
-					WritableHashSet.class);
-		}
+    fun triggerUpdate(
+        handler: RequestResponseHandler<HashSet<String?>?, RRError?>?,
+        timestampBound: TimestampBound
+    ) {
+        if (mMultireddits != null
+            && timestampBound.verifyTimestamp(mMultireddits!!.getTimestamp())
+        ) {
+            return
+        }
 
-		if(singleton == null
-				|| !account.equals(RedditMultiredditSubscriptionManager.singletonAccount)) {
+        RedditAPIMultiredditListRequester(mContext, mUser).performRequest(
+            RedditAPIMultiredditListRequester.Key.INSTANCE,
+            timestampBound,
+            object : RequestResponseHandler<WritableHashSet?, RRError?> {
+                // TODO handle failed requests properly -- retry? then notify listeners
+                override fun onRequestFailed(failureReason: RRError?) {
+                    if (handler != null) {
+                        handler.onRequestFailed(failureReason)
+                    }
+                }
 
-			singleton = new RedditMultiredditSubscriptionManager(
-					account,
-					context.getApplicationContext());
+                override fun onRequestSuccess(
+                    result: WritableHashSet,
+                    timeCached: TimestampUTC
+                ) {
+                    val newSubscriptions = result.toHashset()
+                    onNewSubscriptionListReceived(newSubscriptions, timeCached)
+                    if (handler != null) {
+                        handler.onRequestSuccess(newSubscriptions, timeCached)
+                    }
+                }
+            }
+        )
+    }
 
-			RedditMultiredditSubscriptionManager.singletonAccount = account;
-		}
+    interface MultiredditListChangeListener {
+        fun onMultiredditListUpdated(
+            multiredditSubscriptionManager: RedditMultiredditSubscriptionManager?
+        )
+    }
 
-		return singleton;
-	}
+    private inner class MultiredditListChangeNotifier
 
-	private RedditMultiredditSubscriptionManager(
-			@NonNull final RedditAccount user,
-			@NonNull final Context context) {
+        : WeakReferenceListManager.Operator<MultiredditListChangeListener?> {
+        override fun operate(listener: MultiredditListChangeListener) {
+            listener.onMultiredditListUpdated(
+                this@RedditMultiredditSubscriptionManager
+            )
+        }
+    }
 
-		this.mUser = user;
-		this.mContext = context;
+    companion object {
+        @SuppressLint("StaticFieldLeak")
+        private var singleton: RedditMultiredditSubscriptionManager? = null
+        private var singletonAccount: RedditAccount? = null
 
-		mMultireddits = db.getById(user.getCanonicalUsername());
-	}
+        private var db: RawObjectDB<String?, WritableHashSet?>? = null
 
-	public void addListener(@NonNull final MultiredditListChangeListener listener) {
-		listeners.add(listener);
-	}
+        @Synchronized
+        fun getSingleton(
+            context: Context,
+            account: RedditAccount
+        ): RedditMultiredditSubscriptionManager {
+            if (db == null) {
+                db = RawObjectDB<String?, WritableHashSet?>(
+                    context.getApplicationContext(),
+                    "rr_multireddit_subscriptions.db",
+                    WritableHashSet::class.java
+                )
+            }
 
-	public synchronized boolean areSubscriptionsReady() {
-		return mMultireddits != null;
-	}
+            if (singleton == null
+                || !account.equals(singletonAccount)
+            ) {
+                singleton = RedditMultiredditSubscriptionManager(
+                    account,
+                    context.getApplicationContext()
+                )
 
-	private synchronized void onNewSubscriptionListReceived(
-			final HashSet<String> newSubscriptions,
-			final TimestampUTC timestamp) {
+                singletonAccount = account
+            }
 
-		mMultireddits = new WritableHashSet(
-				newSubscriptions,
-				timestamp,
-				mUser.getCanonicalUsername());
-
-		listeners.map(notifier);
-
-		// TODO threaded? or already threaded due to cache manager
-		db.put(mMultireddits);
-	}
-
-	public synchronized ArrayList<String> getSubscriptionList() {
-		return new ArrayList<>(mMultireddits.toHashset());
-	}
-
-	public void triggerUpdate(
-			@Nullable final RequestResponseHandler<
-					HashSet<String>,
-					RRError> handler,
-			@NonNull final TimestampBound timestampBound) {
-
-		if(mMultireddits != null
-				&& timestampBound.verifyTimestamp(mMultireddits.getTimestamp())) {
-			return;
-		}
-
-		new RedditAPIMultiredditListRequester(mContext, mUser).performRequest(
-				RedditAPIMultiredditListRequester.Key.INSTANCE,
-				timestampBound,
-				new RequestResponseHandler<WritableHashSet, RRError>() {
-
-					// TODO handle failed requests properly -- retry? then notify listeners
-					@Override
-					public void onRequestFailed(final RRError failureReason) {
-						if(handler != null) {
-							handler.onRequestFailed(failureReason);
-						}
-					}
-
-					@Override
-					public void onRequestSuccess(
-							final WritableHashSet result,
-							final TimestampUTC timeCached) {
-						final HashSet<String> newSubscriptions = result.toHashset();
-						onNewSubscriptionListReceived(newSubscriptions, timeCached);
-						if(handler != null) {
-							handler.onRequestSuccess(newSubscriptions, timeCached);
-						}
-					}
-				}
-		);
-	}
-
-	public interface MultiredditListChangeListener {
-		void onMultiredditListUpdated(
-				RedditMultiredditSubscriptionManager multiredditSubscriptionManager);
-	}
-
-	private class MultiredditListChangeNotifier
-			implements WeakReferenceListManager.Operator<MultiredditListChangeListener> {
-
-		@Override
-		public void operate(final MultiredditListChangeListener listener) {
-			listener.onMultiredditListUpdated(
-					RedditMultiredditSubscriptionManager.this);
-		}
-	}
+            return singleton!!
+        }
+    }
 }

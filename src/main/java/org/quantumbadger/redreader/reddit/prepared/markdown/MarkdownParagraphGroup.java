@@ -12,241 +12,234 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.markdown
 
-package org.quantumbadger.redreader.reddit.prepared.markdown;
+import android.graphics.Color
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.UnderlineSpan
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import android.view.ViewGroup.MarginLayoutParams
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.TextView.BufferType
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.Fonts
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
+import org.quantumbadger.redreader.reddit.prepared.markdown.MarkdownParser.MarkdownParagraphType
+import org.quantumbadger.redreader.views.LinkDetailsView
+import org.quantumbadger.redreader.views.LinkifiedTextView
+import kotlin.math.min
 
-import android.graphics.Color;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.UnderlineSpan;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
+    fun buildView(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): ViewGroup {
+        val dpScale = activity.getResources().getDisplayMetrics().density
 
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.Fonts;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.views.LinkDetailsView;
-import org.quantumbadger.redreader.views.LinkifiedTextView;
+        val paragraphSpacing = (dpScale * 6).toInt()
+        val codeLineSpacing = (dpScale * 3).toInt()
+        val quoteBarWidth = (dpScale * 3).toInt()
+        val maxQuoteLevel = 5
 
-public final class MarkdownParagraphGroup {
+        val layout = LinearLayout(activity)
+        layout.setOrientation(LinearLayout.VERTICAL)
 
-	private final MarkdownParagraph[] paragraphs;
+        for (paragraph in paragraphs) {
+            val tv: TextView = LinkifiedTextView(activity)
+            tv.setText(paragraph.spanned, BufferType.SPANNABLE)
 
-	public MarkdownParagraphGroup(final MarkdownParagraph[] paragraphs) {
-		this.paragraphs = paragraphs;
-	}
+            if (textColor != null) {
+                tv.setTextColor(textColor)
+            }
+            if (textSize != null) {
+                tv.setTextSize(textSize)
+            }
 
-	public ViewGroup buildView(
-			final BaseActivity activity,
-			final Integer textColor,
-			final Float textSize,
-			final boolean showLinkButtons) {
+            when (paragraph.type) {
+                MarkdownParagraphType.BULLET -> {
+                    val bulletItem = LinearLayout(activity)
+                    val paddingPx = dpToPixels(activity, 6f)
+                    bulletItem.setPadding(paddingPx, paddingPx, paddingPx, 0)
 
-		final float dpScale = activity.getResources().getDisplayMetrics().density;
+                    val bullet = TextView(activity)
+                    bullet.setText("•   ")
+                    if (textSize != null) {
+                        bullet.setTextSize(textSize)
+                    }
 
-		final int paragraphSpacing = (int)(dpScale * 6);
-		final int codeLineSpacing = (int)(dpScale * 3);
-		final int quoteBarWidth = (int)(dpScale * 3);
-		final int maxQuoteLevel = 5;
+                    bulletItem.addView(bullet)
+                    bulletItem.addView(tv)
 
-		final LinearLayout layout = new LinearLayout(activity);
-		layout.setOrientation(LinearLayout.VERTICAL);
+                    layout.addView(bulletItem)
 
-		for(final MarkdownParagraph paragraph : paragraphs) {
+                    (bulletItem.getLayoutParams() as MarginLayoutParams).leftMargin
+                    = (dpScale * (if (paragraph.level == 0) 12 else 24)).toInt()
+                }
 
-			final TextView tv = new LinkifiedTextView(activity);
-			tv.setText(paragraph.spanned, TextView.BufferType.SPANNABLE);
+                MarkdownParagraphType.NUMBERED -> {
+                    val numberedItem = LinearLayout(activity)
+                    val paddingPx = dpToPixels(activity, 6f)
+                    numberedItem.setPadding(paddingPx, paddingPx, paddingPx, 0)
 
-			if(textColor != null) {
-				tv.setTextColor(textColor);
-			}
-			if(textSize != null) {
-				tv.setTextSize(textSize);
-			}
+                    val number = TextView(activity)
+                    number.setText(paragraph.number.toString() + ".   ")
+                    if (textSize != null) {
+                        number.setTextSize(textSize)
+                    }
 
-			switch(paragraph.type) {
+                    numberedItem.addView(number)
+                    numberedItem.addView(tv)
 
-				case BULLET: {
-					final LinearLayout bulletItem = new LinearLayout(activity);
-					final int paddingPx = General.dpToPixels(activity, 6);
-					bulletItem.setPadding(paddingPx, paddingPx, paddingPx, 0);
+                    layout.addView(numberedItem)
 
-					final TextView bullet = new TextView(activity);
-					bullet.setText("•   ");
-					if(textSize != null) {
-						bullet.setTextSize(textSize);
-					}
+                    (numberedItem.getLayoutParams() as MarginLayoutParams).leftMargin
+                    = (dpScale * (if (paragraph.level == 0) 12 else 24)).toInt()
+                }
 
-					bulletItem.addView(bullet);
-					bulletItem.addView(tv);
+                MarkdownParagraphType.CODE -> {
+                    tv.setTypeface(Fonts.getVeraMonoOrAlternative())
+                    tv.setText(
+                        paragraph.raw.arr,
+                        paragraph.raw.start,
+                        paragraph.raw.length
+                    )
+                    layout.addView(tv)
 
-					layout.addView(bulletItem);
+                    if (paragraph.parent != null) {
+                        (tv.getLayoutParams() as MarginLayoutParams).topMargin
+                        = if (paragraph.parent.type
+                            == MarkdownParagraphType.CODE
+                        )
+                            codeLineSpacing
+                        else
+                            paragraphSpacing
+                    }
 
-					((ViewGroup.MarginLayoutParams)bulletItem.getLayoutParams()).leftMargin
-							= (int)(dpScale * (paragraph.level == 0 ? 12 : 24));
+                    (tv.getLayoutParams() as MarginLayoutParams).leftMargin = (dpScale * 6).toInt()
+                }
 
-					break;
-				}
+                MarkdownParagraphType.HEADER -> {
+                    val underlinedText =
+                        SpannableString(paragraph.spanned)
+                    underlinedText.setSpan(
+                        UnderlineSpan(),
+                        0,
+                        underlinedText.length,
+                        Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+                    )
+                    tv.setText(underlinedText)
+                    layout.addView(tv)
+                    if (paragraph.parent != null) {
+                        (tv.getLayoutParams() as MarginLayoutParams).topMargin =
+                            paragraphSpacing
+                    }
+                }
 
-				case NUMBERED: {
-					final LinearLayout numberedItem = new LinearLayout(activity);
-					final int paddingPx = General.dpToPixels(activity, 6);
-					numberedItem.setPadding(paddingPx, paddingPx, paddingPx, 0);
+                MarkdownParagraphType.HLINE -> {
+                    val hLine = View(activity)
+                    layout.addView(hLine)
+                    val hLineParams =
+                        hLine.getLayoutParams() as MarginLayoutParams
+                    hLineParams.width = ViewGroup.LayoutParams.MATCH_PARENT
+                    hLineParams.height = dpScale.toInt()
+                    hLineParams.setMargins(
+                        (dpScale * 15).toInt(),
+                        paragraphSpacing,
+                        (dpScale * 15).toInt(),
+                        0
+                    )
+                    hLine.setLayoutParams(hLineParams)
+                    hLine.setBackgroundColor(Color.rgb(128, 128, 128))
+                }
 
-					final TextView number = new TextView(activity);
-					//noinspection SetTextI18n
-					number.setText(paragraph.number + ".   ");
-					if(textSize != null) {
-						number.setTextSize(textSize);
-					}
+                MarkdownParagraphType.QUOTE -> {
+                    val quoteLayout = LinearLayout(activity)
 
-					numberedItem.addView(number);
-					numberedItem.addView(tv);
+                    var lvl = 0
+                    while (lvl < min(maxQuoteLevel, paragraph.level)
+                    ) {
+                        val quoteIndent = View(activity)
+                        quoteLayout.addView(quoteIndent)
+                        quoteIndent.setBackgroundColor(Color.rgb(128, 128, 128))
+                        quoteIndent.getLayoutParams().width = quoteBarWidth
+                        quoteIndent.getLayoutParams().height =
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        (quoteIndent.getLayoutParams() as MarginLayoutParams).rightMargin
+                        = quoteBarWidth
+                        quoteIndent.setLayoutParams(quoteIndent.getLayoutParams())
+                        lvl++
+                    }
 
-					layout.addView(numberedItem);
+                    quoteLayout.addView(tv)
+                    layout.addView(quoteLayout)
 
-					((ViewGroup.MarginLayoutParams)numberedItem.getLayoutParams()).leftMargin
-							= (int)(dpScale * (paragraph.level == 0 ? 12 : 24));
+                    if (paragraph.parent != null) {
+                        if (paragraph.parent.type
+                            == MarkdownParagraphType.QUOTE
+                        ) {
+                            (tv.getLayoutParams() as MarginLayoutParams).topMargin
+                            =
+                            paragraphSpacing
+                        } else {
+                            (quoteLayout.getLayoutParams() as MarginLayoutParams).topMargin
+                            =
+                            paragraphSpacing
+                        }
+                    }
+                }
 
-					break;
-				}
+                MarkdownParagraphType.TEXT -> {
+                    layout.addView(tv)
+                    if (paragraph.parent != null) {
+                        (tv.getLayoutParams() as MarginLayoutParams).topMargin =
+                            paragraphSpacing
+                    }
+                }
 
-				case CODE:
+                MarkdownParagraphType.EMPTY -> throw RuntimeException(
+                    "Internal error: empty paragraph when building view"
+                )
+            }
 
-					tv.setTypeface(Fonts.getVeraMonoOrAlternative());
-					tv.setText(
-							paragraph.raw.arr,
-							paragraph.raw.start,
-							paragraph.raw.length);
-					layout.addView(tv);
+            if (showLinkButtons) {
+                for (link in paragraph.links) {
+                    val ldv =
+                        LinkDetailsView(activity, link.title, link.subtitle)
+                    layout.addView(ldv)
 
-					if(paragraph.parent != null) {
-						((ViewGroup.MarginLayoutParams)tv.getLayoutParams()).topMargin
-								= paragraph.parent.type
-								== MarkdownParser.MarkdownParagraphType.CODE
-								? codeLineSpacing : paragraphSpacing;
-					}
+                    val linkMarginPx = Math.round(dpScale * 8)
+                    (ldv.getLayoutParams() as LinearLayout.LayoutParams).setMargins(
+                        0,
+                        linkMarginPx,
+                        0,
+                        linkMarginPx
+                    )
 
-					((ViewGroup.MarginLayoutParams)tv.getLayoutParams()).leftMargin =
-							(int)(dpScale * 6);
-					break;
+                    setLayoutMatchWidthWrapHeight(ldv)
 
-				case HEADER:
-					final SpannableString underlinedText =
-							new SpannableString(paragraph.spanned);
-					underlinedText.setSpan(
-							new UnderlineSpan(),
-							0,
-							underlinedText.length(),
-							Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-					tv.setText(underlinedText);
-					layout.addView(tv);
-					if(paragraph.parent != null) {
-						((ViewGroup.MarginLayoutParams)tv.getLayoutParams()).topMargin =
-								paragraphSpacing;
-					}
-					break;
+                    ldv.setOnClickListener(View.OnClickListener { v: View? ->
+                        link.onClicked(
+                            activity
+                        )
+                    })
 
-				case HLINE: {
+                    ldv.setOnLongClickListener(OnLongClickListener { v: View? ->
+                        link.onLongClicked(activity)
+                        true
+                    })
+                }
+            }
+        }
 
-					final View hLine = new View(activity);
-					layout.addView(hLine);
-					final ViewGroup.MarginLayoutParams hLineParams =
-							(ViewGroup.MarginLayoutParams)hLine.getLayoutParams();
-					hLineParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
-					hLineParams.height = (int)dpScale;
-					hLineParams.setMargins(
-							(int)(dpScale * 15),
-							paragraphSpacing,
-							(int)(dpScale * 15),
-							0);
-					hLine.setLayoutParams(hLineParams);
-					hLine.setBackgroundColor(Color.rgb(128, 128, 128));
-					break;
-				}
-
-				case QUOTE: {
-
-					final LinearLayout quoteLayout = new LinearLayout(activity);
-
-					for(int lvl = 0;
-						lvl < Math.min(maxQuoteLevel, paragraph.level);
-						lvl++) {
-						final View quoteIndent = new View(activity);
-						quoteLayout.addView(quoteIndent);
-						quoteIndent.setBackgroundColor(Color.rgb(128, 128, 128));
-						quoteIndent.getLayoutParams().width = quoteBarWidth;
-						quoteIndent.getLayoutParams().height =
-								ViewGroup.LayoutParams.MATCH_PARENT;
-						((ViewGroup.MarginLayoutParams)quoteIndent.getLayoutParams()).rightMargin
-								= quoteBarWidth;
-						quoteIndent.setLayoutParams(quoteIndent.getLayoutParams());
-					}
-
-					quoteLayout.addView(tv);
-					layout.addView(quoteLayout);
-
-					if(paragraph.parent != null) {
-						if(paragraph.parent.type
-								== MarkdownParser.MarkdownParagraphType.QUOTE) {
-							((ViewGroup.MarginLayoutParams)tv.getLayoutParams()).topMargin
-									=
-									paragraphSpacing;
-						} else {
-							((ViewGroup.MarginLayoutParams)quoteLayout.getLayoutParams()).topMargin
-									=
-									paragraphSpacing;
-						}
-					}
-
-					break;
-				}
-
-				case TEXT:
-
-					layout.addView(tv);
-					if(paragraph.parent != null) {
-						((ViewGroup.MarginLayoutParams)tv.getLayoutParams()).topMargin =
-								paragraphSpacing;
-					}
-
-					break;
-
-				case EMPTY:
-					throw new RuntimeException(
-							"Internal error: empty paragraph when building view");
-			}
-
-			if(showLinkButtons) {
-				for(final MarkdownParagraph.Link link : paragraph.links) {
-
-					final LinkDetailsView ldv =
-							new LinkDetailsView(activity, link.title, link.subtitle);
-					layout.addView(ldv);
-
-					final int linkMarginPx = Math.round(dpScale * 8);
-					((LinearLayout.LayoutParams)ldv.getLayoutParams()).setMargins(
-							0,
-							linkMarginPx,
-							0,
-							linkMarginPx);
-
-					General.setLayoutMatchWidthWrapHeight(ldv);
-
-					ldv.setOnClickListener(v -> link.onClicked(activity));
-
-					ldv.setOnLongClickListener(v -> {
-						link.onLongClicked(activity);
-						return true;
-					});
-				}
-			}
-		}
-
-		return layout;
-	}
+        return layout
+    }
 }

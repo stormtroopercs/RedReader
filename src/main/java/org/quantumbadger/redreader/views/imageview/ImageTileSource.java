@@ -12,25 +12,24 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.imageview
 
-package org.quantumbadger.redreader.views.imageview;
+import android.graphics.Bitmap
 
-import android.graphics.Bitmap;
+interface ImageTileSource {
+    val width: Int
 
-public interface ImageTileSource {
-	int getWidth();
+    val height: Int
 
-	int getHeight();
+    val hTileCount: Int
 
-	int getHTileCount();
+    val vTileCount: Int
 
-	int getVTileCount();
+    val tileSize: Int
 
-	int getTileSize();
+    fun getTile(sampleSize: Int, tileX: Int, tileY: Int): Bitmap?
 
-	Bitmap getTile(int sampleSize, int tileX, int tileY);
-
-	void dispose();
+    fun dispose()
 }

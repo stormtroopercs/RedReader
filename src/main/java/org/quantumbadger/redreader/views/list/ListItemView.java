@@ -12,110 +12,103 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.list
 
-package org.quantumbadger.redreader.views.list;
-
-import android.content.Context;
-import android.graphics.drawable.Drawable;
-import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.google.android.material.textview.MaterialTextView;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.Optional;
+import android.content.Context
+import android.graphics.drawable.Drawable
+import android.view.View
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import com.google.android.material.textview.MaterialTextView
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.common.Optional
 
 // TODO just make this a linear layout
-public class ListItemView extends FrameLayout {
+class ListItemView(context: Context) : FrameLayout(context) {
+    private val mDivider: View
 
-	private final View mDivider;
+    private val mMainText: MaterialTextView
+    private val mMainIcon: ImageView
+    private val mMainLink: LinearLayout
 
-	private final MaterialTextView mMainText;
-	private final ImageView mMainIcon;
-	private final LinearLayout mMainLink;
+    private val mSecondaryLink: View
+    private val mSecondaryIcon: ImageView
 
-	private final View mSecondaryLink;
-	private final ImageView mSecondaryIcon;
+    init {
+        val ll = inflate(context, R.layout.list_item, null) as LinearLayout
 
-	public ListItemView(final Context context) {
+        mDivider = ll.findViewById<View>(R.id.list_item_divider)
 
-		super(context);
+        mMainText = ll.findViewById<MaterialTextView>(R.id.list_item_text)
+        mMainIcon = ll.findViewById<ImageView>(R.id.list_item_icon)
+        mMainLink = ll.findViewById<LinearLayout>(R.id.list_item_main_link)
 
-		final LinearLayout ll = (LinearLayout)inflate(context, R.layout.list_item, null);
+        mSecondaryLink = ll.findViewById<View>(R.id.list_item_secondary_link_outer)
+        mSecondaryIcon = ll.findViewById<ImageView>(R.id.list_item_secondary_icon)
 
-		mDivider = ll.findViewById(R.id.list_item_divider);
+        addView(ll)
+    }
 
-		mMainText = ll.findViewById(R.id.list_item_text);
-		mMainIcon = ll.findViewById(R.id.list_item_icon);
-		mMainLink = ll.findViewById(R.id.list_item_main_link);
+    fun reset(
+        icon: Drawable?,
+        text: CharSequence,
+        contentDescription: String?,
+        hideDivider: Boolean,
+        clickListener: OnClickListener?,
+        longClickListener: OnLongClickListener?,
+        secondaryIcon: Optional<Drawable?>,
+        secondaryAction: Optional<OnClickListener?>,
+        secondaryContentDesc: Optional<String?>
+    ) {
+        if (hideDivider) {
+            mDivider.setVisibility(GONE)
+        } else {
+            mDivider.setVisibility(VISIBLE)
+        }
 
-		mSecondaryLink = ll.findViewById(R.id.list_item_secondary_link_outer);
-		mSecondaryIcon = ll.findViewById(R.id.list_item_secondary_icon);
+        mMainText.setText(text)
+        mMainText.setContentDescription(contentDescription)
 
-		addView(ll);
-	}
+        if (icon != null) {
+            mMainIcon.setImageDrawable(icon)
+            mMainIcon.setVisibility(VISIBLE)
+        } else {
+            mMainIcon.setImageBitmap(null)
+            mMainIcon.setVisibility(GONE)
+        }
 
-	public void reset(
-			@Nullable final Drawable icon,
-			@NonNull final CharSequence text,
-			@Nullable final String contentDescription,
-			final boolean hideDivider,
-			@Nullable final OnClickListener clickListener,
-			@Nullable final OnLongClickListener longClickListener,
-			@NonNull final Optional<Drawable> secondaryIcon,
-			@NonNull final Optional<OnClickListener> secondaryAction,
-			@NonNull final Optional<String> secondaryContentDesc) {
+        if (clickListener != null) {
+            mMainLink.setClickable(true)
+            mMainLink.setFocusable(true)
+            mMainLink.setOnClickListener(clickListener)
+        } else {
+            mMainLink.setClickable(false)
+            mMainLink.setFocusable(false)
+            mMainLink.setOnClickListener(null)
+        }
 
-		if(hideDivider) {
-			mDivider.setVisibility(View.GONE);
-		} else {
-			mDivider.setVisibility(View.VISIBLE);
-		}
+        if (longClickListener != null) {
+            mMainLink.setLongClickable(true)
+            mMainLink.setOnLongClickListener(longClickListener)
+        } else {
+            mMainLink.setLongClickable(false)
+            mMainLink.setOnLongClickListener(null)
+        }
 
-		mMainText.setText(text);
-		mMainText.setContentDescription(contentDescription);
+        if (secondaryIcon.isPresent()) {
+            mSecondaryIcon.setImageDrawable(secondaryIcon.get())
+            mSecondaryIcon.setContentDescription(secondaryContentDesc.orElseNull())
+        }
 
-		if(icon != null) {
-			mMainIcon.setImageDrawable(icon);
-			mMainIcon.setVisibility(VISIBLE);
-		} else {
-			mMainIcon.setImageBitmap(null);
-			mMainIcon.setVisibility(GONE);
-		}
-
-		if(clickListener != null) {
-			mMainLink.setClickable(true);
-			mMainLink.setFocusable(true);
-			mMainLink.setOnClickListener(clickListener);
-		} else {
-			mMainLink.setClickable(false);
-			mMainLink.setFocusable(false);
-			mMainLink.setOnClickListener(null);
-		}
-
-		if(longClickListener != null) {
-			mMainLink.setLongClickable(true);
-			mMainLink.setOnLongClickListener(longClickListener);
-		} else {
-			mMainLink.setLongClickable(false);
-			mMainLink.setOnLongClickListener(null);
-		}
-
-		if(secondaryIcon.isPresent()) {
-			mSecondaryIcon.setImageDrawable(secondaryIcon.get());
-			mSecondaryIcon.setContentDescription(secondaryContentDesc.orElseNull());
-		}
-
-		if(secondaryAction.isPresent()) {
-			mSecondaryLink.setVisibility(VISIBLE);
-			mSecondaryIcon.setOnClickListener(secondaryAction.get());
-		} else {
-			mSecondaryLink.setVisibility(GONE);
-			mSecondaryIcon.setOnClickListener(null);
-		}
-	}
+        if (secondaryAction.isPresent()) {
+            mSecondaryLink.setVisibility(VISIBLE)
+            mSecondaryIcon.setOnClickListener(secondaryAction.get())
+        } else {
+            mSecondaryLink.setVisibility(GONE)
+            mSecondaryIcon.setOnClickListener(null)
+        }
+    }
 }

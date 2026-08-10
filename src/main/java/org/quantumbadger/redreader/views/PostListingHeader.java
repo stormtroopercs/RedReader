@@ -12,87 +12,79 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.graphics.Color
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.common.Fonts
+import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.reddit.SubredditDetails
+import org.quantumbadger.redreader.reddit.things.RedditSubreddit
+import org.quantumbadger.redreader.reddit.url.PostListingURL
 
-import android.content.res.TypedArray;
-import android.graphics.Color;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.Fonts;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.reddit.SubredditDetails;
-import org.quantumbadger.redreader.reddit.things.RedditSubreddit;
-import org.quantumbadger.redreader.reddit.url.PostListingURL;
+class PostListingHeader(
+    activity: AppCompatActivity,
+    titleText: String?,
+    subtitleText: String?,
+    url: PostListingURL,
+    subreddit: RedditSubreddit?
+) : LinearLayout(activity) {
+    init {
+        val dpScale = activity.getResources().getDisplayMetrics().density
 
+        setOrientation(VERTICAL)
 
-public final class PostListingHeader extends LinearLayout {
+        if (!PrefsUtility.pref_appearance_post_hide_subreddit_header()) {
+            val greyHeader = LinearLayout(activity)
+            greyHeader.setOrientation(VERTICAL)
 
-	public PostListingHeader(
-			final AppCompatActivity activity,
-			final String titleText,
-			final String subtitleText,
-			final PostListingURL url,
-			@Nullable final RedditSubreddit subreddit) {
+            run {
+                val appearance =
+                    activity.obtainStyledAttributes(intArrayOf(R.attr.rrPostListHeaderBackgroundCol))
+                greyHeader.setBackgroundColor(appearance.getColor(0, General.COLOR_INVALID))
+                appearance.recycle()
+            }
 
-		super(activity);
+            val sidesPadding = (15.0f * dpScale).toInt()
+            val topPadding = (10.0f * dpScale).toInt()
 
-		final float dpScale = activity.getResources().getDisplayMetrics().density;
+            greyHeader.setPadding(sidesPadding, topPadding, sidesPadding, topPadding)
 
-		setOrientation(LinearLayout.VERTICAL);
+            val title = TextView(activity)
+            title.setText(titleText)
+            title.setTextSize(22.0f)
+            title.setTypeface(Fonts.getRobotoLightOrAlternative())
+            title.setTextColor(Color.WHITE)
+            greyHeader.addView(title)
 
-		if(!PrefsUtility.pref_appearance_post_hide_subreddit_header()) {
+            val subtitle = TextView(activity)
+            subtitle.setTextSize(14.0f)
+            subtitle.setText(subtitleText)
+            subtitle.setTextColor(Color.rgb(200, 200, 200))
+            greyHeader.addView(subtitle)
 
-			final LinearLayout greyHeader = new LinearLayout(activity);
-			greyHeader.setOrientation(LinearLayout.VERTICAL);
+            addView(greyHeader)
+        }
 
-			{
-				final TypedArray appearance = activity.obtainStyledAttributes(new int[]{
-						R.attr.rrPostListHeaderBackgroundCol});
+        if (subreddit != null
+            && !PrefsUtility.pref_appearance_hide_headertoolbar_postlist()
+        ) {
+            val buttons =
+                inflate(activity, R.layout.subreddit_header_toolbar, this)
+                    .findViewById<SubredditToolbar>(R.id.subreddit_toolbar_layout)
 
-				greyHeader.setBackgroundColor(appearance.getColor(0, General.COLOR_INVALID));
-
-				appearance.recycle();
-			}
-
-			final int sidesPadding = (int)(15.0f * dpScale);
-			final int topPadding = (int)(10.0f * dpScale);
-
-			greyHeader.setPadding(sidesPadding, topPadding, sidesPadding, topPadding);
-
-			final TextView title = new TextView(activity);
-			title.setText(titleText);
-			title.setTextSize(22.0f);
-			title.setTypeface(Fonts.getRobotoLightOrAlternative());
-			title.setTextColor(Color.WHITE);
-			greyHeader.addView(title);
-
-			final TextView subtitle = new TextView(activity);
-			subtitle.setTextSize(14.0f);
-			subtitle.setText(subtitleText);
-			subtitle.setTextColor(Color.rgb(200, 200, 200));
-			greyHeader.addView(subtitle);
-
-			addView(greyHeader);
-		}
-
-		if(subreddit != null
-				&& !PrefsUtility.pref_appearance_hide_headertoolbar_postlist()) {
-
-			final SubredditToolbar buttons =
-					inflate(activity, R.layout.subreddit_header_toolbar, this)
-							.findViewById(R.id.subreddit_toolbar_layout);
-
-			buttons.bindSubreddit(
-					SubredditDetails.newWithRuntimeException(subreddit),
-					Optional.of(url.browserUrl()));
-		}
-	}
+            buttons.bindSubreddit(
+                SubredditDetails.Companion.newWithRuntimeException(subreddit),
+                Optional.Companion.of<UriString?>(url.browserUrl())
+            )
+        }
+    }
 }

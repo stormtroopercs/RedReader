@@ -12,51 +12,49 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache
 
-package org.quantumbadger.redreader.cache;
+import android.database.Cursor
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.fromUtcMs
+import java.util.UUID
 
-import android.database.Cursor;
+class CacheEntry internal constructor(cursor: Cursor) {
+    val id: Long
+    val url: UriString
+    val session: UUID?
+    val timestamp: TimestampUTC
+    val mimetype: String?
+    val cacheCompressionType: CacheCompressionType
+    val lengthCompressed: Long
+    val lengthUncompressed: Long
 
-import androidx.annotation.NonNull;
+    init {
+        id = cursor.getLong(0)
+        url = UriString(cursor.getString(1))
+        session = UUID.fromString(cursor.getString(2))
+        timestamp = fromUtcMs(cursor.getLong(3))
+        mimetype = cursor.getString(4)
+        cacheCompressionType = CacheCompressionType.Companion.fromDatabaseId(
+            cursor.getInt(5)
+        )
+        lengthCompressed = cursor.getLong(6)
+        lengthUncompressed = cursor.getLong(7)
+    }
 
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-
-import java.util.UUID;
-
-public final class CacheEntry {
-
-	public static final String[] DB_FIELDS = {
-			CacheDbManager.FIELD_ID,
-			CacheDbManager.FIELD_URL,
-			CacheDbManager.FIELD_SESSION,
-			CacheDbManager.FIELD_TIMESTAMP,
-			CacheDbManager.FIELD_MIMETYPE,
-			CacheDbManager.FIELD_COMPRESSION_TYPE,
-			CacheDbManager.FIELD_LENGTH_COMPRESSED,
-			CacheDbManager.FIELD_LENGTH_UNCOMPRESSED};
-
-	public final long id;
-	public final UriString url;
-	public final UUID session;
-	public final TimestampUTC timestamp;
-	public final String mimetype;
-	public final CacheCompressionType cacheCompressionType;
-	public final long lengthCompressed;
-	public final long lengthUncompressed;
-
-	CacheEntry(@NonNull final Cursor cursor) {
-
-		id = cursor.getLong(0);
-		url = new UriString(cursor.getString(1));
-		session = UUID.fromString(cursor.getString(2));
-		timestamp = TimestampUTC.fromUtcMs(cursor.getLong(3));
-		mimetype = cursor.getString(4);
-		cacheCompressionType = CacheCompressionType.fromDatabaseId(
-				cursor.getInt(5));
-		lengthCompressed = cursor.getLong(6);
-		lengthUncompressed = cursor.getLong(7);
-	}
+    companion object {
+        val DB_FIELDS: Array<String?> = arrayOf<String?>(
+            CacheDbManager.Companion.FIELD_ID,
+            CacheDbManager.Companion.FIELD_URL,
+            CacheDbManager.Companion.FIELD_SESSION,
+            CacheDbManager.Companion.FIELD_TIMESTAMP,
+            CacheDbManager.Companion.FIELD_MIMETYPE,
+            CacheDbManager.Companion.FIELD_COMPRESSION_TYPE,
+            CacheDbManager.Companion.FIELD_LENGTH_COMPRESSED,
+            CacheDbManager.Companion.FIELD_LENGTH_UNCOMPRESSED
+        )
+    }
 }

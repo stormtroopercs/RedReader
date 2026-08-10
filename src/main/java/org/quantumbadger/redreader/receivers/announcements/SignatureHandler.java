@@ -12,149 +12,138 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.receivers.announcements
 
-package org.quantumbadger.redreader.receivers.announcements;
+import org.quantumbadger.redreader.common.HexUtils
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.io.IOException
+import java.security.InvalidKeyException
+import java.security.Key
+import java.security.KeyFactory
+import java.security.NoSuchAlgorithmException
+import java.security.PrivateKey
+import java.security.PublicKey
+import java.security.Signature
+import java.security.SignatureException
+import java.security.spec.InvalidKeySpecException
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
 
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.common.HexUtils;
+object SignatureHandler {
+    private const val ALG = "EC"
+    private const val SIGNATURE_ALG = "SHA256withECDSA"
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.Key;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
+    @JvmStatic
+    fun keyToString(key: Key): String {
+        return HexUtils.toHex(key.getEncoded())
+    }
 
-public final class SignatureHandler {
+    @JvmStatic
+    @Throws(NoSuchAlgorithmException::class, IOException::class, InvalidKeySpecException::class)
+    fun stringToPrivateKey(input: String): PrivateKey {
+        return KeyFactory.getInstance(ALG)
+            .generatePrivate(PKCS8EncodedKeySpec(HexUtils.fromHex(input)))
+    }
 
-	private static final String ALG = "EC";
-	private static final String SIGNATURE_ALG = "SHA256withECDSA";
+    @JvmStatic
+    @Throws(NoSuchAlgorithmException::class, IOException::class, InvalidKeySpecException::class)
+    fun stringToPublicKey(input: String): PublicKey {
+        return KeyFactory.getInstance(ALG)
+            .generatePublic(X509EncodedKeySpec(HexUtils.fromHex(input)))
+    }
 
-	public static class SignatureInvalidException extends Exception {}
+    @Throws(NoSuchAlgorithmException::class, InvalidKeyException::class, SignatureException::class)
+    private fun sign(privateKey: PrivateKey, message: ByteArray): ByteArray {
+        val signer = Signature.getInstance(SIGNATURE_ALG)
 
-	private SignatureHandler() {}
+        signer.initSign(privateKey)
+        signer.update(message)
 
-	@NonNull
-	public static String keyToString(@NonNull final Key key) {
-		return HexUtils.toHex(key.getEncoded());
-	}
+        return signer.sign()
+    }
 
-	@NonNull
-	public static PrivateKey stringToPrivateKey(@NonNull final String input)
-			throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
+    @Throws(
+        NoSuchAlgorithmException::class,
+        InvalidKeyException::class,
+        SignatureException::class,
+        SignatureInvalidException::class
+    )
+    private fun verify(
+        publicKey: PublicKey,
+        message: ByteArray,
+        signature: ByteArray
+    ) {
+        val signer = Signature.getInstance(SIGNATURE_ALG)
 
-		return KeyFactory.getInstance(ALG)
-				.generatePrivate(new PKCS8EncodedKeySpec(HexUtils.fromHex(input)));
-	}
+        signer.initVerify(publicKey)
+        signer.update(message)
 
-	@NonNull
-	public static PublicKey stringToPublicKey(@NonNull final String input)
-			throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
+        if (!signer.verify(signature)) {
+            throw SignatureInvalidException()
+        }
+    }
 
-		return KeyFactory.getInstance(ALG)
-				.generatePublic(new X509EncodedKeySpec(HexUtils.fromHex(input)));
-	}
+    @JvmStatic
+    @Throws(NoSuchAlgorithmException::class, InvalidKeyException::class, SignatureException::class)
+    fun generateSignedPayload(
+        privateKey: PrivateKey,
+        message: ByteArray
+    ): ByteArray {
+        val signature = sign(privateKey, message)
 
-	@NonNull
-	private static byte[] sign(@NonNull final PrivateKey privateKey, @NonNull final byte[] message)
-			throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        val result = ByteArrayOutputStream()
 
-		final Signature signer = Signature.getInstance(SIGNATURE_ALG);
+        val dos = DataOutputStream(result)
 
-		signer.initSign(privateKey);
-		signer.update(message);
+        try {
+            dos.writeInt(message.size)
+            dos.write(message)
 
-		return signer.sign();
-	}
+            dos.writeInt(signature.size)
+            dos.write(signature)
 
-	private static void verify(
-			@NonNull final PublicKey publicKey,
-			@NonNull final byte[] message,
-			@NonNull final byte[] signature) throws
-					NoSuchAlgorithmException,
-					InvalidKeyException,
-					SignatureException,
-					SignatureInvalidException {
+            dos.flush()
+            dos.close()
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
 
-		final Signature signer = Signature.getInstance(SIGNATURE_ALG);
+        return result.toByteArray()
+    }
 
-		signer.initVerify(publicKey);
-		signer.update(message);
+    @JvmStatic
+    @Throws(
+        NoSuchAlgorithmException::class,
+        InvalidKeyException::class,
+        SignatureException::class,
+        IOException::class,
+        SignatureInvalidException::class
+    )
+    fun readAndVerifySignedPayload(
+        publicKey: PublicKey,
+        payload: ByteArray
+    ): ByteArray {
+        DataInputStream(ByteArrayInputStream(payload)).use { payloadStream
+            ->
+            val msgLength = payloadStream.readInt()
+            val msg = ByteArray(msgLength)
+            payloadStream.readFully(msg)
 
-		if(!signer.verify(signature)) {
-			throw new SignatureInvalidException();
-		}
-	}
+            val sigLength = payloadStream.readInt()
 
-	@NonNull
-	public static byte[] generateSignedPayload(
-			@NonNull final PrivateKey privateKey,
-			@NonNull final byte[] message)
-					throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+            val sig = ByteArray(sigLength)
+            payloadStream.readFully(sig)
 
-		final byte[] signature = sign(privateKey, message);
+            // (any trailing bytes in payloadStream are safely ignored)
+            verify(publicKey, msg, sig)
+            return msg
+        }
+    }
 
-		final ByteArrayOutputStream result = new ByteArrayOutputStream();
-
-		final DataOutputStream dos = new DataOutputStream(result);
-
-		try {
-			dos.writeInt(message.length);
-			dos.write(message);
-
-			dos.writeInt(signature.length);
-			dos.write(signature);
-
-			dos.flush();
-			dos.close();
-
-		} catch(final IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		return result.toByteArray();
-	}
-
-	@NonNull
-	public static byte[] readAndVerifySignedPayload(
-			@NonNull final PublicKey publicKey,
-			@NonNull final byte[] payload) throws
-					NoSuchAlgorithmException,
-					InvalidKeyException,
-					SignatureException,
-					IOException,
-					SignatureInvalidException {
-
-		try(DataInputStream payloadStream
-					= new DataInputStream(new ByteArrayInputStream(payload))) {
-
-			final int msgLength = payloadStream.readInt();
-
-			final byte[] msg = new byte[msgLength];
-			payloadStream.readFully(msg);
-
-			final int sigLength = payloadStream.readInt();
-
-			final byte[] sig = new byte[sigLength];
-			payloadStream.readFully(sig);
-
-			// (any trailing bytes in payloadStream are safely ignored)
-
-			verify(publicKey, msg, sig);
-
-			return msg;
-		}
-	}
+    class SignatureInvalidException : Exception()
 }

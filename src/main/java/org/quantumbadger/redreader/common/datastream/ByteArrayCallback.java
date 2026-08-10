@@ -12,19 +12,17 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.datastream
 
-package org.quantumbadger.redreader.common.datastream;
+import java.io.IOException
 
-import androidx.annotation.NonNull;
-
-import java.io.IOException;
-
-public interface ByteArrayCallback {
-
-	void onByteArray(
-			@NonNull byte[] buf,
-			int offset,
-			int length) throws IOException;
+interface ByteArrayCallback {
+    @Throws(IOException::class)
+    fun onByteArray(
+        buf: ByteArray,
+        offset: Int,
+        length: Int
+    )
 }

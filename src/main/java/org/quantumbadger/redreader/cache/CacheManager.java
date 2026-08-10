@@ -12,743 +12,694 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache
 
-package org.quantumbadger.redreader.cache;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.net.Uri
+import android.util.Log
+import com.github.luben.zstd.Zstd
+import com.github.luben.zstd.ZstdInputStream
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.common.FileUtils
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.General.readWholeStream
+import org.quantumbadger.redreader.common.GenericFactory
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.PrioritisedCachedThreadPool
+import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.common.datastream.MemoryDataStream
+import org.quantumbadger.redreader.common.datastream.SeekableFileInputStream
+import org.quantumbadger.redreader.common.datastream.SeekableInputStream
+import org.quantumbadger.redreader.common.time.TimeDuration
+import org.quantumbadger.redreader.common.time.TimeDuration.Companion.days
+import org.quantumbadger.redreader.common.time.TimeDuration.Companion.hours
+import org.quantumbadger.redreader.common.time.TimeDuration.Companion.secs
+import org.quantumbadger.redreader.http.FailedRequestBody
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.Locale
+import java.util.Objects
+import java.util.UUID
+import java.util.concurrent.PriorityBlockingQueue
+import java.util.concurrent.atomic.AtomicBoolean
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.net.Uri;
-import android.util.Log;
+class CacheManager private constructor(context: Context) {
+    private val dbManager: CacheDbManager
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    private val requests = PriorityBlockingQueue<CacheRequest?>()
 
-import com.github.luben.zstd.Zstd;
-import com.github.luben.zstd.ZstdInputStream;
+    private val downloadQueue: PrioritisedDownloadQueue
+    private val mDiskCacheThreadPool = PrioritisedCachedThreadPool(2, "Disk Cache")
 
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.activities.BugReportActivity;
-import org.quantumbadger.redreader.common.FileUtils;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.GenericFactory;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.PrioritisedCachedThreadPool;
-import org.quantumbadger.redreader.common.Priority;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.datastream.MemoryDataStream;
-import org.quantumbadger.redreader.common.datastream.SeekableFileInputStream;
-import org.quantumbadger.redreader.common.datastream.SeekableInputStream;
-import org.quantumbadger.redreader.common.time.TimeDuration;
+    private val context: Context
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
+    init {
+        if (!isAlreadyInitialized.compareAndSet(false, true)) {
+            throw RuntimeException("Attempt to initialize the cache twice.")
+        }
 
-public final class CacheManager {
+        this.context = context
 
-	private static final String TAG = "CacheManager";
+        dbManager = CacheDbManager(context)
 
-	private static final String ext = ".rr_cache_data";
-	private static final String tempExt = ".rr_cache_data_tmp";
+        downloadQueue = PrioritisedDownloadQueue(context)
 
-	private static final AtomicBoolean isAlreadyInitialized = new AtomicBoolean(false);
-	private final CacheDbManager dbManager;
+        val requestHandler = RequestHandlerThread()
+        requestHandler.start()
+    }
 
-	private final PriorityBlockingQueue<CacheRequest> requests
-			= new PriorityBlockingQueue<>();
+    private fun isCacheFile(file: File): Long? {
+        val name = file.getName()
 
-	private final PrioritisedDownloadQueue downloadQueue;
-	private final PrioritisedCachedThreadPool mDiskCacheThreadPool
-			= new PrioritisedCachedThreadPool(2, "Disk Cache");
+        if (!name.endsWith(ext)) {
+            return null
+        }
 
-	private final Context context;
+        val nameSplit: Array<String?> =
+            name.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        if (nameSplit.size != 2) {
+            return null
+        }
 
-	@SuppressLint("StaticFieldLeak") private static CacheManager singleton;
+        try {
+            return nameSplit[0]!!.toLong()
+        } catch (e: Exception) {
+            return null
+        }
+    }
 
-	public static synchronized CacheManager getInstance(@NonNull final Context context) {
-		if(singleton == null) {
-			singleton = new CacheManager(context.getApplicationContext());
-		}
-		return singleton;
-	}
+    private fun getCacheFileList(dir: File, currentFiles: HashSet<Long?>) {
+        val list = dir.listFiles()
+        if (list == null) {
+            return
+        }
 
-	private CacheManager(final Context context) {
+        for (file in list) {
+            if (file.isDirectory()) {
+                getCacheFileList(file, currentFiles)
+            } else {
+                val cacheFileId = isCacheFile(file)
 
-		if(!isAlreadyInitialized.compareAndSet(false, true)) {
-			throw new RuntimeException("Attempt to initialize the cache twice.");
-		}
+                if (cacheFileId != null) {
+                    currentFiles.add(cacheFileId)
+                }
+            }
+        }
+    }
 
-		this.context = context;
+    fun pruneTemp() {
+        val dirs: MutableList<File> = getCacheDirs(context)
+        for (dir in dirs) {
+            pruneTemp(dir)
+        }
+    }
 
-		dbManager = new CacheDbManager(context);
+    @Synchronized
+    fun pruneCache() {
+        pruneCache(PrefsUtility.pref_cache_maxage())
+    }
 
-		downloadQueue = new PrioritisedDownloadQueue(context);
+    @Synchronized
+    fun pruneCache(
+        clearListings: Boolean,
+        clearThumbnails: Boolean,
+        clearImages: Boolean
+    ) {
+        if (!clearListings && !clearThumbnails && !clearImages) {
+            return
+        }
 
-		final RequestHandlerThread requestHandler = new RequestHandlerThread();
-		requestHandler.start();
-	}
-
-	@Nullable
-	private Long isCacheFile(@NonNull final File file) {
-
-		final String name = file.getName();
-
-		if(!name.endsWith(ext)) {
-			return null;
-		}
-
-		final String[] nameSplit = name.split("\\.");
-		if(nameSplit.length != 2) {
-			return null;
-		}
-
-		try {
-			return Long.parseLong(nameSplit[0]);
-		} catch(final Exception e) {
-			return null;
-		}
-	}
-
-	private void getCacheFileList(final File dir, final HashSet<Long> currentFiles) {
-
-		final File[] list = dir.listFiles();
-		if(list == null) {
-			return;
-		}
-
-		for(final File file : list) {
-
-			if(file.isDirectory()) {
-				getCacheFileList(file, currentFiles);
-
-			} else {
-				final Long cacheFileId = isCacheFile(file);
-
-				if(cacheFileId != null) {
-					currentFiles.add(cacheFileId);
-				}
-			}
-		}
-	}
-
-	private static void pruneTemp(final File dir) {
-
-		final String[] list = dir.list();
-		if(list == null) {
-			return;
-		}
-
-		for(final String file : list) {
-
-			if(file.endsWith(tempExt)) {
-				new File(dir, file).delete();
-			}
-		}
-	}
-
-	@NonNull
-	public static ArrayList<File> getCacheDirs(final Context context) {
-
-		final ArrayList<File> dirs = new ArrayList<>();
-
-		dirs.add(context.getCacheDir());
-
-		for(final File dir : context.getExternalCacheDirs()) {
-			if(dir != null) {
-				dirs.add(dir);
-			}
-		}
-
-		return dirs;
-	}
-
-	public void pruneTemp() {
-		final List<File> dirs = getCacheDirs(context);
-		for(final File dir : dirs) {
-			pruneTemp(dir);
-		}
-	}
-
-	public synchronized void pruneCache() {
-		pruneCache(PrefsUtility.pref_cache_maxage());
-	}
-
-	public synchronized void pruneCache(
-			final boolean clearListings,
-			final boolean clearThumbnails,
-			final boolean clearImages) {
-
-		if(!clearListings && !clearThumbnails && !clearImages) {
-			return;
-		}
-
-		/*Use a maximum age of 0 to clear everything* in that category.
+        /*Use a maximum age of 0 to clear everything* in that category.
 		Otherwise, use a high number as the maximum age to ensure that nothing is deleted.
 
 		*May not clear everything if system time shenanigans have occurred.*/
-
-		final TimeDuration clearEverything = TimeDuration.secs(0);
-		final TimeDuration clearNothing = TimeDuration.days(365 * 10);
-
-		pruneCache(PrefsUtility.createFileTypeMap(
-				clearListings ? clearEverything : clearNothing,
-				clearThumbnails ? clearEverything : clearNothing,
-				clearImages ? clearEverything : clearNothing
-		));
-	}
-
-	public synchronized void pruneCache(final HashMap<Integer, TimeDuration> maxAge) {
-
-		try {
-
-			final HashSet<Long> currentFiles = new HashSet<>(1024);
-
-			final List<File> dirs = getCacheDirs(context);
-			for(final File dir : dirs) {
-				getCacheFileList(dir, currentFiles);
-			}
-
-			final ArrayList<Long> filesToDelete = dbManager.getFilesToPrune(
-					currentFiles,
-					maxAge,
-					TimeDuration.hours(72));
-
-			Log.i("CacheManager", "Pruning " + filesToDelete.size() + " files");
-
-			for(final long id : filesToDelete) {
-				final File file = getExistingCacheFile(id);
-				if(file != null) {
-					file.delete();
-				}
-			}
-
-		} catch(final Throwable t) {
-			BugReportActivity.handleGlobalError(context, t);
-		}
-
-	}
-
-	public synchronized void emptyTheWholeCache() {
-		dbManager.emptyTheWholeCache();
-	}
-
-	public synchronized HashMap<Integer, Long> getCacheDataUsages() {
-		final HashMap<Integer, Long> dataUsagePerType = PrefsUtility.createFileTypeMap(0L, 0L, 0L);
-
-		try {
-			final HashSet<Long> currentFiles = new HashSet<>(128);
-
-			final List<File> dirs = getCacheDirs(context);
-			for(final File dir : dirs) {
-				getCacheFileList(dir, currentFiles);
-			}
-
-			final HashMap<Long, Integer> filesToCheckWithTypes = dbManager.getFilesToSize();
-
-			for(final HashMap.Entry<Long, Integer> fileEntry : filesToCheckWithTypes.entrySet()) {
-				final long id = fileEntry.getKey();
-				final int type = fileEntry.getValue();
-
-				final File file = getExistingCacheFile(id);
-				if(file != null && dataUsagePerType.containsKey(type)) {
-					dataUsagePerType.put(
-							type,
-							Objects.requireNonNull(dataUsagePerType.get(type)) + file.length());
-				}
-			}
-
-		} catch(final Throwable t) {
-			BugReportActivity.handleGlobalError(context, t);
-		}
-
-		return dataUsagePerType;
-	}
-
-	public void makeRequest(@NonNull final CacheRequest request) {
-		requests.put(request);
-	}
-
-	public List<CacheEntry> getSessions(final UriString url, final RedditAccount user) {
-		return dbManager.select(url, user.username, null);
-	}
-
-	public File getPreferredCacheLocation() {
-		return new File(
-				PrefsUtility.pref_cache_location(context));
-	}
-
-	@NonNull
-	public ReadableCacheFile getExistingCacheFileById(
-			final long cacheId,
-			@NonNull final CacheCompressionType cacheCompressionType) {
-		return new ReadableCacheFile(cacheId, cacheCompressionType);
-	}
-
-	public class WritableCacheFile {
-
-		private final OutputStream mOutStream;
-		private ReadableCacheFile readableCacheFile = null;
-		@NonNull final UriString mUrl;
-		@NonNull final RedditAccount mUser;
-		final int mFileType;
-		private final File location;
-		private boolean mWriteExternally = false;
-
-		@NonNull private final UUID mSession;
-		@Nullable private final String mMimetype;
-
-		@NonNull private final CacheCompressionType mCacheCompressionType;
-		@NonNull private final File mTmpFile;
-
-		private long mUncompressedLength = 0;
-		private long mCompressedLength = 0;
-
-		private WritableCacheFile(
-				@NonNull final UriString url,
-				@NonNull final RedditAccount user,
-				final int fileType,
-				@NonNull final UUID session,
-				@Nullable final String mimetype,
-				@NonNull final CacheCompressionType cacheCompressionType) throws IOException {
-
-			mUrl = url;
-			mUser = user;
-			mFileType = fileType;
-			mSession = session;
-			mMimetype = mimetype;
-			mCacheCompressionType = cacheCompressionType;
-
-			location = getPreferredCacheLocation();
-			mTmpFile = new File(location, UUID.randomUUID().toString() + tempExt);
-
-			mOutStream = new FileOutputStream(mTmpFile);
-		}
-
-		@NonNull
-		public ReadableCacheFile getReadableCacheFile() {
-			return Objects.requireNonNull(readableCacheFile);
-		}
-
-		public void writeWholeFile(
-				final byte[] buf,
-				final int offset,
-				final int length) throws IOException {
-
-			if(mCacheCompressionType == CacheCompressionType.NONE) {
-				mOutStream.write(buf, offset, length);
-				mCompressedLength += length;
-
-			} else if(mCacheCompressionType == CacheCompressionType.ZSTD) {
-
-				final long maxDestSize = Zstd.compressBound(length);
-
-				if(maxDestSize > Integer.MAX_VALUE) {
-					throw new IOException("Max output size is greater than MAX_INT");
-				}
-
-				final byte[] dst = new byte[(int)maxDestSize];
-
-				final int size = (int)Zstd.compressByteArray(
-						dst,
-						0,
-						dst.length,
-						buf,
-						offset,
-						length,
-						3);
-
-				mOutStream.write(dst, 0, size);
-
-				mCompressedLength += size;
-			}
-
-			mUncompressedLength += length;
-		}
-
-		public void onWriteFinished() throws IOException {
-
-			if(mWriteExternally) {
-				mCompressedLength = mTmpFile.length();
-				mUncompressedLength = mCompressedLength;
-
-			} else {
-				mOutStream.flush();
-				mOutStream.close();
-			}
-
-			final long cacheFileId = dbManager.newEntry(
-					mUrl,
-					mUser,
-					mFileType,
-					mSession,
-					mMimetype,
-					mCacheCompressionType,
-					mCompressedLength,
-					mUncompressedLength);
-
-			final File subdir = getSubdirForCacheFile(location, cacheFileId);
-			FileUtils.mkdirs(subdir);
-
-			final File dstFile = new File(subdir, cacheFileId + ext);
-			FileUtils.moveFile(mTmpFile, dstFile);
-
-			dbManager.setEntryDone(cacheFileId);
-
-			readableCacheFile = new ReadableCacheFile(cacheFileId, mCacheCompressionType);
-		}
-
-		public File writeExternally() throws IOException {
-			mWriteExternally = true;
-			mOutStream.close();
-			return mTmpFile;
-		}
-
-		public void onWriteCancelled() {
-
-			try {
-				mOutStream.close();
-				if(!mTmpFile.delete()) {
-					Log.e(TAG, "Failed to delete temp cache file " + mTmpFile.delete());
-				}
-
-			} catch(final Exception e) {
-				Log.e(TAG, "Exception during cancel", e);
-			}
-		}
-	}
-
-	@NonNull
-	private static File getSubdirForCacheFile(
-			@NonNull final File cacheRoot,
-			final long cacheFileId) {
-
-
-		return FileUtils.buildPath(
-				cacheRoot,
-				"rr_cache_files",
-				String.format(Locale.US, "%02d", cacheFileId % 100),
-				String.format(Locale.US, "%d", (cacheFileId / 100) % 10));
-	}
-
-	public class ReadableCacheFile {
-
-		private final long mId;
-		@NonNull private final CacheCompressionType mCacheCompressionType;
-
-		@Nullable private Uri mCachedUri;
-
-		private ReadableCacheFile(
-				final long id,
-				@NonNull final CacheCompressionType cacheCompressionType) {
-
-			mId = id;
-			mCacheCompressionType = cacheCompressionType;
-		}
-
-		public long getId() {
-			return mId;
-		}
-
-		@NonNull
-		public InputStream getInputStream() throws IOException {
-
-			final InputStream result = getCacheFileInputStream(mId, mCacheCompressionType);
-
-			if(result == null) {
-				throw new FileNotFoundException("Stream was null for id " + mId);
-			}
-
-			return result;
-		}
-
-		@Nullable
-		public Uri getUri() {
-
-			if(mCachedUri == null) {
-				mCachedUri = getCacheFileUri(mId);
-			}
-
-			return mCachedUri;
-		}
-
-		@NonNull
-		public Optional<File> getFile() {
-			return Optional.ofNullable(getExistingCacheFile(mId));
-		}
-
-		@NonNull
-		public Optional<String> lookupMimetype() {
-
-			final Optional<CacheEntry> result = dbManager.selectById(mId);
-
-			if(result.isPresent()) {
-				return Optional.of(result.get().mimetype);
-
-			} else {
-				return Optional.empty();
-			}
-		}
-
-		@Override
-		public String toString() {
-			return String.format(Locale.US, "[ReadableCacheFile : id %d]", mId);
-		}
-	}
-
-	@NonNull
-	public WritableCacheFile openNewCacheFile(
-			@NonNull final UriString url,
-			@NonNull final RedditAccount user,
-			final int fileType,
-			final UUID session,
-			final String mimetype,
-			@NonNull final CacheCompressionType cacheCompressionType) throws IOException {
-		return new WritableCacheFile(url, user, fileType, session, mimetype, cacheCompressionType);
-	}
-
-	@Nullable
-	private File getExistingCacheFile(final long id) {
-
-		final List<File> dirs = getCacheDirs(context);
-
-		// Try new format first
-		for(final File dir : dirs) {
-			final File f = new File(getSubdirForCacheFile(dir, id), id + ext);
-			if(f.exists()) {
-				return f;
-			}
-		}
-
-		for(final File dir : dirs) {
-			final File f = new File(dir, id + ext);
-			if(f.exists()) {
-				return f;
-			}
-		}
-
-		return null;
-	}
-
-	@Nullable
-	private SeekableInputStream getCacheFileInputStream(
-			final long id,
-			@NonNull final CacheCompressionType cacheCompressionType) throws IOException {
-
-		final File cacheFile = getExistingCacheFile(id);
-
-		if(cacheFile == null) {
-			return null;
-		}
-
-		if(cacheCompressionType == CacheCompressionType.NONE) {
-			return new SeekableFileInputStream(cacheFile);
-
-		} else if(cacheCompressionType == CacheCompressionType.ZSTD) {
-
-			try(InputStream is = new ZstdInputStream(new FileInputStream(cacheFile))) {
-				return new MemoryDataStream(General.readWholeStream(is)).getInputStream();
-			}
-
-		} else {
-			throw new RuntimeException("Unhandled compression type " + cacheCompressionType);
-		}
-	}
-
-	@Nullable
-	private Uri getCacheFileUri(final long id) {
-
-		final File cacheFile = getExistingCacheFile(id);
-
-		if(cacheFile == null) {
-			return null;
-		}
-
-		return Uri.fromFile(cacheFile);
-	}
-
-	private class RequestHandlerThread extends Thread {
-
-		public RequestHandlerThread() {
-			super("Request Handler Thread");
-		}
-
-		@Override
-		public void run() {
-
-			try {
-
-				CacheRequest request;
-				while((request = requests.take()) != null) {
-					handleRequest(request);
-				}
-
-			} catch(final InterruptedException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
-		private void handleRequest(final CacheRequest request) {
-
-			if(request.url == null) {
-				request.notifyFailure(General.getGeneralErrorForFailure(
-						context,
-						CacheRequest.RequestFailureType.MALFORMED_URL,
-						new NullPointerException("URL was null"),
-						null,
-						null,
-						Optional.empty()));
-				return;
-			}
-
-			if(request.downloadStrategy.shouldDownloadWithoutCheckingCache()) {
-				queueDownload(request);
-
-			} else {
-
-				final List<CacheEntry> result = dbManager.select(
-						request.url,
-						request.user.username,
-						request.requestSession);
-
-				if(result.isEmpty()) {
-
-					if(request.downloadStrategy.shouldDownloadIfNotCached()) {
-						queueDownload(request);
-
-					} else {
-						request.notifyFailure(General.getGeneralErrorForFailure(
-								context,
-								CacheRequest.RequestFailureType.CACHE_MISS,
-								null,
-								null,
-								request.url,
-								Optional.empty()));
-					}
-
-				} else {
-
-					final CacheEntry entry = mostRecentFromList(result);
-
-					if(request.downloadStrategy.shouldDownloadIfCacheEntryFound(entry)) {
-						queueDownload(request);
-					} else {
-						handleCacheEntryFound(entry, request);
-					}
-				}
-			}
-		}
-
-		private CacheEntry mostRecentFromList(final List<CacheEntry> list) {
-
-			CacheEntry entry = null;
-
-			for(final CacheEntry e : list) {
-				if(entry == null || entry.timestamp.isLessThan(e.timestamp)) {
-					entry = e;
-				}
-			}
-
-			return entry;
-		}
-
-		private void queueDownload(final CacheRequest request) {
-			request.notifyDownloadNecessary();
-
-			try {
-				downloadQueue.add(request, CacheManager.this);
-			} catch(final Exception e) {
-				request.notifyFailure(General.getGeneralErrorForFailure(
-						context,
-						CacheRequest.RequestFailureType.MALFORMED_URL,
-						e,
-						null,
-						request.url,
-						Optional.empty()));
-			}
-		}
-
-		private void handleCacheEntryFound(
-				final CacheEntry entry,
-				final CacheRequest request) {
-
-			final File cacheFile = getExistingCacheFile(entry.id);
-
-			if(cacheFile == null) {
-
-				request.notifyFailure(General.getGeneralErrorForFailure(
-						context,
-						CacheRequest.RequestFailureType.STORAGE,
-						new RuntimeException(),
-						null,
-						request.url,
-						Optional.empty()));
-
-				dbManager.delete(entry.id);
-
-				return;
-			}
-
-			mDiskCacheThreadPool.add(new PrioritisedCachedThreadPool.Task() {
-
-				@NonNull
-				@Override
-				public Priority getPriority() {
-					return request.priority;
-				}
-
-				@Override
-				public void run() {
-
-					final GenericFactory<SeekableInputStream, IOException> streamFactory = () -> {
-						final SeekableInputStream stream
-								= getCacheFileInputStream(entry.id, entry.cacheCompressionType);
-
-						if(stream == null) {
-							dbManager.delete(entry.id);
-							throw new IOException("Failed to open file");
-						}
-
-						return stream;
-					};
-
-					request.notifyDataStreamAvailable(
-							streamFactory,
-							entry.timestamp,
-							entry.session,
-							true,
-							entry.mimetype);
-
-					request.notifyDataStreamComplete(
-							streamFactory,
-							entry.timestamp,
-							entry.session,
-							true,
-							entry.mimetype);
-
-					request.notifyCacheFileWritten(
-							new ReadableCacheFile(entry.id, entry.cacheCompressionType),
-							entry.timestamp,
-							entry.session,
-							true,
-							entry.mimetype);
-				}
-			});
-		}
-	}
+        val clearEverything = secs(0)
+        val clearNothing = days((365 * 10).toLong())
+
+        pruneCache(
+            PrefsUtility.createFileTypeMap<TimeDuration?>(
+                if (clearListings) clearEverything else clearNothing,
+                if (clearThumbnails) clearEverything else clearNothing,
+                if (clearImages) clearEverything else clearNothing
+            )
+        )
+    }
+
+    @Synchronized
+    fun pruneCache(maxAge: java.util.HashMap<Int?, TimeDuration?>?) {
+        try {
+            val currentFiles = HashSet<Long?>(1024)
+
+            val dirs: MutableList<File> = getCacheDirs(context)
+            for (dir in dirs) {
+                getCacheFileList(dir, currentFiles)
+            }
+
+            val filesToDelete = dbManager.getFilesToPrune(
+                currentFiles,
+                maxAge,
+                hours(72)
+            )
+
+            Log.i("CacheManager", "Pruning " + filesToDelete.size + " files")
+
+            for (id in filesToDelete) {
+                val file = getExistingCacheFile(id!!)
+                if (file != null) {
+                    file.delete()
+                }
+            }
+        } catch (t: Throwable) {
+            handleGlobalError(context, t)
+        }
+    }
+
+    @Synchronized
+    fun emptyTheWholeCache() {
+        dbManager.emptyTheWholeCache()
+    }
+
+    @get:Synchronized
+    val cacheDataUsages: HashMap<Int?, Long?>
+        get() {
+            val dataUsagePerType =
+                PrefsUtility.createFileTypeMap<Long?>(0L, 0L, 0L)
+
+            try {
+                val currentFiles =
+                    HashSet<Long?>(128)
+
+                val dirs: MutableList<File> =
+                    getCacheDirs(context)
+                for (dir in dirs) {
+                    getCacheFileList(dir, currentFiles)
+                }
+
+                val filesToCheckWithTypes =
+                    dbManager.getFilesToSize()
+
+                for (fileEntry in filesToCheckWithTypes.entries) {
+                    val id: Long = fileEntry.key!!
+                    val type: Int = fileEntry.value!!
+
+                    val file = getExistingCacheFile(id)
+                    if (file != null && dataUsagePerType.containsKey(type)) {
+                        dataUsagePerType.put(
+                            type,
+                            Objects.requireNonNull<Long?>(dataUsagePerType.get(type)) + file.length()
+                        )
+                    }
+                }
+            } catch (t: Throwable) {
+                handleGlobalError(context, t)
+            }
+
+            return dataUsagePerType
+        }
+
+    fun makeRequest(request: CacheRequest) {
+        requests.put(request)
+    }
+
+    fun getSessions(url: UriString?, user: RedditAccount): MutableList<CacheEntry> {
+        return dbManager.select(url, user.username, null)
+    }
+
+    val preferredCacheLocation: File
+        get() = File(
+            PrefsUtility.pref_cache_location(context)
+        )
+
+    fun getExistingCacheFileById(
+        cacheId: Long,
+        cacheCompressionType: CacheCompressionType
+    ): ReadableCacheFile {
+        return ReadableCacheFile(cacheId, cacheCompressionType)
+    }
+
+    inner class WritableCacheFile private constructor(
+        val mUrl: UriString,
+        val mUser: RedditAccount,
+        val mFileType: Int,
+        private val mSession: UUID,
+        private val mMimetype: String?,
+        private val mCacheCompressionType: CacheCompressionType
+    ) {
+        private val mOutStream: OutputStream
+        private var readableCacheFile: ReadableCacheFile? = null
+        private val location: File
+        private var mWriteExternally = false
+
+        private val mTmpFile: File
+
+        private var mUncompressedLength: Long = 0
+        private var mCompressedLength: Long = 0
+
+        init {
+            location = this.preferredCacheLocation
+            mTmpFile = File(location, UUID.randomUUID().toString() + tempExt)
+
+            mOutStream = FileOutputStream(mTmpFile)
+        }
+
+        fun getReadableCacheFile(): ReadableCacheFile {
+            return Objects.requireNonNull<ReadableCacheFile>(readableCacheFile)
+        }
+
+        @Throws(IOException::class)
+        fun writeWholeFile(
+            buf: ByteArray?,
+            offset: Int,
+            length: Int
+        ) {
+            if (mCacheCompressionType == CacheCompressionType.NONE) {
+                mOutStream.write(buf, offset, length)
+                mCompressedLength += length.toLong()
+            } else if (mCacheCompressionType == CacheCompressionType.ZSTD) {
+                val maxDestSize = Zstd.compressBound(length.toLong())
+
+                if (maxDestSize > Int.MAX_VALUE) {
+                    throw IOException("Max output size is greater than MAX_INT")
+                }
+
+                val dst = ByteArray(maxDestSize.toInt())
+
+                val size = Zstd.compressByteArray(
+                    dst,
+                    0,
+                    dst.size,
+                    buf,
+                    offset,
+                    length,
+                    3
+                ).toInt()
+
+                mOutStream.write(dst, 0, size)
+
+                mCompressedLength += size.toLong()
+            }
+
+            mUncompressedLength += length.toLong()
+        }
+
+        @Throws(IOException::class)
+        fun onWriteFinished() {
+            if (mWriteExternally) {
+                mCompressedLength = mTmpFile.length()
+                mUncompressedLength = mCompressedLength
+            } else {
+                mOutStream.flush()
+                mOutStream.close()
+            }
+
+            val cacheFileId = dbManager.newEntry(
+                mUrl,
+                mUser,
+                mFileType,
+                mSession,
+                mMimetype,
+                mCacheCompressionType,
+                mCompressedLength,
+                mUncompressedLength
+            )
+
+            val subdir: File = getSubdirForCacheFile(location, cacheFileId)
+            FileUtils.mkdirs(subdir)
+
+            val dstFile = File(subdir, cacheFileId.toString() + ext)
+            FileUtils.moveFile(mTmpFile, dstFile)
+
+            dbManager.setEntryDone(cacheFileId)
+
+            readableCacheFile = ReadableCacheFile(cacheFileId, mCacheCompressionType)
+        }
+
+        @Throws(IOException::class)
+        fun writeExternally(): File {
+            mWriteExternally = true
+            mOutStream.close()
+            return mTmpFile
+        }
+
+        fun onWriteCancelled() {
+            try {
+                mOutStream.close()
+                if (!mTmpFile.delete()) {
+                    Log.e(TAG, "Failed to delete temp cache file " + mTmpFile.delete())
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception during cancel", e)
+            }
+        }
+    }
+
+    inner class ReadableCacheFile private constructor(
+        val id: Long,
+        private val mCacheCompressionType: CacheCompressionType
+    ) {
+        private var mCachedUri: Uri? = null
+
+        @get:Throws(IOException::class)
+        val inputStream: InputStream
+            get() {
+                val result: InputStream =
+                    getCacheFileInputStream(this.id, mCacheCompressionType)!!
+
+                if (result == null) {
+                    throw FileNotFoundException("Stream was null for id " + this.id)
+                }
+
+                return result
+            }
+
+        val uri: Uri?
+            get() {
+                if (mCachedUri == null) {
+                    mCachedUri = getCacheFileUri(this.id)
+                }
+
+                return mCachedUri
+            }
+
+        val file: Optional<File?>
+            get() = Optional.Companion.ofNullable<File?>(
+                getExistingCacheFile(this.id)
+            )
+
+        fun lookupMimetype(): Optional<String?> {
+            val result = dbManager.selectById(
+                this.id
+            )
+
+            if (result.isPresent()) {
+                return Optional.Companion.of<String?>(result.get().mimetype)
+            } else {
+                return Optional.Companion.empty<String?>()
+            }
+        }
+
+        override fun toString(): String {
+            return String.format(Locale.US, "[ReadableCacheFile : id %d]", this.id)
+        }
+    }
+
+    @Throws(IOException::class)
+    fun openNewCacheFile(
+        url: UriString,
+        user: RedditAccount,
+        fileType: Int,
+        session: UUID,
+        mimetype: String?,
+        cacheCompressionType: CacheCompressionType
+    ): WritableCacheFile {
+        return WritableCacheFile(url, user, fileType, session, mimetype, cacheCompressionType)
+    }
+
+    private fun getExistingCacheFile(id: Long): File? {
+        val dirs: MutableList<File> = getCacheDirs(context)
+
+        // Try new format first
+        for (dir in dirs) {
+            val f: File = File(getSubdirForCacheFile(dir, id), id.toString() + ext)
+            if (f.exists()) {
+                return f
+            }
+        }
+
+        for (dir in dirs) {
+            val f = File(dir, id.toString() + ext)
+            if (f.exists()) {
+                return f
+            }
+        }
+
+        return null
+    }
+
+    @Throws(IOException::class)
+    private fun getCacheFileInputStream(
+        id: Long,
+        cacheCompressionType: CacheCompressionType
+    ): SeekableInputStream? {
+        val cacheFile = getExistingCacheFile(id)
+
+        if (cacheFile == null) {
+            return null
+        }
+
+        if (cacheCompressionType == CacheCompressionType.NONE) {
+            return SeekableFileInputStream(cacheFile)
+        } else if (cacheCompressionType == CacheCompressionType.ZSTD) {
+            ZstdInputStream(FileInputStream(cacheFile)).use { `is` ->
+                return MemoryDataStream(
+                    readWholeStream(`is`)
+                ).getInputStream()
+            }
+        } else {
+            throw RuntimeException("Unhandled compression type " + cacheCompressionType)
+        }
+    }
+
+    private fun getCacheFileUri(id: Long): Uri? {
+        val cacheFile = getExistingCacheFile(id)
+
+        if (cacheFile == null) {
+            return null
+        }
+
+        return Uri.fromFile(cacheFile)
+    }
+
+    private inner class RequestHandlerThread : Thread("Request Handler Thread") {
+        override fun run() {
+            try {
+                var request: CacheRequest?
+                while ((requests.take().also { request = it }) != null) {
+                    handleRequest(request!!)
+                }
+            } catch (e: InterruptedException) {
+                throw RuntimeException(e)
+            }
+        }
+
+        fun handleRequest(request: CacheRequest) {
+            if (request.url == null) {
+                request.notifyFailure(
+                    getGeneralErrorForFailure(
+                        context,
+                        RequestFailureType.MALFORMED_URL,
+                        NullPointerException("URL was null"),
+                        null,
+                        null,
+                        Optional.Companion.empty<FailedRequestBody>()
+                    )
+                )
+                return
+            }
+
+            if (request.downloadStrategy.shouldDownloadWithoutCheckingCache()) {
+                queueDownload(request)
+            } else {
+                val result = dbManager.select(
+                    request.url,
+                    request.user.username,
+                    request.requestSession
+                )
+
+                if (result.isEmpty()) {
+                    if (request.downloadStrategy.shouldDownloadIfNotCached()) {
+                        queueDownload(request)
+                    } else {
+                        request.notifyFailure(
+                            getGeneralErrorForFailure(
+                                context,
+                                RequestFailureType.CACHE_MISS,
+                                null,
+                                null,
+                                request.url,
+                                Optional.Companion.empty<FailedRequestBody>()
+                            )
+                        )
+                    }
+                } else {
+                    val entry = mostRecentFromList(result)
+
+                    if (request.downloadStrategy.shouldDownloadIfCacheEntryFound(entry)) {
+                        queueDownload(request)
+                    } else {
+                        handleCacheEntryFound(entry, request)
+                    }
+                }
+            }
+        }
+
+        fun mostRecentFromList(list: MutableList<CacheEntry>): CacheEntry {
+            var entry: CacheEntry? = null
+
+            for (e in list) {
+                if (entry == null || entry.timestamp.isLessThan(e.timestamp)) {
+                    entry = e
+                }
+            }
+
+            return entry!!
+        }
+
+        fun queueDownload(request: CacheRequest) {
+            request.notifyDownloadNecessary()
+
+            try {
+                downloadQueue.add(request, this@CacheManager)
+            } catch (e: Exception) {
+                request.notifyFailure(
+                    getGeneralErrorForFailure(
+                        context,
+                        RequestFailureType.MALFORMED_URL,
+                        e,
+                        null,
+                        request.url,
+                        Optional.Companion.empty<FailedRequestBody>()
+                    )
+                )
+            }
+        }
+
+        fun handleCacheEntryFound(
+            entry: CacheEntry,
+            request: CacheRequest
+        ) {
+            val cacheFile = getExistingCacheFile(entry.id)
+
+            if (cacheFile == null) {
+                request.notifyFailure(
+                    getGeneralErrorForFailure(
+                        context,
+                        RequestFailureType.STORAGE,
+                        RuntimeException(),
+                        null,
+                        request.url,
+                        Optional.Companion.empty<FailedRequestBody>()
+                    )
+                )
+
+                dbManager.delete(entry.id)
+
+                return
+            }
+
+            mDiskCacheThreadPool.add(object : PrioritisedCachedThreadPool.Task() {
+                override fun getPriority(): Priority {
+                    return request.priority
+                }
+
+                override fun run() {
+                    val streamFactory: GenericFactory<SeekableInputStream?, IOException?> =
+                        GenericFactory {
+                            val stream =
+                                getCacheFileInputStream(entry.id, entry.cacheCompressionType)
+                            if (stream == null) {
+                                dbManager.delete(entry.id)
+                                throw IOException("Failed to open file")
+                            }
+                            stream
+                        }
+
+                    request.notifyDataStreamAvailable(
+                        streamFactory,
+                        entry.timestamp,
+                        entry.session,
+                        true,
+                        entry.mimetype
+                    )
+
+                    request.notifyDataStreamComplete(
+                        streamFactory,
+                        entry.timestamp,
+                        entry.session,
+                        true,
+                        entry.mimetype
+                    )
+
+                    request.notifyCacheFileWritten(
+                        ReadableCacheFile(entry.id, entry.cacheCompressionType),
+                        entry.timestamp,
+                        entry.session,
+                        true,
+                        entry.mimetype
+                    )
+                }
+            })
+        }
+    }
+
+    companion object {
+        private const val TAG = "CacheManager"
+
+        private const val ext = ".rr_cache_data"
+        private const val tempExt = ".rr_cache_data_tmp"
+
+        private val isAlreadyInitialized = AtomicBoolean(false)
+
+        @SuppressLint("StaticFieldLeak")
+        private var singleton: CacheManager? = null
+
+        @Synchronized
+        fun getInstance(context: Context): CacheManager {
+            if (singleton == null) {
+                singleton = CacheManager(context.getApplicationContext())
+            }
+            return singleton!!
+        }
+
+        private fun pruneTemp(dir: File) {
+            val list = dir.list()
+            if (list == null) {
+                return
+            }
+
+            for (file in list) {
+                if (file.endsWith(tempExt)) {
+                    File(dir, file).delete()
+                }
+            }
+        }
+
+        fun getCacheDirs(context: Context): ArrayList<File> {
+            val dirs = ArrayList<File>()
+
+            dirs.add(context.getCacheDir())
+
+            for (dir in context.getExternalCacheDirs()) {
+                if (dir != null) {
+                    dirs.add(dir)
+                }
+            }
+
+            return dirs
+        }
+
+        private fun getSubdirForCacheFile(
+            cacheRoot: File,
+            cacheFileId: Long
+        ): File {
+            return FileUtils.buildPath(
+                cacheRoot,
+                "rr_cache_files",
+                String.format(Locale.US, "%02d", cacheFileId % 100),
+                String.format(Locale.US, "%d", (cacheFileId / 100) % 10)
+            )
+        }
+    }
 }

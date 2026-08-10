@@ -12,242 +12,261 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.graphics.Color
+import android.view.View
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.widget.TooltipCompat
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.Fonts
+import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.common.LinkHandler.onLinkClicked
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.reddit.api.RedditPostActions
+import org.quantumbadger.redreader.reddit.api.RedditPostActions.setupAccessibilityActions
+import org.quantumbadger.redreader.reddit.api.RedditPostActions.showActionMenu
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
+import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
+import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost
 
-import android.content.res.TypedArray;
-import android.graphics.Color;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+class RedditPostHeaderView(
+    activity: BaseActivity,
+    post: RedditPreparedPost
+) : LinearLayout(activity) {
+    private val subtitle: TextView
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.widget.TooltipCompat;
+    private val mChangeListenerAddTask: Runnable?
+    private val mChangeListenerRemoveTask: Runnable?
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.Fonts;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.LinkHandler;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.reddit.api.RedditPostActions;
-import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
-import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost;
+    init {
+        val dpScale = activity.getResources().getDisplayMetrics().density
 
-public class RedditPostHeaderView extends LinearLayout {
+        setOrientation(VERTICAL)
 
-	private final TextView subtitle;
+        val greyHeader = LinearLayout(activity)
 
-	@Nullable private final Runnable mChangeListenerAddTask;
-	@Nullable private final Runnable mChangeListenerRemoveTask;
+        setupAccessibilityActions(
+            AccessibilityActionManager(
+                greyHeader,
+                activity.getResources()
+            ),
+            post,
+            activity,
+            true
+        )
 
-	public RedditPostHeaderView(
-			final BaseActivity activity,
-			final RedditPreparedPost post) {
+        greyHeader.setOrientation(VERTICAL)
 
-		super(activity);
+        val sidesPadding = (15.0f * dpScale).toInt()
+        val topPadding = (10.0f * dpScale).toInt()
 
-		final float dpScale = activity.getResources().getDisplayMetrics().density;
+        greyHeader.setPadding(sidesPadding, topPadding, sidesPadding, topPadding)
 
-		setOrientation(LinearLayout.VERTICAL);
+        val titleFontScale = PrefsUtility.appearance_fontscale_post_header_titles()
 
-		final LinearLayout greyHeader = new LinearLayout(activity);
+        val title = TextView(activity)
+        title.setTextSize(19.0f * titleFontScale)
+        title.setTypeface(Fonts.getRobotoLightOrAlternative())
+        title.setText(post.src.title)
+        title.setContentDescription(post.buildAccessibilityTitle(activity, true))
+        title.setTextColor(Color.WHITE)
+        greyHeader.addView(title)
 
-		RedditPostActions.INSTANCE.setupAccessibilityActions(
-				new AccessibilityActionManager(
-						greyHeader,
-						activity.getResources()),
-				post,
-				activity,
-				true);
+        val subtitleFontScale =
+            PrefsUtility.appearance_fontscale_post_header_subtitles()
 
-		greyHeader.setOrientation(LinearLayout.VERTICAL);
+        subtitle = TextView(activity)
+        subtitle.setTextSize(13.0f * subtitleFontScale)
+        subtitle.setText(post.buildSubtitle(activity, true))
+        subtitle.setContentDescription(post.buildAccessibilitySubtitle(activity, true))
 
-		final int sidesPadding = (int)(15.0f * dpScale);
-		final int topPadding = (int)(10.0f * dpScale);
+        subtitle.setTextColor(Color.rgb(200, 200, 200))
+        greyHeader.addView(subtitle)
 
-		greyHeader.setPadding(sidesPadding, topPadding, sidesPadding, topPadding);
+        run {
+            val appearance =
+                activity.obtainStyledAttributes(intArrayOf(R.attr.rrPostListHeaderBackgroundCol))
+            greyHeader.setBackgroundColor(appearance.getColor(0, General.COLOR_INVALID))
+            appearance.recycle()
+        }
 
-		final float titleFontScale = PrefsUtility.appearance_fontscale_post_header_titles();
+        greyHeader.setOnClickListener(OnClickListener { v: View? ->
+            if (!post.isSelf()) {
+                onLinkClicked(
+                    activity,
+                    post.src.url,
+                    false,
+                    post.src.src
+                )
+            }
+        })
 
-		final TextView title = new TextView(activity);
-		title.setTextSize(19.0f * titleFontScale);
-		title.setTypeface(Fonts.getRobotoLightOrAlternative());
-		title.setText(post.src.getTitle());
-		title.setContentDescription(post.buildAccessibilityTitle(activity, true));
-		title.setTextColor(Color.WHITE);
-		greyHeader.addView(title);
+        greyHeader.setOnLongClickListener(OnLongClickListener { v: View? ->
+            showActionMenu(activity, post)
+            true
+        })
 
-		final float subtitleFontScale =
-				PrefsUtility.appearance_fontscale_post_header_subtitles();
+        addView(greyHeader)
 
-		subtitle = new TextView(activity);
-		subtitle.setTextSize(13.0f * subtitleFontScale);
-		subtitle.setText(post.buildSubtitle(activity, true));
-		subtitle.setContentDescription(post.buildAccessibilitySubtitle(activity, true));
+        val currentUser: RedditAccount =
+            RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
 
-		subtitle.setTextColor(Color.rgb(200, 200, 200));
-		greyHeader.addView(subtitle);
+        if (!currentUser.isAnonymous) {
+            // A user is logged in
 
-		{
-			final TypedArray appearance = activity.obtainStyledAttributes(new int[] {
-					R.attr.rrPostListHeaderBackgroundCol});
+            val changeDataManager
+                    : RedditChangeDataManager =
+                RedditChangeDataManager.Companion.getInstance(currentUser)
+            val changeListener: RedditChangeDataManager.Listener
 
-			greyHeader.setBackgroundColor(appearance.getColor(0, General.COLOR_INVALID));
+            if (!PrefsUtility.pref_appearance_hide_headertoolbar_commentlist()) {
+                val buttons =
+                    inflate(activity, R.layout.post_header_toolbar, this)
+                        .findViewById<LinearLayout>(R.id.post_toolbar_layout)
 
-			appearance.recycle();
-		}
+                for (i in 0..<buttons.getChildCount()) {
+                    val button = buttons.getChildAt(i) as ImageButton
+                    TooltipCompat.setTooltipText(button, button.getContentDescription())
+                }
 
-		greyHeader.setOnClickListener(v -> {
-			if(!post.isSelf()) {
-				LinkHandler.onLinkClicked(
-						activity,
-						post.src.getUrl(),
-						false,
-						post.src.getSrc());
-			}
-		});
+                val buttonAddUpvote =
+                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_add_upvote)
+                val buttonRemoveUpvote =
+                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_remove_upvote)
+                val buttonAddDownvote =
+                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_add_downvote)
+                val buttonRemoveDownvote =
+                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_remove_downvote)
+                val buttonReply =
+                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_reply)
+                val buttonShare =
+                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_share)
+                val buttonMore =
+                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_more)
 
-		greyHeader.setOnLongClickListener(v -> {
-			RedditPostActions.INSTANCE.showActionMenu(activity, post);
-			return true;
-		});
+                buttonAddUpvote.setOnClickListener(OnClickListener { v: View? ->
+                    post.performAction(
+                        activity,
+                        RedditPostActions.Action.UPVOTE
+                    )
+                })
+                buttonRemoveUpvote.setOnClickListener(OnClickListener { v: View? ->
+                    post.performAction(
+                        activity,
+                        RedditPostActions.Action.UNVOTE
+                    )
+                })
+                buttonAddDownvote.setOnClickListener(OnClickListener { v: View? ->
+                    post.performAction(
+                        activity,
+                        RedditPostActions.Action.DOWNVOTE
+                    )
+                })
+                buttonRemoveDownvote.setOnClickListener(OnClickListener { v: View? ->
+                    post.performAction(
+                        activity,
+                        RedditPostActions.Action.UNVOTE
+                    )
+                })
+                buttonReply.setOnClickListener(OnClickListener { v: View? ->
+                    post.performAction(
+                        activity,
+                        RedditPostActions.Action.REPLY
+                    )
+                })
+                buttonShare.setOnClickListener(OnClickListener { v: View? ->
+                    post.performAction(
+                        activity,
+                        RedditPostActions.Action.SHARE
+                    )
+                })
+                buttonMore.setOnClickListener(OnClickListener { v: View? ->
+                    post.performAction(
+                        activity,
+                        RedditPostActions.Action.ACTION_MENU
+                    )
+                })
 
-		addView(greyHeader);
+                changeListener =
+                    RedditChangeDataManager.Listener { thingIdAndType: RedditIdAndType? ->
+                        subtitle.setText(post.buildSubtitle(activity, true))
+                        subtitle.setContentDescription(
+                            post.buildAccessibilitySubtitle(activity, true)
+                        )
 
-		final RedditAccount currentUser =
-				RedditAccountManager.getInstance(activity).getDefaultAccount();
+                        val isUpvoted = changeDataManager.isUpvoted(
+                            post.src.getIdAndType()
+                        )
 
-		if(!currentUser.isAnonymous()) {
+                        val isDownvoted = changeDataManager.isDownvoted(
+                            post.src.getIdAndType()
+                        )
+                        if (isUpvoted) {
+                            buttonAddUpvote.setVisibility(GONE)
+                            buttonRemoveUpvote.setVisibility(VISIBLE)
+                            buttonAddDownvote.setVisibility(VISIBLE)
+                            buttonRemoveDownvote.setVisibility(GONE)
+                        } else if (isDownvoted) {
+                            buttonAddUpvote.setVisibility(VISIBLE)
+                            buttonRemoveUpvote.setVisibility(GONE)
+                            buttonAddDownvote.setVisibility(GONE)
+                            buttonRemoveDownvote.setVisibility(VISIBLE)
+                        } else {
+                            buttonAddUpvote.setVisibility(VISIBLE)
+                            buttonRemoveUpvote.setVisibility(GONE)
+                            buttonAddDownvote.setVisibility(VISIBLE)
+                            buttonRemoveDownvote.setVisibility(GONE)
+                        }
+                    }
+            } else {
+                changeListener =
+                    RedditChangeDataManager.Listener { thingIdAndType: RedditIdAndType? ->
+                        subtitle.setText(post.buildSubtitle(activity, true))
+                        subtitle.setContentDescription(
+                            post.buildAccessibilitySubtitle(activity, true)
+                        )
+                    }
+            }
 
-			// A user is logged in
+            mChangeListenerAddTask = Runnable? {
+                changeDataManager.addListener(post.src.getIdAndType(), changeListener)
+                changeListener.onRedditDataChange(post.src.getIdAndType())
+            }
 
-			final RedditChangeDataManager changeDataManager
-					= RedditChangeDataManager.getInstance(currentUser);
-			final RedditChangeDataManager.Listener changeListener;
+            mChangeListenerRemoveTask = Runnable? {
+                changeDataManager.removeListener(
+                    post.src.getIdAndType(),
+                    changeListener
+                )
+            }
+        } else {
+            mChangeListenerAddTask = null
+            mChangeListenerRemoveTask = null
+        }
+    }
 
-			if(!PrefsUtility.pref_appearance_hide_headertoolbar_commentlist()) {
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
 
-				final LinearLayout buttons =
-						inflate(activity, R.layout.post_header_toolbar, this)
-								.findViewById(R.id.post_toolbar_layout);
+        if (mChangeListenerAddTask != null) {
+            mChangeListenerAddTask.run()
+        }
+    }
 
-				for(int i = 0; i < buttons.getChildCount(); i++) {
-					final ImageButton button = (ImageButton)buttons.getChildAt(i);
-					TooltipCompat.setTooltipText(button, button.getContentDescription());
-				}
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
 
-				final ImageButton buttonAddUpvote =
-						buttons.findViewById(R.id.post_toolbar_botton_add_upvote);
-				final ImageButton buttonRemoveUpvote =
-						buttons.findViewById(R.id.post_toolbar_botton_remove_upvote);
-				final ImageButton buttonAddDownvote =
-						buttons.findViewById(R.id.post_toolbar_botton_add_downvote);
-				final ImageButton buttonRemoveDownvote =
-						buttons.findViewById(R.id.post_toolbar_botton_remove_downvote);
-				final ImageButton buttonReply =
-						buttons.findViewById(R.id.post_toolbar_botton_reply);
-				final ImageButton buttonShare =
-						buttons.findViewById(R.id.post_toolbar_botton_share);
-				final ImageButton buttonMore =
-						buttons.findViewById(R.id.post_toolbar_botton_more);
-
-				buttonAddUpvote.setOnClickListener(v -> post.performAction(
-						activity,
-						RedditPostActions.Action.UPVOTE));
-				buttonRemoveUpvote.setOnClickListener(v -> post.performAction(
-						activity,
-						RedditPostActions.Action.UNVOTE));
-				buttonAddDownvote.setOnClickListener(v -> post.performAction(
-						activity,
-						RedditPostActions.Action.DOWNVOTE));
-				buttonRemoveDownvote.setOnClickListener(v -> post.performAction(
-						activity,
-						RedditPostActions.Action.UNVOTE));
-				buttonReply.setOnClickListener(v -> post.performAction(
-						activity,
-						RedditPostActions.Action.REPLY));
-				buttonShare.setOnClickListener(v -> post.performAction(
-						activity,
-						RedditPostActions.Action.SHARE));
-				buttonMore.setOnClickListener(v -> post.performAction(
-						activity,
-						RedditPostActions.Action.ACTION_MENU));
-
-				changeListener = thingIdAndType -> {
-
-					subtitle.setText(post.buildSubtitle(activity, true));
-					subtitle.setContentDescription(
-							post.buildAccessibilitySubtitle(activity, true));
-
-					final boolean isUpvoted = changeDataManager.isUpvoted(
-							post.src.getIdAndType());
-
-					final boolean isDownvoted = changeDataManager.isDownvoted(
-							post.src.getIdAndType());
-
-					if(isUpvoted) {
-						buttonAddUpvote.setVisibility(GONE);
-						buttonRemoveUpvote.setVisibility(VISIBLE);
-						buttonAddDownvote.setVisibility(VISIBLE);
-						buttonRemoveDownvote.setVisibility(GONE);
-
-					} else if(isDownvoted) {
-						buttonAddUpvote.setVisibility(VISIBLE);
-						buttonRemoveUpvote.setVisibility(GONE);
-						buttonAddDownvote.setVisibility(GONE);
-						buttonRemoveDownvote.setVisibility(VISIBLE);
-
-					} else {
-						buttonAddUpvote.setVisibility(VISIBLE);
-						buttonRemoveUpvote.setVisibility(GONE);
-						buttonAddDownvote.setVisibility(VISIBLE);
-						buttonRemoveDownvote.setVisibility(GONE);
-					}
-				};
-
-			} else {
-				changeListener = thingIdAndType -> {
-					subtitle.setText(post.buildSubtitle(activity, true));
-					subtitle.setContentDescription(
-							post.buildAccessibilitySubtitle(activity, true));
-				};
-			}
-
-			mChangeListenerAddTask = () -> {
-				changeDataManager.addListener(post.src.getIdAndType(), changeListener);
-				changeListener.onRedditDataChange(post.src.getIdAndType());
-			};
-
-			mChangeListenerRemoveTask = () -> changeDataManager.removeListener(
-					post.src.getIdAndType(),
-					changeListener);
-
-		} else {
-			mChangeListenerAddTask = null;
-			mChangeListenerRemoveTask = null;
-		}
-	}
-
-	@Override
-	protected void onAttachedToWindow() {
-		super.onAttachedToWindow();
-
-		if(mChangeListenerAddTask != null) {
-			mChangeListenerAddTask.run();
-		}
-	}
-
-	@Override
-	protected void onDetachedFromWindow() {
-		super.onDetachedFromWindow();
-
-		if(mChangeListenerRemoveTask != null) {
-			mChangeListenerRemoveTask.run();
-		}
-	}
+        if (mChangeListenerRemoveTask != null) {
+            mChangeListenerRemoveTask.run()
+        }
+    }
 }

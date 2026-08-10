@@ -12,77 +12,70 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.program
 
-package org.quantumbadger.redreader.views.glview.program;
+import android.opengl.GLES20
+import java.nio.FloatBuffer
 
-import android.opengl.GLES20;
+class RRGLProgramTexture : RRGLProgramVertices(vertexShaderSource, fragmentShaderSource) {
+    private val mUVDataHandle: Int
+    private val mTextureUniformHandle: Int
 
-import java.nio.FloatBuffer;
+    fun activateTextureByHandle(textureHandle: Int) {
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle)
+        GLES20.glUniform1i(mTextureUniformHandle, 0)
+    }
 
-public class RRGLProgramTexture extends RRGLProgramVertices {
+    fun activateUVBuffer(uvBuffer: FloatBuffer?) {
+        GLES20.glVertexAttribPointer(
+            mUVDataHandle,
+            2,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            uvBuffer
+        )
+    }
 
-	private final int mUVDataHandle;
-	private final int mTextureUniformHandle;
+    public override fun onActivated() {
+        super.onActivated()
+        GLES20.glEnableVertexAttribArray(mUVDataHandle)
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+    }
 
-	public RRGLProgramTexture() {
+    public override fun onDeactivated() {
+        super.onDeactivated()
+        GLES20.glDisableVertexAttribArray(mUVDataHandle)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
+    }
 
-		super(vertexShaderSource, fragmentShaderSource);
+    init {
+        setVertexBufferHandle(getAttributeHandle("a_Position"))
+        setMatrixUniformHandle(getUniformHandle("u_Matrix"))
+        setPixelMatrixHandle(getUniformHandle("u_PixelMatrix"))
 
-		setVertexBufferHandle(getAttributeHandle("a_Position"));
-		setMatrixUniformHandle(getUniformHandle("u_Matrix"));
-		setPixelMatrixHandle(getUniformHandle("u_PixelMatrix"));
+        mUVDataHandle = getAttributeHandle("a_TexCoordinate")
+        mTextureUniformHandle = getUniformHandle("u_Texture")
+    }
 
-		mUVDataHandle = getAttributeHandle("a_TexCoordinate");
-		mTextureUniformHandle = getUniformHandle("u_Texture");
-	}
+    companion object {
+        private val vertexShaderSource = ("uniform mat4 u_Matrix; \n"
+                + "uniform mat4 u_PixelMatrix; \n"
+                + "attribute vec4 a_Position; \n"
+                + "attribute vec2 a_TexCoordinate; \n"
+                + "varying vec2 v_TexCoordinate; \n"
+                + "void main() {\n"
+                + "  v_TexCoordinate = a_TexCoordinate; \n"
+                + "  gl_Position = u_PixelMatrix * (u_Matrix * a_Position);\n"
+                + "} \n")
 
-	public void activateTextureByHandle(final int textureHandle) {
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle);
-		GLES20.glUniform1i(mTextureUniformHandle, 0);
-	}
-
-	public void activateUVBuffer(final FloatBuffer uvBuffer) {
-		GLES20.glVertexAttribPointer(
-				mUVDataHandle,
-				2,
-				GLES20.GL_FLOAT,
-				false,
-				0,
-				uvBuffer);
-	}
-
-	@Override
-	public void onActivated() {
-		super.onActivated();
-		GLES20.glEnableVertexAttribArray(mUVDataHandle);
-		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-	}
-
-	@Override
-	public void onDeactivated() {
-		super.onDeactivated();
-		GLES20.glDisableVertexAttribArray(mUVDataHandle);
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
-	}
-
-	private static final String vertexShaderSource =
-			"uniform mat4 u_Matrix; \n"
-					+ "uniform mat4 u_PixelMatrix; \n"
-					+ "attribute vec4 a_Position; \n"
-					+ "attribute vec2 a_TexCoordinate; \n"
-					+ "varying vec2 v_TexCoordinate; \n"
-					+ "void main() {\n"
-					+ "  v_TexCoordinate = a_TexCoordinate; \n"
-					+ "  gl_Position = u_PixelMatrix * (u_Matrix * a_Position);\n"
-					+ "} \n";
-
-	private static final String fragmentShaderSource =
-			"precision mediump float; \n"
-					+ "uniform sampler2D u_Texture; \n"
-					+ "varying vec2 v_TexCoordinate; \n"
-					+ "void main() { \n"
-					+ "  gl_FragColor = texture2D(u_Texture, v_TexCoordinate); \n"
-					+ "} \n";
+        private val fragmentShaderSource = ("precision mediump float; \n"
+                + "uniform sampler2D u_Texture; \n"
+                + "varying vec2 v_TexCoordinate; \n"
+                + "void main() { \n"
+                + "  gl_FragColor = texture2D(u_Texture, v_TexCoordinate); \n"
+                + "} \n")
+    }
 }

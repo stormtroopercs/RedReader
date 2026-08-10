@@ -12,51 +12,44 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
 
-package org.quantumbadger.redreader.reddit.url;
+import android.net.Uri
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 
-import android.net.Uri;
-import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType;
+class UnknownPostListURL internal constructor(private val uri: Uri) : PostListingURL() {
+    override fun after(after: RedditIdAndType): PostListingURL {
+        return UnknownPostListURL(
+            uri.buildUpon()
+                .appendQueryParameter("after", after.value)
+                .build()
+        )
+    }
 
-public class UnknownPostListURL extends PostListingURL {
+    override fun limit(limit: Int?): PostListingURL {
+        return UnknownPostListURL(
+            uri.buildUpon()
+                .appendQueryParameter(
+                    "limit",
+                    limit.toString()
+                )
+                .build()
+        )
+    }
 
-	private final Uri uri;
+    // TODO handle this better
+    override fun generateJsonUri(): Uri? {
+        if (uri.getPath()!!.endsWith(".json")) {
+            return uri
+        } else {
+            return uri.buildUpon().appendEncodedPath(".json").build()
+        }
+    }
 
-	UnknownPostListURL(final Uri uri) {
-		this.uri = uri;
-	}
-
-	@Override
-	public PostListingURL after(final RedditIdAndType after) {
-		return new UnknownPostListURL(uri.buildUpon()
-				.appendQueryParameter("after", after.getValue())
-				.build());
-	}
-
-	@Override
-	public PostListingURL limit(final Integer limit) {
-		return new UnknownPostListURL(uri.buildUpon()
-				.appendQueryParameter(
-						"limit",
-						String.valueOf(limit))
-				.build());
-	}
-
-	// TODO handle this better
-	@Override
-	public Uri generateJsonUri() {
-		if(uri.getPath().endsWith(".json")) {
-			return uri;
-		} else {
-			return uri.buildUpon().appendEncodedPath(".json").build();
-		}
-	}
-
-	@Override
-	public @RedditURLParser.PathType
-	int pathType() {
-		return RedditURLParser.UNKNOWN_POST_LISTING_URL;
-	}
+    @RedditURLParser.PathType
+    override fun pathType(): Int {
+        return RedditURLParser.UNKNOWN_POST_LISTING_URL
+    }
 }

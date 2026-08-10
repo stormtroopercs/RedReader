@@ -12,64 +12,54 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.content.res.AssetManager
+import android.graphics.Typeface
+import android.util.Log
+import org.quantumbadger.redreader.common.General.startNewThread
+import java.util.concurrent.atomic.AtomicReference
 
-import android.content.res.AssetManager;
-import android.graphics.Typeface;
-import android.util.Log;
-import androidx.annotation.NonNull;
+object Fonts {
+    private const val TAG = "Fonts"
 
-import java.util.concurrent.atomic.AtomicReference;
+    private val sVeraMono = AtomicReference<Typeface?>()
+    private val sRobotoLight = AtomicReference<Typeface?>()
 
-public final class Fonts {
+    fun onAppCreate(assetManager: AssetManager) {
+        startNewThread("FontCreate", Runnable {
+            try {
+                sVeraMono.set(Typeface.createFromAsset(assetManager, "fonts/VeraMono.ttf"))
+                sRobotoLight.set(Typeface.createFromAsset(assetManager, "fonts/Roboto-Light.ttf"))
 
-	private static final String TAG = "Fonts";
+                Log.i(TAG, "Fonts created")
+            } catch (e: Exception) {
+                Log.e(TAG, "Got exception while creating fonts", e)
+            }
+        })
+    }
 
-	@NonNull private static final AtomicReference<Typeface> sVeraMono = new AtomicReference<>();
-	@NonNull private static final AtomicReference<Typeface> sRobotoLight = new AtomicReference<>();
+    val veraMonoOrAlternative: Typeface
+        get() {
+            val result = sVeraMono.get()
 
-	private Fonts() {}
+            if (result == null) {
+                return Typeface.MONOSPACE
+            } else {
+                return result
+            }
+        }
 
-	public static void onAppCreate(@NonNull final AssetManager assetManager) {
+    val robotoLightOrAlternative: Typeface
+        get() {
+            val result = sRobotoLight.get()
 
-		General.startNewThread("FontCreate", () -> {
-
-			try {
-				sVeraMono.set(Typeface.createFromAsset(assetManager, "fonts/VeraMono.ttf"));
-				sRobotoLight.set(Typeface.createFromAsset(assetManager, "fonts/Roboto-Light.ttf"));
-
-				Log.i(TAG, "Fonts created");
-
-			} catch(final Exception e) {
-				Log.e(TAG, "Got exception while creating fonts", e);
-			}
-		});
-	}
-
-	@NonNull
-	public static Typeface getVeraMonoOrAlternative() {
-
-		final Typeface result = sVeraMono.get();
-
-		if(result == null) {
-			return Typeface.MONOSPACE;
-		} else {
-			return result;
-		}
-	}
-
-	@NonNull
-	public static Typeface getRobotoLightOrAlternative() {
-
-		final Typeface result = sRobotoLight.get();
-
-		if(result == null) {
-			return Typeface.DEFAULT;
-		} else {
-			return result;
-		}
-	}
+            if (result == null) {
+                return Typeface.DEFAULT
+            } else {
+                return result
+            }
+        }
 }

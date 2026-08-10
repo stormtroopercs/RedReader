@@ -12,70 +12,56 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.list
 
-package org.quantumbadger.redreader.views.list;
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.recyclerview.widget.RecyclerView
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.adapters.GroupedRecyclerViewAdapter
 
-import androidx.annotation.NonNull;
-import androidx.core.view.AccessibilityDelegateCompat;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
-import androidx.recyclerview.widget.RecyclerView;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.adapters.GroupedRecyclerViewAdapter;
+class GroupedRecyclerViewItemListSectionHeaderView
+    (private val mText: CharSequence) : GroupedRecyclerViewAdapter.Item<Any?>() {
+    override fun getViewType(): Class<*> {
+        // There's no wrapper class for this view, so just use the item class
+        return GroupedRecyclerViewItemListSectionHeaderView::class.java
+    }
 
-public class GroupedRecyclerViewItemListSectionHeaderView
-		extends GroupedRecyclerViewAdapter.Item {
+    override fun onCreateViewHolder(viewGroup: ViewGroup): RecyclerView.ViewHolder {
+        return object : RecyclerView.ViewHolder(
+            LayoutInflater.from(viewGroup.getContext()).inflate(
+                R.layout.list_sectionheader,
+                viewGroup,
+                false
+            )
+        ) {
+        }
+    }
 
-	@NonNull private final CharSequence mText;
+    override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder) {
+        val view = viewHolder.itemView as TextView
+        view.setText(mText)
 
-	public GroupedRecyclerViewItemListSectionHeaderView(
-			@NonNull final CharSequence text) {
+        //From https://stackoverflow.com/a/54082384
+        ViewCompat.setAccessibilityDelegate(view, object : AccessibilityDelegateCompat() {
+            override fun onInitializeAccessibilityNodeInfo(
+                host: View,
+                info: AccessibilityNodeInfoCompat
+            ) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.setHeading(true)
+            }
+        })
+    }
 
-		mText = text;
-	}
-
-	@Override
-	public Class getViewType() {
-		// There's no wrapper class for this view, so just use the item class
-		return GroupedRecyclerViewItemListSectionHeaderView.class;
-	}
-
-	@Override
-	public RecyclerView.ViewHolder onCreateViewHolder(final ViewGroup viewGroup) {
-		return new RecyclerView.ViewHolder(
-				LayoutInflater.from(viewGroup.getContext()).inflate(
-						R.layout.list_sectionheader,
-						viewGroup,
-						false)) {
-		};
-	}
-
-	@Override
-	public void onBindViewHolder(final RecyclerView.ViewHolder viewHolder) {
-
-		final TextView view = (TextView)viewHolder.itemView;
-		view.setText(mText);
-
-		//From https://stackoverflow.com/a/54082384
-		ViewCompat.setAccessibilityDelegate(view, new AccessibilityDelegateCompat() {
-			@Override
-			public void onInitializeAccessibilityNodeInfo(
-					final View host,
-					final AccessibilityNodeInfoCompat info) {
-				super.onInitializeAccessibilityNodeInfo(host, info);
-				info.setHeading(true);
-			}
-		});
-	}
-
-	@Override
-	public boolean isHidden() {
-		return false;
-	}
+    override fun isHidden(): Boolean {
+        return false
+    }
 }

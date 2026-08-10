@@ -12,316 +12,307 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
-package org.quantumbadger.redreader.account;
-
-import android.annotation.SuppressLint;
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import org.quantumbadger.redreader.activities.BugReportActivity;
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.common.UpdateNotifier;
-import org.quantumbadger.redreader.reddit.api.RedditOAuth;
-
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-
-public final class RedditAccountManager extends SQLiteOpenHelper {
-
-	private List<RedditAccount> accountsCache = null;
-	private RedditAccount defaultAccountCache = null;
-
-	private static final RedditAccount ANON = new RedditAccount(
-			"",
-			null,
-			10,
-			null
-	);
-
-	private final Context context;
-
-	private final UpdateNotifier<RedditAccountChangeListener> updateNotifier
-			= new UpdateNotifier<RedditAccountChangeListener>() {
-		@Override
-		protected void notifyListener(final RedditAccountChangeListener listener) {
-			listener.onRedditAccountChanged();
-		}
-	};
-
-	private static final String ACCOUNTS_DB_FILENAME = "accounts_oauth2.db";
-	private static final String TABLE = "accounts_oauth2";
-	private static final String FIELD_USERNAME = "username";
-	private static final String FIELD_REFRESH_TOKEN = "refresh_token";
-	private static final String FIELD_PRIORITY = "priority";
-	private static final String FIELD_CLIENT_ID = "client_id";
-	private static final String FIELD_USES_NEW_CLIENT_ID = "uses_new_client_id";
-
-	private static final int ACCOUNTS_DB_VERSION = 4;
-
-	@SuppressLint("StaticFieldLeak") private static RedditAccountManager singleton;
-
-	public static synchronized RedditAccountManager getInstance(final Context context) {
-		if(singleton == null) {
-			singleton = new RedditAccountManager(context.getApplicationContext());
-		}
-		return singleton;
-	}
-
-	public static RedditAccount getAnon() {
-		return ANON;
-	}
-
-	private RedditAccountManager(final Context context) {
-		super(
-				context.getApplicationContext(),
-				ACCOUNTS_DB_FILENAME,
-				null,
-				ACCOUNTS_DB_VERSION);
-		this.context = context;
-	}
-
-	@Override
-	public void onCreate(final SQLiteDatabase db) {
-
-		final String queryString = String.format(
-				"CREATE TABLE %s (" +
-						"%s TEXT NOT NULL PRIMARY KEY ON CONFLICT REPLACE," +
-						"%s TEXT," +
-						"%s INTEGER," +
-						"%s BOOLEAN NOT NULL," +
-						"%s TEXT)",
-				TABLE,
-				FIELD_USERNAME,
-				FIELD_REFRESH_TOKEN,
-				FIELD_PRIORITY,
-				FIELD_USES_NEW_CLIENT_ID,
-				FIELD_CLIENT_ID);
-
-		db.execSQL(queryString);
-
-		addAccount(getAnon(), db);
-	}
-
-	@Override
-	public void onUpgrade(
-			final SQLiteDatabase db,
-			final int oldVersion,
-			final int newVersion) {
-
-		if(oldVersion < 2) {
-
-			db.execSQL(String.format(
-					Locale.US,
-					"UPDATE %s SET %2$s=TRIM(%2$s) WHERE %2$s <> TRIM(%2$s)",
-					TABLE,
-					FIELD_USERNAME));
-
-		}
-
-		if(oldVersion < 3) {
-
-			db.execSQL(String.format(
-					Locale.US,
-					"ALTER TABLE %s ADD COLUMN %s BOOLEAN NOT NULL DEFAULT 0",
-					TABLE,
-					FIELD_USES_NEW_CLIENT_ID));
-		}
-
-		if(oldVersion < 4) {
-			db.execSQL(String.format(
-					Locale.US,
-					"ALTER TABLE %s ADD COLUMN %s TEXT DEFAULT NULL",
-					TABLE,
-					FIELD_CLIENT_ID));
-		}
-	}
-
-	public synchronized void addAccount(final RedditAccount account) {
-		addAccount(account, null);
-	}
-
-	private synchronized void addAccount(
-			final RedditAccount account,
-			final SQLiteDatabase inDb) {
-
-		final SQLiteDatabase db;
-		if(inDb == null) {
-			db = getWritableDatabase();
-		} else {
-			db = inDb;
-		}
-
-		final ContentValues row = new ContentValues();
-
-		row.put(FIELD_USERNAME, account.username);
-
-		if(account.refreshToken == null) {
-			row.putNull(FIELD_REFRESH_TOKEN);
-		} else {
-			row.put(FIELD_REFRESH_TOKEN, account.refreshToken.token);
-		}
-
-		row.put(FIELD_PRIORITY, account.priority);
-		row.put(FIELD_USES_NEW_CLIENT_ID, 1);
-		row.put(FIELD_CLIENT_ID, account.clientId);
-
-		db.insert(TABLE, null, row);
-
-		reloadAccounts(db);
-		updateNotifier.updateAllListeners();
-
-		if(inDb == null) {
-			db.close();
-		}
-	}
-
-	public synchronized ArrayList<RedditAccount> getAccounts() {
-
-		if(accountsCache == null) {
-			final SQLiteDatabase db = getReadableDatabase();
-			reloadAccounts(db);
-			db.close();
-		}
-
-		return new ArrayList<>(accountsCache);
-	}
-
-	@Nullable
-	public RedditAccount getAccount(@NonNull final String username) {
-
-		final String usernameCanonical = StringUtils.asciiLowercase(username.trim());
-
-		if(usernameCanonical.isEmpty()) {
-			return getAnon();
-		}
-
-		final ArrayList<RedditAccount> accounts = getAccounts();
-		RedditAccount selectedAccount = null;
-
-		for(final RedditAccount account : accounts) {
-			if(!account.isAnonymous() && account.canonicalUsername.equals(usernameCanonical)) {
-				selectedAccount = account;
-				break;
-			}
-		}
-
-		return selectedAccount;
-	}
-
-	public synchronized RedditAccount getDefaultAccount() {
-
-		if(defaultAccountCache == null) {
-			final SQLiteDatabase db = getReadableDatabase();
-			reloadAccounts(db);
-			db.close();
-		}
-
-		return defaultAccountCache;
-	}
-
-	public synchronized void setDefaultAccount(final RedditAccount newDefault) {
-
-		final SQLiteDatabase db = getWritableDatabase();
-
-		db.execSQL(
-				String.format(
-						Locale.US,
-						"UPDATE %s SET %s=(SELECT MIN(%s)-1 FROM %s) WHERE %s=?",
-						TABLE,
-						FIELD_PRIORITY,
-						FIELD_PRIORITY,
-						TABLE,
-						FIELD_USERNAME),
-				new String[] {newDefault.username});
-
-		reloadAccounts(db);
-		db.close();
-
-		updateNotifier.updateAllListeners();
-	}
-
-	private synchronized void reloadAccounts(final SQLiteDatabase db) {
-
-		final String[] fields = {
-				FIELD_USERNAME,
-				FIELD_REFRESH_TOKEN,
-				FIELD_PRIORITY,
-				FIELD_CLIENT_ID};
-
-		final Cursor cursor = db.query(
-				TABLE,
-				fields,
-				null,
-				null,
-				null,
-				null,
-				FIELD_PRIORITY + " ASC");
-
-		accountsCache = new LinkedList<>();
-		defaultAccountCache = null;
-
-		if(cursor != null) {
-
-			while(cursor.moveToNext()) {
-
-				final String username = cursor.getString(0);
-
-				final RedditOAuth.RefreshToken refreshToken;
-				if(cursor.isNull(1)) {
-					refreshToken = null;
-				} else {
-					refreshToken = new RedditOAuth.RefreshToken(cursor.getString(1));
-				}
-
-				final long priority = cursor.getLong(2);
-				@Nullable final String clientId = cursor.getString(3);
-
-				final RedditAccount account = new RedditAccount(
-						username,
-						refreshToken,
-						priority,
-						clientId);
-
-				accountsCache.add(account);
-
-				if(defaultAccountCache == null
-						|| account.priority < defaultAccountCache.priority) {
-					defaultAccountCache = account;
-				}
-			}
-
-			cursor.close();
-
-		} else {
-			BugReportActivity.handleGlobalError(context, "Cursor was null after query");
-		}
-	}
-
-	public void addUpdateListener(final RedditAccountChangeListener listener) {
-		updateNotifier.addListener(listener);
-	}
-
-	public void removeUpdateListener(final RedditAccountChangeListener listener) {
-		updateNotifier.removeListener(listener);
-	}
-
-	public void deleteAccount(final RedditAccount account) {
-
-		final SQLiteDatabase db = getWritableDatabase();
-		db.delete(TABLE, FIELD_USERNAME + "=?", new String[] {account.username});
-		reloadAccounts(db);
-		updateNotifier.updateAllListeners();
-		db.close();
-	}
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.account
+
+import android.annotation.SuppressLint
+import android.content.ContentValues
+import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.common.UpdateNotifier
+import org.quantumbadger.redreader.reddit.api.RedditOAuth.RefreshToken
+import java.util.LinkedList
+import java.util.Locale
+
+class RedditAccountManager private constructor(private val context: Context) : SQLiteOpenHelper(
+    context.getApplicationContext(),
+    ACCOUNTS_DB_FILENAME,
+    null,
+    ACCOUNTS_DB_VERSION
+) {
+    private var accountsCache: MutableList<RedditAccount?>? = null
+    private var defaultAccountCache: RedditAccount? = null
+
+    private val updateNotifier
+            : UpdateNotifier<RedditAccountChangeListener?> =
+        object : UpdateNotifier<RedditAccountChangeListener?>() {
+            override fun notifyListener(listener: RedditAccountChangeListener) {
+                listener.onRedditAccountChanged()
+            }
+        }
+
+    override fun onCreate(db: SQLiteDatabase) {
+        val queryString = String.format(
+            "CREATE TABLE %s (" +
+                    "%s TEXT NOT NULL PRIMARY KEY ON CONFLICT REPLACE," +
+                    "%s TEXT," +
+                    "%s INTEGER," +
+                    "%s BOOLEAN NOT NULL," +
+                    "%s TEXT)",
+            TABLE,
+            FIELD_USERNAME,
+            FIELD_REFRESH_TOKEN,
+            FIELD_PRIORITY,
+            FIELD_USES_NEW_CLIENT_ID,
+            FIELD_CLIENT_ID
+        )
+
+        db.execSQL(queryString)
+
+        addAccount(anon, db)
+    }
+
+    override fun onUpgrade(
+        db: SQLiteDatabase,
+        oldVersion: Int,
+        newVersion: Int
+    ) {
+        if (oldVersion < 2) {
+            db.execSQL(
+                String.format(
+                    Locale.US,
+                    "UPDATE %s SET %2\$s=TRIM(%2\$s) WHERE %2\$s <> TRIM(%2\$s)",
+                    TABLE,
+                    FIELD_USERNAME
+                )
+            )
+        }
+
+        if (oldVersion < 3) {
+            db.execSQL(
+                String.format(
+                    Locale.US,
+                    "ALTER TABLE %s ADD COLUMN %s BOOLEAN NOT NULL DEFAULT 0",
+                    TABLE,
+                    FIELD_USES_NEW_CLIENT_ID
+                )
+            )
+        }
+
+        if (oldVersion < 4) {
+            db.execSQL(
+                String.format(
+                    Locale.US,
+                    "ALTER TABLE %s ADD COLUMN %s TEXT DEFAULT NULL",
+                    TABLE,
+                    FIELD_CLIENT_ID
+                )
+            )
+        }
+    }
+
+    @Synchronized
+    fun addAccount(account: RedditAccount) {
+        addAccount(account, null)
+    }
+
+    @Synchronized
+    private fun addAccount(
+        account: RedditAccount,
+        inDb: SQLiteDatabase?
+    ) {
+        val db: SQLiteDatabase?
+        if (inDb == null) {
+            db = getWritableDatabase()
+        } else {
+            db = inDb
+        }
+
+        val row = ContentValues()
+
+        row.put(FIELD_USERNAME, account.username)
+
+        if (account.refreshToken == null) {
+            row.putNull(FIELD_REFRESH_TOKEN)
+        } else {
+            row.put(FIELD_REFRESH_TOKEN, account.refreshToken.token)
+        }
+
+        row.put(FIELD_PRIORITY, account.priority)
+        row.put(FIELD_USES_NEW_CLIENT_ID, 1)
+        row.put(FIELD_CLIENT_ID, account.clientId)
+
+        db.insert(TABLE, null, row)
+
+        reloadAccounts(db)
+        updateNotifier.updateAllListeners()
+
+        if (inDb == null) {
+            db.close()
+        }
+    }
+
+    @get:Synchronized
+    val accounts: ArrayList<RedditAccount>
+        get() {
+            if (accountsCache == null) {
+                val db = getReadableDatabase()
+                reloadAccounts(db)
+                db.close()
+            }
+
+            return java.util.ArrayList<RedditAccount>(accountsCache)
+        }
+
+    fun getAccount(username: String): RedditAccount? {
+        val usernameCanonical = StringUtils.asciiLowercase(username.trim { it <= ' ' })
+
+        if (usernameCanonical.isEmpty()) {
+            return anon
+        }
+
+        val accounts = this.accounts
+        var selectedAccount: RedditAccount? = null
+
+        for (account in accounts) {
+            if (!account.isAnonymous && account.canonicalUsername == usernameCanonical) {
+                selectedAccount = account
+                break
+            }
+        }
+
+        return selectedAccount
+    }
+
+    @get:Synchronized
+    @set:Synchronized
+    var defaultAccount: RedditAccount?
+        get() {
+            if (defaultAccountCache == null) {
+                val db = getReadableDatabase()
+                reloadAccounts(db)
+                db.close()
+            }
+
+            return defaultAccountCache
+        }
+        set(newDefault) {
+            val db = getWritableDatabase()
+
+            db.execSQL(
+                String.format(
+                    Locale.US,
+                    "UPDATE %s SET %s=(SELECT MIN(%s)-1 FROM %s) WHERE %s=?",
+                    TABLE,
+                    FIELD_PRIORITY,
+                    FIELD_PRIORITY,
+                    TABLE,
+                    FIELD_USERNAME
+                ),
+                arrayOf<String>(newDefault!!.username)
+            )
+
+            reloadAccounts(db)
+            db.close()
+
+            updateNotifier.updateAllListeners()
+        }
+
+    @Synchronized
+    private fun reloadAccounts(db: SQLiteDatabase) {
+        val fields = arrayOf<String?>(
+            FIELD_USERNAME,
+            FIELD_REFRESH_TOKEN,
+            FIELD_PRIORITY,
+            FIELD_CLIENT_ID
+        )
+
+        val cursor = db.query(
+            TABLE,
+            fields,
+            null,
+            null,
+            null,
+            null,
+            FIELD_PRIORITY + " ASC"
+        )
+
+        accountsCache = LinkedList<RedditAccount?>()
+        defaultAccountCache = null
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                val username = cursor.getString(0)
+
+                val refreshToken: RefreshToken?
+                if (cursor.isNull(1)) {
+                    refreshToken = null
+                } else {
+                    refreshToken = RefreshToken(cursor.getString(1))
+                }
+
+                val priority = cursor.getLong(2)
+                val clientId = cursor.getString(3)
+
+                val account = RedditAccount(
+                    username,
+                    refreshToken,
+                    priority,
+                    clientId
+                )
+
+                accountsCache!!.add(account)
+
+                if (defaultAccountCache == null
+                    || account.priority < defaultAccountCache!!.priority
+                ) {
+                    defaultAccountCache = account
+                }
+            }
+
+            cursor.close()
+        } else {
+            handleGlobalError(context, "Cursor was null after query")
+        }
+    }
+
+    fun addUpdateListener(listener: RedditAccountChangeListener?) {
+        updateNotifier.addListener(listener)
+    }
+
+    fun removeUpdateListener(listener: RedditAccountChangeListener?) {
+        updateNotifier.removeListener(listener)
+    }
+
+    fun deleteAccount(account: RedditAccount) {
+        val db = getWritableDatabase()
+        db.delete(TABLE, FIELD_USERNAME + "=?", arrayOf<String>(account.username))
+        reloadAccounts(db)
+        updateNotifier.updateAllListeners()
+        db.close()
+    }
+
+    companion object {
+        val anon: RedditAccount = RedditAccount(
+            "",
+            null,
+            10,
+            null
+        )
+
+        private const val ACCOUNTS_DB_FILENAME = "accounts_oauth2.db"
+        private const val TABLE = "accounts_oauth2"
+        private const val FIELD_USERNAME = "username"
+        private const val FIELD_REFRESH_TOKEN = "refresh_token"
+        private const val FIELD_PRIORITY = "priority"
+        private const val FIELD_CLIENT_ID = "client_id"
+        private const val FIELD_USES_NEW_CLIENT_ID = "uses_new_client_id"
+
+        private const val ACCOUNTS_DB_VERSION = 4
+
+        @SuppressLint("StaticFieldLeak")
+        private var singleton: RedditAccountManager? = null
+
+        @Synchronized
+        fun getInstance(context: Context): RedditAccountManager {
+            if (singleton == null) {
+                singleton = RedditAccountManager(context.getApplicationContext())
+            }
+            return singleton!!
+        }
+    }
 }

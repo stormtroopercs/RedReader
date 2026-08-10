@@ -12,65 +12,56 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.adapters
 
-package org.quantumbadger.redreader.adapters;
-
-import android.view.ViewGroup;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 
 /**
  * Created by veyndan on 18/04/2016.
  */
-public abstract class HeaderRecyclerAdapter<VH extends RecyclerView.ViewHolder>
-		extends RecyclerView.Adapter<VH> {
+abstract class HeaderRecyclerAdapter<VH : RecyclerView.ViewHolder?>
+    : RecyclerView.Adapter<VH?>() {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+        when (viewType) {
+            TYPE_HEADER -> return onCreateHeaderItemViewHolder(parent)
+            TYPE_CONTENT -> return onCreateContentItemViewHolder(parent)
+            else -> throw IllegalStateException()
+        }
+    }
 
-	private static final int TYPE_HEADER = 0;
-	private static final int TYPE_CONTENT = 1;
+    protected abstract fun onCreateHeaderItemViewHolder(parent: ViewGroup?): VH?
 
-	protected static final int HEADER_SIZE = 1;
+    protected abstract fun onCreateContentItemViewHolder(parent: ViewGroup?): VH?
 
-	@NonNull
-	@Override
-	public VH onCreateViewHolder(@NonNull final ViewGroup parent, final int viewType) {
-		switch(viewType) {
-			case TYPE_HEADER:
-				return onCreateHeaderItemViewHolder(parent);
-			case TYPE_CONTENT:
-				return onCreateContentItemViewHolder(parent);
-			default:
-				throw new IllegalStateException();
-		}
-	}
+    override fun onBindViewHolder(holder: VH, position: Int) {
+        if (position == 0) {
+            onBindHeaderItemViewHolder(holder, position)
+        } else {
+            onBindContentItemViewHolder(holder, position - HEADER_SIZE)
+        }
+    }
 
-	protected abstract VH onCreateHeaderItemViewHolder(ViewGroup parent);
+    protected abstract fun onBindHeaderItemViewHolder(holder: VH?, position: Int)
 
-	protected abstract VH onCreateContentItemViewHolder(ViewGroup parent);
+    protected abstract fun onBindContentItemViewHolder(holder: VH?, position: Int)
 
-	@Override
-	public void onBindViewHolder(@NonNull final VH holder, final int position) {
-		if(position == 0) {
-			onBindHeaderItemViewHolder(holder, position);
-		} else {
-			onBindContentItemViewHolder(holder, position - HEADER_SIZE);
-		}
-	}
+    override fun getItemCount(): Int {
+        return this.contentItemCount + HEADER_SIZE
+    }
 
-	protected abstract void onBindHeaderItemViewHolder(VH holder, int position);
+    override fun getItemViewType(position: Int): Int {
+        return if (position == 0) TYPE_HEADER else TYPE_CONTENT
+    }
 
-	protected abstract void onBindContentItemViewHolder(VH holder, int position);
+    protected abstract val contentItemCount: Int
 
-	@Override
-	public int getItemCount() {
-		return getContentItemCount() + HEADER_SIZE;
-	}
+    companion object {
+        private const val TYPE_HEADER = 0
+        private const val TYPE_CONTENT = 1
 
-	@Override
-	public int getItemViewType(final int position) {
-		return position == 0 ? TYPE_HEADER : TYPE_CONTENT;
-	}
-
-	protected abstract int getContentItemCount();
+        protected const val HEADER_SIZE: Int = 1
+    }
 }

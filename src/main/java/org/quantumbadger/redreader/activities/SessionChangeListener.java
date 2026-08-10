@@ -12,24 +12,21 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.activities
 
-package org.quantumbadger.redreader.activities;
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import java.util.UUID
 
-import org.quantumbadger.redreader.common.time.TimestampUTC;
+interface SessionChangeListener {
+    enum class SessionChangeType {
+        POSTS, COMMENTS
+    }
 
-import java.util.UUID;
+    fun onSessionSelected(session: UUID?, type: SessionChangeType?)
 
-public interface SessionChangeListener {
+    fun onSessionRefreshSelected(type: SessionChangeType?)
 
-	enum SessionChangeType {
-		POSTS, COMMENTS
-	}
-
-	void onSessionSelected(UUID session, SessionChangeType type);
-
-	void onSessionRefreshSelected(SessionChangeType type);
-
-	void onSessionChanged(UUID session, SessionChangeType type, TimestampUTC timestamp);
+    fun onSessionChanged(session: UUID?, type: SessionChangeType?, timestamp: TimestampUTC?)
 }

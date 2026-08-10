@@ -12,154 +12,139 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.api
 
-package org.quantumbadger.redreader.reddit.api;
+import android.content.Context
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.cache.CacheRequest
+import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.cache.CacheRequestJSONParser
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.TimestampBound
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.now
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.io.CacheDataSource
+import org.quantumbadger.redreader.io.RequestResponseHandler
+import org.quantumbadger.redreader.io.WritableHashSet
+import org.quantumbadger.redreader.jsonwrap.JsonValue
+import java.util.UUID
 
-import android.content.Context;
+class RedditAPIMultiredditListRequester(
+    private val context: Context,
+    private val user: RedditAccount
+) : CacheDataSource<Key?, WritableHashSet?, RRError?> {
+    object Key {
+        val INSTANCE: Key = Key()
+    }
 
-import androidx.annotation.NonNull;
+    override fun performRequest(
+        key: Key?,
+        timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<WritableHashSet?, RRError?>
+    ) {
+        if (user.isAnonymous) {
+            val now = now()
 
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.cache.CacheManager;
-import org.quantumbadger.redreader.cache.CacheRequest;
-import org.quantumbadger.redreader.cache.CacheRequestJSONParser;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.Priority;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.TimestampBound;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.http.FailedRequestBody;
-import org.quantumbadger.redreader.io.CacheDataSource;
-import org.quantumbadger.redreader.io.RequestResponseHandler;
-import org.quantumbadger.redreader.io.WritableHashSet;
-import org.quantumbadger.redreader.jsonwrap.JsonArray;
-import org.quantumbadger.redreader.jsonwrap.JsonValue;
+            handler.onRequestSuccess(
+                WritableHashSet(
+                    HashSet<String?>(),
+                    now,
+                    user.canonicalUsername
+                ),
+                now
+            )
+        } else {
+            doRequest(handler)
+        }
+    }
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.UUID;
+    private fun doRequest(
+        handler: RequestResponseHandler<WritableHashSet?, RRError?>
+    ) {
+        val uri = Reddit.getUri(Reddit.PATH_MULTIREDDITS_MINE)
 
-public class RedditAPIMultiredditListRequester implements CacheDataSource<
-		RedditAPIMultiredditListRequester.Key, WritableHashSet, RRError> {
+        val request = CacheRequest(
+            uri,
+            user,
+            null,
+            Priority(Constants.Priority.API_SUBREDDIT_LIST),
+            DownloadStrategyAlways.Companion.INSTANCE,
+            Constants.FileType.MULTIREDDIT_LIST,
+            DownloadQueueType.REDDIT_API,
+            context,
+            CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
+                override fun onJsonParsed(
+                    result: JsonValue,
+                    timestamp: TimestampUTC,
+                    session: UUID,
+                    fromCache: Boolean
+                ) {
+                    try {
+                        val output = HashSet<String?>()
 
-	public static class Key {
-		public static final Key INSTANCE = new Key();
+                        val multiredditList = result.asArray()
 
-		private Key() {
-		}
-	}
+                        for (multireddit in multiredditList!!) {
+                            val name = multireddit.asObject()!!
+                                .getObject("data")!!
+                                .getString("name")
+                            output.add(name)
+                        }
 
-	private final Context context;
-	private final RedditAccount user;
+                        handler.onRequestSuccess(
+                            WritableHashSet(
+                                output,
+                                timestamp,
+                                user.canonicalUsername
+                            ), timestamp
+                        )
+                    } catch (e: Exception) {
+                        handler.onRequestFailed(
+                            getGeneralErrorForFailure(
+                                context,
+                                RequestFailureType.PARSE,
+                                e,
+                                null,
+                                uri,
+                                Optional.Companion.of<FailedRequestBody>(FailedRequestBody(result))
+                            )
+                        )
+                    }
+                }
 
-	public RedditAPIMultiredditListRequester(final Context context, final RedditAccount user) {
-		this.context = context;
-		this.user = user;
-	}
+                override fun onFailure(error: RRError) {
+                    handler.onRequestFailed(error)
+                }
+            })
+        )
 
-	@Override
-	public void performRequest(
-			final Key key,
-			final TimestampBound timestampBound,
-			final RequestResponseHandler<WritableHashSet, RRError> handler) {
+        CacheManager.Companion.getInstance(context).makeRequest(request)
+    }
 
-		if(user.isAnonymous()) {
+    override fun performRequest(
+        keys: MutableCollection<Key?>?, timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<HashMap<Key?, WritableHashSet?>?, RRError?>?
+    ) {
+        throw UnsupportedOperationException()
+    }
 
-			final TimestampUTC now = TimestampUTC.now();
+    override fun performWrite(value: WritableHashSet?) {
+        throw UnsupportedOperationException()
+    }
 
-			handler.onRequestSuccess(
-					new WritableHashSet(
-							new HashSet<>(),
-							now,
-							user.getCanonicalUsername()),
-					now);
-
-		} else {
-			doRequest(handler);
-		}
-	}
-
-	private void doRequest(
-			final RequestResponseHandler<WritableHashSet, RRError> handler) {
-
-		final UriString uri = Constants.Reddit.getUri(Constants.Reddit.PATH_MULTIREDDITS_MINE);
-
-		final CacheRequest request = new CacheRequest(
-				uri,
-				user,
-				null,
-				new Priority(Constants.Priority.API_SUBREDDIT_LIST),
-				DownloadStrategyAlways.INSTANCE,
-				Constants.FileType.MULTIREDDIT_LIST,
-				CacheRequest.DownloadQueueType.REDDIT_API,
-				context,
-				new CacheRequestJSONParser(context, new CacheRequestJSONParser.Listener() {
-					@Override
-					public void onJsonParsed(
-							@NonNull final JsonValue result,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache) {
-
-						try {
-							final HashSet<String> output = new HashSet<>();
-
-							final JsonArray multiredditList = result.asArray();
-
-							for(final JsonValue multireddit : multiredditList) {
-								final String name = multireddit.asObject()
-										.getObject("data")
-										.getString("name");
-								output.add(name);
-							}
-
-							handler.onRequestSuccess(new WritableHashSet(
-									output,
-									timestamp,
-									user.getCanonicalUsername()), timestamp);
-
-						} catch(final Exception e) {
-							handler.onRequestFailed(General.getGeneralErrorForFailure(
-									context,
-									CacheRequest.RequestFailureType.PARSE,
-									e,
-									null,
-									uri,
-									Optional.of(new FailedRequestBody(result))));
-						}
-					}
-
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-						handler.onRequestFailed(error);
-					}
-				}));
-
-		CacheManager.getInstance(context).makeRequest(request);
-	}
-
-	@Override
-	public void performRequest(
-			final Collection<Key> keys, final TimestampBound timestampBound,
-			final RequestResponseHandler<HashMap<Key, WritableHashSet>,
-					RRError> handler) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void performWrite(final WritableHashSet value) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void performWrite(final Collection<WritableHashSet> values) {
-		throw new UnsupportedOperationException();
-	}
+    override fun performWrite(values: MutableCollection<WritableHashSet?>?) {
+        throw UnsupportedOperationException()
+    }
 }

@@ -12,13 +12,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
-
-import androidx.annotation.NonNull;
-
-public interface GenericFactoryNoThrow<E> {
-	@NonNull E create();
+interface GenericFactoryNoThrow<E> {
+    fun create(): E
 }

@@ -12,112 +12,98 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
 
-package org.quantumbadger.redreader.reddit.url;
+import android.net.Uri
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.General.getUriQueryParameterNames
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 
-import android.net.Uri;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.StringUtils;
+class ComposeMessageURL(val recipient: String?, val subject: String?, val message: String?) :
+    RedditURL() {
+    override fun generateJsonUri(): Uri? {
+        val builder = Uri.Builder()
+        builder.scheme(Reddit.getScheme())
+            .authority(Reddit.getDomain())
 
-import java.util.ArrayList;
-import java.util.List;
+        builder.appendEncodedPath("message")
+        builder.appendEncodedPath("compose")
 
-public class ComposeMessageURL extends RedditURLParser.RedditURL {
+        if (recipient != null) {
+            builder.appendQueryParameter("to", recipient)
+        }
 
-	public final String recipient;
-	public final String subject;
-	public final String message;
+        if (subject != null) {
+            builder.appendQueryParameter("subject", subject)
+        }
 
-	public ComposeMessageURL(final String recipient, final String subject, final String message) {
-		this.recipient = recipient;
-		this.subject = subject;
-		this.message = message;
-	}
+        if (message != null) {
+            builder.appendQueryParameter("message", message)
+        }
 
-	public static ComposeMessageURL parse(final Uri uri) {
+        builder.appendEncodedPath(".json")
 
-		final String[] pathSegments;
-		{
-			final List<String> pathSegmentsList = uri.getPathSegments();
+        return builder.build()
+    }
 
-			final ArrayList<String> pathSegmentsFiltered = new ArrayList<>(
-					pathSegmentsList.size());
-			for(String segment : pathSegmentsList) {
+    @RedditURLParser.PathType
+    override fun pathType(): Int {
+        return RedditURLParser.COMPOSE_MESSAGE_URL
+    }
 
-				while(StringUtils.asciiLowercase(segment).endsWith(".json")
-						|| StringUtils.asciiLowercase(segment).endsWith(".xml")) {
-					segment = segment.substring(0, segment.lastIndexOf('.'));
-				}
+    companion object {
+        fun parse(uri: Uri): ComposeMessageURL? {
+            val pathSegments: Array<String?>
+            run {
+                val pathSegmentsList = uri.getPathSegments()
+                val pathSegmentsFiltered = ArrayList<String?>(
+                    pathSegmentsList.size
+                )
+                for (segment in pathSegmentsList) {
+                    var segment = segment
+                    while (StringUtils.asciiLowercase(segment).endsWith(".json")
+                        || StringUtils.asciiLowercase(segment).endsWith(".xml")
+                    ) {
+                        segment = segment.substring(0, segment.lastIndexOf('.'))
+                    }
 
-				if(!segment.isEmpty()) {
-					pathSegmentsFiltered.add(segment);
-				}
-			}
+                    if (!segment.isEmpty()) {
+                        pathSegmentsFiltered.add(segment)
+                    }
+                }
 
-			pathSegments
-					= pathSegmentsFiltered.toArray(new String[0]);
-		}
+                pathSegments
+                = pathSegmentsFiltered.toTypedArray<String?>()
+            }
 
-		if(pathSegments.length != 2) {
-			return null;
-		}
+            if (pathSegments.size != 2) {
+                return null
+            }
 
-		if(!pathSegments[0].equalsIgnoreCase("message")
-				|| !pathSegments[1].equalsIgnoreCase("compose")) {
-			return null;
-		}
+            if (!pathSegments[0].equals("message", ignoreCase = true)
+                || !pathSegments[1].equals("compose", ignoreCase = true)
+            ) {
+                return null
+            }
 
-		String recipient = null;
-		String subject = null;
-		String message = null;
-		for(final String parameterKey : General.getUriQueryParameterNames(uri)) {
-			if(parameterKey.equalsIgnoreCase("to")) {
-				// TODO validate username with regex
-				recipient = uri.getQueryParameter(parameterKey);
+            var recipient: String? = null
+            var subject: String? = null
+            var message: String? = null
+            for (parameterKey in getUriQueryParameterNames(uri)) {
+                if (parameterKey.equals("to", ignoreCase = true)) {
+                    // TODO validate username with regex
+                    recipient = uri.getQueryParameter(parameterKey)
+                } else if (parameterKey.equals("subject", ignoreCase = true)) {
+                    subject = uri.getQueryParameter(parameterKey)
+                } else if (parameterKey.equals("message", ignoreCase = true)) {
+                    message = uri.getQueryParameter(parameterKey)
+                }
+            }
 
-			} else if(parameterKey.equalsIgnoreCase("subject")) {
-				subject = uri.getQueryParameter(parameterKey);
-
-			} else if(parameterKey.equalsIgnoreCase("message")) {
-				message = uri.getQueryParameter(parameterKey);
-			}
-		}
-
-		return new ComposeMessageURL(recipient, subject, message);
-	}
-
-	@Override
-	public Uri generateJsonUri() {
-		final Uri.Builder builder = new Uri.Builder();
-		builder.scheme(Constants.Reddit.getScheme())
-				.authority(Constants.Reddit.getDomain());
-
-		builder.appendEncodedPath("message");
-		builder.appendEncodedPath("compose");
-
-		if(recipient != null) {
-			builder.appendQueryParameter("to", recipient);
-		}
-
-		if(subject != null) {
-			builder.appendQueryParameter("subject", subject);
-		}
-
-		if(message != null) {
-			builder.appendQueryParameter("message", message);
-		}
-
-		builder.appendEncodedPath(".json");
-
-		return builder.build();
-	}
-
-	@Override
-	public @RedditURLParser.PathType
-	int pathType() {
-		return RedditURLParser.COMPOSE_MESSAGE_URL;
-	}
+            return ComposeMessageURL(recipient, subject, message)
+        }
+    }
 }

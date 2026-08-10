@@ -12,56 +12,41 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.adapters
 
-package org.quantumbadger.redreader.adapters;
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import org.quantumbadger.redreader.common.FunctionOneArgWithReturn
 
-import android.view.View;
-import android.view.ViewGroup;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
-import org.quantumbadger.redreader.common.FunctionOneArgWithReturn;
-
-public class GroupedRecyclerViewItemView
-		extends GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder> {
-
-	@NonNull private final FunctionOneArgWithReturn<ViewGroup, View> mFactory;
-	@NonNull private final Class<?> mViewType;
-
-	private boolean mHidden = false;
-
-	public GroupedRecyclerViewItemView(
-			@NonNull final Class<?> viewType,
-			@NonNull final FunctionOneArgWithReturn<ViewGroup, View> factory) {
-		mFactory = factory;
-		mViewType = viewType;
-	}
+open class GroupedRecyclerViewItemView
+    (
+    private val mViewType: Class<*>,
+    private val mFactory: FunctionOneArgWithReturn<ViewGroup?, View>
+) : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder?>() {
+    private var mHidden = false
 
 
-	@NonNull
-	@Override
-	public Class<?> getViewType() {
-		return mViewType;
-	}
+    override fun getViewType(): Class<*> {
+        return mViewType
+    }
 
-	@Override
-	public RecyclerView.ViewHolder onCreateViewHolder(final ViewGroup viewGroup) {
-		final View view = mFactory.apply(viewGroup);
-		return new RecyclerView.ViewHolder(view) {};
-	}
+    override fun onCreateViewHolder(viewGroup: ViewGroup?): RecyclerView.ViewHolder {
+        val view = mFactory.apply(viewGroup)
+        return object : RecyclerView.ViewHolder(view) {}
+    }
 
-	@Override
-	public void onBindViewHolder(final RecyclerView.ViewHolder viewHolder) {
-		// Nothing to do here
-	}
+    override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder?) {
+        // Nothing to do here
+    }
 
-	@Override
-	public boolean isHidden() {
-		return mHidden;
-	}
+    override fun isHidden(): Boolean {
+        return mHidden
+    }
 
-	public void setHidden(final boolean hidden) {
-		mHidden = hidden;
-	}
+    fun setHidden(hidden: Boolean) {
+        mHidden = hidden
+    }
 }

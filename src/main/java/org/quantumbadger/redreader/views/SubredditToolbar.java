@@ -12,293 +12,282 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
-package org.quantumbadger.redreader.views;
-
-import android.content.Context;
-import android.content.Intent;
-import android.util.AttributeSet;
-import android.view.View;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.TooltipCompat;
-
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.activities.PostSubmitActivity;
-import org.quantumbadger.redreader.common.AndroidCommon;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.LinkHandler;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.SharedPrefsWrapper;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.reddit.SubredditDetails;
-import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager;
-import org.quantumbadger.redreader.reddit.api.SubredditSubscriptionState;
-
-import java.util.Objects;
-
-public class SubredditToolbar extends LinearLayout implements
-		RedditSubredditSubscriptionManager.SubredditSubscriptionStateChangeListener,
-		SharedPrefsWrapper.OnSharedPreferenceChangeListener {
-
-	@NonNull private final Context mContext;
-
-	// Field can't be local because the listener gets put in a weak map, and we want to stop it
-	// being garbage collected.
-	@Nullable private RedditSubredditSubscriptionManager.ListenerContext
-			mSubscriptionListenerContext;
-
-	private Runnable mRunnableOnAttach;
-	private Runnable mRunnableOnDetach;
-	private Runnable mRunnableOnSubscriptionsChange;
-	private Runnable mRunnableOnPinnedChange;
-
-	@NonNull private Optional<SubredditDetails> mSubredditDetails = Optional.empty();
-	@NonNull private Optional<UriString> mUrl = Optional.empty();
-
-	private ImageButton mButtonInfo;
-
-	public void bindSubreddit(
-			@NonNull final SubredditDetails subreddit,
-			@NonNull final Optional<UriString> url) {
-
-		mSubredditDetails = Optional.of(subreddit);
-		mUrl = url;
-
-		if(subreddit.hasSidebar()) {
-			mButtonInfo.setVisibility(VISIBLE);
-		} else {
-			mButtonInfo.setVisibility(GONE);
-		}
-
-		mRunnableOnSubscriptionsChange.run();
-		mRunnableOnPinnedChange.run();
-	}
-
-	public SubredditToolbar(final Context context) {
-		this(context, null);
-	}
-
-	public SubredditToolbar(
-			final Context context,
-			@Nullable final AttributeSet attrs) {
-		this(context, attrs, 0);
-	}
-
-	public SubredditToolbar(
-			final Context context,
-			@Nullable final AttributeSet attrs,
-			final int defStyleAttr) {
-
-		super(context, attrs, defStyleAttr);
-
-		mContext = context;
-	}
-
-	@Override
-	protected void onFinishInflate() {
-		super.onFinishInflate();
-
-		final AppCompatActivity activity = (AppCompatActivity)mContext;
-
-		final SharedPrefsWrapper sharedPreferences
-				= General.getSharedPrefs(mContext);
-
-		final RedditAccount currentUser =
-				RedditAccountManager.getInstance(mContext).getDefaultAccount();
-
-		final ImageButton buttonSubscribe = Objects.requireNonNull(
-				(ImageButton)findViewById(R.id.subreddit_toolbar_button_subscribe));
-		final ImageButton buttonUnsubscribe = Objects.requireNonNull(
-				(ImageButton)findViewById(R.id.subreddit_toolbar_button_unsubscribe));
-		final FrameLayout buttonSubscribeLoading = Objects.requireNonNull(
-				(FrameLayout)findViewById(R.id.subreddit_toolbar_button_subscribe_loading));
-
-		final ImageButton buttonPin = Objects.requireNonNull(
-				(ImageButton)findViewById(R.id.subreddit_toolbar_button_pin));
-		final ImageButton buttonUnpin = Objects.requireNonNull(
-				(ImageButton)findViewById(R.id.subreddit_toolbar_button_unpin));
-
-		final ImageButton buttonSubmit = Objects.requireNonNull(
-				(ImageButton)findViewById(R.id.subreddit_toolbar_button_submit));
-		final ImageButton buttonShare = Objects.requireNonNull(
-				(ImageButton)findViewById(R.id.subreddit_toolbar_button_share));
-		mButtonInfo = Objects.requireNonNull(
-				(ImageButton)findViewById(R.id.subreddit_toolbar_button_info));
-
-		for(int i = 0; i < getChildCount(); i++) {
-			final View button = getChildAt(i);
-			TooltipCompat.setTooltipText(button, button.getContentDescription());
-		}
-
-		buttonSubscribeLoading.addView(new ButtonLoadingSpinnerView(mContext));
-
-		final RedditSubredditSubscriptionManager subscriptionManager
-				= RedditSubredditSubscriptionManager.getSingleton(
-						mContext,
-						currentUser);
-
-		mRunnableOnSubscriptionsChange = () -> {
-
-			final SubredditSubscriptionState
-					subscriptionState = subscriptionManager.getSubscriptionState(
-					mSubredditDetails.get().id);
-
-			if(subscriptionState == SubredditSubscriptionState.SUBSCRIBED) {
-
-				buttonSubscribe.setVisibility(GONE);
-				buttonUnsubscribe.setVisibility(VISIBLE);
-				buttonSubscribeLoading.setVisibility(GONE);
-
-			} else if(subscriptionState == SubredditSubscriptionState.NOT_SUBSCRIBED) {
-
-				buttonSubscribe.setVisibility(VISIBLE);
-				buttonUnsubscribe.setVisibility(GONE);
-				buttonSubscribeLoading.setVisibility(GONE);
-
-			} else {
-				buttonSubscribe.setVisibility(GONE);
-				buttonUnsubscribe.setVisibility(GONE);
-				buttonSubscribeLoading.setVisibility(VISIBLE);
-			}
-		};
-
-		mRunnableOnPinnedChange = () -> {
-
-			final boolean pinned = PrefsUtility.pref_pinned_subreddits_check(
-					mSubredditDetails.get().id);
-
-			if(pinned) {
-				buttonPin.setVisibility(GONE);
-				buttonUnpin.setVisibility(VISIBLE);
-			} else {
-				buttonPin.setVisibility(VISIBLE);
-				buttonUnpin.setVisibility(GONE);
-			}
-		};
-
-		mRunnableOnAttach = () -> {
-			mSubscriptionListenerContext = subscriptionManager.addListener(this);
-			sharedPreferences.registerOnSharedPreferenceChangeListener(this);
-
-			mRunnableOnSubscriptionsChange.run();
-			mRunnableOnPinnedChange.run();
-		};
-
-		mRunnableOnDetach = () -> {
-			mSubscriptionListenerContext.removeListener();
-			mSubscriptionListenerContext = null;
-
-			sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
-		};
-
-		if(currentUser.isAnonymous()) {
-
-			final OnClickListener mustBeLoggedInListener
-					= v -> General.showMustBeLoggedInDialog(activity);
-
-			buttonSubscribe.setOnClickListener(mustBeLoggedInListener);
-			buttonUnsubscribe.setOnClickListener(mustBeLoggedInListener);
-			buttonSubmit.setOnClickListener(mustBeLoggedInListener);
-
-		} else {
-			buttonSubscribe.setOnClickListener(v -> subscriptionManager.subscribe(
-					mSubredditDetails.get().id,
-					activity));
-
-			buttonUnsubscribe.setOnClickListener(v -> subscriptionManager.unsubscribe(
-					mSubredditDetails.get().id,
-					activity));
-
-			buttonSubmit.setOnClickListener(v -> {
-				final Intent intent = new Intent(
-						activity,
-						PostSubmitActivity.class);
-				intent.putExtra("subreddit", mSubredditDetails.get().id.toString());
-				activity.startActivity(intent);
-			});
-		}
-
-		buttonPin.setOnClickListener(v -> PrefsUtility.pref_pinned_subreddits_add(
-				mContext,
-				mSubredditDetails.get().id));
-
-		buttonUnpin.setOnClickListener(v -> PrefsUtility.pref_pinned_subreddits_remove(
-				mContext,
-				mSubredditDetails.get().id));
-
-		buttonShare.setOnClickListener(v -> LinkHandler.shareText(
-				activity,
-				mSubredditDetails.get().id.toString(),
-				mUrl.orElse(mSubredditDetails.get().url).value));
-
-		mButtonInfo.setOnClickListener(
-				v -> mSubredditDetails.get().showSidebarActivity(activity));
-	}
-
-	@Override
-	protected void onAttachedToWindow() {
-		super.onAttachedToWindow();
-
-		if(mRunnableOnAttach != null) {
-			mRunnableOnAttach.run();
-		}
-	}
-
-	@Override
-	protected void onDetachedFromWindow() {
-		super.onDetachedFromWindow();
-
-		if(mRunnableOnDetach != null) {
-			mRunnableOnDetach.run();
-		}
-	}
-
-	@Override
-	public void onSubredditSubscriptionListUpdated(
-			final RedditSubredditSubscriptionManager subredditSubscriptionManager) {
-
-		if(mRunnableOnSubscriptionsChange != null) {
-			AndroidCommon.UI_THREAD_HANDLER.post(mRunnableOnSubscriptionsChange);
-		}
-	}
-
-	@Override
-	public void onSubredditSubscriptionAttempted(
-			final RedditSubredditSubscriptionManager subredditSubscriptionManager) {
-
-		if(mRunnableOnSubscriptionsChange != null) {
-			AndroidCommon.UI_THREAD_HANDLER.post(mRunnableOnSubscriptionsChange);
-		}
-	}
-
-	@Override
-	public void onSubredditUnsubscriptionAttempted(
-			final RedditSubredditSubscriptionManager subredditSubscriptionManager) {
-
-		if(mRunnableOnSubscriptionsChange != null) {
-			AndroidCommon.UI_THREAD_HANDLER.post(mRunnableOnSubscriptionsChange);
-		}
-	}
-
-	@Override
-	public void onSharedPreferenceChanged(
-			@NonNull final SharedPrefsWrapper sharedPreferences,
-			@NonNull final String key) {
-
-		if(mRunnableOnPinnedChange != null
-				&& key.equals(mContext.getString(R.string.pref_pinned_subreddits_key))) {
-			mRunnableOnPinnedChange.run();
-		}
-	}
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
+
+import android.content.Context
+import android.content.Intent
+import android.util.AttributeSet
+import android.view.View
+import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.TooltipCompat
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.PostSubmitActivity
+import org.quantumbadger.redreader.common.AndroidCommon
+import org.quantumbadger.redreader.common.General.findViewById
+import org.quantumbadger.redreader.common.General.getSharedPrefs
+import org.quantumbadger.redreader.common.General.showMustBeLoggedInDialog
+import org.quantumbadger.redreader.common.LinkHandler.shareText
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.SharedPrefsWrapper
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.reddit.SubredditDetails
+import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager
+import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager.ListenerContext
+import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager.SubredditSubscriptionStateChangeListener
+import org.quantumbadger.redreader.reddit.api.SubredditSubscriptionState
+import java.util.Objects
+
+class SubredditToolbar @JvmOverloads constructor(
+    private val mContext: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : LinearLayout(mContext, attrs, defStyleAttr), SubredditSubscriptionStateChangeListener,
+    SharedPrefsWrapper.OnSharedPreferenceChangeListener {
+    // Field can't be local because the listener gets put in a weak map, and we want to stop it
+    // being garbage collected.
+    private var mSubscriptionListenerContext: ListenerContext? = null
+
+    private var mRunnableOnAttach: Runnable? = null
+    private var mRunnableOnDetach: Runnable? = null
+    private var mRunnableOnSubscriptionsChange: Runnable? = null
+    private var mRunnableOnPinnedChange: Runnable? = null
+
+    private var mSubredditDetails: Optional<SubredditDetails?> =
+        Optional.Companion.empty<SubredditDetails?>()
+    private var mUrl: Optional<UriString?> = Optional.Companion.empty<UriString?>()
+
+    private var mButtonInfo: ImageButton? = null
+
+    fun bindSubreddit(
+        subreddit: SubredditDetails,
+        url: Optional<UriString?>
+    ) {
+        mSubredditDetails = Optional.Companion.of<SubredditDetails?>(subreddit)
+        mUrl = url
+
+        if (subreddit.hasSidebar()) {
+            mButtonInfo!!.setVisibility(VISIBLE)
+        } else {
+            mButtonInfo!!.setVisibility(GONE)
+        }
+
+        mRunnableOnSubscriptionsChange!!.run()
+        mRunnableOnPinnedChange!!.run()
+    }
+
+    override fun onFinishInflate() {
+        super.onFinishInflate()
+
+        val activity = mContext as AppCompatActivity
+
+        val sharedPreferences = getSharedPrefs(mContext)
+
+        val currentUser: RedditAccount =
+            RedditAccountManager.Companion.getInstance(mContext).getDefaultAccount()
+
+        val buttonSubscribe = Objects.requireNonNull<ImageButton>(
+            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_subscribe)
+        )
+        val buttonUnsubscribe = Objects.requireNonNull<ImageButton>(
+            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_unsubscribe)
+        )
+        val buttonSubscribeLoading = Objects.requireNonNull<FrameLayout>(
+            (FrameLayout)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_subscribe_loading)
+        )
+
+        val buttonPin = Objects.requireNonNull<ImageButton>(
+            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_pin)
+        )
+        val buttonUnpin = Objects.requireNonNull<ImageButton>(
+            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_unpin)
+        )
+
+        val buttonSubmit = Objects.requireNonNull<ImageButton>(
+            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_submit)
+        )
+        val buttonShare = Objects.requireNonNull<ImageButton>(
+            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_share)
+        )
+        mButtonInfo = Objects.requireNonNull<ImageButton>(
+            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_info)
+        )
+
+        for (i in 0..<getChildCount()) {
+            val button = getChildAt(i)
+            TooltipCompat.setTooltipText(button, button.getContentDescription())
+        }
+
+        buttonSubscribeLoading.addView(ButtonLoadingSpinnerView(mContext))
+
+        val subscriptionManager
+                : RedditSubredditSubscriptionManager =
+            RedditSubredditSubscriptionManager.Companion.getSingleton(
+                mContext,
+                currentUser
+            )
+
+        mRunnableOnSubscriptionsChange = Runnable? {
+            val subscriptionState = subscriptionManager.getSubscriptionState(
+                mSubredditDetails.get().id
+            )
+            if (subscriptionState == SubredditSubscriptionState.SUBSCRIBED) {
+                buttonSubscribe.setVisibility(GONE)
+                buttonUnsubscribe.setVisibility(VISIBLE)
+                buttonSubscribeLoading.setVisibility(GONE)
+            } else if (subscriptionState == SubredditSubscriptionState.NOT_SUBSCRIBED) {
+                buttonSubscribe.setVisibility(VISIBLE)
+                buttonUnsubscribe.setVisibility(GONE)
+                buttonSubscribeLoading.setVisibility(GONE)
+            } else {
+                buttonSubscribe.setVisibility(GONE)
+                buttonUnsubscribe.setVisibility(GONE)
+                buttonSubscribeLoading.setVisibility(VISIBLE)
+            }
+        }
+
+        mRunnableOnPinnedChange = Runnable? {
+            val pinned = PrefsUtility.pref_pinned_subreddits_check(
+                mSubredditDetails.get().id
+            )
+            if (pinned) {
+                buttonPin.setVisibility(GONE)
+                buttonUnpin.setVisibility(VISIBLE)
+            } else {
+                buttonPin.setVisibility(VISIBLE)
+                buttonUnpin.setVisibility(GONE)
+            }
+        }
+
+        mRunnableOnAttach = Runnable? {
+            mSubscriptionListenerContext = subscriptionManager.addListener(this)
+            sharedPreferences.registerOnSharedPreferenceChangeListener(this)
+
+            mRunnableOnSubscriptionsChange!!.run()
+            mRunnableOnPinnedChange!!.run()
+        }
+
+        mRunnableOnDetach = Runnable? {
+            mSubscriptionListenerContext!!.removeListener()
+            mSubscriptionListenerContext = null
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
+        }
+
+        if (currentUser.isAnonymous) {
+            val mustBeLoggedInListener =
+                OnClickListener { v: View? -> showMustBeLoggedInDialog(activity) }
+
+            buttonSubscribe.setOnClickListener(mustBeLoggedInListener)
+            buttonUnsubscribe.setOnClickListener(mustBeLoggedInListener)
+            buttonSubmit.setOnClickListener(mustBeLoggedInListener)
+        } else {
+            buttonSubscribe.setOnClickListener(OnClickListener { v: View? ->
+                subscriptionManager.subscribe(
+                    mSubredditDetails.get().id,
+                    activity
+                )
+            })
+
+            buttonUnsubscribe.setOnClickListener(OnClickListener { v: View? ->
+                subscriptionManager.unsubscribe(
+                    mSubredditDetails.get().id,
+                    activity
+                )
+            })
+
+            buttonSubmit.setOnClickListener(OnClickListener { v: View? ->
+                val intent = Intent(
+                    activity,
+                    PostSubmitActivity::class.java
+                )
+                intent.putExtra("subreddit", mSubredditDetails.get().id.toString())
+                activity.startActivity(intent)
+            })
+        }
+
+        buttonPin.setOnClickListener(OnClickListener { v: View? ->
+            PrefsUtility.pref_pinned_subreddits_add(
+                mContext,
+                mSubredditDetails.get().id
+            )
+        })
+
+        buttonUnpin.setOnClickListener(OnClickListener { v: View? ->
+            PrefsUtility.pref_pinned_subreddits_remove(
+                mContext,
+                mSubredditDetails.get().id
+            )
+        })
+
+        buttonShare.setOnClickListener(OnClickListener { v: View? ->
+            shareText(
+                activity,
+                mSubredditDetails.get().id.toString(),
+                mUrl.orElse(mSubredditDetails.get().url).value
+            )
+        })
+
+        mButtonInfo!!.setOnClickListener(
+            OnClickListener { v: View? -> mSubredditDetails.get().showSidebarActivity(activity) })
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+
+        if (mRunnableOnAttach != null) {
+            mRunnableOnAttach!!.run()
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+
+        if (mRunnableOnDetach != null) {
+            mRunnableOnDetach!!.run()
+        }
+    }
+
+    override fun onSubredditSubscriptionListUpdated(
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+    ) {
+        if (mRunnableOnSubscriptionsChange != null) {
+            AndroidCommon.UI_THREAD_HANDLER.post(mRunnableOnSubscriptionsChange!!)
+        }
+    }
+
+    override fun onSubredditSubscriptionAttempted(
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+    ) {
+        if (mRunnableOnSubscriptionsChange != null) {
+            AndroidCommon.UI_THREAD_HANDLER.post(mRunnableOnSubscriptionsChange!!)
+        }
+    }
+
+    override fun onSubredditUnsubscriptionAttempted(
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+    ) {
+        if (mRunnableOnSubscriptionsChange != null) {
+            AndroidCommon.UI_THREAD_HANDLER.post(mRunnableOnSubscriptionsChange!!)
+        }
+    }
+
+    override fun onSharedPreferenceChanged(
+        sharedPreferences: SharedPrefsWrapper,
+        key: String
+    ) {
+        if (mRunnableOnPinnedChange != null
+            && key == mContext.getString(string.pref_pinned_subreddits_key)
+        ) {
+            mRunnableOnPinnedChange!!.run()
+        }
+    }
 }

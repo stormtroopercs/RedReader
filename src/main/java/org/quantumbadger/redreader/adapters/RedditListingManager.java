@@ -12,141 +12,147 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.adapters
 
-package org.quantumbadger.redreader.adapters;
+import android.content.Context
+import android.view.View
+import androidx.recyclerview.widget.LinearLayoutManager
+import org.quantumbadger.redreader.common.General.checkThisIsUIThread
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.views.LoadingSpinnerView
+import org.quantumbadger.redreader.views.RedditPostHeaderView
+import org.quantumbadger.redreader.views.liststatus.ErrorView
 
-import android.content.Context;
-import android.view.View;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.views.LoadingSpinnerView;
-import org.quantumbadger.redreader.views.RedditPostHeaderView;
-import org.quantumbadger.redreader.views.liststatus.ErrorView;
+abstract class RedditListingManager protected constructor(context: Context) {
+    private val mAdapter = GroupedRecyclerViewAdapter(7)
+    private var mLayoutManager: LinearLayoutManager? = null
 
-import java.util.Collection;
+    private val mLoadingItem: GroupedRecyclerViewItemFrameLayout
+    private var mWorkaroundDone = false
 
-public abstract class RedditListingManager {
+    init {
+        checkThisIsUIThread()
+        val loadingSpinnerView = LoadingSpinnerView(context)
+        val paddingPx = dpToPixels(context, 30f)
+        loadingSpinnerView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
 
-	private final GroupedRecyclerViewAdapter mAdapter = new GroupedRecyclerViewAdapter(7);
-	private LinearLayoutManager mLayoutManager;
+        mLoadingItem = GroupedRecyclerViewItemFrameLayout(loadingSpinnerView)
+        mAdapter.appendToGroup(GROUP_LOADING, mLoadingItem)
+    }
 
-	private static final int GROUP_HEADER = 0;
-	private static final int GROUP_NOTIFICATIONS = 1;
-	private static final int GROUP_POST_SELFTEXT = 2;
-	private static final int GROUP_ITEMS = 3;
-	private static final int GROUP_LOAD_MORE_BUTTON = 4;
-	private static final int GROUP_LOADING = 5;
-	private static final int GROUP_FOOTER_ERRORS = 6;
+    fun setLayoutManager(layoutManager: LinearLayoutManager?) {
+        checkThisIsUIThread()
+        mLayoutManager = layoutManager
+    }
 
-	private final GroupedRecyclerViewItemFrameLayout mLoadingItem;
-	private boolean mWorkaroundDone = false;
+    // Workaround for RecyclerView scrolling behaviour
+    private fun doWorkaround() {
+        if (!mWorkaroundDone && mLayoutManager != null) {
+            mLayoutManager!!.scrollToPositionWithOffset(0, 0)
+            mWorkaroundDone = true
+        }
+    }
 
-	protected RedditListingManager(final Context context) {
-		General.checkThisIsUIThread();
-		final LoadingSpinnerView loadingSpinnerView = new LoadingSpinnerView(context);
-		final int paddingPx = General.dpToPixels(context, 30);
-		loadingSpinnerView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+    fun addFooterError(view: ErrorView?) {
+        checkThisIsUIThread()
+        mAdapter.appendToGroup(
+            GROUP_FOOTER_ERRORS,
+            GroupedRecyclerViewItemFrameLayout(view)
+        )
+    }
 
-		mLoadingItem = new GroupedRecyclerViewItemFrameLayout(loadingSpinnerView);
-		mAdapter.appendToGroup(GROUP_LOADING, mLoadingItem);
-	}
+    fun addPostHeader(view: RedditPostHeaderView?) {
+        checkThisIsUIThread()
+        mAdapter.appendToGroup(
+            GROUP_HEADER,
+            GroupedRecyclerViewItemFrameLayout(view)
+        )
+        doWorkaround()
+    }
 
-	public void setLayoutManager(final LinearLayoutManager layoutManager) {
-		General.checkThisIsUIThread();
-		mLayoutManager = layoutManager;
-	}
+    fun addPostListingHeader(view: View?) {
+        checkThisIsUIThread()
+        mAdapter.appendToGroup(
+            GROUP_HEADER,
+            GroupedRecyclerViewItemFrameLayout(view)
+        )
+        doWorkaround()
+    }
 
-	// Workaround for RecyclerView scrolling behaviour
-	private void doWorkaround() {
-		if(!mWorkaroundDone && mLayoutManager != null) {
-			mLayoutManager.scrollToPositionWithOffset(0, 0);
-			mWorkaroundDone = true;
-		}
-	}
+    fun addPostSelfText(view: View?) {
+        checkThisIsUIThread()
+        mAdapter.appendToGroup(
+            GROUP_POST_SELFTEXT,
+            GroupedRecyclerViewItemFrameLayout(view)
+        )
+        doWorkaround()
+    }
 
-	public void addFooterError(final ErrorView view) {
-		General.checkThisIsUIThread();
-		mAdapter.appendToGroup(
-				GROUP_FOOTER_ERRORS,
-				new GroupedRecyclerViewItemFrameLayout(view));
-	}
+    fun addNotification(view: View?) {
+        checkThisIsUIThread()
+        mAdapter.appendToGroup(
+            GROUP_NOTIFICATIONS,
+            GroupedRecyclerViewItemFrameLayout(view)
+        )
+        doWorkaround()
+    }
 
-	public void addPostHeader(final RedditPostHeaderView view) {
-		General.checkThisIsUIThread();
-		mAdapter.appendToGroup(
-				GROUP_HEADER,
-				new GroupedRecyclerViewItemFrameLayout(view));
-		doWorkaround();
-	}
+    fun addItems(items: MutableCollection<GroupedRecyclerViewAdapter.Item<*>?>?) {
+        checkThisIsUIThread()
+        mAdapter.appendToGroup(GROUP_ITEMS, items)
+        doWorkaround()
+    }
 
-	public void addPostListingHeader(final View view) {
-		General.checkThisIsUIThread();
-		mAdapter.appendToGroup(
-				GROUP_HEADER,
-				new GroupedRecyclerViewItemFrameLayout(view));
-		doWorkaround();
-	}
+    fun addViewToItems(view: View?) {
+        checkThisIsUIThread()
+        mAdapter.appendToGroup(GROUP_ITEMS, GroupedRecyclerViewItemFrameLayout(view))
+        doWorkaround()
+    }
 
-	public void addPostSelfText(final View view) {
-		General.checkThisIsUIThread();
-		mAdapter.appendToGroup(
-				GROUP_POST_SELFTEXT,
-				new GroupedRecyclerViewItemFrameLayout(view));
-		doWorkaround();
-	}
+    fun addLoadMoreButton(view: View?) {
+        checkThisIsUIThread()
+        mAdapter.appendToGroup(
+            GROUP_LOAD_MORE_BUTTON,
+            GroupedRecyclerViewItemFrameLayout(view)
+        )
+        doWorkaround()
+    }
 
-	public void addNotification(final View view) {
-		General.checkThisIsUIThread();
-		mAdapter.appendToGroup(
-				GROUP_NOTIFICATIONS,
-				new GroupedRecyclerViewItemFrameLayout(view));
-		doWorkaround();
-	}
+    fun removeLoadMoreButton() {
+        checkThisIsUIThread()
+        mAdapter.removeAllFromGroup(GROUP_LOAD_MORE_BUTTON)
+    }
 
-	public void addItems(final Collection<GroupedRecyclerViewAdapter.Item<?>> items) {
-		General.checkThisIsUIThread();
-		mAdapter.appendToGroup(GROUP_ITEMS, items);
-		doWorkaround();
-	}
+    fun setLoadingVisible(visible: Boolean) {
+        checkThisIsUIThread()
+        mLoadingItem.setHidden(!visible)
+        mAdapter.updateHiddenStatus()
+    }
 
-	public void addViewToItems(final View view) {
-		General.checkThisIsUIThread();
-		mAdapter.appendToGroup(GROUP_ITEMS, new GroupedRecyclerViewItemFrameLayout(view));
-		doWorkaround();
-	}
+    val adapter: GroupedRecyclerViewAdapter
+        get() {
+            checkThisIsUIThread()
+            return mAdapter
+        }
 
-	public void addLoadMoreButton(final View view) {
-		General.checkThisIsUIThread();
-		mAdapter.appendToGroup(
-				GROUP_LOAD_MORE_BUTTON,
-				new GroupedRecyclerViewItemFrameLayout(view));
-		doWorkaround();
-	}
+    fun updateHiddenStatus() {
+        checkThisIsUIThread()
+        mAdapter.updateHiddenStatus()
+    }
 
-	public void removeLoadMoreButton() {
-		General.checkThisIsUIThread();
-		mAdapter.removeAllFromGroup(GROUP_LOAD_MORE_BUTTON);
-	}
+    fun getItemAtPosition(position: Int): GroupedRecyclerViewAdapter.Item<*>? {
+        return mAdapter.getItemAtPosition(position)
+    }
 
-	public void setLoadingVisible(final boolean visible) {
-		General.checkThisIsUIThread();
-		mLoadingItem.setHidden(!visible);
-		mAdapter.updateHiddenStatus();
-	}
-
-	public GroupedRecyclerViewAdapter getAdapter() {
-		General.checkThisIsUIThread();
-		return mAdapter;
-	}
-
-	public void updateHiddenStatus() {
-		General.checkThisIsUIThread();
-		mAdapter.updateHiddenStatus();
-	}
-
-	public GroupedRecyclerViewAdapter.Item getItemAtPosition(final int position) {
-		return mAdapter.getItemAtPosition(position);
-	}
+    companion object {
+        private const val GROUP_HEADER = 0
+        private const val GROUP_NOTIFICATIONS = 1
+        private const val GROUP_POST_SELFTEXT = 2
+        private const val GROUP_ITEMS = 3
+        private const val GROUP_LOAD_MORE_BUTTON = 4
+        private const val GROUP_LOADING = 5
+        private const val GROUP_FOOTER_ERRORS = 6
+    }
 }

@@ -12,11 +12,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview
 
-package org.quantumbadger.redreader.views.glview;
-
-public interface Refreshable {
-	void refresh();
+interface Refreshable {
+    fun refresh()
 }

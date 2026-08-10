@@ -12,50 +12,44 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+abstract class RRDHMAnimation(params: LiveDHM.Params) : RRAnimation() {
+    private val mDHM: LiveDHM
 
-public abstract class RRDHMAnimation extends RRAnimation {
+    init {
+        mDHM = LiveDHM(params)
+    }
 
-	private final LiveDHM mDHM;
+    override fun handleFrame(nanosSinceAnimationStart: Long): Boolean {
+        val microsSinceAnimationStart = nanosSinceAnimationStart / 1000
+        val stepLengthMicros = ((LiveDHM.Params.Companion.stepLengthSeconds
+                * 1000.0
+                * 1000.0)).toLong()
 
-	public RRDHMAnimation(final LiveDHM.Params params) {
-		mDHM = new LiveDHM(params);
-	}
+        val desiredStepNumber = ((microsSinceAnimationStart + (stepLengthMicros
+                / 2))
+                / stepLengthMicros).toInt()
 
-	@Override
-	protected boolean handleFrame(final long nanosSinceAnimationStart) {
+        while (mDHM.getCurrentStep() < desiredStepNumber) {
+            mDHM.calculateStep()
 
-		final long microsSinceAnimationStart = nanosSinceAnimationStart / 1000;
-		final long stepLengthMicros = (long)(mDHM.getParams().stepLengthSeconds
-				* 1000.0
-				* 1000.0);
+            if (mDHM.isEndThresholdReached()) {
+                onEndPosition(mDHM.getParams().endPosition)
+                return false
+            }
+        }
 
-		final int desiredStepNumber = (int)((microsSinceAnimationStart + (stepLengthMicros
-				/ 2))
-				/ stepLengthMicros);
+        onUpdatedPosition(mDHM.getCurrentPosition())
+        return true
+    }
 
-		while(mDHM.getCurrentStep() < desiredStepNumber) {
+    val currentVelocity: Float
+        get() = mDHM.getCurrentVelocity()
 
-			mDHM.calculateStep();
+    protected abstract fun onUpdatedPosition(position: Float)
 
-			if(mDHM.isEndThresholdReached()) {
-				onEndPosition(mDHM.getParams().endPosition);
-				return false;
-			}
-		}
-
-		onUpdatedPosition(mDHM.getCurrentPosition());
-		return true;
-	}
-
-	public final float getCurrentVelocity() {
-		return mDHM.getCurrentVelocity();
-	}
-
-	protected abstract void onUpdatedPosition(float position);
-
-	protected abstract void onEndPosition(float endPosition);
+    protected abstract fun onEndPosition(endPosition: Float)
 }

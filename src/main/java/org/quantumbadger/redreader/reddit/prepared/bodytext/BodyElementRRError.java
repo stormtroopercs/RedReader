@@ -12,37 +12,22 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.view.View
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.views.liststatus.ErrorView
 
-import android.view.View;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.views.liststatus.ErrorView;
-
-public class BodyElementRRError extends BodyElement {
-
-	@NonNull private final RRError mError;
-
-	public BodyElementRRError(@NonNull final RRError error) {
-
-		super(BlockType.ERROR);
-		mError = error;
-	}
-
-	@Override
-	public View generateView(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		return new ErrorView(activity, mError);
-	}
+class BodyElementRRError(private val mError: RRError) : BodyElement(BlockType.ERROR) {
+    override fun generateView(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View {
+        return ErrorView(activity, mError)
+    }
 }

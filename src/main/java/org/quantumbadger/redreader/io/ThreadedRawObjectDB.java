@@ -12,270 +12,223 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.io
 
-package org.quantumbadger.redreader.io;
+import org.quantumbadger.redreader.common.TimestampBound
+import org.quantumbadger.redreader.common.TriggerableThread
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.oldest
+import java.util.concurrent.LinkedBlockingQueue
 
-import org.quantumbadger.redreader.common.TimestampBound;
-import org.quantumbadger.redreader.common.TriggerableThread;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
+class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
+    (
+    private val db: RawObjectDB<K?, V?>,
+    private val alternateSource: CacheDataSource<K?, V?, F?>
+) : CacheDataSource<K?, V?, F?> {
+    private val writeThread = TriggerableThread(Runnable { this.doWrite() }, 1500)
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.concurrent.LinkedBlockingQueue;
+    private val readThread = TriggerableThread(Runnable { this.doRead() }, 0)
 
-public class ThreadedRawObjectDB<K, V extends WritableObject<K>, F>
-		implements CacheDataSource<K, V, F> {
+    private val toWrite = HashMap<K?, V?>()
+    private val toRead: LinkedBlockingQueue<ReadOperation?> = LinkedBlockingQueue<ReadOperation?>()
+    private val ioLock = Any()
 
-	private final TriggerableThread writeThread
-			= new TriggerableThread(this::doWrite, 1500);
+    private fun doWrite() {
+        synchronized(ioLock) {
+            val values: ArrayList<V?>
+            synchronized(toWrite) {
+                values = ArrayList<V?>(toWrite.values)
+                toWrite.clear()
+            }
+            db.putAll(values)
+        }
+    }
 
-	private final TriggerableThread readThread
-			= new TriggerableThread(this::doRead, 0);
+    private fun doRead() {
+        synchronized(ioLock) {
+            while (!toRead.isEmpty()) {
+                toRead.remove()!!.run()
+            }
+        }
+    }
 
-	private final HashMap<K, V> toWrite = new HashMap<>();
-	private final LinkedBlockingQueue<ReadOperation> toRead = new LinkedBlockingQueue<>();
-	private final Object ioLock = new Object();
+    override fun performRequest(
+        key: K?, timestampBound: TimestampBound,
+        handler: RequestResponseHandler<V?, F?>
+    ) {
+        toRead.offer(SingleReadOperation(timestampBound, handler, key))
+        readThread.trigger()
+    }
 
-	private final RawObjectDB<K, V> db;
-	private final CacheDataSource<K, V, F> alternateSource;
+    override fun performRequest(
+        keys: MutableCollection<K?>, timestampBound: TimestampBound,
+        handler: RequestResponseHandler<HashMap<K?, V?>?, F?>
+    ) {
+        toRead.offer(BulkReadOperation(timestampBound, handler, keys))
+        readThread.trigger()
+    }
 
-	public ThreadedRawObjectDB(
-			final RawObjectDB<K, V> db,
-			final CacheDataSource<K, V, F> alternateSource) {
-		this.db = db;
-		this.alternateSource = alternateSource;
-	}
+    override fun performWrite(value: V?) {
+        synchronized(toWrite) {
+            toWrite.put(value!!.getKey(), value)
+        }
 
-	private void doWrite() {
-		synchronized(ioLock) {
+        writeThread.trigger()
+    }
 
-			final ArrayList<V> values;
+    override fun performWrite(values: MutableCollection<V?>) {
+        synchronized(toWrite) {
+            for (value in values) {
+                toWrite.put(value!!.getKey(), value)
+            }
+        }
 
-			synchronized(toWrite) {
-				values = new ArrayList<>(toWrite.values());
-				toWrite.clear();
-			}
+        writeThread.trigger()
+    }
 
-			db.putAll(values);
-		}
-	}
+    private inner class BulkReadOperation(
+        timestampBound: TimestampBound,
+        val responseHandler: RequestResponseHandler<HashMap<K?, V?>?, F?>,
+        val keys: MutableCollection<K?>
+    ) : ReadOperation(timestampBound) {
+        override fun run() {
+            val existingResult = HashMap<K?, V?>(keys.size)
+            var oldestTimestamp: TimestampUTC? = null
 
-	private void doRead() {
-		synchronized(ioLock) {
-			while(!toRead.isEmpty()) {
-				toRead.remove().run();
-			}
-		}
-	}
+            synchronized(toWrite) {
+                val iter = keys.iterator()
+                while (iter.hasNext()) {
+                    val key = iter.next()
+                    val writeCacheResult = toWrite.get(key)
+                    if (writeCacheResult != null && timestampBound.verifyTimestamp(
+                            writeCacheResult.getTimestamp()
+                        )
+                    ) {
+                        iter.remove()
+                        existingResult.put(key, writeCacheResult)
+                        if (oldestTimestamp == null) {
+                            oldestTimestamp = writeCacheResult.getTimestamp()
+                        } else {
+                            oldestTimestamp = oldest(
+                                oldestTimestamp,
+                                writeCacheResult.getTimestamp()
+                            )
+                        }
+                    }
+                }
+            }
 
-	@Override
-	public void performRequest(
-			final K key, final TimestampBound timestampBound,
-			final RequestResponseHandler<V, F> handler) {
+            if (keys.isEmpty()) {
+                responseHandler.onRequestSuccess(existingResult, oldestTimestamp)
+                return
+            }
 
-		toRead.offer(new SingleReadOperation(timestampBound, handler, key));
-		readThread.trigger();
-	}
+            val iter = keys.iterator()
 
-	@Override
-	public void performRequest(
-			final Collection<K> keys, final TimestampBound timestampBound,
-			final RequestResponseHandler<HashMap<K, V>, F> handler) {
+            while (iter.hasNext()) {
+                val key = iter.next()
+                val dbResult = db.getById(key) // TODO this is pretty inefficient
+                if (dbResult != null
+                    && timestampBound.verifyTimestamp(dbResult.getTimestamp())
+                ) {
+                    iter.remove()
+                    existingResult.put(key, dbResult)
+                    if (oldestTimestamp == null) {
+                        oldestTimestamp = dbResult.getTimestamp()
+                    } else {
+                        oldestTimestamp = oldest(
+                            oldestTimestamp,
+                            dbResult.getTimestamp()
+                        )
+                    }
+                }
+            }
 
-		toRead.offer(new BulkReadOperation(timestampBound, handler, keys));
-		readThread.trigger();
-	}
+            if (keys.isEmpty()) {
+                responseHandler.onRequestSuccess(existingResult, oldestTimestamp)
+                return
+            }
 
-	@Override
-	public void performWrite(final V value) {
+            val outerOldestTimestamp = oldestTimestamp
 
-		synchronized(toWrite) {
-			toWrite.put(value.getKey(), value);
-		}
+            alternateSource.performRequest(
+                keys,
+                timestampBound,
+                object : RequestResponseHandler<HashMap<K?, V?>?, F?> {
+                    override fun onRequestFailed(failureReason: F?) {
+                        responseHandler.onRequestFailed(failureReason)
+                    }
 
-		writeThread.trigger();
-	}
+                    override fun onRequestSuccess(
+                        result: HashMap<K?, V?>,
+                        timeCached: TimestampUTC
+                    ) {
+                        val timestamp: TimestampUTC? = if (outerOldestTimestamp == null)
+                            timeCached
+                        else
+                            oldest(outerOldestTimestamp, timeCached)
 
-	@Override
-	public void performWrite(final Collection<V> values) {
+                        performWrite(result.values)
+                        existingResult.putAll(result)
+                        responseHandler.onRequestSuccess(
+                            existingResult,
+                            timestamp
+                        )
+                    }
+                })
+        }
+    }
 
-		synchronized(toWrite) {
-			for(final V value : values) {
-				toWrite.put(value.getKey(), value);
-			}
-		}
+    private inner class SingleReadOperation(
+        timestampBound: TimestampBound,
+        val responseHandler: RequestResponseHandler<V?, F?>,
+        val key: K?
+    ) : ReadOperation(timestampBound) {
+        override fun run() {
+            synchronized(toWrite) {
+                val writeCacheResult = toWrite.get(key)
+                if (writeCacheResult != null && timestampBound.verifyTimestamp(
+                        writeCacheResult.getTimestamp()
+                    )
+                ) {
+                    responseHandler.onRequestSuccess(
+                        writeCacheResult,
+                        writeCacheResult.getTimestamp()
+                    )
+                    return
+                }
+            }
 
-		writeThread.trigger();
-	}
+            val dbResult = db.getById(key)
+            if (dbResult != null
+                && timestampBound.verifyTimestamp(dbResult.getTimestamp())
+            ) {
+                responseHandler.onRequestSuccess(dbResult, dbResult.getTimestamp())
+                return
+            }
 
-	private class BulkReadOperation extends ReadOperation {
+            alternateSource.performRequest(
+                key,
+                timestampBound,
+                object : RequestResponseHandler<V?, F?> {
+                    override fun onRequestFailed(failureReason: F?) {
+                        responseHandler.onRequestFailed(failureReason)
+                    }
 
-		public final Collection<K> keys;
-		public final RequestResponseHandler<HashMap<K, V>, F> responseHandler;
+                    override fun onRequestSuccess(
+                        result: V?,
+                        timeCached: TimestampUTC?
+                    ) {
+                        performWrite(result)
+                        responseHandler.onRequestSuccess(result, timeCached)
+                    }
+                })
+        }
+    }
 
-		private BulkReadOperation(
-				final TimestampBound timestampBound,
-				final RequestResponseHandler<HashMap<K, V>, F> responseHandler,
-				final Collection<K> keys) {
-			super(timestampBound);
-			this.responseHandler = responseHandler;
-			this.keys = keys;
-		}
-
-		@Override
-		public void run() {
-
-			final HashMap<K, V> existingResult = new HashMap<>(keys.size());
-			TimestampUTC oldestTimestamp = null;
-
-			synchronized(toWrite) {
-
-				final Iterator<K> iter = keys.iterator();
-
-				while(iter.hasNext()) {
-					final K key = iter.next();
-					final V writeCacheResult = toWrite.get(key);
-					if(writeCacheResult != null && timestampBound.verifyTimestamp(
-							writeCacheResult.getTimestamp())) {
-						iter.remove();
-						existingResult.put(key, writeCacheResult);
-						if(oldestTimestamp == null) {
-							oldestTimestamp = writeCacheResult.getTimestamp();
-						} else {
-							oldestTimestamp = TimestampUTC.oldest(
-									oldestTimestamp,
-									writeCacheResult.getTimestamp());
-						}
-					}
-				}
-			}
-
-			if(keys.isEmpty()) {
-				responseHandler.onRequestSuccess(existingResult, oldestTimestamp);
-				return;
-			}
-
-			final Iterator<K> iter = keys.iterator();
-
-			while(iter.hasNext()) {
-				final K key = iter.next();
-				final V dbResult = db.getById(key); // TODO this is pretty inefficient
-				if(dbResult != null
-						&& timestampBound.verifyTimestamp(dbResult.getTimestamp())) {
-					iter.remove();
-					existingResult.put(key, dbResult);
-					if(oldestTimestamp == null) {
-						oldestTimestamp = dbResult.getTimestamp();
-					} else {
-						oldestTimestamp = TimestampUTC.oldest(
-								oldestTimestamp,
-								dbResult.getTimestamp());
-					}
-				}
-			}
-
-			if(keys.isEmpty()) {
-				responseHandler.onRequestSuccess(existingResult, oldestTimestamp);
-				return;
-			}
-
-			final TimestampUTC outerOldestTimestamp = oldestTimestamp;
-
-			alternateSource.performRequest(
-					keys,
-					timestampBound,
-					new RequestResponseHandler<HashMap<K, V>, F>() {
-						@Override
-						public void onRequestFailed(final F failureReason) {
-							responseHandler.onRequestFailed(failureReason);
-						}
-
-						@Override
-						public void onRequestSuccess(
-								final HashMap<K, V> result,
-								final TimestampUTC timeCached) {
-
-							final TimestampUTC timestamp = outerOldestTimestamp == null
-									? timeCached
-									: TimestampUTC.oldest(outerOldestTimestamp, timeCached);
-
-							performWrite(result.values());
-							existingResult.putAll(result);
-							responseHandler.onRequestSuccess(
-									existingResult,
-									timestamp);
-						}
-					});
-		}
-	}
-
-	private class SingleReadOperation extends ReadOperation {
-
-		public final K key;
-		public final RequestResponseHandler<V, F> responseHandler;
-
-		private SingleReadOperation(
-				final TimestampBound timestampBound,
-				final RequestResponseHandler<V, F> responseHandler,
-				final K key) {
-			super(timestampBound);
-			this.responseHandler = responseHandler;
-			this.key = key;
-		}
-
-		@Override
-		public void run() {
-
-			synchronized(toWrite) {
-				final V writeCacheResult = toWrite.get(key);
-				if(writeCacheResult != null && timestampBound.verifyTimestamp(
-						writeCacheResult.getTimestamp())) {
-					responseHandler.onRequestSuccess(
-							writeCacheResult,
-							writeCacheResult.getTimestamp());
-					return;
-				}
-			}
-
-			final V dbResult = db.getById(key);
-			if(dbResult != null
-					&& timestampBound.verifyTimestamp(dbResult.getTimestamp())) {
-				responseHandler.onRequestSuccess(dbResult, dbResult.getTimestamp());
-				return;
-			}
-
-			alternateSource.performRequest(
-					key,
-					timestampBound,
-					new RequestResponseHandler<V, F>() {
-						@Override
-						public void onRequestFailed(final F failureReason) {
-							responseHandler.onRequestFailed(failureReason);
-						}
-
-						@Override
-						public void onRequestSuccess(
-								final V result,
-								final TimestampUTC timeCached) {
-							performWrite(result);
-							responseHandler.onRequestSuccess(result, timeCached);
-						}
-					});
-		}
-	}
-
-	private abstract static class ReadOperation {
-
-		public final TimestampBound timestampBound;
-
-		private ReadOperation(final TimestampBound timestampBound) {
-			this.timestampBound = timestampBound;
-		}
-
-		public abstract void run();
-	}
+    private abstract class ReadOperation(val timestampBound: TimestampBound) {
+        abstract fun run()
+    }
 }

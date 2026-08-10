@@ -12,91 +12,77 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+object StringUtils {
+    @JvmStatic
+    fun removePrefix(
+        input: String,
+        prefix: String
+    ): Optional<String?> {
+        if (input.startsWith(prefix)) {
+            return Optional.Companion.of<String?>(input.substring(prefix.length))
+        } else {
+            return Optional.Companion.empty<String?>()
+        }
+    }
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    @JvmStatic
+    fun asciiUppercase(input: String): String {
+        val chars = input.toCharArray()
 
-import java.util.Collection;
+        for (i in chars.indices) {
+            if (chars[i] >= 'a' && chars[i] <= 'z') {
+                chars[i] -= 'a'.code
+                chars[i] += 'A'.code
+            }
+        }
 
-public final class StringUtils {
+        return String(chars)
+    }
 
-	private StringUtils() {}
+    @JvmStatic
+    fun asciiLowercase(input: String): String {
+        val chars = input.toCharArray()
 
-	@NonNull
-	public static Optional<String> removePrefix(
-			@NonNull final String input,
-			@NonNull final String prefix) {
+        for (i in chars.indices) {
+            if (chars[i] >= 'A' && chars[i] <= 'Z') {
+                chars[i] -= 'A'.code
+                chars[i] += 'a'.code
+            }
+        }
 
-		if(input.startsWith(prefix)) {
-			return Optional.of(input.substring(prefix.length()));
+        return String(chars)
+    }
 
-		} else {
-			return Optional.empty();
-		}
-	}
+    fun join(
+        elements: MutableCollection<*>,
+        separator: CharSequence
+    ): String {
+        val result = StringBuilder()
 
-	@NonNull
-	public static String asciiUppercase(@NonNull final String input) {
+        var first = true
 
-		final char[] chars = input.toCharArray();
+        for (element in elements) {
+            if (!first) {
+                result.append(separator)
+            }
 
-		for(int i = 0; i < chars.length; i++) {
-			if(chars[i] >= 'a' && chars[i] <= 'z') {
-				chars[i] -= 'a';
-				chars[i] += 'A';
-			}
-		}
+            result.append(element.toString())
+            first = false
+        }
 
-		return new String(chars);
-	}
+        return result.toString()
+    }
 
-	@NonNull
-	public static String asciiLowercase(@NonNull final String input) {
+    @JvmStatic
+    fun isEmpty(value: CharSequence?): Boolean {
+        return value == null || value.length == 0
+    }
 
-		final char[] chars = input.toCharArray();
-
-		for(int i = 0; i < chars.length; i++) {
-			if(chars[i] >= 'A' && chars[i] <= 'Z') {
-				chars[i] -= 'A';
-				chars[i] += 'a';
-			}
-		}
-
-		return new String(chars);
-	}
-
-	@NonNull
-	public static String join(
-			@NonNull final Collection<?> elements,
-			@NonNull final CharSequence separator) {
-
-		final StringBuilder result = new StringBuilder();
-
-		boolean first = true;
-
-		for(final Object element : elements) {
-
-			if(!first) {
-				result.append(separator);
-			}
-
-			result.append(element.toString());
-			first = false;
-		}
-
-		return result.toString();
-	}
-
-	public static boolean isEmpty(@Nullable final CharSequence value) {
-		return value == null || value.length() == 0;
-	}
-
-	@NonNull
-	public static String fromUTF8(@NonNull final byte[] bytes) {
-		return new String(bytes, General.CHARSET_UTF8);
-	}
+    fun fromUTF8(bytes: ByteArray): String {
+        return String(bytes, General.CHARSET_UTF8)
+    }
 }

@@ -12,14 +12,13 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.api
 
-package org.quantumbadger.redreader.reddit.api;
-
-public enum SubredditSubscriptionState {
-	SUBSCRIBED,
-	SUBSCRIBING,
-	UNSUBSCRIBING,
-	NOT_SUBSCRIBED
+enum class SubredditSubscriptionState {
+    SUBSCRIBED,
+    SUBSCRIBING,
+    UNSUBSCRIBING,
+    NOT_SUBSCRIBED
 }

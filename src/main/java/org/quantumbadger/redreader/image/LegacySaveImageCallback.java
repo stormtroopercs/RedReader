@@ -12,96 +12,95 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.image
 
-package org.quantumbadger.redreader.image;
+import android.content.Intent
+import android.net.Uri
+import android.os.Environment
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.activities.BaseActivity.PermissionCallback
+import org.quantumbadger.redreader.cache.CacheManager.ReadableCacheFile
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.common.FileUtils
+import org.quantumbadger.redreader.common.FileUtils.DownloadImageToSaveSuccessCallback
+import org.quantumbadger.redreader.common.General.filenameFromString
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.General.quickToast
+import org.quantumbadger.redreader.common.General.showResultDialog
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.http.FailedRequestBody
+import java.io.File
+import java.io.IOException
 
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Environment;
+class LegacySaveImageCallback(private val activity: BaseActivity, private val uri: UriString) :
+    PermissionCallback {
+    override fun onPermissionGranted() {
+        FileUtils.downloadImageToSave(
+            activity,
+            uri,
+            DownloadImageToSaveSuccessCallback { info: ImageInfo?, cacheFile: ReadableCacheFile?, mimetype: String? ->
+                val filename = filenameFromString(info!!.original.url.value)
+                var dst = File(
+                    Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_PICTURES
+                    ),
+                    filename
+                )
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.cache.CacheRequest;
-import org.quantumbadger.redreader.common.FileUtils;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.UriString;
+                if (dst.exists()) {
+                    var count = 0
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+                    while (dst.exists()) {
+                        count++
+                        dst = File(
+                            Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_PICTURES
+                            ),
+                            count.toString() + "_" + filename.substring(1)
+                        )
+                    }
+                }
 
-public class LegacySaveImageCallback implements BaseActivity.PermissionCallback {
-	private final BaseActivity activity;
-	private final UriString uri;
+                try {
+                    cacheFile!!.getInputStream().use { cacheFileInputStream ->
+                        FileUtils.copyFile(cacheFileInputStream, dst)
+                    }
+                } catch (e: IOException) {
+                    showResultDialog(
+                        activity,
+                        getGeneralErrorForFailure(
+                            activity,
+                            RequestFailureType.STORAGE,
+                            RuntimeException("Could not copy file", e),
+                            null,
+                            uri,
+                            Optional.Companion.empty<FailedRequestBody>()
+                        )
+                    )
 
-	public LegacySaveImageCallback(final BaseActivity activity, final UriString uri) {
-		this.activity = activity;
-		this.uri = uri;
-	}
+                    return@downloadImageToSave
+                }
 
-	@Override
-	public void onPermissionGranted() {
+                activity.sendBroadcast(
+                    Intent(
+                        Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+                        Uri.parse("file://" + dst.getAbsolutePath())
+                    )
+                )
+                quickToast(
+                    activity,
+                    (activity.getString(string.action_save_image_success)
+                            + " "
+                            + dst.getAbsolutePath())
+                )
+            })
+    }
 
-		FileUtils.downloadImageToSave(
-				activity,
-				uri,
-				(info, cacheFile, mimetype) -> {
-
-					final String filename = General.filenameFromString(info.original.url.value);
-
-					File dst = new File(
-							Environment.getExternalStoragePublicDirectory(
-									Environment.DIRECTORY_PICTURES),
-							filename);
-
-					if(dst.exists()) {
-						int count = 0;
-
-						while(dst.exists()) {
-							count++;
-							dst = new File(
-									Environment.getExternalStoragePublicDirectory(
-											Environment.DIRECTORY_PICTURES),
-									count + "_" + filename.substring(1));
-						}
-					}
-
-					try(InputStream cacheFileInputStream = cacheFile.getInputStream()) {
-						FileUtils.copyFile(cacheFileInputStream, dst);
-
-					} catch(final IOException e) {
-
-						General.showResultDialog(
-								activity,
-								General.getGeneralErrorForFailure(
-										activity,
-										CacheRequest.RequestFailureType.STORAGE,
-										new RuntimeException("Could not copy file", e),
-										null,
-										uri,
-										Optional.empty()));
-
-						return;
-					}
-
-					activity.sendBroadcast(new Intent(
-							Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-							Uri.parse("file://" + dst.getAbsolutePath()))
-					);
-
-					General.quickToast(
-							activity,
-							activity.getString(R.string.action_save_image_success)
-									+ " "
-									+ dst.getAbsolutePath());
-				});
-	}
-
-	@Override
-	public void onPermissionDenied() {
-		General.quickToast(activity, R.string.save_image_permission_denied);
-	}
+    override fun onPermissionDenied() {
+        quickToast(activity, string.save_image_permission_denied)
+    }
 }

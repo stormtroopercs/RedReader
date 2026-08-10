@@ -12,73 +12,63 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.imageview
 
-package org.quantumbadger.redreader.views.imageview;
+import org.quantumbadger.redreader.common.MutableFloatPoint2D
 
-import org.quantumbadger.redreader.common.MutableFloatPoint2D;
+class CoordinateHelper {
+    var scale: Float = 1.0f
+    val positionOffset: MutableFloatPoint2D = MutableFloatPoint2D()
 
-public class CoordinateHelper {
+    fun getPositionOffset(result: MutableFloatPoint2D) {
+        result.set(this.positionOffset)
+    }
 
-	private float mScale = 1.0f;
-	private final MutableFloatPoint2D mPositionOffset = new MutableFloatPoint2D();
+    fun convertScreenToScene(
+        screenPos: MutableFloatPoint2D,
+        output: MutableFloatPoint2D
+    ) {
+        output.x = (screenPos.x - positionOffset.x) / this.scale
+        output.y = (screenPos.y - positionOffset.y) / this.scale
+    }
 
-	public void setScale(final float scale) {
-		mScale = scale;
-	}
+    fun convertSceneToScreen(
+        scenePos: MutableFloatPoint2D,
+        output: MutableFloatPoint2D
+    ) {
+        output.x = scenePos.x * this.scale + positionOffset.x
+        output.y = scenePos.y * this.scale + positionOffset.y
+    }
 
-	public float getScale() {
-		return mScale;
-	}
+    fun scaleAboutScreenPoint(
+        screenPos: MutableFloatPoint2D,
+        scaleFactor: Float
+    ) {
+        setScaleAboutScreenPoint(screenPos, this.scale * scaleFactor)
+    }
 
-	public MutableFloatPoint2D getPositionOffset() {
-		return mPositionOffset;
-	}
+    fun setScaleAboutScreenPoint(
+        screenPos: MutableFloatPoint2D,
+        scale: Float
+    ) {
+        val oldScenePos = MutableFloatPoint2D()
+        convertScreenToScene(screenPos, oldScenePos)
 
-	public void getPositionOffset(final MutableFloatPoint2D result) {
-		result.set(mPositionOffset);
-	}
+        this.scale = scale
 
-	public void convertScreenToScene(
-			final MutableFloatPoint2D screenPos,
-			final MutableFloatPoint2D output) {
-		output.x = (screenPos.x - mPositionOffset.x) / mScale;
-		output.y = (screenPos.y - mPositionOffset.y) / mScale;
-	}
+        val newScreenPos = MutableFloatPoint2D()
+        convertSceneToScreen(oldScenePos, newScreenPos)
 
-	public void convertSceneToScreen(
-			final MutableFloatPoint2D scenePos,
-			final MutableFloatPoint2D output) {
-		output.x = scenePos.x * mScale + mPositionOffset.x;
-		output.y = scenePos.y * mScale + mPositionOffset.y;
-	}
+        translateScreen(newScreenPos, screenPos)
+    }
 
-	public void scaleAboutScreenPoint(
-			final MutableFloatPoint2D screenPos,
-			final float scaleFactor) {
-		setScaleAboutScreenPoint(screenPos, mScale * scaleFactor);
-	}
-
-	public void setScaleAboutScreenPoint(
-			final MutableFloatPoint2D screenPos,
-			final float scale) {
-
-		final MutableFloatPoint2D oldScenePos = new MutableFloatPoint2D();
-		convertScreenToScene(screenPos, oldScenePos);
-
-		mScale = scale;
-
-		final MutableFloatPoint2D newScreenPos = new MutableFloatPoint2D();
-		convertSceneToScreen(oldScenePos, newScreenPos);
-
-		translateScreen(newScreenPos, screenPos);
-	}
-
-	public void translateScreen(
-			final MutableFloatPoint2D oldScreenPos,
-			final MutableFloatPoint2D newScreenPos) {
-		mPositionOffset.add(newScreenPos);
-		mPositionOffset.sub(oldScreenPos);
-	}
+    fun translateScreen(
+        oldScreenPos: MutableFloatPoint2D?,
+        newScreenPos: MutableFloatPoint2D?
+    ) {
+        positionOffset.add(newScreenPos)
+        positionOffset.sub(oldScreenPos)
+    }
 }

@@ -12,198 +12,212 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.image
 
-package org.quantumbadger.redreader.image;
+import android.content.Context
+import android.os.SystemClock
+import android.util.Log
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.cache.CacheRequest
+import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.cache.CacheRequestJSONParser
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyIfTimestampOutsideBounds
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.GenericFactory
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.common.TimestampBound
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.common.time.TimeDuration.Companion.minutes
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.http.PostField
+import org.quantumbadger.redreader.http.body.HTTPRequestBody.PostFields
+import org.quantumbadger.redreader.image.ImageInfo.Companion.parseRedgifsV2
+import org.quantumbadger.redreader.jsonwrap.JsonValue
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
-import android.content.Context;
-import android.os.SystemClock;
-import android.util.Log;
+object RedgifsAPIV2 {
+    private const val TAG = "RedgifsAPIV2"
 
-import androidx.annotation.NonNull;
+    private val TOKEN: AtomicReference<AuthToken?> = AtomicReference<AuthToken?>(
+        AuthToken("", 0)
+    )
 
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.cache.CacheManager;
-import org.quantumbadger.redreader.cache.CacheRequest;
-import org.quantumbadger.redreader.cache.CacheRequestJSONParser;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyIfTimestampOutsideBounds;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.Priority;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.common.TimestampBound;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.time.TimeDuration;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.http.FailedRequestBody;
-import org.quantumbadger.redreader.http.PostField;
-import org.quantumbadger.redreader.http.body.HTTPRequestBody;
-import org.quantumbadger.redreader.jsonwrap.JsonValue;
+    val latestToken: String
+        get() = TOKEN.get()!!.token
 
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
+    private fun requestMetadata(
+        context: Context,
+        imageId: String,
+        priority: Priority,
+        listener: GetImageInfoListener
+    ) {
+        val apiUrl = UriString(
+            "https://api.redgifs.com/v2/gifs/"
+                    + StringUtils.asciiLowercase(imageId)
+        )
 
-public final class RedgifsAPIV2 {
+        CacheManager.Companion.getInstance(context).makeRequest(
+            CacheRequest(
+                apiUrl,
+                RedditAccountManager.Companion.getAnon(),
+                null,
+                priority,  // RedGifs V2 links expire after an undocumented period of time
+                DownloadStrategyIfTimestampOutsideBounds(
+                    TimestampBound.Companion.notOlderThan(minutes(10))
+                ),
+                Constants.FileType.IMAGE_INFO,
+                DownloadQueueType.REDGIFS_API_V2,
+                context,
+                CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
+                    override fun onJsonParsed(
+                        result: JsonValue,
+                        timestamp: TimestampUTC?,
+                        session: UUID,
+                        fromCache: Boolean
+                    ) {
+                        try {
+                            listener.onSuccess(
+                                parseRedgifsV2(
+                                    result
+                                        .getObjectAtPath("gif")
+                                        .orThrow<RuntimeException?>(GenericFactory {
+                                            RuntimeException(
+                                                "No element 'gif'"
+                                            )
+                                        })
+                                )
+                            )
 
-	private static final String TAG = "RedgifsAPIV2";
+                            Log.i(TAG, "Got RedGifs v2 metadata")
+                        } catch (t: Throwable) {
+                            listener.onFailure(
+                                getGeneralErrorForFailure(
+                                    context,
+                                    RequestFailureType.PARSE,
+                                    t,
+                                    null,
+                                    apiUrl,
+                                    Optional.Companion.of<FailedRequestBody>(
+                                        FailedRequestBody(
+                                            result
+                                        )
+                                    )
+                                )
+                            )
+                        }
+                    }
 
-	private static final AtomicReference<AuthToken> TOKEN = new AtomicReference<>(
-			new AuthToken("", 0));
+                    override fun onFailure(error: RRError) {
+                        listener.onFailure(error)
+                    }
+                })
+            )
+        )
+    }
 
-	private static final class AuthToken {
-		@NonNull public final String token;
-		private final long expireAt;
+    fun getImageInfo(
+        context: Context,
+        imageId: String,
+        priority: Priority,
+        listener: GetImageInfoListener
+    ) {
+        if (TOKEN.get()!!.isValid) {
+            Log.i(TAG, "Existing token still valid")
+            requestMetadata(context, imageId, priority, listener)
+            return
+        }
 
-		private AuthToken(@NonNull final String token, final long expireAt) {
-			this.token = token;
-			this.expireAt = expireAt;
-		}
+        Log.i(TAG, "Retrieving new token")
 
-		public static AuthToken expireIn10Mins(@NonNull final String token) {
-			return new AuthToken(token, SystemClock.uptimeMillis() + 10L * 60 * 1000);
-		}
+        val apiUrl = UriString("https://api.redgifs.com/v2/oauth/client")
 
-		public boolean isValid() {
-			return !token.isEmpty() && expireAt > SystemClock.uptimeMillis();
-		}
-	}
+        CacheManager.Companion.getInstance(context).makeRequest(
+            CacheRequest(
+                apiUrl,
+                RedditAccountManager.Companion.getAnon(),
+                null,
+                priority,
+                DownloadStrategyAlways.Companion.INSTANCE,
+                Constants.FileType.IMAGE_INFO,
+                DownloadQueueType.IMMEDIATE,
+                PostFields(
+                    PostField("grant_type", "client_credentials"),
+                    PostField(
+                        Constants.OA_CI,
+                        "1828d09da4e-1011-a880-0005-d2ecbe8daab3"
+                    ),
+                    PostField(
+                        Constants.OA_CS,
+                        "yCarP8TUpIr6J2W8YW+vgSRb8HuBd9koW/nkPtsQaP8="
+                    )
+                ),
+                context,
+                CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
+                    override fun onJsonParsed(
+                        result: JsonValue,
+                        timestamp: TimestampUTC?,
+                        session: UUID,
+                        fromCache: Boolean
+                    ) {
+                        val accessToken = result.getStringAtPath("access_token")
 
-	public static String getLatestToken() {
-		return TOKEN.get().token;
-	}
+                        if (accessToken.isEmpty()) {
+                            Log.i(TAG, "Failed to get RedGifs v2 token: result not present")
+                            listener.onFailure(
+                                getGeneralErrorForFailure(
+                                    context,
+                                    RequestFailureType.REQUEST,
+                                    null,
+                                    null,
+                                    apiUrl,
+                                    Optional.Companion.of<FailedRequestBody>(
+                                        FailedRequestBody(
+                                            result
+                                        )
+                                    )
+                                )
+                            )
+                            return
+                        }
 
-	private static void requestMetadata(
-			final Context context,
-			final String imageId,
-			@NonNull final Priority priority,
-			final GetImageInfoListener listener) {
+                        Log.i(TAG, "Got RedGifs v2 token")
 
-		final UriString apiUrl = new UriString("https://api.redgifs.com/v2/gifs/"
-				+ StringUtils.asciiLowercase(imageId));
+                        TOKEN.set(AuthToken.expireIn10Mins(accessToken.get()))
 
-		CacheManager.getInstance(context).makeRequest(new CacheRequest(
-				apiUrl,
-				RedditAccountManager.getAnon(),
-				null,
-				priority,
-				// RedGifs V2 links expire after an undocumented period of time
-				new DownloadStrategyIfTimestampOutsideBounds(
-						TimestampBound.notOlderThan(TimeDuration.minutes(10))),
-				Constants.FileType.IMAGE_INFO,
-				CacheRequest.DownloadQueueType.REDGIFS_API_V2,
-				context,
-				new CacheRequestJSONParser(context, new CacheRequestJSONParser.Listener() {
-					@Override
-					public void onJsonParsed(
-							@NonNull final JsonValue result,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache) {
+                        requestMetadata(context, imageId, priority, listener)
+                    }
 
-						try {
-							listener.onSuccess(ImageInfo.parseRedgifsV2(result
-									.getObjectAtPath("gif")
-									.orThrow(() -> new RuntimeException("No element 'gif'"))));
+                    override fun onFailure(error: RRError) {
+                        Log.i(TAG, "Failed to get RedGifs v2 token")
+                        listener.onFailure(error)
+                    }
+                })
 
-							Log.i(TAG, "Got RedGifs v2 metadata");
-
-						} catch(final Throwable t) {
-							listener.onFailure(General.getGeneralErrorForFailure(
-									context,
-									CacheRequest.RequestFailureType.PARSE,
-									t,
-									null,
-									apiUrl,
-									Optional.of(new FailedRequestBody(result))));
-						}
-					}
-
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-						listener.onFailure(error);
-					}
-				})));
-
-	}
-
-	public static void getImageInfo(
-			final Context context,
-			final String imageId,
-			@NonNull final Priority priority,
-			final GetImageInfoListener listener) {
-
-		if(TOKEN.get().isValid()) {
-			Log.i(TAG, "Existing token still valid");
-			requestMetadata(context, imageId, priority, listener);
-			return;
-		}
-
-		Log.i(TAG, "Retrieving new token");
-
-		final UriString apiUrl = new UriString("https://api.redgifs.com/v2/oauth/client");
-
-		CacheManager.getInstance(context).makeRequest(new CacheRequest(
-				apiUrl,
-				RedditAccountManager.getAnon(),
-				null,
-				priority,
-				DownloadStrategyAlways.INSTANCE,
-				Constants.FileType.IMAGE_INFO,
-				CacheRequest.DownloadQueueType.IMMEDIATE,
-				new HTTPRequestBody.PostFields(
-						new PostField("grant_type", "client_credentials"),
-						new PostField(
-								Constants.OA_CI,
-								"1828d09da4e-1011-a880-0005-d2ecbe8daab3"),
-						new PostField(
-								Constants.OA_CS,
-								"yCarP8TUpIr6J2W8YW+vgSRb8HuBd9koW/nkPtsQaP8=")
-				),
-				context,
-				new CacheRequestJSONParser(context, new CacheRequestJSONParser.Listener() {
-					@Override
-					public void onJsonParsed(
-							@NonNull final JsonValue result,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache) {
-
-						final Optional<String> accessToken
-								= result.getStringAtPath("access_token");
-
-						if(accessToken.isEmpty()) {
-							Log.i(TAG, "Failed to get RedGifs v2 token: result not present");
-							listener.onFailure(General.getGeneralErrorForFailure(
-									context,
-									CacheRequest.RequestFailureType.REQUEST,
-									null,
-									null,
-									apiUrl,
-									Optional.of(new FailedRequestBody(result))));
-							return;
-						}
-
-						Log.i(TAG, "Got RedGifs v2 token");
-
-						TOKEN.set(AuthToken.expireIn10Mins(accessToken.get()));
-
-						requestMetadata(context, imageId, priority, listener);
-					}
-
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-
-						Log.i(TAG, "Failed to get RedGifs v2 token");
-						listener.onFailure(error);
-					}
-				})
-
-		));
-	}
+            )
+        )
+    }
 
 
+    private class AuthToken(val token: String, private val expireAt: Long) {
+        val isValid: Boolean
+            get() = !token.isEmpty() && expireAt > SystemClock.uptimeMillis()
+
+        companion object {
+            fun expireIn10Mins(token: String): AuthToken {
+                return AuthToken(token, SystemClock.uptimeMillis() + 10L * 60 * 1000)
+            }
+        }
+    }
 }

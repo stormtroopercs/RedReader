@@ -12,67 +12,66 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.things
 
-package org.quantumbadger.redreader.reddit.things;
+import org.quantumbadger.redreader.jsonwrap.JsonObject
+import org.quantumbadger.redreader.jsonwrap.JsonObject.JsonDeserializable
+import java.lang.reflect.InvocationTargetException
 
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.jsonwrap.JsonObject;
+class RedditThing : JsonDeserializable {
+    enum class Kind {
+        POST, USER, COMMENT, MESSAGE, SUBREDDIT, MORE_COMMENTS, LISTING
+    }
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
+    var kind: String? = null
+    var data: JsonObject? = null
 
-public final class RedditThing implements JsonObject.JsonDeserializable {
+    fun getKind(): Kind {
+        val result: Kind = kinds.get(this.kind)!!
 
-	public static final String KIND_USER = "t2";
+        if (result == null) {
+            throw RuntimeException("Unknown thing type: " + this.kind)
+        }
 
-	public enum Kind {
-		POST, USER, COMMENT, MESSAGE, SUBREDDIT, MORE_COMMENTS, LISTING
-	}
+        return result
+    }
 
-	private static final Map<String, Kind> kinds;
+    @Throws(
+        InstantiationException::class,
+        IllegalAccessException::class,
+        NoSuchMethodException::class,
+        InvocationTargetException::class
+    )
+    fun asSubreddit(): RedditSubreddit {
+        return data!!.asObject<RedditSubreddit>(RedditSubreddit::class.java)
+    }
 
-	static {
-		kinds = new HashMap<>();
-		kinds.put("t1", Kind.COMMENT);
-		kinds.put(KIND_USER, Kind.USER);
-		kinds.put("t3", Kind.POST);
-		kinds.put("t4", Kind.MESSAGE);
-		kinds.put("t5", Kind.SUBREDDIT);
-		kinds.put("more", Kind.MORE_COMMENTS);
-		kinds.put("Listing", Kind.LISTING);
-	}
+    @Throws(
+        InstantiationException::class,
+        IllegalAccessException::class,
+        NoSuchMethodException::class,
+        InvocationTargetException::class
+    )
+    fun asUser(): RedditUser {
+        return data!!.asObject<RedditUser>(RedditUser::class.java)
+    }
 
-	public String kind;
-	public JsonObject data;
+    companion object {
+        const val KIND_USER: String = "t2"
 
-	@NonNull
-	public Kind getKind() {
+        private val kinds: MutableMap<String?, Kind>
 
-		final Kind result = kinds.get(this.kind);
-
-		if(result == null) {
-			throw new RuntimeException("Unknown thing type: " + this.kind);
-		}
-
-		return result;
-	}
-
-	public RedditSubreddit asSubreddit() throws
-			InstantiationException,
-			IllegalAccessException,
-			NoSuchMethodException,
-			InvocationTargetException {
-		return data.asObject(RedditSubreddit.class);
-	}
-
-	public RedditUser asUser() throws
-			InstantiationException,
-			IllegalAccessException,
-			NoSuchMethodException,
-			InvocationTargetException {
-		return data.asObject(RedditUser.class);
-	}
+        init {
+            kinds = HashMap<String?, Kind>()
+            kinds.put("t1", Kind.COMMENT)
+            kinds.put(KIND_USER, Kind.USER)
+            kinds.put("t3", Kind.POST)
+            kinds.put("t4", Kind.MESSAGE)
+            kinds.put("t5", Kind.SUBREDDIT)
+            kinds.put("more", Kind.MORE_COMMENTS)
+            kinds.put("Listing", Kind.LISTING)
+        }
+    }
 }

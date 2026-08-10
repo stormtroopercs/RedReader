@@ -12,298 +12,259 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BlockType
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
+import java.util.Objects
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+abstract class HtmlRawElement {
+    // TODO potential improvements:
+    //		- Profile performance
+    //		- Test left/right swiping interaction with table scrollview
+    class LinkButtonDetails(
+        val name: String?,
+        val url: UriString
+    ) {
+        val buttonTitle: String
+            get() {
+                if (name == null || name.isEmpty()) {
+                    return url.value
+                } else {
+                    return name
+                }
+            }
 
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BlockType;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
+        val buttonSubtitle: String?
+            get() {
+                if (name == null || name.isEmpty()) {
+                    return null
+                } else {
+                    return url.value
+                }
+            }
+    }
 
-import java.util.ArrayList;
-import java.util.Objects;
+    val plainText: String
+        get() {
+            val sb = StringBuilder()
+            getPlainText(sb)
+            return sb.toString()
+        }
 
-public abstract class HtmlRawElement {
-
-	// TODO potential improvements:
-	//		- Profile performance
-	//		- Test left/right swiping interaction with table scrollview
-
-	public static class LinkButtonDetails {
-
-		@Nullable public final String name;
-		@NonNull public final UriString url;
-
-
-		public LinkButtonDetails(
-				@Nullable final String name,
-				@NonNull final UriString url) {
-			this.name = name;
-			this.url = url;
-		}
-
-		@NonNull
-		public final String getButtonTitle() {
-
-			if(name == null || name.isEmpty()) {
-				return url.value;
-			} else {
-				return name;
-			}
-		}
-
-		@Nullable
-		public final String getButtonSubtitle() {
-
-			if(name == null || name.isEmpty()) {
-				return null;
-			} else {
-				return url.value;
-			}
-		}
-	}
-
-	@NonNull
-	public final String getPlainText() {
-		final StringBuilder sb = new StringBuilder();
-		getPlainText(sb);
-		return sb.toString();
-	}
-
-	public abstract void getPlainText(@NonNull final StringBuilder stringBuilder);
+    abstract fun getPlainText(stringBuilder: StringBuilder)
 
 
-	public abstract void reduce(
-			@NonNull HtmlTextAttributes activeAttributes,
-			@NonNull AppCompatActivity activity,
-			@NonNull ArrayList<HtmlRawElement> destination,
-			@NonNull ArrayList<LinkButtonDetails> linkButtons);
+    abstract fun reduce(
+        activeAttributes: HtmlTextAttributes,
+        activity: AppCompatActivity,
+        destination: ArrayList<HtmlRawElement?>,
+        linkButtons: ArrayList<LinkButtonDetails?>
+    )
 
-	public abstract void generate(
-			@NonNull final AppCompatActivity activity,
-			@NonNull ArrayList<BodyElement> destination);
+    abstract fun generate(
+        activity: AppCompatActivity,
+        destination: ArrayList<BodyElement?>
+    )
 
-	@NonNull
-	public static HtmlRawElement readFrom(@NonNull final HtmlReaderPeekable reader)
-			throws MalformedHtmlException {
+    companion object {
+        @Throws(MalformedHtmlException::class)
+        fun readFrom(reader: HtmlReaderPeekable): HtmlRawElement {
+            val startToken = reader.peek()
+            reader.advance()
 
-		final HtmlReader.Token startToken = reader.peek();
-		reader.advance();
+            val children = ArrayList<HtmlRawElement?>()
 
-		final ArrayList<HtmlRawElement> children = new ArrayList<>();
+            if (startToken.type == HtmlReader.TokenType.TAG_START_AND_END) {
+                when (startToken.text) {
+                    "hr" -> return HtmlRawElementTagHorizontalRule()
 
-		if(startToken.type == HtmlReader.TokenType.TAG_START_AND_END) {
+                    "br" -> return HtmlRawElementBreak()
 
-			switch(startToken.text) {
-				case "hr":
-					return new HtmlRawElementTagHorizontalRule();
+                    "img" -> return HtmlRawElementImg(
+                        children,
+                        if (startToken.title == null || startToken.title.isEmpty())
+                            "emote"
+                        else
+                            startToken.title,
+                        startToken.src!!
+                    )
 
-				case "br":
-					return new HtmlRawElementBreak();
+                    else -> return HtmlRawElementInlineErrorMessage.create(
+                        "Error: Unexpected tag <" + startToken.text + "/>"
+                    )
+                }
+            } else if (startToken.type == HtmlReader.TokenType.TAG_START) {
+                while (reader.peek().type != HtmlReader.TokenType.TAG_END
+                    && reader.peek().type != HtmlReader.TokenType.EOF
+                ) {
+                    children.add(readFrom(reader))
+                }
 
-				case "img":
-					return new HtmlRawElementImg(children,
-							startToken.title == null || startToken.title.isEmpty()
-									? "emote" : startToken.title,
-							startToken.src);
+                run {
+                    val endToken = reader.peek()
+                    // Reddit sometimes doesn't close tags properly :'(
+                    if (endToken.text.equals(startToken.text, ignoreCase = true)) {
+                        reader.advance()
+                    }
+                }
 
-				default:
-					return HtmlRawElementInlineErrorMessage.create(
-							"Error: Unexpected tag <" + startToken.text + "/>");
-			}
+                val result: HtmlRawElement
 
-		} else if(startToken.type == HtmlReader.TokenType.TAG_START) {
+                when (StringUtils.asciiLowercase(startToken.text)) {
+                    "code" -> result = HtmlRawElementTagCode(children)
+                    "del" -> result = HtmlRawElementTagDel(children)
+                    "em" -> result = HtmlRawElementTagEmphasis(children)
+                    "div" -> result = HtmlRawElementBlock(
+                        BlockType.VERTICAL_SEQUENCE,
+                        children
+                    )
 
-			while(reader.peek().type != HtmlReader.TokenType.TAG_END
-					&& reader.peek().type != HtmlReader.TokenType.EOF) {
+                    "h1" -> result = HtmlRawElementBlock(
+                        BlockType.HEADER,
+                        HtmlRawElementTagH1(children)
+                    )
 
-				children.add(HtmlRawElement.readFrom(reader));
-			}
+                    "h2" -> result = HtmlRawElementBlock(
+                        BlockType.HEADER,
+                        HtmlRawElementTagH2(children)
+                    )
 
-			{
-				final HtmlReader.Token endToken = reader.peek();
+                    "h3" -> result = HtmlRawElementBlock(
+                        BlockType.HEADER,
+                        HtmlRawElementTagH3(children)
+                    )
 
-				// Reddit sometimes doesn't close tags properly :'(
-				if(endToken.text.equalsIgnoreCase(startToken.text)) {
-					reader.advance();
-				}
-			}
+                    "h4" -> result = HtmlRawElementBlock(
+                        BlockType.HEADER,
+                        HtmlRawElementTagH4(children)
+                    )
 
-			final HtmlRawElement result;
+                    "h5" -> result = HtmlRawElementBlock(
+                        BlockType.HEADER,
+                        HtmlRawElementTagH5(children)
+                    )
 
-			switch(StringUtils.asciiLowercase(startToken.text)) {
-				case "code":
-					result = new HtmlRawElementTagCode(children);
-					break;
-				case "del":
-					result = new HtmlRawElementTagDel(children);
-					break;
-				case "em":
-					result = new HtmlRawElementTagEmphasis(children);
-					break;
-				case "div":
-					result = new HtmlRawElementBlock(
-							BlockType.VERTICAL_SEQUENCE,
-							children);
-					break;
-				case "h1":
-					result = new HtmlRawElementBlock(
-							BlockType.HEADER,
-							new HtmlRawElementTagH1(children));
-					break;
-				case "h2":
-					result = new HtmlRawElementBlock(
-							BlockType.HEADER,
-							new HtmlRawElementTagH2(children));
-					break;
-				case "h3":
-					result = new HtmlRawElementBlock(
-							BlockType.HEADER,
-							new HtmlRawElementTagH3(children));
-					break;
-				case "h4":
-					result = new HtmlRawElementBlock(
-							BlockType.HEADER,
-							new HtmlRawElementTagH4(children));
-					break;
-				case "h5":
-					result = new HtmlRawElementBlock(
-							BlockType.HEADER,
-							new HtmlRawElementTagH5(children));
-					break;
-				case "h6":
-					result = new HtmlRawElementBlock(
-							BlockType.HEADER,
-							new HtmlRawElementTagH6(children));
-					break;
-				case "strong":
-					result = new HtmlRawElementTagStrong(children);
-					break;
-				case "p":
-					result = new HtmlRawElementBlock(BlockType.NORMAL_TEXT, children);
-					break;
-				case "th":
-				case "td":
-					result = new HtmlRawElementTableCell(new HtmlRawElementBlock(
-							BlockType.TABLE_CELL,
-							children));
-					break;
-				case "sup":
-					result = new HtmlRawElementTagSuperscript(children);
-					break;
-				case "a": {
+                    "h6" -> result = HtmlRawElementBlock(
+                        BlockType.HEADER,
+                        HtmlRawElementTagH6(children)
+                    )
 
-					final String href = Objects.requireNonNull(startToken.href);
+                    "strong" -> result = HtmlRawElementTagStrong(children)
+                    "p" -> result = HtmlRawElementBlock(BlockType.NORMAL_TEXT, children)
+                    "th", "td" -> result = HtmlRawElementTableCell(
+                        HtmlRawElementBlock(
+                            BlockType.TABLE_CELL,
+                            children
+                        )
+                    )
 
-					if(href.startsWith("/spoiler")) {
-						// Old spoiler syntax
-						result = new HtmlRawElementSpoiler(new HtmlRawElementBlock(
-								BlockType.BUTTON,
-								children));
+                    "sup" -> result = HtmlRawElementTagSuperscript(children)
+                    "a" -> {
+                        val href = Objects.requireNonNull<String>(startToken.href)
 
-					} else if(href.length() == 2
-							&& (href.charAt(0) == '#' || href.charAt(0) == '/')
-							&& startToken.title != null) {
+                        if (href.startsWith("/spoiler")) {
+                            // Old spoiler syntax
+                            result = HtmlRawElementSpoiler(
+                                HtmlRawElementBlock(
+                                    BlockType.BUTTON,
+                                    children
+                                )
+                            )
+                        } else if (href.length == 2 && (href.get(0) == '#' || href.get(0) == '/')
+                            && startToken.title != null
+                        ) {
+                            // Another old spoiler syntax
 
-						// Another old spoiler syntax
+                            children.add(
+                                HtmlRawElementSpoiler(
+                                    HtmlRawElementBlock(
+                                        BlockType.NORMAL_TEXT,
+                                        HtmlRawElementPlainText(startToken.title)
+                                    )
+                                )
+                            )
 
-						children.add(new HtmlRawElementSpoiler(
-								new HtmlRawElementBlock(
-										BlockType.NORMAL_TEXT,
-										new HtmlRawElementPlainText(startToken.title))));
+                            result = HtmlRawElementTagPassthrough(children)
+                        } else if (href.startsWith("#")) {
+                            // Probably an emote: pass through the text, but don't make a link
+                            result = HtmlRawElementTagPassthrough(children)
+                        } else {
+                            result = HtmlRawElementTagAnchor(children, UriString(href))
+                        }
+                    }
 
-						result = new HtmlRawElementTagPassthrough(children);
+                    "pre" -> result = HtmlRawElementBlock(
+                        BlockType.CODE_BLOCK,
+                        HtmlRawElementTagCode(children)
+                    )
 
-					} else if(href.startsWith("#")) {
-						// Probably an emote: pass through the text, but don't make a link
-						result = new HtmlRawElementTagPassthrough(children);
+                    "ul" -> result = HtmlRawElementBulletList(children)
+                    "ol" -> result = HtmlRawElementNumberedList(children)
+                    "li" -> result = HtmlRawElementBlock(BlockType.LIST_ELEMENT, children)
+                    "blockquote" -> result = HtmlRawElementQuote(
+                        HtmlRawElementBlock(
+                            BlockType.QUOTE,
+                            children
+                        )
+                    )
 
-					} else {
-						result = new HtmlRawElementTagAnchor(children, new UriString(href));
-					}
-					break;
-				}
-				case "pre":
-					result = new HtmlRawElementBlock(
-							BlockType.CODE_BLOCK,
-							new HtmlRawElementTagCode(children));
-					break;
-				case "ul":
-					result = new HtmlRawElementBulletList(children);
-					break;
-				case "ol":
-					result = new HtmlRawElementNumberedList(children);
-					break;
-				case "li":
-					result = new HtmlRawElementBlock(BlockType.LIST_ELEMENT, children);
-					break;
-				case "blockquote":
-					result = new HtmlRawElementQuote(new HtmlRawElementBlock(
-							BlockType.QUOTE,
-							children));
-					break;
-				case "span":
+                    "span" -> if ("md-spoiler-text".equals(
+                            startToken.cssClass,
+                            ignoreCase = true
+                        )
+                    ) {
+                        result = HtmlRawElementSpoiler(
+                            HtmlRawElementBlock(
+                                BlockType.BUTTON,
+                                children
+                            )
+                        )
+                    } else {
+                        result = HtmlRawElementTagPassthrough(children)
+                    }
 
-					if("md-spoiler-text".equalsIgnoreCase(startToken.cssClass)) {
-						result = new HtmlRawElementSpoiler(new HtmlRawElementBlock(
-								BlockType.BUTTON,
-								children));
+                    "thead" -> result = HtmlRawElementTagStrong(children)
+                    "tbody" -> result = HtmlRawElementTagPassthrough(children)
+                    "table" -> result = HtmlRawElementTable(children)
+                    "tr" -> result = HtmlRawElementTableRow(children)
+                    "emote" -> {
+                        val src = Objects.requireNonNull<UriString>(startToken.src)
+                        result = HtmlRawElementImg(
+                            children,
+                            if (startToken.title == null || startToken.title.isEmpty())
+                                "emote"
+                            else
+                                startToken.title,
+                            src
+                        )
+                    }
 
-					} else {
-						result = new HtmlRawElementTagPassthrough(children);
-					}
-					break;
+                    else -> return HtmlRawElementInlineErrorMessage.appendError(
+                        "Error: Unexpected tag start <" + startToken.text + ">",
+                        HtmlRawElementBlock(BlockType.NORMAL_TEXT, children)
+                    )
+                }
 
-				case "thead":
-					result = new HtmlRawElementTagStrong(children);
-					break;
-
-				case "tbody":
-					result = new HtmlRawElementTagPassthrough(children);
-					break;
-
-				case "table":
-					result = new HtmlRawElementTable(children);
-					break;
-
-				case "tr":
-					result = new HtmlRawElementTableRow(children);
-					break;
-
-				case "emote":
-					final UriString src = Objects.requireNonNull(startToken.src);
-					result = new HtmlRawElementImg(children,
-							startToken.title == null || startToken.title.isEmpty()
-									? "emote" : startToken.title,
-							src);
-					break;
-
-				default:
-					return HtmlRawElementInlineErrorMessage.appendError(
-							"Error: Unexpected tag start <" + startToken.text + ">",
-							new HtmlRawElementBlock(BlockType.NORMAL_TEXT, children));
-			}
-
-			return result;
-
-		} else if(startToken.type == HtmlReader.TokenType.TEXT) {
-			return new HtmlRawElementPlainText(startToken.text);
-
-		} else if(startToken.type == HtmlReader.TokenType.EOF) {
-			throw new MalformedHtmlException(
-					"Unexpected EOF",
-					reader.getHtml(),
-					reader.getPos());
-
-		} else {
-			return HtmlRawElementInlineErrorMessage.create(
-					"Error: Unexpected token type " + startToken.type);
-		}
-	}
+                return result
+            } else if (startToken.type == HtmlReader.TokenType.TEXT) {
+                return HtmlRawElementPlainText(startToken.text)
+            } else if (startToken.type == HtmlReader.TokenType.EOF) {
+                throw MalformedHtmlException(
+                    "Unexpected EOF",
+                    reader.getHtml(),
+                    reader.getPos()
+                )
+            } else {
+                return HtmlRawElementInlineErrorMessage.create(
+                    "Error: Unexpected token type " + startToken.type
+                )
+            }
+        }
+    }
 }

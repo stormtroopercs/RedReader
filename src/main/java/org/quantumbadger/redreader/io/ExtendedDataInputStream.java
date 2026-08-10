@@ -12,30 +12,21 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.io
 
-package org.quantumbadger.redreader.io;
+import java.io.DataInputStream
+import java.io.IOException
+import java.io.InputStream
 
-import androidx.annotation.Nullable;
+class ExtendedDataInputStream(`in`: InputStream?) : DataInputStream(`in`) {
+    @Throws(IOException::class)
+    fun readNullableBoolean(): Boolean? {
+        if (!readBoolean()) {
+            return null
+        }
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-public class ExtendedDataInputStream extends DataInputStream {
-
-	public ExtendedDataInputStream(final InputStream in) {
-		super(in);
-	}
-
-	@Nullable
-	public Boolean readNullableBoolean() throws IOException {
-
-		if(!readBoolean()) {
-			return null;
-		}
-
-		return readBoolean();
-	}
+        return readBoolean()
+    }
 }

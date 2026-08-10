@@ -12,21 +12,19 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
 
-package org.quantumbadger.redreader.reddit.url;
+import org.quantumbadger.redreader.reddit.PostSort
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
+import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 
-import org.quantumbadger.redreader.reddit.PostSort;
-import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType;
+abstract class PostListingURL : RedditURL() {
+    abstract fun after(after: RedditIdAndType?): PostListingURL?
 
-public abstract class PostListingURL extends RedditURLParser.RedditURL {
+    abstract fun limit(limit: Int?): PostListingURL?
 
-	public abstract PostListingURL after(RedditIdAndType after);
-
-	public abstract PostListingURL limit(Integer limit);
-
-	public PostSort getOrder() {
-		return null;
-	}
+    open val order: PostSort?
+        get() = null
 }

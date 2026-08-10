@@ -12,66 +12,59 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.program
 
-package org.quantumbadger.redreader.views.glview.program;
+import android.opengl.GLES20
+import java.nio.FloatBuffer
 
-import android.opengl.GLES20;
+abstract class RRGLProgramVertices(vertexShaderSource: String?, fragmentShaderSource: String?) :
+    RRGLProgram(vertexShaderSource, fragmentShaderSource) {
+    private var mVertexBufferHandle = 0
+    private var mMatrixUniformHandle = 0
+    private var mPixelMatrixUniformHandle = 0
 
-import java.nio.FloatBuffer;
+    fun activateVertexBuffer(vertexBuffer: FloatBuffer?) {
+        GLES20.glVertexAttribPointer(
+            mVertexBufferHandle,
+            3,
+            GLES20.GL_FLOAT,
+            false,
+            0,
+            vertexBuffer
+        )
+    }
 
-public abstract class RRGLProgramVertices extends RRGLProgram {
+    fun drawTriangleStrip(vertices: Int) {
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, vertices)
+    }
 
-	private int mVertexBufferHandle;
-	private int mMatrixUniformHandle;
-	private int mPixelMatrixUniformHandle;
+    protected fun setVertexBufferHandle(handle: Int) {
+        mVertexBufferHandle = handle
+    }
 
-	public RRGLProgramVertices(final String vertexShaderSource, final String fragmentShaderSource) {
-		super(vertexShaderSource, fragmentShaderSource);
-	}
+    protected fun setMatrixUniformHandle(handle: Int) {
+        mMatrixUniformHandle = handle
+    }
 
-	public final void activateVertexBuffer(final FloatBuffer vertexBuffer) {
-		GLES20.glVertexAttribPointer(
-				mVertexBufferHandle,
-				3,
-				GLES20.GL_FLOAT,
-				false,
-				0,
-				vertexBuffer);
-	}
+    protected fun setPixelMatrixHandle(handle: Int) {
+        mPixelMatrixUniformHandle = handle
+    }
 
-	public final void drawTriangleStrip(final int vertices) {
-		GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, vertices);
-	}
+    fun activateMatrix(buf: FloatArray?, offset: Int) {
+        GLES20.glUniformMatrix4fv(mMatrixUniformHandle, 1, false, buf, offset)
+    }
 
-	protected final void setVertexBufferHandle(final int handle) {
-		mVertexBufferHandle = handle;
-	}
+    fun activatePixelMatrix(buf: FloatArray?, offset: Int) {
+        GLES20.glUniformMatrix4fv(mPixelMatrixUniformHandle, 1, false, buf, offset)
+    }
 
-	protected final void setMatrixUniformHandle(final int handle) {
-		mMatrixUniformHandle = handle;
-	}
+    override fun onActivated() {
+        GLES20.glEnableVertexAttribArray(mVertexBufferHandle)
+    }
 
-	protected final void setPixelMatrixHandle(final int handle) {
-		mPixelMatrixUniformHandle = handle;
-	}
-
-	public final void activateMatrix(final float[] buf, final int offset) {
-		GLES20.glUniformMatrix4fv(mMatrixUniformHandle, 1, false, buf, offset);
-	}
-
-	public final void activatePixelMatrix(final float[] buf, final int offset) {
-		GLES20.glUniformMatrix4fv(mPixelMatrixUniformHandle, 1, false, buf, offset);
-	}
-
-	@Override
-	public void onActivated() {
-		GLES20.glEnableVertexAttribArray(mVertexBufferHandle);
-	}
-
-	@Override
-	public void onDeactivated() {
-		GLES20.glDisableVertexAttribArray(mVertexBufferHandle);
-	}
+    override fun onDeactivated() {
+        GLES20.glDisableVertexAttribArray(mVertexBufferHandle)
+    }
 }

@@ -12,123 +12,115 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import org.quantumbadger.redreader.receivers.NewMessageChecker
+import org.quantumbadger.redreader.receivers.RegularCachePruner
 
-import android.annotation.SuppressLint;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
-import org.quantumbadger.redreader.receivers.NewMessageChecker;
-import org.quantumbadger.redreader.receivers.RegularCachePruner;
+object Alarms {
+    private val alarmMap: MutableMap<Alarm?, AlarmManager?> = HashMap<Alarm?, AlarmManager?>()
+    private val intentMap: MutableMap<Alarm?, PendingIntent?> = HashMap<Alarm?, PendingIntent?>()
 
-import java.util.HashMap;
-import java.util.Map;
+    /**
+     * Starts the specified alarm
+     */
+    fun startAlarm(alarm: Alarm, context: Context) {
+        if (!alarmMap.containsKey(alarm)) {
+            val alarmIntent = Intent(context, alarm.alarmClass())
 
-public class Alarms {
-	private static final Map<Alarm, AlarmManager> alarmMap = new HashMap<>();
-	private static final Map<Alarm, PendingIntent> intentMap = new HashMap<>();
+            var flags = 0
 
-	/*
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                flags = flags or PendingIntent.FLAG_IMMUTABLE
+            }
+
+            @SuppressLint("UnspecifiedImmutableFlag") val pendingIntent =
+                PendingIntent.getBroadcast(
+                    context,
+                    0,
+                    alarmIntent,
+                    flags
+                )
+
+            val alarmManager = (context.getSystemService(Context.ALARM_SERVICE)) as AlarmManager
+            alarmManager.setInexactRepeating(
+                AlarmManager.RTC,
+                System.currentTimeMillis(),
+                alarm.interval(),
+                pendingIntent
+            )
+
+            alarmMap.put(alarm, alarmManager)
+            intentMap.put(alarm, pendingIntent)
+        }
+    }
+
+    /**
+     * Stops the specified alarm
+     *
+     * @param alarm alarm to stop
+     */
+    fun stopAlarm(alarm: Alarm?) {
+        if (alarmMap.containsKey(alarm)) {
+            alarmMap.get(alarm)!!.cancel(intentMap.get(alarm)!!)
+            alarmMap.remove(alarm)
+            intentMap.remove(alarm)
+        }
+    }
+
+    /**
+     * Starts all alarms that are supposed to start at device boot
+     *
+     * @param context
+     */
+    fun onBoot(context: Context) {
+        for (alarm in Alarm.entries) {
+            if (alarm.startOnBoot()) {
+                startAlarm(alarm, context)
+            }
+        }
+    }
+
+    /*
 		An enum to represent an alarm that may be created.
 		If you wish to add an alarm, just add it at the top of the enum with the 3 arguments,
 		and then call startAlarm() on it.
 	 */
+    enum class Alarm(
+        private val interval: Long,
+        alarmClass: Class<out BroadcastReceiver?>,
+        startOnBoot: Boolean
+    ) {
+        MESSAGE_CHECKER(AlarmManager.INTERVAL_HALF_HOUR, NewMessageChecker::class.java, true),
+        CACHE_PRUNER(AlarmManager.INTERVAL_HOUR, RegularCachePruner::class.java, true);
 
-	public enum Alarm {
-		MESSAGE_CHECKER(AlarmManager.INTERVAL_HALF_HOUR, NewMessageChecker.class, true),
-		CACHE_PRUNER(AlarmManager.INTERVAL_HOUR, RegularCachePruner.class, true);
+        private val alarmClass: Class<out BroadcastReceiver?>?
+        private val startOnBoot: Boolean
 
-		private final long interval;
-		private final Class<? extends BroadcastReceiver> alarmClass;
-		private final boolean startOnBoot;
+        init {
+            this.alarmClass = alarmClass
+            this.startOnBoot = startOnBoot
+        }
 
-		Alarm(
-				final long interval,
-				final Class<? extends BroadcastReceiver> alarmClass,
-				final boolean startOnBoot) {
-			this.interval = interval;
-			this.alarmClass = alarmClass;
-			this.startOnBoot = startOnBoot;
-		}
+        private fun interval(): Long {
+            return interval
+        }
 
-		private long interval() {
-			return interval;
-		}
+        private fun alarmClass(): Class<out BroadcastReceiver?>? {
+            return alarmClass
+        }
 
-		private Class<? extends BroadcastReceiver> alarmClass() {
-			return alarmClass;
-		}
-
-		private boolean startOnBoot() {
-			return startOnBoot;
-		}
-	}
-
-	/**
-	 * Starts the specified alarm
-	 */
-
-	public static void startAlarm(final Alarm alarm, final Context context) {
-		if(!alarmMap.containsKey(alarm)) {
-			final Intent alarmIntent = new Intent(context, alarm.alarmClass());
-
-			int flags = 0;
-
-			if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-				flags |= PendingIntent.FLAG_IMMUTABLE;
-			}
-
-			@SuppressLint("UnspecifiedImmutableFlag")
-			final PendingIntent pendingIntent = PendingIntent.getBroadcast(
-					context,
-					0,
-					alarmIntent,
-					flags);
-
-			final AlarmManager alarmManager
-					= (AlarmManager)(context.getSystemService(Context.ALARM_SERVICE));
-			alarmManager.setInexactRepeating(
-					AlarmManager.RTC,
-					System.currentTimeMillis(),
-					alarm.interval(),
-					pendingIntent);
-
-			alarmMap.put(alarm, alarmManager);
-			intentMap.put(alarm, pendingIntent);
-		}
-	}
-
-	/**
-	 * Stops the specified alarm
-	 *
-	 * @param alarm alarm to stop
-	 */
-
-	public static void stopAlarm(final Alarm alarm) {
-		if(alarmMap.containsKey(alarm)) {
-			alarmMap.get(alarm).cancel(intentMap.get(alarm));
-			alarmMap.remove(alarm);
-			intentMap.remove(alarm);
-		}
-	}
-
-	/**
-	 * Starts all alarms that are supposed to start at device boot
-	 *
-	 * @param context
-	 */
-
-	public static void onBoot(final Context context) {
-		for(final Alarm alarm : Alarm.values()) {
-			if(alarm.startOnBoot()) {
-				startAlarm(alarm, context);
-			}
-		}
-	}
+        private fun startOnBoot(): Boolean {
+            return startOnBoot
+        }
+    }
 }

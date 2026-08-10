@@ -12,121 +12,149 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.fragments
 
-package org.quantumbadger.redreader.fragments;
+import android.content.Context
+import android.os.Bundle
+import android.widget.LinearLayout
+import androidx.core.os.BundleCompat
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.reddit.kthings.RedditFieldEdited
+import org.quantumbadger.redreader.reddit.kthings.RedditPost
+import java.util.Objects
 
-import android.content.Context;
-import android.os.Bundle;
-import android.widget.LinearLayout;
+class PostPropertiesDialog : PropertiesDialog() {
+    override fun getTitle(context: Context): String {
+        return context.getString(string.props_post_title)
+    }
 
-import androidx.annotation.NonNull;
-import androidx.core.os.BundleCompat;
+    override fun prepare(
+        context: BaseActivity,
+        items: LinearLayout
+    ) {
+        val post = Objects.requireNonNull<RedditPost>(
+            BundleCompat.getParcelable<RedditPost?>(
+                requireArguments(),
+                "post",
+                RedditPost::class.java
+            )
+        )
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.reddit.kthings.RedditFieldEdited;
-import org.quantumbadger.redreader.reddit.kthings.RedditPost;
+        // TODO nullability
+        items.addView(
+            propView(
+                context,
+                string.props_title,
+                post.title!!.decoded.trim { it <= ' ' },
+                true
+            )
+        )
+        items.addView(
+            propView(
+                context,
+                string.props_author,
+                post.author!!.decoded,
+                false
+            )
+        )
+        items.addView(
+            propView(
+                context,
+                string.props_url,
+                post.url!!.decoded,
+                false
+            )
+        )
+        items.addView(
+            propView(
+                context,
+                string.props_created,
+                post.created_utc.value.format(),
+                false
+            )
+        )
 
-import java.util.Objects;
+        if (post.edited is RedditFieldEdited.Timestamp) {
+            items.addView(
+                propView(
+                    context,
+                    string.props_edited,
+                    post.edited
+                        .value.value.format(),
+                    false
+                )
+            )
+        } else {
+            items.addView(
+                propView(
+                    context,
+                    string.props_edited,
+                    string.props_never,
+                    false
+                )
+            )
+        }
 
-public final class PostPropertiesDialog extends PropertiesDialog {
+        items.addView(
+            propView(
+                context,
+                string.props_subreddit,
+                post.subreddit.decoded,
+                false
+            )
+        )
+        items.addView(
+            propView(
+                context,
+                string.props_score,
+                post.score.toString(),
+                false
+            )
+        )
+        items.addView(
+            propView(
+                context,
+                string.props_num_comments,
+                post.num_comments.toString(),
+                false
+            )
+        )
 
-	public static PostPropertiesDialog newInstance(final RedditPost post) {
+        if (post.selftext != null && !post.selftext.decoded.isEmpty()) {
+            items.addView(
+                propView(
+                    context,
+                    string.props_self_markdown,
+                    post.selftext.decoded,
+                    false
+                )
+            )
 
-		final PostPropertiesDialog pp = new PostPropertiesDialog();
+            if (post.selftext_html != null) {
+                items.addView(
+                    propView(
+                        context,
+                        string.props_self_html,
+                        post.selftext_html.decoded,
+                        false
+                    )
+                )
+            }
+        }
+    }
 
-		final Bundle args = new Bundle();
-		args.putParcelable("post", post);
-		pp.setArguments(args);
+    companion object {
+        fun newInstance(post: RedditPost?): PostPropertiesDialog {
+            val pp = PostPropertiesDialog()
 
-		return pp;
-	}
+            val args = Bundle()
+            args.putParcelable("post", post)
+            pp.setArguments(args)
 
-	@Override
-	protected String getTitle(final Context context) {
-		return context.getString(R.string.props_post_title);
-	}
-
-	@Override
-	protected void prepare(
-			@NonNull final BaseActivity context,
-			@NonNull final LinearLayout items) {
-
-		final RedditPost post = Objects.requireNonNull(
-				BundleCompat.getParcelable(requireArguments(),
-						"post",
-						RedditPost.class));
-
-		// TODO nullability
-
-		items.addView(propView(
-				context,
-				R.string.props_title,
-				post.getTitle().getDecoded().trim(),
-				true));
-		items.addView(propView(
-				context,
-				R.string.props_author,
-				post.getAuthor().getDecoded(),
-				false));
-		items.addView(propView(
-				context,
-				R.string.props_url,
-				post.getUrl().getDecoded(),
-				false));
-		items.addView(propView(
-				context,
-				R.string.props_created,
-				post.getCreated_utc().getValue().format(),
-				false));
-
-		if(post.getEdited() instanceof RedditFieldEdited.Timestamp) {
-			items.addView(propView(
-					context,
-					R.string.props_edited,
-					((RedditFieldEdited.Timestamp)post.getEdited())
-							.getValue().getValue().format(),
-					false));
-		} else {
-			items.addView(propView(
-					context,
-					R.string.props_edited,
-					R.string.props_never,
-					false));
-		}
-
-		items.addView(propView(
-				context,
-				R.string.props_subreddit,
-				post.getSubreddit().getDecoded(),
-				false));
-		items.addView(propView(
-				context,
-				R.string.props_score,
-				String.valueOf(post.getScore()),
-				false));
-		items.addView(propView(
-				context,
-				R.string.props_num_comments,
-				String.valueOf(post.getNum_comments()),
-				false));
-
-		if(post.getSelftext() != null && !post.getSelftext().getDecoded().isEmpty()) {
-			items.addView(propView(
-					context,
-					R.string.props_self_markdown,
-					post.getSelftext().getDecoded(),
-					false));
-
-			if(post.getSelftext_html() != null) {
-				items.addView(propView(
-						context,
-						R.string.props_self_html,
-						post.getSelftext_html().getDecoded(),
-						false));
-			}
-		}
-	}
+            return pp
+        }
+    }
 }

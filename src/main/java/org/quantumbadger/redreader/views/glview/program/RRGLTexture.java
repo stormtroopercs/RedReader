@@ -12,77 +12,78 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.program
 
-package org.quantumbadger.redreader.views.glview.program;
+import android.graphics.Bitmap
+import android.opengl.GLES20
+import android.opengl.GLUtils
 
-import android.graphics.Bitmap;
-import android.opengl.GLES20;
-import android.opengl.GLUtils;
+class RRGLTexture(private val mGLContext: RRGLContext, bitmap: Bitmap?, smooth: Boolean) {
+    private val mTextureHandle: Int
+    private var mRefCount = 1
 
-public class RRGLTexture {
+    init {
+        mTextureHandle = loadTexture(bitmap, smooth)
+    }
 
-	private final int mTextureHandle;
-	private final RRGLContext mGLContext;
-	private int mRefCount = 1;
+    fun addReference() {
+        mRefCount++
+    }
 
-	public RRGLTexture(final RRGLContext glContext, final Bitmap bitmap, final boolean smooth) {
-		mTextureHandle = loadTexture(bitmap, smooth);
-		mGLContext = glContext;
-	}
+    fun releaseReference() {
+        mRefCount--
+        if (mRefCount == 0) {
+            deleteTexture(mTextureHandle)
+        }
+    }
 
-	public void addReference() {
-		mRefCount++;
-	}
+    fun activate() {
+        mGLContext.activateTextureByHandle(mTextureHandle)
+    }
 
-	public void releaseReference() {
-		mRefCount--;
-		if(mRefCount == 0) {
-			deleteTexture(mTextureHandle);
-		}
-	}
+    companion object {
+        private fun loadTexture(bitmap: Bitmap?, smooth: Boolean): Int {
+            val textureHandle = IntArray(1)
+            GLES20.glGenTextures(1, textureHandle, 0)
 
-	public void activate() {
-		mGLContext.activateTextureByHandle(mTextureHandle);
-	}
+            if (textureHandle[0] == 0) {
+                throw RuntimeException("OpenGL error: glGenTextures failed.")
+            }
 
-	private static int loadTexture(final Bitmap bitmap, final boolean smooth) {
+            val filter = if (smooth) GLES20.GL_LINEAR else GLES20.GL_NEAREST
 
-		final int[] textureHandle = new int[1];
-		GLES20.glGenTextures(1, textureHandle, 0);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0])
+            GLES20.glTexParameteri(
+                GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_MIN_FILTER,
+                filter
+            )
+            GLES20.glTexParameteri(
+                GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_MAG_FILTER,
+                filter
+            )
+            GLES20.glTexParameteri(
+                GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_WRAP_S,
+                GLES20.GL_CLAMP_TO_EDGE
+            )
+            GLES20.glTexParameteri(
+                GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_WRAP_T,
+                GLES20.GL_CLAMP_TO_EDGE
+            )
 
-		if(textureHandle[0] == 0) {
-			throw new RuntimeException("OpenGL error: glGenTextures failed.");
-		}
+            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
 
-		final int filter = smooth ? GLES20.GL_LINEAR : GLES20.GL_NEAREST;
+            return textureHandle[0]
+        }
 
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0]);
-		GLES20.glTexParameteri(
-				GLES20.GL_TEXTURE_2D,
-				GLES20.GL_TEXTURE_MIN_FILTER,
-				filter);
-		GLES20.glTexParameteri(
-				GLES20.GL_TEXTURE_2D,
-				GLES20.GL_TEXTURE_MAG_FILTER,
-				filter);
-		GLES20.glTexParameteri(
-				GLES20.GL_TEXTURE_2D,
-				GLES20.GL_TEXTURE_WRAP_S,
-				GLES20.GL_CLAMP_TO_EDGE);
-		GLES20.glTexParameteri(
-				GLES20.GL_TEXTURE_2D,
-				GLES20.GL_TEXTURE_WRAP_T,
-				GLES20.GL_CLAMP_TO_EDGE);
-
-		GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
-
-		return textureHandle[0];
-	}
-
-	private static void deleteTexture(final int handle) {
-		final int[] handles = {handle};
-		GLES20.glDeleteTextures(1, handles, 0);
-	}
+        private fun deleteTexture(handle: Int) {
+            val handles = intArrayOf(handle)
+            GLES20.glDeleteTextures(1, handles, 0)
+        }
+    }
 }

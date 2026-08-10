@@ -12,70 +12,57 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.bezelmenu
 
-package org.quantumbadger.redreader.views.bezelmenu;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.view.MotionEvent
+import android.view.View
+import androidx.annotation.IntDef
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.PrefsUtility
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.view.MotionEvent;
-import android.view.View;
-import androidx.annotation.IntDef;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.PrefsUtility;
+class BezelSwipeOverlay(context: Context?, private val listener: BezelSwipeListener) :
+    View(context) {
+    @IntDef([LEFT, RIGHT])
+    @Retention(AnnotationRetention.SOURCE)
+    annotation class SwipeEdge
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+    private val mSwipeZonePixels: Int
 
-public class BezelSwipeOverlay extends View {
+    init {
+        val swipeZoneDp = PrefsUtility.pref_behaviour_bezel_toolbar_swipezone_dp()
 
-	public static final int LEFT = 0;
-	public static final int RIGHT = 1;
+        mSwipeZonePixels = dpToPixels(getContext(), swipeZoneDp.toFloat())
+    }
 
-	@IntDef({LEFT, RIGHT})
-	@Retention(RetentionPolicy.SOURCE)
-	public @interface SwipeEdge {
-	}
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        val action = event.getAction() and MotionEvent.ACTION_MASK
 
-	private final BezelSwipeListener listener;
+        if (action == MotionEvent.ACTION_DOWN) {
+            if (event.getX() < mSwipeZonePixels) {
+                return listener.onSwipe(LEFT)
+            } else if (event.getX() > getWidth() - mSwipeZonePixels) {
+                return listener.onSwipe(RIGHT)
+            } else {
+                return listener.onTap()
+            }
+        }
 
-	private final int mSwipeZonePixels;
+        return false
+    }
 
-	public BezelSwipeOverlay(final Context context, final BezelSwipeListener listener) {
-		super(context);
-		this.listener = listener;
+    interface BezelSwipeListener {
+        fun onSwipe(@SwipeEdge edge: Int): Boolean
 
-		final int swipeZoneDp = PrefsUtility.pref_behaviour_bezel_toolbar_swipezone_dp();
+        fun onTap(): Boolean
+    }
 
-		mSwipeZonePixels = General.dpToPixels(getContext(), swipeZoneDp);
-	}
-
-	@SuppressLint("ClickableViewAccessibility")
-	@Override
-	public boolean onTouchEvent(final MotionEvent event) {
-
-		final int action = event.getAction() & MotionEvent.ACTION_MASK;
-
-		if(action == MotionEvent.ACTION_DOWN) {
-
-			if(event.getX() < mSwipeZonePixels) {
-				return listener.onSwipe(LEFT);
-
-			} else if(event.getX() > getWidth() - mSwipeZonePixels) {
-				return listener.onSwipe(RIGHT);
-
-			} else {
-				return listener.onTap();
-			}
-		}
-
-		return false;
-	}
-
-	public interface BezelSwipeListener {
-		boolean onSwipe(@SwipeEdge int edge);
-
-		boolean onTap();
-	}
+    companion object {
+        const val LEFT: Int = 0
+        const val RIGHT: Int = 1
+    }
 }

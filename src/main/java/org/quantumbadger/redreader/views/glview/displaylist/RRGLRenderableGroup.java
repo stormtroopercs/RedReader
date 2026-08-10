@@ -12,81 +12,70 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.displaylist
 
-package org.quantumbadger.redreader.views.glview.displaylist;
+import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
-import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack;
+open class RRGLRenderableGroup : RRGLRenderable() {
+    private val mChildren = ArrayList<RRGLRenderable>(16)
 
-import java.util.ArrayList;
+    fun add(child: RRGLRenderable) {
+        mChildren.add(child)
+        if (isAdded()) {
+            child.onAdded()
+        }
+    }
 
-public class RRGLRenderableGroup extends RRGLRenderable {
+    fun remove(child: RRGLRenderable) {
+        if (isAdded()) {
+            child.onRemoved()
+        }
+        mChildren.remove(child)
+    }
 
-	private final ArrayList<RRGLRenderable> mChildren = new ArrayList<>(16);
+    override fun onAdded() {
+        if (!isAdded()) {
+            for (entity in mChildren) {
+                entity.onAdded()
+            }
+        }
 
-	public final void add(final RRGLRenderable child) {
-		mChildren.add(child);
-		if(isAdded()) {
-			child.onAdded();
-		}
-	}
+        super.onAdded()
+    }
 
-	public final void remove(final RRGLRenderable child) {
-		if(isAdded()) {
-			child.onRemoved();
-		}
-		mChildren.remove(child);
-	}
+    override fun renderInternal(matrixStack: RRGLMatrixStack?, time: Long) {
+        for (i in mChildren.indices) {
+            val entity = mChildren.get(i)
+            entity.startRender(matrixStack, time)
+        }
+    }
 
-	@Override
-	public void onAdded() {
+    override fun onRemoved() {
+        super.onRemoved()
 
-		if(!isAdded()) {
-			for(final RRGLRenderable entity : mChildren) {
-				entity.onAdded();
-			}
-		}
+        if (!isAdded()) {
+            for (entity in mChildren) {
+                entity.onRemoved()
+            }
+        }
+    }
 
-		super.onAdded();
-	}
+    override fun isAnimating(): Boolean {
+        for (i in mChildren.indices) {
+            val entity = mChildren.get(i)
+            if (entity.isAnimating()) {
+                return true
+            }
+        }
+        return false
+    }
 
-	@Override
-	protected void renderInternal(final RRGLMatrixStack matrixStack, final long time) {
-		for(int i = 0; i < mChildren.size(); i++) {
-			final RRGLRenderable entity = mChildren.get(i);
-			entity.startRender(matrixStack, time);
-		}
-	}
-
-	@Override
-	public void onRemoved() {
-
-		super.onRemoved();
-
-		if(!isAdded()) {
-			for(final RRGLRenderable entity : mChildren) {
-				entity.onRemoved();
-			}
-		}
-	}
-
-	@Override
-	public boolean isAnimating() {
-		for(int i = 0; i < mChildren.size(); i++) {
-			final RRGLRenderable entity = mChildren.get(i);
-			if(entity.isAnimating()) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public void setOverallAlpha(final float alpha) {
-		for(int i = 0; i < mChildren.size(); i++) {
-			final RRGLRenderable entity = mChildren.get(i);
-			entity.setOverallAlpha(alpha);
-		}
-	}
+    override fun setOverallAlpha(alpha: Float) {
+        for (i in mChildren.indices) {
+            val entity = mChildren.get(i)
+            entity.setOverallAlpha(alpha)
+        }
+    }
 }

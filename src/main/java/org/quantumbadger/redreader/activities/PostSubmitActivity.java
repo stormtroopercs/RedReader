@@ -12,147 +12,141 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.activities
 
-package org.quantumbadger.redreader.activities;
+import android.content.Intent
+import android.os.Bundle
+import android.util.Log
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.common.General.quickToast
+import org.quantumbadger.redreader.common.General.showResultDialog
+import org.quantumbadger.redreader.common.LinkHandler.onLinkClicked
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.fragments.postsubmit.PostSubmitContentFragment
+import org.quantumbadger.redreader.fragments.postsubmit.PostSubmitSubredditSelectionFragment
+import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
+import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
+class PostSubmitActivity : ViewsBaseActivity(), PostSubmitSubredditSelectionFragment.Listener,
+    PostSubmitContentFragment.Listener {
+    private var mIntentUrl: String? = null
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    protected override fun onCreate(savedInstanceState: Bundle?) {
+        PrefsUtility.applyTheme(this)
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.LinkHandler;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.fragments.postsubmit.PostSubmitContentFragment;
-import org.quantumbadger.redreader.fragments.postsubmit.PostSubmitSubredditSelectionFragment;
-import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException;
-import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
+        super.onCreate(savedInstanceState)
 
+        var intentSubreddit: SubredditCanonicalId? = null
 
-public class PostSubmitActivity extends ViewsBaseActivity implements
-		PostSubmitSubredditSelectionFragment.Listener,
-		PostSubmitContentFragment.Listener {
+        val intent = getIntent()
 
-	@NonNull private static final String TAG = "PostSubmitActivity";
+        if (intent != null) {
+            val subreddit = intent.getStringExtra("subreddit")
 
-	@Nullable private String mIntentUrl;
+            if (subreddit != null) {
+                try {
+                    intentSubreddit = SubredditCanonicalId(subreddit)
+                } catch (e: InvalidSubredditNameException) {
+                    Log.e(TAG, "Invalid subreddit name", e)
+                }
+            }
 
-	@Override
-	protected void onCreate(final Bundle savedInstanceState) {
+            if (Intent.ACTION_SEND.equals(intent.getAction(), ignoreCase = true)
+                && intent.hasExtra(Intent.EXTRA_TEXT)
+            ) {
+                mIntentUrl = intent.getStringExtra(Intent.EXTRA_TEXT)
+            }
+        }
 
-		PrefsUtility.applyTheme(this);
+        setBaseActivityListing(R.layout.single_fragment_layout)
 
-		super.onCreate(savedInstanceState);
+        getSupportFragmentManager().beginTransaction()
+            .setReorderingAllowed(false)
+            .add(
+                R.id.single_fragment_container,
+                PostSubmitSubredditSelectionFragment::class.java,
+                PostSubmitSubredditSelectionFragment.Args(intentSubreddit).toBundle()
+            )
+            .commit()
+    }
 
-		SubredditCanonicalId intentSubreddit = null;
+    override fun onSubredditSelected(
+        username: String,
+        subreddit: SubredditCanonicalId
+    ) {
+        getSupportFragmentManager().beginTransaction()
+            .setReorderingAllowed(false)
+            .replace(
+                R.id.single_fragment_container,
+                PostSubmitContentFragment::class.java,
+                PostSubmitContentFragment.Args(
+                    username,
+                    subreddit,
+                    mIntentUrl
+                ).toBundle()
+            )
+            .addToBackStack("Subreddit selected")
+            .commit()
+    }
 
-		final Intent intent = getIntent();
+    override fun onNotLoggedIn() {
+        quickToast(this, string.error_toast_notloggedin)
+        finish()
+    }
 
-		if(intent != null) {
+    override fun onContentFragmentSubmissionSuccess(redirectUrl: UriString?) {
+        if (redirectUrl != null) {
+            onLinkClicked(this, redirectUrl)
+        }
 
-			final String subreddit = intent.getStringExtra("subreddit");
+        finish()
+    }
 
-			if(subreddit != null) {
-				try {
-					intentSubreddit = new SubredditCanonicalId(subreddit);
+    override fun onContentFragmentSubredditDoesNotExist() {
+        onBackPressedDispatcher.onBackPressed()
 
-				} catch(final InvalidSubredditNameException e) {
-					Log.e(TAG, "Invalid subreddit name", e);
-				}
-			}
+        val applicationContext = getApplicationContext()
 
-			if(Intent.ACTION_SEND.equalsIgnoreCase(intent.getAction())
-					&& intent.hasExtra(Intent.EXTRA_TEXT)) {
-				mIntentUrl = intent.getStringExtra(Intent.EXTRA_TEXT);
-			}
-		}
+        showResultDialog(
+            this, RRError(
+                applicationContext.getString(string.error_subreddit_does_not_exist_title),
+                applicationContext.getString(string.error_subreddit_does_not_exist_message),
+                false,
+                RuntimeException()
+            )
+        )
+    }
 
-		setBaseActivityListing(R.layout.single_fragment_layout);
+    override fun onContentFragmentSubredditPermissionDenied() {
+        onBackPressedDispatcher.onBackPressed()
 
-		getSupportFragmentManager().beginTransaction()
-				.setReorderingAllowed(false)
-				.add(
-						R.id.single_fragment_container,
-						PostSubmitSubredditSelectionFragment.class,
-						new PostSubmitSubredditSelectionFragment.Args(intentSubreddit).toBundle())
-				.commit();
-	}
+        val applicationContext = getApplicationContext()
 
-	@Override
-	public void onSubredditSelected(
-			@NonNull final String username,
-			@NonNull final SubredditCanonicalId subreddit) {
+        showResultDialog(
+            this, RRError(
+                applicationContext.getString(
+                    string.error_subreddit_info_permission_denied_title
+                ),
+                applicationContext.getString(
+                    string.error_subreddit_info_permission_denied_message
+                ),
+                false,
+                RuntimeException()
+            )
+        )
+    }
 
-		getSupportFragmentManager().beginTransaction()
-				.setReorderingAllowed(false)
-				.replace(
-						R.id.single_fragment_container,
-						PostSubmitContentFragment.class,
-						new PostSubmitContentFragment.Args(
-								username,
-								subreddit,
-								mIntentUrl).toBundle())
-				.addToBackStack("Subreddit selected")
-				.commit();
-	}
+    override fun onContentFragmentFlairRequestError(error: RRError) {
+        onBackPressedDispatcher.onBackPressed()
+        showResultDialog(this, error)
+    }
 
-	@Override
-	public void onNotLoggedIn() {
-		General.quickToast(this, R.string.error_toast_notloggedin);
-		finish();
-	}
-
-	@Override
-	public void onContentFragmentSubmissionSuccess(@Nullable final UriString redirectUrl) {
-
-		if(redirectUrl != null) {
-			LinkHandler.onLinkClicked(this, redirectUrl);
-		}
-
-		finish();
-	}
-
-	@Override
-	public void onContentFragmentSubredditDoesNotExist() {
-
-		getOnBackPressedDispatcher().onBackPressed();
-
-		final Context applicationContext = getApplicationContext();
-
-		General.showResultDialog(this, new RRError(
-				applicationContext.getString(R.string.error_subreddit_does_not_exist_title),
-				applicationContext.getString(R.string.error_subreddit_does_not_exist_message),
-				false,
-				new RuntimeException()));
-	}
-
-	@Override
-	public void onContentFragmentSubredditPermissionDenied() {
-
-		getOnBackPressedDispatcher().onBackPressed();
-
-		final Context applicationContext = getApplicationContext();
-
-		General.showResultDialog(this, new RRError(
-				applicationContext.getString(
-						R.string.error_subreddit_info_permission_denied_title),
-				applicationContext.getString(
-						R.string.error_subreddit_info_permission_denied_message),
-				false,
-				new RuntimeException()));
-	}
-
-	@Override
-	public void onContentFragmentFlairRequestError(@NonNull final RRError error) {
-		getOnBackPressedDispatcher().onBackPressed();
-		General.showResultDialog(this, error);
-	}
+    companion object {
+        private const val TAG = "PostSubmitActivity"
+    }
 }

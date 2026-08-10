@@ -12,15 +12,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.io
 
-package org.quantumbadger.redreader.io;
+import org.quantumbadger.redreader.common.time.TimestampUTC
 
-import org.quantumbadger.redreader.common.time.TimestampUTC;
+interface RequestResponseHandler<E, F> {
+    fun onRequestFailed(failureReason: F?)
 
-public interface RequestResponseHandler<E, F> {
-	void onRequestFailed(F failureReason);
-
-	void onRequestSuccess(E result, TimestampUTC timeCached);
+    fun onRequestSuccess(result: E?, timeCached: TimestampUTC?)
 }

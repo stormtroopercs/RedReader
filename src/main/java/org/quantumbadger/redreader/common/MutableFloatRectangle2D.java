@@ -12,21 +12,15 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+class MutableFloatRectangle2D {
+    val mTopLeft: MutableFloatPoint2D = MutableFloatPoint2D()
+    val mBottomRight: MutableFloatPoint2D = MutableFloatPoint2D()
 
-public class MutableFloatRectangle2D {
-
-	public final MutableFloatPoint2D mTopLeft = new MutableFloatPoint2D();
-	public final MutableFloatPoint2D mBottomRight = new MutableFloatPoint2D();
-
-	public boolean intersect(final MutableFloatRectangle2D other) {
-
-		return !(mTopLeft.x > other.mBottomRight.x
-				|| mTopLeft.y > other.mBottomRight.y
-				|| other.mTopLeft.x > mBottomRight.x
-				|| other.mTopLeft.y > mBottomRight.y);
-	}
+    fun intersect(other: MutableFloatRectangle2D): Boolean {
+        return !(mTopLeft.x > other.mBottomRight.x || mTopLeft.y > other.mBottomRight.y || other.mTopLeft.x > mBottomRight.x || other.mTopLeft.y > mBottomRight.y)
+    }
 }

@@ -12,51 +12,43 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.imageview
 
-package org.quantumbadger.redreader.views.imageview;
+import org.quantumbadger.redreader.common.MutableFloatPoint2D
+import kotlin.math.pow
 
-import org.quantumbadger.redreader.common.MutableFloatPoint2D;
+class ImageViewScaleAnimation(
+    private val mTargetScale: Float,
+    private val mCoordinateHelper: CoordinateHelper,
+    stepCount: Int,
+    screenCoord: MutableFloatPoint2D
+) {
+    private val mStepSize: Float
+    private val mScreenCoord = MutableFloatPoint2D()
 
-public class ImageViewScaleAnimation {
+    init {
+        mStepSize = (mTargetScale / mCoordinateHelper.getScale()).toDouble()
+            .pow((1.0 / stepCount.toDouble())).toFloat()
+        mScreenCoord.set(screenCoord)
+    }
 
-	private final float mStepSize;
-	private final float mTargetScale;
-	private final CoordinateHelper mCoordinateHelper;
-	private final MutableFloatPoint2D mScreenCoord = new MutableFloatPoint2D();
+    fun onStep(): Boolean {
+        mCoordinateHelper.scaleAboutScreenPoint(mScreenCoord, mStepSize)
 
-	public ImageViewScaleAnimation(
-			final float targetScale,
-			final CoordinateHelper coordinateHelper,
-			final int stepCount,
-			final MutableFloatPoint2D screenCoord) {
+        if (mStepSize > 1) {
+            if (mTargetScale <= mCoordinateHelper.getScale()) {
+                mCoordinateHelper.setScaleAboutScreenPoint(mScreenCoord, mTargetScale)
+                return false
+            }
+        } else {
+            if (mTargetScale >= mCoordinateHelper.getScale()) {
+                mCoordinateHelper.setScaleAboutScreenPoint(mScreenCoord, mTargetScale)
+                return false
+            }
+        }
 
-		mTargetScale = targetScale;
-		mCoordinateHelper = coordinateHelper;
-		mStepSize = (float)Math.pow(
-				(targetScale / coordinateHelper.getScale()),
-				(1.0 / (double)stepCount));
-		mScreenCoord.set(screenCoord);
-	}
-
-	public boolean onStep() {
-
-		mCoordinateHelper.scaleAboutScreenPoint(mScreenCoord, mStepSize);
-
-		if(mStepSize > 1) {
-			if(mTargetScale <= mCoordinateHelper.getScale()) {
-				mCoordinateHelper.setScaleAboutScreenPoint(mScreenCoord, mTargetScale);
-				return false;
-			}
-
-		} else {
-			if(mTargetScale >= mCoordinateHelper.getScale()) {
-				mCoordinateHelper.setScaleAboutScreenPoint(mScreenCoord, mTargetScale);
-				return false;
-			}
-		}
-
-		return true;
-	}
+        return true
+    }
 }

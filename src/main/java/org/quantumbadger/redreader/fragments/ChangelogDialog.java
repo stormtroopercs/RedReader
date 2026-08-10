@@ -12,35 +12,31 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.fragments
 
-package org.quantumbadger.redreader.fragments;
+import android.content.Context
+import android.widget.LinearLayout
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.ChangelogManager
 
-import android.content.Context;
-import android.widget.LinearLayout;
+class ChangelogDialog : PropertiesDialog() {
+    override fun getTitle(context: Context): String {
+        return context.getString(string.title_changelog)
+    }
 
-import androidx.annotation.NonNull;
+    override fun prepare(
+        context: BaseActivity,
+        items: LinearLayout
+    ) {
+        ChangelogManager.generateViews(context, items, false)
+    }
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.ChangelogManager;
-
-public final class ChangelogDialog extends PropertiesDialog {
-
-	public static ChangelogDialog newInstance() {
-		return new ChangelogDialog();
-	}
-
-	@Override
-	protected String getTitle(final Context context) {
-		return context.getString(R.string.title_changelog);
-	}
-
-	@Override
-	protected void prepare(
-			@NonNull final BaseActivity context,
-			@NonNull final LinearLayout items) {
-		ChangelogManager.generateViews(context, items, false);
-	}
+    companion object {
+        fun newInstance(): ChangelogDialog {
+            return ChangelogDialog()
+        }
+    }
 }

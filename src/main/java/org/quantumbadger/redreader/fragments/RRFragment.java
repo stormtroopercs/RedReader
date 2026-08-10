@@ -12,115 +12,90 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.fragments
 
-package org.quantumbadger.redreader.fragments;
+import android.content.Intent
+import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.FrameLayout
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.activities.ViewsBaseActivity
+import org.quantumbadger.redreader.common.General.setLayoutMatchParent
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.FrameLayout;
+abstract class RRFragment protected constructor(
+    protected val activity: AppCompatActivity,
+    savedInstanceState: Bundle?
+) {
+    protected val context: Context
+        get() = this.activity
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+    protected fun getString(resource: Int): String {
+        return activity.getApplicationContext().getString(resource)
+    }
 
-import org.quantumbadger.redreader.activities.ViewsBaseActivity;
-import org.quantumbadger.redreader.common.General;
+    protected fun startActivity(intent: Intent?) {
+        activity.startActivity(intent)
+    }
 
-public abstract class RRFragment {
+    protected fun startActivityForResult(
+        intent: Intent,
+        requestCode: Int
+    ) {
+        activity.startActivityForResult(intent, requestCode)
+    }
 
-	@NonNull private final AppCompatActivity mParent;
+    open fun onCreateOptionsMenu(menu: Menu?) {
+    }
 
-	protected RRFragment(
-			@NonNull final AppCompatActivity parent,
-			final Bundle savedInstanceState) {
-		mParent = parent;
-	}
+    open fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        return false
+    }
 
-	@NonNull
-	protected final Context getContext() {
-		return mParent;
-	}
+    abstract val listingView: View
 
-	@NonNull
-	protected final AppCompatActivity getActivity() {
-		return mParent;
-	}
+    open val overlayView: View?
+        get() =// Null by default
+            null
 
-	protected final String getString(final int resource) {
-		return mParent.getApplicationContext().getString(resource);
-	}
+    fun createCombinedListingAndOverlayView(): View {
+        val outer = FrameLayout(this.activity)
 
-	protected final void startActivity(final Intent intent) {
-		mParent.startActivity(intent);
-	}
+        run {
+            val view = this.listingView
+            outer.addView(view)
+            setLayoutMatchParent(view)
+        }
 
-	protected final void startActivityForResult(
-			final Intent intent,
-			final int requestCode) {
-		mParent.startActivityForResult(intent, requestCode);
-	}
+        run {
+            val overlayView = this.overlayView
+            if (overlayView != null) {
+                outer.addView(overlayView)
+                setLayoutMatchParent(overlayView)
+            }
+        }
 
-	public void onCreateOptionsMenu(final Menu menu) {
-	}
+        return outer
+    }
 
-	public boolean onOptionsItemSelected(final MenuItem item) {
-		return false;
-	}
+    fun setBaseActivityContent(baseActivity: ViewsBaseActivity) {
+        run {
+            val view = this.listingView
+            baseActivity.setBaseActivityListing(view)
+            setLayoutMatchParent(view)
+        }
 
-	public abstract View getListingView();
+        run {
+            val overlayView = this.overlayView
+            if (overlayView != null) {
+                baseActivity.setBaseActivityOverlay(overlayView)
+                setLayoutMatchParent(overlayView)
+            }
+        }
+    }
 
-	@Nullable
-	public View getOverlayView() {
-		// Null by default
-		return null;
-	}
-
-	@NonNull
-	public final View createCombinedListingAndOverlayView() {
-
-		final FrameLayout outer = new FrameLayout(mParent);
-
-		{
-			final View view = getListingView();
-			outer.addView(view);
-			General.setLayoutMatchParent(view);
-		}
-
-		{
-			final View overlayView = getOverlayView();
-
-			if(overlayView != null) {
-				outer.addView(overlayView);
-				General.setLayoutMatchParent(overlayView);
-			}
-		}
-
-		return outer;
-	}
-
-	public final void setBaseActivityContent(@NonNull final ViewsBaseActivity baseActivity) {
-
-		{
-			final View view = getListingView();
-			baseActivity.setBaseActivityListing(view);
-			General.setLayoutMatchParent(view);
-		}
-
-		{
-			final View overlayView = getOverlayView();
-
-			if(overlayView != null) {
-				baseActivity.setBaseActivityOverlay(overlayView);
-				General.setLayoutMatchParent(overlayView);
-			}
-		}
-	}
-
-	public abstract Bundle onSaveInstanceState();
+    abstract fun onSaveInstanceState(): Bundle?
 }

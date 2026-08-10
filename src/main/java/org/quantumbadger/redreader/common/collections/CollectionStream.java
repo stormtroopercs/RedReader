@@ -12,34 +12,27 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.collections
 
-package org.quantumbadger.redreader.common.collections;
+import java.util.Arrays
 
-import java.util.Arrays;
-import java.util.Iterator;
+class CollectionStream<Type>(iterable: Iterable<Type?>) : Stream<Type?>() {
+    private val mIterator: MutableIterator<Type?>
 
-public class CollectionStream<Type> extends Stream<Type> {
+    init {
+        mIterator = iterable.iterator()
+    }
 
-	private final Iterator<Type> mIterator;
+    @SafeVarargs
+    constructor(vararg array: Type?) : this(Arrays.asList<Type?>(*array))
 
-	public CollectionStream(final Iterable<Type> iterable) {
-		mIterator = iterable.iterator();
-	}
+    override fun hasNext(): Boolean {
+        return mIterator.hasNext()
+    }
 
-	@SafeVarargs
-	public CollectionStream(final Type... array) {
-		this(Arrays.asList(array));
-	}
-
-	@Override
-	public boolean hasNext() {
-		return mIterator.hasNext();
-	}
-
-	@Override
-	public Type take() {
-		return mIterator.next();
-	}
+    override fun take(): Type? {
+        return mIterator.next()
+    }
 }

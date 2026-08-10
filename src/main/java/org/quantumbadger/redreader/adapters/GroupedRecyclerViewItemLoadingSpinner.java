@@ -12,27 +12,21 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.adapters
 
-package org.quantumbadger.redreader.adapters;
+import android.content.Context
+import android.view.ViewGroup
+import org.quantumbadger.redreader.common.FunctionOneArgWithReturn
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.views.LoadingSpinnerView
 
-import android.content.Context;
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.views.LoadingSpinnerView;
-
-public class GroupedRecyclerViewItemLoadingSpinner extends GroupedRecyclerViewItemView {
-
-	public GroupedRecyclerViewItemLoadingSpinner(@NonNull final Context context) {
-		super(LoadingSpinnerView.class, input -> {
-
-			final LoadingSpinnerView loadingSpinnerView = new LoadingSpinnerView(context);
-
-			final int paddingPx = General.dpToPixels(context, 30);
-			loadingSpinnerView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-
-			return loadingSpinnerView;
-		});
-	}
-}
+class GroupedRecyclerViewItemLoadingSpinner(context: Context) : GroupedRecyclerViewItemView(
+    LoadingSpinnerView::class.java,
+    FunctionOneArgWithReturn { input: ViewGroup? ->
+        val loadingSpinnerView = LoadingSpinnerView(context)
+        val paddingPx = dpToPixels(context, 30f)
+        loadingSpinnerView.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+        loadingSpinnerView
+    })

@@ -12,145 +12,135 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.things
 
-package org.quantumbadger.redreader.reddit.things;
+import android.os.Parcel
+import android.os.Parcelable
+import org.apache.commons.text.StringEscapeUtils
+import org.quantumbadger.redreader.common.ParcelUtils
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.jsonwrap.JsonObject.JsonDeserializable
 
-import android.os.Parcel;
-import android.os.Parcelable;
+class RedditUser : Parcelable, JsonDeserializable {
+    var comment_karma: Int? = null
+    var link_karma: Int? = null
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    var created: Long? = null
+    var created_utc: Long? = null
 
-import org.apache.commons.text.StringEscapeUtils;
-import org.quantumbadger.redreader.common.ParcelUtils;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.jsonwrap.JsonObject;
+    var has_mail: Boolean? = null
+    var has_mod_mail: Boolean? = null
+    var is_friend: Boolean? = null
+    var is_gold: Boolean? = null
+    var is_mod: Boolean? = null
+    var is_suspended: Boolean? = null
+    var over_18: Boolean? = null
+    var is_blocked: Boolean? = null
 
-public class RedditUser implements Parcelable, JsonObject.JsonDeserializable {
+    var id: String? = null
+    var name: String? = null
+    var icon_img: String? = null
 
-	@Nullable public Integer comment_karma;
-	@Nullable public Integer link_karma;
+    var is_employee: Boolean? = null
 
-	@Nullable public Long created;
-	@Nullable public Long created_utc;
+    override fun describeContents(): Int {
+        return 0
+    }
 
-	@Nullable public Boolean has_mail;
-	@Nullable public Boolean has_mod_mail;
-	@Nullable public Boolean is_friend;
-	@Nullable public Boolean is_gold;
-	@Nullable public Boolean is_mod;
-	@Nullable public Boolean is_suspended;
-	@Nullable public Boolean over_18;
-	@Nullable public Boolean is_blocked;
+    constructor()
 
-	@Nullable public String id;
-	@NonNull public String name;
-	@Nullable public String icon_img;
+    // one of the many reasons why the Android API is awful
+    private constructor(`in`: Parcel) {
+        comment_karma = `in`.readInt()
+        link_karma = `in`.readInt()
 
-	@Nullable public Boolean is_employee;
+        created = `in`.readLong()
+        created_utc = `in`.readLong()
 
-	@Override
-	public int describeContents() {
-		return 0;
-	}
+        val inHasMail = `in`.readInt()
+        if (inHasMail == 0) {
+            has_mail = null
+        } else {
+            has_mail = inHasMail == 1
+        }
 
-	public RedditUser() {
-	}
+        val inHasModMail = `in`.readInt()
+        if (inHasModMail == 0) {
+            has_mod_mail = null
+        } else {
+            has_mod_mail = inHasModMail == 1
+        }
 
-	// one of the many reasons why the Android API is awful
-	private RedditUser(final Parcel in) {
+        is_friend = `in`.readInt() == 1
+        is_gold = `in`.readInt() == 1
+        is_mod = `in`.readInt() == 1
+        over_18 = `in`.readInt() == 1
+        is_blocked = `in`.readInt() == 1
 
-		comment_karma = in.readInt();
-		link_karma = in.readInt();
+        id = `in`.readString()
+        name = `in`.readString()
+        icon_img = `in`.readString()
 
-		created = in.readLong();
-		created_utc = in.readLong();
+        is_employee = ParcelUtils.readNullableBoolean(`in`)
+    }
 
-		final int inHasMail = in.readInt();
-		if(inHasMail == 0) {
-			has_mail = null;
-		} else {
-			has_mail = inHasMail == 1;
-		}
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeInt(comment_karma!!)
+        parcel.writeInt(link_karma!!)
 
-		final int inHasModMail = in.readInt();
-		if(inHasModMail == 0) {
-			has_mod_mail = null;
-		} else {
-			has_mod_mail = inHasModMail == 1;
-		}
+        parcel.writeLong(created!!)
+        parcel.writeLong(created_utc!!)
 
-		is_friend = in.readInt() == 1;
-		is_gold = in.readInt() == 1;
-		is_mod = in.readInt() == 1;
-		over_18 = in.readInt() == 1;
-		is_blocked = in.readInt() == 1;
+        if (has_mail == null) {
+            parcel.writeInt(0)
+        } else {
+            parcel.writeInt(if (has_mail) 1 else -1)
+        }
 
-		id = in.readString();
-		name = in.readString();
-		icon_img = in.readString();
+        if (has_mod_mail == null) {
+            parcel.writeInt(0)
+        } else {
+            parcel.writeInt(if (has_mod_mail) 1 else -1)
+        }
 
-		is_employee = ParcelUtils.readNullableBoolean(in);
-	}
+        parcel.writeInt(if (is_friend) 1 else 0)
+        parcel.writeInt(if (is_gold) 1 else 0)
+        parcel.writeInt(if (is_mod) 1 else 0)
+        parcel.writeInt(if (over_18) 1 else 0)
+        parcel.writeInt(if (is_blocked) 1 else 0)
 
-	@Override
-	public void writeToParcel(final Parcel parcel, final int flags) {
+        parcel.writeString(id)
+        parcel.writeString(name)
+        parcel.writeString(icon_img)
 
-		parcel.writeInt(comment_karma);
-		parcel.writeInt(link_karma);
+        ParcelUtils.writeNullableBoolean(parcel, is_employee)
+    }
 
-		parcel.writeLong(created);
-		parcel.writeLong(created_utc);
+    val iconUrl: UriString?
+        get() {
+            if (icon_img == null) {
+                return null
+            } else {
+                return UriString(StringEscapeUtils.unescapeHtml4(icon_img))
+            }
+        }
 
-		if(has_mail == null) {
-			parcel.writeInt(0);
-		} else {
-			parcel.writeInt(has_mail ? 1 : -1);
-		}
+    fun fullname(): String {
+        return String.format("%s_%s", RedditThing.Companion.KIND_USER, id)
+    }
 
-		if(has_mod_mail == null) {
-			parcel.writeInt(0);
-		} else {
-			parcel.writeInt(has_mod_mail ? 1 : -1);
-		}
+    companion object {
+        val CREATOR
+                : Parcelable.Creator<RedditUser?> = object : Parcelable.Creator<RedditUser?> {
+            override fun createFromParcel(`in`: Parcel): RedditUser {
+                return RedditUser(`in`)
+            }
 
-		parcel.writeInt(is_friend ? 1 : 0);
-		parcel.writeInt(is_gold ? 1 : 0);
-		parcel.writeInt(is_mod ? 1 : 0);
-		parcel.writeInt(over_18 ? 1 : 0);
-		parcel.writeInt(is_blocked ? 1 : 0);
-
-		parcel.writeString(id);
-		parcel.writeString(name);
-		parcel.writeString(icon_img);
-
-		ParcelUtils.writeNullableBoolean(parcel, is_employee);
-	}
-
-	@Nullable
-	public UriString getIconUrl() {
-		if(icon_img == null) {
-			return null;
-		} else {
-			return new UriString(StringEscapeUtils.unescapeHtml4(icon_img));
-		}
-	}
-
-	public static final Parcelable.Creator<RedditUser> CREATOR
-			= new Parcelable.Creator<RedditUser>() {
-		@Override
-		public RedditUser createFromParcel(final Parcel in) {
-			return new RedditUser(in);
-		}
-
-		@Override
-		public RedditUser[] newArray(final int size) {
-			return new RedditUser[size];
-		}
-	};
-	public String fullname() {
-		return String.format("%s_%s", RedditThing.KIND_USER, id);
-	}
+            override fun newArray(size: Int): Array<RedditUser?> {
+                return arrayOfNulls<RedditUser>(size)
+            }
+        }
+    }
 }

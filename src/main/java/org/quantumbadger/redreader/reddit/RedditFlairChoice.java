@@ -12,128 +12,107 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
 
-package org.quantumbadger.redreader.reddit;
+import android.os.Parcel
+import android.os.Parcelable
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.jsonwrap.JsonArray
+import org.quantumbadger.redreader.jsonwrap.JsonObject
 
-import android.os.Parcel;
-import android.os.Parcelable;
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.jsonwrap.JsonArray;
-import org.quantumbadger.redreader.jsonwrap.JsonObject;
-import org.quantumbadger.redreader.jsonwrap.JsonValue;
+class RedditFlairChoice private constructor(
+    val text: String,
+    val templateId: String
+) : Parcelable {
+    override fun describeContents(): Int {
+        return 0
+    }
 
-import java.util.ArrayList;
-import java.util.List;
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeString(text)
+        dest.writeString(templateId)
+    }
 
-public class RedditFlairChoice implements Parcelable {
+    override fun toString(): String {
+        return "RedditFlairChoice(" +
+                "text='" + text + '\'' +
+                ", templateId='" + templateId + '\'' +
+                ')'
+    }
 
-	@NonNull public final String text;
-	@NonNull public final String templateId;
+    override fun equals(o: Any?): Boolean {
+        if (this === o) {
+            return true
+        }
 
-	private RedditFlairChoice(
-			@NonNull final String text,
-			@NonNull final String templateId) {
+        if (o !is RedditFlairChoice) {
+            return false
+        }
 
-		this.text = text;
-		this.templateId = templateId;
-	}
+        val other = o
+        return text == other.text && templateId == other.templateId
+    }
 
-	@NonNull
-	public static Optional<List<RedditFlairChoice>> fromJsonList(@NonNull final JsonArray json) {
+    override fun hashCode(): Int {
+        return text.hashCode() + 37 * templateId.hashCode()
+    }
 
-		final ArrayList<RedditFlairChoice> result = new ArrayList<>(json.size());
+    companion object {
+        fun fromJsonList(json: JsonArray): Optional<MutableList<RedditFlairChoice?>?> {
+            val result = ArrayList<RedditFlairChoice?>(json.size())
 
-		for(final JsonValue value : json) {
+            for (value in json) {
+                val `object` = value.asObject()
 
-			final JsonObject object = value.asObject();
+                if (`object` == null) {
+                    return Optional.Companion.empty<MutableList<RedditFlairChoice?>?>()
+                }
 
-			if(object == null) {
-				return Optional.empty();
-			}
+                val choice: Optional<RedditFlairChoice?> = fromJson(`object`)
 
-			final Optional<RedditFlairChoice> choice = fromJson(object);
+                if (choice.isEmpty()) {
+                    return Optional.Companion.empty<MutableList<RedditFlairChoice?>?>()
+                }
 
-			if(choice.isEmpty()) {
-				return Optional.empty();
-			}
+                result.add(choice.get())
+            }
 
-			result.add(choice.get());
-		}
+            return Optional.Companion.of<MutableList<RedditFlairChoice?>?>(result)
+        }
 
-		return Optional.of(result);
-	}
+        fun fromJson(
+            json: JsonObject
+        ): Optional<RedditFlairChoice?> {
+            val flairText = json.getString("flair_text")
+            val flairTemplateId = json.getString("flair_template_id")
 
-	@NonNull
-	public static Optional<RedditFlairChoice> fromJson(
-			@NonNull final JsonObject json) {
+            if (flairText == null || flairTemplateId == null) {
+                return Optional.Companion.empty<RedditFlairChoice?>()
+            }
 
-		final String flairText = json.getString("flair_text");
-		final String flairTemplateId = json.getString("flair_template_id");
+            return Optional.Companion.of<RedditFlairChoice?>(
+                RedditFlairChoice(
+                    flairText,
+                    flairTemplateId
+                )
+            )
+        }
 
-		if(flairText == null || flairTemplateId == null) {
-			return Optional.empty();
-		}
+        val CREATOR
+                : Parcelable.Creator<RedditFlairChoice?> =
+            object : Parcelable.Creator<RedditFlairChoice?> {
+                override fun createFromParcel(`in`: Parcel): RedditFlairChoice {
+                    val text = `in`.readString()
+                    val templateId = `in`.readString()
 
-		return Optional.of(new RedditFlairChoice(flairText, flairTemplateId));
-	}
+                    return RedditFlairChoice(text!!, templateId!!)
+                }
 
-	@Override
-	public int describeContents() {
-		return 0;
-	}
-
-	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
-		dest.writeString(text);
-		dest.writeString(templateId);
-	}
-
-	public static final Parcelable.Creator<RedditFlairChoice> CREATOR
-			= new Parcelable.Creator<RedditFlairChoice>() {
-
-		@Override
-		public RedditFlairChoice createFromParcel(final Parcel in) {
-
-			final String text = in.readString();
-			final String templateId = in.readString();
-
-			return new RedditFlairChoice(text, templateId);
-		}
-
-		@Override
-		public RedditFlairChoice[] newArray(final int size) {
-			return new RedditFlairChoice[size];
-		}
-	};
-
-	@Override
-	public String toString() {
-		return "RedditFlairChoice(" +
-				"text='" + text + '\'' +
-				", templateId='" + templateId + '\'' +
-				')';
-	}
-
-	@Override
-	public boolean equals(final Object o) {
-
-		if(this == o) {
-			return true;
-		}
-
-		if(!(o instanceof RedditFlairChoice)) {
-			return false;
-		}
-
-		final RedditFlairChoice other = (RedditFlairChoice)o;
-		return text.equals(other.text) && templateId.equals(other.templateId);
-	}
-
-	@Override
-	public int hashCode() {
-		return text.hashCode() + 37 * templateId.hashCode();
-	}
+                override fun newArray(size: Int): Array<RedditFlairChoice?> {
+                    return arrayOfNulls<RedditFlairChoice>(size)
+                }
+            }
+    }
 }

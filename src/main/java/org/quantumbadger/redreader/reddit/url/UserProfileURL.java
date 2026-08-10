@@ -12,89 +12,79 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
 
-package org.quantumbadger.redreader.reddit.url;
+import android.content.Context
+import android.net.Uri
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 
-import android.content.Context;
-import android.net.Uri;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.StringUtils;
+class UserProfileURL(val username: String?) : RedditURL() {
+    override fun generateJsonUri(): Uri? {
+        val builder = Uri.Builder()
+        builder.scheme(Reddit.getScheme())
+            .authority(Reddit.getDomain())
 
-import java.util.ArrayList;
-import java.util.List;
+        builder.appendEncodedPath("user")
+        builder.appendPath(username)
 
-public class UserProfileURL extends RedditURLParser.RedditURL {
+        builder.appendEncodedPath(".json")
 
-	public final String username;
+        return builder.build()
+    }
 
-	public UserProfileURL(final String username) {
-		this.username = username;
-	}
+    @RedditURLParser.PathType
+    override fun pathType(): Int {
+        return RedditURLParser.USER_PROFILE_URL
+    }
 
-	public static UserProfileURL parse(final Uri uri) {
+    override fun humanReadableName(context: Context?, shorter: Boolean): String? {
+        return username
+    }
 
-		final String[] pathSegments;
-		{
-			final List<String> pathSegmentsList = uri.getPathSegments();
+    companion object {
+        fun parse(uri: Uri): UserProfileURL? {
+            val pathSegments: Array<String?>
+            run {
+                val pathSegmentsList = uri.getPathSegments()
+                val pathSegmentsFiltered = ArrayList<String?>(
+                    pathSegmentsList.size
+                )
+                for (segment in pathSegmentsList) {
+                    var segment = segment
+                    while (StringUtils.asciiLowercase(segment).endsWith(".json")
+                        || StringUtils.asciiLowercase(segment).endsWith(".xml")
+                    ) {
+                        segment = segment.substring(0, segment.lastIndexOf('.'))
+                    }
 
-			final ArrayList<String> pathSegmentsFiltered = new ArrayList<>(
-					pathSegmentsList.size());
-			for(String segment : pathSegmentsList) {
+                    if (!segment.isEmpty()) {
+                        pathSegmentsFiltered.add(segment)
+                    }
+                }
 
-				while(StringUtils.asciiLowercase(segment).endsWith(".json")
-						|| StringUtils.asciiLowercase(segment).endsWith(".xml")) {
-					segment = segment.substring(0, segment.lastIndexOf('.'));
-				}
+                pathSegments
+                = pathSegmentsFiltered.toTypedArray<String?>()
+            }
 
-				if(!segment.isEmpty()) {
-					pathSegmentsFiltered.add(segment);
-				}
-			}
+            if (pathSegments.size != 2) {
+                return null
+            }
 
-			pathSegments
-					= pathSegmentsFiltered.toArray(new String[0]);
-		}
+            if (!pathSegments[0].equals("user", ignoreCase = true) && !pathSegments[0].equals(
+                    "u", ignoreCase = true
+                )
+            ) {
+                return null
+            }
 
-		if(pathSegments.length != 2) {
-			return null;
-		}
+            // TODO validate username with regex
+            val username = pathSegments[1]
 
-		if(!pathSegments[0].equalsIgnoreCase("user") && !pathSegments[0].equalsIgnoreCase(
-				"u")) {
-			return null;
-		}
-
-		// TODO validate username with regex
-		final String username = pathSegments[1];
-
-		return new UserProfileURL(username);
-	}
-
-	@Override
-	public Uri generateJsonUri() {
-
-		final Uri.Builder builder = new Uri.Builder();
-		builder.scheme(Constants.Reddit.getScheme())
-				.authority(Constants.Reddit.getDomain());
-
-		builder.appendEncodedPath("user");
-		builder.appendPath(username);
-
-		builder.appendEncodedPath(".json");
-
-		return builder.build();
-	}
-
-	@Override
-	public @RedditURLParser.PathType
-	int pathType() {
-		return RedditURLParser.USER_PROFILE_URL;
-	}
-
-	@Override
-	public String humanReadableName(final Context context, final boolean shorter) {
-		return username;
-	}
+            return UserProfileURL(username)
+        }
+    }
 }

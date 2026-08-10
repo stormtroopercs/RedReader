@@ -12,52 +12,37 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
-
-import androidx.annotation.NonNull;
-
-import java.util.HashMap;
-
-public class GenerationalCache<In extends HasUniqueId, Out> {
-
-	@NonNull private final FunctionOneArgWithReturn<In, Out> mCreator;
-
-	@NonNull private HashMap<String, Out> mPreviousGen = new HashMap<>();
-	@NonNull private HashMap<String, Out> mThisGen = new HashMap<>();
+class GenerationalCache<In : HasUniqueId?, Out>(private val mCreator: FunctionOneArgWithReturn<In?, Out?>) {
+    private var mPreviousGen = HashMap<String?, Out?>()
+    private var mThisGen = HashMap<String?, Out?>()
 
 
-	public GenerationalCache(
-			@NonNull final FunctionOneArgWithReturn<In, Out> creator) {
-		mCreator = creator;
-	}
+    fun get(`in`: In): Out {
+        val uniqueId = `in`!!.getUniqueId()
 
-	@NonNull
-	public Out get(@NonNull final In in) {
+        var result = mThisGen.get(uniqueId)
 
-		final String uniqueId = in.getUniqueId();
+        if (result != null) {
+            return result
+        }
 
-		Out result = mThisGen.get(uniqueId);
+        result = mPreviousGen.get(uniqueId)
 
-		if(result != null) {
-			return result;
-		}
+        if (result == null) {
+            result = mCreator.apply(`in`)
+            mThisGen.put(uniqueId, result)
+        }
 
-		result = mPreviousGen.get(uniqueId);
+        mThisGen.put(uniqueId, result)
+        return result
+    }
 
-		if(result == null) {
-			result = mCreator.apply(in);
-			mThisGen.put(uniqueId, result);
-		}
-
-		mThisGen.put(uniqueId, result);
-		return result;
-	}
-
-	public void nextGeneration() {
-		mPreviousGen = mThisGen;
-		mThisGen = new HashMap<>();
-	}
+    fun nextGeneration() {
+        mPreviousGen = mThisGen
+        mThisGen = HashMap<String?, Out?>()
+    }
 }

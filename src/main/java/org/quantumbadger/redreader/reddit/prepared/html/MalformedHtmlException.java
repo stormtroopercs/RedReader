@@ -12,37 +12,30 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+class MalformedHtmlException : Exception {
+    val html: String
+    val charPosition: Int?
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+    constructor(
+        message: String,
+        html: String,
+        charPosition: Int?,
+        e: Exception
+    ) : super(message, e) {
+        this.html = html
+        this.charPosition = charPosition
+    }
 
-public class MalformedHtmlException extends Exception {
-
-	@NonNull public final String html;
-	@Nullable public final Integer charPosition;
-
-	public MalformedHtmlException(
-			@NonNull final String message,
-			@NonNull final String html,
-			@Nullable final Integer charPosition,
-			@NonNull final Exception e) {
-
-		super(message, e);
-		this.html = html;
-		this.charPosition = charPosition;
-	}
-
-	public MalformedHtmlException(
-			@NonNull final String message,
-			@NonNull final String html,
-			@Nullable final Integer charPosition) {
-
-		super(message);
-		this.html = html;
-		this.charPosition = charPosition;
-	}
+    constructor(
+        message: String,
+        html: String,
+        charPosition: Int?
+    ) : super(message) {
+        this.html = html
+        this.charPosition = charPosition
+    }
 }

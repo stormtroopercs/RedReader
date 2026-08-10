@@ -12,111 +12,91 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.receivers.announcements
 
-package org.quantumbadger.redreader.receivers.announcements;
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.common.time.TimeDuration
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.fromUtcMs
+import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.now
+import java.io.IOException
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+class Announcement private constructor(
+    @JvmField val id: String,
+    @JvmField val title: String,
+    @JvmField val message: String?,
+    @JvmField val url: UriString,
+    @JvmField val showUntil: TimestampUTC
+) {
+    val isExpired: Boolean
+        get() = showUntil.hasPassed()
 
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.time.TimeDuration;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
+    fun toPayload(): Payload {
+        val result = Payload()
 
-import java.io.IOException;
+        result.setString(ENTRY_ID, id)
+        result.setString(ENTRY_TITLE, title)
 
-public class Announcement {
+        if (message != null) {
+            result.setString(ENTRY_MESSAGE, message)
+        }
 
-	private static final String ENTRY_ID = "i";
-	private static final String ENTRY_TITLE = "t";
-	private static final String ENTRY_MESSAGE = "m";
-	private static final String ENTRY_URL = "u";
-	private static final String ENTRY_SHOW_UNTIL = "until";
+        result.setString(ENTRY_URL, url.value)
+        result.setLong(ENTRY_SHOW_UNTIL, showUntil.toUtcMs())
 
-	@NonNull public final String id;
+        return result
+    }
 
-	@NonNull public final String title;
-	@Nullable public final String message;
+    companion object {
+        private const val ENTRY_ID = "i"
+        private const val ENTRY_TITLE = "t"
+        private const val ENTRY_MESSAGE = "m"
+        private const val ENTRY_URL = "u"
+        private const val ENTRY_SHOW_UNTIL = "until"
 
-	@NonNull public final UriString url;
+        @JvmStatic
+        fun create(
+            id: String,
+            title: String,
+            message: String?,
+            url: UriString,
+            duration: TimeDuration
+        ): Announcement {
+            return Announcement(
+                id,
+                title,
+                message,
+                url,
+                now().add(duration)
+            )
+        }
 
-	public final TimestampUTC showUntil;
+        @JvmStatic
+        @Throws(IOException::class)
+        fun fromPayload(payload: Payload): Announcement {
+            var id = payload.getString(ENTRY_ID)
+            val title = payload.getString(ENTRY_TITLE)
+            val message = payload.getString(ENTRY_MESSAGE)
+            val url = payload.getString(ENTRY_URL)
+            val showUntil = payload.getLong(ENTRY_SHOW_UNTIL)
 
-	private Announcement(
-			@NonNull final String id,
-			@NonNull final String title,
-			@Nullable final String message,
-			@NonNull final UriString url,
-			final TimestampUTC showUntil) {
-		this.id = id;
+            if (title == null || url == null || showUntil == null) {
+                throw IOException("Required entry missing")
+            }
 
-		this.title = title;
-		this.message = message;
-		this.url = url;
-		this.showUntil = showUntil;
-	}
+            if (id == null) {
+                id = url
+            }
 
-	@NonNull
-	public static Announcement create(
-			@NonNull final String id,
-			@NonNull final String title,
-			@Nullable final String message,
-			@NonNull final UriString url,
-			final TimeDuration duration) {
-
-		return new Announcement(
-				id,
-				title,
-				message,
-				url,
-				TimestampUTC.now().add(duration));
-	}
-
-	public boolean isExpired() {
-		return showUntil.hasPassed();
-	}
-
-	@NonNull
-	public Payload toPayload() {
-
-		final Payload result = new Payload();
-
-		result.setString(ENTRY_ID, id);
-		result.setString(ENTRY_TITLE, title);
-
-		if(message != null) {
-			result.setString(ENTRY_MESSAGE, message);
-		}
-
-		result.setString(ENTRY_URL, url.value);
-		result.setLong(ENTRY_SHOW_UNTIL, showUntil.toUtcMs());
-
-		return result;
-	}
-
-	@NonNull
-	public static Announcement fromPayload(@NonNull final Payload payload) throws IOException {
-
-		String id = payload.getString(ENTRY_ID);
-		final String title = payload.getString(ENTRY_TITLE);
-		final String message = payload.getString(ENTRY_MESSAGE);
-		final String url = payload.getString(ENTRY_URL);
-		final Long showUntil = payload.getLong(ENTRY_SHOW_UNTIL);
-
-		if(title == null || url == null || showUntil == null) {
-			throw new IOException("Required entry missing");
-		}
-
-		if(id == null) {
-			id = url;
-		}
-
-		return new Announcement(
-				id,
-				title,
-				message,
-				new UriString(url),
-				TimestampUTC.fromUtcMs(showUntil));
-	}
+            return Announcement(
+                id,
+                title,
+                message,
+                UriString(url),
+                fromUtcMs(showUntil)
+            )
+        }
+    }
 }

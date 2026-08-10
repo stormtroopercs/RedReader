@@ -12,258 +12,274 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared
 
-package org.quantumbadger.redreader.reddit.prepared;
+import android.content.Context
+import android.content.Intent
+import android.graphics.Typeface
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import org.apache.commons.text.StringEscapeUtils
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.activities.CommentReplyActivity
+import org.quantumbadger.redreader.activities.InboxListingActivity.InboxType
+import org.quantumbadger.redreader.common.BetterSSB
+import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.common.General.mapIfNotNull
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.RRThemeAttributes
+import org.quantumbadger.redreader.common.ScreenreaderPronunciation
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.common.time.TimeFormatHelper.format
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
+import org.quantumbadger.redreader.reddit.kthings.RedditMessage
+import org.quantumbadger.redreader.reddit.kthings.UrlEncodedString
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
+import org.quantumbadger.redreader.reddit.prepared.html.HtmlReader
 
-import android.content.Context;
-import android.content.Intent;
-import android.content.res.TypedArray;
-import android.graphics.Typeface;
-import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+class RedditPreparedMessage(
+    activity: AppCompatActivity,
+    message: RedditMessage,
+    inboxType: InboxType?
+) : RedditRenderableInboxItem {
+    val header: BetterSSB
+    val body: BodyElement
+    val idAndType: RedditIdAndType
+    val src: RedditMessage
+    val inboxType: InboxType?
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+    init {
+        val applicationContext = activity.getApplicationContext()
 
-import org.apache.commons.text.StringEscapeUtils;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.activities.CommentReplyActivity;
-import org.quantumbadger.redreader.activities.InboxListingActivity;
-import org.quantumbadger.redreader.common.BetterSSB;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.RRThemeAttributes;
-import org.quantumbadger.redreader.common.ScreenreaderPronunciation;
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.common.time.TimeFormatHelper;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType;
-import org.quantumbadger.redreader.reddit.kthings.RedditMessage;
-import org.quantumbadger.redreader.reddit.kthings.UrlEncodedString;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
-import org.quantumbadger.redreader.reddit.prepared.html.HtmlReader;
+        this.src = message
+        this.inboxType = inboxType
 
-public final class RedditPreparedMessage implements RedditRenderableInboxItem {
+        // TODO respect RRTheme
+        val rrCommentHeaderBoldCol: Int
+        val rrCommentHeaderAuthorCol: Int
 
-	public final BetterSSB header;
-	public final BodyElement body;
-	public final RedditIdAndType idAndType;
-	public final RedditMessage src;
-	public final InboxListingActivity.InboxType inboxType;
+        run {
+            val appearance = activity.obtainStyledAttributes(
+                intArrayOf(
+                    R.attr.rrCommentHeaderBoldCol,
+                    R.attr.rrCommentHeaderAuthorCol,
+                )
+            )
+            rrCommentHeaderBoldCol = appearance.getColor(0, 255)
+            rrCommentHeaderAuthorCol = appearance.getColor(1, 255)
+            appearance.recycle()
+        }
 
-	public RedditPreparedMessage(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final RedditMessage message,
-			final InboxListingActivity.InboxType inboxType) {
+        body = HtmlReader.Companion.parse(message.body_html!!.decoded, activity)
 
-		final Context applicationContext = activity.getApplicationContext();
+        idAndType = message.getIdAndType()
 
-		this.src = message;
-		this.inboxType = inboxType;
+        val sb = BetterSSB()
 
-		// TODO respect RRTheme
+        if (inboxType == InboxType.SENT) {
+            sb.append(applicationContext.getString(string.subtitle_to) + " ", 0)
 
-		final int rrCommentHeaderBoldCol;
-		final int rrCommentHeaderAuthorCol;
+            if (src.dest == null) {
+                sb.append(
+                    "[" + applicationContext.getString(string.general_unknown) + "]",
+                    BetterSSB.Companion.FOREGROUND_COLOR or BetterSSB.Companion.BOLD,
+                    rrCommentHeaderAuthorCol,
+                    0,
+                    1f
+                )
+            } else {
+                sb.append(
+                    src.dest.decoded,
+                    BetterSSB.Companion.FOREGROUND_COLOR or BetterSSB.Companion.BOLD,
+                    rrCommentHeaderAuthorCol,
+                    0,
+                    1f
+                )
+            }
+        } else {
+            val author: String? = General.nullAlternative<String>(
+                org.quantumbadger.redreader.common.General.mapIfNotNull<UrlEncodedString?, String>(
+                    src.author,
+                    UrlEncodedString::decoded
+                )!!,
+                org.quantumbadger.redreader.common.General.mapIfNotNull<UrlEncodedString?, String>(
+                    src.subreddit_name_prefixed,
+                    UrlEncodedString::decoded
+                )!!,
+                "[" + applicationContext.getString(string.general_unknown) + "]"
+            )
 
-		{
-			final TypedArray appearance = activity.obtainStyledAttributes(new int[] {
-					R.attr.rrCommentHeaderBoldCol,
-					R.attr.rrCommentHeaderAuthorCol,
-			});
+            sb.append(
+                author!!,
+                BetterSSB.Companion.FOREGROUND_COLOR or BetterSSB.Companion.BOLD,
+                rrCommentHeaderAuthorCol,
+                0,
+                1f
+            )
+        }
 
-			rrCommentHeaderBoldCol = appearance.getColor(0, 255);
-			rrCommentHeaderAuthorCol = appearance.getColor(1, 255);
+        sb.append("   ", 0)
+        sb.append(
+            format(
+                src.created_utc.value.elapsedPeriod(),
+                applicationContext,
+                string.time_ago,
+                PrefsUtility.appearance_inbox_age_units()
+            ),
+            BetterSSB.Companion.FOREGROUND_COLOR or BetterSSB.Companion.BOLD,
+            rrCommentHeaderBoldCol,
+            0,
+            1f
+        )
 
-			appearance.recycle();
-		}
+        header = sb
+    }
 
-		body = HtmlReader.parse(message.getBody_html().getDecoded(), activity);
+    private fun openReplyActivity(activity: AppCompatActivity) {
+        val intent = Intent(activity, CommentReplyActivity::class.java)
+        intent.putExtra(CommentReplyActivity.Companion.PARENT_ID_AND_TYPE_KEY, idAndType)
+        intent.putExtra(
+            CommentReplyActivity.Companion.PARENT_MARKDOWN_KEY,
+            mapIfNotNull<UrlEncodedString?, String>(src.body_html, UrlEncodedString::decoded)
+        )
+        intent.putExtra(
+            CommentReplyActivity.Companion.PARENT_TYPE,
+            CommentReplyActivity.Companion.PARENT_TYPE_MESSAGE
+        )
+        activity.startActivity(intent)
+    }
 
-		idAndType = message.getIdAndType();
+    override fun handleInboxClick(activity: BaseActivity) {
+        if (src.author == null) {
+            return
+        }
 
-		final BetterSSB sb = new BetterSSB();
+        val currentCanonicalUserName: String = RedditAccountManager.Companion.getInstance(activity)
+            .getDefaultAccount().canonicalUsername
 
-		if(inboxType == InboxListingActivity.InboxType.SENT) {
-			sb.append(applicationContext.getString(R.string.subtitle_to) + " ", 0);
+        if (StringUtils.asciiLowercase(src.author.decoded.trim { it <= ' ' })
+            != currentCanonicalUserName
+        ) {
+            openReplyActivity(activity)
+        }
+    }
 
-			if(src.getDest() == null) {
-				sb.append(
-						"[" + applicationContext.getString(R.string.general_unknown) + "]",
-						BetterSSB.FOREGROUND_COLOR | BetterSSB.BOLD,
-						rrCommentHeaderAuthorCol,
-						0,
-						1f);
-			} else {
-				sb.append(
-						src.getDest().getDecoded(),
-						BetterSSB.FOREGROUND_COLOR | BetterSSB.BOLD,
-						rrCommentHeaderAuthorCol,
-						0,
-						1f);
-			}
-		} else {
+    override fun handleInboxLongClick(activity: BaseActivity) {
+        handleInboxClick(activity)
+    }
 
-			final String author = General.nullAlternative(
-					General.mapIfNotNull(
-							src.getAuthor(),
-							UrlEncodedString::getDecoded),
-					General.mapIfNotNull(
-							src.getSubreddit_name_prefixed(),
-							UrlEncodedString::getDecoded),
-					"[" + applicationContext.getString(R.string.general_unknown) + "]");
+    override fun getHeader(
+        theme: RRThemeAttributes?,
+        changeDataManager: RedditChangeDataManager?,
+        context: Context?,
+        commentAgeUnits: Int,
+        postCreated: TimestampUTC?,
+        parentCommentCreated: TimestampUTC?
+    ): BetterSSB {
+        return header
+    }
 
-			sb.append(
-					author,
-					BetterSSB.FOREGROUND_COLOR | BetterSSB.BOLD,
-					rrCommentHeaderAuthorCol,
-					0,
-					1f);
-		}
+    override fun getAccessibilityHeader(
+        theme: RRThemeAttributes?,
+        changeDataManager: RedditChangeDataManager?,
+        context: Context,
+        commentAgeUnits: Int,
+        postCreated: TimestampUTC?,
+        parentCommentCreated: TimestampUTC?,
+        collapsed: Boolean,
+        indentLevel: Optional<Int?>
+    ): String {
+        val accessibilityHeader = StringBuilder()
+        val separator = " \n"
 
-		sb.append("   ", 0);
-		sb.append(
-				TimeFormatHelper.format(
-						src.getCreated_utc().getValue().elapsedPeriod(),
-						applicationContext,
-						R.string.time_ago,
-						PrefsUtility.appearance_inbox_age_units()),
-				BetterSSB.FOREGROUND_COLOR | BetterSSB.BOLD,
-				rrCommentHeaderBoldCol,
-				0,
-				1f);
+        if (inboxType == InboxType.SENT && src.dest != null) {
+            accessibilityHeader
+                .append(
+                    context.getString(
+                        string.accessibility_subtitle_recipient_withperiod,
+                        ScreenreaderPronunciation.getPronunciation(
+                            context,
+                            src.dest.decoded
+                        )
+                    )
+                )
+                .append(separator)
+        } else if (src.author != null) {
+            accessibilityHeader
+                .append(
+                    context.getString(
+                        if (PrefsUtility.pref_accessibility_concise_mode())
+                            string.accessibility_subtitle_author_withperiod_concise_post
+                        else
+                            string.accessibility_subtitle_author_withperiod,
+                        ScreenreaderPronunciation.getPronunciation(
+                            context,
+                            src.author.decoded
+                        )
+                    )
+                )
+                .append(separator)
+        }
 
-		header = sb;
-	}
+        accessibilityHeader
+            .append(
+                context.getString(
+                    string.accessibility_subtitle_age_withperiod,
+                    format(
+                        src.created_utc.value.elapsedPeriod(),
+                        context,
+                        string.time_ago,
+                        PrefsUtility.appearance_inbox_age_units()
+                    )
+                )
+            )
+            .append(separator)
 
-	public BetterSSB getHeader() {
-		return header;
-	}
+        return accessibilityHeader.toString()
+    }
 
-	private void openReplyActivity(final AppCompatActivity activity) {
+    override fun getBody(
+        activity: BaseActivity,
+        textColor: Int,
+        textSize: Float,
+        showLinkButtons: Boolean
+    ): View {
+        val subjectLayout = LinearLayout(activity)
+        subjectLayout.setOrientation(LinearLayout.VERTICAL)
 
-		final Intent intent = new Intent(activity, CommentReplyActivity.class);
-		intent.putExtra(CommentReplyActivity.PARENT_ID_AND_TYPE_KEY, idAndType);
-		intent.putExtra(
-				CommentReplyActivity.PARENT_MARKDOWN_KEY,
-				General.mapIfNotNull(src.getBody_html(), UrlEncodedString::getDecoded));
-		intent.putExtra(
-				CommentReplyActivity.PARENT_TYPE,
-				CommentReplyActivity.PARENT_TYPE_MESSAGE);
-		activity.startActivity(intent);
-	}
+        val subjectText = TextView(activity)
+        subjectText.setText(
+            StringEscapeUtils.unescapeHtml4(
+                if (src.subject != null)
+                    src.subject.decoded
+                else
+                    "(no subject)"
+            )
+        )
+        subjectText.setTextColor(textColor)
+        subjectText.setTextSize(textSize)
+        subjectText.setTypeface(null, Typeface.BOLD)
 
-	@Override
-	public void handleInboxClick(final BaseActivity activity) {
+        subjectLayout.addView(subjectText)
+        subjectLayout.addView(
+            body.generateView(
+                activity,
+                textColor,
+                textSize,
+                showLinkButtons
+            )
+        )
 
-		if(src.getAuthor() == null) {
-			return;
-		}
-
-		final String currentCanonicalUserName = RedditAccountManager.getInstance(activity)
-				.getDefaultAccount().getCanonicalUsername();
-
-		if(!StringUtils.asciiLowercase(src.getAuthor().getDecoded().trim())
-				.equals(currentCanonicalUserName)) {
-			openReplyActivity(activity);
-		}
-	}
-
-	@Override
-	public void handleInboxLongClick(final BaseActivity activity) {
-		handleInboxClick(activity);
-	}
-
-	@Override
-	public BetterSSB getHeader(
-			final RRThemeAttributes theme,
-			final RedditChangeDataManager changeDataManager,
-			final Context context,
-			final int commentAgeUnits,
-			@Nullable final TimestampUTC postCreated,
-			@Nullable final TimestampUTC parentCommentCreated) {
-		return header;
-	}
-
-	@Override
-	public String getAccessibilityHeader(
-			final RRThemeAttributes theme,
-			final RedditChangeDataManager changeDataManager,
-			final Context context,
-			final int commentAgeUnits,
-			@Nullable final TimestampUTC postCreated,
-			@Nullable final TimestampUTC parentCommentCreated,
-			final boolean collapsed,
-			@NonNull final Optional<Integer> indentLevel) {
-
-		final StringBuilder accessibilityHeader = new StringBuilder();
-		final String separator = " \n";
-
-		if(inboxType == InboxListingActivity.InboxType.SENT && src.getDest() != null) {
-			accessibilityHeader
-					.append(context.getString(
-							R.string.accessibility_subtitle_recipient_withperiod,
-							ScreenreaderPronunciation.getPronunciation(
-									context,
-									src.getDest().getDecoded())))
-					.append(separator);
-		} else if(src.getAuthor() != null) {
-			accessibilityHeader
-					.append(context.getString(
-							PrefsUtility.pref_accessibility_concise_mode()
-									?R.string.accessibility_subtitle_author_withperiod_concise_post
-									: R.string.accessibility_subtitle_author_withperiod,
-							ScreenreaderPronunciation.getPronunciation(
-									context,
-									src.getAuthor().getDecoded())))
-					.append(separator);
-		}
-
-		accessibilityHeader
-				.append(context.getString(
-						R.string.accessibility_subtitle_age_withperiod,
-								TimeFormatHelper.format(
-										src.getCreated_utc().getValue().elapsedPeriod(),
-										context,
-										R.string.time_ago,
-										PrefsUtility.appearance_inbox_age_units())))
-				.append(separator);
-
-		return accessibilityHeader.toString();
-	}
-
-	@Override
-	public View getBody(
-			final BaseActivity activity,
-			final Integer textColor,
-			final Float textSize,
-			final boolean showLinkButtons) {
-
-		final LinearLayout subjectLayout = new LinearLayout(activity);
-		subjectLayout.setOrientation(LinearLayout.VERTICAL);
-
-		final TextView subjectText = new TextView(activity);
-		subjectText.setText(StringEscapeUtils.unescapeHtml4(src.getSubject() != null
-				? src.getSubject().getDecoded()
-				: "(no subject)"));
-		subjectText.setTextColor(textColor);
-		subjectText.setTextSize(textSize);
-		subjectText.setTypeface(null, Typeface.BOLD);
-
-		subjectLayout.addView(subjectText);
-		subjectLayout.addView(body.generateView(
-				activity,
-				textColor,
-				textSize,
-				showLinkButtons));
-
-		return subjectLayout;
-	}
+        return subjectLayout
+    }
 }

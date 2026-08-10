@@ -12,77 +12,59 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import java.util.ArrayDeque
 
-import java.util.ArrayDeque;
+class CachedThreadPool(private val mMaxThreads: Int, private val mThreadName: String?) {
+    private val mTasks = ArrayDeque<Runnable>(16)
+    private val mExecutor: Executor = CachedThreadPool.Executor()
 
-public class CachedThreadPool {
+    private var mThreadNameCount = 0
 
-	private final ArrayDeque<Runnable> mTasks = new ArrayDeque<>(16);
-	private final Executor mExecutor = new Executor();
+    private var mRunningThreads = 0
+    private var mIdleThreads = 0
 
-	private final int mMaxThreads;
-	private final String mThreadName;
-	private int mThreadNameCount = 0;
+    fun add(task: Runnable?) {
+        synchronized(mTasks) {
+            mTasks.addLast(task)
+            (mTasks as Object).notifyAll()
+            if (mIdleThreads < 1 && mRunningThreads < mMaxThreads) {
+                mRunningThreads++
+                Thread(mExecutor, mThreadName + " " + (mThreadNameCount++)).start()
+            }
+        }
+    }
 
-	private int mRunningThreads;
-	private int mIdleThreads;
+    private inner class Executor : Runnable {
+        override fun run() {
+            while (true) {
+                val taskToRun: Runnable
 
-	public CachedThreadPool(final int threads, final String threadName) {
-		mMaxThreads = threads;
-		mThreadName = threadName;
-	}
+                synchronized(mTasks) {
+                    if (mTasks.isEmpty()) {
+                        mIdleThreads++
 
-	public void add(final Runnable task) {
+                        try {
+                            (mTasks as Object).wait(30000)
+                        } catch (e: InterruptedException) {
+                            throw RuntimeException(e)
+                        } finally {
+                            mIdleThreads--
+                        }
 
-		synchronized(mTasks) {
-			mTasks.addLast(task);
-			mTasks.notifyAll();
+                        if (mTasks.isEmpty()) {
+                            mRunningThreads--
+                            return
+                        }
+                    }
+                    taskToRun = mTasks.removeFirst()
+                }
 
-			if(mIdleThreads < 1 && mRunningThreads < mMaxThreads) {
-				mRunningThreads++;
-				new Thread(mExecutor, mThreadName + " " + (mThreadNameCount++)).start();
-			}
-		}
-	}
-
-	private final class Executor implements Runnable {
-
-		@Override
-		public void run() {
-
-			while(true) {
-
-				final Runnable taskToRun;
-
-				synchronized(mTasks) {
-
-					if(mTasks.isEmpty()) {
-
-						mIdleThreads++;
-
-						try {
-							mTasks.wait(30_000);
-						} catch(final InterruptedException e) {
-							throw new RuntimeException(e);
-						} finally {
-							mIdleThreads--;
-						}
-
-						if(mTasks.isEmpty()) {
-							mRunningThreads--;
-							return;
-						}
-					}
-
-					taskToRun = mTasks.removeFirst();
-				}
-
-				taskToRun.run();
-			}
-		}
-	}
+                taskToRun.run()
+            }
+        }
+    }
 }

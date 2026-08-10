@@ -12,91 +12,79 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.os.Parcel
 
-import android.os.Parcel;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+object ParcelUtils {
+    fun writeNullableBoolean(
+        parcel: Parcel,
+        value: Boolean?
+    ) {
+        if (value == null) {
+            parcel.writeInt(0)
+        } else if (value) {
+            parcel.writeInt(1)
+        } else {
+            parcel.writeInt(-1)
+        }
+    }
 
-public class ParcelUtils {
+    fun readNullableBoolean(parcel: Parcel): Boolean? {
+        val value = parcel.readInt()
 
-	public static void writeNullableBoolean(
-			@NonNull final Parcel parcel,
-			@Nullable final Boolean value) {
+        when (value) {
+            -1 -> return false
+            0 -> return null
+            1 -> return true
+        }
 
-		if(value == null) {
-			parcel.writeInt(0);
-		} else if(value) {
-			parcel.writeInt(1);
-		} else {
-			parcel.writeInt(-1);
-		}
-	}
+        throw RuntimeException("Invalid value " + value)
+    }
 
-	@Nullable
-	public static Boolean readNullableBoolean(@NonNull final Parcel parcel) {
+    fun writeNullableInt(
+        parcel: Parcel,
+        value: Int?
+    ) {
+        if (value == null) {
+            parcel.writeInt(0)
+        } else {
+            parcel.writeInt(1)
+            parcel.writeInt(value)
+        }
+    }
 
-		final int value = parcel.readInt();
+    fun readNullableInt(parcel: Parcel): Int? {
+        val present = parcel.readInt()
 
-		switch(value) {
-			case -1: return false;
-			case 0: return null;
-			case 1: return true;
-		}
+        if (present == 1) {
+            return parcel.readInt()
+        } else {
+            return null
+        }
+    }
 
-		throw new RuntimeException("Invalid value " + value);
-	}
+    fun writeNullableLong(
+        parcel: Parcel,
+        value: Long?
+    ) {
+        if (value == null) {
+            parcel.writeLong(0)
+        } else {
+            parcel.writeLong(1)
+            parcel.writeLong(value)
+        }
+    }
 
-	public static void writeNullableInt(
-			@NonNull final Parcel parcel,
-			@Nullable final Integer value) {
+    fun readNullableLong(parcel: Parcel): Long? {
+        val present = parcel.readLong()
 
-		if (value == null) {
-			parcel.writeInt(0);
-
-		} else {
-			parcel.writeInt(1);
-			parcel.writeInt(value);
-		}
-	}
-
-	@Nullable
-	public static Integer readNullableInt(@NonNull final Parcel parcel) {
-
-		final int present = parcel.readInt();
-
-		if (present == 1) {
-			return parcel.readInt();
-		} else {
-			return null;
-		}
-	}
-
-	public static void writeNullableLong(
-			@NonNull final Parcel parcel,
-			@Nullable final Long value) {
-
-		if (value == null) {
-			parcel.writeLong(0);
-
-		} else {
-			parcel.writeLong(1);
-			parcel.writeLong(value);
-		}
-	}
-
-	@Nullable
-	public static Long readNullableLong(@NonNull final Parcel parcel) {
-
-		final long present = parcel.readLong();
-
-		if (present == 1) {
-			return parcel.readLong();
-		} else {
-			return null;
-		}
-	}
+        if (present == 1L) {
+            return parcel.readLong()
+        } else {
+            return null
+        }
+    }
 }

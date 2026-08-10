@@ -12,140 +12,144 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.graphics.Color
+import android.view.View
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
+import org.quantumbadger.redreader.common.General.setLayoutWidthHeight
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.RRThemeAttributes
+import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
+import org.quantumbadger.redreader.reddit.prepared.RedditRenderableInboxItem
 
-import android.graphics.Color;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+class RedditInboxItemView(
+    activity: BaseActivity,
+    theme: RRThemeAttributes
+) : LinearLayout(activity) {
+    private val mDivider: View
+    private val mHeader: TextView
+    private val mBodyHolder: FrameLayout
 
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.RRThemeAttributes;
-import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
-import org.quantumbadger.redreader.reddit.prepared.RedditRenderableInboxItem;
+    private val mTheme: RRThemeAttributes
 
-public class RedditInboxItemView extends LinearLayout {
+    private val showLinkButtons: Boolean
 
-	private final View mDivider;
-	private final TextView mHeader;
-	private final FrameLayout mBodyHolder;
+    private var currentItem: RedditRenderableInboxItem? = null
 
-	private final RRThemeAttributes mTheme;
+    private val mActivity: BaseActivity?
 
-	private final boolean showLinkButtons;
+    init {
+        mActivity = activity
+        mTheme = theme
 
-	private RedditRenderableInboxItem currentItem = null;
+        setOrientation(VERTICAL)
 
-	private final BaseActivity mActivity;
+        mDivider = View(activity)
+        mDivider.setBackgroundColor(Color.argb(128, 128, 128, 128)) // TODO better
+        addView(mDivider)
+        setLayoutWidthHeight(mDivider, LayoutParams.MATCH_PARENT, 1)
 
-	public RedditInboxItemView(
-			final BaseActivity activity,
-			final RRThemeAttributes theme) {
+        val inner = LinearLayout(activity)
+        inner.setOrientation(VERTICAL)
 
-		super(activity);
+        mHeader = TextView(activity)
+        mHeader.setTextSize(11.0f * theme.rrCommentHeaderFontScale)
+        mHeader.setTextColor(theme.rrCommentHeaderCol)
+        inner.addView(mHeader)
+        setLayoutMatchWidthWrapHeight(mHeader)
 
-		mActivity = activity;
-		mTheme = theme;
+        mBodyHolder = FrameLayout(activity)
+        mBodyHolder.setPadding(0, dpToPixels(activity, 2f), 0, 0)
+        inner.addView(mBodyHolder)
+        setLayoutMatchWidthWrapHeight(mBodyHolder)
 
-		setOrientation(VERTICAL);
+        val paddingPixels = dpToPixels(activity, 8.0f)
+        inner.setPadding(
+            paddingPixels + paddingPixels,
+            paddingPixels,
+            paddingPixels,
+            paddingPixels
+        )
 
-		mDivider = new View(activity);
-		mDivider.setBackgroundColor(Color.argb(128, 128, 128, 128)); // TODO better
-		addView(mDivider);
-		General.setLayoutWidthHeight(mDivider, ViewGroup.LayoutParams.MATCH_PARENT, 1);
+        addView(inner)
+        setLayoutMatchWidthWrapHeight(mBodyHolder)
 
-		final LinearLayout inner = new LinearLayout(activity);
-		inner.setOrientation(VERTICAL);
+        setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS)
 
-		mHeader = new TextView(activity);
-		mHeader.setTextSize(11.0f * theme.rrCommentHeaderFontScale);
-		mHeader.setTextColor(theme.rrCommentHeaderCol);
-		inner.addView(mHeader);
-		General.setLayoutMatchWidthWrapHeight(mHeader);
+        showLinkButtons = PrefsUtility.pref_appearance_linkbuttons()
 
-		mBodyHolder = new FrameLayout(activity);
-		mBodyHolder.setPadding(0, General.dpToPixels(activity, 2), 0, 0);
-		inner.addView(mBodyHolder);
-		General.setLayoutMatchWidthWrapHeight(mBodyHolder);
+        setOnClickListener(OnClickListener { v: View? -> handleInboxClick(mActivity) })
 
-		final int paddingPixels = General.dpToPixels(activity, 8.0f);
-		inner.setPadding(
-				paddingPixels + paddingPixels,
-				paddingPixels,
-				paddingPixels,
-				paddingPixels);
+        setOnLongClickListener(OnLongClickListener { v: View? ->
+            handleInboxLongClick(mActivity)
+            true
+        })
+    }
 
-		addView(inner);
-		General.setLayoutMatchWidthWrapHeight(mBodyHolder);
+    fun reset(
+        context: BaseActivity?,
+        changeDataManager: RedditChangeDataManager?,
+        theme: RRThemeAttributes?,
+        item: RedditRenderableInboxItem,
+        showDividerAtTop: Boolean
+    ) {
+        currentItem = item
 
-		setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
+        mDivider.setVisibility(if (showDividerAtTop) VISIBLE else GONE)
+        mHeader.setText(
+            item.getHeader(
+                theme,
+                changeDataManager,
+                context,
+                PrefsUtility.appearance_inbox_age_units(),
+                null,
+                null
+            ).get()
+        )
 
-		showLinkButtons = PrefsUtility.pref_appearance_linkbuttons();
+        mHeader.setContentDescription(
+            item.getAccessibilityHeader(
+                theme,
+                changeDataManager,
+                context,
+                PrefsUtility.appearance_inbox_age_units(),
+                null,
+                null,
+                false,
+                Optional.Companion.empty<Int?>()
+            )
+        )
 
-		setOnClickListener(v -> handleInboxClick(mActivity));
+        val body = item.getBody(
+            context,
+            mTheme.rrCommentBodyCol,
+            13.0f * mTheme.rrCommentFontScale,
+            showLinkButtons
+        )
 
-		setOnLongClickListener(v -> {
-			handleInboxLongClick(mActivity);
-			return true;
-		});
-	}
+        mBodyHolder.removeAllViews()
+        mBodyHolder.addView(body)
+        setLayoutMatchWidthWrapHeight(body)
+    }
 
-	public void reset(
-			final BaseActivity context,
-			final RedditChangeDataManager changeDataManager,
-			final RRThemeAttributes theme,
-			final RedditRenderableInboxItem item,
-			final boolean showDividerAtTop) {
+    fun handleInboxClick(activity: BaseActivity?) {
+        if (currentItem != null) {
+            currentItem!!.handleInboxClick(activity)
+        }
+    }
 
-		currentItem = item;
-
-		mDivider.setVisibility(showDividerAtTop ? VISIBLE : GONE);
-		mHeader.setText(item.getHeader(
-				theme,
-				changeDataManager,
-				context,
-				PrefsUtility.appearance_inbox_age_units(),
-				null,
-				null).get());
-
-		mHeader.setContentDescription(item.getAccessibilityHeader(
-				theme,
-				changeDataManager,
-				context,
-				PrefsUtility.appearance_inbox_age_units(),
-				null,
-				null,
-				false,
-				Optional.empty()));
-
-		final View body = item.getBody(
-				context,
-				mTheme.rrCommentBodyCol,
-				13.0f * mTheme.rrCommentFontScale,
-				showLinkButtons);
-
-		mBodyHolder.removeAllViews();
-		mBodyHolder.addView(body);
-		General.setLayoutMatchWidthWrapHeight(body);
-	}
-
-	public void handleInboxClick(final BaseActivity activity) {
-		if(currentItem != null) {
-			currentItem.handleInboxClick(activity);
-		}
-	}
-
-	public void handleInboxLongClick(final BaseActivity activity) {
-		if(currentItem != null) {
-			currentItem.handleInboxLongClick(activity);
-		}
-	}
+    fun handleInboxLongClick(activity: BaseActivity?) {
+        if (currentItem != null) {
+            currentItem!!.handleInboxLongClick(activity)
+        }
+    }
 }

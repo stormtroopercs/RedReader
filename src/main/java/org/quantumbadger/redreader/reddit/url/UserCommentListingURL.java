@@ -12,166 +12,145 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
 
-package org.quantumbadger.redreader.reddit.url;
+import android.content.Context
+import android.net.Uri
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.General.getUriQueryParameterNames
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.reddit.UserCommentSort
 
-import android.content.Context;
-import android.net.Uri;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.reddit.UserCommentSort;
+class UserCommentListingURL internal constructor(
+    val user: String?,
+    val order: UserCommentSort?,
+    val limit: Int?,
+    val after: String?
+) : CommentListingURL() {
+    override fun after(newAfter: String?): UserCommentListingURL {
+        return UserCommentListingURL(user, order, limit, newAfter)
+    }
 
-import java.util.ArrayList;
-import java.util.List;
+    override fun limit(newLimit: Int?): UserCommentListingURL {
+        return UserCommentListingURL(user, order, newLimit, after)
+    }
 
-public class UserCommentListingURL extends CommentListingURL {
+    fun order(newOrder: UserCommentSort?): UserCommentListingURL {
+        return UserCommentListingURL(user, newOrder, limit, after)
+    }
 
-	public final String user;
-	public final UserCommentSort order;
-	public final Integer limit;
-	public final String after;
+    override fun generateJsonUri(): Uri? {
+        val builder = Uri.Builder()
+        builder.scheme(Reddit.getScheme())
+            .authority(Reddit.getDomain())
 
-	UserCommentListingURL(
-			final String user,
-			final UserCommentSort order,
-			final Integer limit,
-			final String after) {
-		this.user = user;
-		this.order = order;
-		this.limit = limit;
-		this.after = after;
-	}
+        builder.appendEncodedPath("user")
+        builder.appendPath(user)
+        builder.appendEncodedPath("comments")
 
-	@Override
-	public UserCommentListingURL after(final String newAfter) {
-		return new UserCommentListingURL(user, order, limit, newAfter);
-	}
+        if (order != null) {
+            order.addToUserCommentListingUri(builder)
+        }
 
-	@Override
-	public UserCommentListingURL limit(final Integer newLimit) {
-		return new UserCommentListingURL(user, order, newLimit, after);
-	}
+        if (after != null) {
+            builder.appendQueryParameter("after", after)
+        }
 
-	public UserCommentListingURL order(final UserCommentSort newOrder) {
-		return new UserCommentListingURL(user, newOrder, limit, after);
-	}
+        if (limit != null) {
+            builder.appendQueryParameter("limit", limit.toString())
+        }
 
-	public static UserCommentListingURL parse(final Uri uri) {
+        builder.appendEncodedPath(".json")
 
-		final String[] pathSegments;
-		{
-			final List<String> pathSegmentsList = uri.getPathSegments();
+        return builder.build()
+    }
 
-			final ArrayList<String> pathSegmentsFiltered = new ArrayList<>(
-					pathSegmentsList.size());
-			for(String segment : pathSegmentsList) {
+    @RedditURLParser.PathType
+    override fun pathType(): Int {
+        return RedditURLParser.USER_COMMENT_LISTING_URL
+    }
 
-				while(StringUtils.asciiLowercase(segment).endsWith(".json")
-						|| StringUtils.asciiLowercase(segment).endsWith(".xml")) {
-					segment = segment.substring(0, segment.lastIndexOf('.'));
-				}
+    override fun humanReadableName(context: Context, shorter: Boolean): String {
+        val name = context.getString(string.user_comments)
 
-				if(!segment.isEmpty()) {
-					pathSegmentsFiltered.add(segment);
-				}
-			}
+        if (shorter) {
+            return name
+        } else {
+            return String.format("%s (%s)", name, user)
+        }
+    }
 
-			pathSegments
-					= pathSegmentsFiltered.toArray(new String[0]);
-		}
+    companion object {
+        fun parse(uri: Uri): UserCommentListingURL? {
+            val pathSegments: Array<String>
+            run {
+                val pathSegmentsList = uri.getPathSegments()
+                val pathSegmentsFiltered = ArrayList<String?>(
+                    pathSegmentsList.size
+                )
+                for (segment in pathSegmentsList) {
+                    var segment = segment
+                    while (StringUtils.asciiLowercase(segment).endsWith(".json")
+                        || StringUtils.asciiLowercase(segment).endsWith(".xml")
+                    ) {
+                        segment = segment.substring(0, segment.lastIndexOf('.'))
+                    }
 
-		final UserCommentSort order;
-		if(pathSegments.length > 0) {
-			order = UserCommentSort.parse(
-					uri.getQueryParameter("sort"), uri.getQueryParameter("t"));
-		} else {
-			order = null;
-		}
+                    if (!segment.isEmpty()) {
+                        pathSegmentsFiltered.add(segment)
+                    }
+                }
 
-		if(pathSegments.length < 3) {
-			return null;
-		}
+                pathSegments
+                = pathSegmentsFiltered.toTypedArray<String?>()
+            }
 
-		if(!pathSegments[0].equalsIgnoreCase("user") && !pathSegments[0].equalsIgnoreCase(
-				"u")) {
-			return null;
-		}
+            val order: UserCommentSort?
+            if (pathSegments.size > 0) {
+                order = UserCommentSort.Companion.parse(
+                    uri.getQueryParameter("sort"), uri.getQueryParameter("t")
+                )
+            } else {
+                order = null
+            }
 
-		// TODO validate username with regex
-		final String username = pathSegments[1];
-		final String typeName = pathSegments[2];
+            if (pathSegments.size < 3) {
+                return null
+            }
 
-		if(!typeName.equalsIgnoreCase("comments")) {
-			return null;
-		}
+            if (!pathSegments[0].equals("user", ignoreCase = true) && !pathSegments[0].equals(
+                    "u", ignoreCase = true
+                )
+            ) {
+                return null
+            }
 
-		Integer limit = null;
-		String after = null;
+            // TODO validate username with regex
+            val username: String? = pathSegments[1]
+            val typeName = pathSegments[2]
 
-		for(final String parameterKey : General.getUriQueryParameterNames(uri)) {
+            if (!typeName.equals("comments", ignoreCase = true)) {
+                return null
+            }
 
-			if(parameterKey.equalsIgnoreCase("after")) {
-				after = uri.getQueryParameter(parameterKey);
+            var limit: Int? = null
+            var after: String? = null
 
-			} else if(parameterKey.equalsIgnoreCase("limit")) {
-				try {
-					limit = Integer.parseInt(uri.getQueryParameter(parameterKey));
-				} catch(final Throwable ignored) {
-				}
-			}
-		}
+            for (parameterKey in getUriQueryParameterNames(uri)) {
+                if (parameterKey.equals("after", ignoreCase = true)) {
+                    after = uri.getQueryParameter(parameterKey)
+                } else if (parameterKey.equals("limit", ignoreCase = true)) {
+                    try {
+                        limit = uri.getQueryParameter(parameterKey)!!.toInt()
+                    } catch (ignored: Throwable) {
+                    }
+                }
+            }
 
-		return new UserCommentListingURL(username, order, limit, after);
-	}
-
-	@Override
-	public Uri generateJsonUri() {
-
-		final Uri.Builder builder = new Uri.Builder();
-		builder.scheme(Constants.Reddit.getScheme())
-				.authority(Constants.Reddit.getDomain());
-
-		builder.appendEncodedPath("user");
-		builder.appendPath(user);
-		builder.appendEncodedPath("comments");
-
-		if(order != null) {
-			order.addToUserCommentListingUri(builder);
-		}
-
-		if(after != null) {
-			builder.appendQueryParameter("after", after);
-		}
-
-		if(limit != null) {
-			builder.appendQueryParameter("limit", String.valueOf(limit));
-		}
-
-		builder.appendEncodedPath(".json");
-
-		return builder.build();
-	}
-
-	@Override
-	public @RedditURLParser.PathType
-	int pathType() {
-		return RedditURLParser.USER_COMMENT_LISTING_URL;
-	}
-
-	@Override
-	public String humanReadableName(final Context context, final boolean shorter) {
-
-		final String name = context.getString(R.string.user_comments);
-
-		if(shorter) {
-			return name;
-		} else {
-			return String.format("%s (%s)", name, user);
-		}
-	}
-
+            return UserCommentListingURL(username, order, limit, after)
+        }
+    }
 }

@@ -12,50 +12,43 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.url
 
-package org.quantumbadger.redreader.reddit.url;
+import android.net.Uri
 
-import android.net.Uri;
+class UnknownCommentListURL internal constructor(private val uri: Uri) : CommentListingURL() {
+    override fun after(after: String?): CommentListingURL {
+        return UnknownCommentListURL(
+            uri.buildUpon()
+                .appendQueryParameter("after", after)
+                .build()
+        )
+    }
 
-public class UnknownCommentListURL extends CommentListingURL {
+    override fun limit(limit: Int?): CommentListingURL {
+        return UnknownCommentListURL(
+            uri.buildUpon()
+                .appendQueryParameter(
+                    "limit",
+                    limit.toString()
+                )
+                .build()
+        )
+    }
 
-	private final Uri uri;
+    // TODO handle this better
+    override fun generateJsonUri(): Uri? {
+        if (uri.getPath()!!.endsWith(".json")) {
+            return uri
+        } else {
+            return uri.buildUpon().appendEncodedPath(".json").build()
+        }
+    }
 
-	UnknownCommentListURL(final Uri uri) {
-		this.uri = uri;
-	}
-
-	@Override
-	public CommentListingURL after(final String after) {
-		return new UnknownCommentListURL(uri.buildUpon()
-				.appendQueryParameter("after", after)
-				.build());
-	}
-
-	@Override
-	public CommentListingURL limit(final Integer limit) {
-		return new UnknownCommentListURL(uri.buildUpon()
-				.appendQueryParameter(
-						"limit",
-						String.valueOf(limit))
-				.build());
-	}
-
-	// TODO handle this better
-	@Override
-	public Uri generateJsonUri() {
-		if(uri.getPath().endsWith(".json")) {
-			return uri;
-		} else {
-			return uri.buildUpon().appendEncodedPath(".json").build();
-		}
-	}
-
-	@Override
-	public @RedditURLParser.PathType
-	int pathType() {
-		return RedditURLParser.UNKNOWN_COMMENT_LISTING_URL;
-	}
+    @RedditURLParser.PathType
+    override fun pathType(): Int {
+        return RedditURLParser.UNKNOWN_COMMENT_LISTING_URL
+    }
 }

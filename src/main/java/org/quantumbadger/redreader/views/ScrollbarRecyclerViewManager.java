@@ -12,131 +12,117 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.content.Context
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
+import org.quantumbadger.redreader.R
 
-import android.content.Context;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import org.quantumbadger.redreader.R;
+class ScrollbarRecyclerViewManager(
+    context: Context?,
+    root: ViewGroup?,
+    attachToRoot: Boolean
+) {
+    val outerView: View
+    private val mSwipeRefreshLayout: SwipeRefreshLayout
+    val recyclerView: RecyclerView
+    private val mScrollbarFrame: FrameLayout
+    private val mScrollbar: View
 
-public class ScrollbarRecyclerViewManager {
+    private var mScrollUnnecessary = false
 
-	private final View mOuter;
-	private final SwipeRefreshLayout mSwipeRefreshLayout;
-	private final RecyclerView mRecyclerView;
-	private final FrameLayout mScrollbarFrame;
-	private final View mScrollbar;
+    init {
+        this.outerView = LayoutInflater.from(context)
+            .inflate(R.layout.scrollbar_recyclerview, root, attachToRoot)
+        mSwipeRefreshLayout
+        = outerView.findViewById<SwipeRefreshLayout>(R.id.scrollbar_recyclerview_refreshlayout)
+        this.recyclerView =
+            outerView.findViewById<RecyclerView>(R.id.scrollbar_recyclerview_recyclerview)
+        mScrollbar = outerView.findViewById<View>(R.id.scrollbar_recyclerview_scrollbar)
+        mScrollbarFrame =
+            outerView.findViewById<FrameLayout>(R.id.scrollbar_recyclerview_scrollbarframe)
 
-	private boolean mScrollUnnecessary = false;
+        mSwipeRefreshLayout.setEnabled(false)
 
-	public ScrollbarRecyclerViewManager(
-			final Context context,
-			final ViewGroup root,
-			final boolean attachToRoot) {
+        val linearLayoutManager = LinearLayoutManager(context)
+        recyclerView.setLayoutManager(linearLayoutManager)
+        recyclerView.setHasFixedSize(true)
+        linearLayoutManager.setSmoothScrollbarEnabled(false)
 
-		mOuter = LayoutInflater.from(context)
-				.inflate(R.layout.scrollbar_recyclerview, root, attachToRoot);
-		mSwipeRefreshLayout
-				= mOuter.findViewById(R.id.scrollbar_recyclerview_refreshlayout);
-		mRecyclerView = mOuter.findViewById(R.id.scrollbar_recyclerview_recyclerview);
-		mScrollbar = mOuter.findViewById(R.id.scrollbar_recyclerview_scrollbar);
-		mScrollbarFrame = mOuter.findViewById(R.id.scrollbar_recyclerview_scrollbarframe);
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            private fun updateScroll() {
+                val firstVisible = linearLayoutManager.findFirstVisibleItemPosition()
+                val lastVisible = linearLayoutManager.findLastVisibleItemPosition()
+                val itemsVisible = lastVisible - firstVisible + 1
+                val totalCount = linearLayoutManager.getItemCount()
 
-		mSwipeRefreshLayout.setEnabled(false);
+                val scrollUnnecessary = (itemsVisible == totalCount)
 
-		final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
-		mRecyclerView.setLayoutManager(linearLayoutManager);
-		mRecyclerView.setHasFixedSize(true);
-		linearLayoutManager.setSmoothScrollbarEnabled(false);
+                if (scrollUnnecessary != mScrollUnnecessary) {
+                    mScrollbar.setVisibility(
+                        if (scrollUnnecessary)
+                            View.INVISIBLE
+                        else
+                            View.VISIBLE
+                    )
+                }
 
-		mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                mScrollUnnecessary = scrollUnnecessary
 
-			private void updateScroll() {
+                if (!scrollUnnecessary) {
+                    val recyclerViewHeight = recyclerView.getMeasuredHeight()
+                    val scrollBarHeight = mScrollbar.getMeasuredHeight()
 
-				final int firstVisible
-						= linearLayoutManager.findFirstVisibleItemPosition();
-				final int lastVisible = linearLayoutManager.findLastVisibleItemPosition();
-				final int itemsVisible = lastVisible - firstVisible + 1;
-				final int totalCount = linearLayoutManager.getItemCount();
+                    val topPadding = ((firstVisible.toDouble() / (totalCount
+                            - itemsVisible).toDouble())
+                            * (recyclerViewHeight - scrollBarHeight))
 
-				final boolean scrollUnnecessary = (itemsVisible == totalCount);
+                    mScrollbarFrame.setPadding(0, Math.round(topPadding).toInt(), 0, 0)
+                }
+            }
 
-				if(scrollUnnecessary != mScrollUnnecessary) {
-					mScrollbar.setVisibility(scrollUnnecessary
-							? View.INVISIBLE
-							: View.VISIBLE);
-				}
+            override fun onScrolled(
+                recyclerView: RecyclerView,
+                dx: Int,
+                dy: Int
+            ) {
+                updateScroll()
+            }
 
-				mScrollUnnecessary = scrollUnnecessary;
+            override fun onScrollStateChanged(
+                recyclerView: RecyclerView,
+                newState: Int
+            ) {
+                when (newState) {
+                    RecyclerView.SCROLL_STATE_IDLE -> hideScrollbar()
+                    RecyclerView.SCROLL_STATE_DRAGGING, RecyclerView.SCROLL_STATE_SETTLING -> showScrollbar()
+                }
 
-				if(!scrollUnnecessary) {
-					final int recyclerViewHeight = mRecyclerView.getMeasuredHeight();
-					final int scrollBarHeight = mScrollbar.getMeasuredHeight();
+                updateScroll()
+            }
+        })
+    }
 
-					final double topPadding = ((double)firstVisible / (double)(totalCount
-							- itemsVisible))
-							* (recyclerViewHeight - scrollBarHeight);
+    fun enablePullToRefresh(listener: OnRefreshListener) {
+        mSwipeRefreshLayout.setOnRefreshListener(listener)
+        mSwipeRefreshLayout.setEnabled(true)
+    }
 
-					mScrollbarFrame.setPadding(0, (int)Math.round(topPadding), 0, 0);
-				}
-			}
+    private fun showScrollbar() {
+        mScrollbar.animate().cancel()
+        mScrollbar.setAlpha(1f)
+    }
 
-			@Override
-			public void onScrolled(
-					@NonNull final RecyclerView recyclerView,
-					final int dx,
-					final int dy) {
-				updateScroll();
-			}
-
-			@Override
-			public void onScrollStateChanged(
-					@NonNull final RecyclerView recyclerView,
-					final int newState) {
-
-				switch(newState) {
-					case RecyclerView.SCROLL_STATE_IDLE:
-						hideScrollbar();
-						break;
-					case RecyclerView.SCROLL_STATE_DRAGGING:
-					case RecyclerView.SCROLL_STATE_SETTLING:
-						showScrollbar();
-						break;
-				}
-
-				updateScroll();
-			}
-		});
-	}
-
-	public void enablePullToRefresh(@NonNull final SwipeRefreshLayout.OnRefreshListener listener) {
-		mSwipeRefreshLayout.setOnRefreshListener(listener);
-		mSwipeRefreshLayout.setEnabled(true);
-	}
-
-	private void showScrollbar() {
-		mScrollbar.animate().cancel();
-		mScrollbar.setAlpha(1f);
-	}
-
-	private void hideScrollbar() {
-		mScrollbar.animate().alpha(0).setStartDelay(500).setDuration(500).start();
-	}
-
-	public View getOuterView() {
-		return mOuter;
-	}
-
-	public RecyclerView getRecyclerView() {
-		return mRecyclerView;
-	}
+    private fun hideScrollbar() {
+        mScrollbar.animate().alpha(0f).setStartDelay(500).setDuration(500).start()
+    }
 }

@@ -12,50 +12,48 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import java.lang.ref.WeakReference
+import java.util.LinkedList
 
-import java.lang.ref.WeakReference;
-import java.util.Iterator;
-import java.util.LinkedList;
+abstract class UpdateNotifier<E> {
+    private val listeners = LinkedList<WeakReference<E?>?>()
 
-public abstract class UpdateNotifier<E> {
+    @Synchronized
+    fun addListener(updateListener: E?) {
+        listeners.add(WeakReference<E?>(updateListener))
+    }
 
-	private final LinkedList<WeakReference<E>> listeners = new LinkedList<>();
+    @Synchronized
+    fun removeListener(updateListener: E?) {
+        val iter = listeners.iterator()
 
-	public synchronized void addListener(final E updateListener) {
-		listeners.add(new WeakReference<>(updateListener));
-	}
+        while (iter.hasNext()) {
+            val listener = iter.next()!!.get()
 
-	public synchronized void removeListener(final E updateListener) {
-		final Iterator<WeakReference<E>> iter = listeners.iterator();
+            if (listener == null || listener === updateListener) {
+                iter.remove()
+            }
+        }
+    }
 
-		while(iter.hasNext()) {
-			final E listener = iter.next().get();
+    @Synchronized
+    fun updateAllListeners() {
+        val iter = listeners.iterator()
 
-			if(listener == null || listener == updateListener) {
-				iter.remove();
-			}
-		}
-	}
+        while (iter.hasNext()) {
+            val listener = iter.next()!!.get()
 
-	public synchronized void updateAllListeners() {
+            if (listener == null) {
+                iter.remove()
+            } else {
+                notifyListener(listener)
+            }
+        }
+    }
 
-		final Iterator<WeakReference<E>> iter = listeners.iterator();
-
-		while(iter.hasNext()) {
-			final E listener = iter.next().get();
-
-			if(listener == null) {
-				iter.remove();
-			} else {
-				notifyListener(listener);
-			}
-		}
-
-	}
-
-	protected abstract void notifyListener(E listener);
+    protected abstract fun notifyListener(listener: E?)
 }

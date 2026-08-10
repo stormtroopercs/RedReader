@@ -12,29 +12,23 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.graphics.Rect
+import androidx.appcompat.app.AppCompatActivity
 
-import android.graphics.Rect;
+object DisplayUtils {
+    private val sWindowVisibleDisplayFrame = Rect()
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+    fun getWindowVisibleDisplayFrame(
+        activity: AppCompatActivity
+    ): Rect {
+        activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(
+            sWindowVisibleDisplayFrame
+        )
 
-public final class DisplayUtils {
-
-	private static final Rect sWindowVisibleDisplayFrame = new Rect();
-
-	private DisplayUtils() {}
-
-	@NonNull
-	public static Rect getWindowVisibleDisplayFrame(
-			@NonNull final AppCompatActivity activity) {
-
-		activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(
-				sWindowVisibleDisplayFrame);
-
-		return sWindowVisibleDisplayFrame;
-	}
+        return sWindowVisibleDisplayFrame
+    }
 }

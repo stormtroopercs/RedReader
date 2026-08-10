@@ -12,92 +12,85 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.datastream
 
-package org.quantumbadger.redreader.common.datastream;
+import org.quantumbadger.redreader.common.General.readWholeStream
+import java.io.File
+import java.io.IOException
+import java.io.RandomAccessFile
+import kotlin.math.min
 
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.common.General;
+class SeekableFileInputStream(file: File) : SeekableInputStream() {
+    private val mFile: RandomAccessFile
+    private var mPosition: Long = 0
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+    init {
+        mFile = RandomAccessFile(file, "r")
+    }
 
-public class SeekableFileInputStream extends SeekableInputStream {
+    override fun getPosition(): Long {
+        return mPosition
+    }
 
-	@NonNull private final RandomAccessFile mFile;
-	private long mPosition;
+    @Throws(IOException::class)
+    override fun seek(position: Long) {
+        mFile.seek(position)
+        mPosition = position
+    }
 
-	public SeekableFileInputStream(@NonNull final File file) throws FileNotFoundException {
-		mFile = new RandomAccessFile(file, "r");
-	}
+    @Throws(IOException::class)
+    override fun readRemainingAsBytes(callback: ByteArrayCallback) {
+        val result = readWholeStream(this)
+        callback.onByteArray(result, 0, result.size)
+    }
 
-	@Override
-	public long getPosition() {
-		return mPosition;
-	}
+    @Throws(IOException::class)
+    override fun read(): Int {
+        val result = mFile.read()
 
-	@Override
-	public void seek(final long position) throws IOException {
-		mFile.seek(position);
-		mPosition = position;
-	}
+        if (result >= 0) {
+            mPosition++
+        }
 
-	@Override
-	public void readRemainingAsBytes(@NonNull final ByteArrayCallback callback) throws IOException {
-		final byte[] result = General.readWholeStream(this);
-		callback.onByteArray(result, 0, result.length);
-	}
+        return result
+    }
 
-	@Override
-	public int read() throws IOException {
+    @Throws(IOException::class)
+    override fun read(buf: ByteArray): Int {
+        return read(buf, 0, buf.size)
+    }
 
-		final int result = mFile.read();
+    @Throws(IOException::class)
+    override fun read(buf: ByteArray?, off: Int, len: Int): Int {
+        if (len == 0) {
+            throw IOException("Attempted to read zero bytes")
+        }
 
-		if(result >= 0) {
-			mPosition ++;
-		}
+        val result = mFile.read(buf, off, len)
 
-		return result;
-	}
+        if (result > 0) {
+            mPosition += result.toLong()
+        }
 
-	@Override
-	public int read(final byte[] buf) throws IOException {
-		return read(buf, 0, buf.length);
-	}
+        return result
+    }
 
-	@Override
-	public int read(final byte[] buf, final int off, final int len) throws IOException {
+    @Throws(IOException::class)
+    override fun skip(n: Long): Long {
+        val bytesToSkip = min(n, available().toLong())
+        seek((mPosition + bytesToSkip).toInt().toLong())
+        return bytesToSkip
+    }
 
-		if(len == 0) {
-			throw new IOException("Attempted to read zero bytes");
-		}
+    @Throws(IOException::class)
+    override fun available(): Int {
+        return (mFile.length() - mPosition).toInt()
+    }
 
-		final int result = mFile.read(buf, off, len);
-
-		if(result > 0) {
-			mPosition += result;
-		}
-
-		return result;
-	}
-
-	@Override
-	public long skip(final long n) throws IOException {
-		final long bytesToSkip = Math.min(n, available());
-		seek((int)(mPosition + bytesToSkip));
-		return bytesToSkip;
-	}
-
-	@Override
-	public int available() throws IOException {
-		return (int)(mFile.length() - mPosition);
-	}
-
-	@Override
-	public void close() throws IOException {
-		mFile.close();
-	}
+    @Throws(IOException::class)
+    override fun close() {
+        mFile.close()
+    }
 }

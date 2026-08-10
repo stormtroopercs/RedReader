@@ -12,87 +12,92 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.image
 
-package org.quantumbadger.redreader.image;
+import android.content.Context
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.cache.CacheRequest
+import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.cache.CacheRequestJSONParser
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyIfNotCached
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.image.ImageInfo.Companion.parseDeviantArt
+import org.quantumbadger.redreader.jsonwrap.JsonValue
+import java.io.UnsupportedEncodingException
+import java.net.URLEncoder
+import java.util.UUID
 
-import android.content.Context;
+object DeviantArtAPI {
+    fun getImageInfo(
+        context: Context,
+        url: UriString,
+        priority: Priority,
+        listener: GetImageInfoListener
+    ) {
+        val apiUrl: UriString
+        try {
+            apiUrl = UriString(
+                "https://backend.deviantart.com/oembed?url="
+                        + URLEncoder.encode(url.value, "UTF-8")
+            )
+        } catch (e: UnsupportedEncodingException) {
+            throw RuntimeException(e)
+        }
 
-import androidx.annotation.NonNull;
+        CacheManager.Companion.getInstance(context).makeRequest(
+            CacheRequest(
+                apiUrl,
+                RedditAccountManager.Companion.getAnon(),
+                null,
+                priority,
+                DownloadStrategyIfNotCached.Companion.INSTANCE,
+                Constants.FileType.IMAGE_INFO,
+                DownloadQueueType.IMMEDIATE,
+                context,
+                CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
+                    override fun onJsonParsed(
+                        result: JsonValue,
+                        timestamp: TimestampUTC?,
+                        session: UUID, fromCache: Boolean
+                    ) {
+                        try {
+                            val outer = result.asObject()
+                            listener.onSuccess(parseDeviantArt(outer))
+                        } catch (t: Throwable) {
+                            listener.onFailure(
+                                getGeneralErrorForFailure(
+                                    context,
+                                    RequestFailureType.PARSE,
+                                    t,
+                                    null,
+                                    apiUrl,
+                                    Optional.Companion.of<FailedRequestBody>(
+                                        FailedRequestBody(
+                                            result
+                                        )
+                                    )
+                                )
+                            )
+                        }
+                    }
 
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.cache.CacheManager;
-import org.quantumbadger.redreader.cache.CacheRequest;
-import org.quantumbadger.redreader.cache.CacheRequestJSONParser;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyIfNotCached;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.Priority;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.http.FailedRequestBody;
-import org.quantumbadger.redreader.jsonwrap.JsonObject;
-import org.quantumbadger.redreader.jsonwrap.JsonValue;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.UUID;
-
-public final class DeviantArtAPI {
-
-	public static void getImageInfo(
-			final Context context,
-			final UriString url,
-			@NonNull final Priority priority,
-			final GetImageInfoListener listener) {
-
-		final UriString apiUrl;
-		try {
-			apiUrl = new UriString("https://backend.deviantart.com/oembed?url="
-					+ URLEncoder.encode(url.value, "UTF-8"));
-
-		} catch(final UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
-
-		CacheManager.getInstance(context).makeRequest(new CacheRequest(
-				apiUrl,
-				RedditAccountManager.getAnon(),
-				null,
-				priority,
-				DownloadStrategyIfNotCached.INSTANCE,
-				Constants.FileType.IMAGE_INFO,
-				CacheRequest.DownloadQueueType.IMMEDIATE,
-				context,
-				new CacheRequestJSONParser(context, new CacheRequestJSONParser.Listener() {
-					@Override
-					public void onJsonParsed(
-							@NonNull final JsonValue result,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session, final boolean fromCache) {
-
-						try {
-							final JsonObject outer = result.asObject();
-							listener.onSuccess(ImageInfo.parseDeviantArt(outer));
-
-						} catch(final Throwable t) {
-							listener.onFailure(General.getGeneralErrorForFailure(
-									context,
-									CacheRequest.RequestFailureType.PARSE,
-									t,
-									null,
-									apiUrl,
-									Optional.of(new FailedRequestBody(result))));
-						}
-					}
-
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-						listener.onFailure(error);
-					}
-				})));
-	}
+                    override fun onFailure(error: RRError) {
+                        listener.onFailure(error)
+                    }
+                })
+            )
+        )
+    }
 }

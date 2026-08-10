@@ -12,71 +12,61 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
 
-import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+class BodyElementBullet(private val mElements: ArrayList<BodyElement?>) :
+    BodyElement(BlockType.LIST_ELEMENT) {
+    override fun generateView(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View {
+        val bulletItem = LinearLayout(activity)
+        val paddingPx = dpToPixels(activity, 6f)
+        bulletItem.setPadding(paddingPx, 0, paddingPx, 0)
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+        val bullet = TextView(activity)
+        bullet.setText("•   ")
+        if (textSize != null) {
+            bullet.setTextSize(textSize)
+        }
 
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.common.General;
+        bulletItem.addView(bullet)
 
-import java.util.ArrayList;
+        if (mElements.size == 1) {
+            bulletItem.addView(
+                mElements.get(0)!!
+                    .generateView(
+                        activity,
+                        textColor,
+                        textSize,
+                        showLinkButtons
+                    )
+            )
+        } else {
+            bulletItem.addView(
+                BodyElementVerticalSequence(mElements)
+                    .generateView(
+                        activity,
+                        textColor,
+                        textSize,
+                        showLinkButtons
+                    )
+            )
+        }
 
-public class BodyElementBullet extends BodyElement {
+        setLayoutMatchWidthWrapHeight(bulletItem)
 
-	@NonNull private final ArrayList<BodyElement> mElements;
-
-	public BodyElementBullet(@NonNull final ArrayList<BodyElement> elements) {
-		super(BlockType.LIST_ELEMENT);
-		mElements = elements;
-	}
-
-
-	@Override
-	public View generateView(
-			@NonNull final BaseActivity activity,
-			@Nullable final Integer textColor,
-			@Nullable final Float textSize,
-			final boolean showLinkButtons) {
-
-		final LinearLayout bulletItem = new LinearLayout(activity);
-		final int paddingPx = General.dpToPixels(activity, 6);
-		bulletItem.setPadding(paddingPx, 0, paddingPx, 0);
-
-		final TextView bullet = new TextView(activity);
-		bullet.setText("•   ");
-		if(textSize != null) {
-			bullet.setTextSize(textSize);
-		}
-
-		bulletItem.addView(bullet);
-
-		if(mElements.size() == 1) {
-			bulletItem.addView(mElements.get(0)
-					.generateView(
-							activity,
-							textColor,
-							textSize,
-							showLinkButtons));
-
-		} else {
-			bulletItem.addView(new BodyElementVerticalSequence(mElements)
-					.generateView(
-							activity,
-							textColor,
-							textSize,
-							showLinkButtons));
-		}
-
-		General.setLayoutMatchWidthWrapHeight(bulletItem);
-
-		return bulletItem;
-	}
+        return bulletItem
+    }
 }

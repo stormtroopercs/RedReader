@@ -12,27 +12,24 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+class TriggerableThreadGroup(threads: Int, task: Runnable?) {
+    private val mThreads: Array<TriggerableThread?>
+    private var mNextThreadToTrigger = 0
 
-public class TriggerableThreadGroup {
+    init {
+        mThreads = arrayOfNulls<TriggerableThread>(threads)
 
-	private final TriggerableThread[] mThreads;
-	private int mNextThreadToTrigger = 0;
+        for (i in 0..<threads) {
+            mThreads[i] = TriggerableThread(task, 0)
+        }
+    }
 
-	public TriggerableThreadGroup(final int threads, final Runnable task) {
-
-		mThreads = new TriggerableThread[threads];
-
-		for(int i = 0; i < threads; i++) {
-			mThreads[i] = new TriggerableThread(task, 0);
-		}
-	}
-
-	public void triggerOne() {
-		mThreads[mNextThreadToTrigger].trigger();
-		mNextThreadToTrigger = (mNextThreadToTrigger + 1) % mThreads.length;
-	}
+    fun triggerOne() {
+        mThreads[mNextThreadToTrigger]!!.trigger()
+        mNextThreadToTrigger = (mNextThreadToTrigger + 1) % mThreads.size
+    }
 }

@@ -12,38 +12,30 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+class ThreadCheckedVar<E>(private var mValue: E?) {
+    private val mThread: Thread
 
-import androidx.annotation.NonNull;
+    init {
+        mThread = Thread.currentThread()
+    }
 
-public class ThreadCheckedVar<E> {
+    fun get(): E? {
+        if (mThread !== Thread.currentThread()) {
+            throw RuntimeException("Accessing variable from wrong thread")
+        }
 
-	private E mValue;
-	@NonNull private final Thread mThread;
+        return mValue
+    }
 
-	public ThreadCheckedVar(final E value) {
-		mValue = value;
-		mThread = Thread.currentThread();
-	}
+    fun set(value: E?) {
+        if (mThread !== Thread.currentThread()) {
+            throw RuntimeException("Setting variable from wrong thread")
+        }
 
-	public E get() {
-
-		if(mThread != Thread.currentThread()) {
-			throw new RuntimeException("Accessing variable from wrong thread");
-		}
-
-		return mValue;
-	}
-
-	public void set(final E value) {
-
-		if(mThread != Thread.currentThread()) {
-			throw new RuntimeException("Setting variable from wrong thread");
-		}
-
-		mValue = value;
-	}
+        mValue = value
+    }
 }

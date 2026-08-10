@@ -12,46 +12,37 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import org.quantumbadger.redreader.common.time.TimeDuration
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.now
 
-import org.quantumbadger.redreader.common.time.TimeDuration;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
+abstract class TimestampBound {
+    abstract fun verifyTimestamp(timestamp: TimestampUTC?): Boolean
 
-public abstract class TimestampBound {
+    class MoreRecentThanBound(private val minTimestamp: TimestampUTC) : TimestampBound() {
+        override fun verifyTimestamp(timestamp: TimestampUTC): Boolean {
+            return timestamp.isGreaterThan(minTimestamp)
+        }
+    }
 
-	public abstract boolean verifyTimestamp(TimestampUTC timestamp);
+    companion object {
+        val ANY: TimestampBound = object : TimestampBound() {
+            override fun verifyTimestamp(timestamp: TimestampUTC?): Boolean {
+                return true
+            }
+        }
+        val NONE: TimestampBound = object : TimestampBound() {
+            override fun verifyTimestamp(timestamp: TimestampUTC?): Boolean {
+                return false
+            }
+        }
 
-	public static final TimestampBound ANY = new TimestampBound() {
-		@Override
-		public boolean verifyTimestamp(final TimestampUTC timestamp) {
-			return true;
-		}
-	};
-	public static final TimestampBound NONE = new TimestampBound() {
-		@Override
-		public boolean verifyTimestamp(final TimestampUTC timestamp) {
-			return false;
-		}
-	};
-
-	public static final class MoreRecentThanBound extends TimestampBound {
-
-		private final TimestampUTC minTimestamp;
-
-		public MoreRecentThanBound(final TimestampUTC minTimestamp) {
-			this.minTimestamp = minTimestamp;
-		}
-
-		@Override
-		public boolean verifyTimestamp(final TimestampUTC timestamp) {
-			return timestamp.isGreaterThan(minTimestamp);
-		}
-	}
-
-	public static MoreRecentThanBound notOlderThan(final TimeDuration age) {
-		return new MoreRecentThanBound(TimestampUTC.now().subtract(age));
-	}
+        fun notOlderThan(age: TimeDuration): MoreRecentThanBound {
+            return MoreRecentThanBound(now().subtract(age))
+        }
+    }
 }

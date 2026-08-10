@@ -12,34 +12,18 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-package org.quantumbadger.redreader.reddit.prepared.bodytext;
+import android.view.View
+import org.quantumbadger.redreader.activities.BaseActivity
 
-import android.view.View;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import org.quantumbadger.redreader.activities.BaseActivity;
-
-public abstract class BodyElement {
-
-	@NonNull private final BlockType mType;
-
-	protected BodyElement(@NonNull final BlockType type) {
-		mType = type;
-	}
-
-	@NonNull
-	public final BlockType getType() {
-		return mType;
-	}
-
-	public abstract View generateView(
-			@NonNull BaseActivity activity,
-			@Nullable Integer textColor,
-			@Nullable Float textSize,
-			boolean showLinkButtons);
+abstract class BodyElement protected constructor(val type: BlockType) {
+    abstract fun generateView(
+        activity: BaseActivity,
+        textColor: Int?,
+        textSize: Float?,
+        showLinkButtons: Boolean
+    ): View?
 }

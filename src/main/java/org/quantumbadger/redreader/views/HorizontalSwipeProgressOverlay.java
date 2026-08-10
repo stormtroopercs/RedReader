@@ -12,86 +12,82 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.content.Context
+import android.graphics.Color
+import android.view.View
+import android.widget.ImageView
+import android.widget.RelativeLayout
+import com.github.lzyzsd.circleprogress.DonutProgress
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.common.General.dpToPixels
+import kotlin.math.abs
 
-import android.content.Context;
-import android.graphics.Color;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
-import com.github.lzyzsd.circleprogress.DonutProgress;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.General;
+class HorizontalSwipeProgressOverlay(context: Context) : RelativeLayout(context) {
+    private val mIcon: ImageView
+    private val mProgress: DonutProgress
+    private var mCurrentIconResource: Int
 
-public class HorizontalSwipeProgressOverlay extends RelativeLayout {
+    init {
+        val background = View(context)
+        val backgroundDimensionsPx = dpToPixels(context, 200f)
+        background.setBackgroundColor(Color.argb(127, 0, 0, 0))
+        addView(background)
+        background.getLayoutParams().width = backgroundDimensionsPx
+        background.getLayoutParams().height = backgroundDimensionsPx
+        (background.getLayoutParams() as LayoutParams).addRule(CENTER_IN_PARENT)
 
-	private final ImageView mIcon;
-	private final DonutProgress mProgress;
-	private int mCurrentIconResource;
+        mIcon = ImageView(context)
+        mIcon.setImageResource(R.drawable.ic_action_forward_dark)
+        mCurrentIconResource = R.drawable.ic_action_forward_dark
+        addView(mIcon)
+        (mIcon.getLayoutParams() as LayoutParams).addRule(CENTER_IN_PARENT)
 
-	public HorizontalSwipeProgressOverlay(final Context context) {
-		super(context);
+        mProgress = DonutProgress(context)
 
-		final View background = new View(context);
-		final int backgroundDimensionsPx = General.dpToPixels(context, 200);
-		background.setBackgroundColor(Color.argb(127, 0, 0, 0));
-		addView(background);
-		background.getLayoutParams().width = backgroundDimensionsPx;
-		background.getLayoutParams().height = backgroundDimensionsPx;
-		((LayoutParams)background.getLayoutParams()).addRule(RelativeLayout.CENTER_IN_PARENT);
+        addView(mProgress)
+        (mProgress.getLayoutParams() as LayoutParams).addRule(CENTER_IN_PARENT)
+        val progressDimensionsPx = dpToPixels(context, 150f)
+        mProgress.getLayoutParams().width = progressDimensionsPx
+        mProgress.getLayoutParams().height = progressDimensionsPx
 
-		mIcon = new ImageView(context);
-		mIcon.setImageResource(R.drawable.ic_action_forward_dark);
-		mCurrentIconResource = R.drawable.ic_action_forward_dark;
-		addView(mIcon);
-		((LayoutParams)mIcon.getLayoutParams()).addRule(RelativeLayout.CENTER_IN_PARENT);
+        mProgress.setAspectIndicatorDisplay(false)
+        mProgress.setFinishedStrokeColor(Color.RED)
+        mProgress.setUnfinishedStrokeColor(Color.argb(127, 0, 0, 0))
+        val progressStrokeWidthPx = dpToPixels(context, 15f)
+        mProgress.setUnfinishedStrokeWidth(progressStrokeWidthPx.toFloat())
+        mProgress.setFinishedStrokeWidth(progressStrokeWidthPx.toFloat())
+        mProgress.startingDegree = -90
+        mProgress.initPainters()
 
-		mProgress = new DonutProgress(context);
+        setVisibility(GONE)
+    }
 
-		addView(mProgress);
-		((LayoutParams)mProgress.getLayoutParams()).addRule(RelativeLayout.CENTER_IN_PARENT);
-		final int progressDimensionsPx = General.dpToPixels(context, 150);
-		mProgress.getLayoutParams().width = progressDimensionsPx;
-		mProgress.getLayoutParams().height = progressDimensionsPx;
+    private fun setIconResource(resource: Int) {
+        if (resource != mCurrentIconResource) {
+            mCurrentIconResource = resource
+            mIcon.setImageResource(resource)
+        }
+    }
 
-		mProgress.setAspectIndicatorDisplay(false);
-		mProgress.setFinishedStrokeColor(Color.RED);
-		mProgress.setUnfinishedStrokeColor(Color.argb(127, 0, 0, 0));
-		final int progressStrokeWidthPx = General.dpToPixels(context, 15);
-		mProgress.setUnfinishedStrokeWidth(progressStrokeWidthPx);
-		mProgress.setFinishedStrokeWidth(progressStrokeWidthPx);
-		mProgress.setStartingDegree(-90);
-		mProgress.initPainters();
+    fun onSwipeUpdate(px: Float, maxPx: Float) {
+        mProgress.progress = -(px / maxPx)
 
-		setVisibility(GONE);
-	}
+        if (abs(px) > 20) {
+            setVisibility(VISIBLE)
+        }
 
-	private void setIconResource(final int resource) {
-		if(resource != mCurrentIconResource) {
-			mCurrentIconResource = resource;
-			mIcon.setImageResource(resource);
-		}
-	}
+        if (px < 0) {
+            setIconResource(R.drawable.ic_action_forward_dark)
+        } else {
+            setIconResource(R.drawable.ic_action_back_dark)
+        }
+    }
 
-	public void onSwipeUpdate(final float px, final float maxPx) {
-
-		mProgress.setProgress(-(px / maxPx));
-
-		if(Math.abs(px) > 20) {
-			setVisibility(VISIBLE);
-		}
-
-		if(px < 0) {
-			setIconResource(R.drawable.ic_action_forward_dark);
-		} else {
-			setIconResource(R.drawable.ic_action_back_dark);
-		}
-	}
-
-	public void onSwipeEnd() {
-		setVisibility(GONE);
-	}
+    fun onSwipeEnd() {
+        setVisibility(GONE)
+    }
 }

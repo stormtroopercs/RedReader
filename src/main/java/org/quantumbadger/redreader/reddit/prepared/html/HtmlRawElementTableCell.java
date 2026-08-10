@@ -12,51 +12,42 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementTableCell
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementTableCell;
+class HtmlRawElementTableCell(private val mChild: HtmlRawElementBlock) : HtmlRawElement() {
+    override fun getPlainText(stringBuilder: StringBuilder) {
+        mChild.getPlainText(stringBuilder)
+    }
 
-import java.util.ArrayList;
+    override fun reduce(
+        activeAttributes: HtmlTextAttributes,
+        activity: AppCompatActivity,
+        destination: ArrayList<HtmlRawElement?>,
+        linkButtons: ArrayList<LinkButtonDetails?>
+    ) {
+        destination.add(
+            HtmlRawElementTableCell(
+                mChild.reduce(
+                    activeAttributes,
+                    activity
+                )
+            )
+        )
+    }
 
-public class HtmlRawElementTableCell extends HtmlRawElement {
+    override fun generate(
+        activity: AppCompatActivity,
+        destination: ArrayList<BodyElement?>
+    ) {
+        val elements = ArrayList<BodyElement?>()
+        mChild.generate(activity, elements)
 
-	@NonNull private final HtmlRawElementBlock mChild;
-
-	public HtmlRawElementTableCell(@NonNull final HtmlRawElementBlock child) {
-		mChild = child;
-	}
-
-	@Override
-	public void getPlainText(@NonNull final StringBuilder stringBuilder) {
-		mChild.getPlainText(stringBuilder);
-	}
-
-	@Override
-	public void reduce(
-			@NonNull final HtmlTextAttributes activeAttributes,
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<HtmlRawElement> destination,
-			@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
-
-		destination.add(new HtmlRawElementTableCell(mChild.reduce(
-				activeAttributes,
-				activity)));
-	}
-
-	@Override
-	public void generate(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<BodyElement> destination) {
-
-		final ArrayList<BodyElement> elements = new ArrayList<>();
-		mChild.generate(activity, elements);
-
-		destination.add(new BodyElementTableCell(elements));
-	}
+        destination.add(BodyElementTableCell(elements))
+    }
 }

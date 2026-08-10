@@ -12,26 +12,22 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+import org.quantumbadger.redreader.common.UriString
 
-import androidx.annotation.Nullable;
+class HtmlTextAttributes {
+    var bold: Int = 0
+    var italic: Int = 0
+    var underline: Int = 0
+    var strikethrough: Int = 0
+    var monospace: Int = 0
+    var superscript: Int = 0
 
-import org.quantumbadger.redreader.common.UriString;
+    var extraLarge: Int = 0
+    var large: Int = 0
 
-public class HtmlTextAttributes {
-
-	public int bold;
-	public int italic;
-	public int underline;
-	public int strikethrough;
-	public int monospace;
-	public int superscript;
-
-	public int extraLarge;
-	public int large;
-
-	@Nullable public UriString href;
+    var href: UriString? = null
 }

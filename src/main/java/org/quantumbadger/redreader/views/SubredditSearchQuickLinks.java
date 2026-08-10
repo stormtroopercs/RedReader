@@ -12,249 +12,224 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.content.Context
+import android.content.Intent
+import android.util.AttributeSet
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.flexbox.FlexboxLayout
+import com.google.android.material.button.MaterialButton
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.activities.PostListingActivity
+import org.quantumbadger.redreader.common.EventListenerSet
+import org.quantumbadger.redreader.common.General.findViewById
+import org.quantumbadger.redreader.common.LinkHandler
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.reddit.url.SearchPostListURL
+import java.util.Objects
 
-import android.content.Context;
-import android.content.Intent;
-import android.util.AttributeSet;
+class SubredditSearchQuickLinks @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : FlexboxLayout(context, attrs, defStyleAttr) {
+    private var mActivity: AppCompatActivity? = null
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
+    private var mBinding: EventListenerSet<String?>? = null
+    private var mBindingListener: EventListenerSet.Listener<String?>? = null
 
-import com.google.android.flexbox.FlexboxLayout;
-import com.google.android.material.button.MaterialButton;
+    private var mButtonSubreddit: MaterialButton? = null
+    private var mButtonUser: MaterialButton? = null
+    private var mButtonUrl: MaterialButton? = null
+    private var mButtonSearch: MaterialButton? = null
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.activities.PostListingActivity;
-import org.quantumbadger.redreader.common.EventListenerSet;
-import org.quantumbadger.redreader.common.LinkHandler;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.reddit.url.SearchPostListURL;
+    override fun onFinishInflate() {
+        super.onFinishInflate()
 
-import java.util.Objects;
+        mButtonSubreddit = Objects.requireNonNull<MaterialButton>(
+            (MaterialButton)<View> findViewById < android . view . View ? > (R.id.button_go_to_subreddit)
+        )
+        mButtonUser = Objects.requireNonNull<MaterialButton>(
+            (MaterialButton)<View> findViewById < android . view . View ? > (R.id.button_go_to_user)
+        )
+        mButtonUrl = Objects.requireNonNull<MaterialButton>(
+            (MaterialButton)<View> findViewById < android . view . View ? > (R.id.button_go_to_url)
+        )
+        mButtonSearch = Objects.requireNonNull<MaterialButton>(
+            (MaterialButton)<View> findViewById < android . view . View ? > (R.id.button_go_to_search)
+        )
+    }
 
-public class SubredditSearchQuickLinks extends FlexboxLayout {
+    fun bind(
+        activity: AppCompatActivity,
+        querySource: EventListenerSet<String?>
+    ) {
+        mActivity = activity
 
-	private AppCompatActivity mActivity;
+        if (mBinding != null) {
+            throw RuntimeException("Search view already bound")
+        }
 
-	@Nullable private EventListenerSet<String> mBinding;
-	@Nullable private EventListenerSet.Listener<String> mBindingListener;
+        mBinding = querySource
 
-	private MaterialButton mButtonSubreddit;
-	private MaterialButton mButtonUser;
-	private MaterialButton mButtonUrl;
-	private MaterialButton mButtonSearch;
+        doBind()
+    }
 
-	public SubredditSearchQuickLinks(final Context context) {
-		this(context, null);
-	}
+    private fun doBind() {
+        if (mBinding != null) {
+            mBindingListener = EventListenerSet.Listener { query: E? -> this.update(query) }
+            update(mBinding!!.register(mBindingListener))
+        }
+    }
 
-	public SubredditSearchQuickLinks(
-			final Context context,
-			final AttributeSet attrs) {
-		this(context, attrs, 0);
-	}
+    private fun doUnbind() {
+        if (mBinding != null && mBindingListener != null) {
+            mBinding!!.unregister(mBindingListener)
+            mBindingListener = null
+        }
+    }
 
-	public SubredditSearchQuickLinks(
-			final Context context,
-			final AttributeSet attrs,
-			final int defStyleAttr) {
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        doBind()
+    }
 
-		super(context, attrs, defStyleAttr);
-	}
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        doUnbind()
+    }
 
-	@SuppressWarnings("RedundantCast")
-	@Override
-	protected void onFinishInflate() {
-		super.onFinishInflate();
+    private fun update(query: String?) {
+        var query = query
+        if (query != null) {
+            query = query.trim { it <= ' ' }
+        }
 
-		mButtonSubreddit = Objects.requireNonNull(
-				(MaterialButton)findViewById(R.id.button_go_to_subreddit));
-		mButtonUser = Objects.requireNonNull(
-				(MaterialButton)findViewById(R.id.button_go_to_user));
-		mButtonUrl = Objects.requireNonNull(
-				(MaterialButton)findViewById(R.id.button_go_to_url));
-		mButtonSearch = Objects.requireNonNull(
-				(MaterialButton)findViewById(R.id.button_go_to_search));
+        if (query == null || query.isEmpty()) {
+            mButtonSubreddit!!.setText(string.find_location_button_goto_subreddit)
 
-	}
+            mButtonSubreddit!!.setEnabled(false)
+            mButtonUser!!.setEnabled(false)
+            mButtonUrl!!.setEnabled(false)
+            mButtonSearch!!.setEnabled(false)
 
-	public void bind(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final EventListenerSet<String> querySource) {
+            mButtonSubreddit!!.setVisibility(VISIBLE)
+            mButtonUser!!.setVisibility(VISIBLE)
+            mButtonUrl!!.setVisibility(VISIBLE)
+            mButtonSearch!!.setVisibility(VISIBLE)
+        } else {
+            val queryProcessed = ProcessedQuery(query)
 
-		mActivity = activity;
+            if (queryProcessed.querySubreddit != null) {
+                mButtonSubreddit!!.setVisibility(VISIBLE)
 
-		if(mBinding != null) {
-			throw new RuntimeException("Search view already bound");
-		}
+                val subredditPrefixed = "/r/" + queryProcessed.querySubreddit
+                mButtonSubreddit!!.setText(subredditPrefixed)
 
-		mBinding = querySource;
+                mButtonSubreddit!!.setOnClickListener(
+                    OnClickListener { view: View? ->
+                        LinkHandler.onLinkClicked(
+                            mActivity!!,
+                            UriString(subredditPrefixed)
+                        )
+                    })
+            } else {
+                mButtonSubreddit!!.setVisibility(GONE)
+            }
 
-		doBind();
-	}
+            if (queryProcessed.queryUser != null) {
+                mButtonUser!!.setVisibility(VISIBLE)
 
-	private void doBind() {
-		if(mBinding != null) {
-			mBindingListener = this::update;
-			update(mBinding.register(mBindingListener));
-		}
-	}
+                mButtonUser!!.setOnClickListener(OnClickListener { view: View? ->
+                    LinkHandler.onLinkClicked(
+                        mActivity!!,
+                        UriString("/u/" + queryProcessed.queryUser)
+                    )
+                })
+            } else {
+                mButtonUser!!.setVisibility(GONE)
+            }
 
-	private void doUnbind() {
-		if(mBinding != null && mBindingListener != null) {
-			mBinding.unregister(mBindingListener);
-			mBindingListener = null;
-		}
-	}
+            if (queryProcessed.queryUrl != null) {
+                mButtonUrl!!.setVisibility(VISIBLE)
 
-	@Override
-	protected void onAttachedToWindow() {
-		super.onAttachedToWindow();
-		doBind();
-	}
+                mButtonUrl!!.setOnClickListener(OnClickListener { view: View? ->
+                    LinkHandler.onLinkClicked(
+                        mActivity!!,
+                        queryProcessed.queryUrl
+                    )
+                })
+            } else {
+                mButtonUrl!!.setVisibility(GONE)
+            }
 
-	@Override
-	protected void onDetachedFromWindow() {
-		super.onDetachedFromWindow();
-		doUnbind();
-	}
+            mButtonSearch!!.setOnClickListener(OnClickListener { view: View? ->
+                val url
+                        : SearchPostListURL =
+                    SearchPostListURL.Companion.build(null, queryProcessed.querySearch)
+                val intent = Intent(mActivity, PostListingActivity::class.java)
+                intent.setData(url.generateJsonUri())
+                mActivity!!.startActivity(intent)
+            })
 
-	private void update(@Nullable String query) {
+            mButtonSubreddit!!.setEnabled(true)
+            mButtonUser!!.setEnabled(true)
+            mButtonUrl!!.setEnabled(true)
+            mButtonSearch!!.setEnabled(true)
+        }
+    }
 
-		if(query != null) {
-			query = query.trim();
-		}
+    private class ProcessedQuery(query: String) {
+        val querySubreddit: String?
+        val queryUser: String?
+        val queryUrl: UriString?
+        val querySearch: String?
 
-		if(query == null || query.isEmpty()) {
-			mButtonSubreddit.setText(R.string.find_location_button_goto_subreddit);
+        init {
+            querySearch = query
 
-			mButtonSubreddit.setEnabled(false);
-			mButtonUser.setEnabled(false);
-			mButtonUrl.setEnabled(false);
-			mButtonSearch.setEnabled(false);
+            val startsWithSlashRSlash = query.startsWith("/r/")
+            val startsWithRSlash = query.startsWith("r/")
 
-			mButtonSubreddit.setVisibility(VISIBLE);
-			mButtonUser.setVisibility(VISIBLE);
-			mButtonUrl.setVisibility(VISIBLE);
-			mButtonSearch.setVisibility(VISIBLE);
+            val startsWithSlashUSlash = query.startsWith("/u/")
+            val startsWithUSlash = query.startsWith("u/")
 
-		} else {
+            if (query.contains("://")) {
+                querySubreddit = null
+                queryUser = null
+                queryUrl = UriString(query)
+            } else if (startsWithSlashRSlash || startsWithRSlash) {
+                if (startsWithSlashRSlash) {
+                    querySubreddit = query.substring(3)
+                } else {
+                    querySubreddit = query.substring(2)
+                }
 
-			final ProcessedQuery queryProcessed = new ProcessedQuery(query);
+                queryUser = null
+                queryUrl = null
+            } else if (startsWithSlashUSlash || startsWithUSlash) {
+                if (startsWithSlashUSlash) {
+                    queryUser = query.substring(3)
+                } else {
+                    queryUser = query.substring(2)
+                }
 
-			if(queryProcessed.querySubreddit != null) {
-				mButtonSubreddit.setVisibility(VISIBLE);
-
-				final String subredditPrefixed = "/r/" + queryProcessed.querySubreddit;
-				mButtonSubreddit.setText(subredditPrefixed);
-
-				mButtonSubreddit.setOnClickListener(
-						view -> LinkHandler.onLinkClicked(
-								mActivity,
-								new UriString(subredditPrefixed)));
-
-			} else {
-				mButtonSubreddit.setVisibility(GONE);
-			}
-
-			if(queryProcessed.queryUser != null) {
-				mButtonUser.setVisibility(VISIBLE);
-
-				mButtonUser.setOnClickListener(view -> LinkHandler.onLinkClicked(
-						mActivity,
-						new UriString("/u/" + queryProcessed.queryUser)));
-
-			} else {
-				mButtonUser.setVisibility(GONE);
-			}
-
-			if(queryProcessed.queryUrl != null) {
-				mButtonUrl.setVisibility(VISIBLE);
-
-				mButtonUrl.setOnClickListener(view -> LinkHandler.onLinkClicked(
-						mActivity,
-						queryProcessed.queryUrl));
-
-			} else {
-				mButtonUrl.setVisibility(GONE);
-			}
-
-			mButtonSearch.setOnClickListener(view -> {
-
-				final SearchPostListURL url
-						= SearchPostListURL.build(null, queryProcessed.querySearch);
-
-				final Intent intent = new Intent(mActivity, PostListingActivity.class);
-				intent.setData(url.generateJsonUri());
-				mActivity.startActivity(intent);
-			});
-
-			mButtonSubreddit.setEnabled(true);
-			mButtonUser.setEnabled(true);
-			mButtonUrl.setEnabled(true);
-			mButtonSearch.setEnabled(true);
-		}
-	}
-
-	private static class ProcessedQuery {
-
-		@Nullable public final String querySubreddit;
-		@Nullable public final String queryUser;
-		@Nullable public final UriString queryUrl;
-		@Nullable public final String querySearch;
-
-		public ProcessedQuery(@NonNull final String query) {
-
-			querySearch = query;
-
-			final boolean startsWithSlashRSlash = query.startsWith("/r/");
-			final boolean startsWithRSlash = query.startsWith("r/");
-
-			final boolean startsWithSlashUSlash = query.startsWith("/u/");
-			final boolean startsWithUSlash = query.startsWith("u/");
-
-			if(query.contains("://")) {
-				querySubreddit = null;
-				queryUser = null;
-				queryUrl = new UriString(query);
-
-			} else if(startsWithSlashRSlash || startsWithRSlash) {
-
-				if(startsWithSlashRSlash) {
-					querySubreddit = query.substring(3);
-				} else {
-					querySubreddit = query.substring(2);
-				}
-
-				queryUser = null;
-				queryUrl = null;
-
-			} else if(startsWithSlashUSlash || startsWithUSlash) {
-
-				if(startsWithSlashUSlash) {
-					queryUser = query.substring(3);
-				} else {
-					queryUser = query.substring(2);
-				}
-
-				querySubreddit = null;
-				queryUrl = null;
-
-			} else if(query.startsWith("/")) {
-				querySubreddit = null;
-				queryUser = null;
-				queryUrl = new UriString("https://reddit.com" + query);
-
-			} else {
-				querySubreddit = query.replaceAll("[ \t]+", "_");
-				queryUser = querySubreddit;
-				queryUrl = new UriString("https://" + query);
-			}
-		}
-	}
+                querySubreddit = null
+                queryUrl = null
+            } else if (query.startsWith("/")) {
+                querySubreddit = null
+                queryUser = null
+                queryUrl = UriString("https://reddit.com" + query)
+            } else {
+                querySubreddit = query.replace("[ \t]+".toRegex(), "_")
+                queryUser = querySubreddit
+                queryUrl = UriString("https://" + query)
+            }
+        }
+    }
 }

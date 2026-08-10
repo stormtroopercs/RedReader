@@ -12,316 +12,303 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.api
 
-package org.quantumbadger.redreader.reddit.api;
+import android.content.Context
+import android.net.Uri
+import android.util.Log
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.cache.CacheRequest
+import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.cache.CacheRequestJSONParser
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.TimestampBound
+import org.quantumbadger.redreader.common.UnexpectedInternalStateException
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.common.UriString.Companion.from
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.now
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.io.CacheDataSource
+import org.quantumbadger.redreader.io.RequestResponseHandler
+import org.quantumbadger.redreader.io.WritableHashSet
+import org.quantumbadger.redreader.jsonwrap.JsonValue
+import org.quantumbadger.redreader.reddit.RedditSubredditManager
+import org.quantumbadger.redreader.reddit.RedditSubredditManager.SubredditListType
+import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
+import org.quantumbadger.redreader.reddit.things.RedditSubreddit
+import org.quantumbadger.redreader.reddit.things.RedditThing
+import java.util.UUID
 
-import android.content.Context;
-import android.net.Uri;
-import android.util.Log;
+class RedditAPIIndividualSubredditListRequester(
+    private val context: Context,
+    private val user: RedditAccount
+) : CacheDataSource<SubredditListType?, WritableHashSet?, RRError?> {
+    override fun performRequest(
+        type: SubredditListType,
+        timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<WritableHashSet?, RRError?>
+    ) {
+        if (type == SubredditListType.DEFAULTS) {
+            val now = now()
 
-import androidx.annotation.NonNull;
+            val data =
+                HashSet<String?>(Reddit.DEFAULT_SUBREDDITS.size + 1)
 
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.cache.CacheManager;
-import org.quantumbadger.redreader.cache.CacheRequest;
-import org.quantumbadger.redreader.cache.CacheRequestJSONParser;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.Priority;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.TimestampBound;
-import org.quantumbadger.redreader.common.UnexpectedInternalStateException;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.http.FailedRequestBody;
-import org.quantumbadger.redreader.io.CacheDataSource;
-import org.quantumbadger.redreader.io.RequestResponseHandler;
-import org.quantumbadger.redreader.io.WritableHashSet;
-import org.quantumbadger.redreader.jsonwrap.JsonArray;
-import org.quantumbadger.redreader.jsonwrap.JsonObject;
-import org.quantumbadger.redreader.jsonwrap.JsonValue;
-import org.quantumbadger.redreader.reddit.RedditSubredditManager;
-import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException;
-import org.quantumbadger.redreader.reddit.things.RedditSubreddit;
-import org.quantumbadger.redreader.reddit.things.RedditThing;
-import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
+            for (id in Reddit.DEFAULT_SUBREDDITS) {
+                data.add(id.toString())
+            }
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.UUID;
+            data.add("/r/redreader")
 
-public class RedditAPIIndividualSubredditListRequester implements CacheDataSource<
-		RedditSubredditManager.SubredditListType, WritableHashSet, RRError> {
+            val result = WritableHashSet(data, now, "DEFAULTS")
+            handler.onRequestSuccess(result, now)
 
-	private final Context context;
-	private final RedditAccount user;
+            return
+        }
 
-	public RedditAPIIndividualSubredditListRequester(
-			final Context context,
-			final RedditAccount user) {
-		this.context = context;
-		this.user = user;
-	}
+        if (type == SubredditListType.MOST_POPULAR) {
+            doSubredditListRequest(
+                SubredditListType.MOST_POPULAR,
+                handler,
+                null
+            )
+        } else if (user.isAnonymous) {
+            when (type) {
+                SubredditListType.SUBSCRIBED -> {
+                    performRequest(
+                        SubredditListType.DEFAULTS,
+                        timestampBound,
+                        handler
+                    )
+                    return
+                }
 
-	@Override
-	public void performRequest(
-			final RedditSubredditManager.SubredditListType type,
-			final TimestampBound timestampBound,
-			final RequestResponseHandler<WritableHashSet, RRError> handler) {
+                SubredditListType.MODERATED -> {
+                    val curTime = now()
+                    handler.onRequestSuccess(
+                        WritableHashSet(
+                            HashSet<String?>(),
+                            curTime,
+                            SubredditListType.MODERATED.name
+                        ),
+                        curTime
+                    )
+                    return
+                }
 
-		if(type == RedditSubredditManager.SubredditListType.DEFAULTS) {
+                SubredditListType.MULTIREDDITS -> {
+                    val curTime = now()
+                    handler.onRequestSuccess(
+                        WritableHashSet(
+                            HashSet<String?>(),
+                            curTime,
+                            SubredditListType.MULTIREDDITS.name
+                        ),
+                        curTime
+                    )
+                    return
+                }
 
-			final TimestampUTC now = TimestampUTC.now();
+                else -> throw RuntimeException(
+                    ("Internal error: unknown subreddit list type '"
+                            + type.name
+                            + "'")
+                )
+            }
+        } else {
+            doSubredditListRequest(type, handler, null)
+        }
+    }
 
-			final HashSet<String> data =
-					new HashSet<>(Constants.Reddit.DEFAULT_SUBREDDITS.size() + 1);
+    private fun doSubredditListRequest(
+        type: SubredditListType,
+        handler: RequestResponseHandler<WritableHashSet?, RRError?>,
+        after: String?
+    ) {
+        val uri: UriString
 
-			for(final SubredditCanonicalId id : Constants.Reddit.DEFAULT_SUBREDDITS) {
-				data.add(id.toString());
-			}
+        run {
+            val baseUri: UriString
+            when (type) {
+                SubredditListType.SUBSCRIBED -> baseUri = Reddit.getUri(
+                    Reddit.PATH_SUBREDDITS_MINE_SUBSCRIBER
+                )
 
-			data.add("/r/redreader");
+                SubredditListType.MODERATED -> baseUri = Reddit.getUri(
+                    Reddit.PATH_SUBREDDITS_MINE_MODERATOR
+                )
 
-			final WritableHashSet result = new WritableHashSet(data, now, "DEFAULTS");
-			handler.onRequestSuccess(result, now);
+                SubredditListType.MOST_POPULAR -> baseUri = Reddit.getUri(
+                    Reddit.PATH_SUBREDDITS_POPULAR
+                )
 
-			return;
-		}
+                else -> throw UnexpectedInternalStateException(type.name)
+            }
+            if (after == null) {
+                uri = baseUri
+            } else {
+                val builder = Uri.parse(baseUri.toString()).buildUpon()
+                builder.appendQueryParameter("after", after)
+                uri = from(builder)
+            }
+        }
 
-		if(type == RedditSubredditManager.SubredditListType.MOST_POPULAR) {
-			doSubredditListRequest(
-					RedditSubredditManager.SubredditListType.MOST_POPULAR,
-					handler,
-					null);
+        val aboutSubredditCacheRequest = CacheRequest(
+            uri,
+            user,
+            null,
+            Priority(Constants.Priority.API_SUBREDDIT_INVIDIVUAL),
+            DownloadStrategyAlways.Companion.INSTANCE,
+            Constants.FileType.SUBREDDIT_LIST,
+            DownloadQueueType.REDDIT_API,
+            context,
+            CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
+                override fun onJsonParsed(
+                    result: JsonValue,
+                    timestamp: TimestampUTC,
+                    session: UUID, fromCache: Boolean
+                ) {
+                    try {
+                        val output = HashSet<String?>()
+                        val toWrite = ArrayList<RedditSubreddit?>()
 
-		} else if(user.isAnonymous()) {
-			switch(type) {
+                        val redditListing =
+                            result.asObject()!!.getObject("data")
 
-				case SUBSCRIBED:
-					performRequest(
-							RedditSubredditManager.SubredditListType.DEFAULTS,
-							timestampBound,
-							handler);
-					return;
+                        val subreddits =
+                            redditListing!!.getArray("children")
 
-				case MODERATED: {
-					final TimestampUTC curTime = TimestampUTC.now();
-					handler.onRequestSuccess(
-							new WritableHashSet(
-									new HashSet<>(),
-									curTime,
-									RedditSubredditManager.SubredditListType.MODERATED.name()),
-							curTime);
-					return;
-				}
+                        if (type == SubredditListType.SUBSCRIBED && subreddits!!.size() == 0 && after == null) {
+                            performRequest(
+                                SubredditListType.DEFAULTS,
+                                TimestampBound.Companion.ANY,
+                                handler
+                            )
+                            return
+                        }
 
-				case MULTIREDDITS: {
-					final TimestampUTC curTime = TimestampUTC.now();
-					handler.onRequestSuccess(
-							new WritableHashSet(
-									new HashSet<>(),
-									curTime,
-									RedditSubredditManager.SubredditListType.MULTIREDDITS.name()),
-							curTime);
-					return;
-				}
+                        for (v in subreddits!!) {
+                            val thing = v.asObject<RedditThing?>(RedditThing::class.java)
+                            val subreddit = thing!!.asSubreddit()
 
-				default:
-					throw new RuntimeException(
-							"Internal error: unknown subreddit list type '"
-									+ type.name()
-									+ "'");
-			}
+                            subreddit.downloadTime = timestamp.toUtcMs()
 
-		} else {
-			doSubredditListRequest(type, handler, null);
-		}
-	}
+                            try {
+                                output.add(subreddit.getCanonicalId().toString())
+                                toWrite.add(subreddit)
+                            } catch (e: InvalidSubredditNameException) {
+                                Log.e(
+                                    "SubredditListRequester",
+                                    "Ignoring invalid subreddit",
+                                    e
+                                )
+                            }
+                        }
 
-	private void doSubredditListRequest(
-			final RedditSubredditManager.SubredditListType type,
-			final RequestResponseHandler<WritableHashSet, RRError> handler,
-			final String after) {
+                        RedditSubredditManager.Companion.getInstance(context, user)
+                            .offerRawSubredditData(toWrite, timestamp)
+                        val receivedAfter = redditListing.getString("after")
+                        if (receivedAfter != null && type !=
+                            SubredditListType.MOST_POPULAR
+                        ) {
+                            doSubredditListRequest(
+                                type,
+                                object : RequestResponseHandler<WritableHashSet?, RRError?> {
+                                    override fun onRequestFailed(
+                                        failureReason: RRError?
+                                    ) {
+                                        handler.onRequestFailed(failureReason)
+                                    }
 
-		final UriString uri;
+                                    override fun onRequestSuccess(
+                                        result: WritableHashSet,
+                                        timeCached: TimestampUTC
+                                    ) {
+                                        output.addAll(result.toHashset())
+                                        handler.onRequestSuccess(
+                                            WritableHashSet(
+                                                output,
+                                                timeCached,
+                                                type.name
+                                            ), timeCached
+                                        )
 
-		{
-			final UriString baseUri;
+                                        if (after == null) {
+                                            Log.i(
+                                                "SubredditListRequester", ("Got "
+                                                        + output.size
+                                                        + " subreddits in multiple requests")
+                                            )
+                                        }
+                                    }
+                                },
+                                receivedAfter
+                            )
+                        } else {
+                            handler.onRequestSuccess(
+                                WritableHashSet(
+                                    output,
+                                    timestamp,
+                                    type.name
+                                ), timestamp
+                            )
 
-			switch(type) {
-				case SUBSCRIBED:
-					baseUri = Constants.Reddit.getUri(
-							Constants.Reddit.PATH_SUBREDDITS_MINE_SUBSCRIBER);
-					break;
-				case MODERATED:
-					baseUri = Constants.Reddit.getUri(
-							Constants.Reddit.PATH_SUBREDDITS_MINE_MODERATOR);
-					break;
-				case MOST_POPULAR:
-					baseUri = Constants.Reddit.getUri(
-							Constants.Reddit.PATH_SUBREDDITS_POPULAR);
-					break;
-				default:
-					throw new UnexpectedInternalStateException(type.name());
-			}
+                            if (after == null) {
+                                Log.i(
+                                    "SubredditListRequester", ("Got "
+                                            + output.size + " subreddits in 1 request")
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        handler.onRequestFailed(
+                            getGeneralErrorForFailure(
+                                context,
+                                RequestFailureType.PARSE,
+                                e,
+                                null,
+                                uri,
+                                Optional.Companion.of<FailedRequestBody>(FailedRequestBody(result))
+                            )
+                        )
+                    }
+                }
 
-			if(after == null) {
-				uri = baseUri;
+                override fun onFailure(error: RRError) {
+                    handler.onRequestFailed(error)
+                }
+            })
+        )
 
-			} else {
-				final Uri.Builder builder = Uri.parse(baseUri.toString()).buildUpon();
-				builder.appendQueryParameter("after", after);
-				uri = UriString.from(builder);
-			}
-		}
+        CacheManager.Companion.getInstance(context).makeRequest(aboutSubredditCacheRequest)
+    }
 
-		final CacheRequest aboutSubredditCacheRequest = new CacheRequest(
-				uri,
-				user,
-				null,
-				new Priority(Constants.Priority.API_SUBREDDIT_INVIDIVUAL),
-				DownloadStrategyAlways.INSTANCE,
-				Constants.FileType.SUBREDDIT_LIST,
-				CacheRequest.DownloadQueueType.REDDIT_API,
-				context,
-				new CacheRequestJSONParser(context, new CacheRequestJSONParser.Listener() {
-					@Override
-					public void onJsonParsed(
-							@NonNull final JsonValue result,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session, final boolean fromCache) {
+    override fun performRequest(
+        keys: MutableCollection<SubredditListType?>?,
+        timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<HashMap<SubredditListType?, WritableHashSet?>?, RRError?>?
+    ) {
+        // TODO batch API? or just make lots of requests and build up a hash map?
+        throw UnsupportedOperationException()
+    }
 
-						try {
+    override fun performWrite(value: WritableHashSet?) {
+        throw UnsupportedOperationException()
+    }
 
-							final HashSet<String> output = new HashSet<>();
-							final ArrayList<RedditSubreddit> toWrite = new ArrayList<>();
-
-							final JsonObject redditListing =
-									result.asObject().getObject("data");
-
-							final JsonArray subreddits =
-									redditListing.getArray("children");
-
-							if(type == RedditSubredditManager.SubredditListType.SUBSCRIBED
-									&& subreddits.size() == 0
-									&& after == null) {
-								performRequest(
-										RedditSubredditManager.SubredditListType.DEFAULTS,
-										TimestampBound.ANY,
-										handler);
-								return;
-							}
-
-							for(final JsonValue v : subreddits) {
-								final RedditThing thing = v.asObject(RedditThing.class);
-								final RedditSubreddit subreddit = thing.asSubreddit();
-
-								subreddit.downloadTime = timestamp.toUtcMs();
-
-								try {
-									output.add(subreddit.getCanonicalId().toString());
-									toWrite.add(subreddit);
-								} catch(final InvalidSubredditNameException e) {
-									Log.e(
-											"SubredditListRequester",
-											"Ignoring invalid subreddit",
-											e);
-								}
-
-							}
-
-							RedditSubredditManager.getInstance(context, user)
-									.offerRawSubredditData(toWrite, timestamp);
-							final String receivedAfter = redditListing.getString("after");
-							if(receivedAfter != null && type !=
-									RedditSubredditManager.SubredditListType.MOST_POPULAR) {
-
-								doSubredditListRequest(
-										type,
-										new RequestResponseHandler<
-												WritableHashSet,
-												RRError>() {
-											@Override
-											public void onRequestFailed(
-													final RRError failureReason) {
-												handler.onRequestFailed(failureReason);
-											}
-
-											@Override
-											public void onRequestSuccess(
-													final WritableHashSet result,
-													final TimestampUTC timeCached) {
-												output.addAll(result.toHashset());
-												handler.onRequestSuccess(new WritableHashSet(
-														output,
-														timeCached,
-														type.name()), timeCached);
-
-												if(after == null) {
-													Log.i("SubredditListRequester", "Got "
-															+ output.size()
-															+ " subreddits in multiple requests");
-												}
-											}
-										},
-										receivedAfter);
-
-							} else {
-								handler.onRequestSuccess(new WritableHashSet(
-										output,
-										timestamp,
-										type.name()), timestamp);
-
-								if(after == null) {
-									Log.i("SubredditListRequester", "Got "
-											+ output.size() + " subreddits in 1 request");
-								}
-							}
-
-						} catch(final Exception e) {
-							handler.onRequestFailed(General.getGeneralErrorForFailure(
-									context,
-									CacheRequest.RequestFailureType.PARSE,
-									e,
-									null,
-									uri,
-									Optional.of(new FailedRequestBody(result))));
-						}
-					}
-
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-						handler.onRequestFailed(error);
-					}
-				}));
-
-		CacheManager.getInstance(context).makeRequest(aboutSubredditCacheRequest);
-	}
-
-	@Override
-	public void performRequest(
-			final Collection<RedditSubredditManager.SubredditListType> keys,
-			final TimestampBound timestampBound,
-			final RequestResponseHandler<
-					HashMap<RedditSubredditManager.SubredditListType, WritableHashSet>,
-					RRError> handler) {
-		// TODO batch API? or just make lots of requests and build up a hash map?
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void performWrite(final WritableHashSet value) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void performWrite(final Collection<WritableHashSet> values) {
-		throw new UnsupportedOperationException();
-	}
+    override fun performWrite(values: MutableCollection<WritableHashSet?>?) {
+        throw UnsupportedOperationException()
+    }
 }

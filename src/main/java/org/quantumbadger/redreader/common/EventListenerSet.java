@@ -12,39 +12,32 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+class EventListenerSet<E> {
+    interface Listener<E> {
+        fun onEvent(event: E?)
+    }
 
-import androidx.annotation.Nullable;
+    private var mMostRecentEvent: E? = null
 
-import java.util.HashSet;
+    private val mListeners = ThreadCheckedVar<HashSet<Listener<E?>>?>(HashSet<Listener<E?>?>())
 
-public class EventListenerSet<E> {
+    fun send(event: E?) {
+        mMostRecentEvent = event
+        for (listener in mListeners.get()!!) {
+            listener.onEvent(event)
+        }
+    }
 
-	public interface Listener<E> {
-		void onEvent(E event);
-	}
+    fun register(listener: Listener<E?>?): E? {
+        mListeners.get()!!.add(listener!!)
+        return mMostRecentEvent
+    }
 
-	@Nullable private E mMostRecentEvent;
-
-	private final ThreadCheckedVar<HashSet<Listener<E>>> mListeners
-			= new ThreadCheckedVar<>(new HashSet<>());
-
-	public void send(final E event) {
-		mMostRecentEvent = event;
-		for(final Listener<E> listener : mListeners.get()) {
-			listener.onEvent(event);
-		}
-	}
-
-	public E register(final Listener<E> listener) {
-		mListeners.get().add(listener);
-		return mMostRecentEvent;
-	}
-
-	public void unregister(final Listener<E> listener) {
-		mListeners.get().remove(listener);
-	}
+    fun unregister(listener: Listener<E?>?) {
+        mListeners.get()!!.remove(listener!!)
+    }
 }

@@ -12,94 +12,79 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.video
 
-package org.quantumbadger.redreader.views.video;
+import android.net.Uri
+import androidx.annotation.OptIn
+import androidx.media3.common.C
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.BaseDataSource
+import androidx.media3.datasource.DataSpec
+import org.quantumbadger.redreader.common.GenericFactory
+import org.quantumbadger.redreader.common.datastream.SeekableInputStream
+import java.io.IOException
+import java.util.Objects
 
-import android.net.Uri;
+@OptIn(markerClass = UnstableApi::class)
+class ExoPlayerSeekableInputStreamDataSource(
+    isNetwork: Boolean,
+    private val mStreamFactory: GenericFactory<SeekableInputStream?, IOException?>
+) : BaseDataSource(isNetwork) {
+    private var mCurrentStream: SeekableInputStream? = null
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.OptIn;
-import androidx.media3.common.C;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.datasource.BaseDataSource;
-import androidx.media3.datasource.DataSpec;
+    @Throws(IOException::class)
+    override fun open(dataSpec: DataSpec): Long {
+        if (mCurrentStream != null) {
+            throw IOException("Already open!")
+        }
 
-import org.quantumbadger.redreader.common.GenericFactory;
-import org.quantumbadger.redreader.common.datastream.SeekableInputStream;
+        transferInitializing(dataSpec)
 
-import java.io.IOException;
-import java.util.Objects;
+        mCurrentStream = mStreamFactory.create()
+        mCurrentStream!!.seek(dataSpec.position)
 
-@OptIn(markerClass = UnstableApi.class)
-public class ExoPlayerSeekableInputStreamDataSource extends BaseDataSource {
+        transferStarted(dataSpec)
 
-	public static final Uri URI = Uri.parse("redreader://video");
+        return C.LENGTH_UNSET.toLong()
+    }
 
-	private final GenericFactory<SeekableInputStream, IOException> mStreamFactory;
+    @Throws(IOException::class)
+    override fun read(
+        buffer: ByteArray,
+        offset: Int,
+        readLength: Int
+    ): Int {
+        if (readLength == 0) {
+            return 0
+        }
 
-	@Nullable private SeekableInputStream mCurrentStream;
+        val result = Objects.requireNonNull<SeekableInputStream?>(mCurrentStream)
+            .read(buffer, offset, readLength)
 
-	protected ExoPlayerSeekableInputStreamDataSource(
-			final boolean isNetwork,
-			final GenericFactory<SeekableInputStream, IOException> streamFactory) {
+        if (result < 0) {
+            return C.RESULT_END_OF_INPUT
+        }
 
-		super(isNetwork);
-		mStreamFactory = streamFactory;
-	}
+        bytesTransferred(result)
+        return result
+    }
 
-	@Override
-	public long open(@NonNull final DataSpec dataSpec) throws IOException {
+    override fun getUri(): Uri? {
+        return URI
+    }
 
-		if(mCurrentStream != null) {
-			throw new IOException("Already open!");
-		}
+    @Throws(IOException::class)
+    override fun close() {
+        if (mCurrentStream != null) {
+            mCurrentStream!!.close()
+            mCurrentStream = null
+            transferEnded()
+        }
+    }
 
-		transferInitializing(dataSpec);
-
-		mCurrentStream = mStreamFactory.create();
-		mCurrentStream.seek(dataSpec.position);
-
-		transferStarted(dataSpec);
-
-		return C.LENGTH_UNSET;
-	}
-
-	@Override
-	public int read(
-			@NonNull final byte[] buffer,
-			final int offset,
-			final int readLength) throws IOException {
-
-		if(readLength == 0) {
-			return 0;
-		}
-
-		final int result = Objects.requireNonNull(mCurrentStream).read(buffer, offset, readLength);
-
-		if(result < 0) {
-			return C.RESULT_END_OF_INPUT;
-		}
-
-		bytesTransferred(result);
-		return result;
-	}
-
-	@Nullable
-	@Override
-	public Uri getUri() {
-		return URI;
-	}
-
-	@Override
-	public void close() throws IOException {
-
-		if(mCurrentStream != null) {
-			mCurrentStream.close();
-			mCurrentStream = null;
-			transferEnded();
-		}
-	}
+    companion object {
+        val URI: Uri? = Uri.parse("redreader://video")
+    }
 }

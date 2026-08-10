@@ -12,82 +12,66 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.imageview
 
-package org.quantumbadger.redreader.views.imageview;
+import android.annotation.SuppressLint
+import android.view.MotionEvent
+import android.view.View
+import android.view.View.OnTouchListener
+import org.quantumbadger.redreader.views.imageview.FingerTracker.Finger
+import org.quantumbadger.redreader.views.imageview.FingerTracker.FingerListener
 
-import android.annotation.SuppressLint;
-import android.view.MotionEvent;
-import android.view.View;
+class BasicGestureHandler
+    (private val mListener: Listener) : OnTouchListener, FingerListener {
+    interface Listener {
+        fun onSingleTap()
 
-public class BasicGestureHandler
-		implements View.OnTouchListener, FingerTracker.FingerListener {
+        fun onHorizontalSwipe(pixels: Float)
 
-	public BasicGestureHandler(final Listener listener) {
-		mListener = listener;
-	}
+        fun onHorizontalSwipeEnd()
+    }
 
-	public interface Listener {
-		void onSingleTap();
+    private val mFingerTracker = FingerTracker(this)
 
-		void onHorizontalSwipe(float pixels);
+    private var mFirstFinger: Finger? = null
+    private var mCurrentFingerCount = 0
 
-		void onHorizontalSwipeEnd();
-	}
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouch(v: View?, event: MotionEvent): Boolean {
+        mFingerTracker.onTouchEvent(event)
+        return true
+    }
 
-	private final FingerTracker mFingerTracker = new FingerTracker(this);
+    override fun onFingerDown(finger: Finger?) {
+        mCurrentFingerCount++
 
-	private final Listener mListener;
+        if (mCurrentFingerCount > 1) {
+            mFirstFinger = null
+        } else {
+            mFirstFinger = finger
+        }
+    }
 
-	private FingerTracker.Finger mFirstFinger;
-	private int mCurrentFingerCount;
+    override fun onFingersMoved() {
+        if (mFirstFinger != null) {
+            mListener.onHorizontalSwipe(mFirstFinger!!.mTotalPosDifference.x)
+        }
+    }
 
-	@SuppressLint("ClickableViewAccessibility")
-	@Override
-	public boolean onTouch(final View v, final MotionEvent event) {
-		mFingerTracker.onTouchEvent(event);
-		return true;
-	}
+    override fun onFingerUp(finger: Finger?) {
+        mCurrentFingerCount--
 
-	@Override
-	public void onFingerDown(final FingerTracker.Finger finger) {
+        if (mFirstFinger != null) {
+            mListener.onHorizontalSwipeEnd()
 
-		mCurrentFingerCount++;
+            // TODO
+            if (mFirstFinger!!.mDownDuration < 300 && mFirstFinger!!.mPosDifference.x < 20 && mFirstFinger!!.mPosDifference.y < 20) {
+                mListener.onSingleTap()
+            }
 
-		if(mCurrentFingerCount > 1) {
-			mFirstFinger = null;
-		} else {
-			mFirstFinger = finger;
-		}
-	}
-
-	@Override
-	public void onFingersMoved() {
-
-		if(mFirstFinger != null) {
-			mListener.onHorizontalSwipe(mFirstFinger.mTotalPosDifference.x);
-		}
-	}
-
-	@Override
-	public void onFingerUp(final FingerTracker.Finger finger) {
-
-		mCurrentFingerCount--;
-
-		if(mFirstFinger != null) {
-
-			mListener.onHorizontalSwipeEnd();
-
-			// TODO
-			if(mFirstFinger.mDownDuration < 300
-					&& mFirstFinger.mPosDifference.x < 20
-					&& mFirstFinger.mPosDifference.y < 20) {
-
-				mListener.onSingleTap();
-			}
-
-			mFirstFinger = null;
-		}
-	}
+            mFirstFinger = null
+        }
+    }
 }

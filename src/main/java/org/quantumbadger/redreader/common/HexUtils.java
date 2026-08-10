@@ -12,66 +12,60 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import java.io.IOException
+import java.util.Locale
 
-import androidx.annotation.NonNull;
+object HexUtils {
+    @JvmStatic
+    fun toHex(input: ByteArray): String {
+        val result = StringBuilder(input.size * 2)
 
-import java.io.IOException;
-import java.util.Locale;
+        for (b in input) {
+            result.append(String.format(Locale.US, "%02X", b))
+        }
 
-public final class HexUtils {
+        return result.toString()
+    }
 
-	private HexUtils() {}
+    @JvmStatic
+    @Throws(IOException::class)
+    fun fromHex(digit: Char): Int {
+        if (digit >= '0' && digit <= '9') {
+            return digit.code - '0'.code
+        }
 
-	@NonNull
-	public static String toHex(@NonNull final byte[] input) {
+        if (digit >= 'A' && digit <= 'F') {
+            return digit.code + 10 - 'A'.code
+        }
 
-		final StringBuilder result = new StringBuilder(input.length * 2);
+        if (digit >= 'a' && digit <= 'f') {
+            return digit.code + 10 - 'a'.code
+        }
 
-		for(final byte b : input) {
-			result.append(String.format(Locale.US, "%02X", b));
-		}
+        throw IOException("Invalid hex digit '" + digit + "'")
+    }
 
-		return result.toString();
-	}
+    @JvmStatic
+    @Throws(IOException::class)
+    fun fromHex(input: String): ByteArray {
+        val inputTrimmed = input.trim { it <= ' ' }
 
-	public static int fromHex(final char digit) throws IOException {
+        if (inputTrimmed.length % 2 != 0) {
+            throw IOException("Hex string length is not even: '" + inputTrimmed + "'")
+        }
 
-		if(digit >= '0' && digit <= '9') {
-			return digit - '0';
-		}
+        val chars = inputTrimmed.toCharArray()
 
-		if(digit >= 'A' && digit <= 'F') {
-			return digit + 10 - 'A';
-		}
+        val result = ByteArray(chars.size / 2)
 
-		if(digit >= 'a' && digit <= 'f') {
-			return digit + 10 - 'a';
-		}
+        for (i in result.indices) {
+            result[i] = ((fromHex(chars[i * 2]) shl 4) or fromHex(chars[i * 2 + 1])).toByte()
+        }
 
-		throw new IOException("Invalid hex digit '" + digit + "'");
-	}
-
-	@NonNull
-	public static byte[] fromHex(@NonNull final String input) throws IOException {
-
-		final String inputTrimmed = input.trim();
-
-		if(inputTrimmed.length() % 2 != 0) {
-			throw new IOException("Hex string length is not even: '" + inputTrimmed + "'");
-		}
-
-		final char[] chars = inputTrimmed.toCharArray();
-
-		final byte[] result = new byte[chars.length / 2];
-
-		for(int i = 0; i < result.length; i++) {
-			result[i] = (byte)((fromHex(chars[i * 2]) << 4) | fromHex(chars[i * 2 + 1]));
-		}
-
-		return result;
-	}
+        return result
+    }
 }

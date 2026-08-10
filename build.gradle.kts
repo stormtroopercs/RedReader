@@ -140,6 +140,7 @@ android {
 		buildConfig = true
 		compose = true
 	}
+    buildToolsVersion = "36.0.0"
 }
 
 composeCompiler {

@@ -12,18 +12,12 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+class UnexpectedInternalStateException : RuntimeException {
+    constructor() : super("The application's internal state is invalid")
 
-public class UnexpectedInternalStateException extends RuntimeException {
-
-	public UnexpectedInternalStateException() {
-		super("The application's internal state is invalid");
-	}
-
-	public UnexpectedInternalStateException(final String message) {
-		super(message);
-	}
+    constructor(message: String?) : super(message)
 }

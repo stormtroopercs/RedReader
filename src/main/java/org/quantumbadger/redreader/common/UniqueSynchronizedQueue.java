@@ -12,33 +12,31 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import java.util.LinkedList
 
-import java.util.HashSet;
-import java.util.LinkedList;
+class UniqueSynchronizedQueue<E> {
+    private val set = HashSet<E?>()
+    private val queue = LinkedList<E?>()
 
-public class UniqueSynchronizedQueue<E> {
+    @Synchronized
+    fun enqueue(`object`: E?) {
+        if (set.add(`object`)) {
+            queue.addLast(`object`)
+        }
+    }
 
-	private final HashSet<E> set = new HashSet<>();
-	private final LinkedList<E> queue = new LinkedList<>();
+    @Synchronized
+    fun dequeue(): E? {
+        if (queue.isEmpty()) {
+            return null
+        }
 
-	public synchronized void enqueue(final E object) {
-		if(set.add(object)) {
-			queue.addLast(object);
-		}
-	}
-
-	public synchronized E dequeue() {
-
-		if(queue.isEmpty()) {
-			return null;
-		}
-
-		final E result = queue.removeFirst();
-		set.remove(result);
-		return result;
-	}
+        val result = queue.removeFirst()
+        set.remove(result)
+        return result
+    }
 }

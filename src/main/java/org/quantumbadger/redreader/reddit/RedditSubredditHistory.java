@@ -12,60 +12,56 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
 
-package org.quantumbadger.redreader.reddit;
-
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
+import java.util.Collections
 
 // Keeps an in-memory list of all known subreddits per account
-public class RedditSubredditHistory {
+object RedditSubredditHistory {
+    private val SUBREDDITS = HashMap<RedditAccount?, HashSet<SubredditCanonicalId?>?>()
 
-	private static final HashMap<RedditAccount, HashSet<SubredditCanonicalId>> SUBREDDITS
-			= new HashMap<>();
+    private fun getForAccount(account: RedditAccount?): HashSet<SubredditCanonicalId?> {
+        var result = SUBREDDITS.get(account)
 
-	private static HashSet<SubredditCanonicalId> getForAccount(final RedditAccount account) {
+        if (result == null) {
+            result = HashSet<SubredditCanonicalId?>(Reddit.DEFAULT_SUBREDDITS)
+            SUBREDDITS.put(account, result)
+        }
 
-		HashSet<SubredditCanonicalId> result = SUBREDDITS.get(account);
+        return result
+    }
 
-		if(result == null) {
-			result = new HashSet<>(Constants.Reddit.DEFAULT_SUBREDDITS);
-			SUBREDDITS.put(account, result);
-		}
+    @Synchronized
+    fun addSubreddit(
+        account: RedditAccount?,
+        id: SubredditCanonicalId?
+    ) {
+        getForAccount(account).add(id)
+    }
 
-		return result;
-	}
+    @Synchronized
+    fun addSubreddits(
+        account: RedditAccount?,
+        ids: MutableCollection<SubredditCanonicalId?>
+    ) {
+        getForAccount(account).addAll(ids)
+    }
 
-	public static synchronized void addSubreddit(
-			final RedditAccount account,
-			final SubredditCanonicalId id) {
-
-		getForAccount(account).add(id);
-	}
-
-	public static synchronized void addSubreddits(
-			final RedditAccount account,
-			final Collection<SubredditCanonicalId> ids) {
-
-		getForAccount(account).addAll(ids);
-	}
-
-	public static synchronized ArrayList<SubredditCanonicalId> getSubredditsSorted(
-			final RedditAccount account) {
-
-		final ArrayList<SubredditCanonicalId> result = new ArrayList<>(getForAccount(
-				account));
-		Collections.sort(result);
-		return result;
-	}
+    @Synchronized
+    fun getSubredditsSorted(
+        account: RedditAccount?
+    ): ArrayList<SubredditCanonicalId?> {
+        val result = ArrayList<SubredditCanonicalId?>(
+            getForAccount(
+                account
+            )
+        )
+        Collections.sort<SubredditCanonicalId?>(result)
+        return result
+    }
 }

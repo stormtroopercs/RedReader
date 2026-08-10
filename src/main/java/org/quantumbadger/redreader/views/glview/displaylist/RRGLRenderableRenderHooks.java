@@ -12,51 +12,38 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.displaylist
 
-package org.quantumbadger.redreader.views.glview.displaylist;
+import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
-import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack;
+abstract class RRGLRenderableRenderHooks(private val mEntity: RRGLRenderable) : RRGLRenderable() {
+    override fun renderInternal(stack: RRGLMatrixStack?, time: Long) {
+        preRender(stack, time)
+        mEntity.startRender(stack, time)
+        postRender(stack, time)
+    }
 
-public abstract class RRGLRenderableRenderHooks extends RRGLRenderable {
+    override fun onAdded() {
+        mEntity.onAdded()
+        super.onAdded()
+    }
 
-	private final RRGLRenderable mEntity;
+    override fun onRemoved() {
+        super.onRemoved()
+        mEntity.onRemoved()
+    }
 
-	public RRGLRenderableRenderHooks(final RRGLRenderable entity) {
-		this.mEntity = entity;
-	}
+    override fun isAnimating(): Boolean {
+        return mEntity.isAnimating()
+    }
 
-	@Override
-	protected void renderInternal(final RRGLMatrixStack stack, final long time) {
-		preRender(stack, time);
-		mEntity.startRender(stack, time);
-		postRender(stack, time);
-	}
+    protected abstract fun preRender(stack: RRGLMatrixStack?, time: Long)
 
-	@Override
-	public void onAdded() {
-		mEntity.onAdded();
-		super.onAdded();
-	}
+    protected abstract fun postRender(stack: RRGLMatrixStack?, time: Long)
 
-	@Override
-	public void onRemoved() {
-		super.onRemoved();
-		mEntity.onRemoved();
-	}
-
-	@Override
-	public boolean isAnimating() {
-		return mEntity.isAnimating();
-	}
-
-	protected abstract void preRender(RRGLMatrixStack stack, final long time);
-
-	protected abstract void postRender(RRGLMatrixStack stack, final long time);
-
-	@Override
-	public void setOverallAlpha(final float alpha) {
-		mEntity.setOverallAlpha(alpha);
-	}
+    override fun setOverallAlpha(alpha: Float) {
+        mEntity.setOverallAlpha(alpha)
+    }
 }

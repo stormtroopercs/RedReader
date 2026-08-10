@@ -12,18 +12,16 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.things
 
-package org.quantumbadger.redreader.reddit.things;
+import java.util.Locale
 
-import java.util.Locale;
-
-public final class InvalidSubredditNameException extends Exception {
-	public InvalidSubredditNameException(final String subredditName) {
-		super(String.format(
-				Locale.US,
-				"Invalid subreddit name '%s'",
-				subredditName == null ? "NULL" : subredditName));
-	}
-}
+class InvalidSubredditNameException(subredditName: String?) : Exception(
+    String.format(
+        Locale.US,
+        "Invalid subreddit name '%s'",
+        if (subredditName == null) "NULL" else subredditName
+    )
+)

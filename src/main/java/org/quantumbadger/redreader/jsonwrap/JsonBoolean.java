@@ -12,32 +12,21 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.jsonwrap
 
-package org.quantumbadger.redreader.jsonwrap;
+class JsonBoolean private constructor(private val mValue: Boolean) : JsonValue() {
+    protected override fun prettyPrint(indent: Int, sb: StringBuilder) {
+        sb.append(if (mValue) "true" else "false")
+    }
 
-import androidx.annotation.NonNull;
+    public override fun asBoolean(): Boolean {
+        return mValue
+    }
 
-public class JsonBoolean extends JsonValue {
-
-	@NonNull public static final JsonBoolean TRUE = new JsonBoolean(true);
-	@NonNull public static final JsonBoolean FALSE = new JsonBoolean(false);
-
-	private final boolean mValue;
-
-	private JsonBoolean(final boolean value) {
-		mValue = value;
-	}
-
-	@Override
-	protected void prettyPrint(final int indent, final StringBuilder sb) {
-		sb.append(mValue ? "true" : "false");
-	}
-
-	@Override
-	@NonNull
-	public Boolean asBoolean() {
-		return mValue;
-	}
+    companion object {
+        val TRUE: JsonBoolean = JsonBoolean(true)
+        val FALSE: JsonBoolean = JsonBoolean(false)
+    }
 }

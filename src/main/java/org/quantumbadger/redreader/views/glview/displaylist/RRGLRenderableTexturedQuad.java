@@ -12,95 +12,84 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.glview.displaylist
 
-package org.quantumbadger.redreader.views.glview.displaylist;
+import org.quantumbadger.redreader.views.glview.program.RRGLContext
+import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
+import org.quantumbadger.redreader.views.glview.program.RRGLTexture
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.FloatBuffer
 
-import org.quantumbadger.redreader.views.glview.program.RRGLContext;
-import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack;
-import org.quantumbadger.redreader.views.glview.program.RRGLTexture;
+class RRGLRenderableTexturedQuad(
+    private val mGLContext: RRGLContext,
+    private var mTexture: RRGLTexture
+) : RRGLRenderable() {
+    fun setTexture(newTexture: RRGLTexture) {
+        if (isAdded()) {
+            mTexture.releaseReference()
+        }
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+        mTexture = newTexture
 
-public class RRGLRenderableTexturedQuad extends RRGLRenderable {
+        if (isAdded()) {
+            mTexture.addReference()
+        }
+    }
 
-	private RRGLTexture mTexture;
-	private final RRGLContext mGLContext;
+    override fun onAdded() {
+        super.onAdded()
+        mTexture.addReference()
+    }
 
-	private static final FloatBuffer mVertexBuffer;
+    override fun onRemoved() {
+        mTexture.releaseReference()
+        super.onRemoved()
+    }
 
-	private static final float[] vertexData = {
-			0, 0, 0,
-			0, 1, 0,
-			1, 0, 0,
-			1, 1, 0
-	};
+    override fun renderInternal(matrixStack: RRGLMatrixStack, time: Long) {
+        mGLContext.activateProgramTexture()
 
-	private static final FloatBuffer mUVBuffer;
+        mTexture.activate()
+        matrixStack.flush()
 
-	private static final float[] uvData = {
-			0f, 0f,
-			0f, 1f,
-			1f, 0f,
-			1f, 1f
-	};
+        mGLContext.activateVertexBuffer(mVertexBuffer)
+        mGLContext.activateUVBuffer(mUVBuffer)
 
-	static {
-		mVertexBuffer = ByteBuffer.allocateDirect(vertexData.length * 4)
-				.order(ByteOrder.nativeOrder())
-				.asFloatBuffer();
-		mVertexBuffer.put(vertexData).position(0);
+        mGLContext.drawTriangleStrip(4)
+    }
 
-		mUVBuffer = ByteBuffer.allocateDirect(uvData.length * 4)
-				.order(ByteOrder.nativeOrder())
-				.asFloatBuffer();
-		mUVBuffer.put(uvData).position(0);
-	}
+    companion object {
+        private val mVertexBuffer: FloatBuffer
 
-	public RRGLRenderableTexturedQuad(final RRGLContext glContext, final RRGLTexture texture) {
-		mGLContext = glContext;
-		mTexture = texture;
-	}
+        private val vertexData = floatArrayOf(
+            0f, 0f, 0f,
+            0f, 1f, 0f,
+            1f, 0f, 0f,
+            1f, 1f, 0f
+        )
 
-	public void setTexture(final RRGLTexture newTexture) {
+        private val mUVBuffer: FloatBuffer
 
-		if(isAdded()) {
-			mTexture.releaseReference();
-		}
+        private val uvData = floatArrayOf(
+            0f, 0f,
+            0f, 1f,
+            1f, 0f,
+            1f, 1f
+        )
 
-		mTexture = newTexture;
+        init {
+            mVertexBuffer = ByteBuffer.allocateDirect(vertexData.size * 4)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer()
+            mVertexBuffer.put(vertexData).position(0)
 
-		if(isAdded()) {
-			mTexture.addReference();
-		}
-	}
-
-	@Override
-	public void onAdded() {
-		super.onAdded();
-		mTexture.addReference();
-	}
-
-	@Override
-	public void onRemoved() {
-		mTexture.releaseReference();
-		super.onRemoved();
-	}
-
-	@Override
-	protected void renderInternal(final RRGLMatrixStack matrixStack, final long time) {
-
-		mGLContext.activateProgramTexture();
-
-		mTexture.activate();
-		matrixStack.flush();
-
-		mGLContext.activateVertexBuffer(mVertexBuffer);
-		mGLContext.activateUVBuffer(mUVBuffer);
-
-		mGLContext.drawTriangleStrip(4);
-	}
+            mUVBuffer = ByteBuffer.allocateDirect(uvData.size * 4)
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer()
+            mUVBuffer.put(uvData).position(0)
+        }
+    }
 }

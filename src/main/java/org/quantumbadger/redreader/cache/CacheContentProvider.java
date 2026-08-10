@@ -12,254 +12,235 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.cache
 
-package org.quantumbadger.redreader.cache;
+import android.content.ContentProvider
+import android.content.ContentValues
+import android.content.Context
+import android.content.pm.ProviderInfo
+import android.database.Cursor
+import android.database.MatrixCursor
+import android.net.Uri
+import android.os.ParcelFileDescriptor
+import android.provider.MediaStore
+import android.provider.OpenableColumns
+import android.util.Log
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.cache.CacheManager.ReadableCacheFile
+import org.quantumbadger.redreader.common.FileUtils
+import org.quantumbadger.redreader.common.General.filenameFromString
+import org.quantumbadger.redreader.common.GenericFactory
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.StringUtils
+import java.io.File
+import java.io.FileNotFoundException
+import java.util.Locale
 
-import android.content.ContentProvider;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.pm.ProviderInfo;
-import android.database.Cursor;
-import android.database.MatrixCursor;
-import android.net.Uri;
-import android.os.ParcelFileDescriptor;
-import android.provider.MediaStore;
-import android.provider.OpenableColumns;
-import android.util.Log;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import org.quantumbadger.redreader.common.FileUtils;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.StringUtils;
+class CacheContentProvider : ContentProvider() {
+    private var mCacheManager: CacheManager? = null
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Locale;
+    private fun getReadableCacheFile(uri: Uri): Optional<ReadableCacheFile?> {
+        val filename = filenameFromString(uri.toString())
 
-public class CacheContentProvider extends ContentProvider {
+        val cacheId: Optional<Long?> = getCacheIdFromFilename(filename)
 
-	private static final String TAG = "CacheContentProvider";
+        if (!cacheId.isPresent()) {
+            return Optional.Companion.empty<ReadableCacheFile?>()
+        }
 
-	@NonNull
-	private static final String[] COLUMNS = {OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE};
+        return Optional.Companion.of<ReadableCacheFile?>(
+            mCacheManager!!.getExistingCacheFileById(
+                cacheId.get(),
+                CacheCompressionType.NONE
+            )
+        ) // No compression is used for images
+    }
 
-	private CacheManager mCacheManager;
+    private fun getFile(uri: Uri): Optional<File?> {
+        val readableCacheFile = getReadableCacheFile(uri)
 
-	@NonNull
-	private static String generateFilename(
-			final long cacheId,
-			@NonNull final String mimetype,
-			@NonNull final String defaultExtension) {
+        if (!readableCacheFile.isPresent()) {
+            return Optional.Companion.empty<File?>()
+        }
 
-		final String extension
-				= FileUtils.getExtensionForMimetype(mimetype).orElse(defaultExtension);
+        return readableCacheFile.get().getFile()
+    }
 
-		return String.format(
-				Locale.US,
-				"redreader_dl_%d.%s",
-				cacheId,
-				extension);
-	}
+    @Throws(FileNotFoundException::class)
+    override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor? {
+        return ParcelFileDescriptor.open(
+            getFile(uri).orThrow<FileNotFoundException?>(GenericFactory { FileNotFoundException(uri.toString()) }),
+            ParcelFileDescriptor.MODE_READ_ONLY
+        )
+    }
 
-	@NonNull
-	private static Optional<Long> getCacheIdFromFilename(@NonNull final String filename) {
+    override fun onCreate(): Boolean {
+        mCacheManager = CacheManager.Companion.getInstance(getContext())
+        return true
+    }
 
-		final String[] filenameSplitDot = filename.split("\\.");
+    override fun attachInfo(
+        context: Context,
+        info: ProviderInfo
+    ) {
+        super.attachInfo(context, info)
 
-		if(filenameSplitDot.length != 2) {
-			Log.e(TAG, "Expecting one dot in filename: " + filename);
-			return Optional.empty();
-		}
+        // Sanity check our security
+        if (info.exported) {
+            throw SecurityException("Provider must not be exported")
+        }
 
-		final Optional<String> prefixRemoved
-				= StringUtils.removePrefix(filenameSplitDot[0], "redreader_dl_");
+        if (!info.grantUriPermissions) {
+            throw SecurityException("Provider must grant uri permissions")
+        }
+    }
 
-		if(!prefixRemoved.isPresent()) {
-			Log.e(TAG, "Expecting redreader_dl_ prefix in filename: " + filename);
-			return Optional.empty();
-		}
+    override fun query(
+        uri: Uri,
+        projection: Array<String?>?,
+        selection: String?,
+        selectionArgs: Array<String?>?,
+        sortOrder: String?
+    ): Cursor? {
+        val readableCacheFile = getReadableCacheFile(uri)
 
-		try {
-			return Optional.of(Long.valueOf(prefixRemoved.get()));
+        if (!readableCacheFile.isPresent()) {
+            Log.e(TAG, "Couldn't get readable cache file: " + uri)
+            return MatrixCursor(COLUMNS, 0)
+        }
 
-		} catch(final NumberFormatException e) {
-			Log.e(TAG, "Invalid number in filename: " + filename, e);
-			return Optional.empty();
-		}
-	}
+        val file = readableCacheFile.get().getFile()
 
-	public static Uri getUriForFile(
-			final long cacheId,
-			@NonNull final String mimetype,
-			@NonNull final String defaultExtension) {
+        if (!file.isPresent()) {
+            Log.e(TAG, "Couldn't get underlying file: " + uri)
+            return MatrixCursor(COLUMNS, 0)
+        }
 
-		return new Uri.Builder()
-				.scheme("content")
-				.authority("org.quantumbadger.redreader.cacheprovider")
-				.encodedPath(generateFilename(cacheId, mimetype, defaultExtension))
-				.build();
-	}
+        val mimetype = readableCacheFile.get().lookupMimetype()
 
-	@NonNull
-	private Optional<CacheManager.ReadableCacheFile> getReadableCacheFile(@NonNull final Uri uri) {
+        if (!mimetype.isPresent()) {
+            Log.e(TAG, "Couldn't get mimetype: " + uri)
+            return MatrixCursor(COLUMNS, 0)
+        }
 
-		final String filename = General.filenameFromString(uri.toString());
+        val cols = ArrayList<String?>()
+        val values = ArrayList<Any?>()
 
-		final Optional<Long> cacheId = getCacheIdFromFilename(filename);
+        for (col in if (projection == null) COLUMNS else projection) {
+            if (OpenableColumns.DISPLAY_NAME == col) {
+                cols.add(OpenableColumns.DISPLAY_NAME)
+                values.add(
+                    generateFilename(
+                        readableCacheFile.get().getId(),
+                        mimetype.get(),
+                        "jpg"
+                    )
+                )
+            } else if (OpenableColumns.SIZE == col) {
+                cols.add(OpenableColumns.SIZE)
+                values.add(file.get().length())
+            } else if (MediaStore.MediaColumns.MIME_TYPE == col) {
+                cols.add(MediaStore.MediaColumns.MIME_TYPE)
+                values.add(mimetype.get())
+            }
+        }
 
-		if(!cacheId.isPresent()) {
-			return Optional.empty();
-		}
+        val cursor = MatrixCursor(cols.toTypedArray<String?>(), 1)
+        cursor.addRow(values)
+        return cursor
+    }
 
-		return Optional.of(mCacheManager.getExistingCacheFileById(
-				cacheId.get(),
-				CacheCompressionType.NONE)); // No compression is used for images
-	}
+    override fun getType(uri: Uri): String? {
+        val readableCacheFile = getReadableCacheFile(uri)
 
-	@NonNull
-	private Optional<File> getFile(@NonNull final Uri uri) {
+        if (!readableCacheFile.isPresent()) {
+            Log.e(TAG, "Couldn't get readable cache file: " + uri)
+            return null
+        }
 
-		final Optional<CacheManager.ReadableCacheFile> readableCacheFile
-				= getReadableCacheFile(uri);
+        return readableCacheFile.get().lookupMimetype().orElseNull()
+    }
 
-		if(!readableCacheFile.isPresent()) {
-			return Optional.empty();
-		}
+    override fun insert(
+        uri: Uri,
+        values: ContentValues?
+    ): Uri? {
+        throw UnsupportedOperationException("No external inserts")
+    }
 
-		return readableCacheFile.get().getFile();
-	}
+    override fun delete(
+        uri: Uri,
+        selection: String?,
+        selectionArgs: Array<String?>?
+    ): Int {
+        return 0
+    }
 
-	@Nullable
-	@Override
-	public ParcelFileDescriptor openFile(@NonNull final Uri uri, @NonNull final String mode)
-			throws FileNotFoundException {
+    override fun update(
+        uri: Uri,
+        values: ContentValues?,
+        selection: String?,
+        selectionArgs: Array<String?>?
+    ): Int {
+        throw UnsupportedOperationException("No external updates")
+    }
 
-		return ParcelFileDescriptor.open(
-				getFile(uri).orThrow(() -> new FileNotFoundException(uri.toString())),
-				ParcelFileDescriptor.MODE_READ_ONLY);
-	}
+    companion object {
+        private const val TAG = "CacheContentProvider"
 
-	@Override
-	public boolean onCreate() {
-		mCacheManager = CacheManager.getInstance(getContext());
-		return true;
-	}
+        private val COLUMNS = arrayOf<String?>(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)
 
-	@Override
-	public void attachInfo(
-			@NonNull final Context context,
-			@NonNull final ProviderInfo info) {
-		super.attachInfo(context, info);
+        private fun generateFilename(
+            cacheId: Long,
+            mimetype: String,
+            defaultExtension: String
+        ): String {
+            val extension = FileUtils.getExtensionForMimetype(mimetype).orElse(defaultExtension)
 
-		// Sanity check our security
-		if (info.exported) {
-			throw new SecurityException("Provider must not be exported");
-		}
+            return String.format(
+                Locale.US,
+                "redreader_dl_%d.%s",
+                cacheId,
+                extension
+            )
+        }
 
-		if (!info.grantUriPermissions) {
-			throw new SecurityException("Provider must grant uri permissions");
-		}
-	}
+        private fun getCacheIdFromFilename(filename: String): Optional<Long?> {
+            val filenameSplitDot: Array<String?> =
+                filename.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
-	@Nullable
-	@Override
-	public Cursor query(
-			@NonNull final Uri uri,
-			@Nullable final String[] projection,
-			@Nullable final String selection,
-			@Nullable final String[] selectionArgs,
-			@Nullable final String sortOrder) {
+            if (filenameSplitDot.size != 2) {
+                Log.e(TAG, "Expecting one dot in filename: " + filename)
+                return Optional.Companion.empty<Long?>()
+            }
 
-		final Optional<CacheManager.ReadableCacheFile> readableCacheFile
-				= getReadableCacheFile(uri);
+            val prefixRemoved = StringUtils.removePrefix(filenameSplitDot[0]!!, "redreader_dl_")
 
-		if(!readableCacheFile.isPresent()) {
-			Log.e(TAG, "Couldn't get readable cache file: " + uri);
-			return new MatrixCursor(COLUMNS, 0);
-		}
+            if (!prefixRemoved.isPresent()) {
+                Log.e(TAG, "Expecting redreader_dl_ prefix in filename: " + filename)
+                return Optional.Companion.empty<Long?>()
+            }
 
-		final Optional<File> file = readableCacheFile.get().getFile();
+            try {
+                return Optional.Companion.of<Long?>(prefixRemoved.get().toLong())
+            } catch (e: NumberFormatException) {
+                Log.e(TAG, "Invalid number in filename: " + filename, e)
+                return Optional.Companion.empty<Long?>()
+            }
+        }
 
-		if(!file.isPresent()) {
-			Log.e(TAG, "Couldn't get underlying file: " + uri);
-			return new MatrixCursor(COLUMNS, 0);
-		}
-
-		final Optional<String> mimetype = readableCacheFile.get().lookupMimetype();
-
-		if(!mimetype.isPresent()) {
-			Log.e(TAG, "Couldn't get mimetype: " + uri);
-			return new MatrixCursor(COLUMNS, 0);
-		}
-
-		final ArrayList<String> cols = new ArrayList<>();
-		final ArrayList<Object> values = new ArrayList<>();
-
-		for(final String col : projection == null ? COLUMNS : projection) {
-
-			if(OpenableColumns.DISPLAY_NAME.equals(col)) {
-				cols.add(OpenableColumns.DISPLAY_NAME);
-				values.add(generateFilename(
-						readableCacheFile.get().getId(),
-						mimetype.get(),
-						"jpg"));
-
-			} else if(OpenableColumns.SIZE.equals(col)) {
-				cols.add(OpenableColumns.SIZE);
-				values.add(file.get().length());
-
-			} else if(MediaStore.MediaColumns.MIME_TYPE.equals(col)) {
-				cols.add(MediaStore.MediaColumns.MIME_TYPE);
-				values.add(mimetype.get());
-			}
-		}
-
-		final MatrixCursor cursor = new MatrixCursor(cols.toArray(new String[0]), 1);
-		cursor.addRow(values);
-		return cursor;
-	}
-
-	@Nullable
-	@Override
-	public String getType(@NonNull final Uri uri) {
-
-		final Optional<CacheManager.ReadableCacheFile> readableCacheFile
-				= getReadableCacheFile(uri);
-
-		if(!readableCacheFile.isPresent()) {
-			Log.e(TAG, "Couldn't get readable cache file: " + uri);
-			return null;
-		}
-
-		return readableCacheFile.get().lookupMimetype().orElseNull();
-	}
-
-	@Nullable
-	@Override
-	public Uri insert(
-			@NonNull final Uri uri,
-			@Nullable final ContentValues values) {
-		throw new UnsupportedOperationException("No external inserts");
-	}
-
-	@Override
-	public int delete(
-			@NonNull final Uri uri,
-			@Nullable final String selection,
-			@Nullable final String[] selectionArgs) {
-		return 0;
-	}
-
-	@Override
-	public int update(
-			@NonNull final Uri uri,
-			@Nullable final ContentValues values,
-			@Nullable final String selection,
-			@Nullable final String[] selectionArgs) {
-		throw new UnsupportedOperationException("No external updates");
-	}
+        fun getUriForFile(
+            cacheId: Long,
+            mimetype: String,
+            defaultExtension: String
+        ): Uri? {
+            return Uri.Builder()
+                .scheme("content")
+                .authority("org.quantumbadger.redreader.cacheprovider")
+                .encodedPath(generateFilename(cacheId, mimetype, defaultExtension))
+                .build()
+        }
+    }
 }

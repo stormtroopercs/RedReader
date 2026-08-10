@@ -12,163 +12,139 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.imageview
 
-package org.quantumbadger.redreader.views.imageview;
+import android.view.MotionEvent
+import org.quantumbadger.redreader.BuildConfig
 
-import android.view.MotionEvent;
+class FingerTracker(private val mListener: FingerListener) {
+    interface FingerListener {
+        fun onFingerDown(finger: Finger?)
 
-import org.quantumbadger.redreader.BuildConfig;
-import org.quantumbadger.redreader.common.MutableFloatPoint2D;
+        fun onFingersMoved()
 
-public class FingerTracker {
+        fun onFingerUp(finger: Finger?)
+    }
 
-	public interface FingerListener {
-		void onFingerDown(Finger finger);
+    private val mFingers: Array<Finger> = arrayOfNulls<Finger>(10)
 
-		void onFingersMoved();
+    init {
+        for (i in mFingers.indices) {
+            mFingers[i] = Finger()
+        }
+    }
 
-		void onFingerUp(Finger finger);
-	}
+    fun onTouchEvent(event: MotionEvent) {
+        val action = event.getActionMasked()
+        when (action) {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                // ACTION_DOWN starts the gesture, and all fingers must be up at this point
+                if (action == MotionEvent.ACTION_DOWN) {
+                    assertThatAllFingersAreInactive("before ACTION_DOWN")
+                }
 
-	private final Finger[] mFingers = new Finger[10];
-	private final FingerListener mListener;
+                for (f in mFingers) {
+                    if (!f.mActive) {
+                        f.onDown(event)
+                        mListener.onFingerDown(f)
+                        break
+                    }
+                }
+            }
 
-	public FingerTracker(final FingerListener mListener) {
+            MotionEvent.ACTION_MOVE -> {
+                for (finger in mFingers) {
+                    if (finger.mActive) {
+                        finger.onMove(event)
+                    }
+                }
 
-		this.mListener = mListener;
+                mListener.onFingersMoved()
+            }
 
-		for(int i = 0; i < mFingers.length; i++) {
-			mFingers[i] = new Finger();
-		}
-	}
+            MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP -> {
+                val id = event.getPointerId(event.getActionIndex())
 
-	public void onTouchEvent(final MotionEvent event) {
-		final int action = event.getActionMasked();
-		switch(action) {
+                for (f in mFingers) {
+                    if (f.mActive && f.mAndroidId == id) {
+                        f.onUp(event)
+                        mListener.onFingerUp(f)
+                        break
+                    }
+                }
+                // ACTION_UP ends the gesture, and all fingers must be up at this point
+                if (action == MotionEvent.ACTION_UP) {
+                    assertThatAllFingersAreInactive("after ACTION_UP")
+                }
+            }
 
-			case MotionEvent.ACTION_DOWN:
-			case MotionEvent.ACTION_POINTER_DOWN:
-				// ACTION_DOWN starts the gesture, and all fingers must be up at this point
-				if (action == MotionEvent.ACTION_DOWN) {
-					assertThatAllFingersAreInactive("before ACTION_DOWN");
-				}
+            MotionEvent.ACTION_CANCEL ->                // ACTION_CANCEL ends the gesture, process all fingers
+                for (f in mFingers) {
+                    if (f.mActive) {
+                        f.onUp(event)
+                        mListener.onFingerUp(f)
+                    }
+                }
 
-				for(final Finger f : mFingers) {
-					if(!f.mActive) {
-						f.onDown(event);
-						mListener.onFingerDown(f);
-						break;
-					}
-				}
+        }
+    }
 
-				break;
+    private fun assertThatAllFingersAreInactive(`when`: String?) {
+        if (BuildConfig.DEBUG) {
+            for (f in mFingers) {
+                check(!f.mActive) { "Finger for pointer id " + f.mAndroidId + " is active " + `when` }
+            }
+        }
+    }
 
-			case MotionEvent.ACTION_MOVE:
+    class Finger {
+        var mActive: Boolean = false
 
-				for(final Finger finger : mFingers) {
-					if(finger.mActive) {
-						finger.onMove(event);
-					}
-				}
+        var mAndroidId: Int = 0
 
-				mListener.onFingersMoved();
+        val mStartPos: MutableFloatPoint2D = MutableFloatPoint2D()
+        val mCurrentPos: MutableFloatPoint2D = MutableFloatPoint2D()
+        val mLastPos: MutableFloatPoint2D = MutableFloatPoint2D()
+        val mPosDifference: MutableFloatPoint2D = MutableFloatPoint2D()
+        val mTotalPosDifference: MutableFloatPoint2D = MutableFloatPoint2D()
 
-				break;
+        var mDownStartTime: Long = 0
+        var mDownDuration: Long = 0
 
-			case MotionEvent.ACTION_POINTER_UP:
-			case MotionEvent.ACTION_UP:
+        fun onDown(event: MotionEvent) {
+            val index = event.getActionIndex()
+            mActive = true
+            mAndroidId = event.getPointerId(index)
+            mCurrentPos.set(event, index)
+            mLastPos.set(mCurrentPos)
+            mStartPos.set(mCurrentPos)
+            mPosDifference.reset()
+            mTotalPosDifference.reset()
+            mDownStartTime = event.getDownTime()
+            mDownDuration = 0
+        }
 
-				final int id = event.getPointerId(event.getActionIndex());
+        fun onMove(event: MotionEvent) {
+            val index = event.findPointerIndex(mAndroidId)
+            if (index >= 0) {
+                mLastPos.set(mCurrentPos)
+                mCurrentPos.set(event, index)
+                mCurrentPos.sub(mLastPos, mPosDifference)
+                mCurrentPos.sub(mStartPos, mTotalPosDifference)
+                mDownDuration = event.getEventTime() - mDownStartTime
+            }
+        }
 
-				for(final Finger f : mFingers) {
-					if(f.mActive && f.mAndroidId == id) {
-						f.onUp(event);
-						mListener.onFingerUp(f);
-						break;
-					}
-				}
-				// ACTION_UP ends the gesture, and all fingers must be up at this point
-				if (action == MotionEvent.ACTION_UP) {
-					assertThatAllFingersAreInactive("after ACTION_UP");
-				}
+        fun onUp(event: MotionEvent) {
+            mLastPos.set(mCurrentPos)
+            mCurrentPos.set(event, event.getActionIndex())
+            mCurrentPos.sub(mLastPos, mPosDifference)
+            mCurrentPos.sub(mStartPos, mTotalPosDifference)
+            mDownDuration = event.getEventTime() - mDownStartTime
 
-				break;
-
-			case MotionEvent.ACTION_CANCEL:
-				// ACTION_CANCEL ends the gesture, process all fingers
-				for(final Finger f : mFingers) {
-					if(f.mActive) {
-						f.onUp(event);
-						mListener.onFingerUp(f);
-					}
-				}
-
-				break;
-		}
-	}
-
-	private void assertThatAllFingersAreInactive(final String when) {
-		if (BuildConfig.DEBUG) {
-			for (final Finger f : mFingers) {
-				if (f.mActive) {
-					throw new IllegalStateException(
-							"Finger for pointer id " + f.mAndroidId + " is active " + when
-					);
-				}
-			}
-		}
-	}
-
-	public static class Finger {
-
-		boolean mActive = false;
-
-		int mAndroidId;
-
-		final MutableFloatPoint2D mStartPos = new MutableFloatPoint2D();
-		public final MutableFloatPoint2D mCurrentPos = new MutableFloatPoint2D();
-		public final MutableFloatPoint2D mLastPos = new MutableFloatPoint2D();
-		public final MutableFloatPoint2D mPosDifference = new MutableFloatPoint2D();
-		public final MutableFloatPoint2D mTotalPosDifference = new MutableFloatPoint2D();
-
-		long mDownStartTime;
-		public long mDownDuration;
-
-		public void onDown(final MotionEvent event) {
-			final int index = event.getActionIndex();
-			mActive = true;
-			mAndroidId = event.getPointerId(index);
-			mCurrentPos.set(event, index);
-			mLastPos.set(mCurrentPos);
-			mStartPos.set(mCurrentPos);
-			mPosDifference.reset();
-			mTotalPosDifference.reset();
-			mDownStartTime = event.getDownTime();
-			mDownDuration = 0;
-		}
-
-		public void onMove(final MotionEvent event) {
-			final int index = event.findPointerIndex(mAndroidId);
-			if(index >= 0) {
-				mLastPos.set(mCurrentPos);
-				mCurrentPos.set(event, index);
-				mCurrentPos.sub(mLastPos, mPosDifference);
-				mCurrentPos.sub(mStartPos, mTotalPosDifference);
-				mDownDuration = event.getEventTime() - mDownStartTime;
-			}
-		}
-
-		public void onUp(final MotionEvent event) {
-
-			mLastPos.set(mCurrentPos);
-			mCurrentPos.set(event, event.getActionIndex());
-			mCurrentPos.sub(mLastPos, mPosDifference);
-			mCurrentPos.sub(mStartPos, mTotalPosDifference);
-			mDownDuration = event.getEventTime() - mDownStartTime;
-
-			mActive = false;
-		}
-	}
+            mActive = false
+        }
+    }
 }

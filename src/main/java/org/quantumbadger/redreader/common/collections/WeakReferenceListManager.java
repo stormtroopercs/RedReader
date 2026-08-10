@@ -12,89 +12,88 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.collections
 
-package org.quantumbadger.redreader.common.collections;
+import java.lang.ref.WeakReference
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Iterator;
+class WeakReferenceListManager<E> {
+    private val data = ArrayList<WeakReference<E?>?>()
 
-public final class WeakReferenceListManager<E> {
+    @Synchronized
+    fun size(): Int {
+        return data.size
+    }
 
-	private final ArrayList<WeakReference<E>> data = new ArrayList<>();
+    @Synchronized
+    fun add(`object`: E?) {
+        data.add(WeakReference<E?>(`object`))
+    }
 
-	public synchronized int size() {
-		return data.size();
-	}
+    @Synchronized
+    fun map(operator: Operator<E?>) {
+        val iterator = data.iterator()
 
-	public synchronized void add(final E object) {
-		data.add(new WeakReference<>(object));
-	}
+        while (iterator.hasNext()) {
+            val `object` = iterator.next()!!.get()
 
-	public synchronized void map(final Operator<E> operator) {
+            if (`object` == null) {
+                iterator.remove()
+            } else {
+                operator.operate(`object`)
+            }
+        }
+    }
 
-		final Iterator<WeakReference<E>> iterator = data.iterator();
+    @Synchronized
+    fun <A> map(operator: ArgOperator<E?, A?>, arg: A?) {
+        val iterator = data.iterator()
 
-		while(iterator.hasNext()) {
-			final E object = iterator.next().get();
+        while (iterator.hasNext()) {
+            val `object` = iterator.next()!!.get()
 
-			if(object == null) {
-				iterator.remove();
-			} else {
-				operator.operate(object);
-			}
-		}
-	}
+            if (`object` == null) {
+                iterator.remove()
+            } else {
+                operator.operate(`object`, arg)
+            }
+        }
+    }
 
-	public synchronized <A> void map(final ArgOperator<E, A> operator, final A arg) {
+    @Synchronized
+    fun remove(`object`: E?) {
+        val iterator = data.iterator()
 
-		final Iterator<WeakReference<E>> iterator = data.iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next()!!.get() === `object`) {
+                iterator.remove()
+            }
+        }
+    }
 
-		while(iterator.hasNext()) {
-			final E object = iterator.next().get();
+    @Synchronized
+    fun clean() {
+        val iterator = data.iterator()
 
-			if(object == null) {
-				iterator.remove();
-			} else {
-				operator.operate(object, arg);
-			}
-		}
-	}
+        while (iterator.hasNext()) {
+            val `object` = iterator.next()!!.get()
 
-	public synchronized void remove(final E object) {
-		final Iterator<WeakReference<E>> iterator = data.iterator();
+            if (`object` == null) {
+                iterator.remove()
+            }
+        }
+    }
 
-		while(iterator.hasNext()) {
-			if(iterator.next().get() == object) {
-				iterator.remove();
-			}
-		}
-	}
+    @get:Synchronized
+    val isEmpty: Boolean
+        get() = data.isEmpty()
 
-	public synchronized void clean() {
+    interface Operator<E> {
+        fun operate(`object`: E?)
+    }
 
-		final Iterator<WeakReference<E>> iterator = data.iterator();
-
-		while(iterator.hasNext()) {
-			final E object = iterator.next().get();
-
-			if(object == null) {
-				iterator.remove();
-			}
-		}
-	}
-
-	public synchronized boolean isEmpty() {
-		return data.isEmpty();
-	}
-
-	public interface Operator<E> {
-		void operate(E object);
-	}
-
-	public interface ArgOperator<E, A> {
-		void operate(E object, A arg);
-	}
+    interface ArgOperator<E, A> {
+        fun operate(`object`: E?, arg: A?)
+    }
 }

@@ -12,65 +12,55 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.imageview
 
-package org.quantumbadger.redreader.views.imageview;
+import android.util.Log
+import org.quantumbadger.redreader.common.TriggerableThreadGroup
+import java.util.ArrayDeque
+import java.util.Deque
+import kotlin.math.max
 
-import android.util.Log;
-import org.quantumbadger.redreader.common.TriggerableThreadGroup;
+class ImageViewTileLoaderThread {
+    private val mThreads: TriggerableThreadGroup
+    private val mQueue: Deque<ImageViewTileLoader> = ArrayDeque<ImageViewTileLoader>(128)
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+    init {
+        val threadCount = max(
+            1,
+            Runtime.getRuntime().availableProcessors() - 1
+        )
 
-public class ImageViewTileLoaderThread {
+        Log.i("IViewTileLoaderThread", "Using thread count: " + threadCount)
 
-	private final TriggerableThreadGroup mThreads;
-	private final Deque<ImageViewTileLoader> mQueue = new ArrayDeque<>(128);
+        mThreads = TriggerableThreadGroup(
+            threadCount,
+            InternalRunnable()
+        )
+    }
 
-	public ImageViewTileLoaderThread() {
+    fun enqueue(tile: ImageViewTileLoader?) {
+        synchronized(mQueue) {
+            mQueue.addLast(tile)
+            mThreads.triggerOne()
+        }
+    }
 
-		final int threadCount = Math.max(
-				1,
-				Runtime.getRuntime().availableProcessors() - 1);
+    private inner class InternalRunnable : Runnable {
+        override fun run() {
+            while (true) {
+                val tile: ImageViewTileLoader
 
-		Log.i("IViewTileLoaderThread", "Using thread count: " + threadCount);
+                synchronized(mQueue) {
+                    if (mQueue.isEmpty()) {
+                        return
+                    }
+                    tile = mQueue.removeFirst()
+                }
 
-		mThreads = new TriggerableThreadGroup(
-				threadCount,
-				new InternalRunnable());
-	}
-
-	public void enqueue(final ImageViewTileLoader tile) {
-
-		synchronized(mQueue) {
-			mQueue.addLast(tile);
-			mThreads.triggerOne();
-		}
-	}
-
-	private class InternalRunnable implements Runnable {
-
-		@Override
-		public void run() {
-
-			while(true) {
-
-				final ImageViewTileLoader tile;
-
-				synchronized(mQueue) {
-
-					if(mQueue.isEmpty()) {
-						return;
-					}
-
-					tile = mQueue.removeFirst();
-				}
-
-				tile.doPrepare();
-			}
-
-		}
-	}
-
+                tile.doPrepare()
+            }
+        }
+    }
 }

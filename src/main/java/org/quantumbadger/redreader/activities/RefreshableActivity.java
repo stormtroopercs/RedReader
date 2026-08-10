@@ -12,115 +12,107 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.activities
 
-package org.quantumbadger.redreader.activities;
+import android.content.res.Configuration
+import android.os.Bundle
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.common.General.recreateActivityNoAnimation
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.SharedPrefsWrapper
+import java.util.EnumSet
 
-import android.content.res.Configuration;
-import android.os.Bundle;
+abstract class RefreshableActivity : ViewsBaseActivity() {
+    private var paused = false
+    private val refreshOnResume: EnumSet<RefreshableFragment?> =
+        EnumSet.noneOf<RefreshableFragment?>(
+            RefreshableFragment::class.java
+        )
 
-import androidx.annotation.NonNull;
+    enum class RefreshableFragment {
+        MAIN, MAIN_RELAYOUT, POSTS, COMMENTS, RESTART, ALL
+    }
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.SharedPrefsWrapper;
+    override fun onPause() {
+        super.onPause()
+        paused = true
+    }
 
-import java.util.EnumSet;
+    override fun onSharedPreferenceChangedInner(
+        prefs: SharedPrefsWrapper?,
+        key: String
+    ) {
+        if (PrefsUtility.isRestartRequired(this, key)) {
+            requestRefresh(RefreshableFragment.RESTART, false)
+            return
+        }
 
-public abstract class RefreshableActivity extends ViewsBaseActivity {
+        if (this is MainActivity && PrefsUtility.isReLayoutRequired(this, key)) {
+            requestRefresh(RefreshableFragment.MAIN_RELAYOUT, false)
+            return
+        }
 
-	private boolean paused = false;
-	private final EnumSet<RefreshableFragment> refreshOnResume = EnumSet.noneOf(
-			RefreshableFragment.class);
+        if (PrefsUtility.isRefreshRequired(this, key)) {
+            requestRefresh(RefreshableFragment.ALL, false)
+            return
+        }
 
-	public enum RefreshableFragment {
-		MAIN, MAIN_RELAYOUT, POSTS, COMMENTS, RESTART, ALL
-	}
+        if (this is MainActivity) {
+            if (key == getString(string.pref_pinned_subreddits_key) ||
+                key == getString(string.pref_blocked_subreddits_key)
+            ) {
+                requestRefresh(RefreshableFragment.MAIN, false)
+            }
+        }
+    }
 
-	@Override
-	protected void onPause() {
-		super.onPause();
-		paused = true;
-	}
+    protected override fun onResume() {
+        super.onResume()
 
-	@Override
-	protected void onSharedPreferenceChangedInner(
-			final SharedPrefsWrapper prefs,
-			final String key) {
+        paused = false
 
-		if(PrefsUtility.isRestartRequired(this, key)) {
-			requestRefresh(RefreshableFragment.RESTART, false);
-			return;
-		}
+        if (!refreshOnResume.isEmpty()) {
+            for (f in refreshOnResume) {
+                doRefreshNow(f, false)
+            }
 
-		if(this instanceof MainActivity && PrefsUtility.isReLayoutRequired(this, key)) {
-			requestRefresh(RefreshableFragment.MAIN_RELAYOUT, false);
-			return;
-		}
+            refreshOnResume.clear()
+        }
+    }
 
-		if(PrefsUtility.isRefreshRequired(this, key)) {
-			requestRefresh(RefreshableFragment.ALL, false);
-			return;
-		}
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        invalidateOptionsMenu()
+        super.onConfigurationChanged(newConfig)
+    }
 
-		if(this instanceof MainActivity) {
-			if(key.equals(getString(R.string.pref_pinned_subreddits_key)) ||
-					key.equals(getString(R.string.pref_blocked_subreddits_key))) {
-				requestRefresh(RefreshableFragment.MAIN, false);
-			}
-		}
-	}
+    protected fun doRefreshNow(which: RefreshableFragment?, force: Boolean) {
+        if (which == RefreshableFragment.RESTART) {
+            recreateActivityNoAnimation(this)
+        } else {
+            doRefresh(which, force, null)
+        }
+    }
 
-	@Override
-	protected void onResume() {
+    protected abstract fun doRefresh(
+        which: RefreshableFragment?,
+        force: Boolean,
+        savedInstanceState: Bundle?
+    )
 
-		super.onResume();
-
-		paused = false;
-
-		if(!refreshOnResume.isEmpty()) {
-			for(final RefreshableFragment f : refreshOnResume) {
-				doRefreshNow(f, false);
-			}
-
-			refreshOnResume.clear();
-		}
-	}
-
-	@Override
-	public void onConfigurationChanged(@NonNull final Configuration newConfig) {
-		invalidateOptionsMenu();
-		super.onConfigurationChanged(newConfig);
-	}
-
-	protected void doRefreshNow(final RefreshableFragment which, final boolean force) {
-
-		if(which == RefreshableFragment.RESTART) {
-			General.recreateActivityNoAnimation(this);
-
-		} else {
-			doRefresh(which, force, null);
-		}
-	}
-
-	protected abstract void doRefresh(
-			RefreshableFragment which,
-			boolean force,
-			final Bundle savedInstanceState);
-
-	public final void requestRefresh(
-			final RefreshableFragment which,
-			final boolean force) {
-		runOnUiThread(() -> {
-					if(!paused) {
-						doRefreshNow(which, force);
-					} else {
-						// TODO this doesn't remember "force" //  (but it doesn't really matter...)
-						refreshOnResume.add(which);
-					}
-				}
-		);
-	}
+    fun requestRefresh(
+        which: RefreshableFragment?,
+        force: Boolean
+    ) {
+        runOnUiThread(Runnable {
+            if (!paused) {
+                doRefreshNow(which, force)
+            } else {
+                // TODO this doesn't remember "force" //  (but it doesn't really matter...)
+                refreshOnResume.add(which)
+            }
+        }
+        )
+    }
 }

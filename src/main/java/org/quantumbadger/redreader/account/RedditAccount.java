@@ -12,84 +12,72 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.account
 
-package org.quantumbadger.redreader.account;
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.reddit.api.RedditOAuth.AccessToken
+import org.quantumbadger.redreader.reddit.api.RedditOAuth.RefreshToken
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+class RedditAccount(
+    username: String,
+    refreshToken: RefreshToken?,
+    priority: Long,
+    clientId: String?
+) {
+    @JvmField
+    val username: String
+    @JvmField
+    val canonicalUsername: String
+    @JvmField
+    val refreshToken: RefreshToken?
 
-import org.quantumbadger.redreader.common.StringUtils;
-import org.quantumbadger.redreader.reddit.api.RedditOAuth;
+    @get:Synchronized
+    var mostRecentAccessToken: AccessToken? = null
+        private set
 
-import java.util.Objects;
+    @JvmField
+    val priority: Long
+    @JvmField
+    val clientId: String?
 
-public class RedditAccount {
+    init {
+        if (username == null) {
+            throw RuntimeException("Null user in RedditAccount")
+        }
 
-	@NonNull public final String username;
-	@NonNull public final String canonicalUsername;
-	public final RedditOAuth.RefreshToken refreshToken;
+        this.username = username.trim { it <= ' ' }
+        this.canonicalUsername = StringUtils.asciiLowercase(this.username)
+        this.refreshToken = refreshToken
+        this.priority = priority
+        this.clientId = clientId
+    }
 
-	private RedditOAuth.AccessToken accessToken;
+    val isAnonymous: Boolean
+        get() = username.isEmpty()
 
-	public final long priority;
-	@Nullable public final String clientId;
+    val isNotAnonymous: Boolean
+        get() = !this.isAnonymous
 
-	public RedditAccount(
-			@NonNull final String username,
-			final RedditOAuth.RefreshToken refreshToken,
-			final long priority,
-			@Nullable final String clientId) {
+    @Synchronized
+    fun setAccessToken(token: AccessToken?) {
+        this.mostRecentAccessToken = token
+    }
 
-		//noinspection ConstantConditions
-		if(username == null) {
-			throw new RuntimeException("Null user in RedditAccount");
-		}
+    override fun equals(o: Any?): Boolean {
+        if (o !is RedditAccount) {
+            return false
+        }
 
-		this.username = username.trim();
-		this.canonicalUsername = StringUtils.asciiLowercase(this.username);
-		this.refreshToken = refreshToken;
-		this.priority = priority;
-		this.clientId = clientId;
-	}
+        val other = o
 
-	public boolean isAnonymous() {
-		return username.isEmpty();
-	}
+        return canonicalUsername.equals(other.canonicalUsername, ignoreCase = true)
+                && clientId == other.clientId
+                && refreshToken == other.refreshToken
+    }
 
-	public boolean isNotAnonymous() {
-		return !isAnonymous();
-	}
-
-	public String getCanonicalUsername() {
-		return canonicalUsername;
-	}
-
-	public synchronized RedditOAuth.AccessToken getMostRecentAccessToken() {
-		return accessToken;
-	}
-
-	public synchronized void setAccessToken(final RedditOAuth.AccessToken token) {
-		accessToken = token;
-	}
-
-	@Override
-	public boolean equals(final Object o) {
-
-		if(!(o instanceof RedditAccount)) {
-			return false;
-		}
-
-		final RedditAccount other = (RedditAccount)o;
-
-		return canonicalUsername.equalsIgnoreCase(other.canonicalUsername)
-				&& Objects.equals(clientId, other.clientId)
-				&& Objects.equals(refreshToken, other.refreshToken);
-	}
-
-	@Override
-	public int hashCode() {
-		return getCanonicalUsername().hashCode();
-	}
+    override fun hashCode(): Int {
+        return this.canonicalUsername.hashCode()
+    }
 }

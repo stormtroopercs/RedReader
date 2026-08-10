@@ -12,217 +12,203 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.video
 
-package org.quantumbadger.redreader.views.video;
-
-import android.annotation.SuppressLint;
-import android.view.MotionEvent;
-import android.view.View;
-
-import androidx.annotation.NonNull;
-
-import org.quantumbadger.redreader.common.MutableFloatPoint2D;
-import org.quantumbadger.redreader.common.collections.Stack;
-import org.quantumbadger.redreader.views.imageview.BasicGestureHandler;
-import org.quantumbadger.redreader.views.imageview.FingerTracker;
+import android.annotation.SuppressLint
+import android.view.MotionEvent
+import android.view.View
+import android.view.View.OnTouchListener
+import org.quantumbadger.redreader.common.MutableFloatPoint2D
+import org.quantumbadger.redreader.common.collections.Stack
+import org.quantumbadger.redreader.views.imageview.BasicGestureHandler
+import org.quantumbadger.redreader.views.imageview.FingerTracker
+import org.quantumbadger.redreader.views.imageview.FingerTracker.Finger
+import org.quantumbadger.redreader.views.imageview.FingerTracker.FingerListener
 
 /**
  * Touch handler for the video player. Behaves like
- * {@link BasicGestureHandler} for taps and single-finger horizontal swipes,
+ * [BasicGestureHandler] for taps and single-finger horizontal swipes,
  * but additionally supports pinch-to-zoom and (while zoomed in)
- * single-finger panning, applied to an {@link ExoPlayerWrapperView}.
+ * single-finger panning, applied to an [ExoPlayerWrapperView].
  */
-public class VideoGestureHandler
-		implements View.OnTouchListener, FingerTracker.FingerListener {
+class VideoGestureHandler
+    (
+    private val mListener: BasicGestureHandler.Listener,
+    private val mPlayerView: ExoPlayerWrapperView
+) : OnTouchListener, FingerListener {
+    private enum class TouchState {
+        ONE_FINGER_DOWN,
+        ONE_FINGER_DRAG,
+        TWO_FINGER_PINCH
+    }
 
-	private static final long TAP_MAX_DURATION_MS = 300;
+    private val mFingerTracker = FingerTracker(this)
 
-	private enum TouchState {
-		ONE_FINGER_DOWN,
-		ONE_FINGER_DRAG,
-		TWO_FINGER_PINCH
-	}
+    private val mScreenDensity: Float
 
-	@NonNull private final BasicGestureHandler.Listener mListener;
-	@NonNull private final ExoPlayerWrapperView mPlayerView;
+    private var mCurrentTouchState: TouchState? = null
 
-	private final FingerTracker mFingerTracker = new FingerTracker(this);
+    private var mDragFinger: Finger? = null
+    private var mPinchFinger1: Finger? = null
+    private var mPinchFinger2: Finger? = null
+    private val mSpareFingers = Stack<Finger?>(8)
 
-	private final float mScreenDensity;
+    private val mTmpPoint1 = MutableFloatPoint2D()
+    private val mTmpPoint2 = MutableFloatPoint2D()
 
-	private TouchState mCurrentTouchState;
+    init {
+        mScreenDensity = mPlayerView.getResources().getDisplayMetrics().density
+    }
 
-	private FingerTracker.Finger mDragFinger;
-	private FingerTracker.Finger mPinchFinger1;
-	private FingerTracker.Finger mPinchFinger2;
-	private final Stack<FingerTracker.Finger> mSpareFingers = new Stack<>(8);
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouch(v: View?, event: MotionEvent): Boolean {
+        mFingerTracker.onTouchEvent(event)
+        return true
+    }
 
-	private final MutableFloatPoint2D mTmpPoint1 = new MutableFloatPoint2D();
-	private final MutableFloatPoint2D mTmpPoint2 = new MutableFloatPoint2D();
+    override fun onFingerDown(finger: Finger?) {
+        if (mCurrentTouchState == null) {
+            mCurrentTouchState = TouchState.ONE_FINGER_DOWN
+            mDragFinger = finger
+        } else {
+            when (mCurrentTouchState) {
+                TouchState.ONE_FINGER_DRAG -> {
+                    mListener.onHorizontalSwipeEnd()
 
-	public VideoGestureHandler(
-			@NonNull final BasicGestureHandler.Listener listener,
-			@NonNull final ExoPlayerWrapperView playerView) {
+                    mCurrentTouchState = TouchState.TWO_FINGER_PINCH
+                    mPinchFinger1 = mDragFinger
+                    mPinchFinger2 = finger
+                    mDragFinger = null
+                }
 
-		mListener = listener;
-		mPlayerView = playerView;
-		mScreenDensity = playerView.getResources().getDisplayMetrics().density;
-	}
+                TouchState.ONE_FINGER_DOWN -> {
+                    mCurrentTouchState = TouchState.TWO_FINGER_PINCH
+                    mPinchFinger1 = mDragFinger
+                    mPinchFinger2 = finger
+                    mDragFinger = null
+                }
 
-	@SuppressLint("ClickableViewAccessibility")
-	@Override
-	public boolean onTouch(final View v, final MotionEvent event) {
-		mFingerTracker.onTouchEvent(event);
-		return true;
-	}
+                else -> mSpareFingers.push(finger)
+            }
+        }
+    }
 
-	@Override
-	public void onFingerDown(final FingerTracker.Finger finger) {
+    override fun onFingersMoved() {
+        if (mCurrentTouchState == null) {
+            return
+        }
 
-		if(mCurrentTouchState == null) {
-			mCurrentTouchState = TouchState.ONE_FINGER_DOWN;
-			mDragFinger = finger;
+        when (mCurrentTouchState) {
+            TouchState.ONE_FINGER_DOWN -> {
+                run {
+                    if (mDragFinger!!.mTotalPosDifference.distanceSquared()
+                        >= 100f * mScreenDensity * mScreenDensity
+                    ) {
+                        mCurrentTouchState = TouchState.ONE_FINGER_DRAG
+                    }
+                }
+                if (mPlayerView.isZoomedIn()) {
+                    mPlayerView.panBy(
+                        mDragFinger!!.mPosDifference.x,
+                        mDragFinger!!.mPosDifference.y
+                    )
+                } else {
+                    mListener.onHorizontalSwipe(mDragFinger!!.mTotalPosDifference.x)
+                }
+            }
 
-		} else {
-			switch(mCurrentTouchState) {
+            TouchState.ONE_FINGER_DRAG -> if (mPlayerView.isZoomedIn()) {
+                mPlayerView.panBy(
+                    mDragFinger!!.mPosDifference.x,
+                    mDragFinger!!.mPosDifference.y
+                )
+            } else {
+                mListener.onHorizontalSwipe(mDragFinger!!.mTotalPosDifference.x)
+            }
 
-				case ONE_FINGER_DRAG:
-					mListener.onHorizontalSwipeEnd();
+            TouchState.TWO_FINGER_PINCH -> {
+                val oldDistance =
+                    mPinchFinger1!!.mLastPos.euclideanDistanceTo(mPinchFinger2!!.mLastPos)
+                val newDistance =
+                    mPinchFinger1!!.mCurrentPos.euclideanDistanceTo(
+                        mPinchFinger2!!.mCurrentPos
+                    )
 
-					// Deliberate fallthrough
+                val oldCentre = mTmpPoint1
+                mPinchFinger1!!.mLastPos.add(mPinchFinger2!!.mLastPos, oldCentre)
+                oldCentre.scale(0.5)
 
-				case ONE_FINGER_DOWN:
-					mCurrentTouchState = TouchState.TWO_FINGER_PINCH;
-					mPinchFinger1 = mDragFinger;
-					mPinchFinger2 = finger;
-					mDragFinger = null;
-					break;
+                val newCentre = mTmpPoint2
+                mPinchFinger1!!.mCurrentPos.add(mPinchFinger2!!.mCurrentPos, newCentre)
+                newCentre.scale(0.5)
 
-				default:
-					mSpareFingers.push(finger);
-					break;
-			}
-		}
-	}
+                if (oldDistance > 0) {
+                    mPlayerView.scaleBy(
+                        (newDistance / oldDistance).toFloat(),
+                        newCentre.x,
+                        newCentre.y
+                    )
+                }
 
-	@Override
-	public void onFingersMoved() {
+                mPlayerView.panBy(
+                    newCentre.x - oldCentre.x,
+                    newCentre.y - oldCentre.y
+                )
+            }
+        }
+    }
 
-		if(mCurrentTouchState == null) {
-			return;
-		}
+    override fun onFingerUp(finger: Finger) {
+        if (mSpareFingers.remove(finger)) {
+            return
+        }
 
-		switch(mCurrentTouchState) {
+        if (mCurrentTouchState == null) {
+            return
+        }
 
-			case ONE_FINGER_DOWN: {
+        when (mCurrentTouchState) {
+            TouchState.ONE_FINGER_DOWN -> {
+                mListener.onHorizontalSwipeEnd()
 
-				if(mDragFinger.mTotalPosDifference.distanceSquared()
-						>= 100f * mScreenDensity * mScreenDensity) {
-					mCurrentTouchState = TouchState.ONE_FINGER_DRAG;
-				}
+                if (finger.mDownDuration < TAP_MAX_DURATION_MS) {
+                    mListener.onSingleTap()
+                }
 
-				// Deliberate fall-through
-			}
+                mCurrentTouchState = null
+                mDragFinger = null
+            }
 
-			case ONE_FINGER_DRAG:
-				if(mPlayerView.isZoomedIn()) {
-					mPlayerView.panBy(
-							mDragFinger.mPosDifference.x,
-							mDragFinger.mPosDifference.y);
-				} else {
-					mListener.onHorizontalSwipe(mDragFinger.mTotalPosDifference.x);
-				}
-				break;
+            TouchState.ONE_FINGER_DRAG -> {
+                mListener.onHorizontalSwipeEnd()
 
-			case TWO_FINGER_PINCH: {
+                if (mSpareFingers.isEmpty()) {
+                    mCurrentTouchState = null
+                    mDragFinger = null
+                } else {
+                    mDragFinger = mSpareFingers.pop()
+                }
+            }
 
-				final double oldDistance =
-						mPinchFinger1.mLastPos.euclideanDistanceTo(mPinchFinger2.mLastPos);
-				final double newDistance =
-						mPinchFinger1.mCurrentPos.euclideanDistanceTo(
-								mPinchFinger2.mCurrentPos);
+            TouchState.TWO_FINGER_PINCH -> if (mSpareFingers.isEmpty()) {
+                mCurrentTouchState = TouchState.ONE_FINGER_DRAG
+                mDragFinger =
+                    if (mPinchFinger1 === finger) mPinchFinger2 else mPinchFinger1
+                mPinchFinger1 = null
+                mPinchFinger2 = null
+            } else {
+                if (mPinchFinger1 === finger) {
+                    mPinchFinger1 = mSpareFingers.pop()
+                } else {
+                    mPinchFinger2 = mSpareFingers.pop()
+                }
+            }
+        }
+    }
 
-				final MutableFloatPoint2D oldCentre = mTmpPoint1;
-				mPinchFinger1.mLastPos.add(mPinchFinger2.mLastPos, oldCentre);
-				oldCentre.scale(0.5);
-
-				final MutableFloatPoint2D newCentre = mTmpPoint2;
-				mPinchFinger1.mCurrentPos.add(mPinchFinger2.mCurrentPos, newCentre);
-				newCentre.scale(0.5);
-
-				if(oldDistance > 0) {
-					mPlayerView.scaleBy(
-							(float)(newDistance / oldDistance),
-							newCentre.x,
-							newCentre.y);
-				}
-
-				mPlayerView.panBy(
-						newCentre.x - oldCentre.x,
-						newCentre.y - oldCentre.y);
-
-				break;
-			}
-		}
-	}
-
-	@Override
-	public void onFingerUp(final FingerTracker.Finger finger) {
-
-		if(mSpareFingers.remove(finger)) {
-			return;
-		}
-
-		if(mCurrentTouchState == null) {
-			return;
-		}
-
-		switch(mCurrentTouchState) {
-
-			case ONE_FINGER_DOWN:
-
-				mListener.onHorizontalSwipeEnd();
-
-				if(finger.mDownDuration < TAP_MAX_DURATION_MS) {
-					mListener.onSingleTap();
-				}
-
-				mCurrentTouchState = null;
-				mDragFinger = null;
-				break;
-
-			case ONE_FINGER_DRAG:
-
-				mListener.onHorizontalSwipeEnd();
-
-				if(mSpareFingers.isEmpty()) {
-					mCurrentTouchState = null;
-					mDragFinger = null;
-				} else {
-					mDragFinger = mSpareFingers.pop();
-				}
-
-				break;
-
-			case TWO_FINGER_PINCH:
-
-				if(mSpareFingers.isEmpty()) {
-					mCurrentTouchState = TouchState.ONE_FINGER_DRAG;
-					mDragFinger =
-							(mPinchFinger1 == finger) ? mPinchFinger2 : mPinchFinger1;
-					mPinchFinger1 = null;
-					mPinchFinger2 = null;
-
-				} else {
-					if(mPinchFinger1 == finger) {
-						mPinchFinger1 = mSpareFingers.pop();
-					} else {
-						mPinchFinger2 = mSpareFingers.pop();
-					}
-				}
-				break;
-		}
-	}
+    companion object {
+        private const val TAP_MAX_DURATION_MS: Long = 300
+    }
 }

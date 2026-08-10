@@ -12,85 +12,81 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.collections
 
-package org.quantumbadger.redreader.common.collections;
+import org.quantumbadger.redreader.common.collections.WeakReferenceListManager.ArgOperator
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+class WeakReferenceListHashMapManager<K, V> {
+    private val mData = HashMap<K?, WeakReferenceListManager<V?>?>()
 
-public class WeakReferenceListHashMapManager<K, V> {
+    private var mCleanupCounter: Byte = 0
 
-	private final HashMap<K, WeakReferenceListManager<V>> mData = new HashMap<>();
+    @Synchronized
+    fun add(key: K?, value: V?) {
+        var list = mData.get(key)
 
-	private byte mCleanupCounter = 0;
+        if (list == null) {
+            list = WeakReferenceListManager<V?>()
+            mData.put(key, list)
+        }
 
-	public synchronized void add(final K key, final V value) {
+        list.add(value)
 
-		WeakReferenceListManager<V> list = mData.get(key);
+        // Perform cleanup once for each 256 values which are added
+        if ((++mCleanupCounter).toInt() == 0) {
+            clean()
+        }
+    }
 
-		if(list == null) {
-			list = new WeakReferenceListManager<>();
-			mData.put(key, list);
-		}
+    @Synchronized
+    fun remove(key: K?, value: V?) {
+        val list = mData.get(key)
 
-		list.add(value);
+        if (list != null) {
+            list.remove(value)
+        }
+    }
 
-		// Perform cleanup once for each 256 values which are added
-		if(++mCleanupCounter == 0) {
-			clean();
-		}
-	}
+    @Synchronized
+    fun map(
+        key: K?,
+        operator: WeakReferenceListManager.Operator<V?>?
+    ) {
+        val list = mData.get(key)
 
-	public synchronized void remove(final K key, final V value) {
+        if (list != null) {
+            list.map(operator)
+        }
+    }
 
-		final WeakReferenceListManager<V> list = mData.get(key);
+    @Synchronized
+    fun <A> map(
+        key: K?,
+        operator: ArgOperator<V?, A?>?,
+        arg: A?
+    ) {
+        val list = mData.get(key)
 
-		if(list != null) {
-			list.remove(value);
-		}
-	}
+        if (list != null) {
+            list.map<A?>(operator, arg)
+        }
+    }
 
-	public synchronized void map(
-			final K key,
-			final WeakReferenceListManager.Operator<V> operator) {
+    @Synchronized
+    fun clean() {
+        val iterator = mData.entries.iterator()
 
-		final WeakReferenceListManager<V> list = mData.get(key);
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
 
-		if(list != null) {
-			list.map(operator);
-		}
-	}
+            val list = entry.value
+            list.clean()
 
-	public synchronized <A> void map(
-			final K key,
-			final WeakReferenceListManager.ArgOperator<V, A> operator,
-			final A arg) {
-
-		final WeakReferenceListManager<V> list = mData.get(key);
-
-		if(list != null) {
-			list.map(operator, arg);
-		}
-	}
-
-	public synchronized void clean() {
-
-		final Iterator<Map.Entry<K, WeakReferenceListManager<V>>> iterator
-				= mData.entrySet().iterator();
-
-		while(iterator.hasNext()) {
-
-			final Map.Entry<K, WeakReferenceListManager<V>> entry = iterator.next();
-
-			final WeakReferenceListManager<V> list = entry.getValue();
-			list.clean();
-
-			if(list.isEmpty()) {
-				iterator.remove();
-			}
-		}
-	}
+            if (list.isEmpty()) {
+                iterator.remove()
+            }
+        }
+    }
 }

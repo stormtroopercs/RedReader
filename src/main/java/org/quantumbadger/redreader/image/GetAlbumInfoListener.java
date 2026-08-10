@@ -12,21 +12,18 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.image
 
-package org.quantumbadger.redreader.image;
+import org.quantumbadger.redreader.common.RRError
 
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.common.RRError;
+interface GetAlbumInfoListener {
+    fun onFailure(error: RRError)
 
-public interface GetAlbumInfoListener {
+    fun onSuccess(info: AlbumInfo)
 
-	void onFailure(@NonNull RRError error);
+    fun onGalleryRemoved()
 
-	void onSuccess(@NonNull AlbumInfo info);
-
-	void onGalleryRemoved();
-
-	void onGalleryDataNotPresent();
+    fun onGalleryDataNotPresent()
 }

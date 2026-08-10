@@ -12,66 +12,52 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
+abstract class HtmlRawElementTagAttributeChange(private val mChildren: ArrayList<HtmlRawElement>) :
+    HtmlRawElementTag() {
+    protected open fun onLinkButtons(linkButtons: ArrayList<LinkButtonDetails?>) {
+        // Add nothing by default
+    }
 
-import java.util.ArrayList;
+    protected abstract fun onStart(activeAttributes: HtmlTextAttributes)
 
-public abstract class HtmlRawElementTagAttributeChange extends HtmlRawElementTag {
+    protected abstract fun onEnd(activeAttributes: HtmlTextAttributes)
 
-	private final ArrayList<HtmlRawElement> mChildren;
+    override fun getPlainText(stringBuilder: StringBuilder) {
+        for (element in mChildren) {
+            element.getPlainText(stringBuilder)
+        }
+    }
 
-	public HtmlRawElementTagAttributeChange(final ArrayList<HtmlRawElement> children) {
-		mChildren = children;
-	}
+    override fun reduce(
+        activeAttributes: HtmlTextAttributes,
+        activity: AppCompatActivity,
+        destination: ArrayList<HtmlRawElement?>,
+        linkButtons: ArrayList<LinkButtonDetails?>
+    ) {
+        onStart(activeAttributes)
 
-	protected void onLinkButtons(@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
-		// Add nothing by default
-	}
+        try {
+            for (child in mChildren) {
+                child.reduce(activeAttributes, activity, destination, linkButtons)
+            }
+        } finally {
+            onEnd(activeAttributes)
+        }
 
-	protected abstract void onStart(@NonNull HtmlTextAttributes activeAttributes);
+        onLinkButtons(linkButtons)
+    }
 
-	protected abstract void onEnd(@NonNull HtmlTextAttributes activeAttributes);
-
-	@Override
-	public void getPlainText(@NonNull final StringBuilder stringBuilder) {
-		for(final HtmlRawElement element : mChildren) {
-			element.getPlainText(stringBuilder);
-		}
-	}
-
-	@Override
-	public final void reduce(
-			@NonNull final HtmlTextAttributes activeAttributes,
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<HtmlRawElement> destination,
-			@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
-
-		onStart(activeAttributes);
-
-		try {
-			for(final HtmlRawElement child : mChildren) {
-				child.reduce(activeAttributes, activity, destination, linkButtons);
-			}
-
-		} finally {
-			onEnd(activeAttributes);
-		}
-
-		onLinkButtons(linkButtons);
-	}
-
-	@Override
-	public final void generate(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<BodyElement> destination) {
-
-		throw new RuntimeException("Attempt to call generate() on reducible element");
-	}
+    override fun generate(
+        activity: AppCompatActivity,
+        destination: ArrayList<BodyElement?>
+    ) {
+        throw RuntimeException("Attempt to call generate() on reducible element")
+    }
 }

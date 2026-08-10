@@ -12,30 +12,16 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.streams
 
-package org.quantumbadger.redreader.common.streams;
+class IteratorStream<E>(private val mInner: MutableIterator<E?>) : Stream<E?> {
+    override fun hasNext(): Boolean {
+        return mInner.hasNext()
+    }
 
-import androidx.annotation.NonNull;
-
-import java.util.Iterator;
-
-public class IteratorStream<E> implements Stream<E> {
-
-	@NonNull private final Iterator<E> mInner;
-
-	public IteratorStream(@NonNull final Iterator<E> inner) {
-		mInner = inner;
-	}
-
-	@Override
-	public boolean hasNext() {
-		return mInner.hasNext();
-	}
-
-	@Override
-	public E next() {
-		return mInner.next();
-	}
+    override fun next(): E? {
+        return mInner.next()
+    }
 }

@@ -12,82 +12,76 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.http
 
-package org.quantumbadger.redreader.http;
+import java.io.IOException
+import java.net.InetAddress
+import java.net.Socket
+import javax.net.ssl.SSLSocket
+import javax.net.ssl.SSLSocketFactory
 
-import androidx.annotation.NonNull;
+class LegacyTLSSocketFactory(private val delegate: SSLSocketFactory) : SSLSocketFactory() {
+    override fun getDefaultCipherSuites(): Array<String?>? {
+        return delegate.getDefaultCipherSuites()
+    }
 
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.Socket;
+    override fun getSupportedCipherSuites(): Array<String?>? {
+        return delegate.getSupportedCipherSuites()
+    }
 
-public class LegacyTLSSocketFactory extends SSLSocketFactory {
+    @Throws(IOException::class)
+    override fun createSocket(
+        s: Socket?,
+        host: String?,
+        port: Int,
+        autoClose: Boolean
+    ): Socket? {
+        return enableTLS1_2(delegate.createSocket(s, host, port, autoClose))
+    }
 
-	private static final String[] TLS_V1_2_ONLY = {"TLSv1.2"};
+    @Throws(IOException::class)
+    override fun createSocket(host: String?, port: Int): Socket? {
+        return enableTLS1_2(delegate.createSocket(host, port))
+    }
 
-	private final SSLSocketFactory delegate;
+    @Throws(IOException::class)
+    override fun createSocket(
+        host: String?,
+        port: Int,
+        localHost: InetAddress?,
+        localPort: Int
+    ): Socket? {
+        return enableTLS1_2(delegate.createSocket(host, port, localHost, localPort))
+    }
 
-	public LegacyTLSSocketFactory(@NonNull final SSLSocketFactory base) {
-		this.delegate = base;
-	}
+    @Throws(IOException::class)
+    override fun createSocket(
+        host: InetAddress?,
+        port: Int
+    ): Socket? {
+        return enableTLS1_2(delegate.createSocket(host, port))
+    }
 
-	@Override
-	public String[] getDefaultCipherSuites() {
-		return delegate.getDefaultCipherSuites();
-	}
+    @Throws(IOException::class)
+    override fun createSocket(
+        address: InetAddress?,
+        port: Int,
+        localAddress: InetAddress?,
+        localPort: Int
+    ): Socket? {
+        return enableTLS1_2(delegate.createSocket(address, port, localAddress, localPort))
+    }
 
-	@Override
-	public String[] getSupportedCipherSuites() {
-		return delegate.getSupportedCipherSuites();
-	}
+    private fun enableTLS1_2(s: Socket?): Socket? {
+        if (s is SSLSocket) {
+            s.setEnabledProtocols(TLS_V1_2_ONLY)
+        }
+        return s
+    }
 
-	@Override
-	public Socket createSocket(
-			final Socket s,
-			final String host,
-			final int port,
-			final boolean autoClose) throws IOException {
-		return enableTLS1_2(delegate.createSocket(s, host, port, autoClose));
-	}
-
-	@Override
-	public Socket createSocket(final String host, final int port) throws IOException {
-		return enableTLS1_2(delegate.createSocket(host, port));
-	}
-
-	@Override
-	public Socket createSocket(
-			final String host,
-			final int port,
-			final InetAddress localHost,
-			final int localPort) throws IOException {
-		return enableTLS1_2(delegate.createSocket(host, port, localHost, localPort));
-	}
-
-	@Override
-	public Socket createSocket(
-			final InetAddress host,
-			final int port) throws IOException {
-		return enableTLS1_2(delegate.createSocket(host, port));
-	}
-
-	@Override
-	public Socket createSocket(
-			final InetAddress address,
-			final int port,
-			final InetAddress localAddress,
-			final int localPort) throws IOException {
-		return enableTLS1_2(delegate.createSocket(address, port, localAddress, localPort));
-	}
-
-	private Socket enableTLS1_2(final Socket s) {
-		if (s instanceof SSLSocket) {
-			((SSLSocket)s).setEnabledProtocols(TLS_V1_2_ONLY);
-		}
-		return s;
-	}
+    companion object {
+        private val TLS_V1_2_ONLY = arrayOf<String?>("TLSv1.2")
+    }
 }

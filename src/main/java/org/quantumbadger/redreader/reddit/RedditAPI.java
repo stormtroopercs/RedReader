@@ -12,1137 +12,1166 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
-
-package org.quantumbadger.redreader.reddit;
-
-import android.content.Context;
-import android.net.Uri;
-
-import androidx.annotation.IntDef;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
-import org.quantumbadger.redreader.account.RedditAccount;
-import org.quantumbadger.redreader.activities.BugReportActivity;
-import org.quantumbadger.redreader.cache.CacheManager;
-import org.quantumbadger.redreader.cache.CacheRequest;
-import org.quantumbadger.redreader.cache.CacheRequestCallbacks;
-import org.quantumbadger.redreader.cache.CacheRequestJSONParser;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategy;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways;
-import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyIfTimestampOutsideBounds;
-import org.quantumbadger.redreader.common.Constants;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.GenericFactory;
-import org.quantumbadger.redreader.common.Optional;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.Priority;
-import org.quantumbadger.redreader.common.RRError;
-import org.quantumbadger.redreader.common.TimestampBound;
-import org.quantumbadger.redreader.common.UriString;
-import org.quantumbadger.redreader.common.datastream.SeekableInputStream;
-import org.quantumbadger.redreader.common.time.TimeDuration;
-import org.quantumbadger.redreader.common.time.TimestampUTC;
-import org.quantumbadger.redreader.http.FailedRequestBody;
-import org.quantumbadger.redreader.http.PostField;
-import org.quantumbadger.redreader.http.body.HTTPRequestBody;
-import org.quantumbadger.redreader.io.RequestResponseHandler;
-import org.quantumbadger.redreader.jsonwrap.JsonArray;
-import org.quantumbadger.redreader.jsonwrap.JsonString;
-import org.quantumbadger.redreader.jsonwrap.JsonValue;
-import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType;
-import org.quantumbadger.redreader.reddit.things.RedditSubreddit;
-import org.quantumbadger.redreader.reddit.things.RedditThing;
-import org.quantumbadger.redreader.reddit.things.RedditUser;
-import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
-
-import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-
-
-public final class RedditAPI {
-
-	public static final int ACTION_UPVOTE = 0;
-	public static final int ACTION_UNVOTE = 1;
-	public static final int ACTION_DOWNVOTE = 2;
-	public static final int ACTION_SAVE = 3;
-	public static final int ACTION_HIDE = 4;
-	public static final int ACTION_UNSAVE = 5;
-	public static final int ACTION_UNHIDE = 6;
-	public static final int ACTION_DELETE = 8;
-
-	public static final int SUBSCRIPTION_ACTION_SUBSCRIBE = 0;
-	public static final int SUBSCRIPTION_ACTION_UNSUBSCRIBE = 1;
-
-	@IntDef({
-			ACTION_UPVOTE,
-			ACTION_UNVOTE,
-			ACTION_DOWNVOTE,
-			ACTION_SAVE,
-			ACTION_HIDE,
-			ACTION_UNSAVE,
-			ACTION_UNHIDE,
-			ACTION_DELETE})
-	@Retention(RetentionPolicy.SOURCE)
-	public @interface RedditAction {
-	}
-
-	@IntDef({SUBSCRIPTION_ACTION_SUBSCRIBE, SUBSCRIPTION_ACTION_UNSUBSCRIBE})
-	@Retention(RetentionPolicy.SOURCE)
-	public @interface RedditSubredditAction {
-	}
-
-	private static final class GenericResponseHandler implements CacheRequestJSONParser.Listener {
-
-		@NonNull private final APIResponseHandler.ActionResponseHandler mHandler;
-
-		private GenericResponseHandler(
-				@NonNull final APIResponseHandler.ActionResponseHandler handler) {
-			mHandler = handler;
-		}
-
-		@Override
-		public void onJsonParsed(
-				@NonNull final JsonValue result,
-				final TimestampUTC timestamp,
-				@NonNull final UUID session,
-				final boolean fromCache) {
-
-			try {
-				final APIResponseHandler.APIFailureType failureType = findFailureType(result);
-
-				if(failureType != null) {
-					mHandler.notifyFailure(
-							failureType,
-							"GenericResponseHandler",
-							Optional.of(new FailedRequestBody(result)));
-				} else {
-					mHandler.notifySuccess();
-				}
-
-			} catch(final Exception e) {
-				BugReportActivity.handleGlobalError(mHandler.context, new RRError(
-						null,
-						null,
-						true,
-						e,
-						null,
-						null,
-						result.toString()));
-			}
-		}
-
-		@Override
-		public void onFailure(@NonNull final RRError error) {
-			mHandler.notifyFailure(error);
-		}
-	}
-
-	public interface BlockUserResponseHandler {
-		void onSuccess();
-		void onBlockUserPermissionDenied();
-		void onFailure(@NonNull final RRError error);
-	}
-
-	public interface FlairSelectorResponseHandler {
-
-		void onSuccess(@NonNull Collection<RedditFlairChoice> choices);
-
-		void onSubredditDoesNotExist();
-
-		void onSubredditPermissionDenied();
-
-		void onFailure(@NonNull final RRError error);
-	}
-
-	public static void flairSelectorForNewLink(
-			@NonNull final Context context,
-			@NonNull final CacheManager cm,
-			@NonNull final RedditAccount user,
-			@NonNull final SubredditCanonicalId subreddit,
-			@NonNull final FlairSelectorResponseHandler responseHandler) {
-
-		final LinkedList<PostField> postFields = new LinkedList<>();
-		postFields.add(new PostField("is_newlink", "true"));
-
-		final UriString apiUrl = Constants.Reddit.getUri(subreddit + "/api/flairselector");
-
-		cm.makeRequest(createPostRequest(
-				apiUrl,
-				user,
-				postFields,
-				context,
-				new CacheRequestJSONParser.Listener() {
-
-					@Override
-					public void onJsonParsed(
-							@NonNull final JsonValue result,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache) {
-
-						if(result.asObject() != null
-								&& Objects.requireNonNull(result.asObject()).isEmpty()) {
-							responseHandler.onSuccess(Collections.emptyList());
-							return;
-						}
-
-						if(result.asString() != null
-								&& Objects.requireNonNull(result.asString()).equals("{}")) {
-							responseHandler.onSuccess(Collections.emptyList());
-							return;
-						}
-
-						final Optional<JsonArray> array = result.getArrayAtPath("choices");
-
-						if(array.isEmpty()) {
-
-							final APIResponseHandler.APIFailureType failureType
-									= findFailureType(result);
-
-							responseHandler.onFailure(General.getGeneralErrorForFailure(
-									context,
-									General.nullAlternative(
-											failureType,
-											APIResponseHandler.APIFailureType.UNKNOWN),
-									"flairselector",
-									Optional.of(new FailedRequestBody(result))
-							));
-
-							return;
-						}
-
-						final Optional<List<RedditFlairChoice>> choices
-								= RedditFlairChoice.fromJsonList(array.get());
-
-						if(choices.isEmpty()) {
-							responseHandler.onFailure(General.getGeneralErrorForFailure(
-									context,
-									CacheRequest.RequestFailureType.PARSE,
-									new RuntimeException(),
-									null,
-									apiUrl,
-									Optional.of(new FailedRequestBody(result))));
-							return;
-						}
-
-						responseHandler.onSuccess(choices.get());
-					}
-
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-
-						if(error.httpStatus != null && error.httpStatus == 404) {
-							responseHandler.onSubredditDoesNotExist();
-
-						} else if(error.httpStatus != null && error.httpStatus == 403) {
-							responseHandler.onSubredditPermissionDenied();
-
-						} else {
-							responseHandler.onFailure(error);
-						}
-					}
-				}));
-	}
-
-	private static class SubmitJSONListener implements CacheRequestJSONParser.Listener {
-
-		@NonNull private final APIResponseHandler.SubmitResponseHandler mResponseHandler;
-
-		private SubmitJSONListener(
-				@NonNull final APIResponseHandler.SubmitResponseHandler responseHandler) {
-			mResponseHandler = responseHandler;
-		}
-
-		@Override
-		public void onJsonParsed(
-				@NonNull final JsonValue result,
-				final TimestampUTC timestamp,
-				@NonNull final UUID session,
-				final boolean fromCache) {
-
-			try {
-				final Optional<JsonArray> errorsJson
-						= result.getArrayAtPath("json", "errors");
-
-				if(errorsJson.isPresent()) {
-
-					final ArrayList<String> errors = new ArrayList<>();
-
-					for(final JsonValue errorValue : errorsJson.get()) {
-
-						final JsonArray error = errorValue.asArray();
-
-						if(error != null && error.getString(1) != null) {
-							errors.add(error.getString(1));
-						}
-					}
-
-					if(!errors.isEmpty()) {
-						mResponseHandler.onSubmitErrors(errors);
-						return;
-					}
-				}
-
-				final APIResponseHandler.APIFailureType failureType
-						= findFailureType(result);
-
-				if(failureType != null) {
-					mResponseHandler.notifyFailure(
-							failureType,
-							null,
-							Optional.of(new FailedRequestBody(result)));
-				} else {
-					mResponseHandler.onSuccess(
-							result.getStringAtPath("json", "data", "things", 0, "data", "permalink")
-									.orElse(result.getStringAtPath("json", "data", "url")),
-							result.getStringAtPath("json", "data", "things", 0, "data", "name"));
-				}
-
-			} catch(final Exception e) {
-				BugReportActivity.handleGlobalError(
-						mResponseHandler.context,
-						new RRError(
-								null,
-								null,
-								true,
-								e,
-								null,
-								null,
-								result.toString()));
-			}
-		}
-
-		@Override
-		public void onFailure(@NonNull final RRError error) {
-			mResponseHandler.notifyFailure(error);
-		}
-	}
-
-	public static void submit(
-			final CacheManager cm,
-			final APIResponseHandler.SubmitResponseHandler responseHandler,
-			final RedditAccount user,
-			final boolean isSelfPost,
-			final String subreddit,
-			final String title,
-			final String body,
-			final boolean sendRepliesToInbox,
-			final boolean markAsNsfw,
-			final boolean markAsSpoiler,
-			@Nullable final String flairId,
-			final Context context) {
-
-		final LinkedList<PostField> postFields = new LinkedList<>();
-		postFields.add(new PostField("api_type", "json"));
-		postFields.add(new PostField("kind", isSelfPost ? "self" : "link"));
-		postFields.add(new PostField(
-				"sendreplies",
-				sendRepliesToInbox ? "true" : "false"));
-		postFields.add(new PostField("nsfw", markAsNsfw ? "true" : "false"));
-		postFields.add(new PostField("spoiler", markAsSpoiler ? "true" : "false"));
-		postFields.add(new PostField("sr", subreddit));
-		postFields.add(new PostField("title", title));
-
-		if(flairId != null) {
-			postFields.add(new PostField("flair_id", flairId));
-		}
-
-		if(isSelfPost) {
-			postFields.add(new PostField("text", body));
-		} else {
-			postFields.add(new PostField("url", body));
-		}
-
-		cm.makeRequest(createPostRequest(
-				Constants.Reddit.getUri("/api/submit"),
-				user,
-				postFields,
-				context,
-				new SubmitJSONListener(responseHandler)));
-	}
-
-	public static void compose(
-			@NonNull final CacheManager cm,
-			@NonNull final APIResponseHandler.ActionResponseHandler responseHandler,
-			@NonNull final RedditAccount user,
-			@NonNull final String recipient,
-			@NonNull final String subject,
-			@NonNull final String body,
-			@NonNull final Context context) {
-
-		final LinkedList<PostField> postFields = new LinkedList<>();
-		postFields.add(new PostField("api_type", "json"));
-		postFields.add(new PostField("subject", subject));
-		postFields.add(new PostField("to", recipient));
-		postFields.add(new PostField("text", body));
-
-		cm.makeRequest(createPostRequest(
-				Constants.Reddit.getUri("/api/compose"),
-				user,
-				postFields,
-				context,
-				new GenericResponseHandler(responseHandler)));
-	}
-
-	public static void comment(
-			@NonNull final CacheManager cm,
-			@NonNull final APIResponseHandler.SubmitResponseHandler responseHandler,
-			@NonNull final APIResponseHandler.ActionResponseHandler inboxResponseHandler,
-			@NonNull final RedditAccount user,
-			@NonNull final RedditIdAndType parentIdAndType,
-			@NonNull final String markdown,
-			final boolean sendRepliesToInbox,
-			@NonNull final AppCompatActivity context) {
-
-		final LinkedList<PostField> postFields = new LinkedList<>();
-		postFields.add(new PostField("api_type", "json"));
-		postFields.add(new PostField("thing_id", parentIdAndType.getValue()));
-		postFields.add(new PostField("text", markdown));
-
-		cm.makeRequest(createPostRequest(
-				Constants.Reddit.getUri("/api/comment"),
-				user,
-				postFields,
-				context,
-				new SubmitJSONListener(new APIResponseHandler.SubmitResponseHandler(context) {
-					@Override
-					public void onSubmitErrors(@NonNull final ArrayList<String> errors) {
-						responseHandler.onSubmitErrors(errors);
-					}
-
-					@Override
-					public void onSuccess(
-							@NonNull final Optional<String> redirectUrl,
-							@NonNull final Optional<String> thingId) {
-
-						if(!sendRepliesToInbox) {
-							thingId.ifPresent(commentFullname -> sendReplies(
-									cm,
-									inboxResponseHandler,
-									user,
-									commentFullname,
-									false,
-									context));
-						}
-
-						responseHandler.onSuccess(redirectUrl, thingId);
-					}
-
-					@Override
-					protected void onCallbackException(final Throwable t) {
-						responseHandler.onCallbackException(t);
-					}
-
-					@Override
-					protected void onFailure(@NonNull final RRError error) {
-						responseHandler.notifyFailure(error);
-					}
-				})));
-	}
-
-	public static void markAllAsRead(
-			final CacheManager cm,
-			final APIResponseHandler.ActionResponseHandler responseHandler,
-			final RedditAccount user,
-			final Context context) {
-
-		final LinkedList<PostField> postFields = new LinkedList<>();
-
-		cm.makeRequest(createPostRequestUnprocessedResponse(
-				Constants.Reddit.getUri("/api/read_all_messages"),
-				user,
-				postFields,
-				context,
-				new CacheRequestCallbacks() {
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-						responseHandler.notifyFailure(error);
-					}
-
-					@Override
-					public void onDataStreamComplete(
-							@NonNull final GenericFactory<SeekableInputStream, IOException> stream,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache,
-							@Nullable final String mimetype) {
-
-						responseHandler.notifySuccess();
-					}
-				}));
-	}
-
-	public static void editComment(
-			final CacheManager cm,
-			final APIResponseHandler.ActionResponseHandler responseHandler,
-			final RedditAccount user,
-			final RedditIdAndType commentIdAndType,
-			final String markdown,
-			final Context context) {
-
-		final LinkedList<PostField> postFields = new LinkedList<>();
-		postFields.add(new PostField("thing_id", commentIdAndType.getValue()));
-		postFields.add(new PostField("text", markdown));
-
-		cm.makeRequest(createPostRequest(
-				Constants.Reddit.getUri("/api/editusertext"),
-				user,
-				postFields,
-				context,
-				new GenericResponseHandler(responseHandler)));
-	}
-
-	public static void action(
-			final CacheManager cm,
-			final APIResponseHandler.ActionResponseHandler responseHandler,
-			final RedditAccount user,
-			final RedditIdAndType idAndType,
-			final @RedditAction int action,
-			final Context context) {
-
-		final LinkedList<PostField> postFields = new LinkedList<>();
-		postFields.add(new PostField("id", idAndType.getValue()));
-
-		final UriString url = prepareActionUri(action, postFields);
-
-		cm.makeRequest(createPostRequest(
-				url,
-				user,
-				postFields,
-				context,
-				new GenericResponseHandler(responseHandler)));
-	}
-
-	private static UriString prepareActionUri(
-			final @RedditAction int action,
-			final LinkedList<PostField> postFields) {
-		switch(action) {
-			case ACTION_DOWNVOTE:
-				postFields.add(new PostField("dir", "-1"));
-				return Constants.Reddit.getUri(Constants.Reddit.PATH_VOTE);
-
-			case ACTION_UNVOTE:
-				postFields.add(new PostField("dir", "0"));
-				return Constants.Reddit.getUri(Constants.Reddit.PATH_VOTE);
-
-			case ACTION_UPVOTE:
-				postFields.add(new PostField("dir", "1"));
-				return Constants.Reddit.getUri(Constants.Reddit.PATH_VOTE);
-
-			case ACTION_SAVE:
-				return Constants.Reddit.getUri(Constants.Reddit.PATH_SAVE);
-			case ACTION_HIDE:
-				return Constants.Reddit.getUri(Constants.Reddit.PATH_HIDE);
-			case ACTION_UNSAVE:
-				return Constants.Reddit.getUri(Constants.Reddit.PATH_UNSAVE);
-			case ACTION_UNHIDE:
-				return Constants.Reddit.getUri(Constants.Reddit.PATH_UNHIDE);
-			case ACTION_DELETE:
-				return Constants.Reddit.getUri(Constants.Reddit.PATH_DELETE);
-
-			default:
-				throw new RuntimeException("Unknown post/comment action");
-		}
-	}
-
-	/**
-	 * Reports a post or comment. The reason fields should be constructed using
-	 * ReportReason.toPostFields().
-	 */
-	public static void report(
-			final CacheManager cm,
-			final APIResponseHandler.ActionResponseHandler responseHandler,
-			final RedditAccount user,
-			final RedditIdAndType idAndType,
-			@Nullable final String subredditName,
-			@NonNull final List<PostField> reasonFields,
-			final Context context) {
-
-		final LinkedList<PostField> postFields = new LinkedList<>();
-		postFields.add(new PostField("api_type", "json"));
-		postFields.add(new PostField("thing_id", idAndType.getValue()));
-
-		if(subredditName != null) {
-			postFields.add(new PostField("sr_name", subredditName));
-		}
-
-		postFields.addAll(reasonFields);
-
-		cm.makeRequest(createPostRequest(
-				Constants.Reddit.getUri(Constants.Reddit.PATH_REPORT),
-				user,
-				postFields,
-				context,
-				new GenericResponseHandler(responseHandler)));
-	}
-
-	public static void subscriptionAction(
-			final CacheManager cm,
-			final APIResponseHandler.ActionResponseHandler responseHandler,
-			final RedditAccount user,
-			final SubredditCanonicalId subredditId,
-			final @RedditSubredditAction int action,
-			final Context context) {
-
-		RedditSubredditManager.getInstance(context, user).getSubreddit(
-				subredditId,
-				TimestampBound.ANY,
-				new RequestResponseHandler<RedditSubreddit, RRError>() {
-
-					@Override
-					public void onRequestFailed(final RRError failureReason) {
-						responseHandler.notifyFailure(failureReason);
-					}
-
-					@Override
-					public void onRequestSuccess(
-							final RedditSubreddit subreddit,
-							final TimestampUTC timeCached) {
-
-						final LinkedList<PostField> postFields = new LinkedList<>();
-
-						postFields.add(new PostField("sr", subreddit.name));
-
-						final UriString url = subscriptionPrepareActionUri(action, postFields);
-
-						cm.makeRequest(createPostRequest(
-								url,
-								user,
-								postFields,
-								context,
-								new GenericResponseHandler(responseHandler)));
-					}
-				},
-				null);
-	}
-
-	private static UriString subscriptionPrepareActionUri(
-			final @RedditSubredditAction int action,
-			final LinkedList<PostField> postFields) {
-		switch(action) {
-			case SUBSCRIPTION_ACTION_SUBSCRIBE:
-				postFields.add(new PostField("action", "sub"));
-				return Constants.Reddit.getUri(Constants.Reddit.PATH_SUBSCRIBE);
-
-			case SUBSCRIPTION_ACTION_UNSUBSCRIBE:
-				postFields.add(new PostField("action", "unsub"));
-				return Constants.Reddit.getUri(Constants.Reddit.PATH_SUBSCRIBE);
-
-			default:
-				throw new RuntimeException("Unknown subreddit action");
-		}
-	}
-
-	public static void getUser(
-			final CacheManager cm,
-			final String usernameToGet,
-			final APIResponseHandler.UserResponseHandler responseHandler,
-			final RedditAccount user,
-			final DownloadStrategy downloadStrategy,
-			final Context context) {
-
-		final UriString uri = Constants.Reddit.getUri("/user/" + usernameToGet + "/about.json");
-
-		cm.makeRequest(createGetRequest(
-				uri,
-				user,
-				new Priority(Constants.Priority.API_USER_ABOUT),
-				Constants.FileType.USER_ABOUT,
-				downloadStrategy,
-				context,
-				new CacheRequestJSONParser.Listener() {
-					@Override
-					public void onJsonParsed(
-							@NonNull final JsonValue result,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache) {
-
-						try {
-							final RedditThing userThing = result.asObject(RedditThing.class);
-							final RedditUser userResult = userThing.asUser();
-							responseHandler.notifySuccess(userResult, timestamp);
-
-						} catch(final Throwable t) {
-							// TODO look for error
-							responseHandler.notifyFailure(General.getGeneralErrorForFailure(
-									context,
-									CacheRequest.RequestFailureType.PARSE,
-									t,
-									null,
-									uri,
-									Optional.of(new FailedRequestBody(result))));
-						}
-					}
-
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-						responseHandler.notifyFailure(error);
-					}
-				}));
-	}
-
-	public static void unblockUser(
-			final CacheManager cm,
-			final String usernameToUnblock,
-			final String currentUserFullname,
-			final APIResponseHandler.ActionResponseHandler responseHandler,
-			final RedditAccount user,
-			final Context context
-	) {
-		final LinkedList<PostField> postFields = new LinkedList<>();
-		postFields.add(new PostField("name", usernameToUnblock));
-		postFields.add(new PostField("container", currentUserFullname));
-		postFields.add(new PostField("type", "enemy"));
-
-		cm.makeRequest(createPostRequest(
-				Constants.Reddit.getUri("/api/unfriend"),
-				user,
-				postFields,
-				context,
-				new GenericResponseHandler(responseHandler)));
-	}
-
-	public static void blockUser(
-			final CacheManager cm,
-			final String usernameToBlock,
-			final BlockUserResponseHandler responseHandler,
-			final RedditAccount user,
-			final Context context
-	) {
-		final LinkedList<PostField> postFields = new LinkedList<>();
-		postFields.add(new PostField("name", usernameToBlock));
-		postFields.add(new PostField("api_type", "json"));
-
-		cm.makeRequest(createPostRequestUnprocessedResponse(
-				Constants.Reddit.getUri("/api/block_user"),
-				user,
-				postFields,
-				context,
-				new CacheRequestCallbacks() {
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-						// we upgraded the OAuth scope to include account,
-						// so check for missing permission
-						if (error.httpStatus != null && error.httpStatus == 403) {
-							responseHandler.onBlockUserPermissionDenied();
-						} else {
-							responseHandler.onFailure(error);
-						}
-					}
-
-					@Override
-					public void onDataStreamComplete(
-							@NonNull final GenericFactory<SeekableInputStream, IOException> stream,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache,
-							@Nullable final String mimetype) {
-						responseHandler.onSuccess();
-					}
-				}
-		));
-	}
-
-	public static void sendReplies(
-			final CacheManager cm,
-			final APIResponseHandler.ActionResponseHandler responseHandler,
-			final RedditAccount user,
-			final String fullname,
-			final boolean state,
-			final Context context) {
-
-		final LinkedList<PostField> postFields = new LinkedList<>();
-		postFields.add(new PostField("id", fullname));
-		postFields.add(new PostField("state", String.valueOf(state)));
-		cm.makeRequest(createPostRequest(
-				Constants.Reddit.getUri("/api/sendreplies"),
-				user,
-				postFields,
-				context,
-				new GenericResponseHandler(responseHandler)));
-	}
-
-	public static void popularSubreddits(
-			@NonNull final CacheManager cm,
-			@NonNull final RedditAccount user,
-			@NonNull final Context context,
-			@NonNull final APIResponseHandler.ValueResponseHandler<
-					SubredditListResponse> handler,
-			@NonNull final Optional<String> after) {
-
-		final TimeDuration maxCacheAgeMs = TimeDuration.hours(1);
-
-		final Uri.Builder builder = Constants.Reddit.getUriBuilder(
-				Constants.Reddit.PATH_SUBREDDITS_POPULAR);
-
-		builder.appendQueryParameter("limit", "100");
-
-		after.apply(value -> builder.appendQueryParameter("after", value));
-
-		final UriString uri = UriString.from(builder.build());
-
-		requestSubredditList(
-				cm,
-				uri,
-				user,
-				context,
-				handler,
-				new DownloadStrategyIfTimestampOutsideBounds(
-						TimestampBound.notOlderThan(maxCacheAgeMs)));
-	}
-
-	public static void searchSubreddits(
-			@NonNull final CacheManager cm,
-			@NonNull final RedditAccount user,
-			@NonNull final String queryString,
-			@NonNull final Context context,
-			@NonNull final APIResponseHandler.ValueResponseHandler<
-					SubredditListResponse> handler,
-			@NonNull final Optional<String> after) {
-
-		final TimeDuration maxCacheAgeMs = TimeDuration.minutes(1);
-
-		final Uri.Builder builder = Constants.Reddit.getUriBuilder(
-				"/subreddits/search.json");
-
-		builder.appendQueryParameter("q", queryString);
-		builder.appendQueryParameter("limit", "100");
-
-		if(PrefsUtility.pref_behaviour_nsfw()) {
-			builder.appendQueryParameter("include_over_18", "on");
-		}
-
-		after.apply(value -> builder.appendQueryParameter("after", value));
-
-		final UriString uri = UriString.from(builder.build());
-
-		requestSubredditList(
-				cm,
-				uri,
-				user,
-				context,
-				handler,
-				new DownloadStrategyIfTimestampOutsideBounds(
-						TimestampBound.notOlderThan(maxCacheAgeMs)));
-	}
-
-	public static void subscribedSubreddits(
-			@NonNull final CacheManager cm,
-			@NonNull final RedditAccount user,
-			@NonNull final AppCompatActivity context,
-			@NonNull final APIResponseHandler.ValueResponseHandler<
-					ArrayList<RedditSubreddit>> handler) {
-
-		subscribedSubredditsInternal(
-				cm,
-				user,
-				context,
-				handler,
-				Optional.empty(),
-				new ArrayList<>(128));
-	}
-
-	private static void subscribedSubredditsInternal(
-			@NonNull final CacheManager cm,
-			@NonNull final RedditAccount user,
-			@NonNull final AppCompatActivity context,
-			@NonNull final APIResponseHandler.ValueResponseHandler<
-					ArrayList<RedditSubreddit>> handler,
-			@NonNull final Optional<String> after,
-			@NonNull final ArrayList<RedditSubreddit> results) {
-
-		final Uri.Builder builder = Constants.Reddit.getUriBuilder(
-				Constants.Reddit.PATH_SUBREDDITS_MINE_SUBSCRIBER);
-
-		after.apply(value -> builder.appendQueryParameter("after", value));
-
-		final UriString uri = UriString.from(builder.build());
-
-		requestSubredditList(
-				cm,
-				uri,
-				user,
-				context,
-				new APIResponseHandler.ValueResponseHandler<SubredditListResponse>(context) {
-					@Override
-					protected void onSuccess(@NonNull final SubredditListResponse value) {
-
-						results.addAll(value.subreddits);
-
-						if(value.after.isEmpty()) {
-							handler.onSuccess(results);
-						} else {
-							subscribedSubredditsInternal(
-									cm,
-									user,
-									context,
-									handler,
-									value.after,
-									results);
-						}
-					}
-
-					@Override
-					protected void onCallbackException(final Throwable t) {
-						handler.onCallbackException(t);
-					}
-
-					@Override
-					protected void onFailure(@NonNull final RRError error) {
-						handler.onFailure(error);
-					}
-				},
-				DownloadStrategyAlways.INSTANCE);
-	}
-
-	public static class SubredditListResponse {
-		public final ArrayList<RedditSubreddit> subreddits;
-		public final Optional<String> after;
-
-		public SubredditListResponse(
-				final ArrayList<RedditSubreddit> subreddits,
-				final Optional<String> after) {
-			this.subreddits = subreddits;
-			this.after = after;
-		}
-	}
-
-	public static void requestSubredditList(
-			@NonNull final CacheManager cm,
-			@NonNull final UriString uri,
-			@NonNull final RedditAccount user,
-			@NonNull final Context context,
-			@NonNull final APIResponseHandler.ValueResponseHandler<
-					SubredditListResponse> handler,
-			@NonNull final DownloadStrategy downloadStrategy) {
-
-		cm.makeRequest(createGetRequest(
-				uri,
-				user,
-				new Priority(Constants.Priority.API_SUBREDDIT_LIST),
-				Constants.FileType.SUBREDDIT_LIST,
-				downloadStrategy,
-				context,
-				new CacheRequestJSONParser.Listener() {
-					@Override
-					public void onJsonParsed(
-							@NonNull final JsonValue result,
-							final TimestampUTC timestamp,
-							@NonNull final UUID session,
-							final boolean fromCache) {
-
-						try {
-							final Optional<JsonArray> subreddits
-									= result.getArrayAtPath("data", "children");
-
-							final Optional<String> after
-									= result.getStringAtPath("data", "after");
-
-							if(subreddits.isEmpty()) {
-								throw new IOException("Subreddit data not found");
-							}
-
-							final ArrayList<RedditSubreddit> output = new ArrayList<>();
-
-							for(final JsonValue value : subreddits.get()) {
-								final RedditThing redditThing = value.asObject(RedditThing.class);
-								final RedditSubreddit subreddit = redditThing.asSubreddit();
-								output.add(subreddit);
-							}
-
-							handler.notifySuccess(
-									new SubredditListResponse(output, after));
-
-						} catch(final Exception e) {
-							onFailure(General.getGeneralErrorForFailure(
-									context,
-									CacheRequest.RequestFailureType.PARSE,
-									e,
-									null,
-									uri,
-									Optional.of(new FailedRequestBody(result))));
-						}
-					}
-
-					@Override
-					public void onFailure(@NonNull final RRError error) {
-						handler.notifyFailure(error);
-					}
-				}
-		));
-	}
-
-	@Nullable
-	private static APIResponseHandler.APIFailureType findFailureType(final JsonValue response) {
-
-		// TODO handle 403 forbidden
-
-		if(response == null) {
-			return null;
-		}
-
-		boolean unknownError = false;
-
-		if(response.asObject() != null) {
-
-			for(final Map.Entry<String, JsonValue> v : response.asObject()) {
-
-				if("success".equals(v.getKey())
-						&& Boolean.FALSE.equals(v.getValue().asBoolean())) {
-
-					unknownError = true;
-				}
-
-				final APIResponseHandler.APIFailureType failureType =
-						findFailureType(v.getValue());
-
-				if(failureType == APIResponseHandler.APIFailureType.UNKNOWN) {
-					unknownError = true;
-
-				} else if(failureType != null) {
-					return failureType;
-				}
-			}
-
-			final Optional<JsonArray> errors = response.getArrayAtPath("json", "errors");
-
-			if(errors.isPresent() && errors.get().size() > 0) {
-				unknownError = true;
-			}
-
-		} else if(response.asArray() != null) {
-
-			for(final JsonValue v : response.asArray()) {
-				final APIResponseHandler.APIFailureType failureType =
-						findFailureType(v);
-
-				if(failureType == APIResponseHandler.APIFailureType.UNKNOWN) {
-					unknownError = true;
-
-				} else if(failureType != null) {
-					return failureType;
-				}
-			}
-
-		} else if(response instanceof JsonString) {
-
-			final String responseAsString = response.asString();
-
-			if(Constants.Reddit.isApiErrorUser(responseAsString)) {
-				return APIResponseHandler.APIFailureType.INVALID_USER;
-			}
-
-			if(Constants.Reddit.isApiErrorCaptcha(responseAsString)) {
-				return APIResponseHandler.APIFailureType.BAD_CAPTCHA;
-			}
-
-			if(Constants.Reddit.isApiErrorNotAllowed(responseAsString)) {
-				return APIResponseHandler.APIFailureType.NOTALLOWED;
-			}
-
-			if(Constants.Reddit.isApiErrorSubredditRequired(responseAsString)) {
-				return APIResponseHandler.APIFailureType.SUBREDDIT_REQUIRED;
-			}
-
-			if(Constants.Reddit.isApiErrorURLRequired(responseAsString)) {
-				return APIResponseHandler.APIFailureType.URL_REQUIRED;
-			}
-
-			if(Constants.Reddit.isApiTooFast(responseAsString)) {
-				return APIResponseHandler.APIFailureType.TOO_FAST;
-			}
-
-			if(Constants.Reddit.isApiTooLong(responseAsString)) {
-				return APIResponseHandler.APIFailureType.TOO_LONG;
-			}
-
-			if(Constants.Reddit.isApiAlreadySubmitted(responseAsString)) {
-				return APIResponseHandler.APIFailureType.ALREADY_SUBMITTED;
-			}
-
-			if(Constants.Reddit.isPostFlairRequired(responseAsString)) {
-				return APIResponseHandler.APIFailureType.POST_FLAIR_REQUIRED;
-			}
-
-			if(Constants.Reddit.isApiError(responseAsString)) {
-				unknownError = true;
-			}
-		}
-
-		return unknownError ? APIResponseHandler.APIFailureType.UNKNOWN : null;
-	}
-
-	@NonNull
-	private static CacheRequest createPostRequest(
-			@NonNull final UriString url,
-			@NonNull final RedditAccount user,
-			@NonNull final List<PostField> postFields,
-			@NonNull final Context context,
-			@NonNull final CacheRequestJSONParser.Listener handler) {
-
-		return createPostRequestUnprocessedResponse(
-				url,
-				user,
-				postFields,
-				context,
-				new CacheRequestJSONParser(context, handler));
-	}
-
-	@NonNull
-	private static CacheRequest createPostRequestUnprocessedResponse(
-			@NonNull final UriString url,
-			@NonNull final RedditAccount user,
-			@NonNull final List<PostField> postFields,
-			@NonNull final Context context,
-			@NonNull final CacheRequestCallbacks callbacks) {
-
-		return new CacheRequest(
-				url,
-				user,
-				null,
-				new Priority(Constants.Priority.API_ACTION),
-				DownloadStrategyAlways.INSTANCE,
-				Constants.FileType.NOCACHE,
-				CacheRequest.DownloadQueueType.REDDIT_API,
-				new HTTPRequestBody.PostFields(postFields),
-				context,
-				callbacks);
-	}
-
-	@NonNull
-	private static CacheRequest createGetRequest(
-			@NonNull final UriString url,
-			@NonNull final RedditAccount user,
-			@NonNull final Priority priority,
-			final int fileType,
-			@NonNull final DownloadStrategy downloadStrategy,
-			@NonNull final Context context,
-			@NonNull final CacheRequestJSONParser.Listener handler) {
-
-		return new CacheRequest(
-				url,
-				user,
-				null,
-				priority,
-				downloadStrategy,
-				fileType,
-				CacheRequest.DownloadQueueType.REDDIT_API,
-				null,
-				context,
-				new CacheRequestJSONParser(context, handler));
-	}
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit
+
+import android.content.Context
+import androidx.annotation.IntDef
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.RedReader.Companion.getInstance
+import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.cache.CacheRequest
+import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
+import org.quantumbadger.redreader.cache.CacheRequestCallbacks
+import org.quantumbadger.redreader.cache.CacheRequestJSONParser
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategy
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyIfTimestampOutsideBounds
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.Constants.Reddit
+import org.quantumbadger.redreader.common.Consumer
+import org.quantumbadger.redreader.common.FunctionOneArgNoReturn
+import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
+import org.quantumbadger.redreader.common.General.nullAlternative
+import org.quantumbadger.redreader.common.GenericFactory
+import org.quantumbadger.redreader.common.Optional
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.TimestampBound
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.common.UriString.Companion.from
+import org.quantumbadger.redreader.common.datastream.SeekableInputStream
+import org.quantumbadger.redreader.common.time.TimeDuration.Companion.hours
+import org.quantumbadger.redreader.common.time.TimeDuration.Companion.minutes
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.http.FailedRequestBody
+import org.quantumbadger.redreader.http.PostField
+import org.quantumbadger.redreader.http.body.HTTPRequestBody.PostFields
+import org.quantumbadger.redreader.io.RequestResponseHandler
+import org.quantumbadger.redreader.jsonwrap.JsonObject
+import org.quantumbadger.redreader.jsonwrap.JsonString
+import org.quantumbadger.redreader.jsonwrap.JsonValue
+import org.quantumbadger.redreader.reddit.APIResponseHandler.APIFailureType
+import org.quantumbadger.redreader.reddit.APIResponseHandler.ActionResponseHandler
+import org.quantumbadger.redreader.reddit.APIResponseHandler.SubmitResponseHandler
+import org.quantumbadger.redreader.reddit.APIResponseHandler.UserResponseHandler
+import org.quantumbadger.redreader.reddit.APIResponseHandler.ValueResponseHandler
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
+import org.quantumbadger.redreader.reddit.things.RedditSubreddit
+import org.quantumbadger.redreader.reddit.things.RedditThing
+import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
+import java.io.IOException
+import java.lang.Boolean
+import java.util.LinkedList
+import java.util.Objects
+import java.util.UUID
+import kotlin.Exception
+import kotlin.Int
+import kotlin.RuntimeException
+import kotlin.String
+import kotlin.Throwable
+import kotlin.arrayOf
+
+object RedditAPI {
+    const val ACTION_UPVOTE: Int = 0
+    const val ACTION_UNVOTE: Int = 1
+    const val ACTION_DOWNVOTE: Int = 2
+    const val ACTION_SAVE: Int = 3
+    const val ACTION_HIDE: Int = 4
+    const val ACTION_UNSAVE: Int = 5
+    const val ACTION_UNHIDE: Int = 6
+    const val ACTION_DELETE: Int = 8
+
+    const val SUBSCRIPTION_ACTION_SUBSCRIBE: Int = 0
+    const val SUBSCRIPTION_ACTION_UNSUBSCRIBE: Int = 1
+
+    fun flairSelectorForNewLink(
+        context: Context,
+        cm: CacheManager,
+        user: RedditAccount,
+        subreddit: SubredditCanonicalId,
+        responseHandler: FlairSelectorResponseHandler
+    ) {
+        val postFields = LinkedList<PostField?>()
+        postFields.add(PostField("is_newlink", "true"))
+
+        val apiUrl = Reddit.getUri(subreddit.toString() + "/api/flairselector")
+
+        cm.makeRequest(
+            createPostRequest(
+                apiUrl,
+                user,
+                postFields,
+                context,
+                object : CacheRequestJSONParser.Listener {
+                    override fun onJsonParsed(
+                        result: JsonValue,
+                        timestamp: TimestampUTC?,
+                        session: UUID,
+                        fromCache: Boolean
+                    ) {
+                        if (result.asObject() != null
+                            && Objects.requireNonNull<JsonObject?>(result.asObject()).isEmpty()
+                        ) {
+                            responseHandler.onSuccess(mutableListOf<RedditFlairChoice?>())
+                            return
+                        }
+
+                        if (result.asString() != null
+                            && Objects.requireNonNull<String?>(result.asString()) == "{}"
+                        ) {
+                            responseHandler.onSuccess(mutableListOf<RedditFlairChoice?>())
+                            return
+                        }
+
+                        val array = result.getArrayAtPath("choices")
+
+                        if (array.isEmpty()) {
+                            val failureType = findFailureType(result)
+
+                            responseHandler.onFailure(
+                                getGeneralErrorForFailure(
+                                    context,
+                                    nullAlternative<APIFailureType?>(
+                                        failureType,
+                                        APIFailureType.UNKNOWN
+                                    ),
+                                    "flairselector",
+                                    Optional.Companion.of<FailedRequestBody>(
+                                        FailedRequestBody(
+                                            result
+                                        )
+                                    )
+                                )
+                            )
+
+                            return
+                        }
+
+                        val choices
+                                : Optional<MutableList<RedditFlairChoice?>?> =
+                            RedditFlairChoice.Companion.fromJsonList(array.get())
+
+                        if (choices.isEmpty()) {
+                            responseHandler.onFailure(
+                                getGeneralErrorForFailure(
+                                    context,
+                                    RequestFailureType.PARSE,
+                                    RuntimeException(),
+                                    null,
+                                    apiUrl,
+                                    Optional.Companion.of<FailedRequestBody>(
+                                        FailedRequestBody(
+                                            result
+                                        )
+                                    )
+                                )
+                            )
+                            return
+                        }
+
+                        responseHandler.onSuccess(choices.get())
+                    }
+
+                    override fun onFailure(error: RRError) {
+                        if (error.httpStatus != null && error.httpStatus == 404) {
+                            responseHandler.onSubredditDoesNotExist()
+                        } else if (error.httpStatus != null && error.httpStatus == 403) {
+                            responseHandler.onSubredditPermissionDenied()
+                        } else {
+                            responseHandler.onFailure(error)
+                        }
+                    }
+                })
+        )
+    }
+
+    fun submit(
+        cm: CacheManager,
+        responseHandler: SubmitResponseHandler,
+        user: RedditAccount,
+        isSelfPost: Boolean,
+        subreddit: String,
+        title: String,
+        body: String,
+        sendRepliesToInbox: Boolean,
+        markAsNsfw: Boolean,
+        markAsSpoiler: Boolean,
+        flairId: String?,
+        context: Context
+    ) {
+        val postFields = LinkedList<PostField?>()
+        postFields.add(PostField("api_type", "json"))
+        postFields.add(PostField("kind", if (isSelfPost) "self" else "link"))
+        postFields.add(
+            PostField(
+                "sendreplies",
+                if (sendRepliesToInbox) "true" else "false"
+            )
+        )
+        postFields.add(PostField("nsfw", if (markAsNsfw) "true" else "false"))
+        postFields.add(PostField("spoiler", if (markAsSpoiler) "true" else "false"))
+        postFields.add(PostField("sr", subreddit))
+        postFields.add(PostField("title", title))
+
+        if (flairId != null) {
+            postFields.add(PostField("flair_id", flairId))
+        }
+
+        if (isSelfPost) {
+            postFields.add(PostField("text", body))
+        } else {
+            postFields.add(PostField("url", body))
+        }
+
+        cm.makeRequest(
+            createPostRequest(
+                Reddit.getUri("/api/submit"),
+                user,
+                postFields,
+                context,
+                SubmitJSONListener(responseHandler)
+            )
+        )
+    }
+
+    fun compose(
+        cm: CacheManager,
+        responseHandler: ActionResponseHandler,
+        user: RedditAccount,
+        recipient: String,
+        subject: String,
+        body: String,
+        context: Context
+    ) {
+        val postFields = LinkedList<PostField?>()
+        postFields.add(PostField("api_type", "json"))
+        postFields.add(PostField("subject", subject))
+        postFields.add(PostField("to", recipient))
+        postFields.add(PostField("text", body))
+
+        cm.makeRequest(
+            createPostRequest(
+                Reddit.getUri("/api/compose"),
+                user,
+                postFields,
+                context,
+                GenericResponseHandler(responseHandler)
+            )
+        )
+    }
+
+    fun comment(
+        cm: CacheManager,
+        responseHandler: SubmitResponseHandler,
+        inboxResponseHandler: ActionResponseHandler,
+        user: RedditAccount,
+        parentIdAndType: RedditIdAndType,
+        markdown: String,
+        sendRepliesToInbox: Boolean,
+        context: AppCompatActivity
+    ) {
+        val postFields = LinkedList<PostField?>()
+        postFields.add(PostField("api_type", "json"))
+        postFields.add(PostField("thing_id", parentIdAndType.value))
+        postFields.add(PostField("text", markdown))
+
+        cm.makeRequest(
+            createPostRequest(
+                Reddit.getUri("/api/comment"),
+                user,
+                postFields,
+                context,
+                SubmitJSONListener(object : SubmitResponseHandler(context) {
+                    override fun onSubmitErrors(errors: ArrayList<String?>) {
+                        responseHandler.onSubmitErrors(errors)
+                    }
+
+                    override fun onSuccess(
+                        redirectUrl: Optional<String?>,
+                        thingId: Optional<String?>
+                    ) {
+                        if (!sendRepliesToInbox) {
+                            thingId.ifPresent(Consumer { commentFullname: String? ->
+                                RedditAPI.sendReplies(
+                                    cm,
+                                    inboxResponseHandler,
+                                    user,
+                                    commentFullname!!,
+                                    false,
+                                    context
+                                )
+                            })
+                        }
+
+                        responseHandler.onSuccess(redirectUrl, thingId)
+                    }
+
+                    protected override fun onCallbackException(t: Throwable?) {
+                        responseHandler.onCallbackException(t)
+                    }
+
+                    protected override fun onFailure(error: RRError) {
+                        responseHandler.notifyFailure(error)
+                    }
+                })
+            )
+        )
+    }
+
+    fun markAllAsRead(
+        cm: CacheManager,
+        responseHandler: ActionResponseHandler,
+        user: RedditAccount,
+        context: Context
+    ) {
+        val postFields = LinkedList<PostField?>()
+
+        cm.makeRequest(
+            createPostRequestUnprocessedResponse(
+                Reddit.getUri("/api/read_all_messages"),
+                user,
+                postFields,
+                context,
+                object : CacheRequestCallbacks {
+                    override fun onFailure(error: RRError) {
+                        responseHandler.notifyFailure(error)
+                    }
+
+                    override fun onDataStreamComplete(
+                        stream: GenericFactory<SeekableInputStream?, IOException?>,
+                        timestamp: TimestampUTC?,
+                        session: UUID,
+                        fromCache: Boolean,
+                        mimetype: String?
+                    ) {
+                        responseHandler.notifySuccess()
+                    }
+                })
+        )
+    }
+
+    fun editComment(
+        cm: CacheManager,
+        responseHandler: ActionResponseHandler,
+        user: RedditAccount,
+        commentIdAndType: RedditIdAndType,
+        markdown: String,
+        context: Context
+    ) {
+        val postFields = LinkedList<PostField?>()
+        postFields.add(PostField("thing_id", commentIdAndType.value))
+        postFields.add(PostField("text", markdown))
+
+        cm.makeRequest(
+            createPostRequest(
+                Reddit.getUri("/api/editusertext"),
+                user,
+                postFields,
+                context,
+                GenericResponseHandler(responseHandler)
+            )
+        )
+    }
+
+    fun action(
+        cm: CacheManager,
+        responseHandler: ActionResponseHandler,
+        user: RedditAccount,
+        idAndType: RedditIdAndType,
+        @RedditAction action: Int,
+        context: Context
+    ) {
+        val postFields = LinkedList<PostField?>()
+        postFields.add(PostField("id", idAndType.value))
+
+        val url = prepareActionUri(action, postFields)
+
+        cm.makeRequest(
+            createPostRequest(
+                url,
+                user,
+                postFields,
+                context,
+                GenericResponseHandler(responseHandler)
+            )
+        )
+    }
+
+    private fun prepareActionUri(
+        @RedditAction action: Int,
+        postFields: LinkedList<PostField?>
+    ): UriString {
+        when (action) {
+            ACTION_DOWNVOTE -> {
+                postFields.add(PostField("dir", "-1"))
+                return Reddit.getUri(Reddit.PATH_VOTE)
+            }
+
+            ACTION_UNVOTE -> {
+                postFields.add(PostField("dir", "0"))
+                return Reddit.getUri(Reddit.PATH_VOTE)
+            }
+
+            ACTION_UPVOTE -> {
+                postFields.add(PostField("dir", "1"))
+                return Reddit.getUri(Reddit.PATH_VOTE)
+            }
+
+            ACTION_SAVE -> return Reddit.getUri(Reddit.PATH_SAVE)
+            ACTION_HIDE -> return Reddit.getUri(Reddit.PATH_HIDE)
+            ACTION_UNSAVE -> return Reddit.getUri(Reddit.PATH_UNSAVE)
+            ACTION_UNHIDE -> return Reddit.getUri(Reddit.PATH_UNHIDE)
+            ACTION_DELETE -> return Reddit.getUri(Reddit.PATH_DELETE)
+
+            else -> throw RuntimeException("Unknown post/comment action")
+        }
+    }
+
+    /**
+     * Reports a post or comment. The reason fields should be constructed using
+     * ReportReason.toPostFields().
+     */
+    fun report(
+        cm: CacheManager,
+        responseHandler: ActionResponseHandler,
+        user: RedditAccount,
+        idAndType: RedditIdAndType,
+        subredditName: String?,
+        reasonFields: MutableList<PostField?>,
+        context: Context
+    ) {
+        val postFields = LinkedList<PostField?>()
+        postFields.add(PostField("api_type", "json"))
+        postFields.add(PostField("thing_id", idAndType.value))
+
+        if (subredditName != null) {
+            postFields.add(PostField("sr_name", subredditName))
+        }
+
+        postFields.addAll(reasonFields)
+
+        cm.makeRequest(
+            createPostRequest(
+                Reddit.getUri(Reddit.PATH_REPORT),
+                user,
+                postFields,
+                context,
+                GenericResponseHandler(responseHandler)
+            )
+        )
+    }
+
+    fun subscriptionAction(
+        cm: CacheManager,
+        responseHandler: ActionResponseHandler,
+        user: RedditAccount,
+        subredditId: SubredditCanonicalId?,
+        @RedditSubredditAction action: Int,
+        context: Context
+    ) {
+        RedditSubredditManager.Companion.getInstance(context, user).getSubreddit(
+            subredditId,
+            TimestampBound.Companion.ANY,
+            object : RequestResponseHandler<RedditSubreddit?, RRError?> {
+                override fun onRequestFailed(failureReason: RRError) {
+                    responseHandler.notifyFailure(failureReason)
+                }
+
+                override fun onRequestSuccess(
+                    subreddit: RedditSubreddit,
+                    timeCached: TimestampUTC?
+                ) {
+                    val postFields = LinkedList<PostField?>()
+
+                    postFields.add(PostField("sr", subreddit.name))
+
+                    val url = subscriptionPrepareActionUri(action, postFields)
+
+                    cm.makeRequest(
+                        createPostRequest(
+                            url,
+                            user,
+                            postFields,
+                            context,
+                            GenericResponseHandler(responseHandler)
+                        )
+                    )
+                }
+            },
+            null
+        )
+    }
+
+    private fun subscriptionPrepareActionUri(
+        @RedditSubredditAction action: Int,
+        postFields: LinkedList<PostField?>
+    ): UriString {
+        when (action) {
+            SUBSCRIPTION_ACTION_SUBSCRIBE -> {
+                postFields.add(PostField("action", "sub"))
+                return Reddit.getUri(Reddit.PATH_SUBSCRIBE)
+            }
+
+            SUBSCRIPTION_ACTION_UNSUBSCRIBE -> {
+                postFields.add(PostField("action", "unsub"))
+                return Reddit.getUri(Reddit.PATH_SUBSCRIBE)
+            }
+
+            else -> throw RuntimeException("Unknown subreddit action")
+        }
+    }
+
+    fun getUser(
+        cm: CacheManager,
+        usernameToGet: String?,
+        responseHandler: UserResponseHandler,
+        user: RedditAccount,
+        downloadStrategy: DownloadStrategy,
+        context: Context
+    ) {
+        val uri = Reddit.getUri("/user/" + usernameToGet + "/about.json")
+
+        cm.makeRequest(
+            createGetRequest(
+                uri,
+                user,
+                Priority(Constants.Priority.API_USER_ABOUT),
+                Constants.FileType.USER_ABOUT,
+                downloadStrategy,
+                context,
+                object : CacheRequestJSONParser.Listener {
+                    override fun onJsonParsed(
+                        result: JsonValue,
+                        timestamp: TimestampUTC?,
+                        session: UUID,
+                        fromCache: Boolean
+                    ) {
+                        try {
+                            val userThing = result.asObject<RedditThing?>(RedditThing::class.java)
+                            val userResult = userThing!!.asUser()
+                            responseHandler.notifySuccess(userResult, timestamp)
+                        } catch (t: Throwable) {
+                            // TODO look for error
+                            responseHandler.notifyFailure(
+                                getGeneralErrorForFailure(
+                                    context,
+                                    RequestFailureType.PARSE,
+                                    t,
+                                    null,
+                                    uri,
+                                    Optional.Companion.of<FailedRequestBody>(
+                                        FailedRequestBody(
+                                            result
+                                        )
+                                    )
+                                )
+                            )
+                        }
+                    }
+
+                    override fun onFailure(error: RRError) {
+                        responseHandler.notifyFailure(error)
+                    }
+                })
+        )
+    }
+
+    fun unblockUser(
+        cm: CacheManager,
+        usernameToUnblock: String,
+        currentUserFullname: String,
+        responseHandler: ActionResponseHandler,
+        user: RedditAccount,
+        context: Context
+    ) {
+        val postFields = LinkedList<PostField?>()
+        postFields.add(PostField("name", usernameToUnblock))
+        postFields.add(PostField("container", currentUserFullname))
+        postFields.add(PostField("type", "enemy"))
+
+        cm.makeRequest(
+            createPostRequest(
+                Reddit.getUri("/api/unfriend"),
+                user,
+                postFields,
+                context,
+                GenericResponseHandler(responseHandler)
+            )
+        )
+    }
+
+    fun blockUser(
+        cm: CacheManager,
+        usernameToBlock: String,
+        responseHandler: BlockUserResponseHandler,
+        user: RedditAccount,
+        context: Context
+    ) {
+        val postFields = LinkedList<PostField?>()
+        postFields.add(PostField("name", usernameToBlock))
+        postFields.add(PostField("api_type", "json"))
+
+        cm.makeRequest(
+            createPostRequestUnprocessedResponse(
+                Reddit.getUri("/api/block_user"),
+                user,
+                postFields,
+                context,
+                object : CacheRequestCallbacks {
+                    override fun onFailure(error: RRError) {
+                        // we upgraded the OAuth scope to include account,
+                        // so check for missing permission
+                        if (error.httpStatus != null && error.httpStatus == 403) {
+                            responseHandler.onBlockUserPermissionDenied()
+                        } else {
+                            responseHandler.onFailure(error)
+                        }
+                    }
+
+                    override fun onDataStreamComplete(
+                        stream: GenericFactory<SeekableInputStream?, IOException?>,
+                        timestamp: TimestampUTC?,
+                        session: UUID,
+                        fromCache: Boolean,
+                        mimetype: String?
+                    ) {
+                        responseHandler.onSuccess()
+                    }
+                }
+            ))
+    }
+
+    fun sendReplies(
+        cm: CacheManager,
+        responseHandler: ActionResponseHandler,
+        user: RedditAccount,
+        fullname: String,
+        state: Boolean,
+        context: Context
+    ) {
+        val postFields = LinkedList<PostField?>()
+        postFields.add(PostField("id", fullname))
+        postFields.add(PostField("state", state.toString()))
+        cm.makeRequest(
+            createPostRequest(
+                Reddit.getUri("/api/sendreplies"),
+                user,
+                postFields,
+                context,
+                GenericResponseHandler(responseHandler)
+            )
+        )
+    }
+
+    fun popularSubreddits(
+        cm: CacheManager,
+        user: RedditAccount,
+        context: Context,
+        handler: ValueResponseHandler<SubredditListResponse?>,
+        after: Optional<String?>
+    ) {
+        val maxCacheAgeMs = hours(1)
+
+        val builder = Reddit.getUriBuilder(
+            Reddit.PATH_SUBREDDITS_POPULAR
+        )
+
+        builder.appendQueryParameter("limit", "100")
+
+        after.apply(FunctionOneArgNoReturn { value: String? ->
+            builder.appendQueryParameter(
+                "after",
+                value
+            )
+        })
+
+        val uri = from(builder.build())
+
+        requestSubredditList(
+            cm,
+            uri,
+            user,
+            context,
+            handler,
+            DownloadStrategyIfTimestampOutsideBounds(
+                TimestampBound.Companion.notOlderThan(maxCacheAgeMs)
+            )
+        )
+    }
+
+    fun searchSubreddits(
+        cm: CacheManager,
+        user: RedditAccount,
+        queryString: String,
+        context: Context,
+        handler: ValueResponseHandler<SubredditListResponse?>,
+        after: Optional<String?>
+    ) {
+        val maxCacheAgeMs = minutes(1)
+
+        val builder = Reddit.getUriBuilder(
+            "/subreddits/search.json"
+        )
+
+        builder.appendQueryParameter("q", queryString)
+        builder.appendQueryParameter("limit", "100")
+
+        if (PrefsUtility.pref_behaviour_nsfw()) {
+            builder.appendQueryParameter("include_over_18", "on")
+        }
+
+        after.apply(FunctionOneArgNoReturn { value: String? ->
+            builder.appendQueryParameter(
+                "after",
+                value
+            )
+        })
+
+        val uri = from(builder.build())
+
+        requestSubredditList(
+            cm,
+            uri,
+            user,
+            context,
+            handler,
+            DownloadStrategyIfTimestampOutsideBounds(
+                TimestampBound.Companion.notOlderThan(maxCacheAgeMs)
+            )
+        )
+    }
+
+    fun subscribedSubreddits(
+        cm: CacheManager,
+        user: RedditAccount,
+        context: AppCompatActivity,
+        handler: ValueResponseHandler<ArrayList<RedditSubreddit?>?>
+    ) {
+        subscribedSubredditsInternal(
+            cm,
+            user,
+            context,
+            handler,
+            Optional.Companion.empty<String?>(),
+            ArrayList<RedditSubreddit?>(128)
+        )
+    }
+
+    private fun subscribedSubredditsInternal(
+        cm: CacheManager,
+        user: RedditAccount,
+        context: AppCompatActivity,
+        handler: ValueResponseHandler<ArrayList<RedditSubreddit?>?>,
+        after: Optional<String?>,
+        results: ArrayList<RedditSubreddit?>
+    ) {
+        val builder = Reddit.getUriBuilder(
+            Reddit.PATH_SUBREDDITS_MINE_SUBSCRIBER
+        )
+
+        after.apply(FunctionOneArgNoReturn { value: String? ->
+            builder.appendQueryParameter(
+                "after",
+                value
+            )
+        })
+
+        val uri = from(builder.build())
+
+        requestSubredditList(
+            cm,
+            uri,
+            user,
+            context,
+            object : ValueResponseHandler<SubredditListResponse?>(context) {
+                protected override fun onSuccess(value: SubredditListResponse) {
+                    results.addAll(value.subreddits)
+
+                    if (value.after.isEmpty()) {
+                        handler.onSuccess(results)
+                    } else {
+                        subscribedSubredditsInternal(
+                            cm,
+                            user,
+                            context,
+                            handler,
+                            value.after,
+                            results
+                        )
+                    }
+                }
+
+                protected override fun onCallbackException(t: Throwable?) {
+                    handler.onCallbackException(t)
+                }
+
+                protected override fun onFailure(error: RRError) {
+                    handler.onFailure(error)
+                }
+            },
+            DownloadStrategyAlways.Companion.INSTANCE
+        )
+    }
+
+    fun requestSubredditList(
+        cm: CacheManager,
+        uri: UriString,
+        user: RedditAccount,
+        context: Context,
+        handler: ValueResponseHandler<SubredditListResponse?>,
+        downloadStrategy: DownloadStrategy
+    ) {
+        cm.makeRequest(
+            createGetRequest(
+                uri,
+                user,
+                Priority(Constants.Priority.API_SUBREDDIT_LIST),
+                Constants.FileType.SUBREDDIT_LIST,
+                downloadStrategy,
+                context,
+                object : CacheRequestJSONParser.Listener {
+                    override fun onJsonParsed(
+                        result: JsonValue,
+                        timestamp: TimestampUTC?,
+                        session: UUID,
+                        fromCache: Boolean
+                    ) {
+                        try {
+                            val subreddits = result.getArrayAtPath("data", "children")
+
+                            val after = result.getStringAtPath("data", "after")
+
+                            if (subreddits.isEmpty()) {
+                                throw IOException("Subreddit data not found")
+                            }
+
+                            val output = ArrayList<RedditSubreddit?>()
+
+                            for (value in subreddits.get()) {
+                                val redditThing =
+                                    value.asObject<RedditThing?>(RedditThing::class.java)
+                                val subreddit = redditThing!!.asSubreddit()
+                                output.add(subreddit)
+                            }
+
+                            handler.notifySuccess(
+                                SubredditListResponse(output, after)
+                            )
+                        } catch (e: Exception) {
+                            onFailure(
+                                getGeneralErrorForFailure(
+                                    context,
+                                    RequestFailureType.PARSE,
+                                    e,
+                                    null,
+                                    uri,
+                                    Optional.Companion.of<FailedRequestBody>(
+                                        FailedRequestBody(
+                                            result
+                                        )
+                                    )
+                                )
+                            )
+                        }
+                    }
+
+                    override fun onFailure(error: RRError) {
+                        handler.notifyFailure(error)
+                    }
+                }
+            ))
+    }
+
+    private fun findFailureType(response: JsonValue?): APIFailureType? {
+        // TODO handle 403 forbidden
+
+        if (response == null) {
+            return null
+        }
+
+        var unknownError = false
+
+        if (response.asObject() != null) {
+            for (v in response.asObject()!!) {
+                if ("success" == v.key
+                    && Boolean.FALSE == v.value.asBoolean()
+                ) {
+                    unknownError = true
+                }
+
+                val failureType =
+                    findFailureType(v.value)
+
+                if (failureType == APIFailureType.UNKNOWN) {
+                    unknownError = true
+                } else if (failureType != null) {
+                    return failureType
+                }
+            }
+
+            val errors = response.getArrayAtPath("json", "errors")
+
+            if (errors.isPresent() && errors.get().size() > 0) {
+                unknownError = true
+            }
+        } else if (response.asArray() != null) {
+            for (v in response.asArray()!!) {
+                val failureType =
+                    findFailureType(v)
+
+                if (failureType == APIFailureType.UNKNOWN) {
+                    unknownError = true
+                } else if (failureType != null) {
+                    return failureType
+                }
+            }
+        } else if (response is JsonString) {
+            val responseAsString = response.asString()
+
+            if (Reddit.isApiErrorUser(responseAsString)) {
+                return APIFailureType.INVALID_USER
+            }
+
+            if (Reddit.isApiErrorCaptcha(responseAsString)) {
+                return APIFailureType.BAD_CAPTCHA
+            }
+
+            if (Reddit.isApiErrorNotAllowed(responseAsString)) {
+                return APIFailureType.NOTALLOWED
+            }
+
+            if (Reddit.isApiErrorSubredditRequired(responseAsString)) {
+                return APIFailureType.SUBREDDIT_REQUIRED
+            }
+
+            if (Reddit.isApiErrorURLRequired(responseAsString)) {
+                return APIFailureType.URL_REQUIRED
+            }
+
+            if (Reddit.isApiTooFast(responseAsString)) {
+                return APIFailureType.TOO_FAST
+            }
+
+            if (Reddit.isApiTooLong(responseAsString)) {
+                return APIFailureType.TOO_LONG
+            }
+
+            if (Reddit.isApiAlreadySubmitted(responseAsString)) {
+                return APIFailureType.ALREADY_SUBMITTED
+            }
+
+            if (Reddit.isPostFlairRequired(responseAsString)) {
+                return APIFailureType.POST_FLAIR_REQUIRED
+            }
+
+            if (Reddit.isApiError(responseAsString)) {
+                unknownError = true
+            }
+        }
+
+        return if (unknownError) APIFailureType.UNKNOWN else null
+    }
+
+    private fun createPostRequest(
+        url: UriString,
+        user: RedditAccount,
+        postFields: MutableList<PostField?>,
+        context: Context,
+        handler: CacheRequestJSONParser.Listener
+    ): CacheRequest {
+        return createPostRequestUnprocessedResponse(
+            url,
+            user,
+            postFields,
+            context,
+            CacheRequestJSONParser(context, handler)
+        )
+    }
+
+    private fun createPostRequestUnprocessedResponse(
+        url: UriString,
+        user: RedditAccount,
+        postFields: MutableList<PostField?>,
+        context: Context,
+        callbacks: CacheRequestCallbacks
+    ): CacheRequest {
+        return CacheRequest(
+            url,
+            user,
+            null,
+            Priority(Constants.Priority.API_ACTION),
+            DownloadStrategyAlways.Companion.INSTANCE,
+            Constants.FileType.NOCACHE,
+            DownloadQueueType.REDDIT_API,
+            PostFields(postFields),
+            context,
+            callbacks
+        )
+    }
+
+    private fun createGetRequest(
+        url: UriString,
+        user: RedditAccount,
+        priority: Priority,
+        fileType: Int,
+        downloadStrategy: DownloadStrategy,
+        context: Context,
+        handler: CacheRequestJSONParser.Listener
+    ): CacheRequest {
+        return CacheRequest(
+            url,
+            user,
+            null,
+            priority,
+            downloadStrategy,
+            fileType,
+            DownloadQueueType.REDDIT_API,
+            null,
+            context,
+            CacheRequestJSONParser(context, handler)
+        )
+    }
+
+    @IntDef(
+        [ACTION_UPVOTE, ACTION_UNVOTE, ACTION_DOWNVOTE, ACTION_SAVE, ACTION_HIDE, ACTION_UNSAVE, ACTION_UNHIDE, ACTION_DELETE]
+    )
+    @Retention(AnnotationRetention.SOURCE)
+    annotation class RedditAction
+
+    @IntDef([SUBSCRIPTION_ACTION_SUBSCRIBE, SUBSCRIPTION_ACTION_UNSUBSCRIBE])
+    @Retention(
+        AnnotationRetention.SOURCE
+    )
+    annotation class RedditSubredditAction
+
+    private class GenericResponseHandler(private val mHandler: ActionResponseHandler) :
+        CacheRequestJSONParser.Listener {
+        override fun onJsonParsed(
+            result: JsonValue,
+            timestamp: TimestampUTC?,
+            session: UUID,
+            fromCache: kotlin.Boolean
+        ) {
+            try {
+                val failureType = findFailureType(result)
+
+                if (failureType != null) {
+                    mHandler.notifyFailure(
+                        failureType,
+                        "GenericResponseHandler",
+                        Optional.Companion.of<FailedRequestBody?>(FailedRequestBody(result))
+                    )
+                } else {
+                    mHandler.notifySuccess()
+                }
+            } catch (e: Exception) {
+                handleGlobalError(
+                    mHandler.context, RRError(
+                        null,
+                        null,
+                        true,
+                        e,
+                        null,
+                        null,
+                        result.toString()
+                    )
+                )
+            }
+        }
+
+        override fun onFailure(error: RRError) {
+            mHandler.notifyFailure(error)
+        }
+    }
+
+    interface BlockUserResponseHandler {
+        fun onSuccess()
+        fun onBlockUserPermissionDenied()
+        fun onFailure(error: RRError)
+    }
+
+    interface FlairSelectorResponseHandler {
+        fun onSuccess(choices: MutableCollection<RedditFlairChoice?>)
+
+        fun onSubredditDoesNotExist()
+
+        fun onSubredditPermissionDenied()
+
+        fun onFailure(error: RRError)
+    }
+
+    private class SubmitJSONListener(private val mResponseHandler: SubmitResponseHandler) :
+        CacheRequestJSONParser.Listener {
+        override fun onJsonParsed(
+            result: JsonValue,
+            timestamp: TimestampUTC?,
+            session: UUID,
+            fromCache: kotlin.Boolean
+        ) {
+            try {
+                val errorsJson = result.getArrayAtPath("json", "errors")
+
+                if (errorsJson.isPresent()) {
+                    val errors = ArrayList<String?>()
+
+                    for (errorValue in errorsJson.get()) {
+                        val error = errorValue.asArray()
+
+                        if (error != null && error.getString(1) != null) {
+                            errors.add(error.getString(1))
+                        }
+                    }
+
+                    if (!errors.isEmpty()) {
+                        mResponseHandler.onSubmitErrors(errors)
+                        return
+                    }
+                }
+
+                val failureType = findFailureType(result)
+
+                if (failureType != null) {
+                    mResponseHandler.notifyFailure(
+                        failureType,
+                        null,
+                        Optional.Companion.of<FailedRequestBody?>(FailedRequestBody(result))
+                    )
+                } else {
+                    mResponseHandler.onSuccess(
+                        result.getStringAtPath("json", "data", "things", 0, "data", "permalink")
+                            .orElse(result.getStringAtPath("json", "data", "url")),
+                        result.getStringAtPath("json", "data", "things", 0, "data", "name")
+                    )
+                }
+            } catch (e: Exception) {
+                handleGlobalError(
+                    mResponseHandler.context,
+                    RRError(
+                        null,
+                        null,
+                        true,
+                        e,
+                        null,
+                        null,
+                        result.toString()
+                    )
+                )
+            }
+        }
+
+        override fun onFailure(error: RRError) {
+            mResponseHandler.notifyFailure(error)
+        }
+    }
+
+    class SubredditListResponse(
+        val subreddits: ArrayList<RedditSubreddit?>,
+        val after: Optional<String?>
+    )
 }

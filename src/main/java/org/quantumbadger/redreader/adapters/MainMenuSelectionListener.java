@@ -12,16 +12,15 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.adapters
 
-package org.quantumbadger.redreader.adapters;
+import org.quantumbadger.redreader.fragments.MainMenuFragment.MainMenuAction
+import org.quantumbadger.redreader.reddit.url.PostListingURL
 
-import org.quantumbadger.redreader.fragments.MainMenuFragment;
-import org.quantumbadger.redreader.reddit.url.PostListingURL;
+interface MainMenuSelectionListener {
+    fun onSelected(@MainMenuAction type: Int)
 
-public interface MainMenuSelectionListener {
-	void onSelected(@MainMenuFragment.MainMenuAction int type);
-
-	void onSelected(PostListingURL url);
+    fun onSelected(url: PostListingURL?)
 }

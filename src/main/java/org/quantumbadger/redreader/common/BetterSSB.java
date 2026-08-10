@@ -12,212 +12,213 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.graphics.Typeface
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.TextUtils
+import android.text.style.BackgroundColorSpan
+import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
+import android.text.style.StrikethroughSpan
+import android.text.style.StyleSpan
+import android.text.style.SuperscriptSpan
+import android.text.style.URLSpan
+import android.text.style.UnderlineSpan
+import org.quantumbadger.redreader.common.LinkHandler.computeAllLinks
+import java.util.Observable
 
-import android.graphics.Typeface;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.TextUtils;
-import android.text.style.BackgroundColorSpan;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.RelativeSizeSpan;
-import android.text.style.StrikethroughSpan;
-import android.text.style.StyleSpan;
-import android.text.style.SuperscriptSpan;
-import android.text.style.URLSpan;
-import android.text.style.UnderlineSpan;
+class BetterSSB : Observable() {
+    private val sb: SpannableStringBuilder
 
-import androidx.annotation.NonNull;
+    init {
+        this.sb = SpannableStringBuilder()
+    }
 
-import java.util.HashSet;
-import java.util.Observable;
+    fun append(str: String, flags: Int, url: String?) {
+        append(str, flags, 0, 0, 1f, url)
+    }
 
-public class BetterSSB extends Observable {
+    @JvmOverloads
+    fun append(
+        str: String,
+        flags: Int,
+        foregroundCol: Int = 0,
+        backgroundCol: Int = 0,
+        scale: Float = 1f,
+        url: String? = null
+    ) {
+        val strStart = sb.length
+        sb.append(str)
+        val strEnd = sb.length
 
-	private final SpannableStringBuilder sb;
+        if ((flags and BOLD) != 0) {
+            sb.setSpan(
+                StyleSpan(Typeface.BOLD),
+                strStart,
+                strEnd,
+                Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+            )
+        }
 
-	public static final int BOLD = 1;
-	public static final int ITALIC = 1 << 1;
-	public static final int UNDERLINE = 1 << 2;
-	public static final int STRIKETHROUGH = 1 << 3;
-	public static final int FOREGROUND_COLOR = 1 << 4;
-	public static final int BACKGROUND_COLOR = 1 << 5;
-	public static final int SIZE = 1 << 6;
-	public static final int SUPERSCRIPT = 1 << 7;
+        if ((flags and ITALIC) != 0) {
+            sb.setSpan(
+                StyleSpan(Typeface.ITALIC),
+                strStart,
+                strEnd,
+                Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+            )
+        }
 
-	public static final char NBSP = '\u00A0';
+        if ((flags and UNDERLINE) != 0) {
+            sb.setSpan(
+                UnderlineSpan(),
+                strStart,
+                strEnd,
+                Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+            )
+        }
 
-	public BetterSSB() {
-		this.sb = new SpannableStringBuilder();
-	}
+        if ((flags and STRIKETHROUGH) != 0) {
+            sb.setSpan(
+                StrikethroughSpan(),
+                strStart,
+                strEnd,
+                Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+            )
+        }
 
-	public void append(final String str, final int flags) {
-		append(str, flags, 0, 0, 1f);
-	}
+        if ((flags and FOREGROUND_COLOR) != 0) {
+            sb.setSpan(
+                ForegroundColorSpan(foregroundCol),
+                strStart,
+                strEnd,
+                Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+            )
+        }
 
-	public void append(final String str, final int flags, final String url) {
-		append(str, flags, 0, 0, 1f, url);
-	}
+        if ((flags and BACKGROUND_COLOR) != 0) {
+            sb.setSpan(
+                BackgroundColorSpan(backgroundCol),
+                strStart,
+                strEnd,
+                Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+            )
+        }
 
-	public void append(
-			@NonNull final String str,
-			final int flags,
-			final int foregroundCol,
-			final int backgroundCol,
-			final float scale) {
-		append(str, flags, foregroundCol, backgroundCol, scale, null);
-	}
+        if ((flags and SIZE) != 0) {
+            sb.setSpan(
+                RelativeSizeSpan(scale),
+                strStart,
+                strEnd,
+                Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+            )
+        }
 
-	public void append(
-			@NonNull final String str,
-			final int flags,
-			final int foregroundCol,
-			final int backgroundCol,
-			final float scale,
-			final String url) {
+        if ((flags and SUPERSCRIPT) != 0) {
+            sb.setSpan(
+                SuperscriptSpan(),
+                strStart,
+                strEnd,
+                Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+            )
+        }
 
-		final int strStart = sb.length();
-		sb.append(str);
-		final int strEnd = sb.length();
+        if (url != null) {
+            sb.setSpan(
+                URLSpan(url),
+                strStart,
+                strEnd,
+                Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+            )
+        }
+    }
 
-		if((flags & BOLD) != 0) {
-			sb.setSpan(
-					new StyleSpan(Typeface.BOLD),
-					strStart,
-					strEnd,
-					Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		}
+    fun linkify() {
+        val asText = sb.toString()
+        val links: HashSet<UriString> = computeAllLinks(asText)
 
-		if((flags & ITALIC) != 0) {
-			sb.setSpan(
-					new StyleSpan(Typeface.ITALIC),
-					strStart,
-					strEnd,
-					Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		}
+        for (uri in links) {
+            val link = uri.value
 
-		if((flags & UNDERLINE) != 0) {
-			sb.setSpan(
-					new UnderlineSpan(),
-					strStart,
-					strEnd,
-					Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		}
+            var index = -1
 
-		if((flags & STRIKETHROUGH) != 0) {
-			sb.setSpan(
-					new StrikethroughSpan(),
-					strStart,
-					strEnd,
-					Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		}
+            while (index < asText.length
+                && (asText.indexOf(link, index + 1).also { index = it }) >= 0
+            ) {
+                if (sb.getSpans<URLSpan?>(
+                        index,
+                        index + link.length,
+                        URLSpan::class.java
+                    ).size < 1
+                ) {
+                    sb.setSpan(
+                        URLSpan(link),
+                        index,
+                        index + link.length,
+                        Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+                    )
+                }
+            }
+        }
+    }
 
-		if((flags & FOREGROUND_COLOR) != 0) {
-			sb.setSpan(
-					new ForegroundColorSpan(foregroundCol),
-					strStart,
-					strEnd,
-					Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		}
+    fun append(text: CharSequence?) {
+        this.sb.append(text)
+        this.setChanged()
+        this.notifyObservers(this.sb)
+    }
 
-		if((flags & BACKGROUND_COLOR) != 0) {
-			sb.setSpan(
-					new BackgroundColorSpan(backgroundCol),
-					strStart,
-					strEnd,
-					Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		}
+    fun replace(start: Int, end: Int, text: CharSequence?) {
+        this.sb.replace(start, end, text)
+        this.setChanged()
+        this.notifyObservers(this.sb)
+    }
 
-		if((flags & SIZE) != 0) {
-			sb.setSpan(
-					new RelativeSizeSpan(scale),
-					strStart,
-					strEnd,
-					Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		}
+    fun replace(
+        textToBeReplaced: CharSequence,
+        replacement: Any
+    ) {
+        val textStartIndex = TextUtils.indexOf(this.sb, textToBeReplaced)
 
-		if((flags & SUPERSCRIPT) != 0) {
-			sb.setSpan(
-					new SuperscriptSpan(),
-					strStart,
-					strEnd,
-					Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		}
+        this.sb.setSpan(
+            replacement,
+            textStartIndex,
+            textStartIndex + textToBeReplaced.length,
+            Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+        )
 
-		if(url != null) {
-			sb.setSpan(
-					new URLSpan(url),
-					strStart,
-					strEnd,
-					Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-		}
-	}
+        this.setChanged()
+        this.notifyObservers(this.sb)
+    }
 
-	public void linkify() {
+    val isEmpty: Boolean
+        get() = this.sb.length == 0
 
-		final String asText = sb.toString();
-		final HashSet<UriString> links = LinkHandler.computeAllLinks(asText);
+    fun setSpan(what: Any?, start: Int, end: Int, flag: Int) {
+        this.sb.setSpan(what, start, end, flag)
 
-		for(final UriString uri : links) {
+        this.setChanged()
+        this.notifyObservers(this.sb)
+    }
 
-			final String link = uri.value;
+    fun get(): SpannableStringBuilder {
+        return sb
+    }
 
-			int index = -1;
+    companion object {
+        const val BOLD: Int = 1
+        val ITALIC: Int = 1 shl 1
+        val UNDERLINE: Int = 1 shl 2
+        val STRIKETHROUGH: Int = 1 shl 3
+        val FOREGROUND_COLOR: Int = 1 shl 4
+        val BACKGROUND_COLOR: Int = 1 shl 5
+        val SIZE: Int = 1 shl 6
+        val SUPERSCRIPT: Int = 1 shl 7
 
-			while(index < asText.length()
-					&& (index = asText.indexOf(link, index + 1)) >= 0) {
-				if(sb.getSpans(index, index + link.length(), URLSpan.class).length < 1) {
-					sb.setSpan(
-							new URLSpan(link),
-							index,
-							index + link.length(),
-							Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-				}
-			}
-		}
-	}
-
-	public void append(final CharSequence text) {
-		this.sb.append(text);
-		this.setChanged();
-		this.notifyObservers(this.sb);
-	}
-
-	public void replace(final int start, final int end, final CharSequence text) {
-		this.sb.replace(start, end, text);
-		this.setChanged();
-		this.notifyObservers(this.sb);
-	}
-
-	public void replace(
-			@NonNull final CharSequence textToBeReplaced,
-			@NonNull final Object replacement) {
-		final int textStartIndex = TextUtils.indexOf(this.sb, textToBeReplaced);
-
-		this.sb.setSpan(replacement,
-				textStartIndex,
-				textStartIndex + textToBeReplaced.length(),
-				Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
-
-		this.setChanged();
-		this.notifyObservers(this.sb);
-	}
-
-	public boolean isEmpty() {
-		return this.sb.length() == 0;
-	}
-
-	public void setSpan(final Object what, final int start, final int end, final int flag) {
-		this.sb.setSpan(what, start, end, flag);
-
-		this.setChanged();
-		this.notifyObservers(this.sb);
-	}
-
-	public SpannableStringBuilder get() {
-		return sb;
-	}
+        const val NBSP: Char = '\u00A0'
+    }
 }

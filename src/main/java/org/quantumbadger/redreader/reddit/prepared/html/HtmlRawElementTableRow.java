@@ -12,68 +12,54 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementTableRow
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementTableRow;
+class HtmlRawElementTableRow(private val mChildren: ArrayList<HtmlRawElement>) : HtmlRawElement() {
+    override fun getPlainText(stringBuilder: StringBuilder) {
+        for (element in mChildren) {
+            element.getPlainText(stringBuilder)
+        }
+    }
 
-import java.util.ArrayList;
+    fun reduce(
+        activeAttributes: HtmlTextAttributes,
+        activity: AppCompatActivity,
+        linkButtons: ArrayList<LinkButtonDetails?>
+    ): HtmlRawElementTableRow {
+        val reduced = ArrayList<HtmlRawElement>()
 
-public class HtmlRawElementTableRow extends HtmlRawElement {
+        for (child in mChildren) {
+            child.reduce(activeAttributes, activity, reduced, linkButtons)
+        }
 
-	@NonNull private final ArrayList<HtmlRawElement> mChildren;
+        return HtmlRawElementTableRow(reduced)
+    }
 
-	public HtmlRawElementTableRow(@NonNull final ArrayList<HtmlRawElement> children) {
-		mChildren = children;
-	}
+    override fun reduce(
+        activeAttributes: HtmlTextAttributes,
+        activity: AppCompatActivity,
+        destination: ArrayList<HtmlRawElement?>,
+        linkButtons: ArrayList<LinkButtonDetails?>
+    ) {
+        destination.add(reduce(activeAttributes, activity, linkButtons))
+    }
 
-	@Override
-	public void getPlainText(@NonNull final StringBuilder stringBuilder) {
-		for(final HtmlRawElement element : mChildren) {
-			element.getPlainText(stringBuilder);
-		}
-	}
+    override fun generate(
+        activity: AppCompatActivity,
+        destination: ArrayList<BodyElement?>
+    ) {
+        val cols = ArrayList<BodyElement?>(mChildren.size)
 
-	public HtmlRawElementTableRow reduce(
-			@NonNull final HtmlTextAttributes activeAttributes,
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
+        for (child in mChildren) {
+            child.generate(activity, cols)
+        }
 
-		final ArrayList<HtmlRawElement> reduced = new ArrayList<>();
-
-		for(final HtmlRawElement child : mChildren) {
-			child.reduce(activeAttributes, activity, reduced, linkButtons);
-		}
-
-		return new HtmlRawElementTableRow(reduced);
-	}
-
-	@Override
-	public void reduce(
-			@NonNull final HtmlTextAttributes activeAttributes,
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<HtmlRawElement> destination,
-			@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
-
-		destination.add(reduce(activeAttributes, activity, linkButtons));
-	}
-
-	@Override
-	public void generate(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<BodyElement> destination) {
-
-		final ArrayList<BodyElement> cols = new ArrayList<>(mChildren.size());
-
-		for(final HtmlRawElement child : mChildren) {
-			child.generate(activity, cols);
-		}
-
-		destination.add(new BodyElementTableRow(cols));
-	}
+        destination.add(BodyElementTableRow(cols))
+    }
 }

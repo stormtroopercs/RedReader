@@ -12,83 +12,83 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.image
 
-package org.quantumbadger.redreader.image;
+import android.graphics.Bitmap
+import kotlin.math.max
 
-import android.graphics.Bitmap;
+object ThumbnailScaler {
+    private const val maxHeightWidthRatio = 3.0f
 
-public final class ThumbnailScaler {
+    private fun scaleAndCrop(
+        src: Bitmap,
+        w: Int,
+        h: Int,
+        newWidth: Int
+    ): Bitmap {
+        val scaleFactor = newWidth.toFloat() / w.toFloat()
+        val scaled = Bitmap.createScaledBitmap(
+            src,
+            Math.round(scaleFactor * src.getWidth()),
+            Math.round(scaleFactor * src.getHeight()),
+            true
+        )
 
-	private static final float maxHeightWidthRatio = 3.0f;
+        val result = Bitmap.createBitmap(
+            scaled,
+            0,
+            0,
+            newWidth,
+            Math.round(h.toFloat() * scaleFactor)
+        )
 
-	private static Bitmap scaleAndCrop(
-			final Bitmap src,
-			final int w,
-			final int h,
-			final int newWidth) {
+        if (result != scaled) {
+            scaled.recycle()
+        }
 
-		final float scaleFactor = (float)newWidth / (float)w;
-		final Bitmap scaled = Bitmap.createScaledBitmap(
-				src,
-				Math.round(scaleFactor * src.getWidth()),
-				Math.round(scaleFactor * src.getHeight()),
-				true);
+        return result
+    }
 
-		final Bitmap result = Bitmap.createBitmap(
-				scaled,
-				0,
-				0,
-				newWidth,
-				Math.round((float)h * scaleFactor));
+    fun scale(image: Bitmap, width: Int): Bitmap {
+        val heightWidthRatio = image.getHeight().toFloat() / image.getWidth().toFloat()
 
-		if(result != scaled) {
-			scaled.recycle();
-		}
+        if (heightWidthRatio >= 1.0f && heightWidthRatio <= maxHeightWidthRatio) {
+            // Use as-is.
 
-		return result;
-	}
+            return Bitmap.createScaledBitmap(
+                image,
+                width,
+                Math.round(heightWidthRatio * width),
+                true
+            )
+        } else if (heightWidthRatio < 1.0f) {
+            // Wide image. Crop horizontally.
 
-	public static Bitmap scale(final Bitmap image, final int width) {
+            return scaleAndCrop(image, image.getHeight(), image.getHeight(), width)
+        } else {
+            // Tall image.
 
-		final float heightWidthRatio = (float)image.getHeight() / (float)image.getWidth();
+            return scaleAndCrop(
+                image,
+                image.getWidth(),
+                Math.round(image.getWidth() * maxHeightWidthRatio),
+                width
+            )
+        }
+    }
 
-		if(heightWidthRatio >= 1.0f && heightWidthRatio <= maxHeightWidthRatio) {
+    fun scaleNoCrop(image: Bitmap, desiredSquareSizePx: Int): Bitmap {
+        val currentSquareSizePx = max(image.getWidth(), image.getHeight())
 
-			// Use as-is.
-			return Bitmap.createScaledBitmap(
-					image,
-					width,
-					Math.round(heightWidthRatio * width),
-					true);
+        val scale = desiredSquareSizePx.toFloat() / currentSquareSizePx.toFloat()
 
-		} else if(heightWidthRatio < 1.0f) {
-
-			// Wide image. Crop horizontally.
-			return scaleAndCrop(image, image.getHeight(), image.getHeight(), width);
-
-		} else {
-
-			// Tall image.
-			return scaleAndCrop(
-					image,
-					image.getWidth(),
-					Math.round(image.getWidth() * maxHeightWidthRatio),
-					width);
-		}
-	}
-
-	public static Bitmap scaleNoCrop(final Bitmap image, final int desiredSquareSizePx) {
-
-		final int currentSquareSizePx = Math.max(image.getWidth(), image.getHeight());
-
-		final float scale = (float)desiredSquareSizePx / (float)currentSquareSizePx;
-
-		return Bitmap.createScaledBitmap(
-				image,
-				Math.round(scale * image.getWidth()),
-				Math.round(scale * image.getHeight()),
-				true);
-	}
+        return Bitmap.createScaledBitmap(
+            image,
+            Math.round(scale * image.getWidth()),
+            Math.round(scale * image.getHeight()),
+            true
+        )
+    }
 }

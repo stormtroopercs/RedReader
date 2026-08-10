@@ -12,103 +12,98 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.fragments
 
-package org.quantumbadger.redreader.fragments;
+import android.app.Dialog
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.account.RedditAccountChangeListener
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.adapters.AccountListAdapter
+import org.quantumbadger.redreader.common.AndroidCommon
+import org.quantumbadger.redreader.common.AndroidCommon.promptForNotificationPermission
+import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.common.RunnableOnce
+import org.quantumbadger.redreader.reddit.api.RedditOAuth
+import kotlin.concurrent.Volatile
 
-import android.app.Dialog;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
+class AccountListDialog private constructor() : AppCompatDialogFragment(),
+    RedditAccountChangeListener {
+    private var mActivity: AppCompatActivity? = null
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDialogFragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+    // Workaround for HoloEverywhere bug?
+    @Volatile
+    private var alreadyCreated = false
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+    private var rv: RecyclerView? = null
 
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.account.RedditAccountChangeListener;
-import org.quantumbadger.redreader.account.RedditAccountManager;
-import org.quantumbadger.redreader.activities.BaseActivity;
-import org.quantumbadger.redreader.adapters.AccountListAdapter;
-import org.quantumbadger.redreader.common.AndroidCommon;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.RunnableOnce;
-import org.quantumbadger.redreader.reddit.api.RedditOAuth;
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent
+    ) {
+        if (requestCode == 123 && requestCode == resultCode && data.hasExtra("url")) {
+            val uri = Uri.parse(data.getStringExtra("url"))
+            RedditOAuth.completeLogin(mActivity!!, uri, RunnableOnce.DO_NOTHING)
+        }
+    }
 
-public class AccountListDialog extends AppCompatDialogFragment
-		implements RedditAccountChangeListener {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        super.onCreateDialog(savedInstanceState)
 
-	private AppCompatActivity mActivity;
+        if (alreadyCreated) {
+            return getDialog()!!
+        }
+        alreadyCreated = true
 
-	// Workaround for HoloEverywhere bug?
-	private volatile boolean alreadyCreated = false;
+        mActivity = getActivity() as AppCompatActivity?
 
-	private RecyclerView rv;
+        val builder = MaterialAlertDialogBuilder(mActivity!!)
+        builder.setTitle(mActivity!!.getString(R.string.options_accounts_long))
 
-	public static void show(final AppCompatActivity activity) {
-		new AccountListDialog().show(
-				activity.getSupportFragmentManager(),
-				null);
-	}
+        rv = RecyclerView(mActivity!!)
 
-	private AccountListDialog() {}
+        rv!!.setLayoutManager(LinearLayoutManager(mActivity))
+        rv!!.setAdapter(AccountListAdapter(mActivity!!, this))
+        rv!!.setHasFixedSize(true)
 
-	@Override
-	public void onActivityResult(
-			final int requestCode,
-			final int resultCode,
-			final Intent data) {
-		if(requestCode == 123 && requestCode == resultCode && data.hasExtra("url")) {
-			final Uri uri = Uri.parse(data.getStringExtra("url"));
-			RedditOAuth.completeLogin(mActivity, uri, RunnableOnce.DO_NOTHING);
-		}
-	}
+        val paddingPx = General.dpToPixels(mActivity!!, 16f)
+        rv!!.setPadding(paddingPx, paddingPx, paddingPx, 0)
 
-	@NonNull
-	@Override
-	public Dialog onCreateDialog(final Bundle savedInstanceState) {
-		super.onCreateDialog(savedInstanceState);
+        RedditAccountManager.getInstance(mActivity).addUpdateListener(this)
 
-		if(alreadyCreated) {
-			return getDialog();
-		}
-		alreadyCreated = true;
+        builder.setNeutralButton(mActivity!!.getString(R.string.dialog_close), null)
 
-		mActivity = (AppCompatActivity)getActivity();
+        builder.setView(rv)
+        return builder.create()
+    }
 
-		final MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(mActivity);
-		builder.setTitle(mActivity.getString(R.string.options_accounts_long));
+    override fun onRedditAccountChanged() {
+        AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
+            rv!!.setAdapter(AccountListAdapter(mActivity!!, this))
+            if (mActivity is BaseActivity) {
+                promptForNotificationPermission(mActivity as BaseActivity, null)
+            }
+        })
+    }
 
-		rv = new RecyclerView(mActivity);
-
-		rv.setLayoutManager(new LinearLayoutManager(mActivity));
-		rv.setAdapter(new AccountListAdapter(mActivity, this));
-		rv.setHasFixedSize(true);
-
-		final int paddingPx = General.dpToPixels(mActivity, 16f);
-		rv.setPadding(paddingPx, paddingPx, paddingPx, 0);
-
-		RedditAccountManager.getInstance(mActivity).addUpdateListener(this);
-
-		builder.setNeutralButton(mActivity.getString(R.string.dialog_close), null);
-
-		builder.setView(rv);
-		return builder.create();
-	}
-
-	@Override
-	public void onRedditAccountChanged() {
-		AndroidCommon.UI_THREAD_HANDLER.post(() -> {
-			rv.setAdapter(new AccountListAdapter(mActivity, this));
-
-			if(mActivity instanceof BaseActivity) {
-				AndroidCommon.promptForNotificationPermission((BaseActivity) mActivity, null);
-			}
-		});
-	}
+    companion object {
+        @JvmStatic
+        fun show(activity: AppCompatActivity) {
+            AccountListDialog().show(
+                activity.getSupportFragmentManager(),
+                null
+            )
+        }
+    }
 }

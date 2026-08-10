@@ -12,40 +12,34 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common.streams
 
-package org.quantumbadger.redreader.common.streams;
+import org.quantumbadger.redreader.common.Consumer
 
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.common.Consumer;
+interface Stream<E> {
+    fun hasNext(): Boolean
 
-import java.util.Iterator;
+    fun next(): E?
 
-public interface Stream<E> {
+    fun filter(predicate: Predicate<E?>): Stream<E?> {
+        return FilterStream<E?>(this, predicate)
+    }
 
-	boolean hasNext();
+    fun forEach(consumer: Consumer<E?>) {
+        while (hasNext()) {
+            consumer.consume(next())
+        }
+    }
 
-	E next();
+    companion object {
+        fun <E> from(iterator: MutableIterator<E?>): Stream<E?> {
+            return IteratorStream<E?>(iterator)
+        }
 
-	@NonNull
-	default Stream<E> filter(@NonNull final Predicate<E> predicate) {
-		return new FilterStream<>(this, predicate);
-	}
-
-	default void forEach(@NonNull final Consumer<E> consumer) {
-		while(hasNext()) {
-			consumer.consume(next());
-		}
-	}
-
-	@NonNull
-	static <E> Stream<E> from(@NonNull final Iterator<E> iterator) {
-		return new IteratorStream<>(iterator);
-	}
-
-	@NonNull
-	static <E> Stream<E> from(@NonNull final Iterable<E> iterable) {
-		return new IteratorStream<>(iterable.iterator());
-	}
+        fun <E> from(iterable: Iterable<E?>): Stream<E?> {
+            return IteratorStream<E?>(iterable.iterator())
+        }
+    }
 }

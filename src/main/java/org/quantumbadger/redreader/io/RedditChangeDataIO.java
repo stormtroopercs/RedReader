@@ -12,230 +12,220 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.io
 
-package org.quantumbadger.redreader.io;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.util.Log
+import org.quantumbadger.redreader.common.TriggerableThread
+import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.util.Log;
-import androidx.annotation.NonNull;
-import org.quantumbadger.redreader.common.TriggerableThread;
-import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
+class RedditChangeDataIO private constructor(private val mContext: Context) {
+    private val mLock = Any()
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Locale;
-import java.util.concurrent.atomic.AtomicBoolean;
+    private val mIsInitialReadStarted = AtomicBoolean(false)
+    private var mIsInitialReadComplete = false
+    private var mUpdatePending = false
 
-public class RedditChangeDataIO {
+    private inner class WriteRunnable : Runnable {
+        override fun run() {
+            val startTime = System.currentTimeMillis()
 
-	private static final String TAG = "RedditChangeDataIO";
+            try {
+                val dataFileTmpLocation: File = this.dataFileWriteTmpLocation
 
-	private static final int DB_VERSION = 1;
-	private static final String DB_FILENAME = "rr_change_data.dat";
-	private static final String DB_WRITETMP_FILENAME = "rr_change_data_tmp.dat";
+                Log.i(
+                    TAG,
+                    String.format(
+                        Locale.US,
+                        "Writing tmp data file at '%s'",
+                        dataFileTmpLocation.getAbsolutePath()
+                    )
+                )
 
-	@SuppressLint("StaticFieldLeak") private static RedditChangeDataIO INSTANCE;
-	private static boolean STATIC_UPDATE_PENDING = false;
+                val dos = ExtendedDataOutputStream(
+                    BufferedOutputStream(
+                        FileOutputStream(dataFileTmpLocation),
+                        64 * 1024
+                    )
+                )
 
-	@NonNull
-	public static synchronized RedditChangeDataIO getInstance(final Context context) {
+                dos.writeInt(DB_VERSION)
 
-		if(INSTANCE == null) {
-			INSTANCE = new RedditChangeDataIO(context.getApplicationContext());
+                RedditChangeDataManager.Companion.writeAllUsers(dos)
 
-			if(STATIC_UPDATE_PENDING) {
-				INSTANCE.notifyUpdate();
-			}
-		}
+                dos.flush()
+                dos.close()
 
-		return INSTANCE;
-	}
+                Log.i(TAG, "Write successful. Atomically replacing data file...")
 
-	public static synchronized void notifyUpdateStatic() {
+                val dataFileLocation: File = this.dataFileLocation
 
-		if(INSTANCE != null) {
-			INSTANCE.notifyUpdate();
-		} else {
-			STATIC_UPDATE_PENDING = true;
-		}
-	}
+                if (!dataFileTmpLocation.renameTo(dataFileLocation)) {
+                    Log.e(TAG, "Atomic replace failed!")
+                    return
+                }
 
-	private final Context mContext;
-	private final Object mLock = new Object();
+                Log.i(TAG, "Write complete.")
 
-	private final AtomicBoolean mIsInitialReadStarted = new AtomicBoolean(false);
-	private boolean mIsInitialReadComplete = false;
-	private boolean mUpdatePending = false;
+                val bytes = dataFileLocation.length()
+                val duration = System.currentTimeMillis() - startTime
 
-	private final class WriteRunnable implements Runnable {
-		@Override
-		public void run() {
+                Log.i(
+                    TAG,
+                    String.format(
+                        Locale.US,
+                        "%d bytes written in %d ms",
+                        bytes,
+                        duration
+                    )
+                )
+            } catch (e: IOException) {
+                Log.e(TAG, "Write failed!", e)
+            }
+        }
+    }
 
-			final long startTime = System.currentTimeMillis();
+    private val mWriteThread = TriggerableThread(WriteRunnable(), 5000)
 
-			try {
+    private fun notifyUpdate() {
+        synchronized(mLock) {
+            if (mIsInitialReadComplete) {
+                triggerUpdate()
+            } else {
+                mUpdatePending = true
+            }
+        }
+    }
 
-				final File dataFileTmpLocation = getDataFileWriteTmpLocation();
+    private val dataFileLocation: File
+        get() = File(mContext.getFilesDir(), DB_FILENAME)
 
-				Log.i(
-						TAG,
-						String.format(
-								Locale.US,
-								"Writing tmp data file at '%s'",
-								dataFileTmpLocation.getAbsolutePath()));
+    private val dataFileWriteTmpLocation: File
+        get() = File(
+            mContext.getFilesDir(),
+            DB_WRITETMP_FILENAME
+        )
 
-				final ExtendedDataOutputStream dos
-						= new ExtendedDataOutputStream(
-						new BufferedOutputStream(
-								new FileOutputStream(dataFileTmpLocation),
-								64 * 1024));
+    fun runInitialReadInThisThread() {
+        if (mIsInitialReadStarted.getAndSet(true)) {
+            throw RuntimeException("Attempted to run initial read twice!")
+        }
 
-				dos.writeInt(DB_VERSION);
+        Log.i(TAG, "Running initial read...")
 
-				RedditChangeDataManager.writeAllUsers(dos);
+        try {
+            val dataFileLocation = this.dataFileLocation
 
-				dos.flush();
-				dos.close();
+            Log.i(
+                TAG,
+                String.format(
+                    Locale.US,
+                    "Data file at '%s'",
+                    dataFileLocation.getAbsolutePath()
+                )
+            )
 
-				Log.i(TAG, "Write successful. Atomically replacing data file...");
+            if (!dataFileLocation.exists()) {
+                Log.i(TAG, "Data file does not exist. Aborting read.")
+                return
+            }
 
-				final File dataFileLocation = getDataFileLocation();
+            val dis = ExtendedDataInputStream(
+                BufferedInputStream(
+                    FileInputStream(dataFileLocation),
+                    64 * 1024
+                )
+            )
 
-				if(!dataFileTmpLocation.renameTo(dataFileLocation)) {
-					Log.e(TAG, "Atomic replace failed!");
-					return;
-				}
+            try {
+                val version = dis.readInt()
 
-				Log.i(TAG, "Write complete.");
+                if (DB_VERSION != version) {
+                    Log.i(
+                        TAG,
+                        String.format(
+                            Locale.US,
+                            "Wanted version %d, got %d. Aborting read.",
+                            DB_VERSION,
+                            version
+                        )
+                    )
+                    return
+                }
 
-				final long bytes = dataFileLocation.length();
-				final long duration = System.currentTimeMillis() - startTime;
+                RedditChangeDataManager.Companion.readAllUsers(dis, mContext)
 
-				Log.i(
-						TAG,
-						String.format(
-								Locale.US,
-								"%d bytes written in %d ms",
-								bytes,
-								duration));
+                Log.i(TAG, "Initial read successful.")
+            } finally {
+                try {
+                    dis.close()
+                } catch (e: IOException) {
+                    Log.e(TAG, "IO error while trying to close input file", e)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Initial read failed", e)
+        } finally {
+            notifyInitialReadComplete()
+        }
+    }
 
-			} catch(final IOException e) {
-				Log.e(TAG, "Write failed!", e);
-			}
-		}
-	}
+    private fun notifyInitialReadComplete() {
+        synchronized(mLock) {
+            mIsInitialReadComplete = true
+            if (mUpdatePending) {
+                triggerUpdate()
+                mUpdatePending = false
+            }
+        }
+    }
 
-	private final TriggerableThread mWriteThread
-			= new TriggerableThread(new WriteRunnable(), 5000);
+    private fun triggerUpdate() {
+        mWriteThread.trigger()
+    }
 
-	private RedditChangeDataIO(final Context context) {
-		mContext = context;
-	}
+    companion object {
+        private const val TAG = "RedditChangeDataIO"
 
-	private void notifyUpdate() {
+        private const val DB_VERSION = 1
+        private const val DB_FILENAME = "rr_change_data.dat"
+        private const val DB_WRITETMP_FILENAME = "rr_change_data_tmp.dat"
 
-		synchronized(mLock) {
+        @SuppressLint("StaticFieldLeak")
+        private var INSTANCE: RedditChangeDataIO? = null
+        private var STATIC_UPDATE_PENDING = false
 
-			if(mIsInitialReadComplete) {
-				triggerUpdate();
-			} else {
-				mUpdatePending = true;
-			}
-		}
-	}
+        @Synchronized
+        fun getInstance(context: Context): RedditChangeDataIO {
+            if (INSTANCE == null) {
+                INSTANCE = RedditChangeDataIO(context.getApplicationContext())
 
-	private File getDataFileLocation() {
-		return new File(mContext.getFilesDir(), DB_FILENAME);
-	}
+                if (STATIC_UPDATE_PENDING) {
+                    INSTANCE!!.notifyUpdate()
+                }
+            }
 
-	private File getDataFileWriteTmpLocation() {
-		return new File(mContext.getFilesDir(), DB_WRITETMP_FILENAME);
-	}
+            return INSTANCE!!
+        }
 
-	public void runInitialReadInThisThread() {
-
-		if(mIsInitialReadStarted.getAndSet(true)) {
-			throw new RuntimeException("Attempted to run initial read twice!");
-		}
-
-		Log.i(TAG, "Running initial read...");
-
-		try {
-			final File dataFileLocation = getDataFileLocation();
-
-			Log.i(
-					TAG,
-					String.format(
-							Locale.US,
-							"Data file at '%s'",
-							dataFileLocation.getAbsolutePath()));
-
-			if(!dataFileLocation.exists()) {
-				Log.i(TAG, "Data file does not exist. Aborting read.");
-				return;
-			}
-
-			final ExtendedDataInputStream dis
-					= new ExtendedDataInputStream(
-					new BufferedInputStream(
-							new FileInputStream(dataFileLocation),
-							64 * 1024));
-
-			try {
-
-				final int version = dis.readInt();
-
-				if(DB_VERSION != version) {
-					Log.i(
-							TAG,
-							String.format(
-									Locale.US,
-									"Wanted version %d, got %d. Aborting read.",
-									DB_VERSION,
-									version));
-					return;
-				}
-
-				RedditChangeDataManager.readAllUsers(dis, mContext);
-
-				Log.i(TAG, "Initial read successful.");
-
-			} finally {
-				try {
-					dis.close();
-				} catch(final IOException e) {
-					Log.e(TAG, "IO error while trying to close input file", e);
-				}
-			}
-
-		} catch(final Exception e) {
-			Log.e(TAG, "Initial read failed", e);
-
-		} finally {
-			notifyInitialReadComplete();
-		}
-	}
-
-	private void notifyInitialReadComplete() {
-
-		synchronized(mLock) {
-			mIsInitialReadComplete = true;
-
-			if(mUpdatePending) {
-				triggerUpdate();
-				mUpdatePending = false;
-			}
-		}
-	}
-
-	private void triggerUpdate() {
-		mWriteThread.trigger();
-	}
+        @Synchronized
+        fun notifyUpdateStatic() {
+            if (INSTANCE != null) {
+                INSTANCE!!.notifyUpdate()
+            } else {
+                STATIC_UPDATE_PENDING = true
+            }
+        }
+    }
 }

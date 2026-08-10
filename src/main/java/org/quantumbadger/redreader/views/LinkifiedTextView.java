@@ -12,86 +12,71 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views
 
-package org.quantumbadger.redreader.views;
+import android.annotation.SuppressLint
+import android.text.Selection
+import android.text.Spannable
+import android.text.style.ClickableSpan
+import android.view.MotionEvent
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatTextView
+import org.quantumbadger.redreader.common.PrefsUtility
 
-import android.annotation.SuppressLint;
-import android.text.Layout;
-import android.text.Selection;
-import android.text.Spannable;
-import android.text.style.ClickableSpan;
-import android.view.MotionEvent;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.AppCompatTextView;
-import org.quantumbadger.redreader.common.PrefsUtility;
+class LinkifiedTextView(val activity: AppCompatActivity) : AppCompatTextView(activity) {
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        val text = getText()
 
-public class LinkifiedTextView extends AppCompatTextView {
+        if (text !is Spannable) {
+            return false
+        }
 
-	private final AppCompatActivity mActivity;
+        if (!PrefsUtility.pref_appearance_link_text_clickable()) {
+            return false
+        }
 
-	public LinkifiedTextView(final AppCompatActivity activity) {
-		super(activity);
-		mActivity = activity;
-	}
+        val buffer = text
 
-	public AppCompatActivity getActivity() {
-		return mActivity;
-	}
+        val action = event.getAction()
 
-	@SuppressLint("ClickableViewAccessibility")
-	@Override
-	public boolean onTouchEvent(final MotionEvent event) {
-		final CharSequence text = getText();
+        if (action == MotionEvent.ACTION_UP ||
+            action == MotionEvent.ACTION_DOWN
+        ) {
+            var x = event.getX().toInt()
+            var y = event.getY().toInt()
 
-		if(!(text instanceof Spannable)) {
-			return false;
-		}
+            x -= getTotalPaddingLeft()
+            y -= getTotalPaddingTop()
 
-		if(!PrefsUtility.pref_appearance_link_text_clickable()) {
+            x += getScrollX()
+            y += getScrollY()
 
-			return false;
-		}
+            val layout = getLayout()
+            val line = layout.getLineForVertical(y)
+            val off = layout.getOffsetForHorizontal(line, x.toFloat())
 
-		final Spannable buffer = (Spannable)text;
+            val links = buffer.getSpans<ClickableSpan?>(off, off, ClickableSpan::class.java)
 
-		final int action = event.getAction();
+            if (links.size != 0) {
+                if (action == MotionEvent.ACTION_UP) {
+                    links[0]!!.onClick(this)
+                } else if (action == MotionEvent.ACTION_DOWN) {
+                    Selection.setSelection(
+                        buffer,
+                        buffer.getSpanStart(links[0]),
+                        buffer.getSpanEnd(links[0])
+                    )
+                }
 
-		if(action == MotionEvent.ACTION_UP ||
-				action == MotionEvent.ACTION_DOWN) {
-			int x = (int)event.getX();
-			int y = (int)event.getY();
+                return true
+            } else {
+                Selection.removeSelection(buffer)
+            }
+        }
 
-			x -= getTotalPaddingLeft();
-			y -= getTotalPaddingTop();
-
-			x += getScrollX();
-			y += getScrollY();
-
-			final Layout layout = getLayout();
-			final int line = layout.getLineForVertical(y);
-			final int off = layout.getOffsetForHorizontal(line, x);
-
-			final ClickableSpan[] links = buffer.getSpans(off, off, ClickableSpan.class);
-
-			if(links.length != 0) {
-				if(action == MotionEvent.ACTION_UP) {
-					links[0].onClick(this);
-				} else if(action == MotionEvent.ACTION_DOWN) {
-					Selection.setSelection(
-							buffer,
-							buffer.getSpanStart(links[0]),
-							buffer.getSpanEnd(links[0]));
-				}
-
-				return true;
-
-			} else {
-				Selection.removeSelection(buffer);
-			}
-		}
-
-		return false;
-	}
+        return false
+    }
 }

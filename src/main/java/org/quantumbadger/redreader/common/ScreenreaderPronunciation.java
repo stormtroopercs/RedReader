@@ -12,145 +12,113 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.content.Context
+import androidx.annotation.StringRes
+import org.quantumbadger.redreader.R.string
+import java.util.Locale
 
-import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.annotation.StringRes;
-import org.quantumbadger.redreader.R;
+object ScreenreaderPronunciation {
+    private val LANGUAGE_CODE_EN: String = Locale("en").getLanguage()
 
-import java.util.Locale;
+    fun getPronunciation(
+        context: Context,
+        text: String
+    ): String {
+        val textLowercase = text.lowercase()
 
-public class ScreenreaderPronunciation {
+        when (textLowercase) {
+            "i.redd.it" -> return context.getString(
+                string.accessibility_subtitle_domain_i_redd_it
+            )
 
-	private static final String LANGUAGE_CODE_EN = new Locale("en").getLanguage();
+            "v.redd.it" -> return context.getString(
+                string.accessibility_subtitle_domain_v_redd_it
+            )
 
-	@NonNull
-	public static String getPronunciation(
-			@NonNull final Context context,
-			@NonNull final String text) {
+            "imgur.com", "i.imgur.com" -> return "imager dot com"
 
-		final String textLowercase = text.toLowerCase(Locale.US);
+            "gfycat.com" -> return "giffy cat dot com"
+        }
 
-		switch(textLowercase) {
-			case "i.redd.it":
-				return context.getString(
-						R.string.accessibility_subtitle_domain_i_redd_it);
+        return pronounceSubreddit(textLowercase)
+    }
 
-			case "v.redd.it":
-				return context.getString(
-						R.string.accessibility_subtitle_domain_v_redd_it);
+    fun getAccessibilityString(
+        context: Context,
+        @StringRes res: Int
+    ): String {
+        // Only override for English for now
 
-			case "imgur.com":
-			case "i.imgur.com":
-				return "imager dot com";
+        if (Locale.getDefault().getLanguage() != LANGUAGE_CODE_EN) {
+            return context.getString(res)
+        }
 
-			case "gfycat.com":
-				return "giffy cat dot com";
-		}
+        // Replace "read" with the English homophone "red" to work around bad speech synth handling
+        if (res == string.accessibility_post_already_read_withperiod) {
+            return "Red."
+        } else {
+            return context.getString(res)
+        }
+    }
 
-		return pronounceSubreddit(textLowercase);
-	}
+    private fun pronounceSubreddit(nameLowercase: String): String {
+        if (nameLowercase.startsWith("/r/") || nameLowercase.startsWith("/u/")) {
+            return (nameLowercase.get(1)
+                .toString() + " slash "
+                    + pronounceSubredditStripped(nameLowercase.substring(3)))
+        } else if (nameLowercase.startsWith("r/") || nameLowercase.startsWith("u/")) {
+            return (nameLowercase.get(0)
+                .toString() + " slash "
+                    + pronounceSubredditStripped(nameLowercase.substring(2)))
+        } else {
+            return pronounceSubredditStripped(nameLowercase)
+        }
+    }
 
-	public static String getAccessibilityString(
-			@NonNull final Context context,
-			@StringRes final int res) {
+    @Suppress("SpellCheckingInspection")
+    private fun pronounceSubredditStripped(nameLowercase: String): String {
+        when (nameLowercase) {
+            "iama" -> return "i am a"
 
-		// Only override for English for now
-		if(!Locale.getDefault().getLanguage().equals(LANGUAGE_CODE_EN)) {
-			return context.getString(res);
-		}
+            "askreddit" -> return "ask reddit"
 
-		// Replace "read" with the English homophone "red" to work around bad speech synth handling
-		if(res == R.string.accessibility_post_already_read_withperiod) {
-			return "Red.";
+            "redreader" -> return "red reader"
 
-		} else {
-			return context.getString(res);
-		}
-	}
+            "quantumbadger" -> return "quantum badger"
 
-	@NonNull
-	private static String pronounceSubreddit(@NonNull final String nameLowercase) {
+            "automoderator" -> return "auto moderator"
 
-		if(nameLowercase.startsWith("/r/") || nameLowercase.startsWith("/u/")) {
-			return nameLowercase.charAt(1)
-					+ " slash "
-					+ pronounceSubredditStripped(nameLowercase.substring(3));
+            "whatcouldgowrong" -> return "what could go wrong"
 
-		} else if(nameLowercase.startsWith("r/") || nameLowercase.startsWith("u/")) {
-			return nameLowercase.charAt(0)
-					+ " slash "
-					+ pronounceSubredditStripped(nameLowercase.substring(2));
+            "mildlyinteresting" -> return "mildly interesting"
 
-		} else {
-			return pronounceSubredditStripped(nameLowercase);
-		}
-	}
+            "lifeprotips" -> return "life pro tips"
 
-	@SuppressWarnings("SpellCheckingInspection")
-	@NonNull
-	private static String pronounceSubredditStripped(@NonNull final String nameLowercase) {
+            "listentothis" -> return "listen to this"
 
-		switch(nameLowercase) {
-			case "iama":
-				return "i am a";
+            "nosleep" -> return "no sleep"
 
-			case "askreddit":
-				return "ask reddit";
+            "nottheonion" -> return "not the onion"
 
-			case "redreader":
-				return "red reader";
+            "personalfinance" -> return "personal finance"
 
-			case "quantumbadger":
-				return "quantum badger";
+            "tifu" -> return "t i f u"
 
-			case "automoderator":
-				return "auto moderator";
+            "todayilearned" -> return "today i learned"
 
-			case "whatcouldgowrong":
-				return "what could go wrong";
+            "twoxchromosomes" -> return "two x chromosomes"
 
-			case "mildlyinteresting":
-				return "mildly interesting";
+            "writingprompts" -> return "writing prompts"
 
-			case "lifeprotips":
-				return "life pro tips";
+            "dataisbeautiful" -> return "data is beautiful"
 
-			case "listentothis":
-				return "listen to this";
+            "explainlikeimfive" -> return "explain like I'm five"
+        }
 
-			case "nosleep":
-				return "no sleep";
-
-			case "nottheonion":
-				return "not the onion";
-
-			case "personalfinance":
-				return "personal finance";
-
-			case "tifu":
-				return "t i f u";
-
-			case "todayilearned":
-				return "today i learned";
-
-			case "twoxchromosomes":
-				return "two x chromosomes";
-
-			case "writingprompts":
-				return "writing prompts";
-
-			case "dataisbeautiful":
-				return "data is beautiful";
-
-			case "explainlikeimfive":
-				return "explain like I'm five";
-		}
-
-		return nameLowercase;
-	}
+        return nameLowercase
+    }
 }

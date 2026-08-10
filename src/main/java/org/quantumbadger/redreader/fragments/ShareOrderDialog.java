@@ -12,145 +12,151 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.fragments
 
-package org.quantumbadger.redreader.fragments;
+import android.app.Dialog
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
+import android.content.pm.ResolveInfo
+import android.os.Bundle
+import android.widget.ListView
+import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.core.os.BundleCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.quantumbadger.redreader.R.string
+import org.quantumbadger.redreader.adapters.ShareOrderAdapter
+import org.quantumbadger.redreader.adapters.ShareOrderCallbackListener
+import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.StringUtils
+import java.util.Arrays
+import java.util.LinkedList
 
-import android.app.Dialog;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.os.Bundle;
-import android.widget.ListView;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatDialogFragment;
-import androidx.core.os.BundleCompat;
+class ShareOrderDialog : AppCompatDialogFragment(), ShareOrderCallbackListener {
+    private var packageManager: PackageManager? = null
+    private var shareIntent: Intent? = null
+    private var orderedAppList: MutableList<ResolveInfo?>? = null
+    private var context: Context? = null
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import org.quantumbadger.redreader.R;
-import org.quantumbadger.redreader.adapters.ShareOrderAdapter;
-import org.quantumbadger.redreader.adapters.ShareOrderCallbackListener;
-import org.quantumbadger.redreader.common.General;
-import org.quantumbadger.redreader.common.PrefsUtility;
-import org.quantumbadger.redreader.common.StringUtils;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        context = getContext()
+        packageManager = getActivity()!!.getPackageManager()
+        shareIntent =
+            BundleCompat.getParcelable<Intent?>(requireArguments(), "intent", Intent::class.java)
+    }
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        super.onCreateDialog(savedInstanceState)
 
+        orderedAppList = prioritizeTopApps(
+            packageManager!!.queryIntentActivities(
+                shareIntent!!,
+                0
+            )
+        )
 
-public class ShareOrderDialog extends AppCompatDialogFragment
-		implements ShareOrderCallbackListener {
-	private static final int amountOfPrioritizedApps = 3;
-	private PackageManager packageManager;
-	private Intent shareIntent;
-	private List<ResolveInfo> orderedAppList;
-	private Context context;
+        val builder = MaterialAlertDialogBuilder(context!!)
+        builder.setTitle(
+            context!!.getString(
+                string.pref_behaviour_sharing_share_dialog_dialogtitle
+            )
+        )
+        val listView = ListView(context)
+        builder.setView(listView)
+        listView.setAdapter(ShareOrderAdapter(context, orderedAppList, this))
 
-	public static ShareOrderDialog newInstance(final Intent shareIntent) {
-		final ShareOrderDialog dialog = new ShareOrderDialog();
+        return builder.create()
+    }
 
-		final Bundle args = new Bundle(1);
-		args.putParcelable("intent", shareIntent);
-		dialog.setArguments(args);
+    private fun prioritizeTopApps(unorderedList: MutableList<ResolveInfo?>): MutableList<ResolveInfo?> {
+        if (unorderedList.isEmpty()) {
+            General.quickToast(context!!, string.error_toast_no_share_app_installed)
+            dismiss()
+        }
 
-		return dialog;
-	}
+        // Make a copy of the list since the original is not modifiable
+        val orderedList = LinkedList<ResolveInfo?>(unorderedList)
 
-	@Override
-	public void onCreate(final Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		context = getContext();
-		packageManager = getActivity().getPackageManager();
-		shareIntent = BundleCompat.getParcelable(requireArguments(), "intent", Intent.class);
-	}
+        val prioritizedAppNames =
+            Arrays.asList<String?>(
+                *PrefsUtility.pref_behaviour_sharing_dialog_data_get()
+                    .split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            )
+        val prioritizedApps = arrayOfNulls<ResolveInfo>(prioritizedAppNames.size)
 
-	@NonNull
-	@Override
-	public Dialog onCreateDialog(final Bundle savedInstanceState) {
-		super.onCreateDialog(savedInstanceState);
+        // get the ResolveInfos for the available prioritized Apps and save them in order
+        var count = 0
+        val iterator: MutableIterator<ResolveInfo> = orderedList.iterator()
+        while (iterator.hasNext()) {
+            val currentApp = iterator.next()
+            val currentAppName = currentApp.activityInfo.name
+            if (prioritizedAppNames.contains(currentAppName)) {
+                prioritizedApps[prioritizedAppNames.indexOf(currentAppName)] = currentApp
+                iterator.remove()
+                // Exit early if all apps matched
+                if (++count >= prioritizedAppNames.size) {
+                    break
+                }
+            }
+        }
 
-		orderedAppList = prioritizeTopApps(packageManager.queryIntentActivities(
-				shareIntent,
-				0));
+        // Combine the two lists in order, respecting unavailable apps (null values in the Array)
+        for (i in prioritizedApps.indices.reversed()) {
+            if (prioritizedApps[i] != null) {
+                orderedList.addFirst(prioritizedApps[i])
+            }
+        }
 
-		final MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(context);
-		builder.setTitle(context.getString(
-				R.string.pref_behaviour_sharing_share_dialog_dialogtitle));
-		final ListView listView = new ListView(context);
-		builder.setView(listView);
-		listView.setAdapter(new ShareOrderAdapter(context, orderedAppList, this));
+        return orderedList
+    }
 
-		return builder.create();
-	}
+    override fun onSelectedIntent(position: Int) {
+        val info = orderedAppList!!.get(position)!!.activityInfo
+        persistPriority(info)
+        shareIntent!!.addCategory(Intent.CATEGORY_LAUNCHER)
+        shareIntent!!.setClassName(info.applicationInfo.packageName, info.name)
+        shareIntent!!.setFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK
+                    or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+        )
+        startActivity(shareIntent!!)
+    }
 
-	private List<ResolveInfo> prioritizeTopApps(final List<ResolveInfo> unorderedList) {
-		if(unorderedList.isEmpty()) {
-			General.quickToast(context, R.string.error_toast_no_share_app_installed);
-			dismiss();
-		}
+    private fun persistPriority(selectedApplication: ActivityInfo) {
+        val priorityAppList =
+            LinkedList<String?>(
+                Arrays.asList<String?>(
+                    *PrefsUtility.pref_behaviour_sharing_dialog_data_get()
+                        .split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                )
+            )
+        priorityAppList.remove(selectedApplication.name)
+        priorityAppList.add(0, selectedApplication.name)
+        if (priorityAppList.size > amountOfPrioritizedApps) {
+            priorityAppList.removeLast()
+        }
 
-		// Make a copy of the list since the original is not modifiable
-		final LinkedList<ResolveInfo> orderedList = new LinkedList<>(unorderedList);
+        PrefsUtility.pref_behaviour_sharing_dialog_data_set(
+            context,
+            StringUtils.join(priorityAppList, ";")
+        )
+    }
 
-		final List<String> prioritizedAppNames
-				= Arrays.asList(PrefsUtility.pref_behaviour_sharing_dialog_data_get()
-				.split(";"));
-		final ResolveInfo[] prioritizedApps = new ResolveInfo[prioritizedAppNames.size()];
+    companion object {
+        private const val amountOfPrioritizedApps = 3
+        fun newInstance(shareIntent: Intent?): ShareOrderDialog {
+            val dialog = ShareOrderDialog()
 
-		// get the ResolveInfos for the available prioritized Apps and save them in order
-		int count = 0;
-		final Iterator<ResolveInfo> iterator = orderedList.iterator();
-		while(iterator.hasNext()) {
-			final ResolveInfo currentApp = iterator.next();
-			final String currentAppName = currentApp.activityInfo.name;
-			if(prioritizedAppNames.contains(currentAppName)) {
-				prioritizedApps[prioritizedAppNames.indexOf(currentAppName)] = currentApp;
-				iterator.remove();
-				// Exit early if all apps matched
-				if(++count >= prioritizedAppNames.size()) {
-					break;
-				}
-			}
-		}
+            val args = Bundle(1)
+            args.putParcelable("intent", shareIntent)
+            dialog.setArguments(args)
 
-		// Combine the two lists in order, respecting unavailable apps (null values in the Array)
-		for(int i = prioritizedApps.length - 1; i >= 0; i--) {
-			if(prioritizedApps[i] != null) {
-				orderedList.addFirst(prioritizedApps[i]);
-			}
-		}
-
-		return orderedList;
-	}
-
-	@Override
-	public void onSelectedIntent(final int position) {
-		final ActivityInfo info = orderedAppList.get(position).activityInfo;
-		persistPriority(info);
-		shareIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-		shareIntent.setClassName(info.applicationInfo.packageName, info.name);
-		shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-				| Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-		startActivity(shareIntent);
-	}
-
-	private void persistPriority(final ActivityInfo selectedApplication) {
-		final LinkedList<String> priorityAppList =
-				new LinkedList<>(Arrays.asList(PrefsUtility.pref_behaviour_sharing_dialog_data_get()
-						.split(";")));
-		priorityAppList.remove(selectedApplication.name);
-		priorityAppList.add(0, selectedApplication.name);
-		if(priorityAppList.size() > amountOfPrioritizedApps) {
-			priorityAppList.removeLast();
-		}
-
-		PrefsUtility.pref_behaviour_sharing_dialog_data_set(
-				context,
-				StringUtils.join(priorityAppList, ";"));
-	}
+            return dialog
+        }
+    }
 }

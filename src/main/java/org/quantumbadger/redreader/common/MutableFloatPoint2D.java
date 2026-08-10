@@ -12,68 +12,61 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.common
 
-package org.quantumbadger.redreader.common;
+import android.view.MotionEvent
+import kotlin.math.sqrt
 
-import android.view.MotionEvent;
+class MutableFloatPoint2D {
+    var x: Float = 0f
+    var y: Float = 0f
 
-public class MutableFloatPoint2D {
+    fun reset() {
+        x = 0f
+        y = 0f
+    }
 
-	public float x;
-	public float y;
+    fun set(event: MotionEvent, pointerIndex: Int) {
+        x = event.getX(pointerIndex)
+        y = event.getY(pointerIndex)
+    }
 
-	public void reset() {
-		x = 0;
-		y = 0;
-	}
+    fun set(other: MutableFloatPoint2D) {
+        x = other.x
+        y = other.y
+    }
 
-	public void set(final MotionEvent event, final int pointerIndex) {
-		x = event.getX(pointerIndex);
-		y = event.getY(pointerIndex);
-	}
+    fun set(x: Float, y: Float) {
+        this.x = x
+        this.y = y
+    }
 
-	public void set(final MutableFloatPoint2D other) {
-		x = other.x;
-		y = other.y;
-	}
+    @JvmOverloads
+    fun add(rhs: MutableFloatPoint2D, result: MutableFloatPoint2D = this) {
+        result.x = x + rhs.x
+        result.y = y + rhs.y
+    }
 
-	public void set(final float x, final float y) {
-		this.x = x;
-		this.y = y;
-	}
+    @JvmOverloads
+    fun sub(rhs: MutableFloatPoint2D, result: MutableFloatPoint2D = this) {
+        result.x = x - rhs.x
+        result.y = y - rhs.y
+    }
 
-	public void add(final MutableFloatPoint2D rhs, final MutableFloatPoint2D result) {
-		result.x = x + rhs.x;
-		result.y = y + rhs.y;
-	}
+    fun scale(factor: Double) {
+        x *= factor.toFloat()
+        y *= factor.toFloat()
+    }
 
-	public void sub(final MutableFloatPoint2D rhs, final MutableFloatPoint2D result) {
-		result.x = x - rhs.x;
-		result.y = y - rhs.y;
-	}
+    fun euclideanDistanceTo(other: MutableFloatPoint2D): Double {
+        val xDistance = x - other.x
+        val yDistance = y - other.y
+        return sqrt((xDistance * xDistance + yDistance * yDistance).toDouble())
+    }
 
-	public void add(final MutableFloatPoint2D rhs) {
-		add(rhs, this);
-	}
-
-	public void sub(final MutableFloatPoint2D rhs) {
-		sub(rhs, this);
-	}
-
-	public void scale(final double factor) {
-		x *= factor;
-		y *= factor;
-	}
-
-	public double euclideanDistanceTo(final MutableFloatPoint2D other) {
-		final float xDistance = x - other.x;
-		final float yDistance = y - other.y;
-		return Math.sqrt(xDistance * xDistance + yDistance * yDistance);
-	}
-
-	public float distanceSquared() {
-		return x * x + y * y;
-	}
+    fun distanceSquared(): Float {
+        return x * x + y * y
+    }
 }

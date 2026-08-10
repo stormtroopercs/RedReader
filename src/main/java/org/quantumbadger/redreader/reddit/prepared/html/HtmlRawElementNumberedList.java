@@ -12,72 +12,58 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.reddit.prepared.html
 
-package org.quantumbadger.redreader.reddit.prepared.html;
+import androidx.appcompat.app.AppCompatActivity
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementNumberedListElement
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
-import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElementNumberedListElement;
+class HtmlRawElementNumberedList(private val mChildren: ArrayList<HtmlRawElement>) :
+    HtmlRawElement() {
+    override fun getPlainText(stringBuilder: StringBuilder) {
+        for (element in mChildren) {
+            element.getPlainText(stringBuilder)
+        }
+    }
 
-import java.util.ArrayList;
+    fun reduce(
+        activeAttributes: HtmlTextAttributes,
+        activity: AppCompatActivity,
+        linkButtons: ArrayList<LinkButtonDetails?>
+    ): HtmlRawElementNumberedList {
+        val reduced = ArrayList<HtmlRawElement>()
 
-public class HtmlRawElementNumberedList extends HtmlRawElement {
+        for (child in mChildren) {
+            child.reduce(activeAttributes, activity, reduced, linkButtons)
+        }
 
-	@NonNull private final ArrayList<HtmlRawElement> mChildren;
+        return HtmlRawElementNumberedList(reduced)
+    }
 
-	public HtmlRawElementNumberedList(@NonNull final ArrayList<HtmlRawElement> children) {
-		mChildren = children;
-	}
+    override fun reduce(
+        activeAttributes: HtmlTextAttributes,
+        activity: AppCompatActivity,
+        destination: ArrayList<HtmlRawElement?>,
+        linkButtons: ArrayList<LinkButtonDetails?>
+    ) {
+        destination.add(reduce(activeAttributes, activity, linkButtons))
+    }
 
-	@Override
-	public void getPlainText(@NonNull final StringBuilder stringBuilder) {
-		for(final HtmlRawElement element : mChildren) {
-			element.getPlainText(stringBuilder);
-		}
-	}
+    override fun generate(
+        activity: AppCompatActivity,
+        destination: ArrayList<BodyElement?>
+    ) {
+        var number = 1
 
-	public HtmlRawElementNumberedList reduce(
-			@NonNull final HtmlTextAttributes activeAttributes,
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
+        for (child in mChildren) {
+            val thisElement = ArrayList<BodyElement?>()
+            child.generate(activity, thisElement)
 
-		final ArrayList<HtmlRawElement> reduced = new ArrayList<>();
+            destination.add(BodyElementNumberedListElement(number, thisElement))
 
-		for(final HtmlRawElement child : mChildren) {
-			child.reduce(activeAttributes, activity, reduced, linkButtons);
-		}
-
-		return new HtmlRawElementNumberedList(reduced);
-	}
-
-	@Override
-	public void reduce(
-			@NonNull final HtmlTextAttributes activeAttributes,
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<HtmlRawElement> destination,
-			@NonNull final ArrayList<LinkButtonDetails> linkButtons) {
-
-		destination.add(reduce(activeAttributes, activity, linkButtons));
-	}
-
-	@Override
-	public void generate(
-			@NonNull final AppCompatActivity activity,
-			@NonNull final ArrayList<BodyElement> destination) {
-
-		int number = 1;
-
-		for(final HtmlRawElement child : mChildren) {
-
-			final ArrayList<BodyElement> thisElement = new ArrayList<>();
-			child.generate(activity, thisElement);
-
-			destination.add(new BodyElementNumberedListElement(number, thisElement));
-
-			number++;
-		}
-	}
+            number++
+        }
+    }
 }

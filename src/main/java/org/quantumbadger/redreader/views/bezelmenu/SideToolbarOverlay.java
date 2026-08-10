@@ -12,63 +12,54 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
- ******************************************************************************/
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
+package org.quantumbadger.redreader.views.bezelmenu
 
-package org.quantumbadger.redreader.views.bezelmenu;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.view.Gravity
+import android.view.View
+import android.widget.FrameLayout
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.view.Gravity;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
+class SideToolbarOverlay(context: Context) : FrameLayout(context) {
+    private var contents: View? = null
+    private var shownPosition: SideToolbarPosition? = null
 
-public class SideToolbarOverlay extends FrameLayout {
+    enum class SideToolbarPosition {
+        LEFT, RIGHT
+    }
 
-	private View contents;
-	private SideToolbarPosition shownPosition = null;
+    fun setContents(contents: View) {
+        this.contents = contents
+        if (shownPosition != null) {
+            show(shownPosition)
+        }
+    }
 
-	public enum SideToolbarPosition {
-		LEFT, RIGHT
-	}
+    @SuppressLint("RtlHardcoded")
+    fun show(pos: SideToolbarPosition?) {
+        removeAllViews()
+        addView(contents)
 
-	public SideToolbarOverlay(final Context context) {
-		super(context);
-	}
+        val layoutParams = contents!!.getLayoutParams()
 
-	public void setContents(final View contents) {
-		this.contents = contents;
-		if(shownPosition != null) {
-			show(shownPosition);
-		}
-	}
+        (layoutParams as LayoutParams).gravity
+        = (if (pos == SideToolbarPosition.LEFT) Gravity.LEFT else Gravity.RIGHT)
+        layoutParams.width = LayoutParams.WRAP_CONTENT
+        layoutParams.height = LayoutParams.MATCH_PARENT
 
-	@SuppressLint("RtlHardcoded")
-	public void show(final SideToolbarPosition pos) {
+        contents!!.setLayoutParams(layoutParams)
 
-		removeAllViews();
-		addView(contents);
+        shownPosition = pos
+    }
 
-		final ViewGroup.LayoutParams layoutParams = contents.getLayoutParams();
+    fun hide() {
+        shownPosition = null
+        removeAllViews()
+    }
 
-		((LayoutParams)layoutParams).gravity
-				= (pos == SideToolbarPosition.LEFT ? Gravity.LEFT : Gravity.RIGHT);
-		layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT;
-		layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
-
-		contents.setLayoutParams(layoutParams);
-
-		shownPosition = pos;
-	}
-
-	public void hide() {
-		shownPosition = null;
-		removeAllViews();
-	}
-
-	@Override
-	public boolean isShown() {
-		return shownPosition != null;
-	}
+    override fun isShown(): Boolean {
+        return shownPosition != null
+    }
 }
