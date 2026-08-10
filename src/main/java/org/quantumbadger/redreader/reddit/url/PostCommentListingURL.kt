@@ -171,8 +171,7 @@ class PostCommentListingURL(
                     pathSegmentsFiltered.add(segment)
                 }
 
-                pathSegments
-                = pathSegmentsFiltered.toTypedArray<String?>()
+                pathSegments = pathSegmentsFiltered.toTypedArray<String?>()
             }
 
             if (pathSegments.size == 1) {
@@ -217,7 +216,7 @@ class PostCommentListingURL(
             }
 
             val postId: String?
-            var commentId: String? = null
+            var commentId: String?=null
 
             postId = pathSegments[offset + 1]
             offset += 2
@@ -226,10 +225,10 @@ class PostCommentListingURL(
                 commentId = pathSegments[offset + 1]
             }
 
-            var after: String? = null
-            var limit: Int? = null
-            var context: Int? = null
-            var order: PostCommentSort? = null
+            var after: String?=null
+            var limit: Int?=null
+            var context: Int?=null
+            var order: PostCommentSort?=null
 
             for (parameterKey in getUriQueryParameterNames(uri)) {
                 if (parameterKey.equals("after", ignoreCase = true)) {

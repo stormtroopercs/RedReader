@@ -588,27 +588,25 @@ fun AlbumSettingsButton(
 
 class OverridePaddingValues(
 	private val parent: PaddingValues,
-	private val top: Dp? = null,
-	private val bottom: Dp? = null,
-	private val left: Dp? = null,
-	private val right: Dp? = null,
+	private val top: Dp?=null,
+	private val bottom: Dp?=null,
+	private val left: Dp?=null,
+	private val right: Dp?=null,
 ) : PaddingValues {
 	override fun calculateBottomPadding() = bottom ?: parent.calculateBottomPadding()
 
-	override fun calculateLeftPadding(layoutDirection: LayoutDirection) =
-		left ?: parent.calculateLeftPadding(layoutDirection)
+	override fun calculateLeftPadding(layoutDirection: LayoutDirection) = 		left ?: parent.calculateLeftPadding(layoutDirection)
 
-	override fun calculateRightPadding(layoutDirection: LayoutDirection) =
-		right ?: parent.calculateRightPadding(layoutDirection)
+	override fun calculateRightPadding(layoutDirection: LayoutDirection) = 		right ?: parent.calculateRightPadding(layoutDirection)
 
 	override fun calculateTopPadding() = top ?: parent.calculateTopPadding()
 }
 
 fun PaddingValues.override(
-	top: Dp? = null,
-	bottom: Dp? = null,
-	left: Dp? = null,
-	right: Dp? = null,
+	top: Dp?=null,
+	bottom: Dp?=null,
+	left: Dp?=null,
+	right: Dp?=null,
 ) = OverridePaddingValues(
 	parent = this,
 	top = top,

@@ -36,7 +36,7 @@ class BodyElementVerticalSequence(private val mElements: ArrayList<BodyElement>)
         val dpScale = activity.getResources().getDisplayMetrics().density
         val paragraphSpacing = (dpScale * 6).toInt()
 
-        var lastBlock: BlockType? = null
+        var lastBlock: BlockType?=null
 
         for (element in mElements) {
             val view = element.generateView(

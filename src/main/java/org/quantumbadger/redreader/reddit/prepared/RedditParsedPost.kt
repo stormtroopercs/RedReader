@@ -147,8 +147,7 @@ class RedditParsedPost(
 		getPreviewInternal(this, minWidth, minHeight)
 	}
 
-    fun getPreviewMP4(minWidth: Int, minHeight: Int)
-		= src.preview?.images?.get(0)?.variants?.mp4?.apply {
+    fun getPreviewMP4(minWidth: Int, minHeight: Int) = src.preview?.images?.get(0)?.variants?.mp4?.apply {
 			getPreviewInternal(this, minWidth, minHeight)
 	}
 
@@ -164,7 +163,7 @@ class RedditParsedPost(
 			return null
 		}
 
-		var best: RedditPost.Preview.ImageDetails? = null
+		var best: RedditPost.Preview.ImageDetails?=null
 
 		val sourceWidth = image.source?.width
 		val sourceHeight = image.source?.height
@@ -183,8 +182,7 @@ class RedditParsedPost(
 
 			if (sourceWidth != null && sourceHeight != null && sourceWidth > 0) {
 
-				val estimatedRealHeight =
-					(sourceHeight.toDouble() / sourceWidth.toDouble() * resolution.width).toInt()
+				val estimatedRealHeight = 					(sourceHeight.toDouble() / sourceWidth.toDouble() * resolution.width).toInt()
 
 				if (estimatedRealHeight > 3000) {
 					continue

@@ -399,7 +399,7 @@ object RedditPostActions {
 
 			Action.EXTERNAL -> {
 				try {
-					val url: UriString? = if (activity is WebViewActivity) activity.currentUrl else post.src.url
+					val url: UriString?=if (activity is WebViewActivity) activity.currentUrl else post.src.url
 					if (url == null) {
 						General.quickToast(activity, R.string.link_does_not_exist)
 						return
@@ -449,8 +449,7 @@ object RedditPostActions {
 			}
 
 			Action.SHARE -> if (post.src.url != null) {
-				val subject =
-					if (PrefsUtility.pref_behaviour_sharing_include_desc()) post.src.title else null
+				val subject = 					if (PrefsUtility.pref_behaviour_sharing_include_desc()) post.src.title else null
 
 				val body = LinkHandler.getPreferredRedditUriString(post.src.url)
 
@@ -482,8 +481,7 @@ object RedditPostActions {
 			}
 
 			Action.COPY -> {
-				val clipboardManager: ClipboardManager =
-					activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+				val clipboardManager: ClipboardManager = 					activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 				val data = ClipData.newPlainText(
 					post.src.author,
 					post.src.url?.value
@@ -496,8 +494,7 @@ object RedditPostActions {
 			}
 
 			Action.COPY_SELFTEXT -> {
-				val clipboardManager: ClipboardManager =
-					activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+				val clipboardManager: ClipboardManager = 					activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 				val data = ClipData.newPlainText(
 					post.src.author,
 					post.src.rawSelfTextMarkdown

@@ -194,9 +194,8 @@ class RedditSubredditSubscriptionManager @Inject constructor(
         pendingSubscriptions.clear()
         pendingUnsubscriptions.clear()
 
-        val newSubscriptionsStrings =
-            CollectionStream<SubredditCanonicalId?>(newSubscriptions)
-                .map<String?>(MapStream.Operator { obj: Input? -> obj.toString() })
+        val newSubscriptionsStrings =             CollectionStream<SubredditCanonicalId?>(newSubscriptions)
+                .map<String?>(MapStream.Operator { obj: SubredditCanonicalId? -> obj.toString() })
                 .collect<HashSet<String?>>(
                     HashSet<String?>()
                 )
@@ -226,7 +225,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
             }
 
             return CollectionStream<String?>(subscriptions!!.toHashset())
-                .mapRethrowExceptions<SubredditCanonicalId?>(MapStreamRethrowExceptions.Operator { name: Input? ->
+                .mapRethrowExceptions<SubredditCanonicalId?>(MapStreamRethrowExceptions.Operator { name: SubredditCanonicalId? ->
                     SubredditCanonicalId(
                         name
                     )
@@ -238,8 +237,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
     fun triggerUpdateIfNotReady(
         onFailure: FunctionOneArgNoReturn<RRError?>?
     ) {
-        val handler
-                : RequestResponseHandler<HashSet<SubredditCanonicalId?>?, RRError?> =
+        val handler: RequestResponseHandler<HashSet<SubredditCanonicalId?>?, RRError?> =
             object : RequestResponseHandler<HashSet<SubredditCanonicalId?>?, RRError?> {
                 override fun onRequestFailed(failureReason: RRError?) {
                     if (onFailure != null) {
@@ -298,8 +296,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
                 ) {
                     val newSubscriptionStrings = result.toHashset()
 
-                    val newSubscriptions =
-                        HashSet<SubredditCanonicalId?>()
+                    val newSubscriptions =                         HashSet<SubredditCanonicalId?>()
 
                     for (id in newSubscriptionStrings) {
                         try {

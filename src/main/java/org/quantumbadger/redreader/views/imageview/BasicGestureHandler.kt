@@ -35,7 +35,7 @@ class BasicGestureHandler
 
     private val mFingerTracker = FingerTracker(this)
 
-    private var mFirstFinger: Finger? = null
+    private var mFirstFinger: Finger?=null
     private var mCurrentFingerCount = 0
 
     @SuppressLint("ClickableViewAccessibility")

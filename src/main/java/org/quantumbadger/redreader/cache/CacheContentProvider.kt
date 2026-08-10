@@ -39,7 +39,7 @@ import java.io.FileNotFoundException
 import java.util.Locale
 
 class CacheContentProvider : ContentProvider() {
-    private var mCacheManager: CacheManager? = null
+    private var mCacheManager: CacheManager?=null
 
     private fun getReadableCacheFile(uri: Uri): Optional<ReadableCacheFile?> {
         val filename = filenameFromString(uri.toString())
@@ -208,8 +208,7 @@ class CacheContentProvider : ContentProvider() {
         }
 
         private fun getCacheIdFromFilename(filename: String): Optional<Long?> {
-            val filenameSplitDot: Array<String?> =
-                filename.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            val filenameSplitDot: Array<String?> =                 filename.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
             if (filenameSplitDot.size != 2) {
                 Log.e(TAG, "Expecting one dot in filename: " + filename)

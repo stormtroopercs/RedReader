@@ -132,15 +132,15 @@ class RedditUser : Parcelable, JsonDeserializable {
     }
 
     companion object {
-        val CREATOR
-                : Parcelable.Creator<RedditUser?> = object : Parcelable.Creator<RedditUser?> {
-            override fun createFromParcel(`in`: Parcel): RedditUser {
-                return RedditUser(`in`)
-            }
+        val CREATOR: Parcelable.Creator<RedditUser?> =
+            object : Parcelable.Creator<RedditUser?> {
+                override fun createFromParcel(`in`: Parcel): RedditUser {
+                    return RedditUser(`in`)
+                }
 
-            override fun newArray(size: Int): Array<RedditUser?> {
-                return arrayOfNulls<RedditUser>(size)
+                override fun newArray(size: Int): Array<RedditUser?> {
+                    return arrayOfNulls<RedditUser>(size)
+                }
             }
-        }
     }
 }

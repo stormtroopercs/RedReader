@@ -103,8 +103,7 @@ class UserPostListingURL internal constructor(
 
         when (order) {
             PostSort.CONTROVERSIAL_HOUR, PostSort.CONTROVERSIAL_DAY, PostSort.CONTROVERSIAL_WEEK, PostSort.CONTROVERSIAL_MONTH, PostSort.CONTROVERSIAL_YEAR, PostSort.CONTROVERSIAL_ALL, PostSort.TOP_HOUR, PostSort.TOP_DAY, PostSort.TOP_WEEK, PostSort.TOP_MONTH, PostSort.TOP_YEAR, PostSort.TOP_ALL -> {
-                val parts: Array<String?> =
-                    order.name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                val parts: Array<String?> =                     order.name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 return (path + "?sort=" + StringUtils.asciiLowercase(parts[0]!!)
                         + "&t=" + StringUtils.asciiLowercase(parts[1]!!))
             }
@@ -154,9 +153,9 @@ class UserPostListingURL internal constructor(
         }
 
         fun parse(uri: Uri): UserPostListingURL? {
-            var limit: Int? = null
-            var before: String? = null
-            var after: RedditIdAndType? = null
+            var limit: Int?=null
+            var before: String?=null
+            var after: RedditIdAndType?=null
 
             for (parameterKey in getUriQueryParameterNames(uri)) {
                 if (parameterKey.equals("after", ignoreCase = true)) {
@@ -190,8 +189,7 @@ class UserPostListingURL internal constructor(
                     }
                 }
 
-                pathSegments
-                = pathSegmentsFiltered.toTypedArray<String?>()
+                pathSegments = pathSegmentsFiltered.toTypedArray<String?>()
             }
 
             val order: PostSort?

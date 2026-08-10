@@ -32,7 +32,7 @@ import java.util.UUID
 
 // TODO add notification/header for abnormal sort order
 class PostListingController(url: PostListingURL, context: Context?) {
-    var session: UUID? = null
+    var session: UUID?=null
     private var url: PostListingURL
 
     init {

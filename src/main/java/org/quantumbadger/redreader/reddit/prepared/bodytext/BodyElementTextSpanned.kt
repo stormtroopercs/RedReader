@@ -28,7 +28,7 @@ class BodyElementTextSpanned(
     blockType: BlockType,
     private val mSpanned: SpannableStringBuilder
 ) : BodyElement(blockType), DynamicSpanned {
-    private var mTextView: LinkifiedTextView? = null
+    private var mTextView: LinkifiedTextView?=null
 
     override fun addSpanDynamic(what: Any?, start: Int, end: Int, flags: Int) {
         runOnUiThread(Runnable {

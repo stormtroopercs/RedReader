@@ -36,7 +36,7 @@ fun RRIconButton(
 	@DrawableRes icon: Int,
 	@StringRes contentDescription: Int,
 	modifier: Modifier = Modifier,
-	tint: Color? = null,
+	tint: Color?=null,
 ) {
 	val theme = LocalComposeTheme.current
 

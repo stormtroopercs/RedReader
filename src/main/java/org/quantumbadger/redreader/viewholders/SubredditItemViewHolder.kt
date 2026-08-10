@@ -60,8 +60,7 @@ class SubredditItemViewHolder(
 
         mPrimaryText = this.itemView.findViewById<TextView>(R.id.subreddit_item_view_primary_text)
         mSubText = this.itemView.findViewById<TextView>(R.id.subreddit_item_view_sub_text)
-        mSupportingText =
-            this.itemView.findViewById<FrameLayout>(R.id.subreddit_item_view_supporting_text)
+        mSupportingText =             this.itemView.findViewById<FrameLayout>(R.id.subreddit_item_view_supporting_text)
         mActions = this.itemView.findViewById<SubredditToolbar>(R.id.subreddit_item_view_actions)
         mGoButton = this.itemView.findViewById<View>(R.id.subreddit_item_view_go)
     }

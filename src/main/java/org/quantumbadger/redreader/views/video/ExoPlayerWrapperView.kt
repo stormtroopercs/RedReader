@@ -133,8 +133,7 @@ class ExoPlayerWrapperView(
             controlBar.setOrientation(LinearLayout.VERTICAL)
 
             run {
-                val controlBarLayoutParams =
-                    controlBar.getLayoutParams() as RelativeLayout.LayoutParams
+                val controlBarLayoutParams =                     controlBar.getLayoutParams() as RelativeLayout.LayoutParams
                 controlBarLayoutParams.width = LayoutParams.WRAP_CONTENT
                 controlBarLayoutParams.height = LayoutParams.WRAP_CONTENT
                 controlBarLayoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM)
@@ -320,8 +319,7 @@ class ExoPlayerWrapperView(
             controlBar.addView(mTimeBarView)
 
             run {
-                val seekBarLayoutParams =
-                    mTimeBarView!!.getLayoutParams() as LinearLayout.LayoutParams
+                val seekBarLayoutParams =                     mTimeBarView!!.getLayoutParams() as LinearLayout.LayoutParams
                 val marginPx = dpToPixels(context, 8f)
                 seekBarLayoutParams.setMargins(marginPx, marginPx, marginPx, marginPx)
             }
@@ -696,8 +694,7 @@ class ExoPlayerWrapperView(
         private fun addButton(button: ImageButton, layout: LinearLayout) {
             layout.addView(button)
 
-            val layoutParams =
-                button.getLayoutParams() as LinearLayout.LayoutParams
+            val layoutParams =                 button.getLayoutParams() as LinearLayout.LayoutParams
 
             layoutParams.width = LayoutParams.WRAP_CONTENT
             layoutParams.height = LayoutParams.WRAP_CONTENT

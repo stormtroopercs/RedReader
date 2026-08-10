@@ -43,7 +43,7 @@ class RedditInboxItemView(
 
     private val showLinkButtons: Boolean
 
-    private var currentItem: RedditRenderableInboxItem? = null
+    private var currentItem: RedditRenderableInboxItem?=null
 
     private val mActivity: BaseActivity?
 

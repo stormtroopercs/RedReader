@@ -39,13 +39,13 @@ import kotlin.concurrent.Volatile
 
 class AccountListDialog private constructor() : AppCompatDialogFragment(),
     RedditAccountChangeListener {
-    private var mActivity: AppCompatActivity? = null
+    private var mActivity: AppCompatActivity?=null
 
     // Workaround for HoloEverywhere bug?
     @Volatile
     private var alreadyCreated = false
 
-    private var rv: RecyclerView? = null
+    private var rv: RecyclerView?=null
 
     override fun onActivityResult(
         requestCode: Int,

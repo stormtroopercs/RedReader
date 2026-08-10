@@ -48,11 +48,11 @@ class VideoGestureHandler
 
     private val mScreenDensity: Float
 
-    private var mCurrentTouchState: TouchState? = null
+    private var mCurrentTouchState: TouchState?=null
 
-    private var mDragFinger: Finger? = null
-    private var mPinchFinger1: Finger? = null
-    private var mPinchFinger2: Finger? = null
+    private var mDragFinger: Finger?=null
+    private var mPinchFinger1: Finger?=null
+    private var mPinchFinger2: Finger?=null
     private val mSpareFingers = Stack<Finger?>(8)
 
     private val mTmpPoint1 = MutableFloatPoint2D()
@@ -129,10 +129,8 @@ class VideoGestureHandler
             }
 
             TouchState.TWO_FINGER_PINCH -> {
-                val oldDistance =
-                    mPinchFinger1!!.mLastPos.euclideanDistanceTo(mPinchFinger2!!.mLastPos)
-                val newDistance =
-                    mPinchFinger1!!.mCurrentPos.euclideanDistanceTo(
+                val oldDistance =                     mPinchFinger1!!.mLastPos.euclideanDistanceTo(mPinchFinger2!!.mLastPos)
+                val newDistance =                     mPinchFinger1!!.mCurrentPos.euclideanDistanceTo(
                         mPinchFinger2!!.mCurrentPos
                     )
 
@@ -194,8 +192,7 @@ class VideoGestureHandler
 
             TouchState.TWO_FINGER_PINCH -> if (mSpareFingers.isEmpty()) {
                 mCurrentTouchState = TouchState.ONE_FINGER_DRAG
-                mDragFinger =
-                    if (mPinchFinger1 === finger) mPinchFinger2 else mPinchFinger1
+                mDragFinger =                     if (mPinchFinger1 === finger) mPinchFinger2 else mPinchFinger1
                 mPinchFinger1 = null
                 mPinchFinger2 = null
             } else {

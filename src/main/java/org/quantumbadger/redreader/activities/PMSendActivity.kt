@@ -47,10 +47,10 @@ import org.quantumbadger.redreader.reddit.APIResponseHandler.ActionResponseHandl
 import org.quantumbadger.redreader.reddit.RedditAPI
 
 class PMSendActivity : ViewsBaseActivity() {
-    private var usernameSpinner: Spinner? = null
-    private var recipientEdit: EditText? = null
-    private var subjectEdit: EditText? = null
-    private var textEdit: EditText? = null
+    private var usernameSpinner: Spinner?=null
+    private var recipientEdit: EditText?=null
+    private var subjectEdit: EditText?=null
+    private var textEdit: EditText?=null
 
     private var mSendSuccess = false
 
@@ -179,8 +179,7 @@ class PMSendActivity : ViewsBaseActivity() {
                 true
             })
 
-            val handler
-                    : ActionResponseHandler = object : ActionResponseHandler(this) {
+            val handler: ActionResponseHandler=object : ActionResponseHandler(this) {
                 override fun onSuccess() {
                     AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
                         safeDismissDialog(progressDialog)
@@ -213,7 +212,7 @@ class PMSendActivity : ViewsBaseActivity() {
             val accounts: ArrayList<RedditAccount> = RedditAccountManager.Companion.getInstance(
                 this
             ).getAccounts()
-            var selectedAccount: RedditAccount? = null
+            var selectedAccount: RedditAccount?=null
 
             for (account in accounts) {
                 if (!account.isAnonymous
@@ -268,8 +267,8 @@ class PMSendActivity : ViewsBaseActivity() {
         private const val SAVED_STATE_TEXT = "pm_text"
         private const val SAVED_STATE_SUBJECT = "pm_subject"
 
-        private var lastText: String? = null
-        private var lastRecipient: String? = null
-        private var lastSubject: String? = null
+        private var lastText: String?=null
+        private var lastRecipient: String?=null
+        private var lastSubject: String?=null
     }
 }

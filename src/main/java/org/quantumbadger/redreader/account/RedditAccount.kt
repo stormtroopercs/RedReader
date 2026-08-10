@@ -34,7 +34,7 @@ class RedditAccount(
     val refreshToken: RefreshToken?
 
     @get:Synchronized
-    var mostRecentAccessToken: AccessToken? = null
+    var mostRecentAccessToken: AccessToken?=null
         private set
 
     @JvmField

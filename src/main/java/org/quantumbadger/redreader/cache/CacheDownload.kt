@@ -270,8 +270,7 @@ class CacheDownload(
                         Constants.FileType.CAPTCHA, Constants.FileType.IMAGE, Constants.FileType.INLINE_IMAGE_PREVIEW, Constants.FileType.NOCACHE, Constants.FileType.THUMBNAIL ->                            // Image saving/sharing relies the file on disk being "raw"
                             cacheCompressionType = CacheCompressionType.NONE
 
-                        Constants.FileType.COMMENT_LIST, Constants.FileType.IMAGE_INFO, Constants.FileType.INBOX_LIST, Constants.FileType.MULTIREDDIT_LIST, Constants.FileType.POST_LIST, Constants.FileType.SUBREDDIT_ABOUT, Constants.FileType.SUBREDDIT_LIST, Constants.FileType.USER_ABOUT -> cacheCompressionType =
-                            CacheCompressionType.ZSTD
+                        Constants.FileType.COMMENT_LIST, Constants.FileType.IMAGE_INFO, Constants.FileType.INBOX_LIST, Constants.FileType.MULTIREDDIT_LIST, Constants.FileType.POST_LIST, Constants.FileType.SUBREDDIT_ABOUT, Constants.FileType.SUBREDDIT_LIST, Constants.FileType.USER_ABOUT -> cacheCompressionType =                             CacheCompressionType.ZSTD
 
                         else -> {
                             Log.e(TAG, "Unhandled filetype: " + mInitiator.fileType)

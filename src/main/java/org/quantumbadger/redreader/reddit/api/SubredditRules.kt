@@ -43,8 +43,7 @@ data class SubredditRule(
 	val shortName: String,
 	val violationReason: String
 ) {
-	fun appliesTo(kind: SubredditRuleKind) =
-		this.kind == SubredditRuleKind.ALL || this.kind == kind
+	fun appliesTo(kind: SubredditRuleKind) = 		this.kind == SubredditRuleKind.ALL || this.kind == kind
 }
 
 /**
@@ -189,8 +188,8 @@ sealed class ReportReason {
 	/** A sitewide reason from the `site_rules_flow` tree. */
 	data class Site(
 		val reasonText: String,
-		val customText: String? = null,
-		val usernames: String? = null
+		val customText: String?=null,
+		val usernames: String?=null
 	) : ReportReason() {
 		override fun toPostFields() = buildList {
 			add(PostField("reason", "site_reason_selected"))

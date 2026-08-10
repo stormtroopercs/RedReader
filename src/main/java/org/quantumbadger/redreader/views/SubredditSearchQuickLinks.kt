@@ -35,34 +35,26 @@ import java.util.Objects
 
 class SubredditSearchQuickLinks @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null,
+    attrs: AttributeSet?=null,
     defStyleAttr: Int = 0
 ) : FlexboxLayout(context, attrs, defStyleAttr) {
-    private var mActivity: AppCompatActivity? = null
+    private var mActivity: AppCompatActivity?=null
 
     private var mBinding: EventListenerSet<String?>? = null
     private var mBindingListener: EventListenerSet.Listener<String?>? = null
 
-    private var mButtonSubreddit: MaterialButton? = null
-    private var mButtonUser: MaterialButton? = null
-    private var mButtonUrl: MaterialButton? = null
-    private var mButtonSearch: MaterialButton? = null
+    private var mButtonSubreddit: MaterialButton?=null
+    private var mButtonUser: MaterialButton?=null
+    private var mButtonUrl: MaterialButton?=null
+    private var mButtonSearch: MaterialButton?=null
 
     override fun onFinishInflate() {
         super.onFinishInflate()
 
-        mButtonSubreddit = Objects.requireNonNull<MaterialButton>(
-            (MaterialButton)<View> findViewById < android . view . View ? > (R.id.button_go_to_subreddit)
-        )
-        mButtonUser = Objects.requireNonNull<MaterialButton>(
-            (MaterialButton)<View> findViewById < android . view . View ? > (R.id.button_go_to_user)
-        )
-        mButtonUrl = Objects.requireNonNull<MaterialButton>(
-            (MaterialButton)<View> findViewById < android . view . View ? > (R.id.button_go_to_url)
-        )
-        mButtonSearch = Objects.requireNonNull<MaterialButton>(
-            (MaterialButton)<View> findViewById < android . view . View ? > (R.id.button_go_to_search)
-        )
+        mButtonSubreddit = findViewById<MaterialButton>(R.id.button_go_to_subreddit)
+        mButtonUser = findViewById<MaterialButton>(R.id.button_go_to_user)
+        mButtonUrl = findViewById<MaterialButton>(R.id.button_go_to_url)
+        mButtonSearch = findViewById<MaterialButton>(R.id.button_go_to_search)
     }
 
     fun bind(
@@ -169,9 +161,7 @@ class SubredditSearchQuickLinks @JvmOverloads constructor(
             }
 
             mButtonSearch!!.setOnClickListener(OnClickListener { view: View? ->
-                val url
-                        : SearchPostListURL =
-                    SearchPostListURL.Companion.build(null, queryProcessed.querySearch)
+                val url: SearchPostListURL=                    SearchPostListURL.Companion.build(null, queryProcessed.querySearch)
                 val intent = Intent(mActivity, PostListingActivity::class.java)
                 intent.setData(url.generateJsonUri())
                 mActivity!!.startActivity(intent)

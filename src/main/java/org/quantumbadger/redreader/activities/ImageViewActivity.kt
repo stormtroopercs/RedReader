@@ -133,41 +133,41 @@ import java.util.concurrent.atomic.AtomicReference
 
 class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
     ImageViewDisplayListManager.Listener {
-    private var mProgressText: TextView? = null
+    private var mProgressText: TextView?=null
 
-    private var surfaceView: GLSurfaceView? = null
-    private var imageView: ImageView? = null
-    private var gifThread: GifDecoderThread? = null
+    private var surfaceView: GLSurfaceView?=null
+    private var imageView: ImageView?=null
+    private var gifThread: GifDecoderThread?=null
 
-    private var mVideoPlayerWrapper: ExoPlayerWrapperView? = null
+    private var mVideoPlayerWrapper: ExoPlayerWrapperView?=null
 
-    private var mUrl: UriString? = null
+    private var mUrl: UriString?=null
 
     private var mIsPaused = true
     private var mIsDestroyed = false
     private val mActionsOnResume = ArrayList<Runnable>()
 
-    private var mImageOrVideoRequest: CacheRequest? = null
-    private var mAudioRequest: CacheRequest? = null
+    private var mImageOrVideoRequest: CacheRequest?=null
+    private var mAudioRequest: CacheRequest?=null
 
     private var mHaveReverted = false
 
-    private var mImageViewDisplayerManager: ImageViewDisplayListManager? = null
+    private var mImageViewDisplayerManager: ImageViewDisplayListManager?=null
 
-    private var mSwipeOverlay: HorizontalSwipeProgressOverlay? = null
+    private var mSwipeOverlay: HorizontalSwipeProgressOverlay?=null
     private var mSwipeCancelled = false
 
-    private var mPost: RedditPost? = null
+    private var mPost: RedditPost?=null
 
-    private var mImageInfo: ImageInfo? = null
-    private var mAlbumInfo: AlbumInfo? = null
+    private var mImageInfo: ImageInfo?=null
+    private var mAlbumInfo: AlbumInfo?=null
     private var mAlbumImageIndex = 0
 
-    private var mLayout: FrameLayout? = null
+    private var mLayout: FrameLayout?=null
 
     private var mGallerySwipeLengthPx = 0
 
-    private var mFloatingToolbar: LinearLayout? = null
+    private var mFloatingToolbar: LinearLayout?=null
 
     override fun baseActivityIsToolbarActionBarEnabled(): Boolean {
         return false
@@ -267,8 +267,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
         progressTextLayout.addView(mProgressText)
         mProgressText!!.getLayoutParams().width = ViewGroup.LayoutParams.WRAP_CONTENT
         mProgressText!!.getLayoutParams().height = ViewGroup.LayoutParams.WRAP_CONTENT
-        (mProgressText!!.getLayoutParams() as MarginLayoutParams).topMargin
-        = dpToPixels(this, 10f)
+        (mProgressText!!.getLayoutParams() as MarginLayoutParams).topMargin = dpToPixels(this, 10f)
 
         val progressLayout = RelativeLayout(this)
         progressLayout.addView(progressTextLayout)
@@ -382,8 +381,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
             )
 
             if (PrefsUtility.pref_appearance_left_handed()) {
-                val toolBarParams =
-                    mFloatingToolbar!!.getLayoutParams() as FrameLayout.LayoutParams
+                val toolBarParams =                     mFloatingToolbar!!.getLayoutParams() as FrameLayout.LayoutParams
                 toolBarParams.gravity = Gravity.START or Gravity.BOTTOM
                 mFloatingToolbar!!.setLayoutParams(toolBarParams)
             }
@@ -899,8 +897,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
                         AndroidCommon.runOnUiThread(Runnable {
                             progressBar.setVisibility(View.VISIBLE)
                             progressBar.setIndeterminate(authorizationInProgress)
-                            progressBar.progress =
-                                (((1000 * bytesRead) / totalBytes).toFloat()) / 1000
+                            progressBar.progress =                                 (((1000 * bytesRead) / totalBytes).toFloat()) / 1000
                             manageAspectRatioIndicator(progressBar)
                             if (!mProgressTextSet) {
                                 mProgressText!!.setText(bytesToMegabytes(totalBytes))
@@ -1052,13 +1049,11 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
             val layout = RelativeLayout(this)
             layout.setGravity(Gravity.CENTER)
 
-            val videoDataSourceFactory =
-                ExoPlayerSeekableInputStreamDataSourceFactory(isNetwork, videoStream)
+            val videoDataSourceFactory =                 ExoPlayerSeekableInputStreamDataSourceFactory(isNetwork, videoStream)
 
             val mediaSource: MediaSource
 
-            val videoMediaSource
-                    : MediaSource = ProgressiveMediaSource.Factory(videoDataSourceFactory)
+            val videoMediaSource: MediaSource=ProgressiveMediaSource.Factory(videoDataSourceFactory)
                 .createMediaSource(
                     MediaItem.fromUri(
                         ExoPlayerSeekableInputStreamDataSource.Companion.URI
@@ -1068,8 +1063,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
             if (audioStream == null) {
                 mediaSource = videoMediaSource
             } else {
-                val audioDataSourceFactory =
-                    ExoPlayerSeekableInputStreamDataSourceFactory(isNetwork, audioStream)
+                val audioDataSourceFactory =                     ExoPlayerSeekableInputStreamDataSourceFactory(isNetwork, audioStream)
 
                 mediaSource = MergingMediaSource(
                     videoMediaSource,
@@ -1271,8 +1265,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
             if (mIsDestroyed) {
                 return@post
             }
-            mImageViewDisplayerManager
-            = ImageViewDisplayListManager(imageTileSource, this)
+            mImageViewDisplayerManager = ImageViewDisplayListManager(imageTileSource, this)
             surfaceView = RRGLSurfaceView(this, mImageViewDisplayerManager)
             setMainView(surfaceView!!)
             if (mIsPaused) {

@@ -25,8 +25,8 @@ class RedditThing : JsonDeserializable {
         POST, USER, COMMENT, MESSAGE, SUBREDDIT, MORE_COMMENTS, LISTING
     }
 
-    var kind: String? = null
-    var data: JsonObject? = null
+    var kind: String?=null
+    var data: JsonObject?=null
 
     fun getKind(): Kind {
         val result: Kind = kinds.get(this.kind)!!

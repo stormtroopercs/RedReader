@@ -31,7 +31,7 @@ import org.quantumbadger.redreader.common.PrefsUtility
  */
 internal class IndentView @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null,
+    attrs: AttributeSet?=null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
     private val mPaint = Paint()

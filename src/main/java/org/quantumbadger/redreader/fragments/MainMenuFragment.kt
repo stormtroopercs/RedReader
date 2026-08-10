@@ -94,21 +94,16 @@ class MainMenuFragment(
         recyclerView.setClipToPadding(false)
 
         run {
-            val appearance =
-                context.obtainStyledAttributes(intArrayOf(R.attr.rrListItemBackgroundCol))
+            val appearance =                 context.obtainStyledAttributes(intArrayOf(R.attr.rrListItemBackgroundCol))
             getActivity().getWindow().setBackgroundDrawable(
                 ColorDrawable(appearance.getColor(0, General.COLOR_INVALID))
             )
             appearance.recycle()
         }
 
-        val multiredditSubscriptionManager
-                : RedditMultiredditSubscriptionManager =
-            RedditMultiredditSubscriptionManager.Companion.getSingleton(context, user)
+        val multiredditSubscriptionManager: RedditMultiredditSubscriptionManager=            RedditMultiredditSubscriptionManager.Companion.getSingleton(context, user)
 
-        val subredditSubscriptionManager
-                : RedditSubredditSubscriptionManager =
-            RedditSubredditSubscriptionManager.Companion.getSingleton(context, user)
+        val subredditSubscriptionManager: RedditSubredditSubscriptionManager=            RedditSubredditSubscriptionManager.Companion.getSingleton(context, user)
 
         if (force) {
             multiredditSubscriptionManager.triggerUpdate(
@@ -158,8 +153,7 @@ class MainMenuFragment(
                 )
             }
 
-            val oneHour
-                    : MoreRecentThanBound = TimestampBound.Companion.notOlderThan(hours(1))
+            val oneHour: MoreRecentThanBound=TimestampBound.Companion.notOlderThan(hours(1))
             multiredditSubscriptionManager.triggerUpdate(null, oneHour)
             subredditSubscriptionManager.triggerUpdate(null, oneHour)
         }

@@ -159,8 +159,7 @@ class SearchPostListURL : PostListingURL {
         if (order != null) {
             when (order) {
                 PostSort.RELEVANCE_HOUR, PostSort.RELEVANCE_DAY, PostSort.RELEVANCE_WEEK, PostSort.RELEVANCE_MONTH, PostSort.RELEVANCE_YEAR, PostSort.RELEVANCE_ALL, PostSort.NEW_HOUR, PostSort.NEW_DAY, PostSort.NEW_WEEK, PostSort.NEW_MONTH, PostSort.NEW_YEAR, PostSort.NEW_ALL, PostSort.HOT_HOUR, PostSort.HOT_DAY, PostSort.HOT_WEEK, PostSort.HOT_MONTH, PostSort.HOT_YEAR, PostSort.HOT_ALL, PostSort.TOP_HOUR, PostSort.TOP_DAY, PostSort.TOP_WEEK, PostSort.TOP_MONTH, PostSort.TOP_YEAR, PostSort.TOP_ALL, PostSort.COMMENTS_HOUR, PostSort.COMMENTS_DAY, PostSort.COMMENTS_WEEK, PostSort.COMMENTS_MONTH, PostSort.COMMENTS_YEAR, PostSort.COMMENTS_ALL -> {
-                    val parts: Array<String?> =
-                        order.name.split("_".toRegex()).dropLastWhile { it.isEmpty() }
+                    val parts: Array<String?> =                         order.name.split("_".toRegex()).dropLastWhile { it.isEmpty() }
                             .toTypedArray()
                     builder.appendQueryParameter("sort", StringUtils.asciiLowercase(parts[0]!!))
                     builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]!!))
@@ -264,8 +263,7 @@ class SearchPostListURL : PostListingURL {
                     || location.startsWith("me/m/")
                     || location.startsWith("m/")
                 ) {
-                    val locationSegments: Array<String?> =
-                        location.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                    val locationSegments: Array<String?> =                         location.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
                     val username: String?
                     val name: String?
@@ -306,14 +304,14 @@ class SearchPostListURL : PostListingURL {
 
         fun parse(uri: Uri): SearchPostListURL? {
             var restrictSubreddit = false
-            var query: String? = ""
+            var query: String?=""
             val order: PostSort?
-            var limit: Int? = null
-            var before: String? = null
-            var after: RedditIdAndType? = null
+            var limit: Int?=null
+            var before: String?=null
+            var after: RedditIdAndType?=null
 
-            var sortParam: String? = null
-            var timeParam: String? = null
+            var sortParam: String?=null
+            var timeParam: String?=null
 
             for (parameterKey in getUriQueryParameterNames(uri)) {
                 if (parameterKey.equals("after", ignoreCase = true)) {
@@ -332,8 +330,7 @@ class SearchPostListURL : PostListingURL {
                 } else if (parameterKey.equals("q", ignoreCase = true)) {
                     query = uri.getQueryParameter(parameterKey)
                 } else if (parameterKey.equals("restrict_sr", ignoreCase = true)) {
-                    restrictSubreddit =
-                        "on".equals(uri.getQueryParameter(parameterKey), ignoreCase = true)
+                    restrictSubreddit =                         "on".equals(uri.getQueryParameter(parameterKey), ignoreCase = true)
                 }
             }
 
@@ -342,8 +339,7 @@ class SearchPostListURL : PostListingURL {
             val pathSegments: Array<String?>
             run {
                 val pathSegmentsList = uri.getPathSegments()
-                val pathSegmentsFiltered =
-                    ArrayList<String?>(pathSegmentsList.size)
+                val pathSegmentsFiltered =                     ArrayList<String?>(pathSegmentsList.size)
                 for (segment in pathSegmentsList) {
                     var segment = segment
                     while (StringUtils.asciiLowercase(segment).endsWith(".json")
@@ -356,8 +352,7 @@ class SearchPostListURL : PostListingURL {
                         pathSegmentsFiltered.add(segment)
                     }
                 }
-                pathSegments =
-                    pathSegmentsFiltered.toTypedArray<String?>()
+                pathSegments =                     pathSegmentsFiltered.toTypedArray<String?>()
             }
 
             if (pathSegments.size != 1 && (pathSegments.size < 3 || pathSegments.size > 5)) {

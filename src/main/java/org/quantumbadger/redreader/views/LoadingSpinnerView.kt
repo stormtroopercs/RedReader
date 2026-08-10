@@ -26,7 +26,7 @@ import org.quantumbadger.redreader.common.General.dpToPixels
 
 class LoadingSpinnerView @JvmOverloads constructor(
     context: Context,
-    attributeSet: AttributeSet? = null,
+    attributeSet: AttributeSet?=null,
     defStyle: Int = 0
 ) : RelativeLayout(context, attributeSet, defStyle) {
     val mProgressView: DonutProgress

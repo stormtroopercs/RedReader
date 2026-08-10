@@ -25,8 +25,8 @@ abstract class RRGLProgram(
 ) {
     val handle: Int
 
-    private var mFragmentShaderHandle: Int? = null
-    private var mVertexShaderHandle: Int? = null
+    private var mFragmentShaderHandle: Int?=null
+    private var mVertexShaderHandle: Int?=null
 
     init {
         this.handle = GLES20.glCreateProgram()

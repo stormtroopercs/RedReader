@@ -95,14 +95,12 @@ class SharedPrefsWrapper internal constructor(private val mPrefs: SharedPreferen
 
     private val mRestoreLock: ReadWriteLock = ReentrantReadWriteLock()
 
-    private val mListenerWrappers =
-        HashMap<OnSharedPreferenceChangeListener?, SharedPreferences.OnSharedPreferenceChangeListener?>()
+    private val mListenerWrappers =         HashMap<OnSharedPreferenceChangeListener?, SharedPreferences.OnSharedPreferenceChangeListener?>()
 
     fun registerOnSharedPreferenceChangeListener(
         listener: OnSharedPreferenceChangeListener
     ) {
-        val spListener =
-            SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences: SharedPreferences?, key: String? ->
+        val spListener =             SharedPreferences.OnSharedPreferenceChangeListener { sharedPreferences: SharedPreferences?, key: String? ->
                 listener.onSharedPreferenceChanged(
                     this,
                     key!!

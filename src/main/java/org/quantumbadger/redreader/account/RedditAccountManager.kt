@@ -46,11 +46,9 @@ class RedditAccountManager @Inject constructor(
     ACCOUNTS_DB_VERSION
 ) {
     private var accountsCache: MutableList<RedditAccount?>? = null
-    private var defaultAccountCache: RedditAccount? = null
+    private var defaultAccountCache: RedditAccount?=null
 
-    private val updateNotifier
-            : UpdateNotifier<RedditAccountChangeListener?> =
-        object : UpdateNotifier<RedditAccountChangeListener?>() {
+    private val updateNotifier: UpdateNotifier<RedditAccountChangeListener?> = object : UpdateNotifier<RedditAccountChangeListener?>() {
             override fun notifyListener(listener: RedditAccountChangeListener) {
                 listener.onRedditAccountChanged()
             }
@@ -177,7 +175,7 @@ class RedditAccountManager @Inject constructor(
         }
 
         val accounts = this.accounts
-        var selectedAccount: RedditAccount? = null
+        var selectedAccount: RedditAccount?=null
 
         for (account in accounts) {
             if (!account.isAnonymous && account.canonicalUsername == usernameCanonical) {

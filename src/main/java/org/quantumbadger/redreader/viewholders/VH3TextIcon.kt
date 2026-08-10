@@ -60,8 +60,7 @@ class VH3TextIcon(itemView: View) : RecyclerView.ViewHolder(itemView) {
     fun addLinkButton(activity: BaseActivity, url: UriString) {
         val linkButton = BodyElementLinkButton(LinkButtonDetails(url.value, url))
 
-        val linkButtonView =
-            linkButton.generateView(
+        val linkButtonView =             linkButton.generateView(
                 activity,
                 RRThemeAttributes(activity.getApplicationContext()).rrCommentBodyCol,
                 13.0f,

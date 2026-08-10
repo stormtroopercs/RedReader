@@ -79,7 +79,7 @@ class HtmlRawElementImg(
                 DownloadQueueType.IMMEDIATE,
                 activity,
                 object : CacheRequestCallbacks {
-                    var image: Bitmap? = null
+                    var image: Bitmap?=null
 
                     override fun onDataStreamComplete(
                         stream: GenericFactory<SeekableInputStream, IOException?>,
@@ -109,8 +109,7 @@ class HtmlRawElementImg(
                                 )
 
                                 if (image!!.getHeight() > maxHeight) {
-                                    val imageAspectRatio =
-                                        image!!.getHeight().toFloat() / image!!.getWidth()
+                                    val imageAspectRatio =                                         image!!.getHeight().toFloat() / image!!.getWidth()
 
                                     val newImageWidth = maxHeight / imageAspectRatio
 

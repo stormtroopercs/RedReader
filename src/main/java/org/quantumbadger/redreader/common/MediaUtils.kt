@@ -52,7 +52,7 @@ object MediaUtils {
                 }
             }
 
-            var muxer: MediaMuxer? = null
+            var muxer: MediaMuxer?=null
 
             val inputFilesToClose = ArrayList<InputFile>()
 

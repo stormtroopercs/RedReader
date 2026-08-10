@@ -134,8 +134,7 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 		try {
 			val builder: OkHTTPRequest.Builder = OkHTTPRequest.Builder()
 			val headRequest: okhttp3.Request = builder.url(url.value).head().build()
-			val noRedirectsClient =
-				mClient.newBuilder().followRedirects(false).build()
+			val noRedirectsClient = 				mClient.newBuilder().followRedirects(false).build()
 			noRedirectsClient.newCall(headRequest).execute().use { response ->
 				if (!response.isRedirect) {
 					return Result.Err(
@@ -270,7 +269,7 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 							)
 						}
 
-						var bodyBytes: FailedRequestBody? = null
+						var bodyBytes: FailedRequestBody?=null
 
 						if (body != null) {
 							try {
@@ -316,7 +315,7 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 	companion object {
 		private const val TAG = "OKHTTPBackend"
 
-		private var httpBackend: HTTPBackend? = null
+		private var httpBackend: HTTPBackend?=null
 
 		@Synchronized
 		fun getHttpBackend(): HTTPBackend {

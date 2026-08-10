@@ -31,7 +31,7 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
 class ErrorPropertiesDialog private constructor(private val mError: RRError) : PropertiesDialog() {
-    private var mContext: AppCompatActivity? = null
+    private var mContext: AppCompatActivity?=null
 
     override fun interceptBuilder(builder: MaterialAlertDialogBuilder) {
         if ((mError.t !is UnknownHostException) && (mError.t !is SocketTimeoutException) && mError.reportable) {

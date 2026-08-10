@@ -91,18 +91,18 @@ class InboxListingActivity : ViewsBaseActivity() {
         INBOX, SENT, MODMAIL
     }
 
-    private var adapter: GroupedRecyclerViewAdapter? = null
+    private var adapter: GroupedRecyclerViewAdapter?=null
 
-    private var loadingView: LoadingView? = null
-    private var notifications: LinearLayout? = null
+    private var loadingView: LoadingView?=null
+    private var notifications: LinearLayout?=null
 
-    private var request: CacheRequest? = null
+    private var request: CacheRequest?=null
 
-    private var inboxType: InboxType? = null
+    private var inboxType: InboxType?=null
     private var mOnlyShowUnread = false
 
-    private var mTheme: RRThemeAttributes? = null
-    private var mChangeDataManager: RedditChangeDataManager? = null
+    private var mTheme: RRThemeAttributes?=null
+    private var mChangeDataManager: RedditChangeDataManager?=null
 
     private val itemHandler: Handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
@@ -292,8 +292,7 @@ class InboxListingActivity : ViewsBaseActivity() {
 
                         if (listing.children.isEmpty()) {
                             AndroidCommon.runOnUiThread(Runnable {
-                                val emptyView =
-                                    LayoutInflater.from(context).inflate(
+                                val emptyView =                                     LayoutInflater.from(context).inflate(
                                         R.layout.no_items_yet,
                                         notifications,
                                         true
@@ -356,15 +355,12 @@ class InboxListingActivity : ViewsBaseActivity() {
                                 ) {
                                     // TODO make RedditThing generic (and override data)?
 
-                                    val replies
-                                            : ArrayList<MaybeParseError<RedditThing?>> =
-                                        (message.src.replies.value as Listing)
+                                    val replies: ArrayList<MaybeParseError<RedditThing?>> = (message.src.replies.value as Listing)
                                             .data.children
 
                                     for (childMsgValue
                                     in replies) {
-                                        val childMsgRaw =
-                                            (childMsgValue.ok() as RedditThing.Message)
+                                        val childMsgRaw =                                             (childMsgValue.ok() as RedditThing.Message)
                                                 .data
 
                                         val childMsg = RedditPreparedMessage(

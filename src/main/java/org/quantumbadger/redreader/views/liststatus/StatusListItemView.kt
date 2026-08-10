@@ -24,7 +24,7 @@ import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
 open class StatusListItemView(context: Context) : FrameLayout(context) {
     protected val dpScale: Float
 
-    private var contents: View? = null
+    private var contents: View?=null
 
     init {
         dpScale = context.getResources().getDisplayMetrics().density // TODO xml?

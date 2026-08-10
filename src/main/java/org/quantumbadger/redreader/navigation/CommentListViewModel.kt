@@ -193,8 +193,8 @@ class CommentListViewModel(
                 val first = thingResponse.things[0]
                 val second = thingResponse.things[1]
 
-                var postTitle: String? = null
-                var postAuthor: String? = null
+                var postTitle: String?=null
+                var postAuthor: String?=null
 
                 if (first is RedditThing.Listing) {
                     val firstListing = first.data

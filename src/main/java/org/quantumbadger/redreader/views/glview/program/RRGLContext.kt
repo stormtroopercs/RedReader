@@ -28,7 +28,7 @@ class RRGLContext(context: Context) {
     private var mPixelMatrix: FloatArray?
     private var mPixelMatrixOffset = 0
 
-    private var mProgramCurrent: RRGLProgramVertices? = null
+    private var mProgramCurrent: RRGLProgramVertices?=null
 
     private val mContext: Context
 

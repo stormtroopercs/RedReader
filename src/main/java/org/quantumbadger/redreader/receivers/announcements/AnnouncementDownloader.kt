@@ -133,9 +133,7 @@ object AnnouncementDownloader {
                 return Optional.Companion.empty<Announcement?>()
             }
 
-            val announcement
-                    : Announcement =
-                Announcement.Companion.fromPayload(Payload.Companion.fromBytes(HexUtils.fromHex(hex)))
+            val announcement: Announcement=                Announcement.Companion.fromPayload(Payload.Companion.fromBytes(HexUtils.fromHex(hex)))
 
             if (announcement.isExpired()) {
                 Log.i(TAG, "Announcement is expired: " + announcement.id)

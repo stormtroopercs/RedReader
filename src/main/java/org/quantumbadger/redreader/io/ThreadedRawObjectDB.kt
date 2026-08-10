@@ -95,7 +95,7 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
     ) : ReadOperation(timestampBound) {
         override fun run() {
             val existingResult = HashMap<K?, V?>(keys.size)
-            var oldestTimestamp: TimestampUTC? = null
+            var oldestTimestamp: TimestampUTC?=null
 
             synchronized(toWrite) {
                 val iter = keys.iterator()
@@ -165,7 +165,7 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
                         result: HashMap<K?, V?>,
                         timeCached: TimestampUTC
                     ) {
-                        val timestamp: TimestampUTC? = if (outerOldestTimestamp == null)
+                        val timestamp: TimestampUTC?=if (outerOldestTimestamp == null)
                             timeCached
                         else
                             oldest(outerOldestTimestamp, timeCached)

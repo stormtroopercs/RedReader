@@ -49,7 +49,7 @@ class BetterSSB : Observable() {
         foregroundCol: Int = 0,
         backgroundCol: Int = 0,
         scale: Float = 1f,
-        url: String? = null
+        url: String?=null
     ) {
         val strStart = sb.length
         sb.append(str)

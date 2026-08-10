@@ -76,7 +76,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
 
-        val activity: FragmentActivity? = getActivity()
+        val activity: FragmentActivity?=getActivity()
 
         if (activity != null) {
             activity.setTitle(mTitle)
@@ -87,7 +87,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         savedInstanceState: Bundle?,
         rootKey: String?
     ) {
-        val context: Context? = getActivity()
+        val context: Context?=getActivity()
 
         val panel = requireArguments().getString("panel")
         val resource: Int
@@ -237,7 +237,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             CheckBoxPreference > findPreference<Preference?>(getString(R.string.pref_behaviour_notifications_key))
             if (notifPref != null) {
                 notifPref.setOnPreferenceChangeListener(Preference.OnPreferenceChangeListener { preference: Preference?, newValue: Any? ->
-                    val activity: Activity? = getActivity()
+                    val activity: Activity?=getActivity()
                     if (activity is BaseActivity) {
                         // Delay this because the preference hasn't taken effect yet
                         AndroidCommon.UI_THREAD_HANDLER.postDelayed(Runnable {
@@ -307,7 +307,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         if (githubPref != null) {
             githubPref.setOnPreferenceClickListener(Preference.OnPreferenceClickListener { preference: Preference? ->
-                val activity: BaseActivity? = getActivity() as BaseActivity?
+                val activity: BaseActivity?=getActivity() as BaseActivity?
                 if (activity == null) {
                     return@setOnPreferenceClickListener true
                 }
@@ -340,14 +340,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         if (backupPreferencesPref != null) {
             backupPreferencesPref.setOnPreferenceClickListener(Preference.OnPreferenceClickListener { preference: Preference? ->
-                val activity: BaseActivity? = getActivity() as BaseActivity?
+                val activity: BaseActivity?=getActivity() as BaseActivity?
                 if (activity == null) {
                     return@setOnPreferenceClickListener true
                 }
 
                 val utc: TimestampUTC = TimestampUTC.now()
-                val filename
-                        : String = (utc.formatFilenameSafe()
+                val filename: String=(utc.formatFilenameSafe()
                         + ".rr_prefs_backup")
 
                 val intent = Intent(Intent.ACTION_CREATE_DOCUMENT)
@@ -362,8 +361,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             if (data == null || data.getData() == null) {
                                 return@startActivityForResultWithCallback
                             }
-                            val contentResolver
-                                    : ContentResolver = activity.getContentResolver()
+                            val contentResolver: ContentResolver=activity.getContentResolver()
                             PrefsBackup.backup(
                                 activity,
                                 BackupDestination { contentResolver.openOutputStream(data.getData()) },
@@ -403,8 +401,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             if (data == null || data.getData() == null) {
                                 return@startActivityForResultWithCallback
                             }
-                            val contentResolver
-                                    : ContentResolver = activity.getContentResolver()
+                            val contentResolver: ContentResolver=activity.getContentResolver()
                             PrefsBackup.restore(
                                 activity,
                                 BackupSource { contentResolver.openInputStream(data.getData()) },
@@ -615,10 +612,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun showChooseStorageLocationDialog() {
-        val context: Context? = getActivity()
+        val context: Context?=getActivity()
 
-        val currentStorage
-                : String = PrefsUtility.pref_cache_location(context)
+        val currentStorage: String=PrefsUtility.pref_cache_location(context)
 
         val checkPaths: MutableList<File?> = CacheManager.Companion.getCacheDirs(context)
 
@@ -720,7 +716,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun showCacheClearDialog() {
-        val context: Context? = getActivity()
+        val context: Context?=getActivity()
         val cacheManager: CacheManager = CacheManager.Companion.getInstance(context)
 
         val cachesToClear = EnumMap<CacheType?, kotlin.Boolean?>(CacheType::class.java)

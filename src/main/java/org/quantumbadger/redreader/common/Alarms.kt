@@ -43,8 +43,7 @@ object Alarms {
                 flags = flags or PendingIntent.FLAG_IMMUTABLE
             }
 
-            @SuppressLint("UnspecifiedImmutableFlag") val pendingIntent =
-                PendingIntent.getBroadcast(
+            @SuppressLint("UnspecifiedImmutableFlag") val pendingIntent =                 PendingIntent.getBroadcast(
                     context,
                     0,
                     alarmIntent,

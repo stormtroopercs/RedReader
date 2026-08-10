@@ -81,8 +81,7 @@ class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
 
                     layout.addView(bulletItem)
 
-                    (bulletItem.getLayoutParams() as MarginLayoutParams).leftMargin
-                    = (dpScale * (if (paragraph.level == 0) 12 else 24)).toInt()
+                    (bulletItem.getLayoutParams() as MarginLayoutParams).leftMargin = (dpScale * (if (paragraph.level == 0) 12 else 24)).toInt()
                 }
 
                 MarkdownParagraphType.NUMBERED -> {
@@ -101,8 +100,7 @@ class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
 
                     layout.addView(numberedItem)
 
-                    (numberedItem.getLayoutParams() as MarginLayoutParams).leftMargin
-                    = (dpScale * (if (paragraph.level == 0) 12 else 24)).toInt()
+                    (numberedItem.getLayoutParams() as MarginLayoutParams).leftMargin = (dpScale * (if (paragraph.level == 0) 12 else 24)).toInt()
                 }
 
                 MarkdownParagraphType.CODE -> {
@@ -115,8 +113,7 @@ class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
                     layout.addView(tv)
 
                     if (paragraph.parent != null) {
-                        (tv.getLayoutParams() as MarginLayoutParams).topMargin
-                        = if (paragraph.parent.type
+                        (tv.getLayoutParams() as MarginLayoutParams).topMargin = if (paragraph.parent.type
                             == MarkdownParagraphType.CODE
                         )
                             codeLineSpacing
@@ -128,8 +125,7 @@ class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
                 }
 
                 MarkdownParagraphType.HEADER -> {
-                    val underlinedText =
-                        SpannableString(paragraph.spanned)
+                    val underlinedText =                         SpannableString(paragraph.spanned)
                     underlinedText.setSpan(
                         UnderlineSpan(),
                         0,
@@ -139,16 +135,14 @@ class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
                     tv.setText(underlinedText)
                     layout.addView(tv)
                     if (paragraph.parent != null) {
-                        (tv.getLayoutParams() as MarginLayoutParams).topMargin =
-                            paragraphSpacing
+                        (tv.getLayoutParams() as MarginLayoutParams).topMargin =                             paragraphSpacing
                     }
                 }
 
                 MarkdownParagraphType.HLINE -> {
                     val hLine = View(activity)
                     layout.addView(hLine)
-                    val hLineParams =
-                        hLine.getLayoutParams() as MarginLayoutParams
+                    val hLineParams =                         hLine.getLayoutParams() as MarginLayoutParams
                     hLineParams.width = ViewGroup.LayoutParams.MATCH_PARENT
                     hLineParams.height = dpScale.toInt()
                     hLineParams.setMargins(
@@ -171,10 +165,8 @@ class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
                         quoteLayout.addView(quoteIndent)
                         quoteIndent.setBackgroundColor(Color.rgb(128, 128, 128))
                         quoteIndent.getLayoutParams().width = quoteBarWidth
-                        quoteIndent.getLayoutParams().height =
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        (quoteIndent.getLayoutParams() as MarginLayoutParams).rightMargin
-                        = quoteBarWidth
+                        quoteIndent.getLayoutParams().height =                             ViewGroup.LayoutParams.MATCH_PARENT
+                        (quoteIndent.getLayoutParams() as MarginLayoutParams).rightMargin = quoteBarWidth
                         quoteIndent.setLayoutParams(quoteIndent.getLayoutParams())
                         lvl++
                     }
@@ -186,13 +178,9 @@ class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
                         if (paragraph.parent.type
                             == MarkdownParagraphType.QUOTE
                         ) {
-                            (tv.getLayoutParams() as MarginLayoutParams).topMargin
-                            =
-                            paragraphSpacing
+                            (tv.getLayoutParams() as MarginLayoutParams).topMargin =                             paragraphSpacing
                         } else {
-                            (quoteLayout.getLayoutParams() as MarginLayoutParams).topMargin
-                            =
-                            paragraphSpacing
+                            (quoteLayout.getLayoutParams() as MarginLayoutParams).topMargin =                             paragraphSpacing
                         }
                     }
                 }
@@ -200,8 +188,7 @@ class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
                 MarkdownParagraphType.TEXT -> {
                     layout.addView(tv)
                     if (paragraph.parent != null) {
-                        (tv.getLayoutParams() as MarginLayoutParams).topMargin =
-                            paragraphSpacing
+                        (tv.getLayoutParams() as MarginLayoutParams).topMargin =                             paragraphSpacing
                     }
                 }
 
@@ -212,8 +199,7 @@ class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
 
             if (showLinkButtons) {
                 for (link in paragraph.links) {
-                    val ldv =
-                        LinkDetailsView(activity, link.title, link.subtitle)
+                    val ldv =                         LinkDetailsView(activity, link.title, link.subtitle)
                     layout.addView(ldv)
 
                     val linkMarginPx = Math.round(dpScale * 8)

@@ -147,9 +147,9 @@ class RRDropdownMenuScope(
 	@Composable
 	fun Item(
 		@StringRes text: Int,
-		@DrawableRes icon: Int? = null,
-		radioButtonWithValue: Boolean? = null,
-		checkboxWithValue: Boolean? = null,
+		@DrawableRes icon: Int?=null,
+		radioButtonWithValue: Boolean?=null,
+		checkboxWithValue: Boolean?=null,
 		onClick: () -> Unit,
 		dismissOnClick: Boolean = true
 	) {
@@ -172,7 +172,7 @@ class RRDropdownMenuScope(
 	@Composable
 	fun ItemPrefBool(
 		@StringRes text: Int,
-		@DrawableRes icon: Int? = null,
+		@DrawableRes icon: Int?=null,
 		pref: Preference<Boolean>,
 		dismissOnClick: Boolean = false
 	) {
@@ -246,7 +246,7 @@ class RRRadioScope<T>(
 	fun RRDropdownMenuScope.Option(
 		value: T,
 		@StringRes text: Int,
-		@DrawableRes icon: Int? = null,
+		@DrawableRes icon: Int?=null,
 	) {
 		Item(
 			text = text,
@@ -540,8 +540,7 @@ private fun calculateTransformOrigin(
 		menuBounds.right <= parentBounds.left -> 1f
 		menuBounds.width == 0 -> 0f
 		else -> {
-			val intersectionCenter =
-				(
+			val intersectionCenter = 				(
 						max(parentBounds.left, menuBounds.left) +
 								min(parentBounds.right, menuBounds.right)
 						) / 2
@@ -553,8 +552,7 @@ private fun calculateTransformOrigin(
 		menuBounds.bottom <= parentBounds.top -> 1f
 		menuBounds.height == 0 -> 0f
 		else -> {
-			val intersectionCenter =
-				(
+			val intersectionCenter = 				(
 						max(parentBounds.top, menuBounds.top) +
 								min(parentBounds.bottom, menuBounds.bottom)
 						) / 2

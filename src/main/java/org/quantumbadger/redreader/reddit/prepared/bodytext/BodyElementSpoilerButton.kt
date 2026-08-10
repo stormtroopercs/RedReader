@@ -53,8 +53,7 @@ class BodyElementSpoilerButton(
 
             scrollView.addView(view)
 
-            val layoutParams
-                    : MarginLayoutParams = view.getLayoutParams() as FrameLayout.LayoutParams
+            val layoutParams: MarginLayoutParams=view.getLayoutParams() as FrameLayout.LayoutParams
 
             val marginPx = dpToPixels(activity, 14f)
             layoutParams.setMargins(marginPx, marginPx, marginPx, marginPx)

@@ -36,12 +36,10 @@ object JsonUtils {
 	}
 
 	@Throws(IOException::class)
-	fun decodeRedditThingFromStream(stream: InputStream): RedditThing =
-		decodeFromStream(RedditThing.serializer(), stream)
+	fun decodeRedditThingFromStream(stream: InputStream): RedditThing = 		decodeFromStream(RedditThing.serializer(), stream)
 
 	@Throws(IOException::class)
-	fun decodeRedditThingResponseFromStream(stream: InputStream): RedditThingResponse =
-		decodeFromStream(RedditThingResponse.serializer(), stream)
+	fun decodeRedditThingResponseFromStream(stream: InputStream): RedditThingResponse = 		decodeFromStream(RedditThingResponse.serializer(), stream)
 
 	@OptIn(ExperimentalSerializationApi::class)
 	private fun <T> decodeFromStream(serializer: KSerializer<T>, stream: InputStream): T {

@@ -104,8 +104,7 @@ class UserCommentListingURL internal constructor(
                     }
                 }
 
-                pathSegments
-                = pathSegmentsFiltered.toTypedArray<String?>()
+                pathSegments = pathSegmentsFiltered.toTypedArray<String?>()
             }
 
             val order: UserCommentSort?
@@ -129,15 +128,15 @@ class UserCommentListingURL internal constructor(
             }
 
             // TODO validate username with regex
-            val username: String? = pathSegments[1]
+            val username: String?=pathSegments[1]
             val typeName = pathSegments[2]
 
             if (!typeName.equals("comments", ignoreCase = true)) {
                 return null
             }
 
-            var limit: Int? = null
-            var after: String? = null
+            var limit: Int?=null
+            var after: String?=null
 
             for (parameterKey in getUriQueryParameterNames(uri)) {
                 if (parameterKey.equals("after", ignoreCase = true)) {

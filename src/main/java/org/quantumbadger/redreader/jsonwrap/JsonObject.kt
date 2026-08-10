@@ -218,11 +218,9 @@ class JsonObject(parser: JsonParser) : JsonValue(),
                 } else if (fieldType == Double::class.java || fieldType == Double.TYPE) {
                     objectField[o] = jsonValue.asDouble()
                 } else if (fieldType == Int::class.java || fieldType == Int.TYPE) {
-                    objectField[o] =
-                        if (jsonValue.asLong() == null) null else jsonValue.asLong()!!.toInt()
+                    objectField[o] =                         if (jsonValue.asLong() == null) null else jsonValue.asLong()!!.toInt()
                 } else if (fieldType == Float::class.java || fieldType == Float.TYPE) {
-                    objectField[o] =
-                        if (jsonValue.asDouble() == null) null else jsonValue.asDouble()!!.toFloat()
+                    objectField[o] =                         if (jsonValue.asDouble() == null) null else jsonValue.asDouble()!!.toFloat()
                 } else if (fieldType == Boolean::class.java || fieldType == java.lang.Boolean.TYPE) {
                     objectField[o] = jsonValue.asBoolean()
                 } else if (fieldType == String::class.java) {

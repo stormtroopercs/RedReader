@@ -100,8 +100,7 @@ class RedditFlairChoice private constructor(
             )
         }
 
-        val CREATOR
-                : Parcelable.Creator<RedditFlairChoice?> =
+        val CREATOR: Parcelable.Creator<RedditFlairChoice?> =
             object : Parcelable.Creator<RedditFlairChoice?> {
                 override fun createFromParcel(`in`: Parcel): RedditFlairChoice {
                     val text = `in`.readString()

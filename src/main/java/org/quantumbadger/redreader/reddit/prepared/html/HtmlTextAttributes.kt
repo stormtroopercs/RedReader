@@ -29,5 +29,5 @@ class HtmlTextAttributes {
     var extraLarge: Int = 0
     var large: Int = 0
 
-    var href: UriString? = null
+    var href: UriString?=null
 }

@@ -41,8 +41,7 @@ object RedditTimestampUTCSerializer : KSerializer<RedditTimestampUTC> {
 	override val descriptor: SerialDescriptor
 		get() = PrimitiveSerialDescriptor("RedditTimestampUTC", PrimitiveKind.DOUBLE)
 
-	override fun deserialize(decoder: Decoder) =
-		RedditTimestampUTC(value = TimestampUTC.fromUtcSecs((decoder.decodeDouble().toLong())))
+	override fun deserialize(decoder: Decoder) = 		RedditTimestampUTC(value = TimestampUTC.fromUtcSecs((decoder.decodeDouble().toLong())))
 
 	override fun serialize(encoder: Encoder, value: RedditTimestampUTC) {
 		encoder.encodeDouble(value.value.toUtcSecs().toDouble())
@@ -50,8 +49,7 @@ object RedditTimestampUTCSerializer : KSerializer<RedditTimestampUTC> {
 }
 
 object TimestampUTCParceler : Parceler<TimestampUTC> {
-	override fun create(parcel: Parcel)
-			= TimestampUTC.fromUtcMs(parcel.readLong())
+	override fun create(parcel: Parcel) = TimestampUTC.fromUtcMs(parcel.readLong())
 
 	override fun TimestampUTC.write(parcel: Parcel, flags: Int) {
 		parcel.writeLong(toUtcMs())

@@ -143,8 +143,7 @@ class RedditOAuth @Inject constructor(
 
     fun needsRelogin(user: RedditAccount) = !user.isAnonymous && user.clientId != cachedAppId.hash
 
-    fun anyNeedRelogin(context: Context) =
-        RedditAccountManager.getAnon() // Placeholder - will use Hilt-injected manager
+    fun anyNeedRelogin(context: Context) =         RedditAccountManager.getAnon() // Placeholder - will use Hilt-injected manager
 
     private fun handleRefreshTokenError(
         exception: Throwable?,
@@ -930,8 +929,7 @@ class RedditOAuth @Inject constructor(
         SUCCESS, USER_REFUSED_PERMISSION, CONNECTION_ERROR, UNKNOWN_ERROR;
 
         companion object {
-            fun fromFetchRefreshTokenStatus(status: FetchRefreshTokenResultStatus?) =
-                when (status) {
+            fun fromFetchRefreshTokenStatus(status: FetchRefreshTokenResultStatus?) =                 when (status) {
                     FetchRefreshTokenResultStatus.SUCCESS -> SUCCESS
                     FetchRefreshTokenResultStatus.USER_REFUSED_PERMISSION -> USER_REFUSED_PERMISSION
                     FetchRefreshTokenResultStatus.INVALID_REQUEST -> UNKNOWN_ERROR
@@ -941,8 +939,7 @@ class RedditOAuth @Inject constructor(
                     else -> UNKNOWN_ERROR
                 }
 
-            fun fromFetchUserInfoStatus(status: FetchUserInfoResultStatus?) =
-                when (status) {
+            fun fromFetchUserInfoStatus(status: FetchUserInfoResultStatus?) =                 when (status) {
                     FetchUserInfoResultStatus.SUCCESS -> SUCCESS
                     FetchUserInfoResultStatus.INVALID_RESPONSE -> UNKNOWN_ERROR
                     FetchUserInfoResultStatus.CONNECTION_ERROR -> CONNECTION_ERROR

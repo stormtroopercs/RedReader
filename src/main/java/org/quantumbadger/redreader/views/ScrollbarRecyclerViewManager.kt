@@ -43,13 +43,10 @@ class ScrollbarRecyclerViewManager(
     init {
         this.outerView = LayoutInflater.from(context)
             .inflate(R.layout.scrollbar_recyclerview, root, attachToRoot)
-        mSwipeRefreshLayout
-        = outerView.findViewById<SwipeRefreshLayout>(R.id.scrollbar_recyclerview_refreshlayout)
-        this.recyclerView =
-            outerView.findViewById<RecyclerView>(R.id.scrollbar_recyclerview_recyclerview)
+        mSwipeRefreshLayout = outerView.findViewById<SwipeRefreshLayout>(R.id.scrollbar_recyclerview_refreshlayout)
+        this.recyclerView =             outerView.findViewById<RecyclerView>(R.id.scrollbar_recyclerview_recyclerview)
         mScrollbar = outerView.findViewById<View>(R.id.scrollbar_recyclerview_scrollbar)
-        mScrollbarFrame =
-            outerView.findViewById<FrameLayout>(R.id.scrollbar_recyclerview_scrollbarframe)
+        mScrollbarFrame =             outerView.findViewById<FrameLayout>(R.id.scrollbar_recyclerview_scrollbarframe)
 
         mSwipeRefreshLayout.setEnabled(false)
 

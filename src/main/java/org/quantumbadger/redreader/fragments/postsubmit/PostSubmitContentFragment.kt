@@ -119,28 +119,28 @@ class PostSubmitContentFragment : Fragment() {
 
     private var mActive = true
 
-    private var mContext: Context? = null
+    private var mContext: Context?=null
 
-    private var mSelectedAccount: RedditAccount? = null
-    private var mSelectedSubreddit: SubredditCanonicalId? = null
+    private var mSelectedAccount: RedditAccount?=null
+    private var mSelectedSubreddit: SubredditCanonicalId?=null
 
-    private var mLoadingSpinnerView: View? = null
-    private var mMainControls: View? = null
+    private var mLoadingSpinnerView: View?=null
+    private var mMainControls: View?=null
 
-    private var mTypeSpinner: MaterialAutoCompleteTextView? = null
-    private var mFlairSpinner: MaterialAutoCompleteTextView? = null
-    private var mFlairSpinnerLayout: TextInputLayout? = null
-    private var mTitleEdit: TextInputEditText? = null
+    private var mTypeSpinner: MaterialAutoCompleteTextView?=null
+    private var mFlairSpinner: MaterialAutoCompleteTextView?=null
+    private var mFlairSpinnerLayout: TextInputLayout?=null
+    private var mTitleEdit: TextInputEditText?=null
 
-    private var mTextEditBodyText: TextInputEditText? = null
-    private var mTextEditLayoutBodyText: TextInputLayout? = null
+    private var mTextEditBodyText: TextInputEditText?=null
+    private var mTextEditLayoutBodyText: TextInputLayout?=null
 
-    private var mTextEditBodyUrl: TextInputEditText? = null
-    private var mTextEditLayoutBodyUrl: TextInputLayout? = null
+    private var mTextEditBodyUrl: TextInputEditText?=null
+    private var mTextEditLayoutBodyUrl: TextInputLayout?=null
 
-    private var mSendRepliesToInboxCheckbox: CheckBox? = null
-    private var mMarkAsNsfwCheckbox: CheckBox? = null
-    private var mMarkAsSpoilerCheckbox: CheckBox? = null
+    private var mSendRepliesToInboxCheckbox: CheckBox?=null
+    private var mMarkAsNsfwCheckbox: CheckBox?=null
+    private var mMarkAsSpoilerCheckbox: CheckBox?=null
 
     private val mFlairIds = HashMap<String?, String?>()
 
@@ -179,8 +179,7 @@ class PostSubmitContentFragment : Fragment() {
 
         mContext = Objects.requireNonNull<ViewGroup?>(container).getContext()
 
-        val accountManager: RedditAccountManager =
-            RedditAccountManager.Companion.getInstance(mContext)
+        val accountManager: RedditAccountManager =             RedditAccountManager.Companion.getInstance(mContext)
 
         val args: Args = Args.Companion.fromBundle(requireArguments())
 
@@ -477,10 +476,9 @@ class PostSubmitContentFragment : Fragment() {
                     true
                 })
 
-                val cm: CacheManager? = CacheManager.Companion.getInstance(mContext)
+                val cm: CacheManager?=CacheManager.Companion.getInstance(mContext)
 
-                val handler
-                        : SubmitResponseHandler = object : SubmitResponseHandler(
+                val handler: SubmitResponseHandler=object : SubmitResponseHandler(
                     activity as AppCompatActivity
                 ) {
                     override fun onSubmitErrors(errors: ArrayList<String?>) {
@@ -607,10 +605,10 @@ class PostSubmitContentFragment : Fragment() {
 
         private val POST_TYPES = arrayOf<String?>(POST_TYPE_LINK, POST_TYPE_SELF, POST_TYPE_IMGUR)
 
-        private var lastType: String? = null
-        private var lastTitle: String? = null
-        private var lastBodyText: String? = null
-        private var lastBodyUrl: String? = null
+        private var lastType: String?=null
+        private var lastTitle: String?=null
+        private var lastBodyText: String?=null
+        private var lastBodyUrl: String?=null
         private var lastNsfw = false
         private var lastSpoiler = false
         private var lastInbox = false

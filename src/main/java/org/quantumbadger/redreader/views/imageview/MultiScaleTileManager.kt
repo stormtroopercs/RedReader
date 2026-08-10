@@ -30,8 +30,7 @@ class MultiScaleTileManager(
     private val mLock = Any()
 
     init {
-        mTileLoaders =
-            arrayOfNulls<ImageViewTileLoader>(sampleSizeToScaleIndex(MAX_SAMPLE_SIZE) + 1)
+        mTileLoaders =             arrayOfNulls<ImageViewTileLoader>(sampleSizeToScaleIndex(MAX_SAMPLE_SIZE) + 1)
 
         for (s in mTileLoaders.indices) {
             mTileLoaders[s] = ImageViewTileLoader(

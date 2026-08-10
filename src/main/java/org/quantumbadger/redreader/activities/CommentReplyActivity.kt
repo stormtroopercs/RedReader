@@ -69,12 +69,12 @@ class CommentReplyActivity : ViewsBaseActivity() {
         MESSAGE, COMMENT_OR_POST
     }
 
-    private var usernameSpinner: Spinner? = null
-    private var textEdit: EditText? = null
-    private var inboxReplies: CheckBox? = null
-    private var parentIdAndType: RedditIdAndType? = null
+    private var usernameSpinner: Spinner?=null
+    private var textEdit: EditText?=null
+    private var inboxReplies: CheckBox?=null
+    private var parentIdAndType: RedditIdAndType?=null
 
-    private var mParentType: ParentType? = null
+    private var mParentType: ParentType?=null
 
     private var mDraftReset = false
     protected override fun onCreate(savedInstanceState: Bundle?) {
@@ -217,8 +217,7 @@ class CommentReplyActivity : ViewsBaseActivity() {
                 true
             })
 
-            val handler
-                    : SubmitResponseHandler = object : SubmitResponseHandler(this) {
+            val handler: SubmitResponseHandler=object : SubmitResponseHandler(this) {
                 override fun onSubmitErrors(errors: ArrayList<String?>) {
                     AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
                         val errorsJoined = StringUtils.join(errors, " ")
@@ -278,8 +277,7 @@ class CommentReplyActivity : ViewsBaseActivity() {
                 }
             }
 
-            val inboxHandler
-                    : ActionResponseHandler = object : ActionResponseHandler(this) {
+            val inboxHandler: ActionResponseHandler=object : ActionResponseHandler(this) {
                 override fun onSuccess() {
                     // Do nothing (result expected)
                 }
@@ -302,7 +300,7 @@ class CommentReplyActivity : ViewsBaseActivity() {
             val accounts: ArrayList<RedditAccount> = RedditAccountManager.Companion.getInstance(
                 this
             ).getAccounts()
-            var selectedAccount: RedditAccount? = null
+            var selectedAccount: RedditAccount?=null
 
             for (account in accounts) {
                 if (!account.isAnonymous
@@ -360,8 +358,7 @@ class CommentReplyActivity : ViewsBaseActivity() {
                         // set the picture into textedit as a link: [Picture](PictureURL)
                         val existingText = textEdit!!.getText().toString()
                         val picturePretext = getString(string.comment_picture_pretext)
-                        val linkText =
-                            "[" + picturePretext + "](" + uploadedImageUrl + ")"
+                        val linkText =                             "[" + picturePretext + "](" + uploadedImageUrl + ")"
                         val combinedText = existingText + " " + linkText
                         textEdit!!.setText(combinedText)
                     }
@@ -370,8 +367,8 @@ class CommentReplyActivity : ViewsBaseActivity() {
     }
 
     companion object {
-        private var lastText: String? = null
-        private var lastParentIdAndType: RedditIdAndType? = null
+        private var lastText: String?=null
+        private var lastParentIdAndType: RedditIdAndType?=null
 
         const val PARENT_TYPE: String = "parentType"
         const val PARENT_TYPE_MESSAGE: String = "parentTypeMessage"

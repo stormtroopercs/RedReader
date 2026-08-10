@@ -39,8 +39,8 @@ import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
 import org.quantumbadger.redreader.views.RedditPostView.PostSelectionListener
 
 class WebViewActivity : ViewsBaseActivity(), PostSelectionListener {
-    private var webView: WebViewFragment? = null
-    private var mPost: RedditPost? = null
+    private var webView: WebViewFragment?=null
+    private var mPost: RedditPost?=null
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         PrefsUtility.applyTheme(this)

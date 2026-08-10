@@ -40,7 +40,7 @@ class LoadMoreCommentsView(
 ) : LinearLayout(context) {
     private val mIndentView: IndentView
     private val mTitleView: TextView
-    private var mItem: RedditCommentListItem? = null
+    private var mItem: RedditCommentListItem?=null
 
     init {
         setOrientation(VERTICAL)
@@ -112,8 +112,7 @@ class LoadMoreCommentsView(
             if (mCommentListingURL.pathType()
                 == RedditURLParser.POST_COMMENT_LISTING_URL
             ) {
-                val listingUrl =
-                    mCommentListingURL.asPostCommentListURL()
+                val listingUrl =                     mCommentListingURL.asPostCommentListURL()
 
                 val commentIds = ArrayList<String?>(16)
                 for (url in mItem!!.asLoadMore()
@@ -121,8 +120,7 @@ class LoadMoreCommentsView(
                     commentIds.add(url.commentId)
                 }
 
-                val intent =
-                    Intent(context, MoreCommentsListingActivity::class.java)
+                val intent =                     Intent(context, MoreCommentsListingActivity::class.java)
                 intent.putExtra("postId", listingUrl.postId)
                 intent.putStringArrayListExtra("commentIds", commentIds)
                 context.startActivity(intent)

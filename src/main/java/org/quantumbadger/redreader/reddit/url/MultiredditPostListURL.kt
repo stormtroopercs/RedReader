@@ -146,9 +146,9 @@ class MultiredditPostListURL private constructor(
         }
 
         fun parse(uri: Uri): MultiredditPostListURL? {
-            var limit: Int? = null
-            var before: String? = null
-            var after: RedditIdAndType? = null
+            var limit: Int?=null
+            var before: String?=null
+            var after: RedditIdAndType?=null
 
             for (parameterKey in getUriQueryParameterNames(uri)) {
                 if (parameterKey.equals("after", ignoreCase = true)) {
@@ -182,8 +182,7 @@ class MultiredditPostListURL private constructor(
                     }
                 }
 
-                pathSegments
-                = pathSegmentsFiltered.toTypedArray<String?>()
+                pathSegments = pathSegmentsFiltered.toTypedArray<String?>()
             }
 
             val order: PostSort?

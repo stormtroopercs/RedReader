@@ -79,8 +79,7 @@ class SubredditCanonicalId(name: String) : Comparable<SubredditCanonicalId?>, Pa
     }
 
     companion object {
-        val CREATOR
-                : Parcelable.Creator<SubredditCanonicalId?> =
+        val CREATOR: Parcelable.Creator<SubredditCanonicalId?> =
             object : Parcelable.Creator<SubredditCanonicalId?> {
                 override fun createFromParcel(`in`: Parcel): SubredditCanonicalId {
                     try {

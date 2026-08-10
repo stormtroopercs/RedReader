@@ -42,10 +42,10 @@ class PermanentCache<K, V : WritableObject<K?>?, F>
     ) {
         val keysRemaining = HashSet<K?>(keys)
         val cacheResult = HashMap<K?, V?>(keys.size)
-        var oldestTimestamp: TimestampUTC? = null
+        var oldestTimestamp: TimestampUTC?=null
 
         for (key in keys) {
-            val entry: CacheEntry? = cached.get(key)
+            val entry: CacheEntry?=cached.get(key)
             if (entry != null) {
                 val value: V? = entry.data
                 if (timestampBound.verifyTimestamp(value!!.getTimestamp())) {
@@ -80,7 +80,7 @@ class PermanentCache<K, V : WritableObject<K?>?, F>
                     ) {
                         cacheResult.putAll(result)
 
-                        val timestamp: TimestampUTC? = if (outerOldestTimestamp == null)
+                        val timestamp: TimestampUTC?=if (outerOldestTimestamp == null)
                             timeCached
                         else
                             oldest(outerOldestTimestamp, timeCached)
@@ -112,7 +112,7 @@ class PermanentCache<K, V : WritableObject<K?>?, F>
         updatedVersionListener: UpdatedVersionListener<K?, V?>?
     ) {
         if (timestampBound != null) {
-            val existingEntry: CacheEntry? = cached.get(key)
+            val existingEntry: CacheEntry?=cached.get(key)
             if (existingEntry != null) {
                 val existing: V? = existingEntry.data
                 if (timestampBound.verifyTimestamp(existing!!.getTimestamp())) {
@@ -156,7 +156,7 @@ class PermanentCache<K, V : WritableObject<K?>?, F>
 
     @Synchronized
     private fun put(value: V?, writeDown: Boolean) {
-        val oldEntry: CacheEntry? = cached.get(value!!.getKey())
+        val oldEntry: CacheEntry?=cached.get(value!!.getKey())
 
         if (oldEntry != null) {
             cached.put(value.getKey(), PermanentCache.CacheEntry(value, oldEntry.listeners))
@@ -173,7 +173,7 @@ class PermanentCache<K, V : WritableObject<K?>?, F>
     @Synchronized
     private fun put(values: MutableCollection<V?>, writeDown: Boolean) {
         for (value in values) {
-            val oldEntry: CacheEntry? = cached.get(value!!.getKey())
+            val oldEntry: CacheEntry?=cached.get(value!!.getKey())
 
             if (oldEntry != null) {
                 cached.put(value.getKey(), PermanentCache.CacheEntry(value, oldEntry.listeners))

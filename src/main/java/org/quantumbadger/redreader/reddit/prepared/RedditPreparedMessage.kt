@@ -107,7 +107,7 @@ class RedditPreparedMessage(
                 )
             }
         } else {
-            val author: String? = General.nullAlternative<String>(
+            val author: String?=General.nullAlternative<String>(
                 org.quantumbadger.redreader.common.General.mapIfNotNull<UrlEncodedString?, String>(
                     src.author,
                     UrlEncodedString::decoded

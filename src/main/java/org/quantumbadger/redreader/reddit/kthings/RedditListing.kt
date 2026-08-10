@@ -24,6 +24,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Parcelize
 data class RedditListing(
-	val after: String? = null,
+	val after: String?=null,
 	val children: ArrayList<MaybeParseError<RedditThing>>
 ) : Parcelable

@@ -109,8 +109,7 @@ class RedditParsedComment(
                 continue
             }
 
-            val flairEmoteObject =
-                (flairEmoteData as MaybeParseError.Ok<FlairEmoteData>)
+            val flairEmoteObject =                 (flairEmoteData as MaybeParseError.Ok<FlairEmoteData>)
                     .value
 
             val objectType = flairEmoteObject.e
@@ -130,7 +129,7 @@ class RedditParsedComment(
                         DownloadQueueType.IMMEDIATE,
                         activity,
                         object : CacheRequestCallbacks {
-                            var image: Bitmap? = null
+                            var image: Bitmap?=null
 
                             override fun onDataStreamComplete(
                                 stream: GenericFactory<SeekableInputStream, IOException?>,
@@ -160,8 +159,7 @@ class RedditParsedComment(
                                         )
 
                                         if (image!!.getHeight() > maxHeight) {
-                                            val imageAspectRatio =
-                                                image!!.getHeight().toFloat() / image!!.getWidth()
+                                            val imageAspectRatio =                                                 image!!.getHeight().toFloat() / image!!.getWidth()
 
                                             val newImageWidth = maxHeight / imageAspectRatio
 

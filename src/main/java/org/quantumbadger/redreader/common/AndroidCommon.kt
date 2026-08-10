@@ -148,7 +148,7 @@ object AndroidCommon {
 	@JvmStatic
 	fun promptForNotificationPermission(
         activity: BaseActivity,
-        onDisabled: Runnable? = null
+        onDisabled: Runnable?=null
 	) {
 		if (Build.VERSION.SDK_INT < 33) {
 			return

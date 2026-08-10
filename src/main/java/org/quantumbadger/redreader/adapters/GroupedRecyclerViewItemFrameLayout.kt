@@ -26,7 +26,7 @@ internal class GroupedRecyclerViewItemFrameLayout(private val mChildView: View) 
     GroupedRecyclerViewAdapter.Item<Any?>() {
     private var mHidden = false
 
-    private var mParent: FrameLayout? = null
+    private var mParent: FrameLayout?=null
 
     override fun getViewType(): Class<*> {
         return this.javaClass

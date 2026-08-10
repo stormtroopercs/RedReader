@@ -32,7 +32,6 @@ class DownloadStrategyIfNotCached private constructor() : DownloadStrategy {
     }
 
     companion object {
-        val INSTANCE
-                : DownloadStrategyIfNotCached = DownloadStrategyIfNotCached()
+        val INSTANCE: DownloadStrategyIfNotCached=DownloadStrategyIfNotCached()
     }
 }

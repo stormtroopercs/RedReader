@@ -204,9 +204,7 @@ object PrefsBackup {
                         Log.i(TAG, "Restoring " + restorePrefs.size + " value(s)")
                         General.getSharedPrefs(activity)
                             .performActionWithWriteLock(Consumer { sharedPrefs: SharedPreferences? ->
-                                val keysToRemove
-                                        : HashSet<String?> =
-                                    HashSet<String?>(sharedPrefs.getAll().keys)
+                                val keysToRemove: HashSet<String?> = HashSet<String?>(sharedPrefs.getAll().keys)
                                 for (ignoredPref in IGNORED_PREFS) {
                                     keysToRemove.remove(ignoredPref)
                                 }

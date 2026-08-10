@@ -81,8 +81,7 @@ class RedditPostHeaderView(
         title.setTextColor(Color.WHITE)
         greyHeader.addView(title)
 
-        val subtitleFontScale =
-            PrefsUtility.appearance_fontscale_post_header_subtitles()
+        val subtitleFontScale =             PrefsUtility.appearance_fontscale_post_header_subtitles()
 
         subtitle = TextView(activity)
         subtitle.setTextSize(13.0f * subtitleFontScale)
@@ -93,8 +92,7 @@ class RedditPostHeaderView(
         greyHeader.addView(subtitle)
 
         run {
-            val appearance =
-                activity.obtainStyledAttributes(intArrayOf(R.attr.rrPostListHeaderBackgroundCol))
+            val appearance =                 activity.obtainStyledAttributes(intArrayOf(R.attr.rrPostListHeaderBackgroundCol))
             greyHeader.setBackgroundColor(appearance.getColor(0, General.COLOR_INVALID))
             appearance.recycle()
         }
@@ -117,20 +115,16 @@ class RedditPostHeaderView(
 
         addView(greyHeader)
 
-        val currentUser: RedditAccount =
-            RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
+        val currentUser: RedditAccount =             RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
 
         if (!currentUser.isAnonymous) {
             // A user is logged in
 
-            val changeDataManager
-                    : RedditChangeDataManager =
-                RedditChangeDataManager.Companion.getInstance(currentUser)
+            val changeDataManager: RedditChangeDataManager=                RedditChangeDataManager.Companion.getInstance(currentUser)
             val changeListener: RedditChangeDataManager.Listener
 
             if (!PrefsUtility.pref_appearance_hide_headertoolbar_commentlist()) {
-                val buttons =
-                    inflate(activity, R.layout.post_header_toolbar, this)
+                val buttons =                     inflate(activity, R.layout.post_header_toolbar, this)
                         .findViewById<LinearLayout>(R.id.post_toolbar_layout)
 
                 for (i in 0..<buttons.getChildCount()) {
@@ -138,20 +132,13 @@ class RedditPostHeaderView(
                     TooltipCompat.setTooltipText(button, button.getContentDescription())
                 }
 
-                val buttonAddUpvote =
-                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_add_upvote)
-                val buttonRemoveUpvote =
-                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_remove_upvote)
-                val buttonAddDownvote =
-                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_add_downvote)
-                val buttonRemoveDownvote =
-                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_remove_downvote)
-                val buttonReply =
-                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_reply)
-                val buttonShare =
-                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_share)
-                val buttonMore =
-                    buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_more)
+                val buttonAddUpvote =                     buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_add_upvote)
+                val buttonRemoveUpvote =                     buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_remove_upvote)
+                val buttonAddDownvote =                     buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_add_downvote)
+                val buttonRemoveDownvote =                     buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_remove_downvote)
+                val buttonReply =                     buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_reply)
+                val buttonShare =                     buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_share)
+                val buttonMore =                     buttons.findViewById<ImageButton>(R.id.post_toolbar_botton_more)
 
                 buttonAddUpvote.setOnClickListener(OnClickListener { v: View? ->
                     post.performAction(
@@ -196,8 +183,7 @@ class RedditPostHeaderView(
                     )
                 })
 
-                changeListener =
-                    RedditChangeDataManager.Listener { thingIdAndType: RedditIdAndType? ->
+                changeListener =                     RedditChangeDataManager.Listener { thingIdAndType: RedditIdAndType? ->
                         subtitle.setText(post.buildSubtitle(activity, true))
                         subtitle.setContentDescription(
                             post.buildAccessibilitySubtitle(activity, true)
@@ -228,8 +214,7 @@ class RedditPostHeaderView(
                         }
                     }
             } else {
-                changeListener =
-                    RedditChangeDataManager.Listener { thingIdAndType: RedditIdAndType? ->
+                changeListener =                     RedditChangeDataManager.Listener { thingIdAndType: RedditIdAndType? ->
                         subtitle.setText(post.buildSubtitle(activity, true))
                         subtitle.setContentDescription(
                             post.buildAccessibilitySubtitle(activity, true)
@@ -237,12 +222,12 @@ class RedditPostHeaderView(
                     }
             }
 
-            mChangeListenerAddTask = Runnable? {
+            mChangeListenerAddTask = Runnable {
                 changeDataManager.addListener(post.src.getIdAndType(), changeListener)
                 changeListener.onRedditDataChange(post.src.getIdAndType())
             }
 
-            mChangeListenerRemoveTask = Runnable? {
+            mChangeListenerRemoveTask = Runnable {
                 changeDataManager.removeListener(
                     post.src.getIdAndType(),
                     changeListener

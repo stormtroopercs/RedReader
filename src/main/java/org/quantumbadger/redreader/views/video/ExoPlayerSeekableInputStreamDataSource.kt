@@ -32,7 +32,7 @@ class ExoPlayerSeekableInputStreamDataSource(
     isNetwork: Boolean,
     private val mStreamFactory: GenericFactory<SeekableInputStream?, IOException?>
 ) : BaseDataSource(isNetwork) {
-    private var mCurrentStream: SeekableInputStream? = null
+    private var mCurrentStream: SeekableInputStream?=null
 
     @Throws(IOException::class)
     override fun open(dataSpec: DataSpec): Long {
@@ -85,6 +85,6 @@ class ExoPlayerSeekableInputStreamDataSource(
     }
 
     companion object {
-        val URI: Uri? = Uri.parse("redreader://video")
+        val URI: Uri?=Uri.parse("redreader://video")
     }
 }

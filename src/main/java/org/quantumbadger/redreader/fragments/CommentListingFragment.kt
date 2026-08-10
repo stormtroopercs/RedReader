@@ -109,7 +109,7 @@ class CommentListingFragment(
     private val mSession: UUID?
     private val mDownloadStrategy: DownloadStrategy
 
-    var post: RedditPreparedPost? = null
+    var post: RedditPreparedPost?=null
         private set
 
     private var mSelfTextVisible = true
@@ -125,9 +125,9 @@ class CommentListingFragment(
     private val mSelfTextFontScale: Float
     private val mShowLinkButtons: Boolean
 
-    private var mCachedTimestamp: TimestampUTC? = null
+    private var mCachedTimestamp: TimestampUTC?=null
 
-    private var mPreviousFirstVisibleItemPosition: Int? = null
+    private var mPreviousFirstVisibleItemPosition: Int?=null
 
     init {
         if (savedInstanceState != null) {
@@ -198,8 +198,7 @@ class CommentListingFragment(
             ) as LinearLayout?
 
             if (PrefsUtility.pref_appearance_left_handed()) {
-                val toolBarParams =
-                    mFloatingToolbar!!.getLayoutParams() as FrameLayout.LayoutParams
+                val toolBarParams =                     mFloatingToolbar!!.getLayoutParams() as FrameLayout.LayoutParams
                 toolBarParams.gravity = Gravity.START or Gravity.BOTTOM
                 mFloatingToolbar.setLayoutParams(toolBarParams)
             }
@@ -318,8 +317,7 @@ class CommentListingFragment(
     }
 
     fun handleCommentVisibilityToggle(view: RedditCommentView) {
-        val changeDataManager
-                : RedditChangeDataManager = RedditChangeDataManager.Companion.getInstance(mUser)
+        val changeDataManager: RedditChangeDataManager=RedditChangeDataManager.Companion.getInstance(mUser)
         val item = view.getComment()
 
         if (item.isComment()) {
@@ -636,8 +634,7 @@ class CommentListingFragment(
     }
 
     override fun onCreateOptionsMenu(menu: Menu) {
-        val appbarItemsPrefs: MutableMap<AppbarItemsPref?, Int?> =
-            PrefsUtility.pref_menus_appbar_items()
+        val appbarItemsPrefs: MutableMap<AppbarItemsPref?, Int?> =             PrefsUtility.pref_menus_appbar_items()
         val replyShowAsAction = OptionsMenuUtility.getOrThrow(
             appbarItemsPrefs,
             AppbarItemsPref.REPLY

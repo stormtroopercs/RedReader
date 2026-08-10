@@ -88,7 +88,7 @@ class CacheManager @Inject constructor(
 
     companion object {
         @Volatile
-        private var instance: CacheManager? = null
+        private var instance: CacheManager?=null
 
         fun getInstance(context: Context): CacheManager {
             return instance ?: synchronized(this) {
@@ -157,8 +157,7 @@ class CacheManager @Inject constructor(
             return null
         }
 
-        val nameSplit: Array<String?> =
-            name.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val nameSplit: Array<String?> =             name.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         if (nameSplit.size != 2) {
             return null
         }
@@ -264,21 +263,17 @@ class CacheManager @Inject constructor(
     @get:Synchronized
     val cacheDataUsages: HashMap<Int?, Long?>
         get() {
-            val dataUsagePerType =
-                PrefsUtility.createFileTypeMap<Long?>(0L, 0L, 0L)
+            val dataUsagePerType =                 PrefsUtility.createFileTypeMap<Long?>(0L, 0L, 0L)
 
             try {
-                val currentFiles =
-                    HashSet<Long?>(128)
+                val currentFiles =                     HashSet<Long?>(128)
 
-                val dirs: MutableList<File> =
-                    getCacheDirs(context)
+                val dirs: MutableList<File> =                     getCacheDirs(context)
                 for (dir in dirs) {
                     getCacheFileList(dir, currentFiles)
                 }
 
-                val filesToCheckWithTypes =
-                    dbManager.getFilesToSize()
+                val filesToCheckWithTypes =                     dbManager.getFilesToSize()
 
                 for (fileEntry in filesToCheckWithTypes.entries) {
                     val id: Long = fileEntry.key!!
@@ -328,7 +323,7 @@ class CacheManager @Inject constructor(
         private val mCacheCompressionType: CacheCompressionType
     ) {
         private val mOutStream: OutputStream
-        private var readableCacheFile: ReadableCacheFile? = null
+        private var readableCacheFile: ReadableCacheFile?=null
         private val location: File
         private var mWriteExternally = false
 
@@ -439,13 +434,12 @@ class CacheManager @Inject constructor(
         val id: Long,
         private val mCacheCompressionType: CacheCompressionType
     ) {
-        private var mCachedUri: Uri? = null
+        private var mCachedUri: Uri?=null
 
         @get:Throws(IOException::class)
         val inputStream: InputStream
             get() {
-                val result: InputStream =
-                    getCacheFileInputStream(this.id, mCacheCompressionType)!!
+                val result: InputStream =                     getCacheFileInputStream(this.id, mCacheCompressionType)!!
 
                 if (result == null) {
                     throw FileNotFoundException("Stream was null for id " + this.id)
@@ -616,7 +610,7 @@ class CacheManager @Inject constructor(
         }
 
         fun mostRecentFromList(list: MutableList<CacheEntry>): CacheEntry {
-            var entry: CacheEntry? = null
+            var entry: CacheEntry?=null
 
             for (e in list) {
                 if (entry == null || entry.timestamp.isLessThan(e.timestamp)) {
@@ -675,10 +669,8 @@ class CacheManager @Inject constructor(
                 }
 
                 override fun run() {
-                    val streamFactory: GenericFactory<SeekableInputStream?, IOException?> =
-                        GenericFactory {
-                            val stream =
-                                getCacheFileInputStream(entry.id, entry.cacheCompressionType)
+                    val streamFactory: GenericFactory<SeekableInputStream?, IOException?> =                         GenericFactory {
+                            val stream =                                 getCacheFileInputStream(entry.id, entry.cacheCompressionType)
                             if (stream == null) {
                                 dbManager.delete(entry.id)
                                 throw IOException("Failed to open file")

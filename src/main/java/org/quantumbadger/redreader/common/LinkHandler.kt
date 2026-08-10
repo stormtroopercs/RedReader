@@ -73,8 +73,7 @@ import kotlin.concurrent.thread
 object LinkHandler {
 	private val youtubeDotComPattern = Pattern.compile("^https?://[.\\w]*youtube\\.\\w+/.*")
 
-	private val youtuDotBePattern =
-		Pattern.compile("^https?://[.\\w]*youtu\\.be/([A-Za-z0-9\\-_]+)(\\?.*|).*")
+	private val youtuDotBePattern = 		Pattern.compile("^https?://[.\\w]*youtu\\.be/([A-Za-z0-9\\-_]+)(\\?.*|).*")
 
 	private val vimeoPattern = Pattern.compile("^https?://[.\\w]*vimeo\\.\\w+/.*")
 
@@ -86,9 +85,9 @@ object LinkHandler {
 		activity: AppCompatActivity,
 		url: UriString?,
 		forceNoImage: Boolean = false,
-		post: RedditPost? = null,
-		albumInfo: AlbumInfo? = null,
-		albumImageIndex: Int? = null,
+		post: RedditPost?=null,
+		albumInfo: AlbumInfo?=null,
+		albumImageIndex: Int?=null,
 		fromExternalIntent: Boolean = false
 	) {
 		if (url == null) {
@@ -371,8 +370,7 @@ object LinkHandler {
 		when (action) {
 			LinkAction.SHARE -> shareText(activity, null, getPreferredRedditUriString(uri).value)
 			LinkAction.COPY_URL -> {
-				val clipboardManager =
-					activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
+				val clipboardManager = 					activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
 				if (clipboardManager != null) {
 					// Using newPlainText here instead of newRawUri because links from
 					// comments/self-text are often not valid URIs
@@ -537,16 +535,13 @@ object LinkHandler {
 	private val qkmePattern2: Pattern = Pattern.compile(".*[^A-Za-z]quickmeme\\.com/meme/(\\w+).*")
 	private val lvmePattern: Pattern = Pattern.compile(".*[^A-Za-z]livememe\\.com/(\\w+).*")
 	private val gfycatPattern: Pattern = Pattern.compile(".*[^A-Za-z]gfycat\\.com/(?:gifs/detail/)?(\\w+).*")
-	private val redgifsPattern: Pattern =
-		Pattern.compile(".*[^A-Za-z]redgifs\\.com/(?:watch|ifr)/(?:gifs/detail/)?(\\w+).*")
+	private val redgifsPattern: Pattern = 		Pattern.compile(".*[^A-Za-z]redgifs\\.com/(?:watch|ifr)/(?:gifs/detail/)?(\\w+).*")
 	private val streamablePattern: Pattern = Pattern.compile(".*[^A-Za-z]streamable\\.com/(\\w+).*")
-	private val reddituploadsPattern: Pattern =
-		Pattern.compile(".*[^A-Za-z]i\\.reddituploads\\.com/(\\w+).*")
+	private val reddituploadsPattern: Pattern = 		Pattern.compile(".*[^A-Za-z]i\\.reddituploads\\.com/(\\w+).*")
 	private val redditVideosPattern: Pattern = Pattern.compile(".*[^A-Za-z]v.redd.it/(\\w+).*")
 	private val imgflipPattern: Pattern = Pattern.compile(".*[^A-Za-z]imgflip\\.com/i/(\\w+).*")
 	private val makeamemePattern: Pattern = Pattern.compile(".*[^A-Za-z]makeameme\\.org/meme/([\\w\\-]+).*")
-	private val deviantartPattern: Pattern =
-		Pattern.compile("https://www\\.deviantart\\.com/([\\w\\-]+)/art/([\\w\\-]+)")
+	private val deviantartPattern: Pattern = 		Pattern.compile("https://www\\.deviantart\\.com/([\\w\\-]+)/art/([\\w\\-]+)")
 	private val giphyPattern: Pattern = Pattern.compile(".*[^A-Za-z]giphy\\.com/gifs/(\\w+).*")
 
 	@JvmStatic
@@ -571,7 +566,7 @@ object LinkHandler {
 	// The RedGifs API returns this link in the "urls.html" field, but its format
 	// is documented as permanent, so it can also be built from the gif id alone.
 	@JvmStatic
-	fun getRedGifsEmbedUrl(url: UriString): UriString? = getRedGifsId(url)?.let { imgId ->
+	fun getRedGifsEmbedUrl(url: UriString): UriString?=getRedGifsId(url)?.let { imgId ->
 		UriString("https://www.redgifs.com/ifr/" + StringUtils.asciiLowercase(imgId))
 	}
 
@@ -1277,8 +1272,7 @@ object LinkHandler {
 			//Don't lowercase the rare userinfo component if present.
 			if (authority.contains("@")) {
 				val authorityParts = authority.split("@".toRegex(), limit = 2).toTypedArray()
-				normalAuthority =
-					authorityParts[0] + "@" + StringUtils.asciiLowercase(
+				normalAuthority = 					authorityParts[0] + "@" + StringUtils.asciiLowercase(
 						authorityParts[1]
 					)
 			} else {

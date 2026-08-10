@@ -26,8 +26,8 @@ data class MediaInfo(
 )
 
 data class MPDReadResult(
-    val video: MediaInfo? = null,
-    val audio: MediaInfo? = null
+    val video: MediaInfo?=null,
+    val audio: MediaInfo?=null
 )
 
 private data class MPD(
@@ -145,7 +145,7 @@ private fun parseRepresentation(parser: XmlPullParser): Representation {
     val height = parser.getAttributeValue(null, "height")?.toIntOrNull()
     val audioSamplingRate = parser.getAttributeValue(null, "audioSamplingRate")
     
-    var baseURL: String? = null
+    var baseURL: String?=null
     val representationDepth = parser.depth
     
     var eventType = parser.next()

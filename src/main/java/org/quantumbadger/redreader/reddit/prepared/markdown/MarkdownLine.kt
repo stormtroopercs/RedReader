@@ -41,8 +41,7 @@ class MarkdownLine internal constructor(
     }
 
     fun tokenize(parent: MarkdownParagraph?): MarkdownParagraph {
-        val cleanedSrc =
-            if (prefixLength == 0) src else src.substring(prefixLength)
+        val cleanedSrc =             if (prefixLength == 0) src else src.substring(prefixLength)
 
         if (type != MarkdownParagraphType.CODE
             && type != MarkdownParagraphType.HLINE

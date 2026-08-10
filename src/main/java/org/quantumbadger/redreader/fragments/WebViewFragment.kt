@@ -77,13 +77,13 @@ import java.util.TimerTask
 import kotlin.concurrent.Volatile
 
 class WebViewFragment : Fragment(), PostSelectionListener {
-    private var mActivity: BaseActivity? = null
+    private var mActivity: BaseActivity?=null
 
-    private var mUrl: UriString? = null
-    private var html: String? = null
+    private var mUrl: UriString?=null
+    private var html: String?=null
 
     @Volatile
-    private var currentUrl: UriString? = null
+    private var currentUrl: UriString?=null
 
     @Volatile
     private var goingBack = false
@@ -91,15 +91,14 @@ class WebViewFragment : Fragment(), PostSelectionListener {
     @Volatile
     private var lastBackDepthAttempt = 0
 
-    private var webView: WebViewFixed? = null
-    private var progressView: ProgressBar? = null
-    private var outer: FrameLayout? = null
+    private var webView: WebViewFixed?=null
+    private var progressView: ProgressBar?=null
+    private var outer: FrameLayout?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // TODO load position/etc?
         super.onCreate(savedInstanceState)
-        mUrl =
-            BundleCompat.getParcelable<UriString?>(requireArguments(), "url", UriString::class.java)
+        mUrl =             BundleCompat.getParcelable<UriString?>(requireArguments(), "url", UriString::class.java)
         html = requireArguments().getString("html")
     }
 
@@ -143,8 +142,7 @@ class WebViewFragment : Fragment(), PostSelectionListener {
         }
 
         webView = outer!!.findViewById<WebViewFixed>(R.id.web_view_fragment_webviewfixed)
-        val loadingViewFrame =
-            outer!!.findViewById<FrameLayout>(R.id.web_view_fragment_loadingview_frame)
+        val loadingViewFrame =             outer!!.findViewById<FrameLayout>(R.id.web_view_fragment_loadingview_frame)
 
         progressView = ProgressBar(
             mActivity,
@@ -158,8 +156,7 @@ class WebViewFragment : Fragment(), PostSelectionListener {
             General.dpToPixels(mActivity!!, 10f),
             0
         )
-        val fullscreenViewFrame =
-            outer!!.findViewById<FrameLayout?>(R.id.web_view_fragment_fullscreen_frame)
+        val fullscreenViewFrame =             outer!!.findViewById<FrameLayout?>(R.id.web_view_fragment_fullscreen_frame)
 
         val chromeClient: VideoEnabledWebChromeClient = object : VideoEnabledWebChromeClient(
             loadingViewFrame,
@@ -404,7 +401,7 @@ class WebViewFragment : Fragment(), PostSelectionListener {
                 super.onPageStarted(view, url, favicon)
 
                 if (mUrl != null && url != null) {
-                    val activity: AppCompatActivity? = mActivity
+                    val activity: AppCompatActivity?=mActivity
 
                     if (activity != null) {
                         activity.setTitle(url)

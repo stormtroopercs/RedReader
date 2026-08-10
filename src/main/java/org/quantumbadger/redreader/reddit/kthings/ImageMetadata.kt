@@ -26,7 +26,7 @@ import kotlinx.serialization.Serializable
 data class ImageMetadata(
     val x: Long,
     val y: Long,
-    val u: UrlEncodedString? = null,
-	val mp4: UrlEncodedString? = null,
-	val gif: UrlEncodedString? = null,
+    val u: UrlEncodedString?=null,
+	val mp4: UrlEncodedString?=null,
+	val gif: UrlEncodedString?=null,
 ) : Parcelable

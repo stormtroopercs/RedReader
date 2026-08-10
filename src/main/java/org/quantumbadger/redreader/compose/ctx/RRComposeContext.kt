@@ -166,8 +166,8 @@ sealed interface Dest {
 
 	data class Link(
 		val url: UriString,
-		val albumInfo: AlbumInfo? = null,
-		val albumImageIndex: Int? = null
+		val albumInfo: AlbumInfo?=null,
+		val albumImageIndex: Int?=null
 	) : Dest
 
 	data class LinkLongClick(

@@ -350,8 +350,7 @@ internal class CacheDbManager(context: Context?) :
                 null
             )
 
-            val filesToCheck =
-                java.util.HashMap<Long?, Int?>(32)
+            val filesToCheck =                 java.util.HashMap<Long?, Int?>(32)
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(0)

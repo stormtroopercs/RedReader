@@ -83,7 +83,7 @@ class RedditPostView(
 ) : FlingableItemView(context), ThumbnailLoadedCallback {
     private val mAccessibilityActionManager: AccessibilityActionManager
 
-    private var mPost: RedditPreparedPost? = null
+    private var mPost: RedditPreparedPost?=null
     private val title: TextView
     private val subtitle: TextView
 
@@ -108,8 +108,8 @@ class RedditPostView(
 
     private val mLeftFlingPref: PostFlingAction
     private val mRightFlingPref: PostFlingAction
-    private var mLeftFlingAction: RedditPostActions.ActionDescriptionPair? = null
-    private var mRightFlingAction: RedditPostActions.ActionDescriptionPair? = null
+    private var mLeftFlingAction: RedditPostActions.ActionDescriptionPair?=null
+    private var mRightFlingAction: RedditPostActions.ActionDescriptionPair?=null
 
     private val mCommentsButtonPref: Boolean
 
@@ -188,16 +188,12 @@ class RedditPostView(
         val titleFontScale = PrefsUtility.appearance_fontscale_posts()
         val subtitleFontScale = PrefsUtility.appearance_fontscale_post_subtitles()
 
-        val rootView =
-            LayoutInflater.from(context).inflate(R.layout.reddit_post, this, true)
+        val rootView =             LayoutInflater.from(context).inflate(R.layout.reddit_post, this, true)
 
-        mOuterView =
-            Objects.requireNonNull<LinearLayout>(rootView.findViewById<LinearLayout?>(R.id.reddit_post_layout_outer))
-        mInnerView =
-            Objects.requireNonNull<LinearLayout>(rootView.findViewById<LinearLayout?>(R.id.reddit_post_layout_inner))
+        mOuterView =             Objects.requireNonNull<LinearLayout>(rootView.findViewById<LinearLayout?>(R.id.reddit_post_layout_outer))
+        mInnerView =             Objects.requireNonNull<LinearLayout>(rootView.findViewById<LinearLayout?>(R.id.reddit_post_layout_inner))
 
-        mPostErrors =
-            Objects.requireNonNull<LinearLayout>(rootView.findViewById<LinearLayout?>(R.id.reddit_post_errors))
+        mPostErrors =             Objects.requireNonNull<LinearLayout>(rootView.findViewById<LinearLayout?>(R.id.reddit_post_errors))
 
         mImagePreviewHolder = Objects.requireNonNull<FrameLayout>(
             rootView.findViewById<FrameLayout?>(R.id.reddit_post_image_preview_holder)
@@ -230,13 +226,10 @@ class RedditPostView(
             rootView.findViewById<ImageView?>(R.id.reddit_post_overlay_icon)
         )
 
-        title =
-            Objects.requireNonNull<TextView>(rootView.findViewById<TextView?>(R.id.reddit_post_title))
-        subtitle =
-            Objects.requireNonNull<TextView>(rootView.findViewById<TextView?>(R.id.reddit_post_subtitle))
+        title =             Objects.requireNonNull<TextView>(rootView.findViewById<TextView?>(R.id.reddit_post_title))
+        subtitle =             Objects.requireNonNull<TextView>(rootView.findViewById<TextView?>(R.id.reddit_post_subtitle))
 
-        mCommentsButtonPref =
-            PrefsUtility.appearance_post_show_comments_button()
+        mCommentsButtonPref =             PrefsUtility.appearance_post_show_comments_button()
 
         mCommentsButton = rootView.findViewById<LinearLayout>(R.id.reddit_post_comments_button)
         mCommentsText = mCommentsButton.findViewById<TextView>(R.id.reddit_post_comments_text)
@@ -345,10 +338,8 @@ class RedditPostView(
             subtitle.getTextSize() * subtitleFontScale
         )
 
-        mLeftFlingPref =
-            PrefsUtility.pref_behaviour_fling_post_left()
-        mRightFlingPref =
-            PrefsUtility.pref_behaviour_fling_post_right()
+        mLeftFlingPref =             PrefsUtility.pref_behaviour_fling_post_left()
+        mRightFlingPref =             PrefsUtility.pref_behaviour_fling_post_right()
 
         run {
             val attr = context.obtainStyledAttributes(
@@ -528,8 +519,7 @@ class RedditPostView(
             ((preview.height.toLong() * screenWidth) / preview.width).toInt()
         )
 
-        val imagePreviewLayoutParams =
-            mImagePreviewHolder.getLayoutParams() as ConstraintLayout.LayoutParams
+        val imagePreviewLayoutParams =             mImagePreviewHolder.getLayoutParams() as ConstraintLayout.LayoutParams
 
         imagePreviewLayoutParams.dimensionRatio = screenWidth.toString() + ":" + boundedImageHeight
         mImagePreviewHolder.setLayoutParams(imagePreviewLayoutParams)
@@ -584,8 +574,7 @@ class RedditPostView(
                                 val alreadyAcceptedPrompt = getSharedPrefs(mActivity)
                                     .getBoolean(PROMPT_PREF_KEY, false)
 
-                                val totalPreviewsShown
-                                        : Int = sInlinePreviewsShownThisSession.incrementAndGet()
+                                val totalPreviewsShown: Int=sInlinePreviewsShownThisSession.incrementAndGet()
 
                                 val isVideoPreview = post.isVideoPreview()
                                 runOnUiThread(Runnable {
@@ -651,8 +640,7 @@ class RedditPostView(
 
         val promptView = mFooter.findViewById<FrameLayout?>(R.id.inline_images_prompt_root)
 
-        val keepShowing =
-            mFooter.findViewById<Button>(R.id.inline_preview_prompt_keep_showing_button)
+        val keepShowing =             mFooter.findViewById<Button>(R.id.inline_preview_prompt_keep_showing_button)
 
         val turnOff = mFooter.findViewById<Button>(R.id.inline_preview_prompt_turn_off_button)
 

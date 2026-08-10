@@ -63,8 +63,7 @@ class RedditAPIIndividualSubredditListRequester(
         if (type == SubredditListType.DEFAULTS) {
             val now = now()
 
-            val data =
-                HashSet<String?>(Reddit.DEFAULT_SUBREDDITS.size + 1)
+            val data =                 HashSet<String?>(Reddit.DEFAULT_SUBREDDITS.size + 1)
 
             for (id in Reddit.DEFAULT_SUBREDDITS) {
                 data.add(id.toString())
@@ -184,11 +183,9 @@ class RedditAPIIndividualSubredditListRequester(
                         val output = HashSet<String?>()
                         val toWrite = ArrayList<RedditSubreddit?>()
 
-                        val redditListing =
-                            result.asObject()!!.getObject("data")
+                        val redditListing =                             result.asObject()!!.getObject("data")
 
-                        val subreddits =
-                            redditListing!!.getArray("children")
+                        val subreddits =                             redditListing!!.getArray("children")
 
                         if (type == SubredditListType.SUBSCRIBED && subreddits!!.size() == 0 && after == null) {
                             performRequest(

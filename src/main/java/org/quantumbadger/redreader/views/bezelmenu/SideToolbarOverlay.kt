@@ -23,8 +23,8 @@ import android.view.View
 import android.widget.FrameLayout
 
 class SideToolbarOverlay(context: Context) : FrameLayout(context) {
-    private var contents: View? = null
-    private var shownPosition: SideToolbarPosition? = null
+    private var contents: View?=null
+    private var shownPosition: SideToolbarPosition?=null
 
     enum class SideToolbarPosition {
         LEFT, RIGHT
@@ -44,8 +44,7 @@ class SideToolbarOverlay(context: Context) : FrameLayout(context) {
 
         val layoutParams = contents!!.getLayoutParams()
 
-        (layoutParams as LayoutParams).gravity
-        = (if (pos == SideToolbarPosition.LEFT) Gravity.LEFT else Gravity.RIGHT)
+        (layoutParams as LayoutParams).gravity = (if (pos == SideToolbarPosition.LEFT) Gravity.LEFT else Gravity.RIGHT)
         layoutParams.width = LayoutParams.WRAP_CONTENT
         layoutParams.height = LayoutParams.MATCH_PARENT
 

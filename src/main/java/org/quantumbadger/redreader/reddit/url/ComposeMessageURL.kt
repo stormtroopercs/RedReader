@@ -75,8 +75,7 @@ class ComposeMessageURL(val recipient: String?, val subject: String?, val messag
                     }
                 }
 
-                pathSegments
-                = pathSegmentsFiltered.toTypedArray<String?>()
+                pathSegments = pathSegmentsFiltered.toTypedArray<String?>()
             }
 
             if (pathSegments.size != 2) {
@@ -89,9 +88,9 @@ class ComposeMessageURL(val recipient: String?, val subject: String?, val messag
                 return null
             }
 
-            var recipient: String? = null
-            var subject: String? = null
-            var message: String? = null
+            var recipient: String?=null
+            var subject: String?=null
+            var message: String?=null
             for (parameterKey in getUriQueryParameterNames(uri)) {
                 if (parameterKey.equals("to", ignoreCase = true)) {
                     // TODO validate username with regex

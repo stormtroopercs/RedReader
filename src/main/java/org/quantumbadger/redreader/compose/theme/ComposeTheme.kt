@@ -93,8 +93,8 @@ data class ComposeThemeButton(
 	val text: TextStyle,
 	val background: Color,
 	val shape: Shape,
-	val border: Color? = null,
-	val borderThickness: Dp? = null,
+	val border: Color?=null,
+	val borderThickness: Dp?=null,
 )
 
 @Immutable
@@ -369,8 +369,7 @@ class ComposeThemeImpl(prefs: ComposePrefs) : ComposeTheme {
 	)
 }
 
-val LocalComposeTheme =
-	staticCompositionLocalOf<ComposeTheme> { throw RuntimeException("Theme not initialized") }
+val LocalComposeTheme = 	staticCompositionLocalOf<ComposeTheme> { throw RuntimeException("Theme not initialized") }
 
 object Colors {
 	object Grey {
@@ -425,9 +424,9 @@ fun TextStyle.StyledText(
 @Composable
 fun Modifier.combinedClickableWithHaptics(
 	enabled: Boolean = true,
-	onClickLabel: String? = null,
-	role: Role? = null,
-	onLongClickLabel: String? = null,
+	onClickLabel: String?=null,
+	role: Role?=null,
+	onLongClickLabel: String?=null,
 	onLongClick: (() -> Unit)? = null,
 	onDoubleClick: (() -> Unit)? = null,
 	onClick: () -> Unit

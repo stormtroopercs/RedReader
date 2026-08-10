@@ -73,11 +73,9 @@ object DialogUtils {
             )
         alertDialog.show()
 
-        val editText =
-            Objects.requireNonNull<TextInputEditText>(alertDialog.findViewById<TextInputEditText?>(R.id.editbox))
+        val editText =             Objects.requireNonNull<TextInputEditText>(alertDialog.findViewById<TextInputEditText?>(R.id.editbox))
 
-        val editTextLayout =
-            Objects.requireNonNull<TextInputLayout>(alertDialog.findViewById<TextInputLayout?>(R.id.editbox_layout))
+        val editTextLayout =             Objects.requireNonNull<TextInputLayout>(alertDialog.findViewById<TextInputLayout?>(R.id.editbox_layout))
 
         editTextRef.set(editText)
 

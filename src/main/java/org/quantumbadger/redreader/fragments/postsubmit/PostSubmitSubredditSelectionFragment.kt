@@ -89,8 +89,7 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
     private inner class AutocompleteAdapter(context: Context?) : RecyclerView.Adapter<VH1Text?>() {
         private val mAllSuggestions: ArrayList<AutocompleteEntry?> = ArrayList<AutocompleteEntry?>()
 
-        private val mCurrentSuggestions: ArrayList<AutocompleteEntry?> =
-            ArrayList<AutocompleteEntry?>()
+        private val mCurrentSuggestions: ArrayList<AutocompleteEntry?> = ArrayList<AutocompleteEntry?>()
 
         init {
             setHasStableIds(true)
@@ -129,8 +128,7 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
                 return
             }
 
-            val possibleSuggestions
-                    : ArrayList<AutocompleteEntry?> = ArrayList<AutocompleteEntry?>(mAllSuggestions)
+            val possibleSuggestions: ArrayList<AutocompleteEntry?> = ArrayList<AutocompleteEntry?>(mAllSuggestions)
 
             run {
                 val it: MutableIterator<AutocompleteEntry> = possibleSuggestions.iterator()
@@ -220,14 +218,11 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
 
         val root = inflater.inflate(R.layout.subreddit_selection, container, false)
 
-        mUsernameSpinner =
-            root.findViewById<MaterialAutoCompleteTextView>(R.id.subreddit_selection_account)
+        mUsernameSpinner =             root.findViewById<MaterialAutoCompleteTextView>(R.id.subreddit_selection_account)
         mSubredditBox = root.findViewById<TextInputEditText>(R.id.subreddit_selection_textbox)
 
-        mAutocompleteSuggestions =
-            root.findViewById<RecyclerView>(R.id.subreddit_selection_autocomplete)
-        mAutocompleteSuggestionsLayout
-        = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+        mAutocompleteSuggestions =             root.findViewById<RecyclerView>(R.id.subreddit_selection_autocomplete)
+        mAutocompleteSuggestionsLayout = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
 
         mAutocompleteSuggestions!!.setLayoutManager(mAutocompleteSuggestionsLayout)
 
@@ -238,8 +233,7 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
         AndroidCommon.onTextChanged(mSubredditBox!!, Runnable { adapter.updateSuggestions() })
         AndroidCommon.onTextChanged(mUsernameSpinner!!, Runnable { adapter.updateSuggestions() })
 
-        val accountManager: RedditAccountManager =
-            RedditAccountManager.Companion.getInstance(context)
+        val accountManager: RedditAccountManager = RedditAccountManager.Companion.getInstance(context)
 
         val usernames = ArrayList<String?>()
 

@@ -72,8 +72,7 @@ object RedditURLParser {
             )
         }
 
-        val hostSegments: Array<String?> =
-            StringUtils.asciiLowercase(uri.getHost()!!).split("\\.".toRegex())
+        val hostSegments: Array<String?> =             StringUtils.asciiLowercase(uri.getHost()!!).split("\\.".toRegex())
                 .dropLastWhile { it.isEmpty() }.toTypedArray()
 
         if (hostSegments.size < 2) {
@@ -109,44 +108,42 @@ object RedditURLParser {
         val uri = optionalUri.get()
 
         run {
-            val opaqueSharedURL: OpaqueSharedURL? = OpaqueSharedURL.Companion.parse(uri)
+            val opaqueSharedURL: OpaqueSharedURL?=OpaqueSharedURL.Companion.parse(uri)
             if (opaqueSharedURL != null) {
                 return opaqueSharedURL
             }
         }
 
         run {
-            val subredditPostListURL: SubredditPostListURL? =
-                SubredditPostListURL.Companion.parse(uri)
+            val subredditPostListURL: SubredditPostListURL?=SubredditPostListURL.Companion.parse(uri)
             if (subredditPostListURL != null) {
                 return subredditPostListURL
             }
         }
 
         run {
-            val multiredditPostListURL
-                    : MultiredditPostListURL? = MultiredditPostListURL.Companion.parse(uri)
+            val multiredditPostListURL: MultiredditPostListURL?=MultiredditPostListURL.Companion.parse(uri)
             if (multiredditPostListURL != null) {
                 return multiredditPostListURL
             }
         }
 
         run {
-            val searchPostListURL: SearchPostListURL? = SearchPostListURL.Companion.parse(uri)
+            val searchPostListURL: SearchPostListURL?=SearchPostListURL.Companion.parse(uri)
             if (searchPostListURL != null) {
                 return searchPostListURL
             }
         }
 
         run {
-            val userPostListURL: UserPostListingURL? = UserPostListingURL.Companion.parse(uri)
+            val userPostListURL: UserPostListingURL?=UserPostListingURL.Companion.parse(uri)
             if (userPostListURL != null) {
                 return userPostListURL
             }
         }
 
         run {
-            val userCommentListURL: UserCommentListingURL? = UserCommentListingURL.Companion.parse(
+            val userCommentListURL: UserCommentListingURL?=UserCommentListingURL.Companion.parse(
                 uri
             )
             if (userCommentListURL != null) {
@@ -155,7 +152,7 @@ object RedditURLParser {
         }
 
         run {
-            val commentListingURL: PostCommentListingURL? = PostCommentListingURL.Companion.parse(
+            val commentListingURL: PostCommentListingURL?=PostCommentListingURL.Companion.parse(
                 uri
             )
             if (commentListingURL != null) {
@@ -164,14 +161,14 @@ object RedditURLParser {
         }
 
         run {
-            val userProfileURL: UserProfileURL? = UserProfileURL.Companion.parse(uri)
+            val userProfileURL: UserProfileURL?=UserProfileURL.Companion.parse(uri)
             if (userProfileURL != null) {
                 return userProfileURL
             }
         }
 
         run {
-            val composeMessageURL: ComposeMessageURL? = ComposeMessageURL.Companion.parse(uri)
+            val composeMessageURL: ComposeMessageURL?=ComposeMessageURL.Companion.parse(uri)
             if (composeMessageURL != null) {
                 return composeMessageURL
             }

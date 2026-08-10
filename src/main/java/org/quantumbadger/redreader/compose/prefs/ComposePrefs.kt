@@ -74,14 +74,10 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 
 	private val changeObservers = HashMap<String, () -> Unit>()
 
-	private val appearance_fontscale_global =
-		FloatPref(R.string.pref_appearance_fontscale_global_key, 1f)
-	private val appearance_fontscale_bodytext =
-		FloatPref(R.string.pref_appearance_fontscale_bodytext_key, -1f)
-	private val appearance_fontscale_posts =
-		FloatPref(R.string.pref_appearance_fontscale_posts_key, -1f)
-	private val appearance_fontscale_post_subtitles =
-		FloatPref(R.string.pref_appearance_fontscale_post_subtitles_key, -1f)
+	private val appearance_fontscale_global = 		FloatPref(R.string.pref_appearance_fontscale_global_key, 1f)
+	private val appearance_fontscale_bodytext = 		FloatPref(R.string.pref_appearance_fontscale_bodytext_key, -1f)
+	private val appearance_fontscale_posts = 		FloatPref(R.string.pref_appearance_fontscale_posts_key, -1f)
+	private val appearance_fontscale_post_subtitles = 		FloatPref(R.string.pref_appearance_fontscale_post_subtitles_key, -1f)
 
 	init {
 		General.checkThisIsUIThread()
@@ -105,8 +101,7 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 			}
 		}
 
-		private fun loadPref() =
-			sharedPrefs.getString(key, default.toString())?.toFloatOrNull() ?: default
+		private fun loadPref() = 			sharedPrefs.getString(key, default.toString())?.toFloatOrNull() ?: default
 
 		override var value: Float
 			get() = mutableState.floatValue
@@ -186,8 +181,7 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 			}
 		}
 
-		private fun loadPref() =
-			sharedPrefs.getString(key, serializer.serialize(default))?.let(serializer::deserialize)
+		private fun loadPref() = 			sharedPrefs.getString(key, serializer.serialize(default))?.let(serializer::deserialize)
 				?: default
 
 		override var value: T

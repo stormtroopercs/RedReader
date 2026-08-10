@@ -17,7 +17,7 @@
 package org.quantumbadger.redreader.common
 
 class TriggerableThread(private val task: Runnable, private val initialDelay: Long) {
-    private var thread: InternalTriggerableThread? = null
+    private var thread: InternalTriggerableThread?=null
     private var allowRetrigger = false
     private var shouldRetrigger = false
 

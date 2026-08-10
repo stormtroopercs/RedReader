@@ -54,7 +54,7 @@ class ShareOrderAdapter(
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View? {
         val inflater = context
             .getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater?
-        var rowView: View? = null
+        var rowView: View?=null
         if (inflater != null) {
             rowView = inflater.inflate(R.layout.list_item_share_dialog, parent, false)
             val label = rowView.findViewById<TextView>(R.id.list_item_share_dialog_text)

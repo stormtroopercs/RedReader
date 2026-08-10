@@ -82,19 +82,18 @@ class RedditPreparedPost(
 
     // TODO make it possible to turn off in-memory caching when out of memory
     @Volatile
-    private var thumbnailCache: Bitmap? = null
+    private var thumbnailCache: Bitmap?=null
 
-    private var thumbnailCallback: ThumbnailLoadedCallback? = null
+    private var thumbnailCallback: ThumbnailLoadedCallback?=null
     private var usageId = -1
 
     var lastChange: TimestampUTC?
 
-    private var mBoundView: RedditPostView? = null
+    private var mBoundView: RedditPostView?=null
 
     // TODO too many parameters
     init {
-        val user: RedditAccount? =
-            RedditAccountManager.Companion.getInstance(context).getDefaultAccount()
+        val user: RedditAccount?=RedditAccountManager.Companion.getInstance(context).getDefaultAccount()
         mChangeDataManager = RedditChangeDataManager.Companion.getInstance(user)
 
         isArchived = src.isArchived
@@ -887,8 +886,7 @@ class RedditPreparedPost(
         context: Context?,
         read: Boolean?
     ) {
-        val user: RedditAccount? =
-            RedditAccountManager.Companion.getInstance(context).getDefaultAccount()
+        val user: RedditAccount?=RedditAccountManager.Companion.getInstance(context).getDefaultAccount()
         RedditChangeDataManager.Companion.getInstance(user)
             .markRead(now(), src.getIdAndType(), read)
     }

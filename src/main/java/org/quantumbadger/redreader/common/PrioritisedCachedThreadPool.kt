@@ -45,7 +45,7 @@ class PrioritisedCachedThreadPool(private val mMaxThreads: Int, private val mThr
     private inner class Executor : Runnable {
         override fun run() {
             while (true) {
-                var taskToRun: Task? = null
+                var taskToRun: Task?=null
 
                 synchronized(mTasks) {
                     if (mTasks.isEmpty()) {

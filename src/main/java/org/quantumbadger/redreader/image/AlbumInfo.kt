@@ -108,9 +108,9 @@ class AlbumInfo(
 			images: List<ImageMetadata>
 		): ImageUrlInfo? {
 
-			var bestSizeMinAxis: Long? = null
-			var bestUrl: String? = null
-			var bestSize: ImageSize? = null
+			var bestSizeMinAxis: Long?=null
+			var bestUrl: String?=null
+			var bestSize: ImageSize?=null
 
 			for (image in images) {
 
@@ -147,8 +147,7 @@ class AlbumInfo(
 			val images = galleryItems.mapNotNull { (it as? MaybeParseError.Ok)?.value }
 				.mapNotNull { item ->
 
-					val mediaMetadataEntry =
-						(post.media_metadata?.get(item.media_id) as? MaybeParseError.Ok)?.value
+					val mediaMetadataEntry = 						(post.media_metadata?.get(item.media_id) as? MaybeParseError.Ok)?.value
 							?: return@mapNotNull null
 
 					val standardImage = mediaMetadataEntry.s
@@ -168,8 +167,8 @@ class AlbumInfo(
 						throw RuntimeException("url missing from response")
 					}
 
-					var bigSquare: ImageUrlInfo? = null
-					var preview: ImageUrlInfo? = null
+					var bigSquare: ImageUrlInfo?=null
+					var preview: ImageUrlInfo?=null
 
 					mediaMetadataEntry.p?.let { p ->
 						val images = p + listOf(standardImage)

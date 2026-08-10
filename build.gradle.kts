@@ -7,88 +7,11 @@ plugins {
 	alias(libs.plugins.compose.compiler)
 	alias(libs.plugins.hilt.android)
 	alias(libs.plugins.ksp)
+	alias(libs.plugins.spotless)
 	pmd
 	checkstyle
 
-	// If plugin is used in multiple subprojects then it needs to be imported with apply(false) in the root project,
-	// otherwise bad things will happen.
-	// The reason is that Gradle isolates class loaders between subprojects and some plugins can't handle it.
-	// Root project's class loader however is available to all subprojects and importing plugin here (but not applying it) solves the issue
 	alias(libs.plugins.kotlin.jvm) apply false
-	alias(libs.plugins.kotlin.android) apply false
-}
-
-dependencies {
-	implementation(project(":redreader-common"))
-	implementation(project(":redreader-datamodel"))
-
-	coreLibraryDesugaring(libs.jdk.desugar)
-
-	implementation(libs.kotlinx.serialization.json)
-	implementation(libs.kotlinx.serialization.json.okio)
-	implementation(libs.kotlin.reflect)
-
-	// Hilt dependencies
-	implementation(libs.hilt.android)
-	ksp(libs.hilt.compiler)
-	implementation(libs.androidx.hilt.navigation.compose)
-	implementation(libs.androidx.hilt.work)
-
-	// Room database
-	implementation(libs.room.runtime)
-	implementation(libs.room.ktx)
-	ksp(libs.room.compiler)
-
-	// WorkManager
-	implementation(libs.work.runtime.ktx)
-	implementation(libs.work.gcm)
-
-	implementation(libs.androidx.annotation)
-	implementation(libs.androidx.appcompat)
-	implementation(libs.androidx.constraintlayout)
-	implementation(libs.androidx.core)
-	implementation(libs.androidx.fragment)
-	implementation(libs.androidx.preference)
-	implementation(libs.androidx.recyclerview)
-	implementation(libs.androidx.swiperefreshlayout)
-	implementation(libs.androidx.window)
-
-	implementation(libs.google.flexbox)
-	implementation(libs.google.material)
-
-	implementation(libs.jackson.core)
-	implementation(libs.commons.lang)
-
-	implementation(libs.commons.text)
-
-	implementation(libs.okhttp)
-	implementation(libs.netcipher.webkit)
-	implementation(libs.media3.exoplayer)
-	implementation(libs.media3.ui)
-	implementation(libs.zstd) {
-		artifact {
-			type = "aar"
-		}
-	}
-
-	implementation(platform(libs.androidx.compose.bom))
-	implementation(libs.androidx.activity.compose)
-	implementation(libs.androidx.compose.material3)
-	implementation(libs.androidx.compose.runtime)
-	implementation(libs.androidx.compose.ui)
-	implementation(libs.androidx.compose.ui.graphics)
-	implementation(libs.androidx.compose.ui.tooling)
-	implementation(libs.androidx.compose.constraintlayout)
-	implementation(libs.androidx.navigation.compose)
-
-	testImplementation(libs.junit)
-	testImplementation(libs.robolectric)
-
-	androidTestImplementation(libs.androidx.test.core)
-	androidTestImplementation(libs.androidx.test.espresso.core)
-	androidTestImplementation(libs.androidx.test.espresso.contrib)
-	androidTestImplementation(libs.androidx.test.rules)
-	androidTestImplementation(libs.androidx.test.junit)
 }
 
 android {
@@ -107,7 +30,6 @@ android {
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 	}
 
-	// Flag to tell aapt to keep the attribute ids around
 	androidResources {
 		additionalParameters.add("--no-version-vectors")
 	}
@@ -130,7 +52,6 @@ android {
 			sourceCompatibility = it
 			targetCompatibility = it
 		}
-
 	}
 
 	lint {
@@ -162,14 +83,69 @@ android {
     buildToolsVersion = "36.0.0"
 }
 
-composeCompiler {
-	if (project.findProperty("composeCompilerReports") == "true") {
-		reportsDestination = layout.buildDirectory.dir("compose_compiler")
+dependencies {
+	coreLibraryDesugaring(libs.jdk.desugar)
+
+	implementation(libs.kotlinx.serialization.json)
+	implementation(libs.kotlinx.serialization.json.okio)
+	implementation(libs.kotlin.reflect)
+
+	implementation(libs.hilt.android)
+	ksp(libs.hilt.compiler)
+	implementation(libs.androidx.hilt.navigation.compose)
+	implementation(libs.androidx.hilt.work)
+
+
+	implementation(libs.work.runtime.ktx)
+	implementation(libs.work.gcm)
+
+	implementation(libs.androidx.annotation)
+	implementation(libs.androidx.appcompat)
+	implementation(libs.androidx.constraintlayout)
+	implementation(libs.androidx.core)
+	implementation(libs.androidx.fragment)
+	implementation(libs.androidx.preference)
+	implementation(libs.androidx.recyclerview)
+	implementation(libs.androidx.swiperefreshlayout)
+	implementation(libs.androidx.window)
+
+	implementation(libs.google.flexbox)
+	implementation(libs.google.material)
+
+	implementation(libs.jackson.core)
+	implementation(libs.commons.lang)
+	implementation(libs.commons.text)
+
+	implementation(libs.okhttp)
+	implementation(libs.netcipher.webkit)
+	implementation(libs.media3.exoplayer)
+	implementation(libs.media3.ui)
+	implementation(libs.zstd) {
+		artifact {
+			type = "aar"
+		}
 	}
 
-	if (project.findProperty("composeCompilerMetrics") == "true") {
-		metricsDestination = layout.buildDirectory.dir("compose_compiler")
-	}
+	implementation(platform(libs.androidx.compose.bom))
+	implementation(libs.androidx.activity.compose)
+	implementation(libs.androidx.compose.material3)
+	implementation(libs.androidx.compose.runtime)
+	implementation(libs.androidx.compose.ui)
+	implementation(libs.androidx.compose.ui.graphics)
+	implementation(libs.androidx.compose.ui.tooling)
+	implementation(libs.androidx.compose.constraintlayout)
+	implementation(libs.androidx.navigation.compose)
+
+	testImplementation(libs.junit)
+	testImplementation(libs.robolectric)
+
+	androidTestImplementation(libs.androidx.test.core)
+	androidTestImplementation(libs.androidx.test.espresso.core)
+	androidTestImplementation(libs.androidx.test.espresso.contrib)
+	androidTestImplementation(libs.androidx.test.rules)
+	androidTestImplementation(libs.androidx.test.junit)
+	androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+	androidTestImplementation(platform(libs.androidx.compose.bom))
 }
 
 pmd {
@@ -179,14 +155,44 @@ pmd {
 tasks.register("pmd", Pmd::class) {
 	dependsOn.add("assembleDebug")
 	ruleSetFiles = files("${project.rootDir}/config/pmd/rules.xml")
-	ruleSets = emptyList() // otherwise defaults clash with the list in rules.xml
+	ruleSets = emptyList()
 	source("src/main/java/org/quantumbadger")
 	include("**/*.java")
 	isConsoleOutput = true
 }
 
-checkstyle {
-	toolVersion = libs.versions.checkstyle.get()
+spotless {
+	lineEndings = com.diffplug.spotless.LineEnding.UNIX
+
+	kotlin {
+		target("**/*.kt")
+		targetExclude("**/build/**/*.kt")
+		targetExclude("**/generated/**/*.kt")
+		ktlint("1.6.0").editorConfigOverride(mapOf(
+			"max_line_length" to "120"
+		))
+		licenseHeaderFile("${project.rootDir}/config/checkstyle/copyright.java.txt")
+			.delimiter("//")
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+
+	kotlinGradle {
+		target("*.kts")
+		targetExclude("**/build/**/*.kts")
+		ktlint("1.6.0")
+	}
+
+	java {
+		target("**/*.java")
+		targetExclude("**/build/**/*.java")
+		targetExclude("**/generated/**/*.java")
+		googleJavaFormat()
+		licenseHeaderFile("${project.rootDir}/config/checkstyle/copyright.java.txt")
+			.delimiter("//")
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
 }
 
 tasks.register("Checkstyle", Checkstyle::class) {

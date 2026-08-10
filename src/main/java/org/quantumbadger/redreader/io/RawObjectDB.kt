@@ -62,8 +62,8 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
             context.getApplicationContext(),
             dbFilename,
             null,
-            TODO("Cannot convert element")
-        )<E> RawObjectDB . Companion . getDbVersion < E ? > (clazz)
+            Companion.getDbVersion(clazz)
+        )
 
         this.clazz = clazz
 

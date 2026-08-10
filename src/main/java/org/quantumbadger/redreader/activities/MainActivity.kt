@@ -105,20 +105,20 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
     OptionsMenuCommentsListener, SessionChangeListener, SubredditSubscriptionStateChangeListener {
     private var twoPane = false
 
-    private var mainMenuFragment: MainMenuFragment? = null
+    private var mainMenuFragment: MainMenuFragment?=null
 
-    private var postListingController: PostListingController? = null
-    private var postListingFragment: PostListingFragment? = null
+    private var postListingController: PostListingController?=null
+    private var postListingFragment: PostListingFragment?=null
 
-    private var commentListingController: CommentListingController? = null
-    private var commentListingFragment: CommentListingFragment? = null
+    private var commentListingController: CommentListingController?=null
+    private var commentListingFragment: CommentListingFragment?=null
 
-    private var mainMenuView: View? = null
-    private var postListingView: View? = null
-    private var commentListingView: View? = null
+    private var mainMenuView: View?=null
+    private var postListingView: View?=null
+    private var commentListingView: View?=null
 
-    private var mLeftPane: FrameLayout? = null
-    private var mRightPane: FrameLayout? = null
+    private var mLeftPane: FrameLayout?=null
+    private var mRightPane: FrameLayout?=null
 
     private var isMenuShown = true
 
@@ -302,8 +302,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
                 )
 
                 val destinationType = root.findViewById<Spinner>(R.id.dialog_mainmenu_custom_type)
-                val editText =
-                    root.findViewById<AutoCompleteTextView>(R.id.dialog_mainmenu_custom_value)
+                val editText =                     root.findViewById<AutoCompleteTextView>(R.id.dialog_mainmenu_custom_value)
 
                 val typeReturnValues = getResources().getStringArray(
                     R.array.mainmenu_custom_destination_type_return
@@ -331,7 +330,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
                     this,
                     android.R.layout.simple_dropdown_item_1line,
                     CollectionStream<SubredditCanonicalId?>(subredditHistory)
-                        .map<String?>(MapStream.Operator { obj: Input? -> obj.getDisplayNameLowercase() })
+                        .map<String?>(MapStream.Operator { obj: SubredditCanonicalId? -> obj.getDisplayNameLowercase() })
                         .collect<ArrayList<String?>?>(ArrayList<String?>())
                 )
 
@@ -375,7 +374,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
                         }
 
                         val value = s.toString()
-                        var type: String? = null
+                        var type: String?=null
 
                         if (value.startsWith("http://") || value.startsWith("https://")) {
                             type = "url"
@@ -408,9 +407,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
                         i: Int,
                         l: Long
                     ) {
-                        val typeName
-                                : String? =
-                            typeReturnValues[destinationType.getSelectedItemPosition()]
+                        val typeName: String?=typeReturnValues[destinationType.getSelectedItemPosition()]
 
                         if ("subreddit" == typeName) {
                             editText.setAdapter<ArrayAdapter<String?>?>(autocompleteAdapter)
@@ -485,12 +482,10 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
                     .replace(" ", "")
 
                 try {
-                    val normalizedName: String? = RedditSubreddit.Companion.stripRPrefix(
+                    val normalizedName: String?=RedditSubreddit.Companion.stripRPrefix(
                         subredditInput
                     )
-                    val redditURL
-                            : RedditURL? =
-                        SubredditPostListURL.Companion.getSubreddit(normalizedName)
+                    val redditURL: RedditURL?=SubredditPostListURL.Companion.getSubreddit(normalizedName)
                     if (redditURL == null
                         || (redditURL.pathType()
                                 != RedditURLParser.SUBREDDIT_POST_LISTING_URL)
@@ -684,8 +679,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
 
     override fun onPostCommentsSelected(post: RedditPreparedPost) {
         if (twoPane) {
-            commentListingController
-            = CommentListingController(
+            commentListingController = CommentListingController(
                 PostCommentListingURL.Companion.forPostId(
                     post.src
                         .getIdAlone()
@@ -746,20 +740,17 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             .getDefaultAccount()
         val subredditSubscriptionState: SubredditSubscriptionState?
 
-        val subredditSubscriptionManager
-                : RedditSubredditSubscriptionManager =
-            RedditSubredditSubscriptionManager.Companion.getSingleton(this, user)
+        val subredditSubscriptionManager: RedditSubredditSubscriptionManager=            RedditSubredditSubscriptionManager.Companion.getSingleton(this, user)
 
-        var subredditPinState: Boolean? = null
-        var subredditBlockedState: Boolean? = null
+        var subredditPinState: Boolean?=null
+        var subredditBlockedState: Boolean?=null
 
         if (postsVisible
             && !user.isAnonymous && postListingController!!.isSubreddit()
             && subredditSubscriptionManager.areSubscriptionsReady()
             && postListingFragment != null && postListingFragment!!.getSubreddit() != null
         ) {
-            subredditSubscriptionState
-            = subredditSubscriptionManager.getSubscriptionState(
+            subredditSubscriptionState = subredditSubscriptionManager.getSubscriptionState(
                 postListingController!!.subredditCanonicalName()
             )
         } else {

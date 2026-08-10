@@ -23,7 +23,7 @@ import org.quantumbadger.redreader.common.General.dpToPixels
 import kotlin.math.abs
 
 abstract class SwipableItemView(context: Context) : FrameLayout(context) {
-    private var mSwipeStart: MotionEvent? = null
+    private var mSwipeStart: MotionEvent?=null
     private var mSwipeStartPointerId = -1
 
     private var mSwipingEnabled = true
@@ -36,7 +36,7 @@ abstract class SwipableItemView(context: Context) : FrameLayout(context) {
     private val mSwipeHistory = SwipeHistory(30)
     private var mVelocity = 0f
 
-    private var mCurrentSwipeAnimation: SwipeAnimation? = null
+    private var mCurrentSwipeAnimation: SwipeAnimation?=null
 
     protected abstract fun onSwipeFingerDown(
         x: Int,

@@ -48,11 +48,11 @@ import kotlin.math.max
 abstract class ViewsBaseActivity : BaseActivity() {
     private var mActionbarTitleTextView: Optional<TextView?> = Optional.Companion.empty<TextView?>()
 
-    private var mContentListing: FrameLayout? = null
-    private var mContentOverlay: FrameLayout? = null
+    private var mContentListing: FrameLayout?=null
+    private var mContentOverlay: FrameLayout?=null
 
-    private var mActionbarBackIconView: ImageView? = null
-    private var mActionbarTitleOuterView: View? = null
+    private var mActionbarBackIconView: ImageView?=null
+    private var mActionbarTitleOuterView: View?=null
 
     protected open fun baseActivityIsToolbarActionBarEnabled(): Boolean {
         return true
@@ -182,8 +182,7 @@ abstract class ViewsBaseActivity : BaseActivity() {
             supportActionBar.setDisplayShowTitleEnabled(false)
             toolbar.setContentInsetsAbsolute(0, 0)
 
-            mActionbarBackIconView =
-                toolbar.findViewById<ImageView>(R.id.actionbar_title_back_image)
+            mActionbarBackIconView =                 toolbar.findViewById<ImageView>(R.id.actionbar_title_back_image)
             mActionbarTitleOuterView = toolbar.findViewById<View>(R.id.actionbar_title_outer)
 
             if (baseActivityIsToolbarSearchBarEnabled()) {
@@ -265,8 +264,7 @@ abstract class ViewsBaseActivity : BaseActivity() {
     private fun wrapWithSystemBarScrims(content: View): View {
         val statusBarColour: Int
         run {
-            val appearance =
-                obtainStyledAttributes(intArrayOf(androidx.appcompat.R.attr.colorPrimaryDark))
+            val appearance =                 obtainStyledAttributes(intArrayOf(androidx.appcompat.R.attr.colorPrimaryDark))
             statusBarColour = appearance.getColor(0, General.COLOR_INVALID)
             appearance.recycle()
         }

@@ -87,7 +87,7 @@ class CacheRequest private constructor(
 
     val cache: Boolean
 
-    private var download: CacheDownload? = null
+    private var download: CacheDownload?=null
     private var cancelled = false
 
     val context: Context

@@ -61,8 +61,8 @@ data class ImageSize(
 @Parcelize
 data class ImageUrlInfo(
 	@JvmField val url: UriString,
-	@JvmField val size: ImageSize? = null,
-	@JvmField val sizeBytes: Long? = null,
+	@JvmField val size: ImageSize?=null,
+	@JvmField val sizeBytes: Long?=null,
 ) : Parcelable
 
 @Immutable
@@ -71,23 +71,23 @@ data class ImageInfo(
 
 	// TODO include all sizes and select at usage time
 	@JvmField val original: ImageUrlInfo,
-	@JvmField val bigSquare: ImageUrlInfo? = null,
-	@JvmField val preview: ImageUrlInfo? = null,
+	@JvmField val bigSquare: ImageUrlInfo?=null,
+	@JvmField val preview: ImageUrlInfo?=null,
 
-	@JvmField val urlAudioStream: UriString? = null,
+	@JvmField val urlAudioStream: UriString?=null,
 
 	// A page containing a compact HTML player, suitable for showing in a WebView
-	@JvmField val urlEmbeddedPlayer: UriString? = null,
+	@JvmField val urlEmbeddedPlayer: UriString?=null,
 
-	@JvmField val title: String? = null,
-	@JvmField val caption: String? = null,
+	@JvmField val title: String?=null,
+	@JvmField val caption: String?=null,
 
-	@JvmField val outboundUrl: UriString? = null,
+	@JvmField val outboundUrl: UriString?=null,
 
-	@JvmField val type: String? = null,
-	val isAnimated: Boolean? = null,
+	@JvmField val type: String?=null,
+	val isAnimated: Boolean?=null,
 
-	@JvmField val mediaType: MediaType? = null,
+	@JvmField val mediaType: MediaType?=null,
 	@JvmField val hasAudio: HasAudio,
 ) : Parcelable {
 
@@ -156,7 +156,7 @@ data class ImageInfo(
 		@JvmStatic
 		@Throws(IOException::class)
 		fun parseStreamable(obj: JsonObject): ImageInfo {
-			var fileObj: JsonObject? = null
+			var fileObj: JsonObject?=null
 			val files = obj.getObject("files")
 
 			val preferredTypes = arrayOf(
@@ -167,7 +167,7 @@ data class ImageInfo(
 				"mp4-mobile",
 				"webm-mobile"
 			)
-			var selectedType: String? = null
+			var selectedType: String?=null
 
 			if (files != null) {
 				for (type in preferredTypes) {
@@ -183,8 +183,7 @@ data class ImageInfo(
 				throw IOException("No suitable Streamable files found")
 			}
 
-			val mimeType =
-				"video/" + selectedType!!.split("-".toRegex()).dropLastWhile { it.isEmpty() }
+			val mimeType = 				"video/" + selectedType!!.split("-".toRegex()).dropLastWhile { it.isEmpty() }
 					.toTypedArray()[0]
 
 			val original = fileObj.getString("url")?.let { originalUrl ->
@@ -261,7 +260,7 @@ data class ImageInfo(
 			val isAnimated = obj?.getBoolean("animated")
 
 			var mp4 = false
-			var hasSound: Boolean? = null
+			var hasSound: Boolean?=null
 
 			val originalSize = ImageSize.fromJson(obj)
 

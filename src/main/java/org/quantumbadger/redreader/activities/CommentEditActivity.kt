@@ -41,9 +41,9 @@ import org.quantumbadger.redreader.reddit.RedditAPI
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 
 class CommentEditActivity : ViewsBaseActivity() {
-    private var textEdit: EditText? = null
+    private var textEdit: EditText?=null
 
-    private var commentIdAndType: RedditIdAndType? = null
+    private var commentIdAndType: RedditIdAndType?=null
     private var isSelfPost = false
 
     protected override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,8 +123,7 @@ class CommentEditActivity : ViewsBaseActivity() {
                 true
             })
 
-            val handler
-                    : ActionResponseHandler = object : ActionResponseHandler(this) {
+            val handler: ActionResponseHandler=object : ActionResponseHandler(this) {
                 override fun onSuccess() {
                     AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
                         safeDismissDialog(progressDialog)

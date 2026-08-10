@@ -25,7 +25,7 @@ class MemoryDataStream {
     private var mData: ByteArray
     private var mSize: Int
 
-    private var mFailed: IOException? = null
+    private var mFailed: IOException?=null
     private var mComplete = false
 
     @JvmOverloads

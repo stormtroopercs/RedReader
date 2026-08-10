@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BaseActivity : AppCompatActivity(),
     SharedPrefsWrapper.OnSharedPreferenceChangeListener {
-    private var mSharedPreferences: SharedPrefsWrapper? = null
+    private var mSharedPreferences: SharedPrefsWrapper?=null
 
     private val mRequestIdGenerator = AtomicInteger(10000)
 
@@ -58,8 +58,7 @@ abstract class BaseActivity : AppCompatActivity(),
         fun onActivityResult(resultCode: Int, data: Intent?)
     }
 
-    private val mBackPressedCallback
-            : OnBackPressedCallback = object : OnBackPressedCallback(true) {
+    private val mBackPressedCallback: OnBackPressedCallback=object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
             if (!osHandlesBackAnimations() && !General.onBackPressed()) {
                 // Debounced: ignore rapid repeated presses
@@ -138,8 +137,7 @@ abstract class BaseActivity : AppCompatActivity(),
     }
 
     protected fun invalidateBackPressedCallback() {
-        mBackPressedCallback.isEnabled =
-            !osHandlesBackAnimations() || baseActivityMustInterceptBack()
+        mBackPressedCallback.isEnabled =             !osHandlesBackAnimations() || baseActivityMustInterceptBack()
     }
 
     /**

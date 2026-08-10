@@ -416,10 +416,8 @@ class RedditChangeDataManager {
         val timestampBoundary = now.subtract(maxAge)
 
         synchronized(mLock) {
-            val iterator =
-                mEntries.entries.iterator()
-            val byTimestamp: SortedMap<TimestampUTC?, RedditIdAndType?> =
-                TreeMap<TimestampUTC?, RedditIdAndType?>()
+            val iterator =                 mEntries.entries.iterator()
+            val byTimestamp: SortedMap<TimestampUTC?, RedditIdAndType?> =                 TreeMap<TimestampUTC?, RedditIdAndType?>()
 
             while (iterator.hasNext()) {
                 val entry = iterator.next()
@@ -444,8 +442,7 @@ class RedditChangeDataManager {
 
             // Limit total number of entries to limit our memory usage. This is meant as a
             // safeguard, as the time-based pruning above should have removed enough already.
-            val iter2 =
-                byTimestamp.entries.iterator()
+            val iter2 =                 byTimestamp.entries.iterator()
             while (iter2.hasNext()) {
                 if (mEntries.size <= MAX_ENTRY_COUNT) {
                     break
@@ -478,7 +475,7 @@ class RedditChangeDataManager {
 
         fun getInstance(user: RedditAccount?): RedditChangeDataManager {
             synchronized(INSTANCE_MAP) {
-                var result: RedditChangeDataManager? = INSTANCE_MAP.get(user)
+                var result: RedditChangeDataManager?=INSTANCE_MAP.get(user)
                 if (result == null) {
                     result = RedditChangeDataManager()
                     INSTANCE_MAP.put(user, result)
@@ -503,13 +500,11 @@ class RedditChangeDataManager {
         fun writeAllUsers(dos: ExtendedDataOutputStream) {
             Log.i(TAG, "Taking snapshot...")
 
-            val data: HashMap<RedditAccount?, HashMap<RedditIdAndType?, Entry?>?> =
-                snapshotAllUsers()
+            val data: HashMap<RedditAccount?, HashMap<RedditIdAndType?, Entry?>?> =                 snapshotAllUsers()
 
             Log.i(TAG, "Writing to stream...")
 
-            val userDataSet =
-                data.entries
+            val userDataSet =                 data.entries
 
             dos.writeInt(userDataSet.size)
 
@@ -580,8 +575,7 @@ class RedditChangeDataManager {
 
                 Log.i(TAG, "Getting account...")
 
-                val account: RedditAccount? =
-                    RedditAccountManager.Companion.getInstance(context).getAccount(username)
+                val account: RedditAccount?=RedditAccountManager.Companion.getInstance(context).getAccount(username)
 
                 if (account == null) {
                     if (isSensitiveDebugLoggingEnabled) {

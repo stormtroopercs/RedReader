@@ -67,38 +67,32 @@ import kotlin.Throwable
 import kotlin.run
 
 class SubredditSearchActivity : ViewsBaseActivity(), SubredditSubscriptionStateChangeListener {
-    private var mSubredditSubscriptionManager: RedditSubredditSubscriptionManager? = null
+    private var mSubredditSubscriptionManager: RedditSubredditSubscriptionManager?=null
 
     private val mSearchView = ThreadCheckedVar<SearchView?>(null)
 
-    private val mSubscriptions =
-        ThreadCheckedVar<Optional<ArrayList<SubredditDetails?>?>?>(Optional.Companion.empty<ArrayList<SubredditDetails?>?>())
+    private val mSubscriptions =         ThreadCheckedVar<Optional<ArrayList<SubredditDetails?>?>?>(Optional.Companion.empty<ArrayList<SubredditDetails?>?>())
 
     private val mQueriesPending = ThreadCheckedVar<HashSet<String?>?>(HashSet<String?>())
 
     private val mSubscriptionListPending = ThreadCheckedVar<Boolean?>(false)
 
-    private val mQueryResults =
-        ThreadCheckedVar<HashMap<String?, ArrayList<SubredditDetails>?>?>(HashMap<String?, ArrayList<SubredditDetails?>?>())
+    private val mQueryResults =         ThreadCheckedVar<HashMap<String?, ArrayList<SubredditDetails>?>?>(HashMap<String?, ArrayList<SubredditDetails?>?>())
 
-    private val mSubredditItemCache: GenerationalCache<SubredditDetails?, SubredditItem?> =
-        GenerationalCache<SubredditDetails?, SubredditItem?>(FunctionOneArgWithReturn { subreddit: Param? ->
+    private val mSubredditItemCache: GenerationalCache<SubredditDetails?, SubredditItem?> =         GenerationalCache<SubredditDetails?, SubredditItem?>(FunctionOneArgWithReturn { subreddit: Param? ->
             SubredditItem(subreddit)
         })
 
-    private var mSubredditSubscriptionListenerContext: Optional<ListenerContext?> =
-        Optional.Companion.empty<ListenerContext?>()
+    private var mSubredditSubscriptionListenerContext: Optional<ListenerContext?> =         Optional.Companion.empty<ListenerContext?>()
 
-    private var mRecyclerViewLayout: LinearLayoutManager? = null
-    private var mLoadingItem: GroupedRecyclerViewItemLoadingSpinner? = null
+    private var mRecyclerViewLayout: LinearLayoutManager?=null
+    private var mLoadingItem: GroupedRecyclerViewItemLoadingSpinner?=null
 
-    private val mSubscriptionsErrorItem =
-        ThreadCheckedVar<Optional<GroupedRecyclerViewItemRRError?>?>(Optional.Companion.empty<GroupedRecyclerViewItemRRError?>())
+    private val mSubscriptionsErrorItem =         ThreadCheckedVar<Optional<GroupedRecyclerViewItemRRError?>?>(Optional.Companion.empty<GroupedRecyclerViewItemRRError?>())
 
-    private val mQueryErrorItem =
-        ThreadCheckedVar<Optional<GroupedRecyclerViewItemRRError?>?>(Optional.Companion.empty<GroupedRecyclerViewItemRRError?>())
+    private val mQueryErrorItem =         ThreadCheckedVar<Optional<GroupedRecyclerViewItemRRError?>?>(Optional.Companion.empty<GroupedRecyclerViewItemRRError?>())
 
-    private var mRecyclerViewAdapter: GroupedRecyclerViewAdapter? = null
+    private var mRecyclerViewAdapter: GroupedRecyclerViewAdapter?=null
     override fun onSubredditSubscriptionListUpdated(
         subredditSubscriptionManager: RedditSubredditSubscriptionManager?
     ) {
@@ -323,8 +317,7 @@ class SubredditSearchActivity : ViewsBaseActivity(), SubredditSubscriptionStateC
                 }
             })
 
-        mSubredditSubscriptionListenerContext
-        = Optional.Companion.of<ListenerContext?>(mSubredditSubscriptionManager!!.addListener(this))
+        mSubredditSubscriptionListenerContext = Optional.Companion.of<ListenerContext?>(mSubredditSubscriptionManager!!.addListener(this))
 
         requestSubscriptions()
 
@@ -383,9 +376,7 @@ class SubredditSearchActivity : ViewsBaseActivity(), SubredditSubscriptionStateC
         Log.i(TAG, "Running search")
 
         val cacheManager: CacheManager = CacheManager.Companion.getInstance(this)
-        val user
-                : RedditAccount =
-            RedditAccountManager.Companion.getInstance(this).getDefaultAccount()
+        val user: RedditAccount=            RedditAccountManager.Companion.getInstance(this).getDefaultAccount()
 
         RedditAPI.searchSubreddits(
             cacheManager,
@@ -399,7 +390,7 @@ class SubredditSearchActivity : ViewsBaseActivity(), SubredditSubscriptionStateC
                     Log.i(TAG, "Search results received")
 
                     val results = CollectionStream<RedditSubreddit?>(value.subreddits)
-                        .map<SubredditDetails?>(MapStream.Operator { subreddit: Input? ->
+                        .map<SubredditDetails?>(MapStream.Operator { subreddit: SubredditCanonicalId? ->
                             SubredditDetails.Companion.newWithRuntimeException(
                                 subreddit
                             )
@@ -458,7 +449,7 @@ class SubredditSearchActivity : ViewsBaseActivity(), SubredditSubscriptionStateC
                         mSubscriptionListPending.set(false)
 
                         val subscriptions = CollectionStream<SubredditCanonicalId?>(list)
-                            .map<SubredditDetails?>(MapStream.Operator { subreddit: Input? ->
+                            .map<SubredditDetails?>(MapStream.Operator { subreddit: SubredditCanonicalId? ->
                                 SubredditDetails(
                                     subreddit
                                 )

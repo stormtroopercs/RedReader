@@ -48,8 +48,7 @@ class BodyElementQuote(private val mElements: ArrayList<BodyElement?>) :
             val quoteIndentLayoutParams = quoteIndent.getLayoutParams()
             quoteIndentLayoutParams.width = quoteBarWidth
             quoteIndentLayoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
-            (quoteIndentLayoutParams as MarginLayoutParams).rightMargin
-            = quoteBarWidth
+            (quoteIndentLayoutParams as MarginLayoutParams).rightMargin = quoteBarWidth
             quoteIndent.setLayoutParams(quoteIndentLayoutParams)
         }
 

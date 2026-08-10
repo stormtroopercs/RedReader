@@ -34,7 +34,7 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
     private var hashSet: HashSet<String>? = null
 
     @WritableField
-    private var serialised: String? = null
+    private var serialised: String?=null
 
     @WritableObjectKey
     private val key: String?

@@ -58,20 +58,18 @@ import java.util.Locale
 import java.util.Objects
 
 object PrefsUtility {
-    const val PREF_LANGUAGE_SETTING_MIGRATED
-            : String = "pref_language_setting_migrated"
+    const val PREF_LANGUAGE_SETTING_MIGRATED: String="pref_language_setting_migrated"
 
-    private var sharedPrefs: SharedPrefsWrapper? = null
-    private var mRes: Resources? = null
+    private var sharedPrefs: SharedPrefsWrapper?=null
+    private var mRes: Resources?=null
 
     // Application context, so cannot leak
     @SuppressLint("StaticFieldLeak")
-    private var appContext: Context? = null
+    private var appContext: Context?=null
 
     // The SharedPreferences implementation only holds weak references to
     // listeners, so keep a strong reference here for the process lifetime.
-    private val LANGUAGE_CHANGE_LISTENER =
-        SharedPrefsWrapper.OnSharedPreferenceChangeListener { prefs: SharedPrefsWrapper?, key: String? ->
+    private val LANGUAGE_CHANGE_LISTENER =         SharedPrefsWrapper.OnSharedPreferenceChangeListener { prefs: SharedPrefsWrapper?, key: String? ->
             if (getPrefKey(
                     string.pref_appearance_langforce_key
                 ) == key
@@ -308,8 +306,7 @@ object PrefsUtility {
         }
 
         if (value.contains("-r")) {
-            val split: Array<String?> =
-                value.split("-r".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            val split: Array<String?> =                 value.split("-r".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
             return LocaleListCompat.create(Locale(split[0], split[1]))
         }
 

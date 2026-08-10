@@ -49,24 +49,23 @@ import java.util.Objects
 
 class SubredditToolbar @JvmOverloads constructor(
     private val mContext: Context,
-    attrs: AttributeSet? = null,
+    attrs: AttributeSet?=null,
     defStyleAttr: Int = 0
 ) : LinearLayout(mContext, attrs, defStyleAttr), SubredditSubscriptionStateChangeListener,
     SharedPrefsWrapper.OnSharedPreferenceChangeListener {
     // Field can't be local because the listener gets put in a weak map, and we want to stop it
     // being garbage collected.
-    private var mSubscriptionListenerContext: ListenerContext? = null
+    private var mSubscriptionListenerContext: ListenerContext?=null
 
-    private var mRunnableOnAttach: Runnable? = null
-    private var mRunnableOnDetach: Runnable? = null
-    private var mRunnableOnSubscriptionsChange: Runnable? = null
-    private var mRunnableOnPinnedChange: Runnable? = null
+    private var mRunnableOnAttach: Runnable?=null
+    private var mRunnableOnDetach: Runnable?=null
+    private var mRunnableOnSubscriptionsChange: Runnable?=null
+    private var mRunnableOnPinnedChange: Runnable?=null
 
-    private var mSubredditDetails: Optional<SubredditDetails?> =
-        Optional.Companion.empty<SubredditDetails?>()
+    private var mSubredditDetails: Optional<SubredditDetails?> =         Optional.Companion.empty<SubredditDetails?>()
     private var mUrl: Optional<UriString?> = Optional.Companion.empty<UriString?>()
 
-    private var mButtonInfo: ImageButton? = null
+    private var mButtonInfo: ImageButton?=null
 
     fun bindSubreddit(
         subreddit: SubredditDetails,
@@ -92,35 +91,18 @@ class SubredditToolbar @JvmOverloads constructor(
 
         val sharedPreferences = getSharedPrefs(mContext)
 
-        val currentUser: RedditAccount =
-            RedditAccountManager.Companion.getInstance(mContext).getDefaultAccount()
+        val currentUser: RedditAccount =             RedditAccountManager.Companion.getInstance(mContext).getDefaultAccount()
 
-        val buttonSubscribe = Objects.requireNonNull<ImageButton>(
-            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_subscribe)
-        )
-        val buttonUnsubscribe = Objects.requireNonNull<ImageButton>(
-            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_unsubscribe)
-        )
-        val buttonSubscribeLoading = Objects.requireNonNull<FrameLayout>(
-            (FrameLayout)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_subscribe_loading)
-        )
+        val buttonSubscribe = findViewById<ImageButton>(R.id.subreddit_toolbar_button_subscribe)
+        val buttonUnsubscribe = findViewById<ImageButton>(R.id.subreddit_toolbar_button_unsubscribe)
+        val buttonSubscribeLoading = findViewById<FrameLayout>(R.id.subreddit_toolbar_button_subscribe_loading)
 
-        val buttonPin = Objects.requireNonNull<ImageButton>(
-            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_pin)
-        )
-        val buttonUnpin = Objects.requireNonNull<ImageButton>(
-            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_unpin)
-        )
+        val buttonPin = findViewById<ImageButton>(R.id.subreddit_toolbar_button_pin)
+        val buttonUnpin = findViewById<ImageButton>(R.id.subreddit_toolbar_button_unpin)
 
-        val buttonSubmit = Objects.requireNonNull<ImageButton>(
-            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_submit)
-        )
-        val buttonShare = Objects.requireNonNull<ImageButton>(
-            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_share)
-        )
-        mButtonInfo = Objects.requireNonNull<ImageButton>(
-            (ImageButton)<View> findViewById < android . view . View ? > (R.id.subreddit_toolbar_button_info)
-        )
+        val buttonSubmit = findViewById<ImageButton>(R.id.subreddit_toolbar_button_submit)
+        val buttonShare = findViewById<ImageButton>(R.id.subreddit_toolbar_button_share)
+        mButtonInfo = findViewById<ImageButton>(R.id.subreddit_toolbar_button_info)
 
         for (i in 0..<getChildCount()) {
             val button = getChildAt(i)
@@ -129,14 +111,12 @@ class SubredditToolbar @JvmOverloads constructor(
 
         buttonSubscribeLoading.addView(ButtonLoadingSpinnerView(mContext))
 
-        val subscriptionManager
-                : RedditSubredditSubscriptionManager =
-            RedditSubredditSubscriptionManager.Companion.getSingleton(
+        val subscriptionManager: RedditSubredditSubscriptionManager=            RedditSubredditSubscriptionManager.Companion.getSingleton(
                 mContext,
                 currentUser
             )
 
-        mRunnableOnSubscriptionsChange = Runnable? {
+        mRunnableOnSubscriptionsChange = Runnable {
             val subscriptionState = subscriptionManager.getSubscriptionState(
                 mSubredditDetails.get().id
             )
@@ -155,7 +135,7 @@ class SubredditToolbar @JvmOverloads constructor(
             }
         }
 
-        mRunnableOnPinnedChange = Runnable? {
+        mRunnableOnPinnedChange = Runnable {
             val pinned = PrefsUtility.pref_pinned_subreddits_check(
                 mSubredditDetails.get().id
             )
@@ -168,7 +148,7 @@ class SubredditToolbar @JvmOverloads constructor(
             }
         }
 
-        mRunnableOnAttach = Runnable? {
+        mRunnableOnAttach = Runnable {
             mSubscriptionListenerContext = subscriptionManager.addListener(this)
             sharedPreferences.registerOnSharedPreferenceChangeListener(this)
 
@@ -176,15 +156,14 @@ class SubredditToolbar @JvmOverloads constructor(
             mRunnableOnPinnedChange!!.run()
         }
 
-        mRunnableOnDetach = Runnable? {
+        mRunnableOnDetach = Runnable {
             mSubscriptionListenerContext!!.removeListener()
             mSubscriptionListenerContext = null
             sharedPreferences.unregisterOnSharedPreferenceChangeListener(this)
         }
 
         if (currentUser.isAnonymous) {
-            val mustBeLoggedInListener =
-                OnClickListener { v: View? -> showMustBeLoggedInDialog(activity) }
+            val mustBeLoggedInListener =                 OnClickListener { v: View? -> showMustBeLoggedInDialog(activity) }
 
             buttonSubscribe.setOnClickListener(mustBeLoggedInListener)
             buttonUnsubscribe.setOnClickListener(mustBeLoggedInListener)

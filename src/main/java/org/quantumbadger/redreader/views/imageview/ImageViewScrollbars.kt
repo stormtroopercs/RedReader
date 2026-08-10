@@ -78,12 +78,9 @@ class ImageViewScrollbars(
             mVScroll = RRGLRenderableGroup()
             group.add(mVScroll)
 
-            val vScrollMarker =
-                RRGLRenderableColouredQuad(glContext)
-            val vScrollBar =
-                RRGLRenderableColouredQuad(glContext)
-            val vScrollBorder =
-                RRGLRenderableColouredQuad(glContext)
+            val vScrollMarker =                 RRGLRenderableColouredQuad(glContext)
+            val vScrollBar =                 RRGLRenderableColouredQuad(glContext)
+            val vScrollBorder =                 RRGLRenderableColouredQuad(glContext)
 
             vScrollMarker.setColour(1f, 1f, 1f, 0.8f)
             vScrollBar.setColour(0f, 0f, 0f, 0.5f)
@@ -93,11 +90,9 @@ class ImageViewScrollbars(
             mVScrollBarScale = RRGLRenderableScale(vScrollBar)
             mVScrollBorderScale = RRGLRenderableScale(vScrollBorder)
 
-            mVScrollMarkerTranslation =
-                RRGLRenderableTranslation(mVScrollMarkerScale)
+            mVScrollMarkerTranslation =                 RRGLRenderableTranslation(mVScrollMarkerScale)
             mVScrollBarTranslation = RRGLRenderableTranslation(mVScrollBarScale)
-            mVScrollBorderTranslation =
-                RRGLRenderableTranslation(mVScrollBorderScale)
+            mVScrollBorderTranslation =                 RRGLRenderableTranslation(mVScrollBorderScale)
 
             mVScroll.add(mVScrollBorderTranslation)
             mVScroll.add(mVScrollBarTranslation)
@@ -109,12 +104,9 @@ class ImageViewScrollbars(
             mHScroll = RRGLRenderableGroup()
             group.add(mHScroll)
 
-            val hScrollMarker =
-                RRGLRenderableColouredQuad(glContext)
-            val hScrollBar =
-                RRGLRenderableColouredQuad(glContext)
-            val hScrollBorder =
-                RRGLRenderableColouredQuad(glContext)
+            val hScrollMarker =                 RRGLRenderableColouredQuad(glContext)
+            val hScrollBar =                 RRGLRenderableColouredQuad(glContext)
+            val hScrollBorder =                 RRGLRenderableColouredQuad(glContext)
 
             hScrollMarker.setColour(1f, 1f, 1f, 0.8f)
             hScrollBar.setColour(0f, 0f, 0f, 0.5f)
@@ -124,11 +116,9 @@ class ImageViewScrollbars(
             mHScrollBarScale = RRGLRenderableScale(hScrollBar)
             mHScrollBorderScale = RRGLRenderableScale(hScrollBorder)
 
-            mHScrollMarkerTranslation =
-                RRGLRenderableTranslation(mHScrollMarkerScale)
+            mHScrollMarkerTranslation =                 RRGLRenderableTranslation(mHScrollMarkerScale)
             mHScrollBarTranslation = RRGLRenderableTranslation(mHScrollBarScale)
-            mHScrollBorderTranslation =
-                RRGLRenderableTranslation(mHScrollBorderScale)
+            mHScrollBorderTranslation =                 RRGLRenderableTranslation(mHScrollBorderScale)
 
             mHScroll.add(mHScrollBorderTranslation)
             mHScroll.add(mHScrollBarTranslation)

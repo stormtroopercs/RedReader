@@ -1330,8 +1330,7 @@ object OptionsMenuUtility {
             return
         }
 
-        val accountManager: RedditAccountManager =
-            RedditAccountManager.Companion.getInstance(activity)
+        val accountManager: RedditAccountManager =             RedditAccountManager.Companion.getInstance(activity)
         val accountsList = accountManager.getAccounts()
 
         if (PrefsUtility.pref_menus_quick_account_switcher()
@@ -1476,8 +1475,7 @@ object OptionsMenuUtility {
 
             val baseSort1 = sorts[0].name()!!.split("_".toRegex()).dropLastWhile { it.isEmpty() }
                 .toTypedArray()[0]
-            val baseSort2: String? =
-                sort.name()!!.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
+            val baseSort2: String?=sort.name()!!.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
 
             return baseSort1 == baseSort2
         }

@@ -37,17 +37,16 @@ import java.util.Arrays
 import java.util.LinkedList
 
 class ShareOrderDialog : AppCompatDialogFragment(), ShareOrderCallbackListener {
-    private var packageManager: PackageManager? = null
-    private var shareIntent: Intent? = null
+    private var packageManager: PackageManager?=null
+    private var shareIntent: Intent?=null
     private var orderedAppList: MutableList<ResolveInfo?>? = null
-    private var context: Context? = null
+    private var context: Context?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         context = getContext()
         packageManager = getActivity()!!.getPackageManager()
-        shareIntent =
-            BundleCompat.getParcelable<Intent?>(requireArguments(), "intent", Intent::class.java)
+        shareIntent =             BundleCompat.getParcelable<Intent?>(requireArguments(), "intent", Intent::class.java)
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -82,8 +81,7 @@ class ShareOrderDialog : AppCompatDialogFragment(), ShareOrderCallbackListener {
         // Make a copy of the list since the original is not modifiable
         val orderedList = LinkedList<ResolveInfo?>(unorderedList)
 
-        val prioritizedAppNames =
-            Arrays.asList<String?>(
+        val prioritizedAppNames =             Arrays.asList<String?>(
                 *PrefsUtility.pref_behaviour_sharing_dialog_data_get()
                     .split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
             )
@@ -128,8 +126,7 @@ class ShareOrderDialog : AppCompatDialogFragment(), ShareOrderCallbackListener {
     }
 
     private fun persistPriority(selectedApplication: ActivityInfo) {
-        val priorityAppList =
-            LinkedList<String?>(
+        val priorityAppList =             LinkedList<String?>(
                 Arrays.asList<String?>(
                     *PrefsUtility.pref_behaviour_sharing_dialog_data_get()
                         .split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()

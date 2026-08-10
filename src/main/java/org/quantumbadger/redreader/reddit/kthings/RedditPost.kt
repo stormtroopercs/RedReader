@@ -31,17 +31,17 @@ import org.quantumbadger.redreader.reddit.things.RedditThingWithIdAndType
 data class RedditPost(
 	val id: String,
 	val name: RedditIdAndType,
-	val url: UrlEncodedString? = null,
-	val url_overridden_by_dest: UrlEncodedString? = null,
-	val title: UrlEncodedString? = null,
-	val author: UrlEncodedString? = null,
-	val domain: UrlEncodedString? = null,
+	val url: UrlEncodedString?=null,
+	val url_overridden_by_dest: UrlEncodedString?=null,
+	val title: UrlEncodedString?=null,
+	val author: UrlEncodedString?=null,
+	val domain: UrlEncodedString?=null,
 	val subreddit: UrlEncodedString,
 	val num_comments: Int,
 	val score: Int,
 	val gilded: Int = 0,
-	val crosspost_parent: String? = null,
-	val upvote_ratio: Double? = null,
+	val crosspost_parent: String?=null,
+	val upvote_ratio: Double?=null,
 	val archived: Boolean = false,
 	val over_18: Boolean = false,
 	val hidden: Boolean = false,
@@ -50,35 +50,35 @@ data class RedditPost(
 	val clicked: Boolean = false,
 	val stickied: Boolean = false,
 	val can_mod_post: Boolean = false,
-	val edited: RedditFieldEdited? = null,
-	val likes: Boolean? = null,
+	val edited: RedditFieldEdited?=null,
+	val likes: Boolean?=null,
 	val spoiler: Boolean = false,
 	val locked: Boolean = false,
 	val created_utc: RedditTimestampUTC,
 
-	val selftext: UrlEncodedString? = null,
-	val selftext_html: UrlEncodedString? = null,
+	val selftext: UrlEncodedString?=null,
+	val selftext_html: UrlEncodedString?=null,
 	val permalink: UrlEncodedString,
 
-	val link_flair_text: UrlEncodedString? = null,
-	val author_flair_text: UrlEncodedString? = null,
+	val link_flair_text: UrlEncodedString?=null,
+	val author_flair_text: UrlEncodedString?=null,
 
-	val thumbnail: UrlEncodedString? = null, // an image URL
+	val thumbnail: UrlEncodedString?=null, // an image URL
 
-	val media: Media? = null,
+	val media: Media?=null,
 
-	val preview: Preview? = null,
+	val preview: Preview?=null,
 	val is_video: Boolean = false,
 
-	val distinguished: String? = null,
-	val suggested_sort: String? = null, // TODO enum type
+	val distinguished: String?=null,
+	val suggested_sort: String?=null, // TODO enum type
 
 	@kotlinx.parcelize.IgnoredOnParcel
 	val media_metadata: Map<UrlEncodedString, MaybeParseError<RedditMediaMetadata>>? = null,
 	@kotlinx.parcelize.IgnoredOnParcel
-	val gallery_data: GalleryData? = null,
+	val gallery_data: GalleryData?=null,
 
-	val removed_by_category: String? = null
+	val removed_by_category: String?=null
 
 ) : RedditThingWithIdAndType, Parcelable {
 
@@ -98,20 +98,20 @@ data class RedditPost(
 		@Parcelize
 		data class GalleryItem (
 			val media_id: UrlEncodedString,
-			val caption: UrlEncodedString? = null,
-			val outbound_url: UrlEncodedString? = null,
+			val caption: UrlEncodedString?=null,
+			val outbound_url: UrlEncodedString?=null,
 		) : Parcelable
 	}
 
 	@Serializable
 	@Parcelize
 	data class Media(
-		val reddit_video: RedditVideo? = null
+		val reddit_video: RedditVideo?=null
 	) : Parcelable {
 		@Serializable
 		@Parcelize
 		data class RedditVideo (
-			val fallback_url: UrlEncodedString? = null
+			val fallback_url: UrlEncodedString?=null
 		) : Parcelable
 	}
 
@@ -120,7 +120,7 @@ data class RedditPost(
 	data class Preview(
 		val enabled: Boolean,
 		val images: List<Image>? = null,
-		val reddit_video_preview: RedditVideoPreview? = null
+		val reddit_video_preview: RedditVideoPreview?=null
 	) : Parcelable {
 		@Serializable
 		@Parcelize
@@ -139,7 +139,7 @@ data class RedditPost(
 		@Serializable
 		@Parcelize
 		data class Image(
-			override val source: ImageDetails? = null,
+			override val source: ImageDetails?=null,
 			override val resolutions: List<ImageDetails>? = null,
 			val variants: ImageVariants
 		) : ImageBase(), Parcelable
@@ -147,20 +147,20 @@ data class RedditPost(
 		@Serializable
 		@Parcelize
 		data class ImageVariants(
-			val mp4: ImageVariant? = null
+			val mp4: ImageVariant?=null
 		) : Parcelable
 
 		@Serializable
 		@Parcelize
 		data class ImageVariant(
-			override val source: ImageDetails? = null,
+			override val source: ImageDetails?=null,
 			override val resolutions: List<ImageDetails>? = null
 		) : ImageBase(), Parcelable
 
 		@Serializable
 		@Parcelize
 		data class RedditVideoPreview(
-			val fallback_url: UrlEncodedString? = null
+			val fallback_url: UrlEncodedString?=null
 		) : Parcelable
 	}
 

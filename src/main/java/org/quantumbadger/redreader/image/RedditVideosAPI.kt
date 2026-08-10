@@ -110,8 +110,7 @@ object RedditVideosAPI {
 								return
 							}
 
-							fun fileUrl(filename: String) =
-								UriString("https://v.redd.it/$imageId/$filename")
+							fun fileUrl(filename: String) = 								UriString("https://v.redd.it/$imageId/$filename")
 
 							val result = ImageInfo(
 								original = ImageUrlInfo(

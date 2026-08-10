@@ -81,8 +81,7 @@ class MainMenuListingManager(
     listener: MainMenuSelectionListener,
     user: RedditAccount
 ) {
-    val adapter
-            : GroupedRecyclerViewAdapter = GroupedRecyclerViewAdapter(13)
+    val adapter: GroupedRecyclerViewAdapter=GroupedRecyclerViewAdapter(13)
     private val mContext: Context
     private val mActivity: AppCompatActivity
 
@@ -754,8 +753,7 @@ class MainMenuListingManager(
         val sharedPreferences = getSharedPrefs(mContext)
 
         if (PrefsUtility.pref_menus_mainmenu_dev_announcements()) {
-            val announcement =
-                AnnouncementDownloader.getMostRecentUnreadAnnouncement(sharedPreferences)
+            val announcement =                 AnnouncementDownloader.getMostRecentUnreadAnnouncement(sharedPreferences)
 
             if (announcement.isPresent()) {
                 mAnnouncementHolder.removeAllViews()
@@ -869,9 +867,7 @@ class MainMenuListingManager(
                     .isAnonymous
             ) {
                 if (itemPref.contains(SubredditAction.SUBSCRIBE)) {
-                    val subscriptionManager
-                            : RedditSubredditSubscriptionManager =
-                        RedditSubredditSubscriptionManager.Companion.getSingleton(
+                    val subscriptionManager: RedditSubredditSubscriptionManager=                        RedditSubredditSubscriptionManager.Companion.getSingleton(
                             activity,
                             RedditAccountManager.Companion.getInstance(activity)
                                 .getDefaultAccount()
@@ -931,8 +927,7 @@ class MainMenuListingManager(
         ) {
             val url = Reddit.getNonAPIUri(subredditCanonicalId.toString())
 
-            val subMan: RedditSubredditSubscriptionManager =
-                RedditSubredditSubscriptionManager.Companion.getSingleton(
+            val subMan: RedditSubredditSubscriptionManager =                 RedditSubredditSubscriptionManager.Companion.getSingleton(
                     activity,
                     RedditAccountManager.Companion.getInstance(
                         activity
@@ -950,8 +945,7 @@ class MainMenuListingManager(
                 }
 
                 SubredditAction.COPY_URL -> {
-                    val clipboardManager =
-                        activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
+                    val clipboardManager =                         activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
                     if (clipboardManager != null) {
                         val data = ClipData.newPlainText(null, url.value)
                         clipboardManager.setPrimaryClip(data)

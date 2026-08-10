@@ -54,9 +54,9 @@ class RRGLDisplayListRenderer(
 
     private val mPixelMatrix = FloatArray(16)
 
-    private var mScene: RRGLDisplayList? = null
-    private var mGLContext: RRGLContext? = null
-    private var mMatrixStack: RRGLMatrixStack? = null
+    private var mScene: RRGLDisplayList?=null
+    private var mGLContext: RRGLContext?=null
+    private var mMatrixStack: RRGLMatrixStack?=null
 
     override fun onSurfaceCreated(ignore: GL10?, config: EGLConfig?) {
         mGLContext = RRGLContext(mSurfaceView.getContext())

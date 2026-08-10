@@ -66,8 +66,7 @@ object RedditFieldEditedBoolSerializer : KSerializer<RedditFieldEdited.Bool> {
 	override val descriptor: SerialDescriptor
 		get() = PrimitiveSerialDescriptor("RedditFieldEdited.Bool", PrimitiveKind.BOOLEAN)
 
-	override fun deserialize(decoder: Decoder)
-		= RedditFieldEdited.Bool(decoder.decodeBoolean())
+	override fun deserialize(decoder: Decoder) = RedditFieldEdited.Bool(decoder.decodeBoolean())
 
 	override fun serialize(encoder: Encoder, value: RedditFieldEdited.Bool) {
 		encoder.encodeBoolean(value.value)

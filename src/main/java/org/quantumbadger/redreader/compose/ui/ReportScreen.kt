@@ -525,7 +525,7 @@ private fun resolvePath(
 ): ReportPosition? {
 
 	var nodes = root
-	var header: String? = null
+	var header: String?=null
 
 	path.forEachIndexed { depth, index ->
 		when (val node = nodes.getOrNull(index) ?: return null) {

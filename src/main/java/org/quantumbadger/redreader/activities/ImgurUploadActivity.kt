@@ -72,15 +72,15 @@ import kotlin.Throwable
 import kotlin.run
 
 class ImgurUploadActivity : ViewsBaseActivity() {
-    private var mTextView: TextView? = null
+    private var mTextView: TextView?=null
 
-    private var mThumbnailView: ImageView? = null
+    private var mThumbnailView: ImageView?=null
 
     private var mImageData: ByteArray?
 
-    private var mUploadButton: Button? = null
+    private var mUploadButton: Button?=null
 
-    private var mLoadingOverlay: View? = null
+    private var mLoadingOverlay: View?=null
 
     protected override fun onCreate(savedInstanceState: Bundle?) {
         PrefsUtility.applyTheme(this)

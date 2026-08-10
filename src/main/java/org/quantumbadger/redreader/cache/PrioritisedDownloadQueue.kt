@@ -56,7 +56,7 @@ internal class PrioritisedDownloadQueue(context: Context?) {
                 }
             }
 
-            var next: CacheDownload? = null
+            var next: CacheDownload?=null
 
             for (entry in redditDownloadsQueued) {
                 if (next == null || entry.getPriority().isHigherPriorityThan(next.getPriority())) {
@@ -73,7 +73,7 @@ internal class PrioritisedDownloadQueue(context: Context?) {
         override fun run() {
             while (true) {
                 synchronized(this) {
-                    val download: CacheDownload? = this.nextRedditInQueue
+                    val download: CacheDownload?=this.nextRedditInQueue
                     CacheDownloadThread(
                         download,
                         true,

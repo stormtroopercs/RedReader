@@ -39,7 +39,7 @@ abstract class FlingableItemView(context: Context) : SwipableItemView(context) {
     private var mRightFlingHintShown = false
     private var mLeftFlingHintShown = false
 
-    private var mFlingHintAnimation: FlingHintAnimation? = null
+    private var mFlingHintAnimation: FlingHintAnimation?=null
     private var mFlingHintYPos = 0f
 
     private val mOffsetBeginAllowed: Int
@@ -77,10 +77,8 @@ abstract class FlingableItemView(context: Context) : SwipableItemView(context) {
         addView(mFlingHintOuter)
         setLayoutMatchWidthWrapHeight(mFlingHintOuter)
 
-        mFlingHintLeft
-        = mFlingHintOuter.findViewById<TextView>(R.id.reddit_post_fling_text_left)
-        mFlingHintRight
-        = mFlingHintOuter.findViewById<TextView>(R.id.reddit_post_fling_text_right)
+        mFlingHintLeft = mFlingHintOuter.findViewById<TextView>(R.id.reddit_post_fling_text_left)
+        mFlingHintRight = mFlingHintOuter.findViewById<TextView>(R.id.reddit_post_fling_text_right)
 
         mFlingHintLeft.setCompoundDrawablesWithIntrinsicBounds(
             null,

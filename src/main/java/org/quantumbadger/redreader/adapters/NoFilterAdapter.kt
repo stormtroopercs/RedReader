@@ -45,8 +45,7 @@ class NoFilterAdapter (
 
 	override fun hasStableIds() = adapter.hasStableIds()
 
-	override fun getView(position: Int, convertView: View?, parent: ViewGroup?) =
-		adapter.getView(position, convertView, parent)
+	override fun getView(position: Int, convertView: View?, parent: ViewGroup?) = 		adapter.getView(position, convertView, parent)
 
 	override fun getItemViewType(position: Int) = adapter.getItemViewType(position)
 

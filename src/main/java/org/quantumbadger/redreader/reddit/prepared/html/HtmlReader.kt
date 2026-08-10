@@ -204,10 +204,10 @@ class HtmlReader(val html: String) {
                     }
 
                     val tagName = readName()
-                    var href: String? = null
-                    var cssClass: String? = null
-                    var title: String? = null
-                    var src: UriString? = null
+                    var href: String?=null
+                    var cssClass: String?=null
+                    var title: String?=null
+                    var src: UriString?=null
 
                     if (tagName.equals("pre", ignoreCase = true)) {
                         mPreformattedTextPending = true

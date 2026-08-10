@@ -188,9 +188,9 @@ class SubredditPostListURL private constructor(
         }
 
         fun parse(uri: Uri): SubredditPostListURL? {
-            var limit: Int? = null
-            var before: String? = null
-            var after: RedditIdAndType? = null
+            var limit: Int?=null
+            var before: String?=null
+            var after: RedditIdAndType?=null
 
             for (parameterKey in getUriQueryParameterNames(uri)) {
                 if (parameterKey.equals("after", ignoreCase = true)) {
@@ -208,8 +208,7 @@ class SubredditPostListURL private constructor(
             val pathSegments: Array<String?>
             run {
                 val pathSegmentsList = uri.getPathSegments()
-                val pathSegmentsFiltered =
-                    ArrayList<String?>(pathSegmentsList.size)
+                val pathSegmentsFiltered =                     ArrayList<String?>(pathSegmentsList.size)
                 for (segment in pathSegmentsList) {
                     var segment = segment
                     while (StringUtils.asciiLowercase(segment).endsWith(".json")

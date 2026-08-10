@@ -122,7 +122,7 @@ object Constants {
             )
 
             DEFAULT_SUBREDDITS = CollectionStream<String?>(*defaultSubredditStrings)
-                .mapRethrowExceptions<SubredditCanonicalId?>(MapStreamRethrowExceptions.Operator { name: Input? ->
+                .mapRethrowExceptions<SubredditCanonicalId?>(MapStreamRethrowExceptions.Operator { name: SubredditCanonicalId? ->
                     SubredditCanonicalId(
                         name
                     )
@@ -161,10 +161,8 @@ object Constants {
         const val PATH_REPORT: String = "/api/report"
         const val PATH_DELETE: String = "/api/del"
         const val PATH_SUBSCRIBE: String = "/api/subscribe"
-        const val PATH_SUBREDDITS_MINE_SUBSCRIBER
-                : String = "/subreddits/mine/subscriber.json?limit=100"
-        const val PATH_SUBREDDITS_MINE_MODERATOR
-                : String = "/subreddits/mine/moderator.json?limit=100"
+        const val PATH_SUBREDDITS_MINE_SUBSCRIBER: String="/subreddits/mine/subscriber.json?limit=100"
+        const val PATH_SUBREDDITS_MINE_MODERATOR: String="/subreddits/mine/moderator.json?limit=100"
         const val PATH_SUBREDDITS_POPULAR: String = "/subreddits/popular.json"
         const val PATH_MULTIREDDITS_MINE: String = "/api/multi/mine.json"
         const val PATH_COMMENTS: String = "/comments/"

@@ -49,14 +49,14 @@ class ImageViewDisplayListManager(
         fun onImageViewDLMException(t: Throwable?)
     }
 
-    private var mOverallTranslation: RRGLRenderableTranslation? = null
-    private var mOverallScale: RRGLRenderableScale? = null
+    private var mOverallTranslation: RRGLRenderableTranslation?=null
+    private var mOverallScale: RRGLRenderableScale?=null
 
     private val mHTileCount: Int
     private val mVTileCount: Int
     private val mTileSize: Int
 
-    private var mNotLoadedTexture: RRGLTexture? = null
+    private var mNotLoadedTexture: RRGLTexture?=null
 
     private var mResolutionX = 0
     private var mResolutionY = 0
@@ -67,7 +67,7 @@ class ImageViewDisplayListManager(
     private var mTileLoaded: Array<BooleanArray>
     private var mLastSampleSize = 1
 
-    private var mRefreshable: Refreshable? = null
+    private var mRefreshable: Refreshable?=null
 
     private enum class TouchState {
         ONE_FINGER_DOWN,
@@ -79,22 +79,22 @@ class ImageViewDisplayListManager(
     }
 
     private val mCoordinateHelper = CoordinateHelper()
-    private var mBoundsHelper: BoundsHelper? = null
+    private var mBoundsHelper: BoundsHelper?=null
 
-    private var mCurrentTouchState: TouchState? = null
+    private var mCurrentTouchState: TouchState?=null
 
-    private var mDragFinger: Finger? = null
-    private var mPinchFinger1: Finger? = null
-    private var mPinchFinger2: Finger? = null
+    private var mDragFinger: Finger?=null
+    private var mPinchFinger1: Finger?=null
+    private var mPinchFinger2: Finger?=null
     private val mSpareFingers = Stack<Finger?>(8)
 
     private val mDoubleTapGapTimer = UIThreadRepeatingTimer(50, this)
 
     private var mFirstTapReleaseTime: Long = -1
 
-    private var mScaleAnimation: ImageViewScaleAnimation? = null
+    private var mScaleAnimation: ImageViewScaleAnimation?=null
 
-    private var mScrollbars: ImageViewScrollbars? = null
+    private var mScrollbars: ImageViewScrollbars?=null
 
     private var mScreenDensity = 1f
 
@@ -119,8 +119,7 @@ class ImageViewDisplayListManager(
 
         for (x in 0..<mHTileCount) {
             for (y in 0..<mVTileCount) {
-                val quad =
-                    RRGLRenderableTexturedQuad(glContext, mNotLoadedTexture)
+                val quad =                     RRGLRenderableTexturedQuad(glContext, mNotLoadedTexture)
                 mTiles[x]!![y] = quad
 
                 val scale = RRGLRenderableScale(quad)
@@ -141,8 +140,7 @@ class ImageViewDisplayListManager(
 
                 scale.setScale(tileWidth.toFloat(), tileHeight.toFloat())
 
-                val translation =
-                    RRGLRenderableTranslation(scale)
+                val translation =                     RRGLRenderableTranslation(scale)
                 translation.setPosition((x * mTileSize).toFloat(), (y * mTileSize).toFloat())
 
                 group.add(translation)
@@ -230,16 +228,13 @@ class ImageViewDisplayListManager(
         val lastVisibleTileX = ceil((lastVisiblePixelX / mTileSize).toDouble()).toInt()
         val lastVisibleTileY = ceil((lastVisiblePixelY / mTileSize).toDouble()).toInt()
 
-        val desiredScaleIndex: Int =
-            MultiScaleTileManager.Companion.sampleSizeToScaleIndex(sampleSize)
+        val desiredScaleIndex: Int =             MultiScaleTileManager.Companion.sampleSizeToScaleIndex(sampleSize)
 
         for (x in 0..<mHTileCount) {
             for (y in 0..<mVTileCount) {
-                val isTileVisible =
-                    x >= firstVisibleTileX && y >= firstVisibleTileY && x <= lastVisibleTileX && y <= lastVisibleTileY
+                val isTileVisible =                     x >= firstVisibleTileX && y >= firstVisibleTileY && x <= lastVisibleTileX && y <= lastVisibleTileY
 
-                val isTileWanted =
-                    x >= firstVisibleTileX - 1 && y >= firstVisibleTileY - 1 && x <= lastVisibleTileX + 1 && y <= lastVisibleTileY + 1
+                val isTileWanted =                     x >= firstVisibleTileX - 1 && y >= firstVisibleTileY - 1 && x <= lastVisibleTileX + 1 && y <= lastVisibleTileY + 1
 
                 if (isTileWanted && !mTileLoaded[x][y]) {
                     mTileLoaders[x]!![y]!!.markAsWanted(desiredScaleIndex)
@@ -253,8 +248,7 @@ class ImageViewDisplayListManager(
 
                         if (tile != null) {
                             try {
-                                val texture =
-                                    RRGLTexture(context, tile, true)
+                                val texture =                                     RRGLTexture(context, tile, true)
                                 mTiles[x]!![y]!!.setTexture(texture)
                                 texture.releaseReference()
                                 mTileLoaded[x][y] = true
@@ -349,8 +343,7 @@ class ImageViewDisplayListManager(
 
         for (x in 0..<mHTileCount) {
             for (y in 0..<mVTileCount) {
-                mTileLoaders[x]!![y] =
-                    MultiScaleTileManager(mImageTileSource, thread, x, y, this)
+                mTileLoaders[x]!![y] =                     MultiScaleTileManager(mImageTileSource, thread, x, y, this)
             }
         }
     }
@@ -415,10 +408,8 @@ class ImageViewDisplayListManager(
             }
 
             TouchState.TWO_FINGER_PINCH -> {
-                val oldDistance =
-                    mPinchFinger1!!.mLastPos.euclideanDistanceTo(mPinchFinger2!!.mLastPos)
-                val newDistance =
-                    mPinchFinger1!!.mCurrentPos.euclideanDistanceTo(mPinchFinger2!!.mCurrentPos)
+                val oldDistance =                     mPinchFinger1!!.mLastPos.euclideanDistanceTo(mPinchFinger2!!.mLastPos)
+                val newDistance =                     mPinchFinger1!!.mCurrentPos.euclideanDistanceTo(mPinchFinger2!!.mCurrentPos)
 
                 val oldCentre = mTmpPoint1_onFingersMoved
                 mPinchFinger1!!.mLastPos.add(mPinchFinger2!!.mLastPos, oldCentre)
@@ -498,8 +489,7 @@ class ImageViewDisplayListManager(
 
             TouchState.TWO_FINGER_PINCH -> if (mSpareFingers.isEmpty()) {
                 mCurrentTouchState = TouchState.ONE_FINGER_DRAG
-                mDragFinger =
-                    if (mPinchFinger1 === finger) mPinchFinger2 else mPinchFinger1
+                mDragFinger =                     if (mPinchFinger1 === finger) mPinchFinger2 else mPinchFinger1
                 mPinchFinger1 = null
                 mPinchFinger2 = null
             } else {
@@ -531,8 +521,7 @@ class ImageViewDisplayListManager(
             }
         }
 
-        mScaleAnimation =
-            ImageViewScaleAnimation(targetScale, mCoordinateHelper, 15, position)
+        mScaleAnimation =             ImageViewScaleAnimation(targetScale, mCoordinateHelper, 15, position)
     }
 
     override fun onUIThreadRepeatingTimer(timer: UIThreadRepeatingTimer?) {

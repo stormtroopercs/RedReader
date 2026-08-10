@@ -108,8 +108,7 @@ fun fetchAlbum(
 	uri: UriString,
 	user: RedditAccountId = LocalRedditUser.current,
 ): State<NetRequestStatus<AlbumInfo>> {
-	val state =
-		remember { mutableStateOf<NetRequestStatus<AlbumInfo>>(NetRequestStatus.Connecting) }
+	val state = 		remember { mutableStateOf<NetRequestStatus<AlbumInfo>>(NetRequestStatus.Connecting) }
 
 	// Prevent conflicting updates to state
 	val currentRequest = remember { mutableIntStateOf(0) }
@@ -185,8 +184,7 @@ fun fetchImage(
 
 	val context = LocalContext.current.applicationContext
 
-	val filter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<ImageBitmap>> =
-		remember(uri, user) {
+	val filter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<ImageBitmap>> = 		remember(uri, user) {
 			{
 				try {
 					val result = BitmapFactory.decodeStream(it.streamFactory.create())
@@ -258,8 +256,7 @@ private fun <T> fetchFile(
 	filter: ((FileRequestMetadata) -> NetRequestStatus<FileRequestResult<T>>)
 ): State<NetRequestStatus<FileRequestResult<T>>> {
 
-	val state =
-		remember { mutableStateOf<NetRequestStatus<FileRequestResult<T>>>(NetRequestStatus.Connecting) }
+	val state = 		remember { mutableStateOf<NetRequestStatus<FileRequestResult<T>>>(NetRequestStatus.Connecting) }
 
 	// Prevent conflicting updates to state
 	val currentRequest = remember { mutableIntStateOf(0) }
@@ -269,8 +266,7 @@ private fun <T> fetchFile(
 
 	val context = LocalContext.current
 
-	val account: RedditAccount =
-		RedditAccountManager.getInstance(context).getAccount(user.canonicalUsername)
+	val account: RedditAccount = 		RedditAccountManager.getInstance(context).getAccount(user.canonicalUsername)
 			?: run {
 				state.value = NetRequestStatus.Failed(
 					RRError(
@@ -334,8 +330,7 @@ private fun <T> fetchFile(
 				override fun onFailure(error: RRError) {
 					AndroidCommon.runOnUiThread {
 						if (active) {
-							state.value =
-								NetRequestStatus.Failed(error.invokeIf(error.resolution == null) {
+							state.value = 								NetRequestStatus.Failed(error.invokeIf(error.resolution == null) {
 									error.copy(resolution = RRError.Resolution.RETRY)
 								})
 							done = true
@@ -375,8 +370,7 @@ private fun <T> fetchFile(
 				) {
 					AndroidCommon.runOnUiThread {
 						if (active && totalBytes > 0) {
-							state.value =
-								NetRequestStatus.Downloading(bytesRead.toFloat() / totalBytes.toFloat())
+							state.value = 								NetRequestStatus.Downloading(bytesRead.toFloat() / totalBytes.toFloat())
 						}
 					}
 				}
@@ -425,8 +419,7 @@ fun fetchSubredditReportFlow(
 		)
 	}
 
-	val rulesFilter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<SubredditRules>> =
-		remember(rulesUri) {
+	val rulesFilter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<SubredditRules>> = 		remember(rulesUri) {
 			{
 				try {
 					val json = JsonValue.parse(it.streamFactory.create())
@@ -451,8 +444,7 @@ fun fetchSubredditReportFlow(
 			}
 		}
 
-	val aboutFilter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<Boolean>> =
-		remember(aboutUri) {
+	val aboutFilter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<Boolean>> = 		remember(aboutUri) {
 			{
 				try {
 					val json = JsonValue.parse(it.streamFactory.create())

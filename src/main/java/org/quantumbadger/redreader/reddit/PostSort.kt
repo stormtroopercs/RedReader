@@ -77,8 +77,7 @@ enum class PostSort(@field:StringRes @param:StringRes private val menuTitle: Int
             )
 
             PostSort.CONTROVERSIAL_HOUR, PostSort.CONTROVERSIAL_DAY, PostSort.CONTROVERSIAL_WEEK, PostSort.CONTROVERSIAL_MONTH, PostSort.CONTROVERSIAL_YEAR, PostSort.CONTROVERSIAL_ALL, PostSort.TOP_HOUR, PostSort.TOP_DAY, PostSort.TOP_WEEK, PostSort.TOP_MONTH, PostSort.TOP_YEAR, PostSort.TOP_ALL -> {
-                val parts: Array<String?> =
-                    name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                val parts: Array<String?> =                     name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 builder.appendQueryParameter("sort", StringUtils.asciiLowercase(parts[0]!!))
                 builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]!!))
             }
@@ -92,8 +91,7 @@ enum class PostSort(@field:StringRes @param:StringRes private val menuTitle: Int
             )
 
             PostSort.CONTROVERSIAL_HOUR, PostSort.CONTROVERSIAL_DAY, PostSort.CONTROVERSIAL_WEEK, PostSort.CONTROVERSIAL_MONTH, PostSort.CONTROVERSIAL_YEAR, PostSort.CONTROVERSIAL_ALL, PostSort.TOP_HOUR, PostSort.TOP_DAY, PostSort.TOP_WEEK, PostSort.TOP_MONTH, PostSort.TOP_YEAR, PostSort.TOP_ALL -> {
-                val parts: Array<String?> =
-                    name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                val parts: Array<String?> =                     name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 builder.appendEncodedPath(
                     StringUtils.asciiLowercase(
                         name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]

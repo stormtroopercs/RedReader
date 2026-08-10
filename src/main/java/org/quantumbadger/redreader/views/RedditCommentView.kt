@@ -55,7 +55,7 @@ class RedditCommentView(
 ) : FlingableItemView(context), RedditChangeDataManager.Listener {
     private val mAccessibilityActionManager: AccessibilityActionManager
 
-    var comment: RedditCommentListItem? = null
+    var comment: RedditCommentListItem?=null
         private set
 
     private val mActivity: BaseActivity
@@ -72,14 +72,14 @@ class RedditCommentView(
 
     private val mShowLinkButtons: Boolean
 
-    private var mHeaderText: CharSequence? = null
+    private var mHeaderText: CharSequence?=null
 
     private val mListener: CommentListener
 
     private val mFragment: CommentListingFragment?
 
-    private var mLeftFlingAction: ActionDescriptionPair? = null
-    private var mRightFlingAction: ActionDescriptionPair? = null
+    private var mLeftFlingAction: ActionDescriptionPair?=null
+    private var mRightFlingAction: ActionDescriptionPair?=null
 
     override fun onSetItemFlingPosition(position: Float) {
         mIndentedContent.setTranslationX(position)
@@ -220,8 +220,7 @@ class RedditCommentView(
     protected override fun getFlingLeftText(): String {
         val context = getContext()
 
-        val pref =
-            PrefsUtility.pref_behaviour_fling_comment_left()
+        val pref =             PrefsUtility.pref_behaviour_fling_comment_left()
 
         mLeftFlingAction = chooseFlingAction(pref)
 
@@ -235,8 +234,7 @@ class RedditCommentView(
     protected override fun getFlingRightText(): String {
         val context = getContext()
 
-        val pref =
-            PrefsUtility.pref_behaviour_fling_comment_right()
+        val pref =             PrefsUtility.pref_behaviour_fling_comment_right()
 
         mRightFlingAction = chooseFlingAction(pref)
 
@@ -306,14 +304,12 @@ class RedditCommentView(
             RedditAccountManager.Companion.getInstance(context).getDefaultAccount()
         )
 
-        val rootView =
-            LayoutInflater.from(context).inflate(R.layout.reddit_comment, this, true)
+        val rootView =             LayoutInflater.from(context).inflate(R.layout.reddit_comment, this, true)
 
         mIndentView = rootView.findViewById<IndentView>(R.id.view_reddit_comment_indentview)
         mHeader = rootView.findViewById<TextView>(R.id.view_reddit_comment_header)
         mBodyHolder = rootView.findViewById<FrameLayout>(R.id.view_reddit_comment_bodyholder)
-        mIndentedContent =
-            rootView.findViewById<LinearLayout>(R.id.view_reddit_comment_indented_content)
+        mIndentedContent =             rootView.findViewById<LinearLayout>(R.id.view_reddit_comment_indented_content)
 
         val minimumCommentHeight = PrefsUtility.pref_accessibility_min_comment_height()
 
@@ -384,8 +380,7 @@ class RedditCommentView(
         mBodyHolder.addView(commentBody)
         setLayoutMatchWidthWrapHeight(commentBody)
 
-        (commentBody.getLayoutParams() as MarginLayoutParams).topMargin =
-            dpToPixels(activity, 1f)
+        (commentBody.getLayoutParams() as MarginLayoutParams).topMargin =             dpToPixels(activity, 1f)
 
         val renderableComment = comment.asComment()
 
@@ -456,9 +451,7 @@ class RedditCommentView(
     }
 
     private fun setupAccessibilityActions() {
-        val defaultAccount
-                : RedditAccount =
-            RedditAccountManager.Companion.getInstance(mActivity).getDefaultAccount()
+        val defaultAccount: RedditAccount=            RedditAccountManager.Companion.getInstance(mActivity).getDefaultAccount()
         val isAuthenticated = defaultAccount.isNotAnonymous
 
         mAccessibilityActionManager.removeAllActions()

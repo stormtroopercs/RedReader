@@ -34,14 +34,14 @@ import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 
 class PostSubmitActivity : ViewsBaseActivity(), PostSubmitSubredditSelectionFragment.Listener,
     PostSubmitContentFragment.Listener {
-    private var mIntentUrl: String? = null
+    private var mIntentUrl: String?=null
 
     protected override fun onCreate(savedInstanceState: Bundle?) {
         PrefsUtility.applyTheme(this)
 
         super.onCreate(savedInstanceState)
 
-        var intentSubreddit: SubredditCanonicalId? = null
+        var intentSubreddit: SubredditCanonicalId?=null
 
         val intent = getIntent()
 

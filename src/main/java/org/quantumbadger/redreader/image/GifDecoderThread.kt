@@ -32,7 +32,7 @@ class GifDecoderThread(private val `is`: InputStream, private val listener: OnGi
     Thread("GIF playing thread") {
     @Volatile
     private var playing = true
-    private var view: ImageView? = null
+    private var view: ImageView?=null
 
     fun setView(view: ImageView?) {
         this.view = view

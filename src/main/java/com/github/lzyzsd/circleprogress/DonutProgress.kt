@@ -14,9 +14,9 @@ import kotlin.math.min
  * Created by bruce on 14-10-30. Edited by QuantumBadger and Cguy7777.
  */
 class DonutProgress(context: Context?) : View(context) {
-    private var finishedPaint: Paint? = null
-    private var unfinishedPaint: Paint? = null
-    private var aspectIndicatorPaint: Paint? = null
+    private var finishedPaint: Paint?=null
+    private var unfinishedPaint: Paint?=null
+    private var aspectIndicatorPaint: Paint?=null
 
     private val finishedOuterRect = RectF()
     private val unfinishedOuterRect = RectF()
@@ -168,10 +168,8 @@ class DonutProgress(context: Context?) : View(context) {
             }
 
             val arDeltaMultiplier = 3.5f
-            val indicatorLeft =
-                delta * arDeltaMultiplier + (delta * (arDeltaMultiplier / 4) * (1 - imageAspectRatio))
-            val indicatorTop =
-                delta * arDeltaMultiplier + (delta * (arDeltaMultiplier / 4) * (1 - 1 / imageAspectRatio))
+            val indicatorLeft =                 delta * arDeltaMultiplier + (delta * (arDeltaMultiplier / 4) * (1 - imageAspectRatio))
+            val indicatorTop =                 delta * arDeltaMultiplier + (delta * (arDeltaMultiplier / 4) * (1 - 1 / imageAspectRatio))
 
             aspectIndicatorRect.set(
                 indicatorLeft,

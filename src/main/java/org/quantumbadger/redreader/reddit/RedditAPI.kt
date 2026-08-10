@@ -153,9 +153,7 @@ object RedditAPI {
                             return
                         }
 
-                        val choices
-                                : Optional<MutableList<RedditFlairChoice?>?> =
-                            RedditFlairChoice.Companion.fromJsonList(array.get())
+                        val choices: Optional<MutableList<RedditFlairChoice?>?> = RedditFlairChoice.Companion.fromJsonList(array.get())
 
                         if (choices.isEmpty()) {
                             responseHandler.onFailure(
@@ -854,8 +852,7 @@ object RedditAPI {
                             val output = ArrayList<RedditSubreddit?>()
 
                             for (value in subreddits.get()) {
-                                val redditThing =
-                                    value.asObject<RedditThing?>(RedditThing::class.java)
+                                val redditThing =                                     value.asObject<RedditThing?>(RedditThing::class.java)
                                 val subreddit = redditThing!!.asSubreddit()
                                 output.add(subreddit)
                             }
@@ -905,8 +902,7 @@ object RedditAPI {
                     unknownError = true
                 }
 
-                val failureType =
-                    findFailureType(v.value)
+                val failureType =                     findFailureType(v.value)
 
                 if (failureType == APIFailureType.UNKNOWN) {
                     unknownError = true
@@ -922,8 +918,7 @@ object RedditAPI {
             }
         } else if (response.asArray() != null) {
             for (v in response.asArray()!!) {
-                val failureType =
-                    findFailureType(v)
+                val failureType =                     findFailureType(v)
 
                 if (failureType == APIFailureType.UNKNOWN) {
                     unknownError = true

@@ -8,7 +8,7 @@ import kotlin.math.pow
 // From https://github.com/tomorrowkey/android-gifview/blob/master/src/jp/tomorrowkey/android/gifplayer/GifDecoder.java
 // This file under Apache License 2.0
 class GifDecoder {
-    protected var `in`: InputStream? = null
+    protected var `in`: InputStream?=null
     protected var status: Int = 0
     protected var width: Int = 0 // full image width
     protected var height: Int = 0 // full image height
@@ -40,12 +40,11 @@ class GifDecoder {
     protected var lry: Int = 0
     protected var lrw: Int = 0
     protected var lrh: Int = 0
-    protected var image: Bitmap? = null // current frame
-    protected var lastBitmap: Bitmap? = null // previous frame
+    protected var image: Bitmap?=null // current frame
+    protected var lastBitmap: Bitmap?=null // previous frame
     protected var block: ByteArray = ByteArray(256) // current data block
     protected var blockSize: Int = 0 // block size last graphic control extension info
-    protected var dispose: Int =
-        0 // 0=no action; 1=leave in place; 2=restore to bg; 3=restore to prev
+    protected var dispose: Int =         0 // 0=no action; 1=leave in place; 2=restore to bg; 3=restore to prev
     protected var lastDispose: Int = 0
     protected var transparency: Boolean = false // use transparent color
     protected var delay: Int = 0 // delay in milliseconds
@@ -419,7 +418,7 @@ class GifDecoder {
      */
     protected fun readColorTable(ncolors: Int): IntArray? {
         val nbytes = 3 * ncolors
-        var tab: IntArray? = null
+        var tab: IntArray?=null
         val c = ByteArray(nbytes)
         var n = 0
         try {

@@ -80,8 +80,7 @@ object RedditAPICommentAction {
         val isCommentLocked = comment.getParsedComment().getRawComment().locked
         val canModerate = comment.getParsedComment().getRawComment().can_mod_post
 
-        val user: RedditAccount =
-            RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
+        val user: RedditAccount =             RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
 
         val menu: ArrayList<RCVMenuItem?> = ArrayList<RCVMenuItem?>()
 
@@ -331,11 +330,9 @@ object RedditAPICommentAction {
         action: RedditCommentAction,
         changeDataManager: RedditChangeDataManager
     ) {
-        val comment =
-            renderableComment.getParsedComment().getRawComment()
+        val comment =             renderableComment.getParsedComment().getRawComment()
 
-        val postLocked =
-            commentListingFragment != null && commentListingFragment.getPost() != null && commentListingFragment.getPost().isLocked
+        val postLocked =             commentListingFragment != null && commentListingFragment.getPost() != null && commentListingFragment.getPost().isLocked
 
         when (action) {
             RedditCommentAction.UPVOTE -> action(
@@ -458,8 +455,7 @@ object RedditAPICommentAction {
                 if (linksInComment.isEmpty()) {
                     quickToast(activity, string.error_toast_no_urls_in_comment)
                 } else {
-                    val linksArr =
-                        linksInComment.toTypedArray<String?>()
+                    val linksArr =                         linksInComment.toTypedArray<String?>()
 
                     val builder = MaterialAlertDialogBuilder(activity)
 
@@ -479,7 +475,7 @@ object RedditAPICommentAction {
 
             RedditCommentAction.SHARE -> {
                 var body = ""
-                var subject: String? = null
+                var subject: String?=null
 
                 if (PrefsUtility.pref_behaviour_sharing_include_desc()) {
                     subject = String.format(
@@ -504,8 +500,7 @@ object RedditAPICommentAction {
             }
 
             RedditCommentAction.COPY_TEXT -> {
-                val clipboardManager =
-                    activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
+                val clipboardManager =                     activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
                 // TODO this currently just dumps the markdown
                 if (clipboardManager != null) {
                     val data = ClipData.newPlainText(
@@ -522,8 +517,7 @@ object RedditAPICommentAction {
             }
 
             RedditCommentAction.COPY_URL -> {
-                val clipboardManager =
-                    activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
+                val clipboardManager =                     activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
                 if (clipboardManager != null) {
                     val data = ClipData.newPlainText(
                         null,
@@ -580,8 +574,7 @@ object RedditAPICommentAction {
         @RedditAction action: Int,
         changeDataManager: RedditChangeDataManager
     ) {
-        val user: RedditAccount =
-            RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
+        val user: RedditAccount =             RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
 
         if (user.isAnonymous) {
             showMustBeLoggedInDialog(activity)

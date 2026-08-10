@@ -117,8 +117,7 @@ class RedditAPIIndividualSubredditDataRequester(
         val requestsToGo = AtomicInteger(subredditCanonicalIds.size)
         val oldestResult = AtomicReference<TimestampUTC?>(null)
 
-        val innerHandler
-                : RequestResponseHandler<RedditSubreddit?, RRError?> =
+        val innerHandler: RequestResponseHandler<RedditSubreddit?, RRError?> =
             object : RequestResponseHandler<RedditSubreddit?, RRError?> {
                 override fun onRequestFailed(failureReason: RRError?) {
                     synchronized(result) {

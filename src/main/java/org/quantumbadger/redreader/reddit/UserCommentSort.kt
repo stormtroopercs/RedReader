@@ -49,8 +49,7 @@ enum class UserCommentSort(@field:StringRes @param:StringRes private val menuTit
             )
 
             UserCommentSort.CONTROVERSIAL_HOUR, UserCommentSort.CONTROVERSIAL_DAY, UserCommentSort.CONTROVERSIAL_WEEK, UserCommentSort.CONTROVERSIAL_MONTH, UserCommentSort.CONTROVERSIAL_YEAR, UserCommentSort.CONTROVERSIAL_ALL, UserCommentSort.TOP_HOUR, UserCommentSort.TOP_DAY, UserCommentSort.TOP_WEEK, UserCommentSort.TOP_MONTH, UserCommentSort.TOP_YEAR, UserCommentSort.TOP_ALL -> {
-                val parts: Array<String?> =
-                    name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                val parts: Array<String?> =                     name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 builder.appendQueryParameter(
                     "sort",
                     StringUtils.asciiLowercase(parts[0]!!)

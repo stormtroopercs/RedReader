@@ -44,10 +44,10 @@ class WeakCache<K, V : WritableObject<K?>?, F>
     ) {
         val keysRemaining = HashSet<K?>(keys)
         val cacheResult = HashMap<K?, V?>(keys.size)
-        var oldestTimestamp: TimestampUTC? = null
+        var oldestTimestamp: TimestampUTC?=null
 
         for (key in keys) {
-            val entry: CacheEntry? = cached.get(key)
+            val entry: CacheEntry?=cached.get(key)
             if (entry != null) {
                 val value: V? = entry.data.get()
                 if (value != null
@@ -84,7 +84,7 @@ class WeakCache<K, V : WritableObject<K?>?, F>
                     ) {
                         cacheResult.putAll(result)
 
-                        val timestamp: TimestampUTC? = if (oldestTimestampOuter == null)
+                        val timestamp: TimestampUTC?=if (oldestTimestampOuter == null)
                             timeCached
                         else
                             oldest(timeCached, oldestTimestampOuter)
@@ -113,7 +113,7 @@ class WeakCache<K, V : WritableObject<K?>?, F>
         updatedVersionListener: UpdatedVersionListener<K?, V?>?
     ) {
         if (timestampBound != null) {
-            val existingEntry: CacheEntry? = cached.get(key)
+            val existingEntry: CacheEntry?=cached.get(key)
             if (existingEntry != null) {
                 val existing: V? = existingEntry.data.get()
                 if (existing != null
@@ -159,7 +159,7 @@ class WeakCache<K, V : WritableObject<K?>?, F>
 
     @Synchronized
     private fun put(value: V?, writeDown: Boolean) {
-        val oldEntry: CacheEntry? = cached.get(value!!.getKey())
+        val oldEntry: CacheEntry?=cached.get(value!!.getKey())
 
         if (oldEntry != null) {
             cached.put(
@@ -179,7 +179,7 @@ class WeakCache<K, V : WritableObject<K?>?, F>
     @Synchronized
     private fun put(values: MutableCollection<V?>, writeDown: Boolean) {
         for (value in values) {
-            val oldEntry: CacheEntry? = cached.get(value!!.getKey())
+            val oldEntry: CacheEntry?=cached.get(value!!.getKey())
 
             if (oldEntry != null) {
                 cached.put(

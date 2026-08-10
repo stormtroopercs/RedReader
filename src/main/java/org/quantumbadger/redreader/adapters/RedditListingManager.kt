@@ -27,7 +27,7 @@ import org.quantumbadger.redreader.views.liststatus.ErrorView
 
 abstract class RedditListingManager protected constructor(context: Context) {
     private val mAdapter = GroupedRecyclerViewAdapter(7)
-    private var mLayoutManager: LinearLayoutManager? = null
+    private var mLayoutManager: LinearLayoutManager?=null
 
     private val mLoadingItem: GroupedRecyclerViewItemFrameLayout
     private var mWorkaroundDone = false

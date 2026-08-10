@@ -62,14 +62,12 @@ class RedditSubredditManager @Inject constructor(
             RedditSubreddit::class.java
         )
 
-        val subredditDbWrapper =
-            ThreadedRawObjectDB<SubredditCanonicalId?, RedditSubreddit?, RRError?>(
+        val subredditDbWrapper =             ThreadedRawObjectDB<SubredditCanonicalId?, RedditSubreddit?, RRError?>(
                 subredditDb,
                 RedditAPIIndividualSubredditDataRequester(context, user)
             )
 
-        subredditCache =
-            WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>(subredditDbWrapper)
+        subredditCache =             WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>(subredditDbWrapper)
     }
     fun offerRawSubredditData(
         toWrite: MutableCollection<RedditSubreddit?>?,
@@ -103,14 +101,12 @@ class RedditSubredditManager @Inject constructor(
             RedditSubreddit::class.java
         )
 
-        val subredditDbWrapper =
-            ThreadedRawObjectDB<SubredditCanonicalId?, RedditSubreddit?, RRError?>(
+        val subredditDbWrapper =             ThreadedRawObjectDB<SubredditCanonicalId?, RedditSubreddit?, RRError?>(
                 subredditDb,
                 RedditAPIIndividualSubredditDataRequester(context, user)
             )
 
-        subredditCache =
-            WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>(subredditDbWrapper)
+        subredditCache =             WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>(subredditDbWrapper)
     }
 
     fun getSubreddit(

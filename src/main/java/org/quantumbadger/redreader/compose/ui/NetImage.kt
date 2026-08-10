@@ -49,7 +49,7 @@ import org.quantumbadger.redreader.image.ImageUrlInfo
 fun NetImage(
 	modifier: Modifier,
 	image: ImageUrlInfo,
-	cropToAspect: Float? = null,
+	cropToAspect: Float?=null,
 	showVideoPlayOverlay: Boolean = false,
 	maxCanvasDimension: Int = 2048,
 ) {

@@ -28,7 +28,7 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 
 class HtmlViewActivity : ViewsBaseActivity() {
-    private var webView: WebViewFragment? = null
+    private var webView: WebViewFragment?=null
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         PrefsUtility.applyTheme(this)

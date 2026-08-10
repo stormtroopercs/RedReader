@@ -50,15 +50,11 @@ class SearchListingHeader(
         ) as LayoutInflater
         layoutInflater.inflate(R.layout.search_listing_header, this, true)
 
-            .also {
-                mQuery = it
-            }<EditText> findViewById < android . view . View ? > (R.id.search_listing_header_query_editText)
+        mQuery = findViewById<EditText>(R.id.search_listing_header_query_editText)
         mQuery.setText(url.query)
         mQuery.setImeOptions(EditorInfo.IME_ACTION_NEXT)
 
-            .also {
-                mLocation = it
-            }<EditText> findViewById < android . view . View ? > (R.id.search_listing_header_sub_editText)
+        mLocation = findViewById<EditText>(R.id.search_listing_header_sub_editText)
 
         if (url.type == SearchPostListURL.Type.SUB_OR_SUB_COMBO && url.subreddit != null) {
             mLocation.setText(url.subreddit)
@@ -80,9 +76,7 @@ class SearchListingHeader(
         mLocation.setImeOptions(EditorInfo.IME_ACTION_SEARCH)
         mLocation.setOnEditorActionListener(onEnter)
 
-            .also {
-                mSearchButton = it
-            }<Button> findViewById < android . view . View ? > (R.id.search_listing_header_search)
+        mSearchButton = findViewById<Button>(R.id.search_listing_header_search)
         mSearchButton.setOnClickListener(OnClickListener { v: View? ->
             performSearch(
                 parentActivity,
@@ -98,7 +92,7 @@ class SearchListingHeader(
             mLocation: EditText,
             mQuery: EditText
         ) {
-            var location: String? = mLocation.getText().toString().trim { it <= ' ' }
+            var location: String?=mLocation.getText().toString().trim { it <= ' ' }
             if (StringUtils.isEmpty(location)) {
                 location = null
             }

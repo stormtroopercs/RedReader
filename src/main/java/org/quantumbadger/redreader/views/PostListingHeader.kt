@@ -47,8 +47,7 @@ class PostListingHeader(
             greyHeader.setOrientation(VERTICAL)
 
             run {
-                val appearance =
-                    activity.obtainStyledAttributes(intArrayOf(R.attr.rrPostListHeaderBackgroundCol))
+                val appearance =                     activity.obtainStyledAttributes(intArrayOf(R.attr.rrPostListHeaderBackgroundCol))
                 greyHeader.setBackgroundColor(appearance.getColor(0, General.COLOR_INVALID))
                 appearance.recycle()
             }
@@ -77,8 +76,7 @@ class PostListingHeader(
         if (subreddit != null
             && !PrefsUtility.pref_appearance_hide_headertoolbar_postlist()
         ) {
-            val buttons =
-                inflate(activity, R.layout.subreddit_header_toolbar, this)
+            val buttons =                 inflate(activity, R.layout.subreddit_header_toolbar, this)
                     .findViewById<SubredditToolbar>(R.id.subreddit_toolbar_layout)
 
             buttons.bindSubreddit(

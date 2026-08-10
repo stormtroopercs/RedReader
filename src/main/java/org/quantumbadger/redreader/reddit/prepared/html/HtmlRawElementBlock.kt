@@ -85,8 +85,7 @@ class HtmlRawElementBlock : HtmlRawElement {
 
         var ssb = SpannableStringBuilder()
 
-        var bodyElementTextSpanned =
-            BodyElementTextSpanned(mBlockType, ssb)
+        var bodyElementTextSpanned =             BodyElementTextSpanned(mBlockType, ssb)
 
         for (child in mChildren) {
             if (child is HtmlRawElementStyledText) {

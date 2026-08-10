@@ -218,21 +218,15 @@ open class VideoEnabledWebChromeClient : WebChromeClient, MediaPlayer.OnPrepared
                     // Javascript interface
                     var js = "javascript:"
                     js += "var _ytrp_html5_video_last;"
-                    js
-                    += "var _ytrp_html5_video = document.getElementsByTagName('video')[0];"
+                    js += "var _ytrp_html5_video = document.getElementsByTagName('video')[0];"
                     js += ("if (_ytrp_html5_video != undefined && _ytrp_html5_video "
                             + "!= _ytrp_html5_video_last) {")
-                    run {
-                        js += "_ytrp_html5_video_last = _ytrp_html5_video;"
-                        js += "function _ytrp_html5_video_ended() {"
-                        run {
-                            // Must match Javascript interface name and method of VideoEnableWebView
-                            js += "_WebViewFixed.notifyVideoEnd();"
-                        }
-                        js += "}"
-                        js += ("_ytrp_html5_video.addEventListener("
-                                + "'ended', _ytrp_html5_video_ended);")
-                    }
+                    js += "_ytrp_html5_video_last = _ytrp_html5_video;"
+                    js += "function _ytrp_html5_video_ended() {"
+                    js += "_WebViewFixed.notifyVideoEnd();"
+                    js += "}"
+                    js += ("_ytrp_html5_video.addEventListener("
+                            + "'ended', _ytrp_html5_video_ended);")
                     js += "}"
                     webView!!.loadUrl(js)
                 }

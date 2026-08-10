@@ -423,8 +423,7 @@ sealed class SettingsItem(val key: String) {
 // ============================================================================
 
 @Suppress("UNCHECKED_CAST")
-private fun getBooleanPref(key: String, default: Boolean): Boolean =
-    try {
+private fun getBooleanPref(key: String, default: Boolean): Boolean =     try {
         PrefsUtility::class.java.methods.find { it.name == "pref_${key}" }?.let { method ->
             method.isAccessible = true
             val result = method.invoke(null)

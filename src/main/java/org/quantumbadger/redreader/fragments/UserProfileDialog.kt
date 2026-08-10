@@ -184,10 +184,8 @@ object UserProfileDialog {
 							val iconUrl = user.iconUrl
 							if (iconUrl?.value?.isNotEmpty() == true) {
 
-								val avatarView =
-									dialog.findViewById<AppCompatImageView>(R.id.avatar_image)!!
-								val avatarViewHolder =
-									dialog.findViewById<View>(R.id.avatar_image_holder)!!
+								val avatarView = 									dialog.findViewById<AppCompatImageView>(R.id.avatar_image)!!
+								val avatarViewHolder = 									dialog.findViewById<View>(R.id.avatar_image_holder)!!
 
 								avatarViewHolder.visibility = View.VISIBLE
 
@@ -202,10 +200,8 @@ object UserProfileDialog {
 						val linkKarma = user.link_karma ?: 0
 						val commentKarma = user.comment_karma ?: 0
 
-						postsKarma.text =
-							NumberFormat.getNumberInstance().format(linkKarma.toLong())
-						commentsKarma.text =
-							NumberFormat.getNumberInstance().format(commentKarma.toLong())
+						postsKarma.text = 							NumberFormat.getNumberInstance().format(linkKarma.toLong())
+						commentsKarma.text = 							NumberFormat.getNumberInstance().format(commentKarma.toLong())
 						postsKarma.setContentDescription(
 							activity.getString(
 								R.string.userprofile_accessibility_karma,

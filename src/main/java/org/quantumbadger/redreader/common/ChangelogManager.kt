@@ -54,7 +54,7 @@ object ChangelogManager {
                 InputStreamReader(context.getAssets().open(filename)),
                 128 * 1024
             ).use { br ->
-                var curVersionName: String? = null
+                var curVersionName: String?=null
                 var itemsToShow = 10
 
                 var line: String?
@@ -69,8 +69,7 @@ object ChangelogManager {
                             }
                         }
                     } else if (curVersionName == null) {
-                        val lineSplit: Array<String?> =
-                            line.split("/".toRegex()).dropLastWhile { it.isEmpty() }
+                        val lineSplit: Array<String?> =                             line.split("/".toRegex()).dropLastWhile { it.isEmpty() }
                                 .toTypedArray()
                         curVersionName = lineSplit[1]
 

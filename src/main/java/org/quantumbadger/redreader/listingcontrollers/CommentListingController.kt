@@ -33,8 +33,8 @@ import java.util.UUID
 class CommentListingController(url: RedditURL) {
     var commentListingUrl: CommentListingURL
         private set
-    var session: UUID? = null
-    var searchString: String? = null
+    var session: UUID?=null
+    var searchString: String?=null
 
     init {
         var url = url

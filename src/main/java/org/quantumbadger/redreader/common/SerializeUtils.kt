@@ -28,8 +28,7 @@ import java.io.IOException
 object SerializeUtils {
     private const val COMPRESSED_FILE_VERSION = 1
 
-    private val COMPRESSED_FILE_USER_HEADER =
-        "RedReader compressed data\r\n".toByteArray(General.CHARSET_UTF8)
+    private val COMPRESSED_FILE_USER_HEADER =         "RedReader compressed data\r\n".toByteArray(General.CHARSET_UTF8)
 
     private fun isInvalidHashKey(value: Any?): Boolean {
         if (value == null) {

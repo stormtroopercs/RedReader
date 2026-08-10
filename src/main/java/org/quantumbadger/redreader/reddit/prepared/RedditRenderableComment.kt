@@ -366,14 +366,11 @@ class RedditRenderableComment
         if (theme.shouldShow(AppearanceCommentHeaderItem.AUTHOR)) {
             @StringRes val authorString: Int
 
-            val authorSubmitterModConcise =
-                string.accessibility_subtitle_author_submitter_moderator_withperiod_concise
+            val authorSubmitterModConcise =                 string.accessibility_subtitle_author_submitter_moderator_withperiod_concise
 
-            val authorSubmitterMod =
-                string.accessibility_subtitle_author_submitter_moderator_withperiod
+            val authorSubmitterMod =                 string.accessibility_subtitle_author_submitter_moderator_withperiod
 
-            val authorModConcise =
-                string.accessibility_subtitle_author_moderator_withperiod_concise_comment
+            val authorModConcise =                 string.accessibility_subtitle_author_moderator_withperiod_concise_comment
 
             val authorMod = string.accessibility_subtitle_author_moderator_withperiod
 
@@ -654,8 +651,7 @@ class RedditRenderableComment
     }
 
     override fun handleInboxLongClick(activity: BaseActivity?) {
-        val changeDataManager
-                : RedditChangeDataManager = RedditChangeDataManager.Companion.getInstance(
+        val changeDataManager: RedditChangeDataManager=RedditChangeDataManager.Companion.getInstance(
             RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
         )
 

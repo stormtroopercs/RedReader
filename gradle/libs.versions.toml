@@ -1,11 +1,12 @@
 [versions]
-agp = "9.3.0"
-kotlin = "2.2.21"
-java = "11"
+agp = "9.0.0"
+kotlin = "2.0.21"
+java = "17"
+spotless = "6.25.0"
 
 robolectric = "4.16"
 sdk-compile = "36"
-sdk-min = "21"
+sdk-min = "23"
 sdk-target = "36"
 ndk = "27.3.13750724"
 
@@ -28,7 +29,7 @@ google-material = "1.13.0"
 jackson = "2.20.1"
 jdk-desugar = "2.1.5"
 kotlinx-datetime = "0.7.1"
-kotlinx-serialization = "1.9.0"
+kotlinx-serialization = "1.7.3"
 media3 = "1.8.0"
 netcipher = "2.1.0"
 okhttp = "5.3.0"
@@ -37,9 +38,9 @@ hilt = "2.60.1"
 hilt-compiler = "2.60.1"
 hilt-navigation-compose = "1.2.0"
 hilt-work = "1.2.0"
-room = "2.6.1"
+room = "2.8.0"
 workmanager = "2.10.0"
-ksp = "2.2.21-2.0.5"
+ksp = "2.2.21-2.0.4"
 zstd = "1.5.7-6"
 
 junit = "4.13.2"
@@ -110,6 +111,7 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
@@ -117,3 +119,4 @@ kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref =
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

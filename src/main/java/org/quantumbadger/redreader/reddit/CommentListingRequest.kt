@@ -107,7 +107,7 @@ class CommentListingRequest(
         timestamp: TimestampUTC?,
         fromCache: Boolean
     ) {
-        var parentPostAuthor: String? = null
+        var parentPostAuthor: String?=null
 
         if (mActivity is SessionChangeListener) {
             (mActivity as SessionChangeListener).onSessionChanged(
@@ -146,8 +146,7 @@ class CommentListingRequest(
                 .get(0)
                 .ok() as Post).data
 
-            val parsedPost =
-                RedditParsedPost(mActivity, post, mParsePostSelfText)
+            val parsedPost =                 RedditParsedPost(mActivity, post, mParsePostSelfText)
 
             val preparedPost = RedditPreparedPost(
                 mContext,
@@ -174,8 +173,7 @@ class CommentListingRequest(
         }
 
         // Download comments
-        val topLevelComments
-                : ArrayList<MaybeParseError<RedditThing?>> = commentListing.children
+        val topLevelComments: ArrayList<MaybeParseError<RedditThing?>> = commentListing.children
 
         val items = ArrayList<RedditCommentListItem>(200)
 
@@ -189,8 +187,7 @@ class CommentListingRequest(
             )
         }
 
-        val changeDataManager
-                : RedditChangeDataManager = RedditChangeDataManager.Companion.getInstance(mUser)
+        val changeDataManager: RedditChangeDataManager = RedditChangeDataManager.Companion.getInstance(mUser)
 
         for (item in items) {
             if (item.isComment()) {
@@ -290,8 +287,7 @@ class CommentListingRequest(
                             continue
                         }
 
-                        val emoteMetadata =
-                            (entry.value as MaybeParseError.Ok<RedditMediaMetadata>).value
+                        val emoteMetadata =                             (entry.value as MaybeParseError.Ok<RedditMediaMetadata>).value
 
                         // id is always structured as emote|{subreddit_id}|{emote_id}
                         // for subreddit emotes
@@ -343,8 +339,7 @@ class CommentListingRequest(
                 }
             }
 
-            val currentCanonicalUserName: String =
-                RedditAccountManager.Companion.getInstance(mContext)
+            val currentCanonicalUserName: String = RedditAccountManager.Companion.getInstance(mContext)
                     .getDefaultAccount().canonicalUsername
             val showSubredditName = !(mCommentListingURL != null
                     && mCommentListingURL.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL)

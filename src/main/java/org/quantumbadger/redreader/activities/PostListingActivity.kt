@@ -60,8 +60,8 @@ import java.util.concurrent.atomic.AtomicReference
 class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
     PostSelectionListener, OptionsMenuPostsListener, SessionChangeListener,
     SubredditSubscriptionStateChangeListener {
-    private var fragment: PostListingFragment? = null
-    private var controller: PostListingController? = null
+    private var fragment: PostListingFragment?=null
+    private var controller: PostListingController?=null
 
     private val mSubredditSubscriptionListenerContext = AtomicReference<ListenerContext?>(null)
 
@@ -101,7 +101,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
 
             controller = PostListingController(url, this)
 
-            var fragmentSavedInstanceState: Bundle? = null
+            var fragmentSavedInstanceState: Bundle?=null
 
             if (savedInstanceState != null) {
                 if (savedInstanceState.containsKey(SAVEDSTATE_SESSION)) {
@@ -173,9 +173,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
             .getDefaultAccount()
         val subredditSubscriptionState: SubredditSubscriptionState?
 
-        val subredditSubscriptionManager
-                : RedditSubredditSubscriptionManager =
-            RedditSubredditSubscriptionManager.Companion.getSingleton(this, user)
+        val subredditSubscriptionManager: RedditSubredditSubscriptionManager=            RedditSubredditSubscriptionManager.Companion.getSingleton(this, user)
 
         if (!user.isAnonymous && controller!!.isSubreddit()
             && subredditSubscriptionManager.areSubscriptionsReady()
@@ -195,8 +193,8 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         else
             null
 
-        var subredditPinState: Boolean? = null
-        var subredditBlockedState: Boolean? = null
+        var subredditPinState: Boolean?=null
+        var subredditBlockedState: Boolean?=null
 
         if (controller!!.isSubreddit()
             && fragment != null && fragment!!.getSubreddit() != null

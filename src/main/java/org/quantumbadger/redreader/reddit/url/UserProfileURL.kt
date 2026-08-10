@@ -66,8 +66,7 @@ class UserProfileURL(val username: String?) : RedditURL() {
                     }
                 }
 
-                pathSegments
-                = pathSegmentsFiltered.toTypedArray<String?>()
+                pathSegments = pathSegmentsFiltered.toTypedArray<String?>()
             }
 
             if (pathSegments.size != 2) {

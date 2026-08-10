@@ -72,7 +72,7 @@ class WebViewFixed : WebView {
         }
     }
 
-    private var videoEnabledWebChromeClient: VideoEnabledWebChromeClient? = null
+    private var videoEnabledWebChromeClient: VideoEnabledWebChromeClient?=null
     private var addedJavascriptInterface: Boolean
 
     constructor(context: Context) : super(context) {

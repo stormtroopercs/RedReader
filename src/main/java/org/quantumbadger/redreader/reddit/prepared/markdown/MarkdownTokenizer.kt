@@ -155,14 +155,12 @@ object MarkdownTokenizer {
 
                 'h', 'w' -> {
                     if (inBrackets == 0 && lastCharOk) {
-                        val linkStartType =
-                            getLinkStartType(input.data, i, input.pos)
+                        val linkStartType =                             getLinkStartType(input.data, i, input.pos)
                         if (linkStartType >= 0) {
                             // Greedily read to space, or <>, or etc
 
                             val linkStartPos = i
-                            val linkPrefixEndPos =
-                                linkPrefixes[linkStartType]!!.size + linkStartPos
+                            val linkPrefixEndPos =                                 linkPrefixes[linkStartType]!!.size + linkStartPos
                             var linkEndPos = linkPrefixEndPos
 
                             var hasOpeningParen = false
@@ -170,8 +168,7 @@ object MarkdownTokenizer {
                             while (linkEndPos < input.pos) {
                                 val lToken = input.data[linkEndPos]
 
-                                val isValidChar =
-                                    lToken != ' '.code && lToken != '<'.code && lToken != '>'.code && lToken != TOKEN_GRAVE && lToken != TOKEN_BRACKET_SQUARE_OPEN && lToken != TOKEN_BRACKET_SQUARE_CLOSE
+                                val isValidChar =                                     lToken != ' '.code && lToken != '<'.code && lToken != '>'.code && lToken != TOKEN_GRAVE && lToken != TOKEN_BRACKET_SQUARE_OPEN && lToken != TOKEN_BRACKET_SQUARE_CLOSE
 
                                 if (lToken == '('.code) {
                                     hasOpeningParen = true
@@ -203,8 +200,7 @@ object MarkdownTokenizer {
                             }
 
                             if (linkEndPos - linkPrefixEndPos >= 2) {
-                                val reverted =
-                                    revert(input.data, linkStartPos, linkEndPos)
+                                val reverted =                                     revert(input.data, linkStartPos, linkEndPos)
 
                                 output.data[output.pos++] = TOKEN_BRACKET_SQUARE_OPEN
                                 output.append(reverted)
@@ -229,20 +225,17 @@ object MarkdownTokenizer {
 
                 'r', 'u', '/' -> {
                     if (inBrackets == 0 && lastCharOk) {
-                        val linkStartType =
-                            getRedditLinkStartType(input.data, i, input.pos)
+                        val linkStartType =                             getRedditLinkStartType(input.data, i, input.pos)
                         if (linkStartType >= 0) {
                             val linkStartPos = i
-                            val linkPrefixEndPos =
-                                (linkPrefixes_reddit[linkStartType]!!.size
+                            val linkPrefixEndPos =                                 (linkPrefixes_reddit[linkStartType]!!.size
                                         + linkStartPos)
                             var linkEndPos = linkPrefixEndPos
 
                             while (linkEndPos < input.pos) {
                                 val lToken = input.data[linkEndPos]
 
-                                val isValidChar =
-                                    (lToken >= 'a'.code && lToken <= 'z'.code)
+                                val isValidChar =                                     (lToken >= 'a'.code && lToken <= 'z'.code)
                                             || (lToken >= 'A'.code && lToken <= 'Z'.code)
                                             || (lToken >= '0'.code && lToken <= '9'.code)
                                             || lToken == '_'.code || lToken == TOKEN_UNDERSCORE || lToken == TOKEN_UNDERSCORE_DOUBLE || lToken == '+'.code || lToken == '-'.code
@@ -255,8 +248,7 @@ object MarkdownTokenizer {
                             }
 
                             if (linkEndPos - linkPrefixEndPos > 2) {
-                                val reverted =
-                                    revert(input.data, linkStartPos, linkEndPos)
+                                val reverted =                                     revert(input.data, linkStartPos, linkEndPos)
 
                                 output.data[output.pos++] = TOKEN_BRACKET_SQUARE_OPEN
                                 output.append(reverted)
@@ -416,8 +408,7 @@ object MarkdownTokenizer {
 
                     MarkdownTokenizer.TOKEN_GRAVE -> {
                         val openingGrave = i
-                        val closingGrave =
-                            MarkdownTokenizer.indexOf(
+                        val closingGrave =                             MarkdownTokenizer.indexOf(
                                 input.data,
                                 MarkdownTokenizer.TOKEN_GRAVE,
                                 i + 1,
@@ -509,8 +500,7 @@ object MarkdownTokenizer {
                                         parenOpenPos
                                     )
                                 ) {
-                                    val parenClosePos =
-                                        MarkdownTokenizer.findParenClosePos(input, parenOpenPos + 1)
+                                    val parenClosePos =                                         MarkdownTokenizer.findParenClosePos(input, parenOpenPos + 1)
 
                                     if (parenClosePos >= 0) {
                                         linkParseSuccess = true
@@ -583,13 +573,11 @@ object MarkdownTokenizer {
                         lastBracketSquareOpen = -1
                     }
 
-                    MarkdownTokenizer.TOKEN_PAREN_OPEN, MarkdownTokenizer.TOKEN_PAREN_CLOSE, MarkdownTokenizer.TOKEN_UNICODE_CLOSE -> toRevert[i] =
-                        true
+                    MarkdownTokenizer.TOKEN_PAREN_OPEN, MarkdownTokenizer.TOKEN_PAREN_CLOSE, MarkdownTokenizer.TOKEN_UNICODE_CLOSE -> toRevert[i] =                         true
 
                     MarkdownTokenizer.TOKEN_UNICODE_OPEN -> {
                         val openingUnicode = i
-                        val closingUnicode =
-                            MarkdownTokenizer.indexOf(
+                        val closingUnicode =                             MarkdownTokenizer.indexOf(
                                 input.data, MarkdownTokenizer.TOKEN_UNICODE_CLOSE, i + 1,
                                 min(input.pos, i + 20)
                             )
@@ -651,7 +639,7 @@ object MarkdownTokenizer {
                                 toRevert[i] = true
                             }
                         } else {
-                            var codePoint: Int? = null
+                            var codePoint: Int?=null
 
                             try {
                                 val name = String(
@@ -660,8 +648,7 @@ object MarkdownTokenizer {
                                     closingUnicode - openingUnicode - 1
                                 )
 
-                                val result =
-                                    StringEscapeUtils.unescapeHtml4("&" + name + ";")
+                                val result =                                     StringEscapeUtils.unescapeHtml4("&" + name + ";")
 
                                 if (result.length == 1) {
                                     codePoint = result.get(0).code

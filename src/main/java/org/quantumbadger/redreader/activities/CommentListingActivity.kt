@@ -44,9 +44,9 @@ import java.util.UUID
 
 class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListener,
     OptionsMenuCommentsListener, PostSelectionListener, SessionChangeListener {
-    private var controller: CommentListingController? = null
+    private var controller: CommentListingController?=null
 
-    private var mFragment: CommentListingFragment? = null
+    private var mFragment: CommentListingFragment?=null
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         PrefsUtility.applyTheme(this)
@@ -67,7 +67,7 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
             )
             controller!!.setSearchString(searchString)
 
-            var fragmentSavedInstanceState: Bundle? = null
+            var fragmentSavedInstanceState: Bundle?=null
 
             if (savedInstanceState != null) {
                 if (savedInstanceState.containsKey(SAVEDSTATE_SESSION)) {

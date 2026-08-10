@@ -36,11 +36,11 @@ import java.util.UUID
 import kotlin.concurrent.Volatile
 
 class SessionListDialog : AppCompatDialogFragment(), RedditAccountChangeListener {
-    private var url: UriString? = null
-    private var current: UUID? = null
-    private var type: SessionChangeType? = null
+    private var url: UriString?=null
+    private var current: UUID?=null
+    private var type: SessionChangeType?=null
 
-    private var rv: RecyclerView? = null
+    private var rv: RecyclerView?=null
 
     // Workaround for HoloEverywhere bug?
     @Volatile

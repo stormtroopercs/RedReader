@@ -128,25 +128,25 @@ class PostListingFragment(
     session: UUID?,
     forceDownload: Boolean
 ) : RRFragment(parent, savedInstanceState), PostSelectionListener {
-    private var mPostListingURL: PostListingURL? = null
+    private var mPostListingURL: PostListingURL?=null
 
-    var subreddit: RedditSubreddit? = null
+    var subreddit: RedditSubreddit?=null
         private set
 
     private var mSession: UUID?
     private val mPostCountLimit: Int
-    private var mLoadMoreView: TextView? = null
+    private var mLoadMoreView: TextView?=null
 
     private val mPostListingManager: PostListingManager
     private val mRecyclerView: RecyclerView
 
     private val mOuter: View?
 
-    private var mAfter: RedditIdAndType? = null
-    private var mLastAfter: RedditIdAndType? = null
+    private var mAfter: RedditIdAndType?=null
+    private var mLastAfter: RedditIdAndType?=null
     private var mRequest: CacheRequest?
     private var mReadyToDownloadMore = false
-    private var mTimestamp: TimestampUTC? = null
+    private var mTimestamp: TimestampUTC?=null
 
     private var mPostCount = 0
     private var mPostsNotShown = false
@@ -154,7 +154,7 @@ class PostListingFragment(
 
     private val mPostIds = HashSet<String?>(200)
 
-    private var mPreviousFirstVisibleItemPosition: Int? = null
+    private var mPreviousFirstVisibleItemPosition: Int?=null
 
     // Session may be null
     init {
@@ -167,8 +167,7 @@ class PostListingFragment(
         }
 
         try {
-            mPostListingURL
-            = RedditURLParser.parseProbablePostListing(url) as PostListingURL
+            mPostListingURL = RedditURLParser.parseProbablePostListing(url) as PostListingURL
         } catch (e: ClassCastException) {
             Toast.makeText(getActivity(), "Invalid post listing URL.", Toast.LENGTH_LONG)
                 .show()
@@ -297,8 +296,7 @@ class PostListingFragment(
 
                     SubredditPostListURL.Type.SUBREDDIT -> {
                         // Request the subreddit data
-                        val subredditHandler: RequestResponseHandler<RedditSubreddit?, RRError?> =
-                            object : RequestResponseHandler<RedditSubreddit?, RRError?> {
+                        val subredditHandler: RequestResponseHandler<RedditSubreddit?, RRError?> =                             object : RequestResponseHandler<RedditSubreddit?, RRError?> {
                                 override fun onRequestFailed(
                                     failureReason: RRError?
                                 ) {
@@ -323,8 +321,7 @@ class PostListingFragment(
 
                                             val title = string.error_nsfw_subreddits_disabled_title
 
-                                            val message =
-                                                string.error_nsfw_subreddits_disabled_message
+                                            val message =                                                 string.error_nsfw_subreddits_disabled_message
 
                                             mPostListingManager.addFooterError(
                                                 ErrorView(
@@ -676,8 +673,7 @@ class PostListingFragment(
 
                         val listing = thing.data
 
-                        val posts
-                                : ArrayList<MaybeParseError<RedditThing?>?> = listing.children
+                        val posts: ArrayList<MaybeParseError<RedditThing?>?> = listing.children
 
                         val isNsfwAllowed = PrefsUtility.pref_behaviour_nsfw()
 
@@ -692,8 +688,7 @@ class PostListingFragment(
 
                         val showNsfwPreviews = PrefsUtility.images_inline_image_previews_nsfw()
 
-                        val showSpoilerPreviews =
-                            PrefsUtility.images_inline_image_previews_spoiler()
+                        val showSpoilerPreviews =                             PrefsUtility.images_inline_image_previews_spoiler()
 
                         val downloadThumbnails = PrefsUtility.appearance_thumbnails_show()
                             .isEnabled(isConnectionWifi)
@@ -704,8 +699,7 @@ class PostListingFragment(
 
                         val showNsfwThumbnails = PrefsUtility.appearance_thumbnails_nsfw_show()
 
-                        val showSpoilerThumbnails =
-                            PrefsUtility.appearance_thumbnails_spoiler_show()
+                        val showSpoilerThumbnails =                             PrefsUtility.appearance_thumbnails_spoiler_show()
 
                         val precacheImages = !inlinePreviews && PrefsUtility.cache_precache_images()
                             .isEnabled(isConnectionWifi)
@@ -722,8 +716,7 @@ class PostListingFragment(
 
                         val leftHandedMode = PrefsUtility.pref_appearance_left_handed()
 
-                        val subredditFilteringEnabled =
-                            (mPostListingURL!!.pathType()
+                        val subredditFilteringEnabled =                             (mPostListingURL!!.pathType()
                                     == RedditURLParser.SUBREDDIT_POST_LISTING_URL)
                                     && ((mPostListingURL!!.asSubredditPostListURL().type
                                     == SubredditPostListURL.Type.ALL) || (mPostListingURL!!.asSubredditPostListURL().type
@@ -732,8 +725,7 @@ class PostListingFragment(
                                     == SubredditPostListURL.Type.FRONTPAGE))
 
                         // Grab this so we don't have to pull from the prefs every post
-                        val blockedSubreddits =
-                            HashSet<SubredditCanonicalId?>(PrefsUtility.pref_blocked_subreddits())
+                        val blockedSubreddits =                             HashSet<SubredditCanonicalId?>(PrefsUtility.pref_blocked_subreddits())
 
                         Log.i(
                             TAG, "Inline previews: "
@@ -752,8 +744,7 @@ class PostListingFragment(
 
                         val cm: CacheManager? = CacheManager.Companion.getInstance(activity)
 
-                        val showSubredditName =
-                            !(mPostListingURL != null && (mPostListingURL!!.pathType()
+                        val showSubredditName =                             !(mPostListingURL != null && (mPostListingURL!!.pathType()
                                     == RedditURLParser.SUBREDDIT_POST_LISTING_URL) && (mPostListingURL!!.asSubredditPostListURL().type
                                     == SubredditPostListURL.Type.SUBREDDIT))
 
@@ -898,8 +889,7 @@ class PostListingFragment(
                                     }
                                 }
 
-                                val emptyView =
-                                    LayoutInflater.from(getContext()).inflate(
+                                val emptyView =                                     LayoutInflater.from(getContext()).inflate(
                                         R.layout.no_items_yet,
                                         mRecyclerView,
                                         false

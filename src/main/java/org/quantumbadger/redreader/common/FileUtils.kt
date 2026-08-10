@@ -170,8 +170,7 @@ object FileUtils {
         val splitType: String
 
         if (mimetype.contains(";")) {
-            splitType =
-                mimetype.split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
+            splitType =                 mimetype.split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
         } else {
             splitType = mimetype
         }
@@ -234,7 +233,7 @@ object FileUtils {
             activity,
             uri,
             DownloadImageToSaveSuccessCallback { info: ImageInfo, cacheFile: ReadableCacheFile?, mimetype: String? ->
-                val externalUri: Uri? = CacheContentProvider.Companion.getUriForFile(
+                val externalUri: Uri?=CacheContentProvider.Companion.getUriForFile(
                     cacheFile!!.getId(),
                     mimetype,
                     getExtensionFromPath(info.original.url.value).orElse("jpg")

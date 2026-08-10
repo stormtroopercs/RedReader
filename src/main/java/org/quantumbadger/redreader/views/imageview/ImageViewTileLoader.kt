@@ -41,7 +41,7 @@ class ImageViewTileLoader(
 
     private var mWanted = false
 
-    private var mResult: Bitmap? = null
+    private var mResult: Bitmap?=null
 
     private val mNotifyRunnable: Runnable
 

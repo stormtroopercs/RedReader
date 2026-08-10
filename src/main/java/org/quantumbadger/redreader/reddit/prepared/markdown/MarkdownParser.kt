@@ -27,7 +27,7 @@ object MarkdownParser {
         }
 
         val mergedLines = ArrayList<MarkdownLine>(rawLines.size)
-        var currentLine: MarkdownLine? = null
+        var currentLine: MarkdownLine?=null
 
         for (i in lines.indices) {
             if (currentLine != null) {
@@ -66,8 +66,7 @@ object MarkdownParser {
             mergedLines.add(currentLine)
         }
 
-        val outputParagraphs =
-            ArrayList<MarkdownParagraph?>(mergedLines.size)
+        val outputParagraphs =             ArrayList<MarkdownParagraph?>(mergedLines.size)
 
         for (line in mergedLines) {
             val lastParagraph = if (outputParagraphs.isEmpty())

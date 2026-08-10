@@ -238,8 +238,7 @@ class RedditSubreddit : Parcelable, Comparable<RedditSubreddit?>,
             }
         }
 
-        val CREATOR
-                : Parcelable.Creator<RedditSubreddit?> =
+        val CREATOR: Parcelable.Creator<RedditSubreddit?> =
             object : Parcelable.Creator<RedditSubreddit?> {
                 override fun createFromParcel(`in`: Parcel): RedditSubreddit {
                     return RedditSubreddit(`in`)

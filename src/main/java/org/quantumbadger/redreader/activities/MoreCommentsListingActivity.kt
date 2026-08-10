@@ -41,9 +41,9 @@ class MoreCommentsListingActivity : RefreshableActivity(), RedditAccountChangeLi
     OptionsMenuCommentsListener, PostSelectionListener {
     private val mUrls = ArrayList<RedditURL?>(32)
 
-    private var mFragment: CommentListingFragment? = null
+    private var mFragment: CommentListingFragment?=null
 
-    private var mSearchString: String? = null
+    private var mSearchString: String?=null
 
     override fun baseActivityAllowToolbarHideOnScroll(): Boolean {
         return true
