@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.quantumbadger.redreader.cache
 
@@ -22,6 +22,9 @@ import android.net.Uri
 import android.util.Log
 import com.github.luben.zstd.Zstd
 import com.github.luben.zstd.ZstdInputStream
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.scopes.Singleton
+import javax.inject.Inject
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
@@ -55,7 +58,14 @@ import java.util.UUID
 import java.util.concurrent.PriorityBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
-class CacheManager private constructor(context: Context) {
+/**
+ * Hilt-injected CacheManager for Reddit caching.
+ * Replaces companion object singleton pattern.
+ */
+@Singleton
+class CacheManager @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
     private val dbManager: CacheDbManager
 
     private val requests = PriorityBlockingQueue<CacheRequest?>()
@@ -63,14 +73,10 @@ class CacheManager private constructor(context: Context) {
     private val downloadQueue: PrioritisedDownloadQueue
     private val mDiskCacheThreadPool = PrioritisedCachedThreadPool(2, "Disk Cache")
 
-    private val context: Context
-
     init {
         if (!isAlreadyInitialized.compareAndSet(false, true)) {
             throw RuntimeException("Attempt to initialize the cache twice.")
         }
-
-        this.context = context
 
         dbManager = CacheDbManager(context)
 
@@ -80,8 +86,59 @@ class CacheManager private constructor(context: Context) {
         requestHandler.start()
     }
 
+    companion object {
+        private const val TAG = "CacheManager"
+
+        private const val ext = ".rr_cache_data"
+        private const val tempExt = ".rr_cache_data_tmp"
+
+        private val isAlreadyInitialized = AtomicBoolean(false)
+
+        private fun pruneTemp(dir: File) {
+            val list = dir.list()
+            if (list == null) {
+                return
+            }
+
+            for (file in list) {
+                if (file.endsWith(tempExt)) {
+                    File(dir, file).delete()
+                }
+            }
+        }
+
+        fun getCacheDirs(context: Context): ArrayList<File> {
+            val dirs = ArrayList<File>()
+
+            dirs.add(context.cacheDir)
+
+            val externalDirs = context.externalCacheDirs
+            if (externalDirs != null) {
+                for (dir in externalDirs) {
+                    if (dir != null) {
+                        dirs.add(dir)
+                    }
+                }
+            }
+
+            return dirs
+        }
+
+        private fun getSubdirForCacheFile(
+            cacheRoot: File,
+            cacheFileId: Long
+        ): File {
+            return FileUtils.buildPath(
+                cacheRoot,
+                "rr_cache_files",
+                String.format(Locale.US, "%02d", cacheFileId % 100),
+                String.format(Locale.US, "%d", (cacheFileId / 100) % 10)
+            )
+        }
+    }
+
     private fun isCacheFile(file: File): Long? {
-        val name = file.getName()
+        val name = file.name
 
         if (!name.endsWith(ext)) {
             return null
@@ -394,7 +451,7 @@ class CacheManager private constructor(context: Context) {
             }
 
         val file: Optional<File?>
-            get() = Optional.Companion.ofNullable<File?>(
+            get() = Optional.ofNullable<File?>(
                 getExistingCacheFile(this.id)
             )
 
@@ -404,9 +461,9 @@ class CacheManager private constructor(context: Context) {
             )
 
             if (result.isPresent()) {
-                return Optional.Companion.of<String?>(result.get().mimetype)
+                return Optional.of<String?>(result.get().mimetype)
             } else {
-                return Optional.Companion.empty<String?>()
+                return Optional.empty<String?>()
             }
         }
 
@@ -503,7 +560,7 @@ class CacheManager private constructor(context: Context) {
                         NullPointerException("URL was null"),
                         null,
                         null,
-                        Optional.Companion.empty<FailedRequestBody>()
+                        Optional.empty<FailedRequestBody>()
                     )
                 )
                 return
@@ -529,7 +586,7 @@ class CacheManager private constructor(context: Context) {
                                 null,
                                 null,
                                 request.url,
-                                Optional.Companion.empty<FailedRequestBody>()
+                                Optional.empty<FailedRequestBody>()
                             )
                         )
                     }
@@ -570,7 +627,7 @@ class CacheManager private constructor(context: Context) {
                         e,
                         null,
                         request.url,
-                        Optional.Companion.empty<FailedRequestBody>()
+                        Optional.empty<FailedRequestBody>()
                     )
                 )
             }
@@ -590,7 +647,7 @@ class CacheManager private constructor(context: Context) {
                         RuntimeException(),
                         null,
                         request.url,
-                        Optional.Companion.empty<FailedRequestBody>()
+                        Optional.empty<FailedRequestBody>()
                     )
                 )
 
@@ -641,65 +698,6 @@ class CacheManager private constructor(context: Context) {
                     )
                 }
             })
-        }
-    }
-
-    companion object {
-        private const val TAG = "CacheManager"
-
-        private const val ext = ".rr_cache_data"
-        private const val tempExt = ".rr_cache_data_tmp"
-
-        private val isAlreadyInitialized = AtomicBoolean(false)
-
-        @SuppressLint("StaticFieldLeak")
-        private var singleton: CacheManager? = null
-
-        @Synchronized
-        fun getInstance(context: Context): CacheManager {
-            if (singleton == null) {
-                singleton = CacheManager(context.getApplicationContext())
-            }
-            return singleton!!
-        }
-
-        private fun pruneTemp(dir: File) {
-            val list = dir.list()
-            if (list == null) {
-                return
-            }
-
-            for (file in list) {
-                if (file.endsWith(tempExt)) {
-                    File(dir, file).delete()
-                }
-            }
-        }
-
-        fun getCacheDirs(context: Context): ArrayList<File> {
-            val dirs = ArrayList<File>()
-
-            dirs.add(context.getCacheDir())
-
-            for (dir in context.getExternalCacheDirs()) {
-                if (dir != null) {
-                    dirs.add(dir)
-                }
-            }
-
-            return dirs
-        }
-
-        private fun getSubdirForCacheFile(
-            cacheRoot: File,
-            cacheFileId: Long
-        ): File {
-            return FileUtils.buildPath(
-                cacheRoot,
-                "rr_cache_files",
-                String.format(Locale.US, "%02d", cacheFileId % 100),
-                String.format(Locale.US, "%d", (cacheFileId / 100) % 10)
-            )
         }
     }
 }
