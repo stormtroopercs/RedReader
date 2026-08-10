@@ -32,6 +32,16 @@ dependencies {
 	ksp(libs.hilt.compiler)
 	ksp(libs.androidx.hilt.compiler)
 	implementation(libs.androidx.hilt.navigation.compose)
+	implementation(libs.androidx.hilt.work)
+
+	// Room database
+	implementation(libs.room.runtime)
+	implementation(libs.room.ktx)
+	ksp(libs.room.compiler)
+
+	// WorkManager
+	implementation(libs.work.runtime.ktx)
+	implementation(libs.work.gcm)
 
 	implementation(libs.androidx.annotation)
 	implementation(libs.androidx.appcompat)
