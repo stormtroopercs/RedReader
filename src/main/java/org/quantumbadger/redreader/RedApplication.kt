@@ -19,24 +19,56 @@ package org.quantumbadger.redreader
 
 import android.app.Application
 import android.content.Context
+import android.os.Process
+import android.util.Log
 import dagger.hilt.android.HiltAndroidApp
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.common.AndroidCommon
+import org.quantumbadger.redreader.common.Fonts
+import org.quantumbadger.redreader.common.GlobalConfig
+import org.quantumbadger.redreader.common.GlobalExceptionHandler
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.compose.prefs.ComposePrefsSingleton
 
 /**
- * Hilt Application class - marks the entry point for Hilt dependency injection.
- * This replaces the plain RedReader application class with Hilt integration.
+ * Hilt-managed application class for RedReader.
+ * Replaces manual singleton patterns with Hilt dependency injection.
  */
 @HiltAndroidApp
-class RedApplication : Application() {
+class RedReader : Application() {
 
     companion object {
-        const val TAG = "RedApplication"
+        const val TAG = "RedReader"
+    }
 
-        /**
-         * Get the RedApplication instance from any Context.
-         */
-        @JvmStatic
-        fun getInstance(context: Context): RedApplication {
-            return context.applicationContext as RedApplication
-        }
+    private lateinit var packageInfo: AndroidCommon.PackageInfo
+
+    override fun onCreate() {
+        super.onCreate()
+
+        Log.i(TAG, "Application created.")
+
+        packageInfo = AndroidCommon.getPackageInfo(this)
+
+        GlobalExceptionHandler.init(this)
+        PrefsUtility.init(this)
+        PrefsUtility.applyLanguageSetting()
+        ComposePrefsSingleton.init(this)
+        Fonts.onAppCreate(assets)
+
+        // Note: Network initialization moved to Hilt modules
+        // OkHttpClient and HTTPBackend are now provided via NetworkModule
+
+        Log.i(TAG, "Config: " + GlobalConfig.appName + " (" + GlobalConfig.appBuildType + ")")
+
+        val cm = CacheManager.getInstance(this)
+
+        object : Thread() {
+            override fun run() {
+                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+                cm.pruneTemp()
+                cm.pruneCache()
+            }
+        }.start()
     }
 }
