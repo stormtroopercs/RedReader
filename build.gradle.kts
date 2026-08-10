@@ -5,6 +5,8 @@ plugins {
 	alias(libs.plugins.kotlin.serialization)
 	alias(libs.plugins.kotlin.parcelize)
 	alias(libs.plugins.compose.compiler)
+	alias(libs.plugins.hilt.android)
+	alias(libs.plugins.ksp)
 	pmd
 	checkstyle
 
@@ -24,6 +26,12 @@ dependencies {
 	implementation(libs.kotlinx.serialization.json)
 	implementation(libs.kotlinx.serialization.json.okio)
 	implementation(libs.kotlin.reflect)
+
+	// Hilt dependencies
+	implementation(libs.hilt.android)
+	ksp(libs.hilt.compiler)
+	ksp(libs.androidx.hilt.compiler)
+	implementation(libs.androidx.hilt.navigation.compose)
 
 	implementation(libs.androidx.annotation)
 	implementation(libs.androidx.appcompat)
