@@ -1,3 +1,19 @@
+/*******************************************************************************
+ * This file is part of RedReader.
+ *
+ * RedReader is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * RedReader is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ */
 package org.quantumbadger.redreader.viewholders
 
 import android.view.LayoutInflater
@@ -26,7 +42,7 @@ class SubredditItemViewHolder(
     parent: ViewGroup,
     private val mActivity: BaseActivity
 ) : RecyclerView.ViewHolder(
-    LayoutInflater.from(parent.context)
+    LayoutInflater.from(parent.getContext())
         .inflate(R.layout.subreddit_item_view, parent, false)
 ) {
     private val mTheme: RRThemeAttributes
@@ -42,15 +58,16 @@ class SubredditItemViewHolder(
         mTheme = RRThemeAttributes(mActivity)
         mBodyFontScale = PrefsUtility.appearance_fontscale_bodytext()
 
-        mPrimaryText = itemView.findViewById(R.id.subreddit_item_view_primary_text)
-        mSubText = itemView.findViewById(R.id.subreddit_item_view_sub_text)
-        mSupportingText = itemView.findViewById(R.id.subreddit_item_view_supporting_text)
-        mActions = itemView.findViewById(R.id.subreddit_item_view_actions)
-        mGoButton = itemView.findViewById(R.id.subreddit_item_view_go)
+        mPrimaryText = this.itemView.findViewById<TextView>(R.id.subreddit_item_view_primary_text)
+        mSubText = this.itemView.findViewById<TextView>(R.id.subreddit_item_view_sub_text)
+        mSupportingText =
+            this.itemView.findViewById<FrameLayout>(R.id.subreddit_item_view_supporting_text)
+        mActions = this.itemView.findViewById<SubredditToolbar>(R.id.subreddit_item_view_actions)
+        mGoButton = this.itemView.findViewById<View>(R.id.subreddit_item_view_go)
     }
 
     fun bind(subreddit: SubredditDetails) {
-        mPrimaryText.text = subreddit.name
+        mPrimaryText.setText(subreddit.name)
 
         val subtitle: String?
         if (subreddit.subscribers == null) {
@@ -64,22 +81,23 @@ class SubredditItemViewHolder(
         }
 
         if (subtitle == null) {
-            mSubText.visibility = View.GONE
+            mSubText.setVisibility(View.GONE)
         } else {
-            mSubText.visibility = View.VISIBLE
-            mSubText.text = subtitle
+            mSubText.setVisibility(View.VISIBLE)
+            mSubText.setText(subtitle)
         }
 
         mSupportingText.removeAllViews()
 
-        val pubDesc = subreddit.publicDescriptionHtmlEscaped
-        if (pubDesc != null && pubDesc.trim().isNotEmpty()) {
-            val body: BodyElement = HtmlReader.parse(
-                StringEscapeUtils.unescapeHtml4(pubDesc),
+        if (subreddit.publicDescriptionHtmlEscaped != null
+            && !subreddit.publicDescriptionHtmlEscaped.trim { it <= ' ' }.isEmpty()
+        ) {
+            val body: BodyElement = HtmlReader.Companion.parse(
+                StringEscapeUtils.unescapeHtml4(subreddit.publicDescriptionHtmlEscaped),
                 mActivity
             )
 
-            mSupportingText.visibility = View.VISIBLE
+            mSupportingText.setVisibility(View.VISIBLE)
 
             mSupportingText.addView(
                 body.generateView(
@@ -90,11 +108,12 @@ class SubredditItemViewHolder(
                 )
             )
         } else {
-            mSupportingText.visibility = View.GONE
+            mSupportingText.setVisibility(View.GONE)
         }
 
-        mActions.bindSubreddit(subreddit, Optional.empty())
+        mActions.bindSubreddit(subreddit, Optional.Companion.empty<UriString?>())
 
-        mGoButton.setOnClickListener { v: View? -> onLinkClicked(mActivity, subreddit.url) }
+        mGoButton.setOnClickListener(
+            View.OnClickListener { v: View? -> onLinkClicked(mActivity, subreddit.url) })
     }
 }
