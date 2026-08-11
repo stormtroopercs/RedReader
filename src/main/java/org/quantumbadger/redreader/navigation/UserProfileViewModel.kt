@@ -20,6 +20,7 @@ package org.quantumbadger.redreader.navigation
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +35,7 @@ import javax.inject.Inject
  * ViewModel for user profile display.
  * Manages user profile state and provides reactive updates via StateFlow.
  */
+@HiltViewModel
 class UserProfileViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
