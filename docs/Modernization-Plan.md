@@ -71,7 +71,7 @@
 |- Replace Activity/Fragment lifecycle state with StateFlow ✅ DONE
 |- Can be done alongside Compose migration ✅ DONE
 |- Reference: nowinandroid/feature/foryou, nowinandroid/feature/interests
-|- Notes: Created SettingsViewModel, SubredditSearchViewModel, UserProfileViewModel, InboxViewModel with StateFlow-based UI states. All follow RED-GREEN-REFACTOR pattern.
+|- Notes: Created SettingsViewModel, SubredditSearchViewModel, UserProfileViewModel, InboxViewModel with StateFlow-based UI states. All follow RED-GREEN-REFACTOR pattern. All annotated with @HiltViewModel.
 |
 |### 7. Java → Kotlin Migration ✅ DONE
 |- 369 Java files → Kotlin gradually ✅ All 351+ `.java` files renamed to `.kt` (3rd-party libs excluded)
@@ -84,7 +84,7 @@
 |- Add Roborazzi screenshot tests ✅ DONE
 |- Add macro benchmarks for startup/performance ✅ DONE
 |- Reference: nowinandroid/app/src/androidTest, nowinandroid/benchmarks
-|- Notes: MainScreenTest.kt created with 3 tests verifying subreddit display, navigation, and settings click. SettingsScreenTest.kt created with 3 tests verifying settings display and interactions. Roborazzi plugin configured in build.gradle.kts. ui-test-manifest added for Android tests. StartupBenchmark.kt created with cold/warm/hot startup benchmarks.
+|- Notes: MainScreenTest.kt created with 3 tests verifying subreddit display, navigation, and settings click. SettingsScreenTest.kt created with 3 tests verifying settings display and interactions. CommentListScreenTest.kt created with 2 tests. Repository tests: PostRepositoryTest.kt, CommentRepositoryTest.kt. Roborazzi plugin configured in build.gradle.kts. ui-test-manifest added for Android tests. StartupBenchmark.kt created with cold/warm/hot startup benchmarks.
 |
 |### 9. Code Quality Tools ✅ COMPLETE
 |- Add ktlint + Spotless for Kotlin formatting ✅ DONE
