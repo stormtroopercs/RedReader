@@ -95,9 +95,10 @@
 |
 |## Phase 4: Advanced
 |
-|### 10. Compose Material 3 Adaptive
-|- Tablet/desktop support via adaptive layouts
+|### 10. Compose Material 3 Adaptive ✅ COMPLETE
+|- Tablet/desktop support via adaptive layouts ✅ DONE
 |- Reference: nowinandroid adaptive navigation
+|- Notes: AdaptiveNavigation.kt created with SinglePaneLayout (phone) and TwoPaneLayout (tablet) modes. Two-pane layout shows master-detail view with post list and comment detail side-by-side.
 |
 |### 11. Modularization
 |- Split into feature/* and core/* modules
