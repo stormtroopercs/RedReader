@@ -16,6 +16,6 @@
  */
 package org.quantumbadger.redreader.views.glview
 
-interface Refreshable {
+fun interface Refreshable {
     fun refresh()
 }

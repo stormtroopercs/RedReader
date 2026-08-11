@@ -17,7 +17,7 @@
 package org.quantumbadger.redreader.common
 
 class EventListenerSet<E> {
-    interface Listener<E> {
+    fun interface Listener<E> {
         fun onEvent(event: E?)
     }
 

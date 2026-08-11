@@ -18,7 +18,7 @@ package org.quantumbadger.redreader.common.datastream
 
 import java.io.IOException
 
-interface ByteArrayCallback {
+fun interface ByteArrayCallback {
     @Throws(IOException::class)
     fun onByteArray(
         buf: ByteArray,

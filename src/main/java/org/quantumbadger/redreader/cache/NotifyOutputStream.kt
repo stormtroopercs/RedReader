@@ -28,7 +28,7 @@ class NotifyOutputStream(out: OutputStream?, private val listener: Listener) :
         listener.onClose()
     }
 
-    interface Listener {
+    fun interface Listener {
         @Throws(IOException::class)
         fun onClose()
     }

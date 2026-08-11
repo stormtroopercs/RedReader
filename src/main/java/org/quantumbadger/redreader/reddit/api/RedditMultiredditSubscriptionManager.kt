@@ -115,7 +115,7 @@ class RedditMultiredditSubscriptionManager @Inject constructor(
         )
     }
 
-    interface MultiredditListChangeListener {
+    fun interface MultiredditListChangeListener {
         fun onMultiredditListUpdated(
             multiredditSubscriptionManager: RedditMultiredditSubscriptionManager?
         )

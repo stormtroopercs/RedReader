@@ -16,6 +16,6 @@
  */
 package org.quantumbadger.redreader.account
 
-interface RedditAccountChangeListener {
+fun interface RedditAccountChangeListener {
     fun onRedditAccountChanged()
 }

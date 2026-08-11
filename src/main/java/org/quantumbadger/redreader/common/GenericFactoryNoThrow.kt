@@ -16,6 +16,6 @@
  */
 package org.quantumbadger.redreader.common
 
-interface GenericFactoryNoThrow<E> {
+fun interface GenericFactoryNoThrow<E> {
     fun create(): E
 }
