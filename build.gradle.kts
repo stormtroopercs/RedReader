@@ -6,7 +6,7 @@ plugins {
 	alias(libs.plugins.kotlin.parcelize)
 	alias(libs.plugins.compose.compiler)
 	alias(libs.plugins.hilt.android)
-	alias(libs.plugins.kapt)
+	alias(libs.plugins.ksp)
 	alias(libs.plugins.spotless)
 	pmd
 	checkstyle
@@ -91,7 +91,7 @@ dependencies {
 	implementation(libs.kotlin.reflect)
 
 	implementation(libs.hilt.android)
-	kapt(libs.hilt.compiler)
+	ksp(libs.hilt.compiler)
 	implementation(libs.androidx.hilt.navigation.compose)
 	implementation(libs.androidx.hilt.work)
 

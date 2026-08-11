@@ -23,8 +23,9 @@ It is a multi-activity app using the following:
 ## Build Configuration
 
 -   **Kotlin:** `android.builtInKotlin=true` (use Android Studio's built-in Kotlin compiler)
--   **Annotation Processing:** KAPT (not KSP) for Hilt and Room code generation
--   **Hilt:** Dagger Hilt for dependency injection with `kapt` for compiler
+-   **Annotation Processing:** KSP (Kotlin Symbol Processing) for Hilt code generation
+-   **Hilt:** Dagger Hilt for dependency injection with `ksp` for compiler
+-   **KSP Isolation:** `ksp.project.isolation.enabled=true` for faster builds
 
 ## Current Tech Stack
 
