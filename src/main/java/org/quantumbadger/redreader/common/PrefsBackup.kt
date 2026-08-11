@@ -325,12 +325,12 @@ object PrefsBackup {
         }).start()
     }
 
-    fun interface BackupDestination {
+    interface BackupDestination {
         @Throws(IOException::class)
         fun openOutputStream(): OutputStream
     }
 
-    fun interface BackupSource {
+    interface BackupSource {
         @Throws(IOException::class)
         fun openInputStream(): InputStream
     }

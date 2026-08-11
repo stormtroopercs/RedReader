@@ -16,6 +16,6 @@
  */
 package org.quantumbadger.redreader.common.streams
 
-fun interface Predicate<E> {
+interface Predicate<E> {
     fun matches(value: E?): Boolean
 }

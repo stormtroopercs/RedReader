@@ -699,6 +699,6 @@ private fun getSettingsCategories(context: android.content.Context): List<Settin
 private fun SettingsCategory.Builder.__(block: SettingsCategory.() -> Unit): Unit = block()
 
 @Suppress("UNCHECKED_CAST")
-private fun interface SettingsCategoryBuilder {
+private interface SettingsCategoryBuilder {
     fun build(): SettingsCategory
 }

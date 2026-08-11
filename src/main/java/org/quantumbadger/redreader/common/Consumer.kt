@@ -16,6 +16,6 @@
  */
 package org.quantumbadger.redreader.common
 
-fun interface Consumer<E> {
+interface Consumer<E> {
     fun consume(value: E?)
 }

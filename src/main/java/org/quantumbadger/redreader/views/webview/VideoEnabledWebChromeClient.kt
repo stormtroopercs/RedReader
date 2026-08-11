@@ -54,7 +54,7 @@ import android.widget.VideoView
 // https://github.com/cprcrack/VideoEnabledWebView/blob/master/app/src/main/java/name/cpr/VideoEnabledWebChromeClient.java
 open class VideoEnabledWebChromeClient : WebChromeClient, MediaPlayer.OnPreparedListener,
     OnCompletionListener, MediaPlayer.OnErrorListener {
-    fun interface ToggledFullscreenCallback {
+    interface ToggledFullscreenCallback {
         fun toggledFullscreen(fullscreen: Boolean)
     }
 

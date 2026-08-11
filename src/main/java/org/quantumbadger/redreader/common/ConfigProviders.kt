@@ -21,7 +21,7 @@ import android.util.Base64
 
 object ConfigProviders {
 
-	fun interface ConfigProvider {
+	interface ConfigProvider {
 		fun config(): String
 	}
 

@@ -26,7 +26,7 @@ import javax.inject.Inject
  */
 @Singleton
 class RRChoreographer @Inject constructor() : Choreographer.FrameCallback {
-    fun interface Callback {
+    interface Callback {
         fun doFrame(frameTimeNanos: Long)
     }
 

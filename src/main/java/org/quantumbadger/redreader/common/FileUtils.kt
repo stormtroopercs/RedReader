@@ -715,7 +715,7 @@ object FileUtils {
         }
     }
 
-    fun interface DownloadImageToSaveSuccessCallback {
+    interface DownloadImageToSaveSuccessCallback {
         fun onSuccess(
             info: ImageInfo,
             cacheFile: ReadableCacheFile?,

@@ -16,6 +16,6 @@
  */
 package org.quantumbadger.redreader.adapters
 
-fun interface ShareOrderCallbackListener {
+interface ShareOrderCallbackListener {
     fun onSelectedIntent(position: Int)
 }

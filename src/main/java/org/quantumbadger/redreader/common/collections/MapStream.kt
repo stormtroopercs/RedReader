@@ -20,7 +20,7 @@ class MapStream<Input, Output>(
     private val mInput: Stream<Input?>,
     private val mOperator: Operator<Input?, Output?>
 ) : Stream<Output?>() {
-    fun interface Operator<Input, Output> {
+    interface Operator<Input, Output> {
         fun operate(value: Input?): Output?
     }
 

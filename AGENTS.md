@@ -20,6 +20,12 @@ It is a multi-activity app using the following:
 -   **Background Processing:** Currently uses direct OkHttp calls and handlers. WorkManager is
     planned for background sync tasks.
 
+## Build Configuration
+
+-   **Kotlin:** `android.builtInKotlin=true` (use Android Studio's built-in Kotlin compiler)
+-   **Annotation Processing:** KAPT (not KSP) for Hilt and Room code generation
+-   **Hilt:** Dagger Hilt for dependency injection with `kapt` for compiler
+
 ## Current Tech Stack
 
 | Technology | Version |

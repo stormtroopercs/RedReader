@@ -23,7 +23,7 @@ import org.quantumbadger.redreader.common.General.checkThisIsUIThread
 
 class UIThreadRepeatingTimer(private val mIntervalMs: Long, private val mListener: Listener) :
     Runnable {
-    fun interface Listener {
+    interface Listener {
         fun onUIThreadRepeatingTimer(timer: UIThreadRepeatingTimer?)
     }
 

@@ -16,7 +16,7 @@
  */
 package org.quantumbadger.redreader.common
 
-fun interface GenericFactory<E, T : Throwable?> {
+interface GenericFactory<E, T : Throwable?> {
     @Throws(T::class)
     fun create(): E
 }

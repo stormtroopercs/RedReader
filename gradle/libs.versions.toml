@@ -3,6 +3,7 @@ agp = "9.0.0"
 kotlin = "2.2.21"
 java = "17"
 spotless = "6.25.0"
+kapt = "1.9.22"
 
 robolectric = "4.16"
 roborazzi = "1.32.0"
@@ -42,7 +43,7 @@ hilt-navigation-compose = "1.2.0"
 hilt-work = "1.2.0"
 room = "2.8.0"
 workmanager = "2.10.0"
-ksp = "2.2.21-2.0.4"
+ksp = "2.2.21-1.0.27"
 zstd = "1.5.7-6"
 
 junit = "4.13.2"
@@ -124,4 +125,5 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+kapt = { id = "org.jetbrains.kotlin.plugin.kapt", version.ref = "kapt" }
 roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }

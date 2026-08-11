@@ -86,7 +86,7 @@ class SharedPrefsWrapper internal constructor(private val mPrefs: SharedPreferen
         }
     }
 
-    fun interface OnSharedPreferenceChangeListener {
+    interface OnSharedPreferenceChangeListener {
         fun onSharedPreferenceChanged(
             sharedPreferences: SharedPrefsWrapper,
             key: String

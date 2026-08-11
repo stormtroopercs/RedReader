@@ -63,7 +63,7 @@ class ExoPlayerWrapperView(
     private val mListener: Listener,
     controlsMarginRightDp: Int
 ) : FrameLayout(context) {
-    fun interface Listener {
+    interface Listener {
         fun onError()
     }
 

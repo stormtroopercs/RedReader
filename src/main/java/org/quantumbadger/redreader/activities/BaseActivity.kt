@@ -54,7 +54,7 @@ abstract class BaseActivity : AppCompatActivity(),
         fun onPermissionDenied()
     }
 
-    fun interface ActivityResultCallback {
+    interface ActivityResultCallback {
         fun onActivityResult(resultCode: Int, data: Intent?)
     }
 
