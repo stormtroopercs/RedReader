@@ -55,7 +55,9 @@
 |- ✅ Report flow (already partially Compose in ReportScreen.kt)
 |- ✅ Album viewer (already Compose in AlbumScreen.kt)
 |- ✅ User profile dialogs → UserProfileDialog.kt, UserPropertiesDialog.kt migrated to Compose
-|- ⬜ User profile screens
+|- ✅ User profile screens → UserProfileScreen.kt created
+|- ✅ Inbox screen → InboxScreen.kt created with message list and actions
+|- ✅ Post submit screen → PostSubmitScreen.kt created with title/body/url fields
 |
 |Reference: nowinandroid/core/designsystem, nowinandroid/feature/*
 |
@@ -79,9 +81,9 @@
 |### 8. Testing Modernization ✅ COMPLETE
 |- Add Compose UI tests (createComposeRule) ✅ DONE
 |- Add Roborazzi screenshot tests ✅ DONE
-|- Add macro benchmarks for startup/performance ⬜ TODO
+|- Add macro benchmarks for startup/performance ✅ DONE
 |- Reference: nowinandroid/app/src/androidTest, nowinandroid/benchmarks
-|- Notes: MainScreenTest.kt created with 3 tests verifying subreddit display, navigation, and settings click. Roborazzi plugin configured in build.gradle.kts. ui-test-manifest added for Android tests.
+|- Notes: MainScreenTest.kt created with 3 tests verifying subreddit display, navigation, and settings click. Roborazzi plugin configured in build.gradle.kts. ui-test-manifest added for Android tests. StartupBenchmark.kt created with cold/warm/hot startup benchmarks.
 |
 |### 9. Code Quality Tools ✅ COMPLETE
 |- Add ktlint + Spotless for Kotlin formatting ✅ DONE
