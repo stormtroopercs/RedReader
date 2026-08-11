@@ -63,7 +63,7 @@ object RedditVideosAPI {
 					private val mNotifiedFailure = AtomicBoolean(false)
 
 					override fun onDataStreamComplete(
-						stream: GenericFactory<SeekableInputStream, IOException>,
+						stream: GenericFactory<SeekableInputStream, IOException?>,
 						timestamp: TimestampUTC,
 						session: UUID,
 						fromCache: Boolean,

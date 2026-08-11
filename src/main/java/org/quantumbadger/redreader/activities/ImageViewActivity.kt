@@ -847,8 +847,8 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
         val resultLock = Any()
 
         val failed = AtomicBoolean(false)
-        val audio = AtomicReference<GenericFactory<SeekableInputStream?, IOException?>?>()
-        val video = AtomicReference<GenericFactory<SeekableInputStream?, IOException?>?>()
+        val audio = AtomicReference<GenericFactory<SeekableInputStream, IOException?>?>()
+        val video = AtomicReference<GenericFactory<SeekableInputStream, IOException?>?>()
         val videoMimetype = AtomicReference<String?>()
 
         CacheManager.Companion.getInstance(this).makeRequest(

@@ -30,7 +30,7 @@ import java.util.Objects
 @OptIn(markerClass = UnstableApi::class)
 class ExoPlayerSeekableInputStreamDataSource(
     isNetwork: Boolean,
-    private val mStreamFactory: GenericFactory<SeekableInputStream?, IOException?>
+    private val mStreamFactory: GenericFactory<SeekableInputStream, IOException?>
 ) : BaseDataSource(isNetwork) {
     private var mCurrentStream: SeekableInputStream?=null
 

@@ -111,7 +111,7 @@ class FailedRequestBody {
         }
 
         fun from(
-            `is`: GenericFactory<SeekableInputStream?, IOException?>
+            `is`: GenericFactory<SeekableInputStream, IOException?>
         ): Optional<FailedRequestBody?> {
             try {
                 return from(`is`.create())

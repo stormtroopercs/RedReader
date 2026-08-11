@@ -90,7 +90,7 @@ sealed interface NetRequestStatus<out R> {
 
 @Immutable
 class FileRequestMetadata(
-	val streamFactory: GenericFactory<SeekableInputStream, IOException>,
+	val streamFactory: GenericFactory<SeekableInputStream, IOException?>,
 	val timestamp: TimestampUTC?,
 	val session: UUID,
 	val fromCache: Boolean,
@@ -339,7 +339,7 @@ private fun <T> fetchFile(
 				}
 
 				override fun onDataStreamComplete(
-					streamFactory: GenericFactory<SeekableInputStream, IOException>,
+					streamFactory: GenericFactory<SeekableInputStream, IOException?>,
 					timestamp: TimestampUTC?,
 					session: UUID,
 					fromCache: Boolean,

@@ -238,7 +238,7 @@ class CacheRequest private constructor(
     }
 
     fun notifyDataStreamAvailable(
-        streamFactory: GenericFactory<SeekableInputStream?, IOException?>,
+        streamFactory: GenericFactory<SeekableInputStream, IOException?>,
         timestamp: TimestampUTC?,
         session: UUID,
         fromCache: Boolean,
@@ -248,7 +248,7 @@ class CacheRequest private constructor(
     }
 
     fun notifyDataStreamComplete(
-        streamFactory: GenericFactory<SeekableInputStream?, IOException?>,
+        streamFactory: GenericFactory<SeekableInputStream, IOException?>,
         timestamp: TimestampUTC?,
         session: UUID,
         fromCache: Boolean,

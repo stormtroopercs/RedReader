@@ -669,7 +669,7 @@ class CacheManager @Inject constructor(
                 }
 
                 override fun run() {
-                    val streamFactory: GenericFactory<SeekableInputStream?, IOException?> =                         GenericFactory {
+                    val streamFactory: GenericFactory<SeekableInputStream, IOException?> =                         GenericFactory {
                             val stream =                                 getCacheFileInputStream(entry.id, entry.cacheCompressionType)
                             if (stream == null) {
                                 dbManager.delete(entry.id)
