@@ -16,6 +16,6 @@
  */
 package org.quantumbadger.redreader.reddit.prepared.bodytext
 
-interface DynamicSpanned {
+fun interface DynamicSpanned {
     fun addSpanDynamic(what: Any?, start: Int, end: Int, flags: Int)
 }

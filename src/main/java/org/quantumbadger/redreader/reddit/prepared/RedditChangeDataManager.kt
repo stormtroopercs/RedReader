@@ -43,7 +43,7 @@ import java.util.SortedMap
 import java.util.TreeMap
 
 class RedditChangeDataManager {
-    interface Listener {
+    fun interface Listener {
         fun onRedditDataChange(thingIdAndType: RedditIdAndType?)
     }
 

@@ -872,7 +872,7 @@ class RedditPreparedPost(
     }
 
     // TODO handle download failure - show red "X" or something
-    interface ThumbnailLoadedCallback {
+    fun interface ThumbnailLoadedCallback {
         fun betterThumbnailAvailable(thumbnail: Bitmap?, usageId: Int)
     }
 

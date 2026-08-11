@@ -89,11 +89,11 @@ class WeakReferenceListManager<E> {
     val isEmpty: Boolean
         get() = data.isEmpty()
 
-    interface Operator<E> {
+    fun interface Operator<E> {
         fun operate(`object`: E?)
     }
 
-    interface ArgOperator<E, A> {
+    fun interface ArgOperator<E, A> {
         fun operate(`object`: E?, arg: A?)
     }
 }
