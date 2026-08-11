@@ -8,6 +8,7 @@ plugins {
 	alias(libs.plugins.hilt.android)
 	alias(libs.plugins.ksp)
 	alias(libs.plugins.spotless)
+	alias(libs.plugins.roborazzi)
 	pmd
 	checkstyle
 
@@ -138,6 +139,8 @@ dependencies {
 
 	testImplementation(libs.junit)
 	testImplementation(libs.robolectric)
+	testImplementation(libs.roborazzi)
+	testImplementation("com.github.alexfu:roborazzi-compose:1.32.0")
 
 	androidTestImplementation(libs.androidx.test.core)
 	androidTestImplementation(libs.androidx.test.espresso.core)
@@ -146,6 +149,7 @@ dependencies {
 	androidTestImplementation(libs.androidx.test.junit)
 	androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 	androidTestImplementation(platform(libs.androidx.compose.bom))
+	androidTestImplementation("androidx.compose.ui:ui-test-manifest")
 }
 
 pmd {
