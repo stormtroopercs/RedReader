@@ -26,6 +26,7 @@ import androidx.navigation.navArgument
 /**
  * App-wide navigation graph.
  * Replaces Fragment-based navigation with Compose Navigation.
+ * Includes all screens: Main, PostList, CommentList, Settings, UserProfile, Inbox, PostSubmit.
  */
 @Composable
 fun AppNavGraph(
@@ -36,6 +37,7 @@ fun AppNavGraph(
         navController = navController,
         startDestination = startDestination
     ) {
+        // Main screen
         composable(Screen.Main.path) {
             MainScreen(
                 onNavigateToPostList = { subreddit ->
@@ -47,6 +49,7 @@ fun AppNavGraph(
             )
         }
 
+        // Post list screen
         composable(
             route = Screen.PostList.path,
             arguments = listOf(
@@ -59,10 +62,17 @@ fun AppNavGraph(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToCommentList = { postId ->
                     navController.navigate(Screen.CommentList.createRoute(postId))
+                },
+                onNavigateToUserProfile = { username ->
+                    navController.navigate(Screen.UserProfile.createRoute(username))
+                },
+                onNavigateToPostSubmit = {
+                    navController.navigate(Screen.PostSubmit.createRoute(subreddit))
                 }
             )
         }
 
+        // Comment list screen
         composable(
             route = Screen.CommentList.path,
             arguments = listOf(
@@ -76,9 +86,52 @@ fun AppNavGraph(
             )
         }
 
+        // Settings screen
         composable(Screen.Settings.path) {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // User profile screen
+        composable(
+            route = Screen.UserProfile.path,
+            arguments = listOf(
+                navArgument("username") { defaultValue = "" }
+            )
+        ) { backStackEntry ->
+            val username = backStackEntry.arguments?.getString("username") ?: ""
+            org.quantumbadger.redreader.compose.ui.UserProfileScreen(
+                username = username,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToPosts = { /* TODO: Navigate to user posts */ },
+                onNavigateToComments = { /* TODO: Navigate to user comments */ },
+                onSendMessage = { /* TODO: Navigate to message screen */ }
+            )
+        }
+
+        // Inbox screen
+        composable(Screen.Inbox.path) {
+            org.quantumbadger.redreader.compose.ui.InboxScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onMarkAllRead = { /* TODO: Mark all as read */ },
+                onSendMessage = { /* TODO: Navigate to send message */ }
+            )
+        }
+
+        // Post submit screen
+        composable(
+            route = Screen.PostSubmit.path,
+            arguments = listOf(
+                navArgument("subreddit") { defaultValue = "" }
+            )
+        ) { backStackEntry ->
+            val subreddit = backStackEntry.arguments?.getString("subreddit") ?: ""
+            org.quantumbadger.redreader.compose.ui.PostSubmitScreen(
+                subreddit = subreddit,
+                onNavigateBack = { navController.popBackStack() },
+                onSubmit = { /* TODO: Submit post */ },
+                onNavigateToSubredditPicker = { /* TODO: Navigate to subreddit picker */ }
             )
         }
     }
@@ -96,4 +149,11 @@ sealed class Screen(val path: String) {
         fun createRoute(postId: String) = "comment_list/$postId"
     }
     object Settings : Screen("settings")
+    object UserProfile : Screen("user_profile/{username}") {
+        fun createRoute(username: String) = "user_profile/$username"
+    }
+    object Inbox : Screen("inbox")
+    object PostSubmit : Screen("post_submit/{subreddit}") {
+        fun createRoute(subreddit: String) = "post_submit/$subreddit"
+    }
 }

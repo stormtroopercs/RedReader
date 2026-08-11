@@ -58,6 +58,7 @@
 |- ✅ User profile screens → UserProfileScreen.kt created
 |- ✅ Inbox screen → InboxScreen.kt created with message list and actions
 |- ✅ Post submit screen → PostSubmitScreen.kt created with title/body/url fields
+|- ✅ Navigation graph wired with all screens: Main, PostList, CommentList, Settings, UserProfile, Inbox, PostSubmit
 |
 |Reference: nowinandroid/core/designsystem, nowinandroid/feature/*
 |
@@ -83,7 +84,7 @@
 |- Add Roborazzi screenshot tests ✅ DONE
 |- Add macro benchmarks for startup/performance ✅ DONE
 |- Reference: nowinandroid/app/src/androidTest, nowinandroid/benchmarks
-|- Notes: MainScreenTest.kt created with 3 tests verifying subreddit display, navigation, and settings click. Roborazzi plugin configured in build.gradle.kts. ui-test-manifest added for Android tests. StartupBenchmark.kt created with cold/warm/hot startup benchmarks.
+|- Notes: MainScreenTest.kt created with 3 tests verifying subreddit display, navigation, and settings click. SettingsScreenTest.kt created with 3 tests verifying settings display and interactions. Roborazzi plugin configured in build.gradle.kts. ui-test-manifest added for Android tests. StartupBenchmark.kt created with cold/warm/hot startup benchmarks.
 |
 |### 9. Code Quality Tools ✅ COMPLETE
 |- Add ktlint + Spotless for Kotlin formatting ✅ DONE
