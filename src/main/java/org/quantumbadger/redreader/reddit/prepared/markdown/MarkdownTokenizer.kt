@@ -22,26 +22,26 @@ import kotlin.math.min
 object MarkdownTokenizer {
     // TODO support double graves
     @JvmField
-    val TOKEN_UNDERSCORE: Int = -1
-    val TOKEN_UNDERSCORE_DOUBLE: Int = -2
+    const val TOKEN_UNDERSCORE: Int = -1
+    const val TOKEN_UNDERSCORE_DOUBLE: Int = -2
     @JvmField
-    val TOKEN_ASTERISK: Int = -3
+    const val TOKEN_ASTERISK: Int = -3
     @JvmField
-    val TOKEN_ASTERISK_DOUBLE: Int = -4
-    val TOKEN_TILDE_DOUBLE: Int = -5
+    const val TOKEN_ASTERISK_DOUBLE: Int = -4
+    const val TOKEN_TILDE_DOUBLE: Int = -5
     @JvmField
-    val TOKEN_CARET: Int = -6
-    val TOKEN_GRAVE: Int = -7
+    const val TOKEN_CARET: Int = -6
+    const val TOKEN_GRAVE: Int = -7
     @JvmField
-    val TOKEN_BRACKET_SQUARE_OPEN: Int = -8
+    const val TOKEN_BRACKET_SQUARE_OPEN: Int = -8
     @JvmField
-    val TOKEN_BRACKET_SQUARE_CLOSE: Int = -9
+    const val TOKEN_BRACKET_SQUARE_CLOSE: Int = -9
     @JvmField
-    val TOKEN_PAREN_OPEN: Int = -10
+    const val TOKEN_PAREN_OPEN: Int = -10
     @JvmField
-    val TOKEN_PAREN_CLOSE: Int = -11
-    val TOKEN_UNICODE_OPEN: Int = -12
-    val TOKEN_UNICODE_CLOSE: Int = -13
+    const val TOKEN_PAREN_CLOSE: Int = -11
+    const val TOKEN_UNICODE_OPEN: Int = -12
+    const val TOKEN_UNICODE_CLOSE: Int = -13
 
     private val reverseLookup: Array<CharArray> = arrayOfNulls<CharArray>(20)
 

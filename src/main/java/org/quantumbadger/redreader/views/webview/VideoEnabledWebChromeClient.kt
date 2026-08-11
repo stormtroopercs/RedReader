@@ -217,7 +217,9 @@ open class VideoEnabledWebChromeClient : WebChromeClient, MediaPlayer.OnPrepared
                     // Run javascript code that detects the video end and notifies the
                     // Javascript interface
                     var js = "javascript:"
+                    @Suppress("PropertyName")
                     js += "var _ytrp_html5_video_last;"
+                    @Suppress("PropertyName")
                     js += "var _ytrp_html5_video = document.getElementsByTagName('video')[0];"
                     js += ("if (_ytrp_html5_video != undefined && _ytrp_html5_video "
                             + "!= _ytrp_html5_video_last) {")

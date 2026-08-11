@@ -211,12 +211,19 @@ class BetterSSB : Observable() {
 
     companion object {
         const val BOLD: Int = 1
+        @Suppress("PropertyName")
         val ITALIC: Int = 1 shl 1
+        @Suppress("PropertyName")
         val UNDERLINE: Int = 1 shl 2
+        @Suppress("PropertyName")
         val STRIKETHROUGH: Int = 1 shl 3
+        @Suppress("PropertyName")
         val FOREGROUND_COLOR: Int = 1 shl 4
+        @Suppress("PropertyName")
         val BACKGROUND_COLOR: Int = 1 shl 5
+        @Suppress("PropertyName")
         val SIZE: Int = 1 shl 6
+        @Suppress("PropertyName")
         val SUPERSCRIPT: Int = 1 shl 7
 
         const val NBSP: Char = '\u00A0'

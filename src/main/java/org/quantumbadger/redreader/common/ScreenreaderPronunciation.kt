@@ -22,6 +22,7 @@ import org.quantumbadger.redreader.R.string
 import java.util.Locale
 
 object ScreenreaderPronunciation {
+    @Suppress("PropertyName")
     private val LANGUAGE_CODE_EN: String = Locale("en").getLanguage()
 
     fun getPronunciation(

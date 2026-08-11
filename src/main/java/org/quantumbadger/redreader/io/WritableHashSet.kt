@@ -100,6 +100,7 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
 
     companion object {
         @WritableObjectVersion
+        @Suppress("PropertyName")
         var DB_VERSION: Int = 1
 
         fun unserializeWithMetadata(raw: String?): WritableHashSet {

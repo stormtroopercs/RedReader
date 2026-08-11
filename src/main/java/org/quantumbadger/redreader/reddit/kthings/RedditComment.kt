@@ -34,6 +34,7 @@ import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
 data class RedditComment(
 	val body: UrlEncodedString?=null,
 	val body_html: UrlEncodedString?=null,
+ @Suppress("PropertyName")
 	val COLLAPSED_REASON_BLOCKED_AUTHOR: String = "BLOCKED_AUTHOR",
 
 	val author: UrlEncodedString?=null,

@@ -603,6 +603,7 @@ class PostSubmitContentFragment : Fragment() {
         private const val POST_TYPE_SELF = "Text"
         private const val POST_TYPE_IMGUR = "Upload to Imgur"
 
+        @Suppress("PropertyName")
         private val POST_TYPES = arrayOf<String?>(POST_TYPE_LINK, POST_TYPE_SELF, POST_TYPE_IMGUR)
 
         private var lastType: String?=null

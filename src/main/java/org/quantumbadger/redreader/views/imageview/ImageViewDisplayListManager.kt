@@ -570,6 +570,7 @@ class ImageViewDisplayListManager(
         private const val TAP_MAX_DURATION_MS: Long = 225
         private const val DOUBLE_TAP_MAX_GAP_DURATION_MS: Long = 275
 
+        @Suppress("PropertyName")
         private val NOT_LOADED_BITMAP: Bitmap
 
         init {

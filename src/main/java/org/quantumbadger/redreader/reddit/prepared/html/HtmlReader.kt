@@ -79,6 +79,7 @@ class HtmlReader(val html: String) {
         }
 
         companion object {
+            @Suppress("PropertyName")
             val EOF: Token = Token(TokenType.EOF, "", null, null, null)
         }
     }

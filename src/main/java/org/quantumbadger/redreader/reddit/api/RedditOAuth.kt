@@ -64,11 +64,14 @@ class RedditOAuth @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private val TAG = "RedditOAuth"
+    @Suppress("PropertyName")
     private val REDIRECT_URI_NEW = "redreader://rr_oauth_redir"
+    @Suppress("PropertyName")
     private val ALL_SCOPES = ("identity edit flair history "
             + "modconfig modflair modlog modposts modwiki mysubreddits "
             + "privatemessages read report save submit subscribe vote "
             + "wikiedit wikiread account")
+    @Suppress("PropertyName")
     private val ACCESS_TOKEN_URL = UriString("https://www.reddit.com/api/v1/access_token")
 
     private val promptUri: Uri

@@ -85,9 +85,11 @@ class CommentListViewModel(
     postId: String
 ) : ViewModel() {
 
+    @Suppress("PropertyName")
     private val _state = MutableStateFlow<CommentListUiState>(CommentListUiState.Loading)
     val state: StateFlow<CommentListUiState> = _state.asStateFlow()
 
+    @Suppress("PropertyName")
     private val _postId = MutableStateFlow(postId)
     val postId: StateFlow<String> = _postId.asStateFlow()
 

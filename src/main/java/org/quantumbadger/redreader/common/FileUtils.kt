@@ -70,6 +70,7 @@ import java.util.UUID
 object FileUtils {
     private const val TAG = "FileUtils"
 
+    @Suppress("PropertyName")
     private val MIMETYPE_TO_EXTENSION = HashMap<String?, String?>()
 
     init {

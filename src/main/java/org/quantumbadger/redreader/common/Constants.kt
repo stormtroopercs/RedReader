@@ -64,8 +64,10 @@ object Constants {
     }
 
     object Reddit {
+        @Suppress("PropertyName")
         val DEFAULT_SUBREDDITS: ArrayList<SubredditCanonicalId?>
 
+        @Suppress("PropertyName")
         val BOT_USERNAMES_LOWERCASE: HashSet<String?>
 
         init {
@@ -232,25 +234,37 @@ object Constants {
     }
 
     object Priority {
+        @Suppress("PropertyName")
         val CAPTCHA: Int = -600
+        @Suppress("PropertyName")
         val API_ACTION: Int = -500
+        @Suppress("PropertyName")
         val API_MULTIREDDIT_LIST: Int = -200
+        @Suppress("PropertyName")
         val API_SUBREDDIT_LIST: Int = -100
+        @Suppress("PropertyName")
         val API_SUBREDDIT_SEARCH: Int = -500
+        @Suppress("PropertyName")
         val API_SUBREDDIT_INVIDIVUAL: Int = -250
+        @Suppress("PropertyName")
         val API_POST_LIST: Int = -200
+        @Suppress("PropertyName")
         val API_COMMENT_LIST: Int = -300
         const val THUMBNAIL: Int = 100
         const val INLINE_IMAGE_PREVIEW: Int = 100
         const val IMAGE_PRECACHE: Int = 500
         const val COMMENT_PRECACHE: Int = 500
+        @Suppress("PropertyName")
         val IMAGE_VIEW: Int = -400
+        @Suppress("PropertyName")
         val API_USER_ABOUT: Int = -500
+        @Suppress("PropertyName")
         val API_INBOX_LIST: Int = -500
         const val DEV_ANNOUNCEMENTS: Int = 600
     }
 
     object FileType {
+        @Suppress("PropertyName")
         val NOCACHE: Int = -1
         const val SUBREDDIT_LIST: Int = 100
         const val SUBREDDIT_ABOUT: Int = 101

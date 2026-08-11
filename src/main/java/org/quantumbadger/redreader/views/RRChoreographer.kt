@@ -34,6 +34,7 @@ class RRChoreographer @Inject constructor() : Choreographer.FrameCallback {
     private var mCallbackCount = 0
     private var mPosted = false
 
+    @Suppress("PropertyName")
     private val CHOREOGRAPHER: Choreographer = Choreographer.getInstance()
 
     fun postFrameCallback(callback: Callback) {

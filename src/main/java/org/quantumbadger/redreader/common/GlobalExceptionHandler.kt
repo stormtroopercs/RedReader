@@ -24,7 +24,10 @@ import org.quantumbadger.redreader.activities.BugReportActivity
 import org.quantumbadger.redreader.common.AndroidCommon.runOnUiThread
 import org.quantumbadger.redreader.common.General.checkThisIsUIThread
 import org.quantumbadger.redreader.common.General.readWholeStreamAsUTF8
-import java.io.*
+import java.io.File
+import java.io.FileWriter
+import java.io.IOException
+import java.io.PrintWriter
 
 class GlobalExceptionHandler private constructor(context: Context) :
 	Thread.UncaughtExceptionHandler {

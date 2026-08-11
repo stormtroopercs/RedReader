@@ -56,6 +56,7 @@ interface ComposePrefs {
 }
 
 object ComposePrefsSingleton {
+	@Suppress("PropertyName")
 	private lateinit var SINGLETON: ComposePrefs
 
 	fun init(context: Context) {

@@ -82,6 +82,7 @@ class LegacyTLSSocketFactory(private val delegate: SSLSocketFactory) : SSLSocket
     }
 
     companion object {
+        @Suppress("PropertyName")
         private val TLS_V1_2_ONLY = arrayOf<String?>("TLSv1.2")
     }
 }

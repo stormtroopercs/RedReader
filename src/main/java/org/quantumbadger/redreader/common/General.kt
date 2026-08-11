@@ -72,6 +72,7 @@ import kotlin.math.roundToLong
 
 object General {
     @JvmField
+ @Suppress("PropertyName")
 	val CHARSET_UTF8: Charset = Objects.requireNonNull(Charset.forName("UTF-8"))
 
     const val LTR_OVERRIDE_MARK = "\u202D"

@@ -208,6 +208,7 @@ class RedditChangeDataManager {
 
         companion object {
             // For posts, this means "hidden". For comments, this means "collapsed".
+            @Suppress("PropertyName")
             val CLEAR_ENTRY: Entry = Entry()
         }
     }
@@ -471,6 +472,7 @@ class RedditChangeDataManager {
 
         private const val MAX_ENTRY_COUNT = 10000
 
+        @Suppress("PropertyName")
         private val INSTANCE_MAP = HashMap<RedditAccount?, RedditChangeDataManager?>()
 
         fun getInstance(user: RedditAccount?): RedditChangeDataManager {

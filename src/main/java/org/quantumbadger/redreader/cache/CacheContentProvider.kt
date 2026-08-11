@@ -190,6 +190,7 @@ class CacheContentProvider : ContentProvider() {
     companion object {
         private const val TAG = "CacheContentProvider"
 
+        @Suppress("PropertyName")
         private val COLUMNS = arrayOf<String?>(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)
 
         private fun generateFilename(

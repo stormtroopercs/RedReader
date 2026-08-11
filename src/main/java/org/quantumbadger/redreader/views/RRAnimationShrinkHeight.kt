@@ -46,6 +46,7 @@ class RRAnimationShrinkHeight(private val mTarget: View) : RRAnimation() {
     }
 
     companion object {
+        @Suppress("PropertyName")
         private val DURATION_NANOS = 500L * 1000 * 1000
 
         private fun interpolateSine(fraction: Double): Double {

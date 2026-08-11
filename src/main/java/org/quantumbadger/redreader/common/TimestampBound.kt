@@ -35,7 +35,8 @@ abstract class TimestampBound {
                 return true
             }
         }
-        val NONE: TimestampBound = object : TimestampBound() {
+        @Suppress("PropertyName")
+    val NONE: TimestampBound = object : TimestampBound() {
             override fun verifyTimestamp(timestamp: TimestampUTC?): Boolean {
                 return false
             }

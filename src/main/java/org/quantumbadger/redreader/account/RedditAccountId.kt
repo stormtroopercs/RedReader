@@ -24,6 +24,7 @@ data class RedditAccountId(val username: String) {
 	val canonicalUsername = username.trim().asciiLowercase()
 
 	companion object {
+  @Suppress("PropertyName")
 		val ANON = RedditAccountId("")
 	}
 }

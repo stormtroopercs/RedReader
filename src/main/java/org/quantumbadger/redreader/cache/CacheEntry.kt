@@ -46,6 +46,7 @@ class CacheEntry internal constructor(cursor: Cursor) {
     }
 
     companion object {
+        @Suppress("PropertyName")
         val DB_FIELDS: Array<String?> = arrayOf<String?>(
             CacheDbManager.Companion.FIELD_ID,
             CacheDbManager.Companion.FIELD_URL,

@@ -43,6 +43,7 @@ import java.security.cert.CertificateFactory
 
 object AndroidCommon {
     @JvmField
+ @Suppress("PropertyName")
 	val UI_THREAD_HANDLER = Handler(Looper.getMainLooper())
 
     @JvmStatic

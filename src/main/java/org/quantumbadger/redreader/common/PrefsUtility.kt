@@ -69,6 +69,7 @@ object PrefsUtility {
 
     // The SharedPreferences implementation only holds weak references to
     // listeners, so keep a strong reference here for the process lifetime.
+    @Suppress("PropertyName")
     private val LANGUAGE_CHANGE_LISTENER =         SharedPrefsWrapper.OnSharedPreferenceChangeListener { prefs: SharedPrefsWrapper?, key: String? ->
             if (getPrefKey(
                     string.pref_appearance_langforce_key
@@ -1976,8 +1977,10 @@ object PrefsUtility {
     }
 
     private const val REDDIT_USER_AGREEMENT_PREF = "accepted_reddit_user_agreement"
+    @Suppress("PropertyName")
     private val REDDIT_USER_AGREEMENT_DECLINED = -1
     private const val REDDIT_USER_AGREEMENT_APRIL_2023 = 1
+    @Suppress("PropertyName")
     private val REDDIT_USER_AGREEMENT_CURRENT = REDDIT_USER_AGREEMENT_APRIL_2023
 
     val isRedditUserAgreementAccepted: Boolean

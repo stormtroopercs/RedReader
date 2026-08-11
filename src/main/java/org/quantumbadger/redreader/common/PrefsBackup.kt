@@ -30,6 +30,7 @@ import java.io.OutputStream
 object PrefsBackup {
     private const val TAG = "PrefsBackup"
 
+    @Suppress("PropertyName")
     private val MAGIC_HEADER = "RedReader preferences backup\r\n".toByteArray(General.CHARSET_UTF8)
 
     private const val FIELD_TYPE = "type"
@@ -43,6 +44,7 @@ object PrefsBackup {
     private const val FILE_TYPE = "redreader_prefs_backup"
     private const val FILE_VERSION = 1
 
+    @Suppress("PropertyName")
     private val IGNORED_PREFS = HashSet<String?>()
 
     init {

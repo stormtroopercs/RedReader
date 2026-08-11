@@ -20,7 +20,9 @@ package org.quantumbadger.redreader.navigation
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.cache.CacheManager
@@ -66,9 +68,11 @@ class PostListViewModel(
     subreddit: String
 ) : ViewModel() {
 
+    @Suppress("PropertyName")
     private val _state = MutableStateFlow<PostListUiState>(PostListUiState.Loading)
     val state: StateFlow<PostListUiState> = _state.asStateFlow()
 
+    @Suppress("PropertyName")
     private val _subreddit = MutableStateFlow(subreddit)
     val subreddit: StateFlow<String> = _subreddit.asStateFlow()
 

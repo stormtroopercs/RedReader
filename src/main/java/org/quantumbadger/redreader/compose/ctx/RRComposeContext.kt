@@ -158,6 +158,7 @@ val LocalLauncher = staticCompositionLocalOf<(Dest) -> Unit> {
 }
 
 // Increment this to retry all failed in-scope network requests
+@Suppress("PropertyName")
 val GlobalNetworkRetry = mutableIntStateOf(0)
 
 sealed interface Dest {

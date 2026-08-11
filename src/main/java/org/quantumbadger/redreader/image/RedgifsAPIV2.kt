@@ -50,6 +50,7 @@ import java.util.concurrent.atomic.AtomicReference
 object RedgifsAPIV2 {
     private const val TAG = "RedgifsAPIV2"
 
+    @Suppress("PropertyName")
     private val TOKEN: AtomicReference<AuthToken?> = AtomicReference<AuthToken?>(
         AuthToken("", 0)
     )

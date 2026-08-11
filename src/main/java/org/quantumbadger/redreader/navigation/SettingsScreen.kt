@@ -69,7 +69,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.quantumbadger.redreader.common.PrefsUtility
-import org.quantumbadger.redreader.common.PrefsUtility.*
 import org.quantumbadger.redreader.common.PrefsUtility.AppearanceStatusBarMode
 import org.quantumbadger.redreader.common.PrefsUtility.PostTapAction
 import org.quantumbadger.redreader.common.PrefsUtility.ImageViewMode

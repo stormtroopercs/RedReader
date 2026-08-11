@@ -19,7 +19,7 @@ package org.quantumbadger.redreader.common.time
 
 import android.content.Context
 import androidx.annotation.StringRes
-import java.util.*
+import java.util.Locale
 
 object TimeFormatHelper {
 

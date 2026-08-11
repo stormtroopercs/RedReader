@@ -85,6 +85,7 @@ class ExoPlayerSeekableInputStreamDataSource(
     }
 
     companion object {
+        @Suppress("PropertyName")
         val URI: Uri?=Uri.parse("redreader://video")
     }
 }

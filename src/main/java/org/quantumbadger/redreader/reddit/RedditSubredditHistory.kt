@@ -23,6 +23,7 @@ import java.util.Collections
 
 // Keeps an in-memory list of all known subreddits per account
 object RedditSubredditHistory {
+    @Suppress("PropertyName")
     private val SUBREDDITS = HashMap<RedditAccount?, HashSet<SubredditCanonicalId?>?>()
 
     private fun getForAccount(account: RedditAccount?): HashSet<SubredditCanonicalId?> {

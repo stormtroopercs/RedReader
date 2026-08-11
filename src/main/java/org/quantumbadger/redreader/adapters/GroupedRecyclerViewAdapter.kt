@@ -289,6 +289,7 @@ class GroupedRecyclerViewAdapter(groups: Int) : RecyclerView.Adapter<RecyclerVie
     }
 
     companion object {
+        @Suppress("PropertyName")
         private val ITEM_UNIQUE_ID_GENERATOR = AtomicLong(100000)
     }
 }

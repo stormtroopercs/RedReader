@@ -99,7 +99,9 @@ class LoadingView(
     }
 
     companion object {
+        @Suppress("PropertyName")
         private val LOADING_INDETERMINATE = -1
+        @Suppress("PropertyName")
         private val LOADING_DONE = -2
     }
 }

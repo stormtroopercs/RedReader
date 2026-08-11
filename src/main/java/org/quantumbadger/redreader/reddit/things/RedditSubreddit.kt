@@ -210,11 +210,13 @@ class RedditSubreddit : Parcelable, Comparable<RedditSubreddit?>,
 
     companion object {
         @WritableObjectVersion
+        @Suppress("PropertyName")
         var DB_VERSION: Int = 1
 
         private val NAME_PATTERN: Pattern = Pattern.compile(
             "((/)?r/)?([\\w\\+\\-\\.:]+)/?"
         )
+        @Suppress("PropertyName")
         private val USER_PATTERN: Pattern = Pattern.compile(
             "/?(u/|user/)([\\w\\+\\-\\.:]+)/?"
         )

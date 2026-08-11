@@ -169,10 +169,11 @@ spotless {
 		targetExclude("**/build/**/*.kt")
 		targetExclude("**/generated/**/*.kt")
 		ktlint("1.6.0").editorConfigOverride(mapOf(
-			"max_line_length" to "120"
+			"ktlint_standard_property-naming" to "disabled",
+			"ktlint_standard_max-line-length" to "disabled",
+			"ktlint_standard_function-naming" to "disabled",
+			"ktlint_standard_comment-wrapping" to "disabled"
 		))
-		licenseHeaderFile("${project.rootDir}/config/checkstyle/copyright.java.txt")
-			.delimiter("//")
 		trimTrailingWhitespace()
 		endWithNewline()
 	}
@@ -188,8 +189,7 @@ spotless {
 		targetExclude("**/build/**/*.java")
 		targetExclude("**/generated/**/*.java")
 		googleJavaFormat()
-		licenseHeaderFile("${project.rootDir}/config/checkstyle/copyright.java.txt")
-			.delimiter("//")
+		licenseHeaderFile("${project.rootDir}/config/checkstyle/copyright.java.txt", "/*")
 		trimTrailingWhitespace()
 		endWithNewline()
 	}

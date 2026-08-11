@@ -47,6 +47,7 @@ import org.quantumbadger.redreader.settings.types.AppearanceTheme
 import java.util.Collections
 
 object OptionsMenuUtility {
+    @Suppress("PropertyName")
     val DO_NOT_SHOW: Int = -1
 
 
@@ -1041,6 +1042,7 @@ object OptionsMenuUtility {
         }
     }
 
+    @Suppress("PropertyName")
     val CONTROVERSIAL_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.CONTROVERSIAL_HOUR,
@@ -1053,6 +1055,7 @@ object OptionsMenuUtility {
         string.sort_posts_controversial
     )
 
+    @Suppress("PropertyName")
     val TOP_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.TOP_HOUR,
@@ -1065,6 +1068,7 @@ object OptionsMenuUtility {
         string.sort_posts_top
     )
 
+    @Suppress("PropertyName")
     val RELEVANCE_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.RELEVANCE_HOUR,
@@ -1077,6 +1081,7 @@ object OptionsMenuUtility {
         string.sort_posts_relevance
     )
 
+    @Suppress("PropertyName")
     val NEW_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.NEW_HOUR,
@@ -1089,6 +1094,7 @@ object OptionsMenuUtility {
         string.sort_posts_new
     )
 
+    @Suppress("PropertyName")
     val HOT_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.HOT_HOUR,
@@ -1101,6 +1107,7 @@ object OptionsMenuUtility {
         string.sort_posts_hot
     )
 
+    @Suppress("PropertyName")
     val COMMENTS_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.COMMENTS_HOUR,
@@ -1196,6 +1203,7 @@ object OptionsMenuUtility {
         sortComments.setGroupCheckable(Menu.NONE, true, true)
     }
 
+    @Suppress("PropertyName")
     val CONTROVERSIAL_COMMENT_SORTS: SortGroup = SortGroup(
         arrayOf<UserCommentSort>(
             UserCommentSort.CONTROVERSIAL_HOUR,
@@ -1208,6 +1216,7 @@ object OptionsMenuUtility {
         string.sort_comments_controversial
     )
 
+    @Suppress("PropertyName")
     val TOP_COMMENT_SORTS: SortGroup = SortGroup(
         arrayOf<UserCommentSort>(
             UserCommentSort.TOP_HOUR,
