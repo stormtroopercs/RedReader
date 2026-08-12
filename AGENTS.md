@@ -32,7 +32,7 @@ It is a multi-activity app using the following:
 | Technology | Version |
 |------------|---------|
 | Kotlin | 2.2.21 |
-| AGP | 9.3.0 |
+| AGP | 9.3.1 |
 | compileSdk | 36 |
 | minSdk | 23 |
 | targetSdk | 36 |
@@ -40,6 +40,7 @@ It is a multi-activity app using the following:
 | Compose BOM | 2025.11.00 |
 | OkHttp | 5.3.0 |
 | Media3 | 1.8.0 |
+| KSP | 2.3.11 |
 
 ## Modules
 

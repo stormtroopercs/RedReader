@@ -1,5 +1,5 @@
 [versions]
-agp = "9.0.0"
+agp = "9.3.1"
 kotlin = "2.2.21"
 java = "17"
 spotless = "6.25.0"
@@ -42,7 +42,7 @@ hilt-navigation-compose = "1.2.0"
 hilt-work = "1.2.0"
 room = "2.8.0"
 workmanager = "2.10.0"
-ksp = "2.2.21-2.0.4"
+ksp = "2.3.11"
 zstd = "1.5.7-6"
 
 junit = "4.13.2"
