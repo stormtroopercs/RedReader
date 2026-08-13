@@ -18,42 +18,30 @@
 package org.quantumbadger.redreader.navigation
 
 import androidx.navigation3.runtime.NavKey
-import kotlinx.serialization.Serializable
 
 /**
- * Navigation route keys for RedReader.
- *
- * Top-level routes (each has its own back stack):
- *   - Main (Home)
- *   - Settings
- *
- * Child routes (pushed onto the active top-level back stack):
- *   - PostList(subreddit)
- *   - CommentList(postId)
- *   - UserProfile(username)
- *   - Inbox
- *   - PostSubmit(subreddit)
+ * Handles navigation events (forward and back) by updating the navigation state.
  */
-@Serializable
-data object Main : NavKey
+class Navigator(val state: NavigationState) {
+    fun navigate(route: NavKey) {
+        if (route in state.backStacks.keys) {
+            // This is a top level route, just switch to it.
+            state.topLevelRoute = route
+        } else {
+            state.backStacks[state.topLevelRoute]?.add(route)
+        }
+    }
 
-@Serializable
-data object Settings : NavKey
+    fun goBack() {
+        val currentStack = state.backStacks[state.topLevelRoute]
+            ?: error("Stack for ${state.topLevelRoute} not found")
+        val currentRoute = currentStack.last()
 
-@Serializable
-data class PostList(val subreddit: String) : NavKey
-
-@Serializable
-data class CommentList(val postId: String) : NavKey
-
-@Serializable
-data class UserProfile(val username: String) : NavKey
-
-@Serializable
-data object Inbox : NavKey
-
-@Serializable
-data class PostSubmit(val subreddit: String) : NavKey
-
-/** All top-level routes (displayed in navigation bar/rail/drawer). */
-val TOP_LEVEL_ROUTES = setOf<NavKey>(Main, Settings)
+        // If we're at the base of the current route, go back to the start route stack.
+        if (currentRoute == state.topLevelRoute) {
+            state.topLevelRoute = state.startRoute
+        } else {
+            currentStack.removeLastOrNull()
+        }
+    }
+}

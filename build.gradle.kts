@@ -134,7 +134,9 @@ dependencies {
 	implementation(libs.androidx.compose.ui.graphics)
 	implementation(libs.androidx.compose.ui.tooling)
 	implementation(libs.androidx.compose.constraintlayout)
-	implementation(libs.androidx.navigation.compose)
+	implementation(libs.androidx.navigation3.runtime)
+	implementation(libs.androidx.navigation3.ui)
+	implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
 	testImplementation(libs.junit)
 	testImplementation(libs.robolectric)

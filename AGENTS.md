@@ -1,89 +1,82 @@
-# RedReader Project
+# RedReader — Project Context
 
-RedReader is an open-source Reddit client for Android written in Java and Kotlin. It provides
-a clean, ad-free experience for browsing Reddit with support for image galleries, video playback,
-custom themes, and offline reading.
+## Overview
+Open-source Reddit client for Android. 100% Kotlin codebase (484 files, 0 Java).
+
+## Branch
+**`java-to-kotlin-conversion`** — main development branch.
+
+## Tech Stack
+| Component | Version |
+|---|---|
+| Kotlin | 2.4.10 |
+| AGP | 9.3.1 |
+| Compose BOM | 2026.08.00 |
+| Navigation | **Navigation 3** (1.0.0) |
+| compileSdk / targetSdk | 36 |
+| minSdk | 23 |
+| Hilt | 2.55 (DI) |
+| Room | 2.6.x (4 entities, 4 DAOs) |
+| OkHttp | 5.3.0 |
 
 ## Architecture
+**Hybrid UI** — legacy Activities/Fragments coexist with new Compose screens.
 
-RedReader is a traditional Android app currently transitioning toward modern Android best practices.
-It is a multi-activity app using the following:
+### Modules
+- `app/` — Main application module
+- `libs/redreader-common/` — Shared utilities
+- `libs/redreader-datamodel/` — Data models
 
--   **UI:** Primarily XML layouts with Android Views, with Compose being incrementally adopted.
-    Material 3 Expressive (MDC-Android 1.14.0) is the current design system.
--   **State Management:** Activity/Fragment lifecycle-based state management, with plans to
-    migrate toward Unidirectional Data Flow (ViewModel + StateFlow).
--   **Dependency Injection:** Currently manual wiring. Hilt is planned for future adoption.
--   **Navigation:** Fragment-based navigation with manual transactions.
--   **Data:** Custom data layer using OkHttp for network requests and Jackson/Kotlinx Serialization
-    for JSON parsing. No local database currently.
--   **Background Processing:** Currently uses direct OkHttp calls and handlers. WorkManager is
-    planned for background sync tasks.
+### Package Layout
+- `activities/` — Entry points (`MainActivityCompose` is launcher)
+- `navigation/` — Navigation 3 setup + screen composables
+- `compose/ui/` — Reusable Compose components (14 screens)
+- `di/` — Hilt modules (Application, Database, Network)
+- `database/` — Room DB (Post, Comment, Subreddit, UserSession)
+- `repository/` — Repository layer (4 repositories)
+- `viewmodel/` — ViewModels (6 total)
 
-## Build Configuration
+## Navigation 3
+Migrated from Navigation 2 (NavController/NavHost) to Navigation 3.
 
--   **Kotlin:** `android.builtInKotlin=true` (use Android Studio's built-in Kotlin compiler)
--   **Annotation Processing:** KSP (Kotlin Symbol Processing) for Hilt code generation
--   **Hilt:** Dagger Hilt for dependency injection with `ksp` for compiler
--   **KSP Isolation:** `ksp.project.isolation.enabled=true` for faster builds
+### Key Files
+- `navigation/Screens.kt` — `@Serializable NavKey` definitions (Main, Settings, PostList, CommentList, UserProfile, Inbox, PostSubmit)
+- `navigation/NavigationState.kt` — `rememberNavigationState()` + `NavigationState` class (per-top-level back stacks)
+- `navigation/Navigator.kt` — `Navigator` class (navigate/goBack actions)
+- `navigation/AppNavigation.kt` — `AppNavGraph()` — entryProvider + NavDisplay with entryDecorators
+- `navigation/AdaptiveNavigation.kt` — `AdaptiveAppNavigation()` — adaptive layout variant
+- `navigation/MainScreen.kt` — Main screen composable
+- `activities/MainActivityCompose.kt` — Entry point, renders `AppNavGraph()`
 
-## Current Tech Stack
+### Pattern
+```kotlin
+NavDisplay(
+    backStack = navigationState.backStack,
+    onBack = { navigator.goBack() },
+    entryDecorators = listOf(
+        rememberSaveableStateHolderNavEntryDecorator(),
+        rememberViewModelStoreNavEntryDecorator()  // ViewModel scoping per NavEntry
+    ),
+    entryProvider = entryProvider {
+        entry<Main> { /* ... */ }
+        entry<PostList> { key -> /* key.subreddit */ }
+    }
+)
+```
 
-| Technology | Version |
-|------------|---------|
-| Kotlin | 2.2.21 |
-| AGP | 9.3.1 |
-| compileSdk | 36 |
-| minSdk | 23 |
-| targetSdk | 36 |
-| MDC-Android | 1.14.0 (Material 3 Expressive) |
-| Compose BOM | 2025.11.00 |
-| OkHttp | 5.3.0 |
-| Media3 | 1.8.0 |
-| KSP | 2.3.11 |
+### ViewModel Integration
+- Uses `androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel` (NOT `androidx.hilt.navigation.compose.hiltViewModel`)
+- `rememberViewModelStoreNavEntryDecorator()` in `entryDecorators` scopes ViewModels per NavEntry
+- Reference: `nav3-recipes/passingarguments/viewmodels/hilt/HiltViewModelsActivity.kt`
 
-## Modules
+### Removed
+- `androidx.navigation:navigation-compose` (Nav 2) — removed from libs.versions.toml and build.gradle.kts
+- `compose/adaptive/AdaptiveNavigation.kt` — orphaned duplicate, deleted
+- All `androidx.navigation.*` imports (replaced with `androidx.navigation3.*`)
+- All `androidx.hilt.navigation.compose.hiltViewModel` imports (replaced with `androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel`)
 
-The project has a flat structure with two library modules:
-
--   `src/` — Main Android application (single module)
--   `libs/redreader-common/` — Shared utilities, extensions, and helpers
--   `libs/redreader-datamodel/` — Data models and serialization
-
-## Commands to Build & Test
-
--   Build: `./gradlew assembleDebug`
--   Build release: `./gradlew assembleRelease`
--   Run PMD: `./gradlew pmd`
--   Run Checkstyle: `./gradlew Checkstyle`
--   Run local tests: `./gradlew test`
--   Run instrumented tests: `./gradlew connectedAndroidTest`
-
-## Linting & Code Quality
-
--   PMD rules: `config/pmd/rules.xml`
--   Checkstyle config: `config/checkstyle/checkstyle.xml`
--   Lint baseline: `config/lint/lint-baseline.xml`
--   Lint config: `config/lint/lint.xml`
-
-## Modernization Goals
-
-RedReader is on a path toward modern Android development practices. Key goals include:
-
-1.  **Compose migration:** Incrementally convert XML layouts to Jetpack Compose
-2.  **Hilt DI:** Adopt Hilt for dependency injection
-3.  **Unidirectional Data Flow:** Migrate to ViewModel + StateFlow architecture
-4.  **Room:** Add local database for caching posts/comments
-5.  **WorkManager:** Add background sync for feeds
-6.  **Navigation Compose:** Replace Fragment transactions with declarative navigation
-7.  **Java → Kotlin:** Gradually migrate remaining Java code to Kotlin
-
-Reference project for modern patterns: [Now in Android](https://github.com/android/nowinandroid)
-
-## Continuous integration
-
--   Workflows are defined in `.github/workflows/*.yaml`
-
-## Version control and code location
-
--   The project uses git and is hosted at https://github.com/stormtroopercs/RedReader.
+## Conventions
+- Commit per logical section, not per file.
+- NavKeys are `@Serializable` data classes/objects implementing `NavKey`.
+- Top-level routes have independent back stacks; child routes push onto the active stack.
+- `Navigator.navigate()` auto-detects top-level vs child routes.

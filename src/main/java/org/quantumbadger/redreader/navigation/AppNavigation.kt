@@ -12,148 +12,117 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.\
  ******************************************************************************/
 
 package org.quantumbadger.redreader.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 
 /**
- * App-wide navigation graph.
- * Replaces Fragment-based navigation with Compose Navigation.
- * Includes all screens: Main, PostList, CommentList, Settings, UserProfile, Inbox, PostSubmit.
+ * App-wide navigation using Navigation 3.
+ *
+ * Uses the standard Nav 3 pattern:
+ *   - NavigationState (holds back stacks per top-level route)
+ *   - Navigator (navigate/goBack actions)
+ *   - entryProvider (resolves routes to composables)
+ *   - NavDisplay with entryDecorators (saveable state + ViewModel scoping)
  */
 @Composable
-fun AppNavGraph(
-    navController: NavHostController,
-    startDestination: String = Screen.Main.path
-) {
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
-        // Main screen
-        composable(Screen.Main.path) {
-            MainScreen(
-                onNavigateToPostList = { subreddit ->
-                    navController.navigate(Screen.PostList.createRoute(subreddit))
-                },
-                onNavigateToSettings = {
-                    navController.navigate(Screen.Settings.path)
-                }
-            )
-        }
+fun AppNavGraph() {
+    val navigationState = rememberNavigationState(
+        startRoute = Main,
+        topLevelRoutes = TOP_LEVEL_ROUTES
+    )
 
-        // Post list screen
-        composable(
-            route = Screen.PostList.path,
-            arguments = listOf(
-                navArgument("subreddit") { defaultValue = "" }
-            )
-        ) { backStackEntry ->
-            val subreddit = backStackEntry.arguments?.getString("subreddit") ?: ""
-            PostListScreen(
-                subreddit = subreddit,
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToCommentList = { postId ->
-                    navController.navigate(Screen.CommentList.createRoute(postId))
-                },
-                onNavigateToUserProfile = { username ->
-                    navController.navigate(Screen.UserProfile.createRoute(username))
-                },
-                onNavigateToPostSubmit = {
-                    navController.navigate(Screen.PostSubmit.createRoute(subreddit))
-                }
-            )
-        }
+    val navigator = remember { Navigator(navigationState) }
 
-        // Comment list screen
-        composable(
-            route = Screen.CommentList.path,
-            arguments = listOf(
-                navArgument("postId") { defaultValue = "" }
-            )
-        ) { backStackEntry ->
-            val postId = backStackEntry.arguments?.getString("postId") ?: ""
-            CommentListScreen(
-                postId = postId,
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
+    NavDisplay(
+        backStack = navigationState.backStack,
+        onBack = { navigator.goBack() },
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
+        ),
+        entryProvider = entryProvider {
+            // Top-level: Main screen
+            entry<Main> {
+                MainScreen(
+                    onNavigateToPostList = { subreddit ->
+                        navigator.navigate(PostList(subreddit))
+                    },
+                    onNavigateToSettings = {
+                        navigator.navigate(Settings)
+                    }
+                )
+            }
 
-        // Settings screen
-        composable(Screen.Settings.path) {
-            SettingsScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
+            // Top-level: Settings screen
+            entry<Settings> {
+                SettingsScreen(
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
 
-        // User profile screen
-        composable(
-            route = Screen.UserProfile.path,
-            arguments = listOf(
-                navArgument("username") { defaultValue = "" }
-            )
-        ) { backStackEntry ->
-            val username = backStackEntry.arguments?.getString("username") ?: ""
-            org.quantumbadger.redreader.compose.ui.UserProfileScreen(
-                username = username,
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToPosts = { /* TODO: Navigate to user posts */ },
-                onNavigateToComments = { /* TODO: Navigate to user comments */ },
-                onSendMessage = { /* TODO: Navigate to message screen */ }
-            )
-        }
+            // Child: Post list
+            entry<PostList> { key ->
+                RealPostListScreen(
+                    subreddit = key.subreddit,
+                    onNavigateBack = { navigator.goBack() },
+                    onNavigateToCommentList = { postId ->
+                        navigator.navigate(CommentList(postId))
+                    },
+                    onNavigateToUserProfile = { username ->
+                        navigator.navigate(UserProfile(username))
+                    },
+                    onNavigateToPostSubmit = {
+                        navigator.navigate(PostSubmit(key.subreddit))
+                    }
+                )
+            }
 
-        // Inbox screen
-        composable(Screen.Inbox.path) {
-            org.quantumbadger.redreader.compose.ui.InboxScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onMarkAllRead = { /* TODO: Mark all as read */ },
-                onSendMessage = { /* TODO: Navigate to send message */ }
-            )
-        }
+            // Child: Comment list
+            entry<CommentList> { key ->
+                RealCommentListScreen(
+                    postId = key.postId,
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
 
-        // Post submit screen
-        composable(
-            route = Screen.PostSubmit.path,
-            arguments = listOf(
-                navArgument("subreddit") { defaultValue = "" }
-            )
-        ) { backStackEntry ->
-            val subreddit = backStackEntry.arguments?.getString("subreddit") ?: ""
-            org.quantumbadger.redreader.compose.ui.PostSubmitScreen(
-                subreddit = subreddit,
-                onNavigateBack = { navController.popBackStack() },
-                onSubmit = { /* TODO: Submit post */ },
-                onNavigateToSubredditPicker = { /* TODO: Navigate to subreddit picker */ }
-            )
-        }
-    }
-}
+            // Child: User profile
+            entry<UserProfile> { key ->
+                org.quantumbadger.redreader.compose.ui.UserProfileScreen(
+                    username = key.username,
+                    onNavigateBack = { navigator.goBack() },
+                    onNavigateToPosts = { /* TODO */ },
+                    onNavigateToComments = { /* TODO */ },
+                    onSendMessage = { /* TODO */ }
+                )
+            }
 
-/**
- * Screen route definitions.
- */
-sealed class Screen(val path: String) {
-    object Main : Screen("main")
-    object PostList : Screen("post_list/{subreddit}") {
-        fun createRoute(subreddit: String) = "post_list/$subreddit"
-    }
-    object CommentList : Screen("comment_list/{postId}") {
-        fun createRoute(postId: String) = "comment_list/$postId"
-    }
-    object Settings : Screen("settings")
-    object UserProfile : Screen("user_profile/{username}") {
-        fun createRoute(username: String) = "user_profile/$username"
-    }
-    object Inbox : Screen("inbox")
-    object PostSubmit : Screen("post_submit/{subreddit}") {
-        fun createRoute(subreddit: String) = "post_submit/$subreddit"
-    }
+            // Child: Inbox
+            entry<Inbox> {
+                org.quantumbadger.redreader.compose.ui.InboxScreen(
+                    onNavigateBack = { navigator.goBack() },
+                    onMarkAllRead = { /* TODO */ },
+                    onSendMessage = { /* TODO */ }
+                )
+            }
+
+            // Child: Post submit
+            entry<PostSubmit> { key ->
+                org.quantumbadger.redreader.compose.ui.PostSubmitScreen(
+                    subreddit = key.subreddit,
+                    onNavigateBack = { navigator.goBack() },
+                    onSubmit = { /* TODO */ },
+                    onNavigateToSubredditPicker = { /* TODO */ }
+                )
+            }
+        }
+    )
 }
