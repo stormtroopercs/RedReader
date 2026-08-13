@@ -99,9 +99,15 @@ fun AppNavGraph() {
                 org.quantumbadger.redreader.compose.ui.UserProfileScreen(
                     username = key.username,
                     onNavigateBack = { navigator.goBack() },
-                    onNavigateToPosts = { /* TODO */ },
-                    onNavigateToComments = { /* TODO */ },
-                    onSendMessage = { /* TODO */ }
+                    onNavigateToPosts = {
+                        navigator.navigate(PostList("u/${key.username}/submitted"))
+                    },
+                    onNavigateToComments = {
+                        navigator.navigate(PostList("u/${key.username}/comments"))
+                    },
+                    onSendMessage = {
+                        navigator.navigate(CommentReply(postId = "", commentId = null))
+                    }
                 )
             }
 
@@ -109,8 +115,12 @@ fun AppNavGraph() {
             entry<Inbox> {
                 org.quantumbadger.redreader.compose.ui.InboxScreen(
                     onNavigateBack = { navigator.goBack() },
-                    onMarkAllRead = { /* TODO */ },
-                    onSendMessage = { /* TODO */ }
+                    onMarkAllRead = {
+                        // TODO: wire up inbox mark-all-read
+                    },
+                    onSendMessage = {
+                        navigator.navigate(CommentReply(postId = "", commentId = null))
+                    }
                 )
             }
 
@@ -119,8 +129,34 @@ fun AppNavGraph() {
                 org.quantumbadger.redreader.compose.ui.PostSubmitScreen(
                     subreddit = key.subreddit,
                     onNavigateBack = { navigator.goBack() },
-                    onSubmit = { /* TODO */ },
-                    onNavigateToSubredditPicker = { /* TODO */ }
+                    onSubmit = {
+                        // TODO: wire up post submission
+                    },
+                    onNavigateToSubredditPicker = {
+                        navigator.navigate(SubredditSearch)
+                    }
+                )
+            }
+
+            // Child: Subreddit search
+            entry<SubredditSearch> {
+                org.quantumbadger.redreader.compose.ui.SubredditSearchScreen(
+                    onNavigateBack = { navigator.goBack() },
+                    onSubredditSelected = { subreddit ->
+                        navigator.navigate(PostList(subreddit))
+                    }
+                )
+            }
+
+            // Child: Comment reply
+            entry<CommentReply> { key ->
+                org.quantumbadger.redreader.compose.ui.CommentReplyScreen(
+                    postId = key.postId,
+                    commentId = key.commentId,
+                    onNavigateBack = { navigator.goBack() },
+                    onSubmit = { body ->
+                        // TODO: wire up comment reply submission
+                    }
                 )
             }
         }

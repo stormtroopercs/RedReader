@@ -33,6 +33,8 @@ import kotlinx.serialization.Serializable
  *   - UserProfile(username)
  *   - Inbox
  *   - PostSubmit(subreddit)
+ *   - SubredditSearch
+ *   - CommentReply(postId, commentId?)
  */
 @Serializable
 data object Main : NavKey
@@ -54,6 +56,12 @@ data object Inbox : NavKey
 
 @Serializable
 data class PostSubmit(val subreddit: String) : NavKey
+
+@Serializable
+data object SubredditSearch : NavKey
+
+@Serializable
+data class CommentReply(val postId: String, val commentId: String? = null) : NavKey
 
 /** All top-level routes (displayed in navigation bar/rail/drawer). */
 val TOP_LEVEL_ROUTES = setOf<NavKey>(Main, Settings)
