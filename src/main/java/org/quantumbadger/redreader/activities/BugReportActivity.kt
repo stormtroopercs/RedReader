@@ -122,7 +122,7 @@ class BugReportActivity : ViewsBaseActivity() {
         }
 
         @Synchronized
-        private fun getErrors(): LinkedList<RRError> {
+        fun getErrors(): LinkedList<RRError> {
             val result = LinkedList<RRError>(errors)
             errors.clear()
             return result

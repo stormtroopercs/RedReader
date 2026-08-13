@@ -63,5 +63,14 @@ data object SubredditSearch : NavKey
 @Serializable
 data class CommentReply(val postId: String, val commentId: String? = null) : NavKey
 
+@Serializable
+data object RedditTerms : NavKey
+
+@Serializable
+data object Changelog : NavKey
+
+@Serializable
+data object BugReport : NavKey
+
 /** All top-level routes (displayed in navigation bar/rail/drawer). */
 val TOP_LEVEL_ROUTES = setOf<NavKey>(Main, Settings)

@@ -159,6 +159,27 @@ fun AppNavGraph() {
                     }
                 )
             }
+
+            // Child: Reddit Terms
+            entry<RedditTerms> {
+                org.quantumbadger.redreader.compose.ui.RedditTermsScreen(
+                    onDone = { navigator.goBack() }
+                )
+            }
+
+            // Child: Changelog
+            entry<Changelog> {
+                org.quantumbadger.redreader.compose.ui.ChangelogScreen(
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
+
+            // Child: Bug Report
+            entry<BugReport> {
+                org.quantumbadger.redreader.compose.ui.BugReportScreen(
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
         }
     )
 }
