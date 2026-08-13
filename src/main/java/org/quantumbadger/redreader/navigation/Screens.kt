@@ -72,5 +72,14 @@ data object Changelog : NavKey
 @Serializable
 data object BugReport : NavKey
 
+@Serializable
+data class WebViewRoute(val url: String, val title: String? = null) : NavKey
+
+@Serializable
+data class HtmlView(val html: String, val title: String) : NavKey
+
+@Serializable
+data object OAuthLogin : NavKey
+
 /** All top-level routes (displayed in navigation bar/rail/drawer). */
 val TOP_LEVEL_ROUTES = setOf<NavKey>(Main, Settings)

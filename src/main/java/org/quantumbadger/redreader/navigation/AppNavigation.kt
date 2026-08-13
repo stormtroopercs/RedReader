@@ -180,6 +180,38 @@ fun AppNavGraph() {
                     onNavigateBack = { navigator.goBack() }
                 )
             }
+
+            // Child: WebView (URL)
+            entry<WebViewRoute> { key ->
+                org.quantumbadger.redreader.compose.ui.WebViewScreen(
+                    url = key.url,
+                    title = key.title,
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
+
+            // Child: HTML View
+            entry<HtmlView> { key ->
+                org.quantumbadger.redreader.compose.ui.HtmlViewScreen(
+                    html = key.html,
+                    title = key.title,
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
+
+            // Child: OAuth Login
+            entry<OAuthLogin> {
+                org.quantumbadger.redreader.compose.ui.OAuthLoginScreen(
+                    onOAuthComplete = { callbackUrl ->
+                        // TODO: handle OAuth callback
+                        navigator.goBack()
+                    },
+                    onOAuthError = { error ->
+                        // TODO: show error dialog
+                        navigator.goBack()
+                    }
+                )
+            }
         }
     )
 }
