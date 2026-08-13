@@ -12,49 +12,25 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
- */
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+ ******************************************************************************/
+
 package org.quantumbadger.redreader.activities
 
-import android.graphics.Color
 import android.os.Bundle
-import android.view.MenuItem
-import android.widget.LinearLayout
-import android.widget.ScrollView
-import org.quantumbadger.redreader.R
-import org.quantumbadger.redreader.common.ChangelogManager
-import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
+import org.quantumbadger.redreader.compose.ui.ChangelogScreen
 
-class ChangelogActivity : ViewsBaseActivity() {
-    override fun baseActivityNavigationBarColour(): Int {
-        return Color.rgb(0x55, 0x55, 0x55)
-    }
+/**
+ * Thin Compose wrapper around [ChangelogScreen].
+ */
+class ChangelogActivity : ComposeBaseActivity() {
 
-    protected override fun onCreate(savedInstanceState: Bundle?) {
-        PrefsUtility.applySettingsTheme(this)
-
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setTitle(R.string.title_changelog)
-
-        val items = LinearLayout(this)
-        items.setOrientation(LinearLayout.VERTICAL)
-
-        ChangelogManager.generateViews(this, items, true)
-
-        val sv = ScrollView(this)
-        sv.addView(items)
-        setBaseActivityListing(sv)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.getItemId()) {
-            android.R.id.home -> {
-                finish()
-                return true
-            }
-
-            else -> return false
+        setContentCompose {
+            ChangelogScreen(onNavigateBack = ::finish)
         }
     }
 }

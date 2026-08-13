@@ -12,8 +12,9 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
- */
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+ ******************************************************************************/
+
 package org.quantumbadger.redreader.activities
 
 import android.content.ActivityNotFoundException
@@ -23,62 +24,22 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.ScrollView
-import android.widget.TextView
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.common.AndroidCommon
 import org.quantumbadger.redreader.common.Constants
-import org.quantumbadger.redreader.common.General.dpToPixels
-import org.quantumbadger.redreader.common.General.listOfOne
 import org.quantumbadger.redreader.common.General.quickToast
 import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
+import org.quantumbadger.redreader.compose.ui.BugReportScreen
 import java.util.LinkedList
 
-class BugReportActivity : ViewsBaseActivity() {
-    protected override fun onCreate(savedInstanceState: Bundle?) {
+class BugReportActivity : ComposeBaseActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val layout = LinearLayout(this)
-        layout.setOrientation(LinearLayout.VERTICAL)
-
-        val title = TextView(this)
-        title.setText(R.string.bug_title)
-        layout.addView(title)
-        title.setTextSize(20.0f)
-
-        val text = TextView(this)
-        text.setText(R.string.bug_message)
-
-        layout.addView(text)
-        text.setTextSize(15.0f)
-
-        val paddingPx = dpToPixels(this, 20f)
-        title.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
-        text.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
-
-        val send = Button(this)
-        send.setText(R.string.bug_button_send)
-
-        send.setOnClickListener(View.OnClickListener { v: View? ->
-            sendBugReport(this, getErrors())
-            finish()
-        })
-
-        val ignore = Button(this)
-        ignore.setText(R.string.bug_button_ignore)
-
-        ignore.setOnClickListener(View.OnClickListener { v: View? -> finish() })
-
-        layout.addView(send)
-        layout.addView(ignore)
-
-        val sv = ScrollView(this)
-        sv.addView(layout)
-
-        setBaseActivityListing(sv)
+        setContentCompose {
+            BugReportScreen(onNavigateBack = ::finish)
+        }
     }
 
     companion object {
@@ -102,18 +63,13 @@ class BugReportActivity : ViewsBaseActivity() {
             if (t != null) {
                 Log.e("BugReportActivity", "Handling exception", t)
             }
-
             handleGlobalError(context, RRError(null, null, true, t))
         }
 
         @JvmStatic
         @Synchronized
-        fun handleGlobalError(
-            context: Context,
-            error: RRError?
-        ) {
+        fun handleGlobalError(context: Context, error: RRError?) {
             addGlobalError(error)
-
             AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
                 val intent = Intent(context, BugReportActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -129,19 +85,12 @@ class BugReportActivity : ViewsBaseActivity() {
         }
 
         @JvmStatic
-        fun sendBugReport(
-            context: Context,
-            error: RRError
-        ) {
-            Companion.sendBugReport(context, listOfOne<RRError?>(error))
+        fun sendBugReport(context: Context, error: RRError) {
+            sendBugReport(context, listOf(error))
         }
 
-        fun sendBugReport(
-            context: Context,
-            errors: Iterable<RRError>
-        ) {
+        fun sendBugReport(context: Context, errors: Iterable<RRError>) {
             val sb = StringBuilder(1024)
-
             sb.append("Error report -- RedReader v")
                 .append(Constants.version(context))
                 .append("\r\n\r\n")
@@ -179,13 +128,9 @@ class BugReportActivity : ViewsBaseActivity() {
             intent.putExtra(
                 Intent.EXTRA_EMAIL,
                 arrayOf<String>(
-                    ("bug"
-                            + "reports"
-                            + 64.toChar() + "redreader"
-                            + '.'
-                            + "org")
+                    "bugreports" + 64.toChar() + "redreader" + '.' + "org"
                 )
-            ) // no spam, thanks
+            )
             intent.putExtra(Intent.EXTRA_SUBJECT, "Bug Report")
             intent.putExtra(Intent.EXTRA_TEXT, sb.toString())
 
@@ -197,8 +142,7 @@ class BugReportActivity : ViewsBaseActivity() {
                 context.startActivity(
                     Intent.createChooser(
                         intent,
-                        context.getApplicationContext()
-                            .getString(R.string.bug_chooser_title)
+                        context.getApplicationContext().getString(R.string.bug_chooser_title)
                     )
                 )
             } catch (ex: ActivityNotFoundException) {
@@ -207,20 +151,14 @@ class BugReportActivity : ViewsBaseActivity() {
         }
 
         @JvmStatic
-        fun appendException(
-            sb: StringBuilder,
-            t: Throwable?,
-            recurseLimit: Int
-        ) {
+        fun appendException(sb: StringBuilder, t: Throwable?, recurseLimit: Int) {
             if (t != null) {
                 sb.append("Exception: ")
                 sb.append(t.javaClass.getCanonicalName()).append("\r\n")
                 sb.append(t.message).append("\r\n")
-
                 for (elem in t.getStackTrace()) {
                     sb.append("  ").append(elem.toString()).append("\r\n")
                 }
-
                 if (recurseLimit > 0 && t.cause != null) {
                     sb.append("Caused by: ")
                     appendException(sb, t.cause, recurseLimit - 1)

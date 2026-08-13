@@ -18,70 +18,40 @@
 package org.quantumbadger.redreader.activities
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
-import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.button.MaterialButton
-import org.quantumbadger.redreader.R
-import org.quantumbadger.redreader.common.LinkHandler
-import org.quantumbadger.redreader.common.PrefsUtility
-import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
+import org.quantumbadger.redreader.compose.ui.RedditTermsScreen
 
-class RedditTermsActivity : ViewsBaseActivity() {
+/**
+ * Thin Compose wrapper around [RedditTermsScreen].
+ * Keeps the legacy [launch] API so existing call sites still work.
+ */
+class RedditTermsActivity : ComposeBaseActivity() {
 
-	companion object {
+    companion object {
+        private const val EXTRA_LAUNCH_MAIN = "launch_main"
 
-		private const val extraLaunchMain = "launch_main"
+        @JvmStatic
+        fun launch(activity: AppCompatActivity, launchMainOnClose: Boolean) {
+            val intent = Intent(activity, RedditTermsActivity::class.java)
+            intent.putExtra(EXTRA_LAUNCH_MAIN, launchMainOnClose)
+            activity.startActivity(intent)
+        }
+    }
 
-		@JvmStatic
-		fun launch(activity: AppCompatActivity, launchMainOnClose: Boolean) {
-			val intent = Intent(activity, RedditTermsActivity::class.java)
-			intent.putExtra(extraLaunchMain, launchMainOnClose)
-			activity.startActivity(intent)
-		}
-	}
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-	override fun baseActivityIsActionBarBackEnabled() = false
+        val launchMainOnClose = intent.getBooleanExtra(EXTRA_LAUNCH_MAIN, false)
 
-	override fun baseActivityNavigationBarColour() = Color.rgb(0x55, 0x55, 0x55)
-
-	override fun onCreate(savedInstanceState: Bundle?) {
-
-		PrefsUtility.applySettingsTheme(this)
-
-		super.onCreate(savedInstanceState)
-
-		setBaseActivityListing(R.layout.reddit_terms_activity)
-
-		val launchMainOnClose = intent.getBooleanExtra(extraLaunchMain, false)
-
-		fun onClick(@IdRes id: Int, action: () -> Unit) {
-			findViewById<MaterialButton>(id).setOnClickListener { action() }
-		}
-
-		fun onDone() {
-			if (launchMainOnClose) {
-				startActivity(Intent(this, MainActivity::class.java))
-			}
-			finish()
-		}
-
-		onClick(R.id.terms_button_view) {
-			LinkHandler.onLinkClicked(
-				this,
-				UriString("https://www.redditinc.com/policies/user-agreement-april-18-2023")
-			)
-		}
-
-		onClick(R.id.terms_button_decline) {
-			PrefsUtility.declineRedditUserAgreement()
-			onDone()
-		}
-
-		onClick(R.id.terms_button_accept) {
-			PrefsUtility.acceptRedditUserAgreement()
-			onDone()
-		}
-	}
+        setContentCompose {
+            RedditTermsScreen(launchMainOnClose = launchMainOnClose) {
+                finish()
+                if (launchMainOnClose) {
+                    startActivity(Intent(this, MainActivity::class.java))
+                }
+            }
+        }
+    }
 }
