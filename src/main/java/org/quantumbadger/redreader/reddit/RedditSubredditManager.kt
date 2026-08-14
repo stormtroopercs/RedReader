@@ -17,7 +17,6 @@
 package org.quantumbadger.redreader.reddit
 
 import android.content.Context
-import dagger.hilt.android.scopes.SingletonScoped
 import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.android.components.FragmentComponent
 import dagger.hilt.android.components.ActivityRetainedComponent
@@ -46,7 +45,7 @@ import javax.inject.Provider
  * Hilt-injected subreddit manager. Replaces manual singleton pattern.
  * Uses per-user caching for subreddit data.
  */
-@SingletonScoped
+@Singleton
 class RedditSubredditManager @Inject constructor(
     private val context: Context,
     private val user: RedditAccount
@@ -87,26 +86,6 @@ class RedditSubredditManager @Inject constructor(
         MULTIREDDITS,
         MOST_POPULAR,
         DEFAULTS
-    }
-
-    private val subredditCache: WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>
-
-
-    init {
-        // Subreddit cache
-
-        val subredditDb = RawObjectDB<SubredditCanonicalId?, RedditSubreddit?>(
-            context,
-            getDbFilename("subreddits", user),
-            RedditSubreddit::class.java
-        )
-
-        val subredditDbWrapper =             ThreadedRawObjectDB<SubredditCanonicalId?, RedditSubreddit?, RRError?>(
-                subredditDb,
-                RedditAPIIndividualSubredditDataRequester(context, user)
-            )
-
-        subredditCache =             WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>(subredditDbWrapper)
     }
 
     fun getSubreddit(

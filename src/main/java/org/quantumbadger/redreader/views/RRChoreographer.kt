@@ -17,8 +17,8 @@
 package org.quantumbadger.redreader.views
 
 import android.view.Choreographer
-import dagger.hilt.android.scopes.Singleton
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Hilt-injected choreographer for frame callbacks.

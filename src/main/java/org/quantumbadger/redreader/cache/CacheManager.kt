@@ -23,8 +23,8 @@ import android.util.Log
 import com.github.luben.zstd.Zstd
 import com.github.luben.zstd.ZstdInputStream
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.scopes.Singleton
 import javax.inject.Inject
+import javax.inject.Singleton
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType

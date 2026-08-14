@@ -28,15 +28,16 @@ import org.quantumbadger.redreader.reddit.api.RedditOAuth.RefreshToken
 import java.util.LinkedList
 import java.util.Locale
 
-import dagger.hilt.android.scopes.SingletonScoped
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Named
+import javax.inject.Singleton
 
 /**
  * Hilt-injected account manager. Replaces manual singleton pattern.
  * Provides Reddit account CRUD operations backed by SQLite.
  */
-@SingletonScoped
+@Singleton
 class RedditAccountManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) : SQLiteOpenHelper(
