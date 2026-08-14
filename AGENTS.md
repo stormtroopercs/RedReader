@@ -1,7 +1,7 @@
 # RedReader — Project Context
 
 ## Overview
-Open-source Reddit client for Android. 100% Kotlin codebase (484 files, 0 Java).
+Open-source Reddit client for Android. 100% Kotlin production code (514 .kt files; the only remaining 16 .java files are test sources).
 
 ## Branch
 **`java-to-kotlin-conversion`** — main development branch.
@@ -15,26 +15,26 @@ Open-source Reddit client for Android. 100% Kotlin codebase (484 files, 0 Java).
 | Navigation | **Navigation 3** (1.0.0) |
 | compileSdk / targetSdk | 36 |
 | minSdk | 23 |
-| Hilt | 2.55 (DI) |
-| Room | 2.6.x (4 entities, 4 DAOs) |
+| Hilt | 2.60.1 (DI) |
+| Room | 2.8.0 (4 entities, 4 DAOs) |
 | OkHttp | 5.3.0 |
 
 ## Architecture
 **Hybrid UI** — legacy Activities/Fragments coexist with new Compose screens.
 
 ### Modules
-- `app/` — Main application module
-- `libs/redreader-common/` — Shared utilities
-- `libs/redreader-datamodel/` — Data models
+Single Gradle module. `settings.gradle.kts` defines `rootProject.name = "RedReader"` with **no `include()` statements** — all source lives in `src/` at the repo root.
+
+> Note: `core/`, `feature/`, and `libs/` contain leftover `build/` output (untracked) but are **not part of the build**. `libs/redreader-common/` and `libs/redreader-datamodel/` have their own `build.gradle.kts` but are not wired into `settings.gradle.kts`, so they are orphaned and not compiled.
 
 ### Package Layout
-- `activities/` — Entry points (`MainActivityCompose` is launcher)
-- `navigation/` — Navigation 3 setup + screen composables
-- `compose/ui/` — Reusable Compose components (14 screens)
+All production code is under `src/main/java/org/quantumbadger/redreader/`:
+- `activities/` — Entry points (`MainActivityCompose` is the launcher)
+- `navigation/` — Navigation 3 setup, screen composables, and all 6 ViewModels
+- `compose/ui/` — Reusable Compose components and screens (23 files)
 - `di/` — Hilt modules (Application, Database, Network)
-- `database/` — Room DB (Post, Comment, Subreddit, UserSession)
+- `database/` — Room DB (`entities/` + `dao/`: Post, Comment, Subreddit, UserSession)
 - `repository/` — Repository layer (4 repositories)
-- `viewmodel/` — ViewModels (6 total)
 
 ## Navigation 3
 Migrated from Navigation 2 (NavController/NavHost) to Navigation 3.
