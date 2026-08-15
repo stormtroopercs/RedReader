@@ -374,7 +374,7 @@ class PostSubmitContentFragment : Fragment() {
                 override fun onSuccess(choices: MutableCollection<RedditFlairChoice>) {
                     runOnUiThread(Runnable {
                         if (!mActive) {
-                            return@runOnUiThread
+                            return@Runnable
                         }
                         mLoadingSpinnerView!!.setVisibility(View.GONE)
                         mMainControls!!.setVisibility(View.VISIBLE)
@@ -389,7 +389,7 @@ class PostSubmitContentFragment : Fragment() {
                 override fun onSubredditDoesNotExist() {
                     runOnUiThread(Runnable {
                         if (!mActive) {
-                            return@runOnUiThread
+                            return@Runnable
                         }
                         ifActivityNotNull(Consumer { obj: E? -> obj.onContentFragmentSubredditDoesNotExist() })
                     })
@@ -398,7 +398,7 @@ class PostSubmitContentFragment : Fragment() {
                 override fun onSubredditPermissionDenied() {
                     runOnUiThread(Runnable {
                         if (!mActive) {
-                            return@runOnUiThread
+                            return@Runnable
                         }
                         ifActivityNotNull(Consumer { obj: E? -> obj.onContentFragmentSubredditPermissionDenied() })
                     })
@@ -407,7 +407,7 @@ class PostSubmitContentFragment : Fragment() {
                 override fun onFailure(error: RRError) {
                     runOnUiThread(Runnable {
                         if (!mActive) {
-                            return@runOnUiThread
+                            return@Runnable
                         }
                         ifActivityNotNull(Consumer { listener: Listener? ->
                             listener!!.onContentFragmentFlairRequestError(error)

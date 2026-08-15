@@ -76,7 +76,7 @@ object MarkdownParser {
 
             val paragraph = line.tokenize(lastParagraph)
 
-            if (!paragraph.isEmpty()) {
+            if (!paragraph.isEmpty) {
                 outputParagraphs.add(paragraph)
             }
         }

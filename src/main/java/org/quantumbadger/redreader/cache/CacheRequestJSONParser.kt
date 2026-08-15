@@ -90,7 +90,7 @@ class CacheRequestJSONParser(
                             )
                         )
                     }
-                    return@add
+                    return@Runnable
                 }
                 try {
                     mListener.onJsonParsed(jsonValue, timestamp, session, fromCache)

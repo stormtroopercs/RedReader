@@ -415,10 +415,10 @@ class WebViewFragment : Fragment(), PostSelectionListener {
                     override fun run() {
                         AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
                             if (currentUrl == null || url == null) {
-                                return@post
+                                return@Runnable
                             }
                             if (url != view.getUrl()) {
-                                return@post
+                                return@Runnable
                             }
                             if (goingBack && url == currentUrl) {
                                 quickToast(

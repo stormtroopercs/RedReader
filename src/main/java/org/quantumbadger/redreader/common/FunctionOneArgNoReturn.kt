@@ -16,6 +16,6 @@
  */
 package org.quantumbadger.redreader.common
 
-interface FunctionOneArgNoReturn<Param> {
+fun interface FunctionOneArgNoReturn<Param> {
     fun apply(input: Param?)
 }

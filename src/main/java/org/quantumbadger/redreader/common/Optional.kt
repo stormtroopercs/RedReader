@@ -150,8 +150,7 @@ class Optional<E> private constructor(private val mValue: E?) {
 
         fun <E> ofNullable(value: E?): Optional<E?> {
             if (value == null) {
-                return
-                E > empty<Any?>()
+                return empty()
             }
 
             return Optional<E?>(value)

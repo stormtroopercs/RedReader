@@ -163,7 +163,7 @@ class CacheDownload(
                 body: FailedRequestBody?
             ) {
                 if (mInitiator.queueType == DownloadQueueType.REDDIT_API
-                    && TorCommon.isTorEnabled()
+                    && TorCommon.isTorEnabled
                 ) {
                     backend.recreateHttpBackend()
                     resetUserCredentialsOnNextRequest()

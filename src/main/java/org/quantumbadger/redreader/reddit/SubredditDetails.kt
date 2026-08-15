@@ -64,7 +64,7 @@ class SubredditDetails : HasUniqueId {
 
         intent.putExtra(
             "html", RedditSubreddit.Companion.getSidebarHtmlStatic(
-                PrefsUtility.isNightMode(),
+                PrefsUtility.isNightMode,
                 publicDescriptionHtmlEscaped
             )
         )

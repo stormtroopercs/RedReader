@@ -149,8 +149,8 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             return
         }
 
-        if (!PrefsUtility.isRedditUserAgreementAccepted()
-            && !PrefsUtility.isRedditUserAgreementDeclined()
+        if (!PrefsUtility.isRedditUserAgreementAccepted
+            && !PrefsUtility.isRedditUserAgreementDeclined
         ) {
             launch(this, true)
             finish()
@@ -719,7 +719,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
     }
 
     override fun onPostSelected(post: RedditPreparedPost) {
-        if (post.isSelf()) {
+        if (post.isSelf) {
             onPostCommentsSelected(post)
         } else {
             onLinkClicked(this, post.src.url, false, post.src.src)
@@ -731,12 +731,12 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         val commentsVisible = commentListingFragment != null
 
         val postsSortable = postListingController != null
-                && postListingController!!.isSortable()
+                && postListingController!!.isSortable
         val commentsSortable = commentListingController != null
-                && commentListingController!!.isSortable()
+                && commentListingController!!.isSortable
 
         val isFrontPage = postListingController != null && postListingController!!
-            .isFrontPage()
+            .isFrontPage
 
         val user: RedditAccount = RedditAccountManager.Companion.getInstance(this)
             .getDefaultAccount()
@@ -748,7 +748,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         var subredditBlockedState: Boolean?=null
 
         if (postsVisible
-            && !user.isAnonymous && postListingController!!.isSubreddit()
+            && !user.isAnonymous && postListingController!!.isSubreddit
             && subredditSubscriptionManager.areSubscriptionsReady()
             && postListingFragment != null && postListingFragment!!.getSubreddit() != null
         ) {
@@ -760,7 +760,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         }
 
         if (postsVisible
-            && postListingController!!.isSubreddit()
+            && postListingController!!.isSubreddit
             && postListingFragment != null && postListingFragment!!.getSubreddit() != null
         ) {
             try {
@@ -866,7 +866,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
 
     override fun onSubmitPost() {
         val intent = Intent(this, PostSubmitActivity::class.java)
-        if (postListingController!!.isSubreddit()) {
+        if (postListingController!!.isSubreddit) {
             intent.putExtra(
                 "subreddit",
                 postListingController!!.subredditCanonicalName().toString()

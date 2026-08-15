@@ -260,7 +260,7 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
             continueButton.setOnClickListener(View.OnClickListener { v: View? ->
                 val activity = getActivity()
                 if (activity == null) {
-                    return@setOnClickListener
+                    return@OnClickListener
                 }
 
                 val subreddit: SubredditCanonicalId
@@ -280,7 +280,7 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
                         )
                     )
 
-                    return@setOnClickListener
+                    return@OnClickListener
                 }
                 (activity as Listener).onSubredditSelected(
                     mUsernameSpinner!!.getText().toString(),

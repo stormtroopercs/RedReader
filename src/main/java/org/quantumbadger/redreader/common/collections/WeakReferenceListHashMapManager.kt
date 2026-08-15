@@ -84,7 +84,7 @@ class WeakReferenceListHashMapManager<K, V> {
             val list = entry.value
             list.clean()
 
-            if (list.isEmpty()) {
+            if (list.isEmpty) {
                 iterator.remove()
             }
         }

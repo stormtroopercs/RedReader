@@ -97,7 +97,7 @@ class RedditPostHeaderView(
         }
 
         greyHeader.setOnClickListener(OnClickListener { v: View? ->
-            if (!post.isSelf()) {
+            if (!post.isSelf) {
                 onLinkClicked(
                     activity,
                     post.src.url,

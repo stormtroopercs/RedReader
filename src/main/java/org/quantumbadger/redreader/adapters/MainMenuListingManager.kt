@@ -584,12 +584,12 @@ class MainMenuListingManager(
             if (mSubredditSubscriptions != null
                 && mSubredditSubscriptions == subscriptionsSorted
             ) {
-                return@post
+                return@Runnable
             }
             if (!PrefsUtility.pref_show_subscribed_subreddits_main_menu()) {
                 adapter.removeAllFromGroup(GROUP_SUBREDDITS_HEADER)
                 adapter.removeAllFromGroup(GROUP_SUBREDDITS_ITEMS)
-                return@post
+                return@Runnable
             }
 
             mSubredditSubscriptions = subscriptionsSorted
@@ -616,12 +616,12 @@ class MainMenuListingManager(
             if (mMultiredditSubscriptions != null
                 && mMultiredditSubscriptions == subscriptionsSorted
             ) {
-                return@post
+                return@Runnable
             }
             if (!PrefsUtility.pref_show_multireddit_main_menu()) {
                 adapter.removeAllFromGroup(GROUP_MULTIREDDITS_HEADER)
                 adapter.removeAllFromGroup(GROUP_MULTIREDDITS_ITEMS)
-                return@post
+                return@Runnable
             }
 
             mMultiredditSubscriptions = subscriptionsSorted
@@ -755,7 +755,7 @@ class MainMenuListingManager(
         if (PrefsUtility.pref_menus_mainmenu_dev_announcements()) {
             val announcement =                 AnnouncementDownloader.getMostRecentUnreadAnnouncement(sharedPreferences)
 
-            if (announcement.isPresent()) {
+            if (announcement.isPresent) {
                 mAnnouncementHolder.removeAllViews()
                 mAnnouncementHolder.addView(AnnouncementView(mActivity, announcement.get()))
             }

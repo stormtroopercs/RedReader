@@ -91,7 +91,7 @@ class RedditCommentView(
     )
 
     private fun chooseFlingAction(pref: CommentFlingAction): ActionDescriptionPair? {
-        if (!comment!!.isComment()) {
+        if (!comment!!.isComment) {
             return null
         }
 
@@ -254,7 +254,7 @@ class RedditCommentView(
     }
 
     override fun onFlungLeft() {
-        if (mLeftFlingAction == null || !comment!!.isComment()) {
+        if (mLeftFlingAction == null || !comment!!.isComment) {
             return
         }
 
@@ -269,7 +269,7 @@ class RedditCommentView(
     }
 
     override fun onFlungRight() {
-        if (mRightFlingAction == null || !comment!!.isComment()) {
+        if (mRightFlingAction == null || !comment!!.isComment) {
             return
         }
 
@@ -344,7 +344,7 @@ class RedditCommentView(
         updateOnly: Boolean = false
     ) {
         if (!updateOnly) {
-            if (!comment.isComment()) {
+            if (!comment.isComment) {
                 throw RuntimeException("Not a comment")
             }
 
@@ -456,7 +456,7 @@ class RedditCommentView(
 
         mAccessibilityActionManager.removeAllActions()
 
-        if (!comment!!.isComment()) {
+        if (!comment!!.isComment) {
             return
         }
 

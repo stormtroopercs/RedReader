@@ -35,15 +35,11 @@ class AnnouncementView(
         LayoutInflater.from(activity)
             .inflate(R.layout.announcement_view, this, true)
 
-        val textTitle: TextView
-        TextView > findViewById<View?>(R.id.announcement_view_title)
-        val textMessage: TextView
-        TextView > findViewById<View?>(R.id.announcement_view_message)
+        val textTitle: TextView = findViewById(R.id.announcement_view_title)
+        val textMessage: TextView = findViewById(R.id.announcement_view_message)
 
-        val buttonView: Button
-        Button > findViewById<View?>(R.id.announcement_view_button_view)
-        val buttonDismiss: Button
-        Button > findViewById<View?>(R.id.announcement_view_button_dismiss)
+        val buttonView: Button = findViewById(R.id.announcement_view_button_view)
+        val buttonDismiss: Button = findViewById(R.id.announcement_view_button_dismiss)
 
         textTitle.setText(announcement.title)
 

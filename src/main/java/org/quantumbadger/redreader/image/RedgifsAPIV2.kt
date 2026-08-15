@@ -174,7 +174,7 @@ object RedgifsAPIV2 {
                     ) {
                         val accessToken = result.getStringAtPath("access_token")
 
-                        if (accessToken.isEmpty()) {
+                        if (accessToken.isEmpty) {
                             Log.i(TAG, "Failed to get RedGifs v2 token: result not present")
                             listener.onFailure(
                                 getGeneralErrorForFailure(

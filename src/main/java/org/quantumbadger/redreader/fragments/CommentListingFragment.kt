@@ -209,7 +209,7 @@ class CommentListingFragment(
             floatingToolbarContainer.addView(mFloatingToolbar)
             mOverlayFrame.addView(floatingToolbarContainer)
 
-            if (PrefsUtility.isNightMode()) {
+            if (PrefsUtility.isNightMode) {
                 mFloatingToolbar!!.setBackgroundColor(Color.argb(0xCC, 0x33, 0x33, 0x33))
             }
 
@@ -357,7 +357,7 @@ class CommentListingFragment(
             layoutManager!!.findFirstVisibleItemPosition()
         )
 
-        if (this.post != null && post!!.isSelf()) {
+        if (this.post != null && post!!.isSelf) {
             bundle.putBoolean(SAVEDSTATE_SELFTEXT_VISIBLE, mSelfTextVisible)
         }
 
@@ -532,7 +532,7 @@ class CommentListingFragment(
                 activity.setTitle(post.src.title)
             }
 
-            if (mCommentListingManager.isSearchListing()) {
+            if (mCommentListingManager.isSearchListing) {
                 val searchCommentThreadView = CommentSubThreadView(
                     activity,
                     mAllUrls!!.get(0)!!.asPostCommentListURL(),
@@ -611,7 +611,7 @@ class CommentListingFragment(
                     false
                 )
 
-                if (mCommentListingManager.isSearchListing()) {
+                if (mCommentListingManager.isSearchListing) {
                     (emptyView.findViewById<View?>(R.id.empty_view_text) as TextView)
                         .setText(string.no_search_results)
                 } else {
@@ -693,7 +693,7 @@ class CommentListingFragment(
                 pos
             )
             if (item is RedditCommentListItem
-                && item.isComment()
+                && item.isComment
                 && item.getIndent() == 0
             ) {
                 layoutManager.scrollToPositionWithOffset(pos, 0)
@@ -713,7 +713,7 @@ class CommentListingFragment(
                 pos
             )
             if (item is RedditCommentListItem
-                && item.isComment()
+                && item.isComment
                 && item.getIndent() == 0
             ) {
                 layoutManager.scrollToPositionWithOffset(pos, 0)

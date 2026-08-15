@@ -123,7 +123,7 @@ class RedditOAuth @Inject constructor(
             )
         }
 
-        if (!PrefsUtility.isRedditUserAgreementAccepted()) {
+        if (!PrefsUtility.isRedditUserAgreementAccepted) {
             return RRError(
                 title = context.getString(R.string.reddit_terms_error_title),
                 message = context.getString(R.string.reddit_terms_error_message),

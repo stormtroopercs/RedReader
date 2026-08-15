@@ -429,7 +429,7 @@ class RedditPostView(
             )
         }
 
-        if (mPost!!.isRead()) {
+        if (mPost!!.isRead) {
             title.setTextColor(rrPostTitleReadCol)
         } else {
             title.setTextColor(rrPostTitleCol)
@@ -442,13 +442,13 @@ class RedditPostView(
 
         var overlayVisible = true
 
-        if (mPost!!.isSaved()) {
+        if (mPost!!.isSaved) {
             mOverlayIcon.setImageResource(R.drawable.star_dark)
-        } else if (mPost!!.isHidden()) {
+        } else if (mPost!!.isHidden) {
             mOverlayIcon.setImageResource(R.drawable.ic_action_cross_dark)
-        } else if (mPost!!.isUpvoted()) {
+        } else if (mPost!!.isUpvoted) {
             mOverlayIcon.setImageResource(R.drawable.arrow_up_bold_orangered)
-        } else if (mPost!!.isDownvoted()) {
+        } else if (mPost!!.isDownvoted) {
             mOverlayIcon.setImageResource(R.drawable.arrow_down_bold_periwinkle)
         } else {
             overlayVisible = false
@@ -576,7 +576,7 @@ class RedditPostView(
 
                                 val totalPreviewsShown: Int=sInlinePreviewsShownThisSession.incrementAndGet()
 
-                                val isVideoPreview = post.isVideoPreview()
+                                val isVideoPreview = post.isVideoPreview
                                 runOnUiThread(Runnable {
                                     mImagePreviewImageView.setImageBitmap(data)
                                     mImagePreviewLoadingSpinner.setVisibility(GONE)

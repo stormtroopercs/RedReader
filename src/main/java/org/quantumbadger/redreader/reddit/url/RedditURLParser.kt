@@ -102,7 +102,7 @@ object RedditURLParser {
 
         val optionalUri = tryGetRedditUri(rawUri)
 
-        if (optionalUri.isEmpty()) {
+        if (optionalUri.isEmpty) {
             return null
         }
 

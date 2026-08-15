@@ -627,7 +627,7 @@ object OptionsMenuUtility {
 
                 accounts.setShowAsAction(showAsAction)
                 if (longText) {
-                    if (PrefsUtility.isNightMode()) {
+                    if (PrefsUtility.isNightMode) {
                         accounts.setIcon(R.drawable.ic_settings_dark)
                     } else {
                         accounts.setIcon(R.drawable.ic_settings_light)
@@ -804,12 +804,12 @@ object OptionsMenuUtility {
                     .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener { item: MenuItem? ->
                         if (activity is OptionsMenuPostsListener) {
                             (activity as OptionsMenuPostsListener).onSearchPosts()
-                            return@setOnMenuItemClickListener true
+                            return@OnMenuItemClickListener true
                         } else if (activity is OptionsMenuCommentsListener) {
                             (activity as OptionsMenuCommentsListener).onSearchComments()
-                            return@setOnMenuItemClickListener true
+                            return@OnMenuItemClickListener true
                         } else {
-                            return@setOnMenuItemClickListener false
+                            return@OnMenuItemClickListener false
                         }
                     })
 
@@ -830,7 +830,7 @@ object OptionsMenuUtility {
                         if (activity is OptionsMenuCommentsListener) {
                             (activity as OptionsMenuCommentsListener)
                                 .onSearchComments()
-                            return@setOnMenuItemClickListener true
+                            return@OnMenuItemClickListener true
                         }
                         false
                     })

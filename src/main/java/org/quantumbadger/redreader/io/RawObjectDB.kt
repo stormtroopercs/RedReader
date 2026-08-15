@@ -28,7 +28,6 @@ import org.quantumbadger.redreader.io.WritableObject.WritableField
 import org.quantumbadger.redreader.io.WritableObject.WritableObjectKey
 import org.quantumbadger.redreader.io.WritableObject.WritableObjectTimestamp
 import org.quantumbadger.redreader.io.WritableObject.WritableObjectVersion
-import java.lang.Boolean
 import java.lang.Long
 import java.lang.reflect.Field
 import java.lang.reflect.InvocationTargetException

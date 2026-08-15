@@ -102,7 +102,7 @@ class WebViewFixed : WebView {
          * @return true it the video is being displayed using a custom view (typically full-screen)
          */
         get() = videoEnabledWebChromeClient != null
-                && videoEnabledWebChromeClient!!.isVideoFullscreen()
+                && videoEnabledWebChromeClient!!.isVideoFullscreen
 
     /**
      * Pass only a VideoEnabledWebChromeClient instance.
@@ -169,7 +169,7 @@ class WebViewFixed : WebView {
     }
 
     private fun setTor(context: Context) {
-        if (TorCommon.isTorEnabled()) {
+        if (TorCommon.isTorEnabled) {
             try {
                 clearBrowser()
                 val result = WebkitProxy.setProxy(

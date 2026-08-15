@@ -44,7 +44,7 @@ class HandlerTimer(private val mHandler: Handler) {
 
         mHandler.postDelayed(Runnable {
             if (!mTimers.get(id, false)) {
-                return@postDelayed
+                return@Runnable
             }
             mTimers.delete(id)
             runnable.run()

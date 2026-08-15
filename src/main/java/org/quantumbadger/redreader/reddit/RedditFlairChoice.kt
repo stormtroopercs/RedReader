@@ -72,7 +72,7 @@ class RedditFlairChoice private constructor(
 
                 val choice: Optional<RedditFlairChoice?> = fromJson(`object`)
 
-                if (choice.isEmpty()) {
+                if (choice.isEmpty) {
                     return Optional.Companion.empty<MutableList<RedditFlairChoice?>?>()
                 }
 

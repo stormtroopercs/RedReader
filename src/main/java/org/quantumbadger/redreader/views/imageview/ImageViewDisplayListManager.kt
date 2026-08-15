@@ -388,7 +388,7 @@ class ImageViewDisplayListManager(
                         mCurrentTouchState = TouchState.ONE_FINGER_DRAG
                     }
                 }
-                if (mBoundsHelper!!.isMinScale()) {
+                if (mBoundsHelper!!.isMinScale) {
                     mListener.onHorizontalSwipe(mDragFinger!!.mTotalPosDifference.x)
                 } else {
                     mCoordinateHelper.translateScreen(
@@ -398,7 +398,7 @@ class ImageViewDisplayListManager(
                 }
             }
 
-            TouchState.ONE_FINGER_DRAG -> if (mBoundsHelper!!.isMinScale()) {
+            TouchState.ONE_FINGER_DRAG -> if (mBoundsHelper!!.isMinScale) {
                 mListener.onHorizontalSwipe(mDragFinger!!.mTotalPosDifference.x)
             } else {
                 mCoordinateHelper.translateScreen(
@@ -472,7 +472,7 @@ class ImageViewDisplayListManager(
             TouchState.ONE_FINGER_DRAG -> {
                 mListener.onHorizontalSwipeEnd()
 
-                if (mSpareFingers.isEmpty()) {
+                if (mSpareFingers.isEmpty) {
                     mCurrentTouchState = null
                     mDragFinger = null
                 } else {
@@ -480,14 +480,14 @@ class ImageViewDisplayListManager(
                 }
             }
 
-            TouchState.DOUBLE_TAP_ONE_FINGER_DRAG -> if (mSpareFingers.isEmpty()) {
+            TouchState.DOUBLE_TAP_ONE_FINGER_DRAG -> if (mSpareFingers.isEmpty) {
                 mCurrentTouchState = null
                 mDragFinger = null
             } else {
                 mDragFinger = mSpareFingers.pop()
             }
 
-            TouchState.TWO_FINGER_PINCH -> if (mSpareFingers.isEmpty()) {
+            TouchState.TWO_FINGER_PINCH -> if (mSpareFingers.isEmpty) {
                 mCurrentTouchState = TouchState.ONE_FINGER_DRAG
                 mDragFinger =                     if (mPinchFinger1 === finger) mPinchFinger2 else mPinchFinger1
                 mPinchFinger1 = null

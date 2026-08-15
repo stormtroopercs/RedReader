@@ -21,24 +21,16 @@ import kotlin.math.min
 
 object MarkdownTokenizer {
     // TODO support double graves
-    @JvmField
     const val TOKEN_UNDERSCORE: Int = -1
     const val TOKEN_UNDERSCORE_DOUBLE: Int = -2
-    @JvmField
     const val TOKEN_ASTERISK: Int = -3
-    @JvmField
     const val TOKEN_ASTERISK_DOUBLE: Int = -4
     const val TOKEN_TILDE_DOUBLE: Int = -5
-    @JvmField
     const val TOKEN_CARET: Int = -6
     const val TOKEN_GRAVE: Int = -7
-    @JvmField
     const val TOKEN_BRACKET_SQUARE_OPEN: Int = -8
-    @JvmField
     const val TOKEN_BRACKET_SQUARE_CLOSE: Int = -9
-    @JvmField
     const val TOKEN_PAREN_OPEN: Int = -10
-    @JvmField
     const val TOKEN_PAREN_CLOSE: Int = -11
     const val TOKEN_UNICODE_OPEN: Int = -12
     const val TOKEN_UNICODE_CLOSE: Int = -13
@@ -825,7 +817,7 @@ object MarkdownTokenizer {
                     output.data[output.pos++] = '\\'.code
                 }
 
-                '\t', '\r', '\f', '\n' -> output.data[output.pos++] = ' '.code
+                '\t', '\r', '\u000C', '\n' -> output.data[output.pos++] = ' '.code
                 else -> output.data[output.pos++] = c
             }
             i++

@@ -46,7 +46,7 @@ class CacheContentProvider : ContentProvider() {
 
         val cacheId: Optional<Long?> = getCacheIdFromFilename(filename)
 
-        if (!cacheId.isPresent()) {
+        if (!cacheId.isPresent) {
             return Optional.Companion.empty<ReadableCacheFile?>()
         }
 
@@ -61,7 +61,7 @@ class CacheContentProvider : ContentProvider() {
     private fun getFile(uri: Uri): Optional<File?> {
         val readableCacheFile = getReadableCacheFile(uri)
 
-        if (!readableCacheFile.isPresent()) {
+        if (!readableCacheFile.isPresent) {
             return Optional.Companion.empty<File?>()
         }
 
@@ -106,7 +106,7 @@ class CacheContentProvider : ContentProvider() {
     ): Cursor? {
         val readableCacheFile = getReadableCacheFile(uri)
 
-        if (!readableCacheFile.isPresent()) {
+        if (!readableCacheFile.isPresent) {
             Log.e(TAG, "Couldn't get readable cache file: " + uri)
             return MatrixCursor(COLUMNS, 0)
         }
@@ -120,7 +120,7 @@ class CacheContentProvider : ContentProvider() {
 
         val mimetype = readableCacheFile.get().lookupMimetype()
 
-        if (!mimetype.isPresent()) {
+        if (!mimetype.isPresent) {
             Log.e(TAG, "Couldn't get mimetype: " + uri)
             return MatrixCursor(COLUMNS, 0)
         }
@@ -155,7 +155,7 @@ class CacheContentProvider : ContentProvider() {
     override fun getType(uri: Uri): String? {
         val readableCacheFile = getReadableCacheFile(uri)
 
-        if (!readableCacheFile.isPresent()) {
+        if (!readableCacheFile.isPresent) {
             Log.e(TAG, "Couldn't get readable cache file: " + uri)
             return null
         }
@@ -218,7 +218,7 @@ class CacheContentProvider : ContentProvider() {
 
             val prefixRemoved = StringUtils.removePrefix(filenameSplitDot[0]!!, "redreader_dl_")
 
-            if (!prefixRemoved.isPresent()) {
+            if (!prefixRemoved.isPresent) {
                 Log.e(TAG, "Expecting redreader_dl_ prefix in filename: " + filename)
                 return Optional.Companion.empty<Long?>()
             }

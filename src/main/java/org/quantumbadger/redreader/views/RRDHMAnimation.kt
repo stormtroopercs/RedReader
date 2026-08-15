@@ -36,7 +36,7 @@ abstract class RRDHMAnimation(params: LiveDHM.Params) : RRAnimation() {
         while (mDHM.getCurrentStep() < desiredStepNumber) {
             mDHM.calculateStep()
 
-            if (mDHM.isEndThresholdReached()) {
+            if (mDHM.isEndThresholdReached) {
                 onEndPosition(mDHM.getParams().endPosition)
                 return false
             }

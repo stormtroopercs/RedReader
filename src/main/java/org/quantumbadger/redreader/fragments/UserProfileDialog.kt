@@ -150,7 +150,7 @@ object UserProfileDialog {
 							chipSuspended.visibility = View.GONE
 						}
 
-						if (accountManager.getDefaultAccount().isAnonymous()) {
+						if (accountManager.getDefaultAccount().isAnonymous) {
 							chipBlock.visibility = View.GONE
 							chipUnblock.visibility = View.GONE
 							chipBlocked.visibility = View.GONE

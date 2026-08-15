@@ -160,7 +160,7 @@ object DialogUtils {
         })
     }
 
-    interface OnSearchListener {
+    fun interface OnSearchListener {
         fun onSearch(query: String?)
     }
 }

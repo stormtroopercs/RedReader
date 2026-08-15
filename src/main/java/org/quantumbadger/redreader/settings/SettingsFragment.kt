@@ -40,18 +40,14 @@ import org.quantumbadger.redreader.common.General
 import org.quantumbadger.redreader.common.LinkHandler
 import org.quantumbadger.redreader.common.time.TimeDuration
 import java.io.File
-import java.lang.Boolean
 import java.util.EnumMap
 import java.util.Locale
 import java.util.Objects
 import kotlin.Any
 import kotlin.CharSequence
 import kotlin.Exception
-import kotlin.Int
 import kotlin.IntArray
-import kotlin.Long
 import kotlin.RuntimeException
-import kotlin.String
 import kotlin.arrayOf
 import kotlin.arrayOfNulls
 import kotlin.collections.ArrayList
@@ -113,12 +109,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val resource: Int
 
         try {
-            resource = xml::class.java.getDeclaredField("prefs_" + panel).getInt(null)
+            resource = R.xml::class.java.getDeclaredField("prefs_" + panel).getInt(null)
 
             if ("root" == panel) {
                 mTitle = R.string.options_settings
             } else {
-                mTitle = string::class.java.getDeclaredField("prefs_category_" + panel)
+                mTitle = R.string::class.java.getDeclaredField("prefs_category_" + panel)
                     .getInt(null)
             }
         } catch (e: Exception) {
@@ -210,8 +206,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         )
 
         for (pref in listPrefsToUpdate) {
-            val listPreference: ListPreference?
-            ListPreference > findPreference<Preference?>(getString(pref))
+            val listPreference: ListPreference? = findPreference(getString(pref))
 
             if (listPreference == null) {
                 continue
@@ -233,8 +228,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         for (pref in editTextPrefsToUpdate) {
-            val editTextPreference: EditTextPreference?
-            EditTextPreference > findPreference<Preference?>(getString(pref))
+            val editTextPreference: EditTextPreference? = findPreference(getString(pref))
 
             if (editTextPreference == null) {
                 continue
@@ -253,8 +247,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         run {
-            val notifPref: CheckBoxPreference?
-            CheckBoxPreference > findPreference<Preference?>(getString(R.string.pref_behaviour_notifications_key))
+            val notifPref: CheckBoxPreference? = findPreference(getString(R.string.pref_behaviour_notifications_key))
             if (notifPref != null) {
                 notifPref.setOnPreferenceChangeListener(Preference.OnPreferenceChangeListener { preference: Preference?, newValue: Any? ->
                     val activity: Activity?=getActivity()
@@ -275,22 +268,14 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
 
-        val testNotificationPref: Preference?
-        Preference > findPreference<Preference?>(getString(R.string.pref_developer_test_notification_key))
-        val versionPref: Preference?
-        Preference > findPreference<Preference?>(getString(R.string.pref_about_version_key))
-        val changelogPref: Preference?
-        Preference > findPreference<Preference?>(getString(R.string.pref_about_changelog_key))
-        val torPref: Preference?
-        Preference > findPreference<Preference?>(getString(R.string.pref_network_tor_key))
-        val licensePref: Preference?
-        Preference > findPreference<Preference?>(getString(R.string.pref_about_license_key))
-        val githubPref: Preference?
-        Preference > findPreference<Preference?>(getString(R.string.pref_about_github_key))
-        val backupPreferencesPref: Preference?
-        Preference > findPreference<Preference?>(getString(R.string.pref_item_backup_preferences_key))
-        val restorePreferencesPref: Preference?
-        Preference > findPreference<Preference?>(getString(R.string.pref_item_restore_preferences_key))
+        val testNotificationPref: Preference? = findPreference(getString(R.string.pref_developer_test_notification_key))
+        val versionPref: Preference? = findPreference(getString(R.string.pref_about_version_key))
+        val changelogPref: Preference? = findPreference(getString(R.string.pref_about_changelog_key))
+        val torPref: Preference? = findPreference(getString(R.string.pref_network_tor_key))
+        val licensePref: Preference? = findPreference(getString(R.string.pref_about_license_key))
+        val githubPref: Preference? = findPreference(getString(R.string.pref_about_github_key))
+        val backupPreferencesPref: Preference? = findPreference(getString(R.string.pref_item_backup_preferences_key))
+        val restorePreferencesPref: Preference? = findPreference(getString(R.string.pref_item_restore_preferences_key))
 
         if (testNotificationPref != null) {
             testNotificationPref.setOnPreferenceClickListener(Preference.OnPreferenceClickListener { preference: Preference? ->
@@ -329,7 +314,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             githubPref.setOnPreferenceClickListener(Preference.OnPreferenceClickListener { preference: Preference? ->
                 val activity: BaseActivity?=getActivity() as BaseActivity?
                 if (activity == null) {
-                    return@setOnPreferenceClickListener true
+                    return@OnPreferenceClickListener true
                 }
 
                 LinkHandler.onLinkClicked(
@@ -346,8 +331,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 // Run this after the preference has actually changed
                 AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
                     TorCommon.updateTorStatus()
-                    if (TorCommon.isTorEnabled()
-                        != (Boolean.TRUE == newValue)
+                    if (TorCommon.isTorEnabled
+                        != (true == newValue)
                     ) {
                         throw RuntimeException(
                             "Tor not correctly enabled after preference change"
@@ -362,7 +347,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             backupPreferencesPref.setOnPreferenceClickListener(Preference.OnPreferenceClickListener { preference: Preference? ->
                 val activity: BaseActivity?=getActivity() as BaseActivity?
                 if (activity == null) {
-                    return@setOnPreferenceClickListener true
+                    return@OnPreferenceClickListener true
                 }
 
                 val utc: TimestampUTC = TimestampUTC.now()
@@ -379,7 +364,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         intent,
                         BaseActivity.ActivityResultCallback { resultCode: Int, data: Intent? ->
                             if (data == null || data.getData() == null) {
-                                return@startActivityForResultWithCallback
+                                return@ActivityResultCallback
                             }
                             val contentResolver: ContentResolver=activity.getContentResolver()
                             PrefsBackup.backup(
@@ -407,7 +392,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             restorePreferencesPref.setOnPreferenceClickListener(Preference.OnPreferenceClickListener { preference: Preference? ->
                 val activity = getActivity() as SettingsActivity?
                 if (activity == null) {
-                    return@setOnPreferenceClickListener true
+                    return@OnPreferenceClickListener true
                 }
 
                 val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
@@ -419,7 +404,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         intent,
                         BaseActivity.ActivityResultCallback { resultCode: Int, data: Intent? ->
                             if (data == null || data.getData() == null) {
-                                return@startActivityForResultWithCallback
+                                return@ActivityResultCallback
                             }
                             val contentResolver: ContentResolver=activity.getContentResolver()
                             PrefsBackup.restore(
@@ -443,8 +428,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             })
         }
 
-        val cacheLocationPref: Preference?
-        Preference > findPreference<Preference?>(getString(R.string.pref_cache_location_key))
+        val cacheLocationPref: Preference? = findPreference(getString(R.string.pref_cache_location_key))
         if (cacheLocationPref != null) {
             cacheLocationPref.setOnPreferenceClickListener(Preference.OnPreferenceClickListener { preference: Preference? ->
                 showChooseStorageLocationDialog()
@@ -456,14 +440,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
         //This disables the "Show NSFW thumbnails" setting when Show thumbnails is set to Never
         //Based off https://stackoverflow.com/a/4137963
         run {
-            val thumbnailPref: ListPreference?
-            ListPreference > findPreference<Preference?>(
+            val thumbnailPref: ListPreference? = findPreference(
                 getString(R.string.pref_appearance_thumbnails_show_list_key)
             )
-            val thumbnailNsfwPref: Preference
-            Preference > findPreference<Preference?>(getString(R.string.pref_appearance_thumbnails_nsfw_show_key))
-            val thumbnailSpoilerPref: Preference
-            Preference > findPreference<Preference?>(getString(R.string.pref_appearance_thumbnails_spoiler_show_key))
+            val thumbnailNsfwPref: Preference = findPreference(getString(R.string.pref_appearance_thumbnails_nsfw_show_key))
+            val thumbnailSpoilerPref: Preference = findPreference(getString(R.string.pref_appearance_thumbnails_spoiler_show_key))
             if (thumbnailPref != null) {
                 thumbnailPref.setOnPreferenceChangeListener(Preference.OnPreferenceChangeListener { preference: Preference?, newValue: Any? ->
                     val index = thumbnailPref.findIndexOfValue(newValue as String?)
@@ -476,14 +457,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         run {
-            val inlineImagesPref: ListPreference?
-            ListPreference > findPreference<Preference?>(
+            val inlineImagesPref: ListPreference? = findPreference(
                 getString(R.string.pref_images_inline_image_previews_key)
             )
-            val inlineImagesNsfwPref: Preference
-            Preference > findPreference<Preference?>(getString(R.string.pref_images_inline_image_previews_nsfw_key))
-            val inlineImagesSpoilerPref: Preference
-            Preference > findPreference<Preference?>(getString(R.string.pref_images_inline_image_previews_spoiler_key))
+            val inlineImagesNsfwPref: Preference = findPreference(getString(R.string.pref_images_inline_image_previews_nsfw_key))
+            val inlineImagesSpoilerPref: Preference = findPreference(getString(R.string.pref_images_inline_image_previews_spoiler_key))
             if (inlineImagesPref != null) {
                 inlineImagesPref.setOnPreferenceChangeListener(Preference.OnPreferenceChangeListener { preference: Preference?, newValue: Any? ->
                     val index = inlineImagesPref.findIndexOfValue(newValue as String?)
@@ -496,12 +474,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         run {
-            val sharingDomainPref: ListPreference?
-            ListPreference > findPreference<Preference?>(
+            val sharingDomainPref: ListPreference? = findPreference(
                 getString(R.string.pref_behaviour_sharing_domain_key)
             )
-            val shareAsPermalinkPref: Preference
-            Preference > findPreference<Preference?>(
+            val shareAsPermalinkPref: Preference = findPreference(
                 getString(R.string.pref_behaviour_share_permalink_key)
             )
             if (sharingDomainPref != null) {
@@ -515,22 +491,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
 
         run {
-            val hideOnScrollPref: CheckBoxPreference?
-            CheckBoxPreference > findPreference<Preference?>(
+            val hideOnScrollPref: CheckBoxPreference? = findPreference(
                 getString(
                     R.string.pref_appearance_hide_toolbar_on_scroll_key
                 )
             )
 
-            val toolbarAtBottomPref: Preference?
-            Preference > findPreference<Preference?>(
+            val toolbarAtBottomPref: Preference? = findPreference(
                 getString(
                     R.string.pref_appearance_bottom_toolbar_key
                 )
             )
 
-            val twoPanePref: Preference?
-            Preference > findPreference<Preference?>(
+            val twoPanePref: Preference? = findPreference(
                 getString(
                     R.string.pref_appearance_twopane_key
                 )
@@ -569,20 +542,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
                         // Post this after the preference has been updated
                         AndroidCommon.UI_THREAD_HANDLER.post(update)
                         if (existingListener != null) {
-                            return@setOnPreferenceChangeListener existingListener.onPreferenceChange(
+                            return@OnPreferenceChangeListener existingListener.onPreferenceChange(
                                 preference!!,
                                 newValue
                             )
                         } else {
-                            return@setOnPreferenceChangeListener true
+                            return@OnPreferenceChangeListener true
                         }
                     })
                 }
             }
         }
 
-        val cacheClearPref: Preference?
-        Preference > findPreference<Preference?>(getString(R.string.pref_cache_clear_key))
+        val cacheClearPref: Preference? = findPreference(getString(R.string.pref_cache_clear_key))
 
         if (cacheClearPref != null) {
             cacheClearPref.setOnPreferenceClickListener(Preference.OnPreferenceClickListener { preference: Preference? ->
@@ -691,7 +663,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun updateStorageLocationText(path: String?) {
-        Preference > findPreference<Preference?>(getString(R.string.pref_cache_location_key)).setSummary(
+        findPreference(getString(R.string.pref_cache_location_key)).setSummary(
             path
         )
     }

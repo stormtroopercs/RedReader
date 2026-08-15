@@ -42,7 +42,6 @@ import org.quantumbadger.redreader.common.time.TimestampUTC
 import org.quantumbadger.redreader.reddit.api.RedditAPICommentAction
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 import org.quantumbadger.redreader.reddit.things.RedditThingWithIdAndType
-import java.lang.Boolean
 import java.util.Observable
 import java.util.Observer
 import kotlin.Any
@@ -74,10 +73,10 @@ class RedditRenderableComment
 
         var score = rawComment.ups - rawComment.downs
 
-        if (Boolean.TRUE == rawComment.likes) {
+        if (true == rawComment.likes) {
             score--
         }
-        if (Boolean.FALSE == rawComment.likes) {
+        if (false == rawComment.likes) {
             score++
         }
 
@@ -332,7 +331,7 @@ class RedditRenderableComment
 
         val accessibilityConciseMode = PrefsUtility.pref_accessibility_concise_mode()
 
-        if (indentLevel.isPresent()
+        if (indentLevel.isPresent
             && PrefsUtility.pref_accessibility_say_comment_indent_level()
         ) {
             val accessibilityLvl = indentLevel.get() + 1

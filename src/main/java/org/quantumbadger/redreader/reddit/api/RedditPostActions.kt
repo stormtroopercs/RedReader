@@ -172,7 +172,7 @@ object RedditPostActions {
 						)
 					}
 
-					PostFlingAction.MARK_READ -> if (post.isRead()) {
+					PostFlingAction.MARK_READ -> if (post.isRead) {
 						ActionDescriptionPair(
 							Action.MARK_UNREAD,
 							R.string.action_mark_unread

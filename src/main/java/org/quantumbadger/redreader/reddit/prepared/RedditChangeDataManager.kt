@@ -43,7 +43,7 @@ import java.util.TreeMap
 import org.quantumbadger.redreader.common.General
 
 class RedditChangeDataManager {
-    interface Listener {
+    fun interface Listener {
         fun onRedditDataChange(thingIdAndType: RedditIdAndType?)
     }
 

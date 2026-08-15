@@ -98,12 +98,12 @@ class ListItemView(context: Context) : FrameLayout(context) {
             mMainLink.setOnLongClickListener(null)
         }
 
-        if (secondaryIcon.isPresent()) {
+        if (secondaryIcon.isPresent) {
             mSecondaryIcon.setImageDrawable(secondaryIcon.get())
             mSecondaryIcon.setContentDescription(secondaryContentDesc.orElseNull())
         }
 
-        if (secondaryAction.isPresent()) {
+        if (secondaryAction.isPresent) {
             mSecondaryLink.setVisibility(VISIBLE)
             mSecondaryIcon.setOnClickListener(secondaryAction.get())
         } else {

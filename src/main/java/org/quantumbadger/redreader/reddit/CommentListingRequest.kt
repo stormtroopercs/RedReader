@@ -190,7 +190,7 @@ class CommentListingRequest(
         val changeDataManager: RedditChangeDataManager = RedditChangeDataManager.Companion.getInstance(mUser)
 
         for (item in items) {
-            if (item.isComment()) {
+            if (item.isComment) {
                 changeDataManager.update(
                     timestamp,
                     item.asComment().getParsedComment().getRawComment()

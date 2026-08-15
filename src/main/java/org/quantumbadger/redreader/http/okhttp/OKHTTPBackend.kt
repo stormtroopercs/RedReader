@@ -93,7 +93,7 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 			builder.cookieJar(cookieJar)
 		}
 
-		if (TorCommon.isTorEnabled()) {
+		if (TorCommon.isTorEnabled) {
 			val tor = Proxy(
 				Proxy.Type.HTTP,
 				InetSocketAddress("127.0.0.1", 8118)

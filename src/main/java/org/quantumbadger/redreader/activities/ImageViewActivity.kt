@@ -455,7 +455,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
             Log.i(TAG, "Image stream ready")
             if (mimetype == null) {
                 revertToWeb()
-                return@startNewThread
+                return@Runnable
             }
 
             val isOctetStream = Mime.isOctetStream(mimetype)
@@ -471,7 +471,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
             if (!isImage && !isVideo && !isGif) {
                 Log.e(TAG, "Cannot play mimetype: " + mimetype)
                 revertToWeb()
-                return@startNewThread
+                return@Runnable
             }
 
             if (mImageInfo != null && ((mImageInfo!!.title != null && !mImageInfo!!.title!!.isEmpty())
@@ -507,13 +507,13 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
                     Log.e(TAG, "Got exception while fully buffering", e)
                     quickToast(this, string.imageview_download_failed)
                     revertToWeb()
-                    return@startNewThread
+                    return@Runnable
                 }
             }
             if (isVideo) {
                 AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
                     if (mIsDestroyed) {
-                        return@post
+                        return@Runnable
                     }
                     val videoViewMode = PrefsUtility.pref_behaviour_videoview_mode()
                     if (videoViewMode == VideoViewMode.INTERNAL_BROWSER) {
@@ -532,10 +532,10 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
 
                 if (gifViewMode == GifViewMode.INTERNAL_BROWSER) {
                     revertToWeb()
-                    return@startNewThread
+                    return@Runnable
                 } else if (gifViewMode == GifViewMode.EXTERNAL_BROWSER) {
                     openInExternalBrowser()
-                    return@startNewThread
+                    return@Runnable
                 }
 
                 if (gifViewMode == GifViewMode.INTERNAL_MOVIE) {
@@ -680,7 +680,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
             mVideoPlayerWrapper!!.handleTap()
 
             if (mFloatingToolbar != null) {
-                if (mVideoPlayerWrapper!!.isControlViewVisible() == View.VISIBLE) {
+                if (mVideoPlayerWrapper!!.isControlViewVisible == View.VISIBLE) {
                     mFloatingToolbar!!.setVisibility(View.GONE)
                 } else {
                     mFloatingToolbar!!.setVisibility(View.VISIBLE)
@@ -1112,7 +1112,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
                         if (muteByDefault) string.video_unmute else string.video_mute,
                         View.OnClickListener { view: View? ->
                             val button = muteButton.get()
-                            if (mVideoPlayerWrapper!!.isMuted()) {
+                            if (mVideoPlayerWrapper!!.isMuted) {
                                 mVideoPlayerWrapper!!.setMuted(false)
                                 button.setImageResource(iconUnmuted)
                                 button.setContentDescription(
@@ -1154,15 +1154,15 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
                     } catch (e: OutOfMemoryError) {
                         quickToast(this, string.imageview_oom)
                         revertToWeb()
-                        return@readRemainingAsBytes
+                        return@ByteArrayCallback
                     } catch (e: Throwable) {
                         quickToast(this, string.imageview_invalid_gif)
                         revertToWeb()
-                        return@readRemainingAsBytes
+                        return@ByteArrayCallback
                     }
                     AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
                         if (mIsDestroyed) {
-                            return@post
+                            return@Runnable
                         }
                         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -1201,7 +1201,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
                 override fun onGifLoaded() {
                     AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
                         if (mIsDestroyed) {
-                            return@post
+                            return@Runnable
                         }
                         imageView = ImageView(this@ImageViewActivity)
                         imageView!!.setScaleType(ImageView.ScaleType.FIT_CENTER)
@@ -1262,7 +1262,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
 
         AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
             if (mIsDestroyed) {
-                return@post
+                return@Runnable
             }
             mImageViewDisplayerManager = ImageViewDisplayListManager(imageTileSource, this)
             surfaceView = RRGLSurfaceView(this, mImageViewDisplayerManager)

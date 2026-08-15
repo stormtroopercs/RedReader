@@ -60,7 +60,7 @@ abstract class JsonValue {
     fun getObjectAtPath(vararg keys: Any?): Optional<JsonObject?> {
         val result = getAtPath(*keys)
 
-        if (result.isEmpty()) {
+        if (result.isEmpty) {
             return Optional.empty<JsonObject?>()
         }
 
@@ -70,7 +70,7 @@ abstract class JsonValue {
     fun getArrayAtPath(vararg keys: Any?): Optional<JsonArray?> {
         val result = getAtPath(*keys)
 
-        if (result.isEmpty()) {
+        if (result.isEmpty) {
             return Optional.empty<JsonArray?>()
         }
 
@@ -80,7 +80,7 @@ abstract class JsonValue {
     fun getStringAtPath(vararg keys: Any?): Optional<String?> {
         val result = getAtPath(*keys)
 
-        if (result.isEmpty()) {
+        if (result.isEmpty) {
             return Optional.empty<String?>()
         }
 

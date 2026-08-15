@@ -65,7 +65,6 @@ import org.quantumbadger.redreader.reddit.things.RedditSubreddit
 import org.quantumbadger.redreader.reddit.things.RedditThing
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 import java.io.IOException
-import java.lang.Boolean
 import java.util.LinkedList
 import java.util.Objects
 import java.util.UUID
@@ -117,7 +116,7 @@ object RedditAPI {
                         fromCache: Boolean
                     ) {
                         if (result.asObject() != null
-                            && Objects.requireNonNull<JsonObject?>(result.asObject()).isEmpty()
+                            && Objects.requireNonNull<JsonObject?>(result.asObject()).isEmpty
                         ) {
                             responseHandler.onSuccess(mutableListOf<RedditFlairChoice?>())
                             return
@@ -132,7 +131,7 @@ object RedditAPI {
 
                         val array = result.getArrayAtPath("choices")
 
-                        if (array.isEmpty()) {
+                        if (array.isEmpty) {
                             val failureType = findFailureType(result)
 
                             responseHandler.onFailure(
@@ -156,7 +155,7 @@ object RedditAPI {
 
                         val choices: Optional<MutableList<RedditFlairChoice?>?> = RedditFlairChoice.Companion.fromJsonList(array.get())
 
-                        if (choices.isEmpty()) {
+                        if (choices.isEmpty) {
                             responseHandler.onFailure(
                                 getGeneralErrorForFailure(
                                     context,
@@ -792,7 +791,7 @@ object RedditAPI {
                 protected override fun onSuccess(value: SubredditListResponse) {
                     results.addAll(value.subreddits)
 
-                    if (value.after.isEmpty()) {
+                    if (value.after.isEmpty) {
                         handler.onSuccess(results)
                     } else {
                         subscribedSubredditsInternal(
@@ -846,7 +845,7 @@ object RedditAPI {
 
                             val after = result.getStringAtPath("data", "after")
 
-                            if (subreddits.isEmpty()) {
+                            if (subreddits.isEmpty) {
                                 throw IOException("Subreddit data not found")
                             }
 
@@ -898,7 +897,7 @@ object RedditAPI {
         if (response.asObject() != null) {
             for (v in response.asObject()!!) {
                 if ("success" == v.key
-                    && Boolean.FALSE == v.value.asBoolean()
+                    && false == v.value.asBoolean()
                 ) {
                     unknownError = true
                 }
@@ -914,7 +913,7 @@ object RedditAPI {
 
             val errors = response.getArrayAtPath("json", "errors")
 
-            if (errors.isPresent() && errors.get().size() > 0) {
+            if (errors.isPresent && errors.get().size() > 0) {
                 unknownError = true
             }
         } else if (response.asArray() != null) {
@@ -1113,7 +1112,7 @@ object RedditAPI {
             try {
                 val errorsJson = result.getArrayAtPath("json", "errors")
 
-                if (errorsJson.isPresent()) {
+                if (errorsJson.isPresent) {
                     val errors = ArrayList<String?>()
 
                     for (errorValue in errorsJson.get()) {

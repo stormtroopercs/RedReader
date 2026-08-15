@@ -60,7 +60,6 @@ import org.quantumbadger.redreader.jsonwrap.JsonValue
 import org.quantumbadger.redreader.views.LoadingSpinnerView
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.lang.Boolean
 import java.util.UUID
 import kotlin.ByteArray
 import kotlin.Exception
@@ -120,10 +119,10 @@ class ImgurUploadActivity : ViewsBaseActivity() {
                 intent,
                 BaseActivity.ActivityResultCallback { resultCode: Int, data: Intent? ->
                     if (data == null || data.getData() == null) {
-                        return@startActivityForResultWithCallback
+                        return@ActivityResultCallback
                     }
                     if (resultCode != RESULT_OK) {
-                        return@startActivityForResultWithCallback
+                        return@ActivityResultCallback
                     }
                     onImageSelected(data.getData()!!)
                 })
@@ -313,7 +312,7 @@ class ImgurUploadActivity : ViewsBaseActivity() {
 
                             val success = root.getBoolean("success")
 
-                            if (Boolean.TRUE != success) {
+                            if (true != success) {
                                 onFailure(
                                     getGeneralErrorForFailure(
                                         this@ImgurUploadActivity,

@@ -468,7 +468,7 @@ class CacheManager @Inject constructor(
                 this.id
             )
 
-            if (result.isPresent()) {
+            if (result.isPresent) {
                 return Optional.of<String?>(result.get().mimetype)
             } else {
                 return Optional.empty<String?>()

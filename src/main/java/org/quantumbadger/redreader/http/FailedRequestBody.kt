@@ -52,10 +52,10 @@ class FailedRequestBody {
 
     @Synchronized
     override fun toString(): String {
-        if (!mString.isPresent()) {
-            if (mBytes.isPresent()) {
+        if (!mString.isPresent) {
+            if (mBytes.isPresent) {
                 mString = Optional.Companion.of<String?>(String(mBytes.get(), General.CHARSET_UTF8))
-            } else if (mJson.isPresent()) {
+            } else if (mJson.isPresent) {
                 mString = Optional.Companion.of<String?>(mJson.toString())
             } else {
                 throw RuntimeException("No data present")
@@ -67,7 +67,7 @@ class FailedRequestBody {
 
     @Synchronized
     fun toBytes(): ByteArray {
-        if (!mBytes.isPresent()) {
+        if (!mBytes.isPresent) {
             mBytes = Optional.Companion.of<ByteArray>(toString().toByteArray(General.CHARSET_UTF8))
         }
 
@@ -76,7 +76,7 @@ class FailedRequestBody {
 
     @Synchronized
     fun toJson(): Optional<JsonValue?> {
-        if (!mJson.isPresent() && !mAttemptedParse) {
+        if (!mJson.isPresent && !mAttemptedParse) {
             mAttemptedParse = true
 
             try {

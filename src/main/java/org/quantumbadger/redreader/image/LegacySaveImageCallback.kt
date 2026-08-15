@@ -83,7 +83,7 @@ class LegacySaveImageCallback(private val activity: BaseActivity, private val ur
                         )
                     )
 
-                    return@downloadImageToSave
+                    return@DownloadImageToSaveSuccessCallback
                 }
 
                 activity.sendBroadcast(

@@ -174,7 +174,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
 
         val subredditSubscriptionManager: RedditSubredditSubscriptionManager=            RedditSubredditSubscriptionManager.Companion.getSingleton(this, user)
 
-        if (!user.isAnonymous && controller!!.isSubreddit()
+        if (!user.isAnonymous && controller!!.isSubreddit
             && subredditSubscriptionManager.areSubscriptionsReady()
             && fragment != null && fragment!!.getSubreddit() != null
         ) {
@@ -195,7 +195,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         var subredditPinState: Boolean?=null
         var subredditBlockedState: Boolean?=null
 
-        if (controller!!.isSubreddit()
+        if (controller!!.isSubreddit
             && fragment != null && fragment!!.getSubreddit() != null
         ) {
             try {
@@ -218,12 +218,12 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
             false,
             true,
             false,
-            controller!!.isSearchResults(),
-            controller!!.isUserPostListing(),
+            controller!!.isSearchResults,
+            controller!!.isUserPostListing,
             false,
-            controller!!.isSortable(),
+            controller!!.isSortable,
             true,
-            controller!!.isFrontPage(),
+            controller!!.isFrontPage,
             subredditSubscriptionState,
             subredditDescription != null && !subredditDescription.isEmpty(),
             false,
@@ -297,7 +297,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
     override fun onSubmitPost() {
         val intent = Intent(this, PostSubmitActivity::class.java)
 
-        if (controller!!.isSubreddit()) {
+        if (controller!!.isSubreddit) {
             intent.putExtra("subreddit", controller!!.subredditCanonicalName().toString())
         }
 
@@ -328,7 +328,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
             intent.putExtra(
                 "html",
                 fragment!!.getSubreddit()!!
-                    .getSidebarHtml(PrefsUtility.isNightMode())
+                    .getSidebarHtml(PrefsUtility.isNightMode)
             )
             intent.putExtra(
                 "title", String.format(
@@ -527,13 +527,13 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         ) {
             DialogUtils.showSearchDialog(activity, OnSearchListener { query: String? ->
                 if (query == null) {
-                    return@showSearchDialog
+                    return@OnSearchListener
                 }
                 val url: SearchPostListURL
 
-                if (controller != null && (controller.isSubreddit()
-                            || controller.isSubredditCombination()
-                            || controller.isSubredditSearchResults())
+                if (controller != null && (controller.isSubreddit
+                            || controller.isSubredditCombination
+                            || controller.isSubredditSearchResults)
                 ) {
                     val subredditCanonicalId = controller.subredditCanonicalName()
 
@@ -545,14 +545,14 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
                                         + controller.getUri()
                             )
                         )
-                        return@showSearchDialog
+                        return@OnSearchListener
                     }
 
                     url = SearchPostListURL.Companion.build(
                         subredditCanonicalId.toString(),
                         query
                     )
-                } else if (controller != null && controller.isMultireddit()) {
+                } else if (controller != null && controller.isMultireddit) {
                     val multiName = controller.multiredditName()
                     val multiUsername = controller.multiredditUsername()
 

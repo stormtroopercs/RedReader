@@ -109,7 +109,7 @@ class VideoGestureHandler
                         mCurrentTouchState = TouchState.ONE_FINGER_DRAG
                     }
                 }
-                if (mPlayerView.isZoomedIn()) {
+                if (mPlayerView.isZoomedIn) {
                     mPlayerView.panBy(
                         mDragFinger!!.mPosDifference.x,
                         mDragFinger!!.mPosDifference.y
@@ -119,7 +119,7 @@ class VideoGestureHandler
                 }
             }
 
-            TouchState.ONE_FINGER_DRAG -> if (mPlayerView.isZoomedIn()) {
+            TouchState.ONE_FINGER_DRAG -> if (mPlayerView.isZoomedIn) {
                 mPlayerView.panBy(
                     mDragFinger!!.mPosDifference.x,
                     mDragFinger!!.mPosDifference.y
@@ -182,7 +182,7 @@ class VideoGestureHandler
             TouchState.ONE_FINGER_DRAG -> {
                 mListener.onHorizontalSwipeEnd()
 
-                if (mSpareFingers.isEmpty()) {
+                if (mSpareFingers.isEmpty) {
                     mCurrentTouchState = null
                     mDragFinger = null
                 } else {
@@ -190,7 +190,7 @@ class VideoGestureHandler
                 }
             }
 
-            TouchState.TWO_FINGER_PINCH -> if (mSpareFingers.isEmpty()) {
+            TouchState.TWO_FINGER_PINCH -> if (mSpareFingers.isEmpty) {
                 mCurrentTouchState = TouchState.ONE_FINGER_DRAG
                 mDragFinger =                     if (mPinchFinger1 === finger) mPinchFinger2 else mPinchFinger1
                 mPinchFinger1 = null

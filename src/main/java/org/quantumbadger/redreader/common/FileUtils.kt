@@ -331,7 +331,7 @@ object FileUtils {
                 intent,
                 BaseActivity.ActivityResultCallback { resultCode: Int, data: Intent? ->
                     if (data == null || data.getData() == null) {
-                        return@startActivityForResultWithCallback
+                        return@ActivityResultCallback
                     }
                     Thread(Runnable {
                         try {
@@ -714,7 +714,7 @@ object FileUtils {
         }
     }
 
-    interface DownloadImageToSaveSuccessCallback {
+    fun interface DownloadImageToSaveSuccessCallback {
         fun onSuccess(
             info: ImageInfo,
             cacheFile: ReadableCacheFile?,

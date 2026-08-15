@@ -805,7 +805,7 @@ class PostListingFragment(
 
                                 // Skip adding this post (go to next iteration) if it
                                 // has been clicked on AND read posts should be hidden
-                                if (hideReadPosts && preparedPost.isRead()) {
+                                if (hideReadPosts && preparedPost.isRead) {
                                     mPostsNotShown = true
                                     continue
                                 }

@@ -103,7 +103,7 @@ object AnnouncementDownloader {
                 "selftext"
             )
 
-            if (selfText.isEmpty()) {
+            if (selfText.isEmpty) {
                 throw IOException("Couldn't find self text in response")
             }
 
@@ -136,7 +136,7 @@ object AnnouncementDownloader {
 
             val announcement: Announcement=                Announcement.Companion.fromPayload(Payload.Companion.fromBytes(HexUtils.fromHex(hex)))
 
-            if (announcement.isExpired()) {
+            if (announcement.isExpired) {
                 Log.i(TAG, "Announcement is expired: " + announcement.id)
                 return Optional.Companion.empty<Announcement?>()
             }

@@ -191,7 +191,7 @@ class RedditSubreddit : Parcelable, Comparable<RedditSubreddit?>,
     fun showSidebarActivity(context: AppCompatActivity) {
         val intent = Intent(context, HtmlViewActivity::class.java)
 
-        intent.putExtra("html", getSidebarHtml(PrefsUtility.isNightMode()))
+        intent.putExtra("html", getSidebarHtml(PrefsUtility.isNightMode))
 
         intent.putExtra(
             "title", String.format(

@@ -46,7 +46,7 @@ class FilteredCommentListingManager(
         } else {
             searchComments = ArrayList<RedditCommentListItem>()
             for (comment in comments) {
-                if (!comment.isComment()) {
+                if (!comment.isComment) {
                     continue
                 }
                 val body = comment.asComment()

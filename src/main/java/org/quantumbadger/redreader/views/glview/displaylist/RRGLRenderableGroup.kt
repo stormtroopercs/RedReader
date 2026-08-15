@@ -65,7 +65,7 @@ open class RRGLRenderableGroup : RRGLRenderable() {
     override fun isAnimating(): Boolean {
         for (i in mChildren.indices) {
             val entity = mChildren.get(i)
-            if (entity.isAnimating()) {
+            if (entity.isAnimating) {
                 return true
             }
         }

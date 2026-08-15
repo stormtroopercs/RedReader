@@ -105,7 +105,7 @@ private fun createOAuthWebView(
     cookieManager.setAcceptThirdPartyCookies(webView, true)
 
     // Tor proxy support
-    if (TorCommon.isTorEnabled()) {
+    if (TorCommon.isTorEnabled) {
         try {
             val result = WebkitProxy.setProxy(
                 RedReader::class.java.getCanonicalName(),
