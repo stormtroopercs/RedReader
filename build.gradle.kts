@@ -87,6 +87,7 @@ dependencies {
 	coreLibraryDesugaring(libs.jdk.desugar)
 
 	implementation(libs.kotlinx.serialization.json)
+	implementation(libs.kotlinx.datetime)
 	implementation(libs.kotlinx.serialization.json.okio)
 	implementation(libs.kotlin.reflect)
 
