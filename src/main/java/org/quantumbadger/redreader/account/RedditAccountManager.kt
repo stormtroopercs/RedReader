@@ -297,6 +297,23 @@ class RedditAccountManager @Inject constructor(
     }
 
     companion object {
+        @Volatile
+        private var instance: RedditAccountManager?=null
+
+        /**
+         * Legacy accessor for pre-Hilt call sites.
+         * Returns the Hilt-managed singleton (wired via setInstance in RedReader.onCreate).
+         */
+        fun getInstance(context: Context): RedditAccountManager {
+            return instance ?: synchronized(this) {
+                instance ?: throw IllegalStateException("RedditAccountManager not initialized by Hilt")
+            }
+        }
+
+        internal fun setInstance(i: RedditAccountManager?) {
+            instance = i
+        }
+
         val anon: RedditAccount = RedditAccount(
             "",
             null,

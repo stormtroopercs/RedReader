@@ -26,6 +26,7 @@ import dagger.hilt.EntryPoints
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.common.AndroidCommon
 import org.quantumbadger.redreader.common.Fonts
@@ -57,6 +58,9 @@ class RedReader : Application() {
     @Inject
     lateinit var cacheManager: CacheManager
 
+    @Inject
+    lateinit var redditAccountManager: RedditAccountManager
+
     override fun onCreate() {
         super.onCreate()
 
@@ -77,6 +81,7 @@ class RedReader : Application() {
 
         // Wire CacheManager static instance for legacy call sites
         CacheManager.setInstance(cacheManager)
+        RedditAccountManager.setInstance(redditAccountManager)
 
         object : Thread() {
             override fun run() {
