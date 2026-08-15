@@ -37,14 +37,14 @@ class BoundsHelper(
     }
 
     val isMinScale: Boolean
-        get() = mCoordinateHelper.getScale() - 0.000001f <= mMinScale
+        get() = mCoordinateHelper.scale - 0.000001f <= mMinScale
 
     fun applyBounds() {
-        if (mCoordinateHelper.getScale() < mMinScale) {
+        if (mCoordinateHelper.scale < mMinScale) {
             applyMinScale()
         }
 
-        val scale = mCoordinateHelper.getScale()
+        val scale = mCoordinateHelper.scale
         val posOffset = mCoordinateHelper.getPositionOffset()
 
         val scaledImageWidth = mImageResolutionX.toFloat() * scale

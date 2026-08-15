@@ -29,7 +29,7 @@ class ImageViewScaleAnimation(
     private val mScreenCoord = MutableFloatPoint2D()
 
     init {
-        mStepSize = (mTargetScale / mCoordinateHelper.getScale()).toDouble()
+        mStepSize = (mTargetScale / mCoordinateHelper.scale).toDouble()
             .pow((1.0 / stepCount.toDouble())).toFloat()
         mScreenCoord.set(screenCoord)
     }
@@ -38,12 +38,12 @@ class ImageViewScaleAnimation(
         mCoordinateHelper.scaleAboutScreenPoint(mScreenCoord, mStepSize)
 
         if (mStepSize > 1) {
-            if (mTargetScale <= mCoordinateHelper.getScale()) {
+            if (mTargetScale <= mCoordinateHelper.scale) {
                 mCoordinateHelper.setScaleAboutScreenPoint(mScreenCoord, mTargetScale)
                 return false
             }
         } else {
-            if (mTargetScale >= mCoordinateHelper.getScale()) {
+            if (mTargetScale >= mCoordinateHelper.scale) {
                 mCoordinateHelper.setScaleAboutScreenPoint(mScreenCoord, mTargetScale)
                 return false
             }

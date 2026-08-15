@@ -198,10 +198,10 @@ class InboxListingActivity : ViewsBaseActivity() {
         val recyclerViewManager = ScrollbarRecyclerViewManager(this, null, false)
 
         adapter = GroupedRecyclerViewAdapter(1)
-        recyclerViewManager.getRecyclerView().setAdapter(adapter)
+        recyclerViewManager.recyclerView.setAdapter(adapter)
 
         outer.addView(notifications)
-        outer.addView(recyclerViewManager.getOuterView())
+        outer.addView(recyclerViewManager.outerView)
 
         makeFirstRequest(this)
 

@@ -135,7 +135,7 @@ class RedditAPIIndividualSubredditDataRequester(
                     synchronized(result) {
                         if (stillOkay.get()) {
                             try {
-                                val canonicalId = innerResult.getCanonicalId()
+                                val canonicalId = innerResult.canonicalId
 
                                 result.put(canonicalId, innerResult)
 

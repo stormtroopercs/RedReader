@@ -113,7 +113,7 @@ class PMSendActivity : ViewsBaseActivity() {
         }
 
         val accounts: ArrayList<RedditAccount> = RedditAccountManager.Companion.getInstance(this)
-            .getAccounts()
+            .accounts
         val usernames = ArrayList<String?>()
 
         for (account in accounts) {
@@ -211,7 +211,7 @@ class PMSendActivity : ViewsBaseActivity() {
 
             val accounts: ArrayList<RedditAccount> = RedditAccountManager.Companion.getInstance(
                 this
-            ).getAccounts()
+            ).accounts
             var selectedAccount: RedditAccount?=null
 
             for (account in accounts) {

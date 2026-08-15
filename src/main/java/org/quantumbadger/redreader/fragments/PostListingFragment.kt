@@ -177,7 +177,7 @@ class PostListingFragment(
 
         mSession = session
 
-        val context = getContext()
+        val context = context
 
         // TODO output failed URL
         if (mPostListingURL == null) {
@@ -220,12 +220,12 @@ class PostListingFragment(
                 OnRefreshListener { (parent as OptionsMenuPostsListener).onRefreshPosts() })
         }
 
-        mRecyclerView = recyclerViewManager.getRecyclerView()
+        mRecyclerView = recyclerViewManager.recyclerView
         mPostListingManager.setLayoutManager(mRecyclerView.getLayoutManager() as LinearLayoutManager?)
 
-        mRecyclerView.setAdapter(mPostListingManager.getAdapter())
+        mRecyclerView.setAdapter(mPostListingManager.adapter)
 
-        mOuter = recyclerViewManager.getOuterView()
+        mOuter = recyclerViewManager.outerView
 
         mRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(
@@ -406,13 +406,13 @@ class PostListingFragment(
     private fun onSubredditReceived() {
         val subtitle: String
 
-        if (mPostListingURL!!.getOrder() == null
-            || mPostListingURL!!.getOrder() == PostSort.HOT
+        if (mPostListingURL!!.order == null
+            || mPostListingURL!!.order == PostSort.HOT
         ) {
             if (subreddit!!.subscribers == null) {
                 subtitle = getString(string.header_subscriber_count_unknown)
             } else {
-                subtitle = getContext().getString(
+                subtitle = context.getString(
                     string.header_subscriber_count,
                     NumberFormat.getNumberInstance(Locale.getDefault())
                         .format(subreddit!!.subscribers)
@@ -452,7 +452,7 @@ class PostListingFragment(
                 try {
                     MainMenuListingManager.Companion.showActionMenu(
                         getActivity(),
-                        subreddit.getCanonicalId()
+                        subreddit.canonicalId
                     )
                 } catch (e: InvalidSubredditNameException) {
                     throw RuntimeException(e)
@@ -525,7 +525,7 @@ class PostListingFragment(
                 CacheManager.Companion.getInstance(getActivity()).makeRequest(mRequest)
             } else if (mPostCountLimit > 0 && mPostRefreshCount.get() <= 0) {
                 if (mLoadMoreView == null) {
-                    mLoadMoreView = LayoutInflater.from(getContext())
+                    mLoadMoreView = LayoutInflater.from(context)
                         .inflate(R.layout.load_more_posts, null) as TextView?
                     mLoadMoreView!!.setOnClickListener(View.OnClickListener { view: View? ->
                         mPostListingManager.removeLoadMoreButton()
@@ -573,7 +573,7 @@ class PostListingFragment(
                 RedditAccountManager.Companion.getInstance(getActivity())
                     .getDefaultAccount()
             )
-                .unsubscribe(subreddit!!.getCanonicalId(), getActivity())
+                .unsubscribe(subreddit!!.canonicalId, getActivity())
         } catch (e: InvalidSubredditNameException) {
             throw RuntimeException(e)
         }
@@ -889,7 +889,7 @@ class PostListingFragment(
                                     }
                                 }
 
-                                val emptyView =                                     LayoutInflater.from(getContext()).inflate(
+                                val emptyView =                                     LayoutInflater.from(context).inflate(
                                         R.layout.no_items_yet,
                                         mRecyclerView,
                                         false
@@ -944,7 +944,7 @@ class PostListingFragment(
             PostCommentListingURL.Companion.forPostId(preparedPost.src.getIdAlone())
         )
 
-        val url = from(controller.getUri())
+        val url = from(controller.uri)
 
         CacheManager.Companion.getInstance(activity)
             .makeRequest(

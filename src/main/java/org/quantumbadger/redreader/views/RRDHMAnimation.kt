@@ -33,21 +33,21 @@ abstract class RRDHMAnimation(params: LiveDHM.Params) : RRAnimation() {
                 / 2))
                 / stepLengthMicros).toInt()
 
-        while (mDHM.getCurrentStep() < desiredStepNumber) {
+        while (mDHM.currentStep < desiredStepNumber) {
             mDHM.calculateStep()
 
             if (mDHM.isEndThresholdReached) {
-                onEndPosition(mDHM.getParams().endPosition)
+                onEndPosition(mDHM.params.endPosition)
                 return false
             }
         }
 
-        onUpdatedPosition(mDHM.getCurrentPosition())
+        onUpdatedPosition(mDHM.currentPosition)
         return true
     }
 
     val currentVelocity: Float
-        get() = mDHM.getCurrentVelocity()
+        get() = mDHM.currentVelocity
 
     protected abstract fun onUpdatedPosition(position: Float)
 

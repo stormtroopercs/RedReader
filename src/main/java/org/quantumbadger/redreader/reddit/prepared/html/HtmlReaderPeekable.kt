@@ -34,8 +34,8 @@ class HtmlReaderPeekable(private val mHtmlReader: HtmlReader) {
     }
 
     val html: String
-        get() = mHtmlReader.getHtml()
+        get() = mHtmlReader.html
 
     val pos: Int
-        get() = mHtmlReader.getPos()
+        get() = mHtmlReader.pos
 }

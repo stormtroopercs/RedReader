@@ -234,7 +234,7 @@ object FileUtils {
             uri,
             DownloadImageToSaveSuccessCallback { info: ImageInfo, cacheFile: ReadableCacheFile?, mimetype: String? ->
                 val externalUri: Uri?=CacheContentProvider.Companion.getUriForFile(
-                    cacheFile!!.getId(),
+                    cacheFile!!.id,
                     mimetype,
                     getExtensionFromPath(info.original.url.value).orElse("jpg")
                 )
@@ -402,7 +402,7 @@ object FileUtils {
                                 activity,
                                 filename,
                                 mimetype,
-                                cacheFile!!.getFile()
+                                cacheFile!!.file
                                     .map<Long?>(FunctionOneArgWithReturn { obj: Param? -> obj.length() })
                                     .orElse(0L),
                                 CacheFileDataSource(cacheFile),
@@ -500,12 +500,12 @@ object FileUtils {
                             MediaUtils.muxFiles(
                                 file,
                                 arrayOf<File>(
-                                    cacheFile.getFile().orThrow<RuntimeException?>(GenericFactory {
+                                    cacheFile.file.orThrow<RuntimeException?>(GenericFactory {
                                         RuntimeException(
                                             "Audio file not found"
                                         )
                                     }),
-                                    video.getFile().orThrow<RuntimeException?>(GenericFactory {
+                                    video.file.orThrow<RuntimeException?>(GenericFactory {
                                         RuntimeException(
                                             "Video file not found"
                                         )
@@ -707,7 +707,7 @@ object FileUtils {
     private class CacheFileDataSource(private val mCacheFile: ReadableCacheFile) : FileDataSource {
         @Throws(IOException::class)
         override fun writeTo(outputStream: OutputStream) {
-            mCacheFile.getInputStream().use { inputStream ->
+            mCacheFile.inputStream.use { inputStream ->
                 copyStream(inputStream, outputStream)
                 outputStream.flush()
             }

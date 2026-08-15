@@ -24,7 +24,7 @@ import org.quantumbadger.redreader.common.LinkHandler.onLinkLongClicked
 import org.quantumbadger.redreader.reddit.prepared.html.HtmlRawElement.LinkButtonDetails
 
 class BodyElementLinkButton(private val mDetails: LinkButtonDetails) : BodyElementBaseButton(
-    mDetails.getButtonTitle(), mDetails.getButtonSubtitle(), true
+    mDetails.buttonTitle, mDetails.buttonSubtitle, true
 ) {
     protected override fun generateOnClickListener(
         activity: BaseActivity,

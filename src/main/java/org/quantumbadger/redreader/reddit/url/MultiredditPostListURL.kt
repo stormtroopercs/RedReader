@@ -53,8 +53,8 @@ class MultiredditPostListURL private constructor(
 
     override fun generateJsonUri(): Uri? {
         val builder = Uri.Builder()
-        builder.scheme(Reddit.getScheme())
-            .authority(Reddit.getDomain())
+        builder.scheme(Reddit.scheme)
+            .authority(Reddit.domain)
 
         if (username != null) {
             builder.encodedPath("/user/")
@@ -121,8 +121,8 @@ class MultiredditPostListURL private constructor(
             name: String
         ): RedditURL? {
             val builder = Uri.Builder()
-            builder.scheme(Reddit.getScheme())
-                .authority(Reddit.getDomain())
+            builder.scheme(Reddit.scheme)
+                .authority(Reddit.domain)
 
             builder.encodedPath("/me/m/")
             builder.appendPath(name)
@@ -135,8 +135,8 @@ class MultiredditPostListURL private constructor(
             name: String
         ): RedditURL? {
             val builder = Uri.Builder()
-            builder.scheme(Reddit.getScheme())
-                .authority(Reddit.getDomain())
+            builder.scheme(Reddit.scheme)
+                .authority(Reddit.domain)
 
             builder.encodedPath("/user/")
             builder.appendPath(username)

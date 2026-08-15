@@ -107,7 +107,7 @@ class ImageViewDisplayListManager(
         mTileVisibility = Array<BooleanArray?>(mHTileCount) { BooleanArray(mVTileCount) }
         mTileLoaded = Array<BooleanArray?>(mHTileCount) { BooleanArray(mVTileCount) }
         mRefreshable = refreshable
-        mScreenDensity = glContext.getScreenDensity()
+        mScreenDensity = glContext.screenDensity
 
         mNotLoadedTexture = RRGLTexture(glContext, NOT_LOADED_BITMAP, false)
 
@@ -127,8 +127,8 @@ class ImageViewDisplayListManager(
                 var tileWidth = mTileSize
                 var tileHeight = mTileSize
 
-                val imageWidth = mImageTileSource.getWidth()
-                val imageHeight = mImageTileSource.getHeight()
+                val imageWidth = mImageTileSource.width
+                val imageHeight = mImageTileSource.height
 
                 if (x == mHTileCount - 1 && imageWidth % mTileSize != 0) {
                     tileWidth = imageWidth % mTileSize
@@ -150,8 +150,8 @@ class ImageViewDisplayListManager(
         mScrollbars = ImageViewScrollbars(
             glContext,
             mCoordinateHelper,
-            mImageTileSource.getWidth(),
-            mImageTileSource.getHeight()
+            mImageTileSource.width,
+            mImageTileSource.height
         )
 
         scene.add(mScrollbars)
@@ -171,7 +171,7 @@ class ImageViewDisplayListManager(
 
         mBoundsHelper = BoundsHelper(
             width, height,
-            mImageTileSource.getWidth(), mImageTileSource.getHeight(),
+            mImageTileSource.width, mImageTileSource.height,
             mCoordinateHelper
         )
 
@@ -199,7 +199,7 @@ class ImageViewDisplayListManager(
         }
 
         val positionOffset = mCoordinateHelper.getPositionOffset()
-        val scale = mCoordinateHelper.getScale()
+        val scale = mCoordinateHelper.scale
 
         mOverallTranslation!!.setPosition(positionOffset)
         mOverallScale!!.setScale(scale, scale)
@@ -244,7 +244,7 @@ class ImageViewDisplayListManager(
 
                 if (isTileVisible != mTileVisibility[x]!![y] || !mTileLoaded[x][y]) {
                     if (isTileVisible && !mTileLoaded[x][y]) {
-                        val tile = mTileLoaders[x]!![y]!!.getAtDesiredScale()
+                        val tile = mTileLoaders[x]!![y]!!.atDesiredScale
 
                         if (tile != null) {
                             try {
@@ -329,9 +329,9 @@ class ImageViewDisplayListManager(
     private val mTmpPoint2_onFingersMoved = MutableFloatPoint2D()
 
     init {
-        mHTileCount = mImageTileSource.getHTileCount()
-        mVTileCount = mImageTileSource.getVTileCount()
-        mTileSize = mImageTileSource.getTileSize()
+        mHTileCount = mImageTileSource.hTileCount
+        mVTileCount = mImageTileSource.vTileCount
+        mTileSize = mImageTileSource.tileSize
         mTiles = Array<Array<RRGLRenderableTexturedQuad?>?>(mHTileCount) {
             arrayOfNulls<RRGLRenderableTexturedQuad>(mVTileCount)
         }
@@ -504,7 +504,7 @@ class ImageViewDisplayListManager(
 
     private fun onDoubleTap(position: MutableFloatPoint2D?) {
         val minScale = mBoundsHelper!!.getMinScale()
-        val currentScale = mCoordinateHelper.getScale()
+        val currentScale = mCoordinateHelper.scale
 
         var targetScale: Float
 
@@ -512,8 +512,8 @@ class ImageViewDisplayListManager(
             targetScale = minScale
         } else {
             targetScale = max(
-                mResolutionX.toFloat() / mImageTileSource.getWidth().toFloat(),
-                mResolutionY.toFloat() / mImageTileSource.getHeight().toFloat()
+                mResolutionX.toFloat() / mImageTileSource.width.toFloat(),
+                mResolutionY.toFloat() / mImageTileSource.height.toFloat()
             )
 
             if (abs((targetScale / currentScale) - 1.0) < 0.05) {
@@ -542,7 +542,7 @@ class ImageViewDisplayListManager(
         var result = 1
 
         while (result <= MultiScaleTileManager.Companion.MAX_SAMPLE_SIZE
-            && (1.0 / (result * 2)) > mCoordinateHelper.getScale()
+            && (1.0 / (result * 2)) > mCoordinateHelper.scale
         ) {
             result *= 2
         }

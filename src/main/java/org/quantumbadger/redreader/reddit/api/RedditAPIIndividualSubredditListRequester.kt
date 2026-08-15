@@ -203,7 +203,7 @@ class RedditAPIIndividualSubredditListRequester(
                             subreddit.downloadTime = timestamp.toUtcMs()
 
                             try {
-                                output.add(subreddit.getCanonicalId().toString())
+                                output.add(subreddit.canonicalId.toString())
                                 toWrite.add(subreddit)
                             } catch (e: InvalidSubredditNameException) {
                                 Log.e(

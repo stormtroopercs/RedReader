@@ -67,7 +67,7 @@ class LegacySaveImageCallback(private val activity: BaseActivity, private val ur
                 }
 
                 try {
-                    cacheFile!!.getInputStream().use { cacheFileInputStream ->
+                    cacheFile!!.inputStream.use { cacheFileInputStream ->
                         FileUtils.copyFile(cacheFileInputStream, dst)
                     }
                 } catch (e: IOException) {

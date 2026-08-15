@@ -257,8 +257,8 @@ abstract class HtmlRawElement {
             } else if (startToken.type == HtmlReader.TokenType.EOF) {
                 throw MalformedHtmlException(
                     "Unexpected EOF",
-                    reader.getHtml(),
-                    reader.getPos()
+                    reader.html,
+                    reader.pos
                 )
             } else {
                 return HtmlRawElementInlineErrorMessage.create(

@@ -25,8 +25,8 @@ import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 class UserProfileURL(val username: String?) : RedditURL() {
     override fun generateJsonUri(): Uri? {
         val builder = Uri.Builder()
-        builder.scheme(Reddit.getScheme())
-            .authority(Reddit.getDomain())
+        builder.scheme(Reddit.scheme)
+            .authority(Reddit.domain)
 
         builder.appendEncodedPath("user")
         builder.appendPath(username)

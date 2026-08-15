@@ -76,9 +76,9 @@ object RedditAPICommentAction {
 
         // These will be false for comments in the inbox. There seems to be no way around this,
         // unless we do a lot of work to download the associated post and check there.
-        val isArchived = comment.getParsedComment().getRawComment().archived
-        val isCommentLocked = comment.getParsedComment().getRawComment().locked
-        val canModerate = comment.getParsedComment().getRawComment().can_mod_post
+        val isArchived = comment.parsedComment.getRawComment().archived
+        val isCommentLocked = comment.parsedComment.getRawComment().locked
+        val canModerate = comment.parsedComment.getRawComment().can_mod_post
 
         val user: RedditAccount =             RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
 
@@ -170,7 +170,7 @@ object RedditAPICommentAction {
             }
 
             if (user.username.equals(
-                    comment.getParsedComment()
+                    comment.parsedComment
                         .getRawComment().author!!.decoded, ignoreCase = true
                 )
             ) {
@@ -330,9 +330,9 @@ object RedditAPICommentAction {
         action: RedditCommentAction,
         changeDataManager: RedditChangeDataManager
     ) {
-        val comment =             renderableComment.getParsedComment().getRawComment()
+        val comment =             renderableComment.parsedComment.getRawComment()
 
-        val postLocked =             commentListingFragment != null && commentListingFragment.getPost() != null && commentListingFragment.getPost().isLocked
+        val postLocked =             commentListingFragment != null && commentListingFragment.post != null && commentListingFragment.post.isLocked
 
         when (action) {
             RedditCommentAction.UPVOTE -> action(

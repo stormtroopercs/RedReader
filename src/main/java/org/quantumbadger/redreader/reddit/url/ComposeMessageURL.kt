@@ -27,8 +27,8 @@ class ComposeMessageURL(val recipient: String?, val subject: String?, val messag
     RedditURL() {
     override fun generateJsonUri(): Uri? {
         val builder = Uri.Builder()
-        builder.scheme(Reddit.getScheme())
-            .authority(Reddit.getDomain())
+        builder.scheme(Reddit.scheme)
+            .authority(Reddit.domain)
 
         builder.appendEncodedPath("message")
         builder.appendEncodedPath("compose")

@@ -72,7 +72,7 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
 
     override fun performWrite(value: V?) {
         synchronized(toWrite) {
-            toWrite.put(value!!.getKey(), value)
+            toWrite.put(value!!.key, value)
         }
 
         writeThread.trigger()
@@ -81,7 +81,7 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
     override fun performWrite(values: MutableCollection<V?>) {
         synchronized(toWrite) {
             for (value in values) {
-                toWrite.put(value!!.getKey(), value)
+                toWrite.put(value!!.key, value)
             }
         }
 
@@ -103,17 +103,17 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
                     val key = iter.next()
                     val writeCacheResult = toWrite.get(key)
                     if (writeCacheResult != null && timestampBound.verifyTimestamp(
-                            writeCacheResult.getTimestamp()
+                            writeCacheResult.timestamp
                         )
                     ) {
                         iter.remove()
                         existingResult.put(key, writeCacheResult)
                         if (oldestTimestamp == null) {
-                            oldestTimestamp = writeCacheResult.getTimestamp()
+                            oldestTimestamp = writeCacheResult.timestamp
                         } else {
                             oldestTimestamp = oldest(
                                 oldestTimestamp,
-                                writeCacheResult.getTimestamp()
+                                writeCacheResult.timestamp
                             )
                         }
                     }
@@ -131,16 +131,16 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
                 val key = iter.next()
                 val dbResult = db.getById(key) // TODO this is pretty inefficient
                 if (dbResult != null
-                    && timestampBound.verifyTimestamp(dbResult.getTimestamp())
+                    && timestampBound.verifyTimestamp(dbResult.timestamp)
                 ) {
                     iter.remove()
                     existingResult.put(key, dbResult)
                     if (oldestTimestamp == null) {
-                        oldestTimestamp = dbResult.getTimestamp()
+                        oldestTimestamp = dbResult.timestamp
                     } else {
                         oldestTimestamp = oldest(
                             oldestTimestamp,
-                            dbResult.getTimestamp()
+                            dbResult.timestamp
                         )
                     }
                 }
@@ -190,12 +190,12 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
             synchronized(toWrite) {
                 val writeCacheResult = toWrite.get(key)
                 if (writeCacheResult != null && timestampBound.verifyTimestamp(
-                        writeCacheResult.getTimestamp()
+                        writeCacheResult.timestamp
                     )
                 ) {
                     responseHandler.onRequestSuccess(
                         writeCacheResult,
-                        writeCacheResult.getTimestamp()
+                        writeCacheResult.timestamp
                     )
                     return
                 }
@@ -203,9 +203,9 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
 
             val dbResult = db.getById(key)
             if (dbResult != null
-                && timestampBound.verifyTimestamp(dbResult.getTimestamp())
+                && timestampBound.verifyTimestamp(dbResult.timestamp)
             ) {
-                responseHandler.onRequestSuccess(dbResult, dbResult.getTimestamp())
+                responseHandler.onRequestSuccess(dbResult, dbResult.timestamp)
                 return
             }
 

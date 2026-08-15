@@ -65,7 +65,7 @@ class CacheContentProvider : ContentProvider() {
             return Optional.Companion.empty<File?>()
         }
 
-        return readableCacheFile.get().getFile()
+        return readableCacheFile.get().file
     }
 
     @Throws(FileNotFoundException::class)
@@ -111,7 +111,7 @@ class CacheContentProvider : ContentProvider() {
             return MatrixCursor(COLUMNS, 0)
         }
 
-        val file = readableCacheFile.get().getFile()
+        val file = readableCacheFile.get().file
 
         if (!file.isPresent()) {
             Log.e(TAG, "Couldn't get underlying file: " + uri)
@@ -133,7 +133,7 @@ class CacheContentProvider : ContentProvider() {
                 cols.add(OpenableColumns.DISPLAY_NAME)
                 values.add(
                     generateFilename(
-                        readableCacheFile.get().getId(),
+                        readableCacheFile.get().id,
                         mimetype.get(),
                         "jpg"
                     )

@@ -217,7 +217,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         if (savedInstanceState == null
             && PrefsUtility.pref_behaviour_skiptofrontpage()
         ) {
-            onSelected(SubredditPostListURL.Companion.getFrontPage())
+            onSelected(SubredditPostListURL.Companion.frontPage)
         }
     }
 
@@ -251,9 +251,9 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             .getDefaultAccount().username
 
         when (type) {
-            MainMenuFragment.Companion.MENU_MENU_ACTION_FRONTPAGE -> onSelected(SubredditPostListURL.Companion.getFrontPage())
-            MainMenuFragment.Companion.MENU_MENU_ACTION_POPULAR -> onSelected(SubredditPostListURL.Companion.getPopular())
-            MainMenuFragment.Companion.MENU_MENU_ACTION_ALL -> onSelected(SubredditPostListURL.Companion.getAll())
+            MainMenuFragment.Companion.MENU_MENU_ACTION_FRONTPAGE -> onSelected(SubredditPostListURL.Companion.frontPage)
+            MainMenuFragment.Companion.MENU_MENU_ACTION_POPULAR -> onSelected(SubredditPostListURL.Companion.popular)
+            MainMenuFragment.Companion.MENU_MENU_ACTION_ALL -> onSelected(SubredditPostListURL.Companion.all)
             MainMenuFragment.Companion.MENU_MENU_ACTION_SUBMITTED -> onSelected(
                 UserPostListingURL.Companion.getSubmitted(
                     username
@@ -332,7 +332,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
                     this,
                     android.R.layout.simple_dropdown_item_1line,
                     CollectionStream<SubredditCanonicalId?>(subredditHistory)
-                        .map<String?>(MapStream.Operator { obj: SubredditCanonicalId? -> obj.getDisplayNameLowercase() })
+                        .map<String?>(MapStream.Operator { obj: SubredditCanonicalId? -> obj.displayNameLowercase })
                         .collect<ArrayList<String?>?>(ArrayList<String?>())
                 )
 
@@ -750,7 +750,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         if (postsVisible
             && !user.isAnonymous && postListingController!!.isSubreddit
             && subredditSubscriptionManager.areSubscriptionsReady()
-            && postListingFragment != null && postListingFragment!!.getSubreddit() != null
+            && postListingFragment != null && postListingFragment!!.subreddit != null
         ) {
             subredditSubscriptionState = subredditSubscriptionManager.getSubscriptionState(
                 postListingController!!.subredditCanonicalName()
@@ -761,15 +761,15 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
 
         if (postsVisible
             && postListingController!!.isSubreddit
-            && postListingFragment != null && postListingFragment!!.getSubreddit() != null
+            && postListingFragment != null && postListingFragment!!.subreddit != null
         ) {
             try {
                 subredditPinState = PrefsUtility.pref_pinned_subreddits_check(
-                    postListingFragment!!.getSubreddit()!!.getCanonicalId()
+                    postListingFragment!!.subreddit!!.canonicalId
                 )
 
                 subredditBlockedState = PrefsUtility.pref_blocked_subreddits_check(
-                    postListingFragment!!.getSubreddit()!!.getCanonicalId()
+                    postListingFragment!!.subreddit!!.canonicalId
                 )
             } catch (e: InvalidSubredditNameException) {
                 subredditPinState = null
@@ -778,9 +778,9 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         }
 
         val subredditDescription = if (postListingFragment != null
-            && postListingFragment!!.getSubreddit() != null
+            && postListingFragment!!.subreddit != null
         )
-            postListingFragment!!.getSubreddit()!!.description_html
+            postListingFragment!!.subreddit!!.description_html
         else
             null
 
@@ -818,8 +818,8 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
 
     override fun onPastComments() {
         val sessionListDialog: SessionListDialog = SessionListDialog.Companion.newInstance(
-            commentListingController!!.getUri(),
-            commentListingController!!.getSession(),
+            commentListingController!!.uri,
+            commentListingController!!.session,
             SessionChangeType.COMMENTS
         )
         sessionListDialog.show(getSupportFragmentManager(), null)
@@ -841,7 +841,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             string.action_search_comments,
             OnSearchListener { query: String? ->
                 val searchIntent = Intent(this, CommentListingActivity::class.java)
-                searchIntent.setData(commentListingController!!.getUri())
+                searchIntent.setData(commentListingController!!.uri)
                 searchIntent.putExtra(
                     CommentListingActivity.EXTRA_SEARCH_STRING,
                     query
@@ -857,8 +857,8 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
 
     override fun onPastPosts() {
         val sessionListDialog: SessionListDialog = SessionListDialog.Companion.newInstance(
-            postListingController!!.getUri(),
-            postListingController!!.getSession(),
+            postListingController!!.uri,
+            postListingController!!.session,
             SessionChangeType.POSTS
         )
         sessionListDialog.show(getSupportFragmentManager(), null)
@@ -897,7 +897,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
     }
 
     override fun onSidebar() {
-        postListingFragment!!.getSubreddit()!!.showSidebarActivity(this)
+        postListingFragment!!.subreddit!!.showSidebarActivity(this)
     }
 
     override fun onPin() {
@@ -908,7 +908,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         try {
             PrefsUtility.pref_pinned_subreddits_add(
                 this,
-                postListingFragment!!.getSubreddit()!!.getCanonicalId()
+                postListingFragment!!.subreddit!!.canonicalId
             )
         } catch (e: InvalidSubredditNameException) {
             throw RuntimeException(e)
@@ -925,7 +925,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         try {
             PrefsUtility.pref_pinned_subreddits_remove(
                 this,
-                postListingFragment!!.getSubreddit()!!.getCanonicalId()
+                postListingFragment!!.subreddit!!.canonicalId
             )
         } catch (e: InvalidSubredditNameException) {
             throw RuntimeException(e)
@@ -942,7 +942,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         try {
             PrefsUtility.pref_blocked_subreddits_add(
                 this,
-                postListingFragment!!.getSubreddit()!!.getCanonicalId()
+                postListingFragment!!.subreddit!!.canonicalId
             )
         } catch (e: InvalidSubredditNameException) {
             throw RuntimeException(e)
@@ -959,7 +959,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         try {
             PrefsUtility.pref_blocked_subreddits_remove(
                 this,
-                postListingFragment!!.getSubreddit()!!.getCanonicalId()
+                postListingFragment!!.subreddit!!.canonicalId
             )
         } catch (e: InvalidSubredditNameException) {
             throw RuntimeException(e)
@@ -1067,7 +1067,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             return null
         }
 
-        return postListingController!!.getSort()
+        return postListingController!!.sort
     }
 
     override fun getCommentSort(): OptionsMenuUtility.Sort? {
@@ -1075,15 +1075,15 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             return null
         }
 
-        return commentListingController!!.getSort()
+        return commentListingController!!.sort
     }
 
     override fun getSuggestedCommentSort(): PostCommentSort? {
-        if (commentListingFragment == null || commentListingFragment!!.getPost() == null) {
+        if (commentListingFragment == null || commentListingFragment!!.post == null) {
             return null
         }
 
-        return commentListingFragment!!.getPost().src.suggestedCommentSort
+        return commentListingFragment!!.post.src.suggestedCommentSort
     }
 
     companion object {

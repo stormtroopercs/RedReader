@@ -103,7 +103,7 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
                 mAllSuggestions.add(
                     AutocompleteEntry(
                         i.toLong(),
-                        allSuggestions.get(i)!!.getDisplayNameLowercase()
+                        allSuggestions.get(i)!!.displayNameLowercase
                     )
                 )
             }
@@ -237,7 +237,7 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
 
         val usernames = ArrayList<String?>()
 
-        Stream.Companion.from<RedditAccount?>(accountManager.getAccounts())
+        Stream.Companion.from<RedditAccount?>(accountManager.accounts)
             .filter(RedditAccount::isNotAnonymous)
             .forEach(Consumer { account: RedditAccount? -> usernames.add(account!!.username) })
 
@@ -290,7 +290,7 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
         }
 
         if (args.subreddit != null) {
-            mSubredditBox!!.setText(args.subreddit.getDisplayNameLowercase())
+            mSubredditBox!!.setText(args.subreddit.displayNameLowercase)
             adapter.updateSuggestions()
         }
 

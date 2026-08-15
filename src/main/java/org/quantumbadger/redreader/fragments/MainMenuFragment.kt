@@ -72,8 +72,8 @@ class MainMenuFragment(
 
         val recyclerViewManager = ScrollbarRecyclerViewManager(parent, null, false)
 
-        mOuter = recyclerViewManager.getOuterView()
-        val recyclerView = recyclerViewManager.getRecyclerView()
+        mOuter = recyclerViewManager.outerView
+        val recyclerView = recyclerViewManager.recyclerView
 
         if (parent is OptionsMenuSubredditsListener
             && PrefsUtility.pref_behaviour_enable_swipe_refresh()
@@ -87,7 +87,7 @@ class MainMenuFragment(
 
         mManager = MainMenuListingManager(getActivity(), this, user)
 
-        recyclerView.setAdapter(mManager.getAdapter())
+        recyclerView.setAdapter(mManager.adapter)
 
         val paddingPx = dpToPixels(context, 8f)
         recyclerView.setPadding(paddingPx, 0, paddingPx, 0)
@@ -143,13 +143,13 @@ class MainMenuFragment(
 
             if (multiredditSubscriptionManager.areSubscriptionsReady()) {
                 onMultiredditSubscriptionsChanged(
-                    multiredditSubscriptionManager.getSubscriptionList()
+                    multiredditSubscriptionManager.subscriptionList
                 )
             }
 
             if (subredditSubscriptionManager.areSubscriptionsReady()) {
                 onSubredditSubscriptionsChanged(
-                    subredditSubscriptionManager.getSubscriptionList()
+                    subredditSubscriptionManager.subscriptionList
                 )
             }
 
@@ -205,13 +205,13 @@ class MainMenuFragment(
     override fun onSubredditSubscriptionListUpdated(
         subredditSubscriptionManager: RedditSubredditSubscriptionManager
     ) {
-        onSubredditSubscriptionsChanged(subredditSubscriptionManager.getSubscriptionList())
+        onSubredditSubscriptionsChanged(subredditSubscriptionManager.subscriptionList)
     }
 
     override fun onMultiredditListUpdated(
         multiredditSubscriptionManager: RedditMultiredditSubscriptionManager
     ) {
-        onMultiredditSubscriptionsChanged(multiredditSubscriptionManager.getSubscriptionList())
+        onMultiredditSubscriptionsChanged(multiredditSubscriptionManager.subscriptionList)
     }
 
     override fun onSubredditSubscriptionAttempted(

@@ -50,7 +50,7 @@ class FilteredCommentListingManager(
                     continue
                 }
                 val body = comment.asComment()
-                    .getParsedComment()
+                    .parsedComment
                     .getRawComment().body
                 if (body != null) {
                     if (StringUtils.asciiLowercase(body.decoded).contains(mSearchString)) {

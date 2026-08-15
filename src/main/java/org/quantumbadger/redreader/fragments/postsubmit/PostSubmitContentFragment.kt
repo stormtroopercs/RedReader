@@ -437,7 +437,7 @@ class PostSubmitContentFragment : Fragment() {
             mTextEditBodyUrl!!.getText().toString()
 
         if (item.getTitle() == getString(string.comment_reply_send)) {
-            var subreddit = mSelectedSubreddit!!.getDisplayNameLowercase()
+            var subreddit = mSelectedSubreddit!!.displayNameLowercase
             val postTitle = mTitleEdit!!.getText().toString()
 
             if (postTitle.isEmpty()) {

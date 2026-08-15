@@ -63,7 +63,7 @@ class RRGLContext(context: Context) {
             mProgramCurrent!!.onDeactivated()
         }
 
-        GLES20.glUseProgram(program.getHandle())
+        GLES20.glUseProgram(program.handle)
         mProgramCurrent = program
 
         program.onActivated()

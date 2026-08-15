@@ -699,7 +699,7 @@ class MainMenuListingManager(
         val displayName = if (showRSlashPrefix)
             subreddit.toString()
         else
-            subreddit.getDisplayNameLowercase()
+            subreddit.displayNameLowercase
 
         return GroupedRecyclerViewItemListItemView(
             null,

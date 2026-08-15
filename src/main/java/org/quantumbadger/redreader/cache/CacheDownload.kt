@@ -150,7 +150,7 @@ class CacheDownload(
         if (mInitiator.queueType == DownloadQueueType.IMGUR_API) {
             request.addHeader("Authorization", "Client-ID c3713d9e7674477")
         } else if (mInitiator.queueType == DownloadQueueType.REDGIFS_API_V2) {
-            request.addHeader("Authorization", "Bearer " + RedgifsAPIV2.getLatestToken())
+            request.addHeader("Authorization", "Bearer " + RedgifsAPIV2.latestToken)
         }
 
         mInitiator.notifyDownloadStarted()
@@ -194,7 +194,7 @@ class CacheDownload(
                 val stream = MemoryDataStream(64 * 1024)
 
                 mInitiator.notifyDataStreamAvailable(
-                    GenericFactory { stream.getInputStream() },
+                    GenericFactory { stream.inputStream },
                     now(),
                     session,
                     false,
@@ -231,7 +231,7 @@ class CacheDownload(
                     stream.setComplete()
 
                     mInitiator.notifyDataStreamComplete(
-                        GenericFactory { stream.getInputStream() },
+                        GenericFactory { stream.inputStream },
                         now(),
                         session,
                         false,
@@ -293,7 +293,7 @@ class CacheDownload(
 
                         val failureType: RequestFailureType
 
-                        if (manager.getPreferredCacheLocation().exists()) {
+                        if (manager.preferredCacheLocation.exists()) {
                             failureType = RequestFailureType.STORAGE
                         } else {
                             failureType = RequestFailureType.CACHE_DIR_DOES_NOT_EXIST

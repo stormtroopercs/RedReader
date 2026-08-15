@@ -99,7 +99,7 @@ abstract class SwipableItemView(context: Context) : FrameLayout(context) {
 
     private fun onSwipeEnd() {
         if (mSwipeHistory.size() >= 2) {
-            mVelocity = (mSwipeHistory.getMostRecent()
+            mVelocity = (mSwipeHistory.mostRecent
                     - mSwipeHistory.getAtTimeAgoMs(100)) * 10
         } else {
             mVelocity = 0f

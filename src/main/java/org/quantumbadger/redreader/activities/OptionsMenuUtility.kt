@@ -1263,7 +1263,7 @@ object OptionsMenuUtility {
             && (activity as OptionsMenuCommentsListener).suggestedCommentSort != null && ((activity as OptionsMenuCommentsListener).suggestedCommentSort
                     == order)
         ) {
-            menuTitle = order.getSuggestedTitle()
+            menuTitle = order.suggestedTitle
         } else {
             menuTitle = order.menuTitle
         }
@@ -1340,7 +1340,7 @@ object OptionsMenuUtility {
         }
 
         val accountManager: RedditAccountManager =             RedditAccountManager.Companion.getInstance(activity)
-        val accountsList = accountManager.getAccounts()
+        val accountsList = accountManager.accounts
 
         if (PrefsUtility.pref_menus_quick_account_switcher()
             && accountsList.size > 1

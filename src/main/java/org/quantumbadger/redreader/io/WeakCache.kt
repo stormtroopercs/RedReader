@@ -51,16 +51,16 @@ class WeakCache<K, V : WritableObject<K?>?, F>
             if (entry != null) {
                 val value: V? = entry.data.get()
                 if (value != null
-                    && timestampBound.verifyTimestamp(value.getTimestamp())
+                    && timestampBound.verifyTimestamp(value.timestamp)
                 ) {
                     keysRemaining.remove(key)
                     cacheResult.put(key, value)
                     if (oldestTimestamp == null) {
-                        oldestTimestamp = value.getTimestamp()
+                        oldestTimestamp = value.timestamp
                     } else {
                         oldestTimestamp = oldest(
                             oldestTimestamp,
-                            value.getTimestamp()
+                            value.timestamp
                         )
                     }
                 }
@@ -117,9 +117,9 @@ class WeakCache<K, V : WritableObject<K?>?, F>
             if (existingEntry != null) {
                 val existing: V? = existingEntry.data.get()
                 if (existing != null
-                    && timestampBound.verifyTimestamp(existing.getTimestamp())
+                    && timestampBound.verifyTimestamp(existing.timestamp)
                 ) {
-                    handler.onRequestSuccess(existing, existing.getTimestamp())
+                    handler.onRequestSuccess(existing, existing.timestamp)
                     return
                 }
             }
@@ -159,16 +159,16 @@ class WeakCache<K, V : WritableObject<K?>?, F>
 
     @Synchronized
     private fun put(value: V?, writeDown: Boolean) {
-        val oldEntry: CacheEntry?=cached.get(value!!.getKey())
+        val oldEntry: CacheEntry?=cached.get(value!!.key)
 
         if (oldEntry != null) {
             cached.put(
-                value.getKey(),
+                value.key,
                 WeakCache.CacheEntry(WeakReference<V?>(value), oldEntry.listeners)
             )
             oldEntry.listeners.map<V?>(updatedVersionListenerNotifier, value)
         } else {
-            cached.put(value.getKey(), WeakCache.CacheEntry(WeakReference<V?>(value)))
+            cached.put(value.key, WeakCache.CacheEntry(WeakReference<V?>(value)))
         }
 
         if (writeDown) {
@@ -179,16 +179,16 @@ class WeakCache<K, V : WritableObject<K?>?, F>
     @Synchronized
     private fun put(values: MutableCollection<V?>, writeDown: Boolean) {
         for (value in values) {
-            val oldEntry: CacheEntry?=cached.get(value!!.getKey())
+            val oldEntry: CacheEntry?=cached.get(value!!.key)
 
             if (oldEntry != null) {
                 cached.put(
-                    value.getKey(),
+                    value.key,
                     WeakCache.CacheEntry(WeakReference<V?>(value), oldEntry.listeners)
                 )
                 oldEntry.listeners.map<V?>(updatedVersionListenerNotifier, value)
             } else {
-                cached.put(value.getKey(), WeakCache.CacheEntry(WeakReference<V?>(value)))
+                cached.put(value.key, WeakCache.CacheEntry(WeakReference<V?>(value)))
             }
         }
 

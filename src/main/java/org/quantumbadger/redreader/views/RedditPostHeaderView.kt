@@ -74,7 +74,7 @@ class RedditPostHeaderView(
 
         val title = TextView(activity)
         title.setTextSize(19.0f * titleFontScale)
-        title.setTypeface(Fonts.getRobotoLightOrAlternative())
+        title.setTypeface(Fonts.robotoLightOrAlternative)
         title.setText(post.src.title)
         title.setContentDescription(post.buildAccessibilityTitle(activity, true))
         title.setTextColor(Color.WHITE)

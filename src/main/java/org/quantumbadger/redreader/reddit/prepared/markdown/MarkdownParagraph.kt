@@ -223,7 +223,7 @@ class MarkdownParagraph(
                     val span: ClickableSpan = object : ClickableSpan() {
                         override fun onClick(widget: View) {
                             val activity = (widget as LinkifiedTextView)
-                                .getActivity()
+                                .activity
                             onLinkClicked(activity, UriString(url))
                         }
                     }

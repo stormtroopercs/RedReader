@@ -530,7 +530,7 @@ class CacheManager @Inject constructor(
             ZstdInputStream(FileInputStream(cacheFile)).use { `is` ->
                 return MemoryDataStream(
                     readWholeStream(`is`)
-                ).getInputStream()
+                ).inputStream
             }
         } else {
             throw RuntimeException("Unhandled compression type " + cacheCompressionType)

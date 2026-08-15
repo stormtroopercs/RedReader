@@ -189,7 +189,7 @@ abstract class FlingableItemView(context: Context) : SwipableItemView(context) {
                 params.endPosition = yPos.toFloat()
 
                 if (oldAnimation != null) {
-                    params.startVelocity = oldAnimation.getCurrentVelocity()
+                    params.startVelocity = oldAnimation.currentVelocity
                 }
 
                 mFlingHintAnimation = FlingHintAnimation(params)

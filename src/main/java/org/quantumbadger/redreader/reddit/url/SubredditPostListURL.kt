@@ -59,8 +59,8 @@ class SubredditPostListURL private constructor(
 
     override fun generateJsonUri(): Uri? {
         val builder = Uri.Builder()
-        builder.scheme(Reddit.getScheme())
-            .authority(Reddit.getDomain())
+        builder.scheme(Reddit.scheme)
+            .authority(Reddit.domain)
 
         when (type) {
             Type.FRONTPAGE -> builder.encodedPath("/")
@@ -182,8 +182,8 @@ class SubredditPostListURL private constructor(
         fun getSubreddit(subreddit: SubredditCanonicalId): RedditURL? {
             return RedditURLParser.parse(
                 Uri.Builder()
-                    .scheme(Reddit.getScheme())
-                    .authority(Reddit.getDomain())
+                    .scheme(Reddit.scheme)
+                    .authority(Reddit.domain)
                     .encodedPath(subreddit.toString()).build()
             )
         }

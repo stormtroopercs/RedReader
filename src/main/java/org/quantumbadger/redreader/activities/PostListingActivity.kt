@@ -142,12 +142,12 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        val session = controller!!.getSession()
+        val session = controller!!.session
         if (session != null) {
             outState.putString(SAVEDSTATE_SESSION, session.toString())
         }
 
-        val sort = controller!!.getSort()
+        val sort = controller!!.sort
         if (sort != null) {
             outState.putString(SAVEDSTATE_SORT, sort.name)
         }
@@ -176,7 +176,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
 
         if (!user.isAnonymous && controller!!.isSubreddit
             && subredditSubscriptionManager.areSubscriptionsReady()
-            && fragment != null && fragment!!.getSubreddit() != null
+            && fragment != null && fragment!!.subreddit != null
         ) {
             subredditSubscriptionState = subredditSubscriptionManager.getSubscriptionState(
                 controller!!.subredditCanonicalName()
@@ -186,9 +186,9 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         }
 
         val subredditDescription = if (fragment != null
-            && fragment!!.getSubreddit() != null
+            && fragment!!.subreddit != null
         )
-            fragment!!.getSubreddit()!!.description_html
+            fragment!!.subreddit!!.description_html
         else
             null
 
@@ -196,15 +196,15 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         var subredditBlockedState: Boolean?=null
 
         if (controller!!.isSubreddit
-            && fragment != null && fragment!!.getSubreddit() != null
+            && fragment != null && fragment!!.subreddit != null
         ) {
             try {
                 subredditPinState = PrefsUtility.pref_pinned_subreddits_check(
-                    fragment!!.getSubreddit()!!.getCanonicalId()
+                    fragment!!.subreddit!!.canonicalId
                 )
 
                 subredditBlockedState = PrefsUtility.pref_blocked_subreddits_check(
-                    fragment!!.getSubreddit()!!.getCanonicalId()
+                    fragment!!.subreddit!!.canonicalId
                 )
             } catch (e: InvalidSubredditNameException) {
                 subredditPinState = null
@@ -287,8 +287,8 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
 
     override fun onPastPosts() {
         val sessionListDialog: SessionListDialog = SessionListDialog.Companion.newInstance(
-            controller!!.getUri(),
-            controller!!.getSession(),
+            controller!!.uri,
+            controller!!.session,
             SessionChangeType.POSTS
         )
         sessionListDialog.show(getSupportFragmentManager(), "SessionListDialog")
@@ -323,18 +323,18 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
     }
 
     override fun onSidebar() {
-        if (fragment!!.getSubreddit() != null) {
+        if (fragment!!.subreddit != null) {
             val intent = Intent(this, HtmlViewActivity::class.java)
             intent.putExtra(
                 "html",
-                fragment!!.getSubreddit()!!
+                fragment!!.subreddit!!
                     .getSidebarHtml(PrefsUtility.isNightMode)
             )
             intent.putExtra(
                 "title", String.format(
                     Locale.US, "%s: %s",
                     getString(string.sidebar_activity_title),
-                    fragment!!.getSubreddit()!!.url
+                    fragment!!.subreddit!!.url
                 )
             )
             startActivityForResult(intent, 1)
@@ -346,12 +346,12 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
             return
         }
 
-        if (fragment!!.getSubreddit() == null) {
+        if (fragment!!.subreddit == null) {
             handleGlobalError(
                 this,
                 RuntimeException(
                     "Can't pin post listing "
-                            + fragment!!.getPostListingURL()
+                            + fragment!!.postListingURL
                 )
             )
             return
@@ -360,7 +360,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         try {
             PrefsUtility.pref_pinned_subreddits_add(
                 this,
-                fragment!!.getSubreddit()!!.getCanonicalId()
+                fragment!!.subreddit!!.canonicalId
             )
         } catch (e: InvalidSubredditNameException) {
             throw RuntimeException(e)
@@ -374,12 +374,12 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
             return
         }
 
-        if (fragment!!.getSubreddit() == null) {
+        if (fragment!!.subreddit == null) {
             handleGlobalError(
                 this,
                 RuntimeException(
                     "Can't unpin post listing "
-                            + fragment!!.getPostListingURL()
+                            + fragment!!.postListingURL
                 )
             )
             return
@@ -388,7 +388,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         try {
             PrefsUtility.pref_pinned_subreddits_remove(
                 this,
-                fragment!!.getSubreddit()!!.getCanonicalId()
+                fragment!!.subreddit!!.canonicalId
             )
         } catch (e: InvalidSubredditNameException) {
             throw RuntimeException(e)
@@ -402,12 +402,12 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
             return
         }
 
-        if (fragment!!.getSubreddit() == null) {
+        if (fragment!!.subreddit == null) {
             handleGlobalError(
                 this,
                 RuntimeException(
                     "Can't block post listing "
-                            + fragment!!.getPostListingURL()
+                            + fragment!!.postListingURL
                 )
             )
             return
@@ -416,7 +416,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         try {
             PrefsUtility.pref_blocked_subreddits_add(
                 this,
-                fragment!!.getSubreddit()!!.getCanonicalId()
+                fragment!!.subreddit!!.canonicalId
             )
         } catch (e: InvalidSubredditNameException) {
             throw RuntimeException(e)
@@ -430,12 +430,12 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
             return
         }
 
-        if (fragment!!.getSubreddit() == null) {
+        if (fragment!!.subreddit == null) {
             handleGlobalError(
                 this,
                 RuntimeException(
                     "Can't unblock post listing "
-                            + fragment!!.getPostListingURL()
+                            + fragment!!.postListingURL
                 )
             )
             return
@@ -444,7 +444,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         try {
             PrefsUtility.pref_blocked_subreddits_remove(
                 this,
-                fragment!!.getSubreddit()!!.getCanonicalId()
+                fragment!!.subreddit!!.canonicalId
             )
         } catch (e: InvalidSubredditNameException) {
             throw RuntimeException(e)
@@ -513,7 +513,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
     }
 
     override fun getPostSort(): PostSort? {
-        return controller!!.getSort()
+        return controller!!.sort
     }
 
     companion object {
@@ -542,7 +542,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
                             activity,
                             RuntimeException(
                                 "Can't search post listing "
-                                        + controller.getUri()
+                                        + controller.uri
                             )
                         )
                         return@OnSearchListener

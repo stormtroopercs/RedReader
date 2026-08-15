@@ -45,8 +45,8 @@ class UserCommentListingURL internal constructor(
 
     override fun generateJsonUri(): Uri? {
         val builder = Uri.Builder()
-        builder.scheme(Reddit.getScheme())
-            .authority(Reddit.getDomain())
+        builder.scheme(Reddit.scheme)
+            .authority(Reddit.domain)
 
         builder.appendEncodedPath("user")
         builder.appendPath(user)

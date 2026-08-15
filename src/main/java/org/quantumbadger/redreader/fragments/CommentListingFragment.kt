@@ -178,13 +178,13 @@ class CommentListingFragment(
                 OnRefreshListener { (parent as OptionsMenuCommentsListener).onRefreshComments() })
         }
 
-        mRecyclerView = recyclerViewManager.getRecyclerView()
+        mRecyclerView = recyclerViewManager.recyclerView
         mCommentListingManager.setLayoutManager(
             mRecyclerView.getLayoutManager() as LinearLayoutManager?
         )
 
-        mRecyclerView.setAdapter(mCommentListingManager.getAdapter())
-        mListingView = recyclerViewManager.getOuterView()
+        mRecyclerView.setAdapter(mCommentListingManager.adapter)
+        mListingView = recyclerViewManager.outerView
 
         mRecyclerView.setItemAnimator(null)
 
@@ -318,7 +318,7 @@ class CommentListingFragment(
 
     fun handleCommentVisibilityToggle(view: RedditCommentView) {
         val changeDataManager: RedditChangeDataManager=RedditChangeDataManager.Companion.getInstance(mUser)
-        val item = view.getComment()
+        val item = view.comment
 
         if (item.isComment()) {
             val comment = item.asComment()
@@ -386,7 +386,7 @@ class CommentListingFragment(
         when (PrefsUtility.pref_behaviour_actions_comment_tap()) {
             CommentAction.COLLAPSE -> handleCommentVisibilityToggle(view)
             CommentAction.ACTION_MENU -> {
-                val item = view.getComment()
+                val item = view.comment
                 if (item != null && item.isComment()) {
                     RedditAPICommentAction.showActionMenu(
                         getActivity(),
@@ -404,7 +404,7 @@ class CommentListingFragment(
     override fun onCommentLongClicked(view: RedditCommentView) {
         when (PrefsUtility.pref_behaviour_actions_comment_longclick()) {
             CommentAction.ACTION_MENU -> {
-                val item = view.getComment()
+                val item = view.comment
                 if (item != null && item.isComment()) {
                     RedditAPICommentAction.showActionMenu(
                         getActivity(),
@@ -581,7 +581,7 @@ class CommentListingFragment(
         if (mFloatingToolbar != null && mFloatingToolbar.getVisibility() != View.VISIBLE) {
             mFloatingToolbar.setVisibility(View.VISIBLE)
             val animation = AnimationUtils.loadAnimation(
-                getContext(),
+                context,
                 R.anim.slide_in_from_bottom
             )
             animation.setInterpolator(OvershootInterpolator())
@@ -604,8 +604,8 @@ class CommentListingFragment(
         }
 
         if (mUrlsToDownload.isEmpty()) {
-            if (mCommentListingManager.getCommentCount() == 0) {
-                val emptyView = LayoutInflater.from(getContext()).inflate(
+            if (mCommentListingManager.commentCount == 0) {
+                val emptyView = LayoutInflater.from(context).inflate(
                     R.layout.no_items_yet,
                     mRecyclerView,
                     false
@@ -621,9 +621,9 @@ class CommentListingFragment(
 
                 mCommentListingManager.addViewToItems(emptyView)
             } else {
-                val blankView = View(getContext())
+                val blankView = View(context)
                 blankView.setMinimumWidth(1)
-                blankView.setMinimumHeight(dpToPixels(getContext(), 96f))
+                blankView.setMinimumHeight(dpToPixels(context, 96f))
                 mCommentListingManager.addViewToItems(blankView)
             }
 
@@ -694,7 +694,7 @@ class CommentListingFragment(
             )
             if (item is RedditCommentListItem
                 && item.isComment
-                && item.getIndent() == 0
+                && item.indent == 0
             ) {
                 layoutManager.scrollToPositionWithOffset(pos, 0)
                 setFocusDelayed(pos)
@@ -714,7 +714,7 @@ class CommentListingFragment(
             )
             if (item is RedditCommentListItem
                 && item.isComment
-                && item.getIndent() == 0
+                && item.indent == 0
             ) {
                 layoutManager.scrollToPositionWithOffset(pos, 0)
                 setFocusDelayed(pos)

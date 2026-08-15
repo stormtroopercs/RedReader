@@ -105,7 +105,7 @@ class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
                 }
 
                 MarkdownParagraphType.CODE -> {
-                    tv.setTypeface(Fonts.getVeraMonoOrAlternative())
+                    tv.setTypeface(Fonts.veraMonoOrAlternative)
                     tv.setText(
                         paragraph.raw.arr,
                         paragraph.raw.start,

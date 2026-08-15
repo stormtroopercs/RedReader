@@ -51,7 +51,7 @@ class BodyElementVerticalSequence(private val mElements: ArrayList<BodyElement>)
             val layoutParams = view.getLayoutParams() as LinearLayout.LayoutParams
 
             if (lastBlock != null) {
-                if (!(element.getType() == BlockType.LIST_ELEMENT
+                if (!(element.type == BlockType.LIST_ELEMENT
                             && lastBlock == BlockType.LIST_ELEMENT)
                 ) {
                     layoutParams.topMargin = paragraphSpacing
@@ -60,7 +60,7 @@ class BodyElementVerticalSequence(private val mElements: ArrayList<BodyElement>)
 
             view.setLayoutParams(layoutParams)
 
-            lastBlock = element.getType()
+            lastBlock = element.type
         }
 
         setLayoutMatchWidthWrapHeight(result)

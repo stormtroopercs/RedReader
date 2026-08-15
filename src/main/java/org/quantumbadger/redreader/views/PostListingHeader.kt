@@ -60,7 +60,7 @@ class PostListingHeader(
             val title = TextView(activity)
             title.setText(titleText)
             title.setTextSize(22.0f)
-            title.setTypeface(Fonts.getRobotoLightOrAlternative())
+            title.setTypeface(Fonts.robotoLightOrAlternative)
             title.setTextColor(Color.WHITE)
             greyHeader.addView(title)
 

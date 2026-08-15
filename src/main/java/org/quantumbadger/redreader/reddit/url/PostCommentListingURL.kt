@@ -92,8 +92,8 @@ class PostCommentListingURL(
 
     override fun generateJsonUri(): Uri? {
         val builder = Uri.Builder()
-        builder.scheme(Reddit.getScheme())
-            .authority(Reddit.getDomain())
+        builder.scheme(Reddit.scheme)
+            .authority(Reddit.domain)
 
         internalGenerateCommon(builder)
 
@@ -104,8 +104,8 @@ class PostCommentListingURL(
 
     fun generateNonJsonUri(): Uri? {
         val builder = Uri.Builder()
-        builder.scheme(Reddit.getScheme())
-            .authority(Reddit.getHumanReadableDomain())
+        builder.scheme(Reddit.scheme)
+            .authority(Reddit.humanReadableDomain)
         internalGenerateCommon(builder)
         return builder.build()
     }

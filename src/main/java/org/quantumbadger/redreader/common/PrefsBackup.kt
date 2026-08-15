@@ -71,7 +71,7 @@ object PrefsBackup {
         val prefs = General.getSharedPrefs(activity)
 
         Thread(Runnable {
-            val prefMap: HashMap<String?, *> = HashMap<String?, Any?>(prefs.getAllClone())
+            val prefMap: HashMap<String?, *> = HashMap<String?, Any?>(prefs.allClone)
             for (ignoredPref in IGNORED_PREFS) {
                 prefMap.remove(ignoredPref)
             }

@@ -296,8 +296,8 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
 
     @Throws(IllegalAccessException::class)
     private fun toContentValues(obj: E?, result: ContentValues): ContentValues {
-        result.put(FIELD_ID, obj!!.getKey().toString())
-        result.put(FIELD_TIMESTAMP, obj.getTimestamp().toUtcMs())
+        result.put(FIELD_ID, obj!!.key.toString())
+        result.put(FIELD_TIMESTAMP, obj.timestamp.toUtcMs())
 
         for (i in fields.indices) {
             val field = fields[i]

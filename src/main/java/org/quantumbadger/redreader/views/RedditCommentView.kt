@@ -95,7 +95,7 @@ class RedditCommentView(
             return null
         }
 
-        val comment = comment!!.asComment().getParsedComment()
+        val comment = comment!!.asComment().parsedComment
 
         when (pref) {
             CommentFlingAction.UPVOTE -> if (mChangeDataManager.isUpvoted(comment.getIdAndType())) {
@@ -361,10 +361,10 @@ class RedditCommentView(
             resetSwipeState()
         }
 
-        mIndentView.setIndentation(comment.getIndent())
+        mIndentView.setIndentation(comment.indent)
 
         val hideLinkButtons = comment.asComment()
-            .getParsedComment()
+            .parsedComment
             .getRawComment().author!!.decoded.equals(
                 "autowikibot", ignoreCase = true
             )
@@ -386,13 +386,13 @@ class RedditCommentView(
 
         val ageUnits = PrefsUtility.appearance_comment_age_units()
 
-        val postTimestamp = if (mFragment != null && mFragment.getPost() != null)
-            mFragment.getPost().src.createdTimeUTC
+        val postTimestamp = if (mFragment != null && mFragment.post != null)
+            mFragment.post.src.createdTimeUTC
         else
             null
 
-        val parentCommentTimestamp = if (comment.getParent() != null)
-            comment.getParent().asComment().getParsedComment().getRawComment()
+        val parentCommentTimestamp = if (comment.parent != null)
+            comment.parent.asComment().getParsedComment().getRawComment()
                 .created_utc.value
         else
             null
@@ -430,7 +430,7 @@ class RedditCommentView(
                 postTimestamp,
                 parentCommentTimestamp,
                 isCollapsed,
-                Optional.Companion.of<Int?>(comment.getIndent())
+                Optional.Companion.of<Int?>(comment.indent)
             )
         )
 
@@ -479,7 +479,7 @@ class RedditCommentView(
         }
 
         // TODO null
-        if (comment!!.asComment().getParsedComment().getRawComment()
+        if (comment!!.asComment().parsedComment.getRawComment()
                 .author!!.decoded.equals(defaultAccount.username, ignoreCase = true)
         ) {
             addAccessibilityActionFromDescriptionPair(

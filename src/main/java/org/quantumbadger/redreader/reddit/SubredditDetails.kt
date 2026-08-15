@@ -36,7 +36,7 @@ class SubredditDetails : HasUniqueId {
     val subscribers: Int?
 
     constructor(subreddit: RedditSubreddit) {
-        id = subreddit.getCanonicalId()
+        id = subreddit.canonicalId
         name = subreddit.display_name
         url = subreddit.getUrl()
         publicDescriptionHtmlEscaped = subreddit.public_description_html
@@ -45,7 +45,7 @@ class SubredditDetails : HasUniqueId {
 
     constructor(subreddit: SubredditCanonicalId) {
         id = subreddit
-        name = subreddit.getDisplayNameLowercase()
+        name = subreddit.displayNameLowercase
         url = UriString(subreddit.toString())
         publicDescriptionHtmlEscaped = null
         subscribers = null

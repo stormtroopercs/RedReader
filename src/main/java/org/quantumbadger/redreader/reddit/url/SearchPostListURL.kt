@@ -129,8 +129,8 @@ class SearchPostListURL : PostListingURL {
 
     override fun generateJsonUri(): Uri? {
         val builder = Uri.Builder()
-        builder.scheme(Reddit.getScheme())
-            .authority(Reddit.getDomain())
+        builder.scheme(Reddit.scheme)
+            .authority(Reddit.domain)
 
         if (type == Type.SUB_OR_SUB_COMBO && subreddit != null) {
             builder.encodedPath("/r/")

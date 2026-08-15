@@ -112,12 +112,12 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        val session = controller!!.getSession()
+        val session = controller!!.session
         if (session != null) {
             outState.putString(SAVEDSTATE_SESSION, session.toString())
         }
 
-        val sort = controller!!.getSort()
+        val sort = controller!!.sort
         if (sort != null) {
             outState.putBoolean(SAVEDSTATE_SORT_IS_USER, controller!!.isUserCommentListing)
             outState.putString(SAVEDSTATE_SORT, sort.name())
@@ -167,7 +167,7 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
         mFragment = controller!!.get(this, force, savedInstanceState)
         mFragment!!.setBaseActivityContent(this)
 
-        setTitle(controller!!.getCommentListingUrl().humanReadableName(this, false))
+        setTitle(controller!!.commentListingUrl.humanReadableName(this, false))
         invalidateOptionsMenu()
     }
 
@@ -178,8 +178,8 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
 
     override fun onPastComments() {
         val sessionListDialog = SessionListDialog.newInstance(
-            controller!!.getUri(),
-            controller!!.getSession(),
+            controller!!.uri,
+            controller!!.session,
             SessionChangeType.COMMENTS
         )
         sessionListDialog.show(getSupportFragmentManager(), null)
@@ -254,15 +254,15 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
     }
 
     override fun getCommentSort(): OptionsMenuUtility.Sort? {
-        return controller!!.getSort()
+        return controller!!.sort
     }
 
     override fun getSuggestedCommentSort(): PostCommentSort? {
-        if (mFragment == null || mFragment!!.getPost() == null) {
+        if (mFragment == null || mFragment!!.post == null) {
             return null
         }
 
-        return mFragment!!.getPost().src.suggestedCommentSort
+        return mFragment!!.post.src.suggestedCommentSort
     }
 
     companion object {

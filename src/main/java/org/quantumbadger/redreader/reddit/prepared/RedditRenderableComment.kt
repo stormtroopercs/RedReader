@@ -69,7 +69,7 @@ class RedditRenderableComment
     }
 
     private fun computeScore(changeDataManager: RedditChangeDataManager): Int {
-        val rawComment = parsedComment.getRawComment()
+        val rawComment = parsedComment.rawComment
 
         var score = rawComment.ups - rawComment.downs
 
@@ -101,7 +101,7 @@ class RedditRenderableComment
 
         val sb = BetterSSB()
 
-        val rawComment = parsedComment.getRawComment()
+        val rawComment = parsedComment.rawComment
 
         val pointsCol: Int
         val score = computeScore(changeDataManager)
@@ -166,7 +166,7 @@ class RedditRenderableComment
             }
         }
 
-        val flair = parsedComment.getFlair()
+        val flair = parsedComment.flair
 
         if (theme.shouldShow(AppearanceCommentHeaderItem.FLAIR)
             && flair != null && !flair.isEmpty()
@@ -300,7 +300,7 @@ class RedditRenderableComment
             sb.append(context.getString(string.subtitle_to) + " ", 0)
 
             sb.append(
-                parsedComment.getRawComment().subreddit!!.decoded,  // TODO null
+                parsedComment.rawComment.subreddit!!.decoded,  // TODO null
                 BetterSSB.Companion.BOLD or BetterSSB.Companion.FOREGROUND_COLOR,
                 theme.rrCommentHeaderBoldCol,
                 0,
@@ -325,7 +325,7 @@ class RedditRenderableComment
 
         val accessibilityHeader = StringBuilder()
 
-        val rawComment = parsedComment.getRawComment()
+        val rawComment = parsedComment.rawComment
 
         val separator = " \n"
 
@@ -423,7 +423,7 @@ class RedditRenderableComment
                 .append(separator)
         }
 
-        val flair = parsedComment.getFlair()
+        val flair = parsedComment.flair
 
         if (theme.shouldShow(AppearanceCommentHeaderItem.FLAIR)
             && flair != null && !flair.isEmpty()
@@ -559,7 +559,7 @@ class RedditRenderableComment
                             string.accessibility_subtitle_subreddit_withperiod,
                         ScreenreaderPronunciation.getPronunciation(
                             context,
-                            parsedComment.getRawComment().subreddit!!.decoded
+                            parsedComment.rawComment.subreddit!!.decoded
                         )
                     )
                 )
@@ -638,13 +638,13 @@ class RedditRenderableComment
         textSize: Float?,
         showLinkButtons: kotlin.Boolean
     ): View? {
-        return parsedComment.getBody()
+        return parsedComment.body
             .generateView(activity, textColor, textSize, showLinkButtons)
     }
 
     override fun handleInboxClick(activity: BaseActivity) {
         // TODO nullability
-        val commentContext = Reddit.getUri(parsedComment.getRawComment().context!!.decoded)
+        val commentContext = Reddit.getUri(parsedComment.rawComment.context!!.decoded)
         onLinkClicked(activity, commentContext)
     }
 
@@ -676,7 +676,7 @@ class RedditRenderableComment
             return false
         }
 
-        if (parsedComment.getRawComment().score_hidden) {
+        if (parsedComment.rawComment.score_hidden) {
             return false
         }
 
@@ -700,13 +700,13 @@ class RedditRenderableComment
         }
 
         val authorLowercase = StringUtils.asciiLowercase(
-            parsedComment.getRawComment().author!!.decoded.trim { it <= ' ' })
+            parsedComment.rawComment.author!!.decoded.trim { it <= ' ' })
 
         if (authorLowercase == mCurrentCanonicalUserName) {
             return false
         }
 
-        if (parsedComment.getRawComment().stickied) {
+        if (parsedComment.rawComment.stickied) {
             when (PrefsUtility.behaviour_collapse_sticky_comments()) {
                 BehaviourCollapseStickyComments.ALWAYS -> return true
 

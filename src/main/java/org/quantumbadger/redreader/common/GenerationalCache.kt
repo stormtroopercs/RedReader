@@ -22,7 +22,7 @@ class GenerationalCache<In : HasUniqueId?, Out>(private val mCreator: FunctionOn
 
 
     fun get(`in`: In): Out {
-        val uniqueId = `in`!!.getUniqueId()
+        val uniqueId = `in`!!.uniqueId
 
         var result = mThisGen.get(uniqueId)
 

@@ -146,6 +146,6 @@ class LoadMoreCommentsView(
             )
         )
 
-        mIndentView.setIndentation(item.getIndent())
+        mIndentView.setIndentation(item.indent)
     }
 }
