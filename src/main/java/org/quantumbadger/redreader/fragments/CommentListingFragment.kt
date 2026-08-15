@@ -92,6 +92,7 @@ import org.quantumbadger.redreader.views.liststatus.CommentSubThreadView
 import org.quantumbadger.redreader.views.liststatus.ErrorView
 import java.util.LinkedList
 import java.util.UUID
+import org.quantumbadger.redreader.common.General
 
 class CommentListingFragment(
     parent: AppCompatActivity,

@@ -119,6 +119,7 @@ import java.text.NumberFormat
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
+import org.quantumbadger.redreader.common.General
 
 class PostListingFragment(
     parent: AppCompatActivity,

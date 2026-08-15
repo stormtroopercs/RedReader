@@ -21,6 +21,7 @@ import org.quantumbadger.redreader.common.Constants.Reddit
 import org.quantumbadger.redreader.common.General.getUriQueryParameterNames
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
+import org.quantumbadger.redreader.common.General
 
 class ComposeMessageURL(val recipient: String?, val subject: String?, val message: String?) :
     RedditURL() {

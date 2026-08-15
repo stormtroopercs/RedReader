@@ -31,6 +31,7 @@ import org.quantumbadger.redreader.fragments.postsubmit.PostSubmitContentFragmen
 import org.quantumbadger.redreader.fragments.postsubmit.PostSubmitSubredditSelectionFragment
 import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
+import org.quantumbadger.redreader.common.General
 
 class PostSubmitActivity : ViewsBaseActivity(), PostSubmitSubredditSelectionFragment.Listener,
     PostSubmitContentFragment.Listener {

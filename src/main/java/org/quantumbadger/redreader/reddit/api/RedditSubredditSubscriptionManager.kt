@@ -52,6 +52,7 @@ import org.quantumbadger.redreader.reddit.RedditSubredditHistory
 import org.quantumbadger.redreader.reddit.RedditSubredditManager.SubredditListType
 import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
+import org.quantumbadger.redreader.common.General
 
 /**
  * Hilt-injected subreddit subscription manager.

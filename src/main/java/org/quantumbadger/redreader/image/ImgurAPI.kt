@@ -35,6 +35,7 @@ import org.quantumbadger.redreader.http.FailedRequestBody
 import org.quantumbadger.redreader.image.ImageInfo.Companion.parseImgur
 import org.quantumbadger.redreader.jsonwrap.JsonValue
 import java.util.UUID
+import org.quantumbadger.redreader.common.General
 
 object ImgurAPI {
     fun getAlbumInfo(

@@ -64,6 +64,7 @@ import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 import java.io.IOException
 import java.util.Locale
 import java.util.UUID
+import org.quantumbadger.redreader.common.General
 
 class CommentListingRequest(
     private val mContext: Context,

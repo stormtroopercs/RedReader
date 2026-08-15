@@ -32,6 +32,7 @@ import android.widget.TextView
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.common.General.dpToPixels
 import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.General
 
 class LinkDetailsView @SuppressLint("ClickableViewAccessibility") constructor(
     context: Context,

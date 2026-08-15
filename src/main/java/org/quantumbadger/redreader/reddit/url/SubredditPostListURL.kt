@@ -27,6 +27,7 @@ import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
+import org.quantumbadger.redreader.common.General
 
 class SubredditPostListURL private constructor(
     val type: Type,

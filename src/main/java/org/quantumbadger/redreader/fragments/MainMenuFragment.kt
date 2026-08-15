@@ -46,6 +46,7 @@ import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 import org.quantumbadger.redreader.reddit.url.PostListingURL
 import org.quantumbadger.redreader.views.ScrollbarRecyclerViewManager
 import org.quantumbadger.redreader.views.liststatus.ErrorView
+import java.lang.annotation.Retention
 
 class MainMenuFragment(
     parent: AppCompatActivity,

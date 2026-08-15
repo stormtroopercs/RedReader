@@ -37,6 +37,7 @@ import org.quantumbadger.redreader.jsonwrap.JsonValue
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 import java.util.UUID
+import org.quantumbadger.redreader.common.General
 
 object DeviantArtAPI {
     fun getImageInfo(

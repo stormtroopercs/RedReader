@@ -18,6 +18,7 @@ package org.quantumbadger.redreader.views.imageview
 
 import android.view.MotionEvent
 import org.quantumbadger.redreader.BuildConfig
+import org.quantumbadger.redreader.common.MutableFloatPoint2D
 
 class FingerTracker(private val mListener: FingerListener) {
     interface FingerListener {

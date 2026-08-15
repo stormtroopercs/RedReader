@@ -30,6 +30,7 @@ import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.RRThemeAttributes
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
 import org.quantumbadger.redreader.reddit.prepared.RedditRenderableInboxItem
+import org.quantumbadger.redreader.common.General
 
 class RedditInboxItemView(
     activity: BaseActivity,

@@ -75,6 +75,8 @@ import kotlin.RuntimeException
 import kotlin.String
 import kotlin.Throwable
 import kotlin.arrayOf
+import org.quantumbadger.redreader.common.General
+import java.lang.annotation.Retention
 
 object RedditAPI {
     const val ACTION_UPVOTE: Int = 0

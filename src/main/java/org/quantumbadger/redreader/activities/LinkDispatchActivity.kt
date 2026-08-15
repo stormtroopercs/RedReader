@@ -26,6 +26,7 @@ import org.quantumbadger.redreader.common.LinkHandler.onLinkClicked
 import org.quantumbadger.redreader.common.RunnableOnce
 import org.quantumbadger.redreader.common.UriString.Companion.from
 import org.quantumbadger.redreader.reddit.api.RedditOAuth.completeLogin
+import org.quantumbadger.redreader.common.General
 
 class LinkDispatchActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

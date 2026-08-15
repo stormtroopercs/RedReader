@@ -23,6 +23,7 @@ import org.quantumbadger.redreader.common.Constants.Reddit
 import org.quantumbadger.redreader.common.General.getUriQueryParameterNames
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.reddit.UserCommentSort
+import org.quantumbadger.redreader.common.General
 
 class UserCommentListingURL internal constructor(
     val user: String?,

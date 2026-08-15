@@ -21,6 +21,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
+import org.quantumbadger.redreader.common.General
 
 internal class GroupedRecyclerViewItemFrameLayout(private val mChildView: View) :
     GroupedRecyclerViewAdapter.Item<Any?>() {

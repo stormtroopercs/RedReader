@@ -20,6 +20,7 @@ import android.content.Context
 import android.opengl.GLES20
 import org.quantumbadger.redreader.common.General.dpToPixels
 import java.nio.FloatBuffer
+import org.quantumbadger.redreader.common.General
 
 class RRGLContext(context: Context) {
     private val mProgramTexture: RRGLProgramTexture

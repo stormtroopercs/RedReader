@@ -20,6 +20,7 @@ import android.content.Context
 import android.view.View
 import android.widget.FrameLayout
 import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
+import org.quantumbadger.redreader.common.General
 
 open class StatusListItemView(context: Context) : FrameLayout(context) {
     protected val dpScale: Float

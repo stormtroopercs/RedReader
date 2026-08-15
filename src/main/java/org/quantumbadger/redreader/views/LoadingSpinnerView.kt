@@ -23,6 +23,7 @@ import android.widget.RelativeLayout
 import com.github.lzyzsd.circleprogress.DonutProgress
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.General
 
 class LoadingSpinnerView @JvmOverloads constructor(
     context: Context,

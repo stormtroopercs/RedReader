@@ -25,6 +25,7 @@ import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.reddit.PostSort
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
+import org.quantumbadger.redreader.common.General
 
 class SearchPostListURL : PostListingURL {
     val type: Type

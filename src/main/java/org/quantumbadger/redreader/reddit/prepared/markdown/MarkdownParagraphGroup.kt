@@ -35,6 +35,7 @@ import org.quantumbadger.redreader.reddit.prepared.markdown.MarkdownParser.Markd
 import org.quantumbadger.redreader.views.LinkDetailsView
 import org.quantumbadger.redreader.views.LinkifiedTextView
 import kotlin.math.min
+import org.quantumbadger.redreader.common.General
 
 class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
     fun buildView(

@@ -36,6 +36,7 @@ import org.quantumbadger.redreader.common.StringUtils
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.Locale
+import org.quantumbadger.redreader.common.General
 
 class CacheContentProvider : ContentProvider() {
     private var mCacheManager: CacheManager?=null

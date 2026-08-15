@@ -29,6 +29,7 @@ import org.quantumbadger.redreader.reddit.url.RedditURLParser
 import org.quantumbadger.redreader.reddit.url.SubredditPostListURL
 import org.quantumbadger.redreader.reddit.url.UserPostListingURL
 import java.util.UUID
+import android.net.Uri
 
 // TODO add notification/header for abnormal sort order
 class PostListingController(url: PostListingURL, context: Context?) {

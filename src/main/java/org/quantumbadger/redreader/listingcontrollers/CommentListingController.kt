@@ -28,6 +28,8 @@ import org.quantumbadger.redreader.reddit.url.CommentListingURL
 import org.quantumbadger.redreader.reddit.url.RedditURLParser
 import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 import java.util.UUID
+import android.net.Uri
+import org.quantumbadger.redreader.common.General
 
 // TODO add notification/header for abnormal sort order
 class CommentListingController(url: RedditURL) {

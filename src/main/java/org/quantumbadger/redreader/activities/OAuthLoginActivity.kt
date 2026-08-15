@@ -21,6 +21,7 @@ import android.content.Intent
 import android.os.Bundle
 import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.compose.ui.OAuthLoginScreen
+import org.quantumbadger.redreader.RedReader
 
 /**
  * Thin Compose wrapper around [OAuthLoginScreen].

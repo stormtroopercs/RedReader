@@ -23,6 +23,7 @@ import org.quantumbadger.redreader.R.string
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.common.General.dpToPixels
 import org.quantumbadger.redreader.reddit.prepared.markdown.MarkdownParser
+import org.quantumbadger.redreader.common.General
 
 class MarkdownPreviewDialog : PropertiesDialog() {
     override fun getTitle(context: Context): String {

@@ -44,6 +44,7 @@ import org.quantumbadger.redreader.reddit.api.SubredditSubscriptionState
 import org.quantumbadger.redreader.settings.SettingsActivity
 import org.quantumbadger.redreader.settings.types.AppearanceTheme
 import java.util.Collections
+import org.quantumbadger.redreader.common.General
 
 object OptionsMenuUtility {
     @Suppress("PropertyName")

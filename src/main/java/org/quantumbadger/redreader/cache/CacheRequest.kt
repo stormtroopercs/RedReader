@@ -35,6 +35,7 @@ import org.quantumbadger.redreader.http.FailedRequestBody
 import org.quantumbadger.redreader.http.body.HTTPRequestBody
 import java.io.IOException
 import java.util.UUID
+import org.quantumbadger.redreader.common.General
 
 class CacheRequest private constructor(
     url: UriString,

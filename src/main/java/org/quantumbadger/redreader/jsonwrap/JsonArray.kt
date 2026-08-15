@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonToken
 import org.quantumbadger.redreader.common.Consumer
 import org.quantumbadger.redreader.common.Optional
 import org.quantumbadger.redreader.jsonwrap.JsonObject.JsonDeserializable
+import java.lang.reflect.InvocationTargetException
 
 class JsonArray(parser: JsonParser) : JsonValue(), Iterable<JsonValue?> {
     private val mContents = ArrayList<JsonValue>(16)

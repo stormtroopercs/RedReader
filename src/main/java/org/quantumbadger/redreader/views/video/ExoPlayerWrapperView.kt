@@ -55,6 +55,7 @@ import java.util.Locale
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.max
 import kotlin.math.min
+import org.quantumbadger.redreader.common.General
 
 @OptIn(markerClass = UnstableApi::class)
 class ExoPlayerWrapperView(

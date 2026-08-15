@@ -40,6 +40,7 @@ import org.quantumbadger.redreader.reddit.api.RedditAPIIndividualSubredditDataRe
 import org.quantumbadger.redreader.reddit.things.RedditSubreddit
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 import javax.inject.Provider
+import org.quantumbadger.redreader.common.General
 
 /**
  * Per-user subreddit manager. Original Java used a static per-user singleton

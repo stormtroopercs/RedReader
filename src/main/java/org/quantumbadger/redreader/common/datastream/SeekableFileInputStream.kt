@@ -21,6 +21,7 @@ import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
 import kotlin.math.min
+import org.quantumbadger.redreader.common.General
 
 class SeekableFileInputStream(file: File) : SeekableInputStream() {
     private val mFile: RandomAccessFile

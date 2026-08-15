@@ -23,6 +23,7 @@ import android.view.ViewGroup.MarginLayoutParams
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.common.General.dpToPixels
 import org.quantumbadger.redreader.views.LinkDetailsView
+import org.quantumbadger.redreader.common.General
 
 abstract class BodyElementBaseButton(
     private val mText: String,

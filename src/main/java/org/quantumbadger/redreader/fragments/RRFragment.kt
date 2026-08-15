@@ -26,6 +26,7 @@ import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import org.quantumbadger.redreader.activities.ViewsBaseActivity
 import org.quantumbadger.redreader.common.General.setLayoutMatchParent
+import org.quantumbadger.redreader.common.General
 
 abstract class RRFragment protected constructor(
     protected val activity: AppCompatActivity,

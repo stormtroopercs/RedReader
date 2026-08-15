@@ -23,6 +23,7 @@ import org.quantumbadger.redreader.common.Constants.Reddit
 import org.quantumbadger.redreader.common.Optional
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.common.UriString
+import java.lang.annotation.Retention
 
 object RedditURLParser {
     const val SUBREDDIT_POST_LISTING_URL: Int = 0

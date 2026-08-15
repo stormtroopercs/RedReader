@@ -32,6 +32,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
+import android.database.Cursor
 
 /**
  * Hilt-injected account manager. Replaces manual singleton pattern.

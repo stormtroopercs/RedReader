@@ -32,6 +32,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
+import android.util.Log
 
 @ViewModelScoped
 class RedditChangeDataIO @Inject constructor(

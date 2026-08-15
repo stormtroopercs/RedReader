@@ -22,6 +22,7 @@ import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.General
 
 class BodyElementHorizontalRule : BodyElement(BlockType.HORIZONTAL_RULE) {
     override fun generateView(

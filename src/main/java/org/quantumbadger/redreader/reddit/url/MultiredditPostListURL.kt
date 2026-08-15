@@ -25,6 +25,7 @@ import org.quantumbadger.redreader.reddit.PostSort
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 import java.util.Locale
+import org.quantumbadger.redreader.common.General
 
 class MultiredditPostListURL private constructor(
     val username: String?,

@@ -70,6 +70,7 @@ import org.quantumbadger.redreader.reddit.RedditFlairChoice
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 import java.util.Locale
 import java.util.Objects
+import org.quantumbadger.redreader.common.General
 
 class PostSubmitContentFragment : Fragment() {
     class Args(

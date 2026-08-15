@@ -57,6 +57,7 @@ import java.util.Objects
 import java.util.UUID
 import java.util.concurrent.PriorityBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
+import org.quantumbadger.redreader.common.General
 
 /**
  * Hilt-injected CacheManager for Reddit caching.

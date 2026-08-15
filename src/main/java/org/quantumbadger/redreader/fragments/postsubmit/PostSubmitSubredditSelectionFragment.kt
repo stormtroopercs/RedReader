@@ -48,6 +48,7 @@ import org.quantumbadger.redreader.reddit.things.RedditSubreddit
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 import org.quantumbadger.redreader.viewholders.VH1Text
 import java.util.Objects
+import org.quantumbadger.redreader.common.General
 
 class PostSubmitSubredditSelectionFragment : Fragment() {
     class Args(val subreddit: SubredditCanonicalId?) {

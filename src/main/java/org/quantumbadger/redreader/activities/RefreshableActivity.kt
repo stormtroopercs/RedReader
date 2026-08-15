@@ -23,6 +23,7 @@ import org.quantumbadger.redreader.common.General.recreateActivityNoAnimation
 import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.SharedPrefsWrapper
 import java.util.EnumSet
+import org.quantumbadger.redreader.common.General
 
 abstract class RefreshableActivity : ViewsBaseActivity() {
     private var paused = false

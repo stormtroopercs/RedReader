@@ -73,6 +73,7 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 import kotlin.math.min
+import org.quantumbadger.redreader.common.General
 
 class RedditPostView(
     context: Context,

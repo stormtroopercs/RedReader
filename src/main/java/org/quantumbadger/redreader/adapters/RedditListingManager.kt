@@ -24,6 +24,7 @@ import org.quantumbadger.redreader.common.General.dpToPixels
 import org.quantumbadger.redreader.views.LoadingSpinnerView
 import org.quantumbadger.redreader.views.RedditPostHeaderView
 import org.quantumbadger.redreader.views.liststatus.ErrorView
+import org.quantumbadger.redreader.common.General
 
 abstract class RedditListingManager protected constructor(context: Context) {
     private val mAdapter = GroupedRecyclerViewAdapter(7)

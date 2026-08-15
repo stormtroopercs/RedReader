@@ -37,6 +37,7 @@ import org.quantumbadger.redreader.common.time.TimestampUTC
 import org.quantumbadger.redreader.jsonwrap.JsonValue
 import java.io.IOException
 import java.util.UUID
+import org.quantumbadger.redreader.common.General
 
 object AnnouncementDownloader {
     private const val TAG = "AnnouncementDownloader"

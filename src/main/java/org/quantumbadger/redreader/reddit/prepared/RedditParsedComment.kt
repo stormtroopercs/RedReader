@@ -51,6 +51,7 @@ import org.quantumbadger.redreader.reddit.prepared.html.HtmlReader
 import org.quantumbadger.redreader.reddit.things.RedditThingWithIdAndType
 import java.io.IOException
 import java.util.UUID
+import org.quantumbadger.redreader.common.General
 
 class RedditParsedComment(
     val rawComment: RedditComment,

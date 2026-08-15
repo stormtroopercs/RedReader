@@ -74,6 +74,7 @@ import kotlin.collections.ArrayList
 import kotlin.collections.MutableCollection
 import kotlin.collections.indices
 import kotlin.text.startsWith
+import org.quantumbadger.redreader.common.General
 
 class MainMenuListingManager(
     activity: AppCompatActivity,

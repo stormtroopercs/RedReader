@@ -44,6 +44,7 @@ import org.quantumbadger.redreader.fragments.MarkdownPreviewDialog
 import org.quantumbadger.redreader.fragments.ReportDialog.Companion.show
 import org.quantumbadger.redreader.reddit.APIResponseHandler.ActionResponseHandler
 import org.quantumbadger.redreader.reddit.RedditAPI
+import org.quantumbadger.redreader.common.General
 
 class PMSendActivity : ViewsBaseActivity() {
     private var usernameSpinner: Spinner?=null

@@ -99,6 +99,8 @@ import org.quantumbadger.redreader.reddit.url.UserProfileURL
 import org.quantumbadger.redreader.views.RedditPostView.PostSelectionListener
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
+import org.quantumbadger.redreader.RedReader
+import org.quantumbadger.redreader.common.General
 
 class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAccountChangeListener,
     PostSelectionListener, OptionsMenuSubredditsListener, OptionsMenuPostsListener,

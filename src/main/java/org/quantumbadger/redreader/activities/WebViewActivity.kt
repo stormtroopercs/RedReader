@@ -23,6 +23,9 @@ import androidx.core.content.IntentCompat
 import org.quantumbadger.redreader.compose.ui.WebViewScreen
 import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.UriString
+import android.content.Intent
+import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.fragments.WebViewFragment
 
 /**
  * Thin Compose wrapper around [WebViewScreen].

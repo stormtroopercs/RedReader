@@ -45,6 +45,7 @@ import org.quantumbadger.redreader.image.ImageInfo.Companion.parseRedgifsV2
 import org.quantumbadger.redreader.jsonwrap.JsonValue
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
+import org.quantumbadger.redreader.common.General
 
 object RedgifsAPIV2 {
     private const val TAG = "RedgifsAPIV2"

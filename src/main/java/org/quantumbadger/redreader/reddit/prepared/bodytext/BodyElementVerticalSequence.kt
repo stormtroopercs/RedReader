@@ -20,6 +20,7 @@ import android.view.View
 import android.widget.LinearLayout
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
+import org.quantumbadger.redreader.common.General
 
 class BodyElementVerticalSequence(private val mElements: ArrayList<BodyElement>) : BodyElement(
     BlockType.VERTICAL_SEQUENCE

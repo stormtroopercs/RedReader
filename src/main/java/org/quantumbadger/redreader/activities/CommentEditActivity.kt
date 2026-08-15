@@ -39,6 +39,7 @@ import org.quantumbadger.redreader.fragments.MarkdownPreviewDialog
 import org.quantumbadger.redreader.reddit.APIResponseHandler.ActionResponseHandler
 import org.quantumbadger.redreader.reddit.RedditAPI
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
+import org.quantumbadger.redreader.common.General
 
 class CommentEditActivity : ViewsBaseActivity() {
     private var textEdit: EditText?=null

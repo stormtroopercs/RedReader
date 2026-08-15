@@ -16,6 +16,7 @@
  */
 package org.quantumbadger.redreader.views.imageview
 
+import android.graphics.Bitmap
 class MultiScaleTileManager(
     imageTileSource: ImageTileSource?,
     thread: ImageViewTileLoaderThread?,

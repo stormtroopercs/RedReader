@@ -21,6 +21,7 @@ import android.view.ViewGroup
 import org.quantumbadger.redreader.common.FunctionOneArgWithReturn
 import org.quantumbadger.redreader.common.General.dpToPixels
 import org.quantumbadger.redreader.views.LoadingSpinnerView
+import org.quantumbadger.redreader.common.General
 
 class GroupedRecyclerViewItemLoadingSpinner(context: Context) : GroupedRecyclerViewItemView(
     LoadingSpinnerView::class.java,

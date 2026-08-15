@@ -57,6 +57,7 @@ import org.quantumbadger.redreader.reddit.prepared.RedditRenderableComment
 import org.quantumbadger.redreader.reddit.url.UserProfileURL
 import org.quantumbadger.redreader.views.RedditCommentView
 import java.util.Locale
+import org.quantumbadger.redreader.common.General
 
 object RedditAPICommentAction {
     fun showActionMenu(

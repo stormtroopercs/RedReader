@@ -32,6 +32,7 @@ import org.quantumbadger.redreader.common.RRError
 import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.compose.ui.BugReportScreen
 import java.util.LinkedList
+import org.quantumbadger.redreader.common.General
 
 class BugReportActivity : ComposeBaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

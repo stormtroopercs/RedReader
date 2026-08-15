@@ -20,6 +20,7 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import org.quantumbadger.redreader.common.General.divideCeil
 import kotlin.math.min
+import org.quantumbadger.redreader.common.General
 
 class ImageTileSourceWholeBitmap(private val mBitmap: Bitmap) : ImageTileSource {
     private val mWidth: Int

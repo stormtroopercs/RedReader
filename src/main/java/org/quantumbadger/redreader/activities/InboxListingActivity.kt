@@ -84,6 +84,7 @@ import org.quantumbadger.redreader.views.liststatus.ErrorView
 import org.quantumbadger.redreader.views.liststatus.LoadingView
 import java.io.IOException
 import java.util.UUID
+import org.quantumbadger.redreader.common.General
 
 class InboxListingActivity : ViewsBaseActivity() {
     enum class InboxType {

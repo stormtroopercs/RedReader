@@ -35,6 +35,7 @@ import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.http.FailedRequestBody
 import java.io.File
 import java.io.IOException
+import org.quantumbadger.redreader.common.General
 
 class LegacySaveImageCallback(private val activity: BaseActivity, private val uri: UriString) :
     PermissionCallback {

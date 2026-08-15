@@ -39,6 +39,7 @@ import org.quantumbadger.redreader.io.RequestResponseHandler
 import org.quantumbadger.redreader.io.WritableHashSet
 import org.quantumbadger.redreader.jsonwrap.JsonValue
 import java.util.UUID
+import org.quantumbadger.redreader.common.General
 
 class RedditAPIMultiredditListRequester(
     private val context: Context,

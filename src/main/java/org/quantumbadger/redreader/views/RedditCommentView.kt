@@ -45,6 +45,7 @@ import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
 import java.util.Observable
 import java.util.Observer
+import org.quantumbadger.redreader.common.General
 
 class RedditCommentView(
     context: BaseActivity,

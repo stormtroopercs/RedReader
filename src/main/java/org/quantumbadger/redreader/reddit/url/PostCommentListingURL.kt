@@ -22,6 +22,7 @@ import org.quantumbadger.redreader.common.Constants.Reddit
 import org.quantumbadger.redreader.common.General.getUriQueryParameterNames
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.reddit.PostCommentSort
+import org.quantumbadger.redreader.common.General
 
 class PostCommentListingURL(
     after: String?,

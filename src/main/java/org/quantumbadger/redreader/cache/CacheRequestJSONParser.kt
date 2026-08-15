@@ -35,6 +35,7 @@ import org.quantumbadger.redreader.reddit.api.RedditPostActions.ActionDescriptio
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
+import org.quantumbadger.redreader.common.General
 
 class CacheRequestJSONParser(
     private val mContext: Context,

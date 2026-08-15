@@ -45,6 +45,7 @@ import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager
 import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager.SubredditSubscriptionStateChangeListener
 import org.quantumbadger.redreader.reddit.api.SubredditSubscriptionState
 import java.util.Objects
+import org.quantumbadger.redreader.common.General
 
 class SubredditToolbar @JvmOverloads constructor(
     private val mContext: Context,

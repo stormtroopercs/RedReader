@@ -25,6 +25,7 @@ import com.github.lzyzsd.circleprogress.DonutProgress
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.common.General.dpToPixels
 import kotlin.math.abs
+import org.quantumbadger.redreader.common.General
 
 class HorizontalSwipeProgressOverlay(context: Context) : RelativeLayout(context) {
     private val mIcon: ImageView

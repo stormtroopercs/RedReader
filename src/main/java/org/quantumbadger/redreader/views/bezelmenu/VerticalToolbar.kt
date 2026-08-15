@@ -23,6 +23,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.General
 
 class VerticalToolbar(context: Context) : FrameLayout(context) {
     private val buttons: LinearLayout

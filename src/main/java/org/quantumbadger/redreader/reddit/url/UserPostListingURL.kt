@@ -24,6 +24,7 @@ import org.quantumbadger.redreader.common.General.getUriQueryParameterNames
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.reddit.PostSort
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
+import org.quantumbadger.redreader.common.General
 
 class UserPostListingURL internal constructor(
     val type: Type,

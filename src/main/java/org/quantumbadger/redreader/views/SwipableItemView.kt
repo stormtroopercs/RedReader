@@ -21,6 +21,7 @@ import android.view.MotionEvent
 import android.widget.FrameLayout
 import org.quantumbadger.redreader.common.General.dpToPixels
 import kotlin.math.abs
+import org.quantumbadger.redreader.common.General
 
 abstract class SwipableItemView(context: Context) : FrameLayout(context) {
     private var mSwipeStart: MotionEvent?=null

@@ -24,6 +24,7 @@ import android.widget.LinearLayout
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.common.General.dpToPixels
 import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
+import org.quantumbadger.redreader.common.General
 
 class BodyElementQuote(private val mElements: ArrayList<BodyElement?>) :
     BodyElement(BlockType.QUOTE) {

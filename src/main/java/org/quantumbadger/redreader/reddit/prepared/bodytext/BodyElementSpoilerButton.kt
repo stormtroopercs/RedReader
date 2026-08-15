@@ -27,6 +27,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.quantumbadger.redreader.R.string
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.common.General.dpToPixels
+import org.quantumbadger.redreader.common.General
 
 class BodyElementSpoilerButton(
     activity: AppCompatActivity,

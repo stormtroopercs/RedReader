@@ -20,6 +20,7 @@ package org.quantumbadger.redreader.activities
 import android.os.Bundle
 import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.compose.ui.CommentReplyScreen
+import org.quantumbadger.redreader.common.General
 
 /**
  * Thin Compose wrapper around [CommentReplyScreen].

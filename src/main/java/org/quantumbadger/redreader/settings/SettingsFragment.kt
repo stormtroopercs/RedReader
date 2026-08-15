@@ -68,6 +68,26 @@ import kotlin.text.endsWith
 import kotlin.text.format
 import kotlin.text.plus
 import kotlin.text.substring
+import android.content.ActivityNotFoundException
+import android.content.ContentResolver
+import androidx.annotation.StringRes
+import androidx.fragment.app.FragmentActivity
+import androidx.preference.PreferenceFragmentCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import org.quantumbadger.redreader.RedReader
+import org.quantumbadger.redreader.activities.BugReportActivity
+import org.quantumbadger.redreader.activities.ChangelogActivity
+import org.quantumbadger.redreader.activities.HtmlViewActivity
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.common.AndroidCommon
+import org.quantumbadger.redreader.common.DialogUtils
+import org.quantumbadger.redreader.common.PrefsBackup
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.TorCommon
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.receivers.NewMessageChecker
+import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
 
 class SettingsFragment : PreferenceFragmentCompat() {
     @StringRes

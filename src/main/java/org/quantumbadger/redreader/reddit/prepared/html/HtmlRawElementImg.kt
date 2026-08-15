@@ -45,6 +45,7 @@ import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
 import org.quantumbadger.redreader.reddit.prepared.bodytext.DynamicSpanned
 import java.io.IOException
 import java.util.UUID
+import org.quantumbadger.redreader.common.General
 
 class HtmlRawElementImg(
     private val mChildren: ArrayList<HtmlRawElement>,
