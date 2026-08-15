@@ -104,21 +104,21 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
 
             if (savedInstanceState != null) {
                 if (savedInstanceState.containsKey(SAVEDSTATE_SESSION)) {
-                    controller!!.setSession(
+                    controller!!.session = 
                         UUID.fromString(
                             savedInstanceState.getString(
                                 SAVEDSTATE_SESSION
                             )
                         )
-                    )
+                    
                 }
 
                 if (savedInstanceState.containsKey(SAVEDSTATE_SORT)) {
-                    controller!!.setSort(
+                    controller!!.sort = 
                         PostSort.valueOf(
                             savedInstanceState.getString(SAVEDSTATE_SORT)!!
                         )
-                    )
+                    
                 }
 
                 if (savedInstanceState.containsKey(SAVEDSTATE_FRAGMENT)) {

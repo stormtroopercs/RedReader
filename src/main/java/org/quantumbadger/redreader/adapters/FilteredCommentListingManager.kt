@@ -51,7 +51,7 @@ class FilteredCommentListingManager(
                 }
                 val body = comment.asComment()
                     .parsedComment
-                    .getRawComment().body
+                    .rawComment.body
                 if (body != null) {
                     if (StringUtils.asciiLowercase(body.decoded).contains(mSearchString)) {
                         searchComments.add(comment)

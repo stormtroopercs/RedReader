@@ -193,7 +193,7 @@ class CommentListingRequest(
             if (item.isComment) {
                 changeDataManager.update(
                     timestamp,
-                    item.asComment().parsedComment.getRawComment()
+                    item.asComment().parsedComment.rawComment
                 )
             }
         }

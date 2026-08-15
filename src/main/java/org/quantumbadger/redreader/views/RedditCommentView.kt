@@ -365,7 +365,7 @@ class RedditCommentView(
 
         val hideLinkButtons = comment.asComment()
             .parsedComment
-            .getRawComment().author!!.decoded.equals(
+            .rawComment.author!!.decoded.equals(
                 "autowikibot", ignoreCase = true
             )
 
@@ -392,7 +392,7 @@ class RedditCommentView(
             null
 
         val parentCommentTimestamp = if (comment.parent != null)
-            comment.parent.asComment().getParsedComment().getRawComment()
+            comment.parent.asComment().parsedComment.getRawComment()
                 .created_utc.value
         else
             null
@@ -479,7 +479,7 @@ class RedditCommentView(
         }
 
         // TODO null
-        if (comment!!.asComment().parsedComment.getRawComment()
+        if (comment!!.asComment().parsedComment.rawComment
                 .author!!.decoded.equals(defaultAccount.username, ignoreCase = true)
         ) {
             addAccessibilityActionFromDescriptionPair(

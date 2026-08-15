@@ -71,13 +71,13 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
 
             if (savedInstanceState != null) {
                 if (savedInstanceState.containsKey(SAVEDSTATE_SESSION)) {
-                    controller!!.setSession(
+                    controller!!.session = 
                         UUID.fromString(
                             savedInstanceState.getString(
                                 SAVEDSTATE_SESSION
                             )
                         )
-                    )
+                    
                 }
 
                 if (savedInstanceState.containsKey(SAVEDSTATE_SORT)) {
