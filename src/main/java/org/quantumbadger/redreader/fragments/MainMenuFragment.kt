@@ -24,7 +24,6 @@ import androidx.annotation.IntDef
 import androidx.appcompat.app.AppCompatActivity
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import org.quantumbadger.redreader.R
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuSubredditsListener

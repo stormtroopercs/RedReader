@@ -23,7 +23,6 @@ import android.text.SpannableStringBuilder
 import android.text.style.ImageSpan
 import android.util.TypedValue
 import androidx.appcompat.app.AppCompatActivity
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest

@@ -19,7 +19,6 @@ package org.quantumbadger.redreader.image
 import android.content.Context
 import android.os.SystemClock
 import android.util.Log
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest

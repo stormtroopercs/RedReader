@@ -26,7 +26,6 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.SessionChangeListener
 import org.quantumbadger.redreader.activities.SessionChangeListener.SessionChangeType

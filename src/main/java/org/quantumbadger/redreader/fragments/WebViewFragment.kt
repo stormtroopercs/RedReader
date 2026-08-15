@@ -44,7 +44,6 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.common.AndroidCommon

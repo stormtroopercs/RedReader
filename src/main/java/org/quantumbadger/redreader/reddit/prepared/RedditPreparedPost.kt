@@ -25,7 +25,6 @@ import android.util.Log
 import androidx.annotation.StringRes
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity

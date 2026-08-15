@@ -19,7 +19,6 @@ package org.quantumbadger.redreader.reddit.api
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest

@@ -16,6 +16,7 @@
  */
 package org.quantumbadger.redreader.fragments
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
@@ -30,6 +31,14 @@ abstract class RRFragment protected constructor(
     protected val activity: AppCompatActivity,
     savedInstanceState: Bundle?
 ) {
+    /**
+     * Legacy accessor for converted call sites that still use
+     * the Java-style `getActivity()` call form.
+     */
+    protected fun getActivity(): AppCompatActivity {
+        return activity
+    }
+
     protected val context: Context
         get() = this.activity
 

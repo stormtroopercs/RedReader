@@ -222,6 +222,14 @@ class RedditAccountManager @Inject constructor(
             updateNotifier.updateAllListeners()
         }
 
+    /**
+     * Legacy accessor for converted call sites that still use the
+     * Java-style `getDefaultAccount()` call form.
+     */
+    fun getDefaultAccount(): RedditAccount? {
+        return defaultAccount
+    }
+
     @Synchronized
     private fun reloadAccounts(db: SQLiteDatabase) {
         val fields = arrayOf<String?>(
@@ -309,6 +317,12 @@ class RedditAccountManager @Inject constructor(
                 instance ?: throw IllegalStateException("RedditAccountManager not initialized by Hilt")
             }
         }
+
+        /**
+         * Legacy accessor for `Companion.getAnon()` call sites.
+         */
+        @JvmStatic
+        fun getAnon(): RedditAccount = anon
 
         internal fun setInstance(i: RedditAccountManager?) {
             instance = i

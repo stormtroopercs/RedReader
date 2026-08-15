@@ -27,7 +27,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.account.RedditAccount.isAnonymous
 import org.quantumbadger.redreader.account.RedditAccountManager

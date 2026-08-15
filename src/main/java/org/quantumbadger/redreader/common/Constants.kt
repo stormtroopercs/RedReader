@@ -124,16 +124,20 @@ object Constants {
             )
 
             DEFAULT_SUBREDDITS = CollectionStream<String?>(*defaultSubredditStrings)
-                .mapRethrowExceptions<SubredditCanonicalId?>(MapStreamRethrowExceptions.Operator { name: SubredditCanonicalId? ->
-                    SubredditCanonicalId(
-                        name
-                    )
-                })
+                .mapRethrowExceptions<SubredditCanonicalId?> { name: String? ->
+                    if (name == null) {
+                        null
+                    } else {
+                        SubredditCanonicalId(
+                            name
+                        )
+                    }
+                }
                 .collect<ArrayList<SubredditCanonicalId?>>(
                     ArrayList<SubredditCanonicalId?>(
                         defaultSubredditStrings.size
                     )
-                )
+                )!!
 
             BOT_USERNAMES_LOWERCASE = HashSet<String?>()
             BOT_USERNAMES_LOWERCASE.add("automoderator")

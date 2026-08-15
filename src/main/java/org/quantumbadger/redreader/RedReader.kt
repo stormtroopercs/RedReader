@@ -22,6 +22,7 @@ import android.content.Context
 import android.os.Process
 import android.util.Log
 import dagger.hilt.EntryPoint
+import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.EntryPoints
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -46,6 +47,21 @@ class RedReader : Application() {
     companion object {
         const val TAG = "RedReader"
 
+        @Volatile
+        private var instance: RedReader? = null
+
+        /**
+         * Legacy accessor for converted pre-Hilt call sites that still use
+         * the static `RedReader.getInstance(context)` form.
+         */
+        fun getInstance(context: Context): RedReader {
+            return instance ?: synchronized(this) {
+                instance ?: throw IllegalStateException(
+                    "RedReader not initialized by Application.onCreate()"
+                )
+            }
+        }
+
         @EntryPoint
         @InstallIn(SingletonComponent::class)
         interface CacheManagerEntryPoint {
@@ -63,6 +79,7 @@ class RedReader : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
 
         Log.i(TAG, "Application created.")
 

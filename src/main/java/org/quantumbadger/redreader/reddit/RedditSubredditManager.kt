@@ -42,11 +42,11 @@ import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 import javax.inject.Provider
 
 /**
- * Hilt-injected subreddit manager. Replaces manual singleton pattern.
- * Uses per-user caching for subreddit data.
+ * Per-user subreddit manager. Original Java used a static per-user singleton
+ * (`getInstance(context, user)`) — restored here so legacy call sites keep
+ * working.
  */
-@Singleton
-class RedditSubredditManager @Inject constructor(
+class RedditSubredditManager private constructor(
     private val context: Context,
     private val user: RedditAccount
 ) {
@@ -58,7 +58,7 @@ class RedditSubredditManager @Inject constructor(
         val subredditDb = RawObjectDB<SubredditCanonicalId?, RedditSubreddit?>(
             context,
             getDbFilename("subreddits", user),
-            RedditSubreddit::class.java
+            RedditSubreddit::class.java as Class<RedditSubreddit?>
         )
 
         val subredditDbWrapper =             ThreadedRawObjectDB<SubredditCanonicalId?, RedditSubreddit?, RRError?>(
@@ -91,9 +91,13 @@ class RedditSubredditManager @Inject constructor(
     fun getSubreddit(
         subredditCanonicalId: SubredditCanonicalId?,
         timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<RedditSubreddit?, RRError?>?,
+        handler: RequestResponseHandler<RedditSubreddit?, RRError?>,
         updatedVersionListener: UpdatedVersionListener<SubredditCanonicalId?, RedditSubreddit?>?
     ) {
+        if (handler == null) {
+            return
+        }
+
         subredditCache.performRequest(
             subredditCanonicalId,
             timestampBound,
@@ -105,12 +109,38 @@ class RedditSubredditManager @Inject constructor(
     fun getSubreddits(
         ids: MutableCollection<SubredditCanonicalId?>?,
         timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<HashMap<SubredditCanonicalId?, RedditSubreddit?>?, RRError?>?
+        handler: RequestResponseHandler<HashMap<SubredditCanonicalId?, RedditSubreddit?>?, RRError?>
     ) {
+        if (ids == null || timestampBound == null || handler == null) {
+            return
+        }
+
         subredditCache.performRequest(ids, timestampBound, handler)
     }
 
     companion object {
+        @Volatile
+        private var singleton: RedditSubredditManager? = null
+
+        @Volatile
+        private var singletonUser: RedditAccount? = null
+
+        /**
+         * Per-user singleton, matching the original Java static accessor.
+         */
+        @JvmStatic
+        @Synchronized
+        fun getInstance(context: Context, user: RedditAccount): RedditSubredditManager {
+            val current = singleton
+            val currentUser = singletonUser
+            if (current == null || current.user !== user || currentUser != user) {
+                singleton = RedditSubredditManager(context, user)
+                singletonUser = user
+            }
+
+            return singleton!!
+        }
+
         private fun getDbFilename(type: String?, user: RedditAccount): String {
             return sha1(user.username.toByteArray()) + "_" + type + "_subreddits.db"
         }

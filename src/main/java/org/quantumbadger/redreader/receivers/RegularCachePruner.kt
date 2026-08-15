@@ -20,7 +20,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
 

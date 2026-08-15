@@ -20,7 +20,6 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.UiThread
 import org.apache.commons.text.StringEscapeUtils
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity

@@ -19,7 +19,6 @@ package org.quantumbadger.redreader.reddit
 import android.content.Context
 import androidx.annotation.IntDef
 import androidx.appcompat.app.AppCompatActivity
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheManager

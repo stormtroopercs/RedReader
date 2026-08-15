@@ -26,7 +26,6 @@ import androidx.appcompat.app.AppCompatActivity
 import org.apache.commons.text.StringEscapeUtils
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.activities.CommentReplyActivity

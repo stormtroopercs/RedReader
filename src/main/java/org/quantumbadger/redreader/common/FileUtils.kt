@@ -30,7 +30,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError

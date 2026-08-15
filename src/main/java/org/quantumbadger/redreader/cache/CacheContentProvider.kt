@@ -27,7 +27,6 @@ import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.util.Log
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.cache.CacheManager.ReadableCacheFile
 import org.quantumbadger.redreader.common.FileUtils
 import org.quantumbadger.redreader.common.General.filenameFromString

@@ -53,7 +53,6 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import com.github.lzyzsd.circleprogress.DonutProgress
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.RedReader.Companion.getInstance
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest
