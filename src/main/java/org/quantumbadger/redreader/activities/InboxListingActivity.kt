@@ -118,7 +118,7 @@ class InboxListingActivity : ViewsBaseActivity() {
             return RedditInboxItemView::class.java
         }
 
-        override fun onCreateViewHolder(viewGroup: ViewGroup?): RecyclerView.ViewHolder {
+        override fun onCreateViewHolder(viewGroup : ViewGroup): RecyclerView.ViewHolder {
             val view = RedditInboxItemView(this@InboxListingActivity, mTheme)
 
             val layoutParams = RecyclerView.LayoutParams(
@@ -455,7 +455,7 @@ class InboxListingActivity : ViewsBaseActivity() {
                             )
                         }
 
-                        protected override fun onCallbackException(t: Throwable?) {
+                        protected override fun onCallbackException(t : Throwable) {
                             addGlobalError(
                                 RRError(
                                     "Mark all as Read failed",

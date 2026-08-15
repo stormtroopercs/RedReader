@@ -21,7 +21,7 @@ import org.quantumbadger.redreader.common.time.TimestampUTC
 import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.now
 
 abstract class TimestampBound {
-    abstract fun verifyTimestamp(timestamp: TimestampUTC?): Boolean
+    abstract fun verifyTimestamp(timestamp : TimestampUTC): Boolean
 
     class MoreRecentThanBound(private val minTimestamp: TimestampUTC) : TimestampBound() {
         override fun verifyTimestamp(timestamp: TimestampUTC): Boolean {
@@ -31,13 +31,13 @@ abstract class TimestampBound {
 
     companion object {
         val ANY: TimestampBound = object : TimestampBound() {
-            override fun verifyTimestamp(timestamp: TimestampUTC?): Boolean {
+            override fun verifyTimestamp(timestamp : TimestampUTC): Boolean {
                 return true
             }
         }
         @Suppress("PropertyName")
     val NONE: TimestampBound = object : TimestampBound() {
-            override fun verifyTimestamp(timestamp: TimestampUTC?): Boolean {
+            override fun verifyTimestamp(timestamp : TimestampUTC): Boolean {
                 return false
             }
         }

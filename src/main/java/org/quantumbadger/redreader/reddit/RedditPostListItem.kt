@@ -35,7 +35,7 @@ class RedditPostListItem
         return RedditPostView::class.java
     }
 
-    override fun onCreateViewHolder(viewGroup: ViewGroup?): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(viewGroup : ViewGroup): RecyclerView.ViewHolder {
         val view = RedditPostView(
             mActivity,
             mFragment,

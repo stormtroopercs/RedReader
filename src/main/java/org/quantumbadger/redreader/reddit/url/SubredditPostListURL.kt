@@ -41,7 +41,7 @@ class SubredditPostListURL private constructor(
         FRONTPAGE, ALL, SUBREDDIT, SUBREDDIT_COMBINATION, ALL_SUBTRACTION, POPULAR
     }
 
-    override fun after(newAfter: RedditIdAndType?): SubredditPostListURL {
+    override fun after(newAfter : RedditIdAndType): SubredditPostListURL {
         return SubredditPostListURL(type, subreddit, order, limit, before, newAfter)
     }
 

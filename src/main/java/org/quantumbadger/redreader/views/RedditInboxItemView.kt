@@ -142,13 +142,13 @@ class RedditInboxItemView(
         setLayoutMatchWidthWrapHeight(body)
     }
 
-    fun handleInboxClick(activity: BaseActivity?) {
+    fun handleInboxClick(activity : BaseActivity) {
         if (currentItem != null) {
             currentItem!!.handleInboxClick(activity)
         }
     }
 
-    fun handleInboxLongClick(activity: BaseActivity?) {
+    fun handleInboxLongClick(activity : BaseActivity) {
         if (currentItem != null) {
             currentItem!!.handleInboxLongClick(activity)
         }

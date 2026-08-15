@@ -145,7 +145,7 @@ class PostCommentListingURL(
         return RedditURLParser.POST_COMMENT_LISTING_URL
     }
 
-    override fun humanReadableName(context: Context?, shorter: Boolean): String? {
+    override fun humanReadableName(context : Context, shorter: Boolean): String? {
         return super.humanReadableName(context, shorter)
     }
 

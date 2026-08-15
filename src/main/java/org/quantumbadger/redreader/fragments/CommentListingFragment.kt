@@ -677,11 +677,11 @@ class CommentListingFragment(
         return false
     }
 
-    override fun onPostSelected(post: RedditPreparedPost?) {
+    override fun onPostSelected(post : RedditPreparedPost) {
         (getActivity() as PostSelectionListener).onPostSelected(post)
     }
 
-    override fun onPostCommentsSelected(post: RedditPreparedPost?) {
+    override fun onPostCommentsSelected(post : RedditPreparedPost) {
         (getActivity() as PostSelectionListener).onPostCommentsSelected(post)
     }
 

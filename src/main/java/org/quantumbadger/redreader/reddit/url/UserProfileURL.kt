@@ -41,7 +41,7 @@ class UserProfileURL(val username: String?) : RedditURL() {
         return RedditURLParser.USER_PROFILE_URL
     }
 
-    override fun humanReadableName(context: Context?, shorter: Boolean): String? {
+    override fun humanReadableName(context : Context, shorter: Boolean): String? {
         return username
     }
 

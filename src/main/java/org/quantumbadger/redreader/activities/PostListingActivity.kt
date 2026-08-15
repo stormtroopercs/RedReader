@@ -167,7 +167,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu : Menu): Boolean {
         val user: RedditAccount = RedditAccountManager.Companion.getInstance(this)
             .getDefaultAccount()
         val subredditSubscriptionState: SubredditSubscriptionState?

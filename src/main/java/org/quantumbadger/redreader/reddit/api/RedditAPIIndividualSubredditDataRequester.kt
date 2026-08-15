@@ -119,7 +119,7 @@ class RedditAPIIndividualSubredditDataRequester(
 
         val innerHandler: RequestResponseHandler<RedditSubreddit?, RRError?> =
             object : RequestResponseHandler<RedditSubreddit?, RRError?> {
-                override fun onRequestFailed(failureReason: RRError?) {
+                override fun onRequestFailed(failureReason : RRError) {
                     synchronized(result) {
                         if (stillOkay.get()) {
                             stillOkay.set(false)

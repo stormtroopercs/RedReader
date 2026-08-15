@@ -44,7 +44,7 @@ class UserPostListingURL internal constructor(
         SAVED, HIDDEN, UPVOTED, DOWNVOTED, SUBMITTED
     }
 
-    override fun after(newAfter: RedditIdAndType?): UserPostListingURL {
+    override fun after(newAfter : RedditIdAndType): UserPostListingURL {
         return UserPostListingURL(type, user, order, limit, before, newAfter)
     }
 

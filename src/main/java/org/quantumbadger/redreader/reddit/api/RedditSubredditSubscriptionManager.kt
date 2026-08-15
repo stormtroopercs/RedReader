@@ -240,7 +240,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
     ) {
         val handler: RequestResponseHandler<HashSet<SubredditCanonicalId?>?, RRError?> =
             object : RequestResponseHandler<HashSet<SubredditCanonicalId?>?, RRError?> {
-                override fun onRequestFailed(failureReason: RRError?) {
+                override fun onRequestFailed(failureReason : RRError) {
                     if (onFailure != null) {
                         onFailure.apply(failureReason)
                     }
@@ -285,7 +285,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
             timestampBound,
             object : RequestResponseHandler<WritableHashSet?, RRError?> {
                 // TODO handle failed requests properly -- retry? then notify listeners
-                override fun onRequestFailed(failureReason: RRError?) {
+                override fun onRequestFailed(failureReason : RRError) {
                     if (handler != null) {
                         handler.onRequestFailed(failureReason)
                     }
@@ -374,7 +374,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
             }
         }
 
-        protected override fun onCallbackException(t: Throwable?) {
+        protected override fun onCallbackException(t : Throwable) {
             handleGlobalError(context, t)
         }
 

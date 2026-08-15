@@ -228,7 +228,7 @@ class ImageViewScrollbars(
     }
 
     @Synchronized
-    override fun renderInternal(stack: RRGLMatrixStack?, time: Long) {
+    override fun renderInternal(stack : RRGLMatrixStack, time: Long) {
         if (mIsVisible && time > mShowUntil) {
             mCurrentAlpha -= ALPHA_STEP
 

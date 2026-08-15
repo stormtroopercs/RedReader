@@ -21,7 +21,7 @@ import org.quantumbadger.redreader.common.RRError
 interface GetImageInfoListener {
     fun onFailure(error: RRError)
 
-    fun onSuccess(info: ImageInfo?)
+    fun onSuccess(info : ImageInfo)
 
     fun onNotAnImage()
 }

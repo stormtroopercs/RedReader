@@ -519,7 +519,7 @@ class PostSubmitContentFragment : Fragment() {
                         })
                     }
 
-                    protected override fun onCallbackException(t: Throwable?) {
+                    protected override fun onCallbackException(t : Throwable) {
                         BugReportActivity.handleGlobalError(mContext!!, t)
                     }
 

@@ -352,7 +352,7 @@ object UserProfileDialog {
 						General.showResultDialog(activity, error)
 					}
 
-					override fun onCallbackException(t: Throwable?) {
+					override fun onCallbackException(t : Throwable) {
 						BugReportActivity.handleGlobalError(activity, t)
 						activity.runOnUiThread {
 							chipUnblock.text = activity.getString(R.string.userprofile_button_unblock)

@@ -28,7 +28,7 @@ class GroupedRecyclerViewAdapter(groups: Int) : RecyclerView.Adapter<RecyclerVie
 
         abstract val viewType: Class<*>?
 
-        abstract fun onCreateViewHolder(viewGroup: ViewGroup?): VH?
+        abstract fun onCreateViewHolder(viewGroup : ViewGroup): VH?
 
         abstract fun onBindViewHolder(viewHolder: VH?)
 

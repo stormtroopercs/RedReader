@@ -35,7 +35,7 @@ class MultiredditPostListURL private constructor(
     val before: String?,
     val after: RedditIdAndType?
 ) : PostListingURL() {
-    override fun after(newAfter: RedditIdAndType?): MultiredditPostListURL {
+    override fun after(newAfter : RedditIdAndType): MultiredditPostListURL {
         return MultiredditPostListURL(username, name, order, limit, before, newAfter)
     }
 
@@ -108,7 +108,7 @@ class MultiredditPostListURL private constructor(
         }
     }
 
-    override fun humanReadableName(context: Context?, shorter: Boolean): String {
+    override fun humanReadableName(context : Context, shorter: Boolean): String {
         if (username == null) {
             return name
         } else {

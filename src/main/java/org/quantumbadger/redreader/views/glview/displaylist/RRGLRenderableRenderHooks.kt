@@ -19,7 +19,7 @@ package org.quantumbadger.redreader.views.glview.displaylist
 import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
 abstract class RRGLRenderableRenderHooks(private val mEntity: RRGLRenderable) : RRGLRenderable() {
-    override fun renderInternal(stack: RRGLMatrixStack?, time: Long) {
+    override fun renderInternal(stack : RRGLMatrixStack, time: Long) {
         preRender(stack, time)
         mEntity.startRender(stack, time)
         postRender(stack, time)
@@ -39,9 +39,9 @@ abstract class RRGLRenderableRenderHooks(private val mEntity: RRGLRenderable) : 
         return mEntity.isAnimating
     }
 
-    protected abstract fun preRender(stack: RRGLMatrixStack?, time: Long)
+    protected abstract fun preRender(stack : RRGLMatrixStack, time: Long)
 
-    protected abstract fun postRender(stack: RRGLMatrixStack?, time: Long)
+    protected abstract fun postRender(stack : RRGLMatrixStack, time: Long)
 
     override fun setOverallAlpha(alpha: Float) {
         mEntity.setOverallAlpha(alpha)

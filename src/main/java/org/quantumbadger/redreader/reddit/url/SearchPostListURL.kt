@@ -103,7 +103,7 @@ class SearchPostListURL : PostListingURL {
         after: RedditIdAndType?
     ) : this(username, name, query, PostSort.RELEVANCE_ALL, limit, before, after)
 
-    override fun after(after: RedditIdAndType?): PostListingURL {
+    override fun after(after : RedditIdAndType): PostListingURL {
         if (type == Type.SUB_OR_SUB_COMBO) {
             return SearchPostListURL(subreddit, query, order, limit, before, after)
         } else {

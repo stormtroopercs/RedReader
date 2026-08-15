@@ -648,7 +648,7 @@ class RedditRenderableComment
         onLinkClicked(activity, commentContext)
     }
 
-    override fun handleInboxLongClick(activity: BaseActivity?) {
+    override fun handleInboxLongClick(activity : BaseActivity) {
         val changeDataManager: RedditChangeDataManager=RedditChangeDataManager.Companion.getInstance(
             RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
         )

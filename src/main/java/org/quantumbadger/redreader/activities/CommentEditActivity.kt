@@ -143,7 +143,7 @@ class CommentEditActivity : ViewsBaseActivity() {
                     })
                 }
 
-                protected override fun onCallbackException(t: Throwable?) {
+                protected override fun onCallbackException(t : Throwable) {
                     BugReportActivity.Companion.handleGlobalError(this@CommentEditActivity, t)
                 }
 

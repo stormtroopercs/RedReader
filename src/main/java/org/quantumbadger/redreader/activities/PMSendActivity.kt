@@ -197,7 +197,7 @@ class PMSendActivity : ViewsBaseActivity() {
                     })
                 }
 
-                protected override fun onCallbackException(t: Throwable?) {
+                protected override fun onCallbackException(t : Throwable) {
                     handleGlobalError(this@PMSendActivity, t)
                 }
 

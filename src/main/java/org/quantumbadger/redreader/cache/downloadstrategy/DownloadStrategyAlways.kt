@@ -23,7 +23,7 @@ class DownloadStrategyAlways private constructor() : DownloadStrategy {
         return true
     }
 
-    override fun shouldDownloadIfCacheEntryFound(entry: CacheEntry?): Boolean {
+    override fun shouldDownloadIfCacheEntryFound(entry : CacheEntry): Boolean {
         // Should never get here
         return true
     }

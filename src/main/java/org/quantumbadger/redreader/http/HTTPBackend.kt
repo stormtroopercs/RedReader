@@ -45,7 +45,7 @@ abstract class HTTPBackend {
             body: FailedRequestBody?
         )
 
-        fun onSuccess(mimetype: String?, bodyBytes: Long?, body: InputStream?)
+        fun onSuccess(mimetype: String?, bodyBytes: Long?, body : InputStream)
     }
 
     abstract fun resolveRedirectUri(

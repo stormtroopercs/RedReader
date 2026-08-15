@@ -95,7 +95,7 @@ class RedditMultiredditSubscriptionManager @Inject constructor(
             timestampBound,
             object : RequestResponseHandler<WritableHashSet?, RRError?> {
                 // TODO handle failed requests properly -- retry? then notify listeners
-                override fun onRequestFailed(failureReason: RRError?) {
+                override fun onRequestFailed(failureReason : RRError) {
                     if (handler != null) {
                         handler.onRequestFailed(failureReason)
                     }

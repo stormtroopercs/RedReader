@@ -479,9 +479,9 @@ class RedditPostView(
     }
 
     interface PostSelectionListener {
-        fun onPostSelected(post: RedditPreparedPost?)
+        fun onPostSelected(post : RedditPreparedPost)
 
-        fun onPostCommentsSelected(post: RedditPreparedPost?)
+        fun onPostCommentsSelected(post : RedditPreparedPost)
     }
 
     private fun setBottomMargin(enabled: Boolean) {

@@ -90,13 +90,13 @@ class CommentListingRequest(
     interface Listener {
         fun onCommentListingRequestDownloadNecessary()
 
-        fun onCommentListingRequestFailure(error: RRError?)
+        fun onCommentListingRequestFailure(error : RRError)
 
         fun onCommentListingRequestCachedCopy(timestamp: TimestampUTC?)
 
         fun onCommentListingRequestParseStart()
 
-        fun onCommentListingRequestPostDownloaded(post: RedditPreparedPost?)
+        fun onCommentListingRequestPostDownloaded(post : RedditPreparedPost)
 
         fun onCommentListingRequestAllItemsDownloaded(items: ArrayList<RedditCommentListItem>?)
     }

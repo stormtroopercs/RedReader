@@ -58,10 +58,10 @@ abstract class RRFragment protected constructor(
         activity.startActivityForResult(intent, requestCode)
     }
 
-    open fun onCreateOptionsMenu(menu: Menu?) {
+    open fun onCreateOptionsMenu(menu : Menu) {
     }
 
-    open fun onOptionsItemSelected(item: MenuItem?): Boolean {
+    open fun onOptionsItemSelected(item : MenuItem): Boolean {
         return false
     }
 

@@ -1468,7 +1468,7 @@ object OptionsMenuUtility {
         @get:StringRes
         val menuTitle: Int
 
-        fun onSortSelected(activity: AppCompatActivity?)
+        fun onSortSelected(activity : AppCompatActivity)
     }
 
     //The sorts of a SortGroup should always be of the same "base type" (e.g. only top post sorts).

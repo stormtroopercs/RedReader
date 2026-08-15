@@ -40,7 +40,7 @@ abstract class APIResponseHandler private constructor(val context: AppCompatActi
         POST_FLAIR_REQUIRED
     }
 
-    abstract fun onCallbackException(t: Throwable?)
+    abstract fun onCallbackException(t : Throwable)
 
     abstract fun onFailure(error: RRError)
 
@@ -148,6 +148,6 @@ abstract class APIResponseHandler private constructor(val context: AppCompatActi
 
         protected abstract fun onDownloadStarted()
 
-        protected abstract fun onSuccess(result: RedditUser?, timestamp: TimestampUTC?)
+        protected abstract fun onSuccess(result : RedditUser, timestamp : TimestampUTC)
     }
 }

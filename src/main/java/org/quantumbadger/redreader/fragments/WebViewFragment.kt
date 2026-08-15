@@ -527,11 +527,11 @@ class WebViewFragment : Fragment(), PostSelectionListener {
         return false
     }
 
-    override fun onPostSelected(post: RedditPreparedPost?) {
+    override fun onPostSelected(post : RedditPreparedPost) {
         (mActivity as PostSelectionListener).onPostSelected(post)
     }
 
-    override fun onPostCommentsSelected(post: RedditPreparedPost?) {
+    override fun onPostCommentsSelected(post : RedditPreparedPost) {
         (mActivity as PostSelectionListener).onPostCommentsSelected(post)
     }
 

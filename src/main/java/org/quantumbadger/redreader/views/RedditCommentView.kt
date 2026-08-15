@@ -284,9 +284,9 @@ class RedditCommentView(
     }
 
     interface CommentListener {
-        fun onCommentClicked(view: RedditCommentView?)
+        fun onCommentClicked(view : RedditCommentView)
 
-        fun onCommentLongClicked(view: RedditCommentView?)
+        fun onCommentLongClicked(view : RedditCommentView)
     }
 
     init {

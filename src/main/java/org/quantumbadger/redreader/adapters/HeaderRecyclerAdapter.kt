@@ -32,9 +32,9 @@ abstract class HeaderRecyclerAdapter<VH : RecyclerView.ViewHolder?>
         }
     }
 
-    protected abstract fun onCreateHeaderItemViewHolder(parent: ViewGroup?): VH?
+    protected abstract fun onCreateHeaderItemViewHolder(parent : ViewGroup): VH?
 
-    protected abstract fun onCreateContentItemViewHolder(parent: ViewGroup?): VH?
+    protected abstract fun onCreateContentItemViewHolder(parent : ViewGroup): VH?
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         if (position == 0) {

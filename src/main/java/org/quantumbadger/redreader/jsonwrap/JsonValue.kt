@@ -51,7 +51,7 @@ abstract class JsonValue {
         return sb.toString()
     }
 
-    abstract fun prettyPrint(indent: Int, sb: StringBuilder?)
+    abstract fun prettyPrint(indent: Int, sb : StringBuilder)
 
     fun getAtPath(vararg keys: Any?): Optional<JsonValue?> {
         return getAtPathInternal(0, *keys)

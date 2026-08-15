@@ -85,7 +85,7 @@ class MoreCommentsListingActivity : RefreshableActivity(), RedditAccountChangeLi
     // protected void onSaveInstanceState(final Bundle outState) {
     // 	super.onSaveInstanceState(outState);
     // }
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu : Menu): Boolean {
         OptionsMenuUtility.prepare<MoreCommentsListingActivity?>(
             this,
             menu,

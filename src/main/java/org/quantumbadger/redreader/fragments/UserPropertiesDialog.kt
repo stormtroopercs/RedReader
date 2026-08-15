@@ -27,7 +27,7 @@ import org.quantumbadger.redreader.reddit.things.RedditUser
 import java.util.Objects
 
 class UserPropertiesDialog : PropertiesDialog() {
-    override fun getTitle(context: Context?): String {
+    override fun getTitle(context : Context): String {
         return Objects.requireNonNull<RedditUser?>(
             BundleCompat.getParcelable<RedditUser?>(
                 requireArguments(),

@@ -19,7 +19,7 @@ package org.quantumbadger.redreader.reddit.prepared
 import org.quantumbadger.redreader.activities.BaseActivity
 
 interface RedditRenderableInboxItem : RedditRenderableCommentListItem {
-    fun handleInboxClick(activity: BaseActivity?)
+    fun handleInboxClick(activity : BaseActivity)
 
-    fun handleInboxLongClick(activity: BaseActivity?)
+    fun handleInboxLongClick(activity : BaseActivity)
 }

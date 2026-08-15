@@ -33,12 +33,12 @@ open class GroupedRecyclerViewItemView
         return mViewType
     }
 
-    override fun onCreateViewHolder(viewGroup: ViewGroup?): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(viewGroup : ViewGroup): RecyclerView.ViewHolder {
         val view = mFactory.apply(viewGroup)
         return object : RecyclerView.ViewHolder(view) {}
     }
 
-    override fun onBindViewHolder(viewHolder: RecyclerView.ViewHolder?) {
+    override fun onBindViewHolder(viewHolder : RecyclerView.ViewHolder) {
         // Nothing to do here
     }
 

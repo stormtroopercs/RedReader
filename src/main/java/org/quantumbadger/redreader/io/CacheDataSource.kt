@@ -33,5 +33,5 @@ interface CacheDataSource<K, V, F> {
 
     fun performWrite(value: V?)
 
-    fun performWrite(values: MutableCollection<V?>?)
+    fun performWrite(values : MutableCollection<V?>)
 }

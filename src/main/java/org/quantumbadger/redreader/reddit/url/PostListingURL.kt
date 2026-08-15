@@ -21,7 +21,7 @@ import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 
 abstract class PostListingURL : RedditURL() {
-    abstract fun after(after: RedditIdAndType?): PostListingURL?
+    abstract fun after(after : RedditIdAndType): PostListingURL?
 
     abstract fun limit(limit: Int?): PostListingURL?
 

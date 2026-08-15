@@ -45,7 +45,7 @@ open class RRGLRenderableGroup : RRGLRenderable() {
         super.onAdded()
     }
 
-    override fun renderInternal(matrixStack: RRGLMatrixStack?, time: Long) {
+    override fun renderInternal(matrixStack : RRGLMatrixStack, time: Long) {
         for (i in mChildren.indices) {
             val entity = mChildren.get(i)
             entity.startRender(matrixStack, time)

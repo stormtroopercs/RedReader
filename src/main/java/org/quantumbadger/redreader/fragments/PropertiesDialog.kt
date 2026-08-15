@@ -41,7 +41,7 @@ abstract class PropertiesDialog : AppCompatDialogFragment() {
     @Volatile
     private var alreadyCreated = false
 
-    protected abstract fun getTitle(context: Context?): String?
+    protected abstract fun getTitle(context : Context): String?
 
     protected abstract fun prepare(
         context: BaseActivity,

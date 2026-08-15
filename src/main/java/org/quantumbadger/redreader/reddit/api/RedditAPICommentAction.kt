@@ -635,7 +635,7 @@ object RedditAPICommentAction {
         RedditAPI.action(
             CacheManager.Companion.getInstance(activity),
             object : ActionResponseHandler(activity) {
-                protected override fun onCallbackException(t: Throwable?) {
+                protected override fun onCallbackException(t : Throwable) {
                     throw RuntimeException(t)
                 }
 

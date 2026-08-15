@@ -241,7 +241,7 @@ object RedditURLParser {
             return this as ComposeMessageURL
         }
 
-        open fun humanReadableName(context: Context?, shorter: Boolean): String {
+        open fun humanReadableName(context : Context, shorter: Boolean): String {
             return humanReadablePath()
         }
 

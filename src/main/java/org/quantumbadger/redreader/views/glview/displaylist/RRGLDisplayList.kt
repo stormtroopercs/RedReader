@@ -19,7 +19,7 @@ package org.quantumbadger.redreader.views.glview.displaylist
 import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
 class RRGLDisplayList : RRGLRenderableGroup() {
-    protected override fun renderInternal(matrixStack: RRGLMatrixStack?, time: Long) {
+    protected override fun renderInternal(matrixStack : RRGLMatrixStack, time: Long) {
         super.renderInternal(matrixStack, time)
     }
 

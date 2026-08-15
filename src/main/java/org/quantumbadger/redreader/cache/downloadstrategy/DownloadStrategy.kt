@@ -23,7 +23,7 @@ import org.quantumbadger.redreader.cache.CacheEntry
 interface DownloadStrategy {
     fun shouldDownloadWithoutCheckingCache(): Boolean
 
-    fun shouldDownloadIfCacheEntryFound(entry: CacheEntry?): Boolean
+    fun shouldDownloadIfCacheEntryFound(entry : CacheEntry): Boolean
 
     fun shouldDownloadIfNotCached(): Boolean
 }

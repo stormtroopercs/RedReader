@@ -128,7 +128,7 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu : Menu): Boolean {
         OptionsMenuUtility.prepare<CommentListingActivity?>(
             this,
             menu,

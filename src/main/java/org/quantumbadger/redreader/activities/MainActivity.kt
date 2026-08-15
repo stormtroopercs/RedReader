@@ -726,7 +726,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu : Menu): Boolean {
         val postsVisible = postListingFragment != null
         val commentsVisible = commentListingFragment != null
 

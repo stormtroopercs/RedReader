@@ -44,7 +44,7 @@ abstract class RRGLRenderable {
     open val isAdded: Boolean
         get() = mAttachmentCount > 0
 
-    protected abstract fun renderInternal(stack: RRGLMatrixStack?, time: Long)
+    protected abstract fun renderInternal(stack : RRGLMatrixStack, time: Long)
 
     open fun onRemoved() {
         mAttachmentCount--

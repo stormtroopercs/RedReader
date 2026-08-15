@@ -40,7 +40,7 @@ class GroupedRecyclerViewItemRRError(
         return GroupedRecyclerViewItemRRError::class.java
     }
 
-    override fun onCreateViewHolder(viewGroup: ViewGroup?): ErrorHolder {
+    override fun onCreateViewHolder(viewGroup : ViewGroup): ErrorHolder {
         return ErrorHolder()
     }
 
