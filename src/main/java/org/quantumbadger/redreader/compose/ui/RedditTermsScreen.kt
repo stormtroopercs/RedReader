@@ -24,6 +24,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -75,10 +76,12 @@ fun RedditTermsScreen(
 
             Button(
                 onClick = {
-                    onLinkClicked(
-                        context,
-                        UriString("https://www.redditinc.com/policies/user-agreement-april-18-2023")
-                    )
+                    (context as? AppCompatActivity)?.let { host ->
+                        onLinkClicked(
+                            host,
+                            UriString("https://www.redditinc.com/policies/user-agreement-april-18-2023")
+                        )
+                    }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

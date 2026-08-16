@@ -28,6 +28,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +55,10 @@ fun UserProfileScreen(
     viewModel: UserProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(username) {
+        viewModel.loadProfile(username)
+    }
 
     Scaffold(
         topBar = {
@@ -93,6 +98,9 @@ fun UserProfileScreen(
             is UserProfileViewModel.UserProfileUiState.Ready -> {
                 UserProfileContent(
                     uiState = uiState,
+                    onNavigateToPosts = onNavigateToPosts,
+                    onNavigateToComments = onNavigateToComments,
+                    onSendMessage = onSendMessage,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -115,7 +123,7 @@ fun UserProfileScreen(
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.loadProfile() }) {
+                        Button(onClick = { viewModel.loadProfile(username) }) {
                             Text("Retry")
                         }
                     }
@@ -128,6 +136,9 @@ fun UserProfileScreen(
 @Composable
 private fun UserProfileContent(
     uiState: UserProfileViewModel.UserProfileUiState.Ready,
+    onNavigateToPosts: () -> Unit,
+    onNavigateToComments: () -> Unit,
+    onSendMessage: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -190,9 +201,10 @@ private fun UserHeader(uiState: UserProfileViewModel.UserProfileUiState.Ready) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "User avatar",
-                    modifier = Modifier.padding(16.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    size = 48.dp
+                    modifier = Modifier
+                        .size(48.dp)
+                        .padding(4.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
 
@@ -312,7 +324,7 @@ private fun AccountBadges(uiState: UserProfileViewModel.UserProfileUiState.Ready
                 }
                 if (uiState.isGold) {
                     BadgeChip(
-                        icon = Icons.Default.Empire,
+                        icon = Icons.Filled.Star,
                         label = "Employee",
                         color = MaterialTheme.colorScheme.secondary
                     )

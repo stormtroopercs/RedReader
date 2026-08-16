@@ -36,7 +36,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.FlagOutlined
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Bookmark
@@ -79,6 +78,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Comment list content with real data from CommentListViewModel.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RealCommentListScreen(
     postId: String,

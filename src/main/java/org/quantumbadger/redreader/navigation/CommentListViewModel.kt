@@ -34,7 +34,7 @@ import org.quantumbadger.redreader.common.General
 import org.quantumbadger.redreader.common.Priority
 import org.quantumbadger.redreader.common.RRError
 import org.quantumbadger.redreader.common.UriString
-import org.quantumbadger.common.AndroidCommon
+import org.quantumbadger.redreader.common.AndroidCommon
 import org.quantumbadger.redreader.common.datastream.SeekableInputStream
 import org.quantumbadger.redreader.jsonwrap.JsonValue
 import org.quantumbadger.redreader.reddit.kthings.JsonUtils
@@ -113,10 +113,18 @@ class CommentListViewModel(
             try {
                 val cacheManager = CacheManager.getInstance(context)
                 val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+                if (account == null) {
+                    AndroidCommon.runOnUiThread {
+                        _state.value = CommentListUiState.Error(
+                            RRError(title = "Not signed in", message = "Sign in to view comments")
+                        )
+                    }
+                    return@launch
+                }
 
                 // Build the URL for this post's comments
                 val url = PostCommentListingURL.forPostId(postId)
-                val uri = UriString.from(url.generateJsonUri())
+                val uri = UriString(url.generateJsonUri().toString())
 
                 val cacheRequest = CacheRequest(
                     uri,
@@ -126,8 +134,6 @@ class CommentListViewModel(
                     DownloadStrategyIfNotCached.INSTANCE,
                     Constants.FileType.COMMENT_LIST,
                     CacheRequest.DownloadQueueType.REDDIT_API,
-                    null,
-                    true,
                     context,
                     object : CacheRequestCallbacks {
                         override fun onFailure(error: RRError) {
@@ -273,7 +279,7 @@ class CommentListViewModel(
                         } else {
                             0
                         },
-                        createdUtcTimestamp = comment.created_utc.timestampUTC.timeMs / 1000,
+                        createdUtcTimestamp = comment.created_utc.value.toUtcSecs(),
                         authorFlairText = comment.author_flair_text?.decoded,
                         isTopLevel = depth == 0,
                         collapsed = false,

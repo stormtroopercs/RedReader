@@ -31,7 +31,6 @@ import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.common.Priority
 import org.quantumbadger.redreader.common.UriString
-import org.quantumbadger.redreader.reddit.url.InboxListingURL
 import org.quantumbadger.redreader.reddit.url.RedditURLParser
 import javax.inject.Inject
 

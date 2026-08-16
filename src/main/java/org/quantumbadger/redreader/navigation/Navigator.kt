@@ -26,7 +26,7 @@ class Navigator(val state: NavigationState) {
     fun navigate(route: NavKey) {
         if (route in state.backStacks.keys) {
             // This is a top level route, just switch to it.
-            state.topLevelRoute = route
+            state.switchTopLevel(route)
         } else {
             state.backStacks[state.topLevelRoute]?.add(route)
         }
@@ -39,7 +39,7 @@ class Navigator(val state: NavigationState) {
 
         // If we're at the base of the current route, go back to the start route stack.
         if (currentRoute == state.topLevelRoute) {
-            state.topLevelRoute = state.startRoute
+            state.switchTopLevel(state.startRoute)
         } else {
             currentStack.removeLastOrNull()
         }

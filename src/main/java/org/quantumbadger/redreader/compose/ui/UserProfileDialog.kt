@@ -75,7 +75,13 @@ fun UserProfileDialog(
                 }
 
                 is UserProfileViewModel.UserProfileUiState.Ready -> {
-                    UserProfileContent(uiState, username)
+                    UserProfileContent(
+                        uiState = uiState,
+                        username = username,
+                        onNavigateToPosts = onNavigateToPosts,
+                        onNavigateToComments = onNavigateToComments,
+                        onSendMessage = onSendMessage
+                    )
                 }
 
                 is UserProfileViewModel.UserProfileUiState.Error -> {
@@ -103,7 +109,10 @@ fun UserProfileDialog(
 @Composable
 private fun UserProfileContent(
     uiState: UserProfileViewModel.UserProfileUiState.Ready,
-    username: String
+    username: String,
+    onNavigateToPosts: () -> Unit,
+    onNavigateToComments: () -> Unit,
+    onSendMessage: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier

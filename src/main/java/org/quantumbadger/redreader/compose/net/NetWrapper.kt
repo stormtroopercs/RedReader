@@ -19,6 +19,7 @@ package org.quantumbadger.redreader.compose.net
 
 import android.graphics.BitmapFactory
 import android.util.Log
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
@@ -406,16 +407,18 @@ fun fetchSubredditReportFlow(
 	val rulesUri = remember(subredditName) {
 		UriString.from(
 			Constants.Reddit.getUriBuilder("/r/$subredditName/about/rules.json")
-				.appendQueryParameter("raw_json", "1")
-				.build()
+				?.appendQueryParameter("raw_json", "1")
+				?.build()
+				?: Uri.parse("")
 		)
 	}
 
 	val aboutUri = remember(subredditName) {
 		UriString.from(
 			Constants.Reddit.getUriBuilder("/r/$subredditName/about.json")
-				.appendQueryParameter("raw_json", "1")
-				.build()
+				?.appendQueryParameter("raw_json", "1")
+				?.build()
+				?: Uri.parse("")
 		)
 	}
 

@@ -61,6 +61,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -103,6 +104,10 @@ fun RealPostListScreen(
     val viewModel: PostListViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val currentSort by viewModel.sortBy.collectAsStateWithLifecycle()
+
+    LaunchedEffect(subreddit) {
+        viewModel.fetchPosts(subreddit)
+    }
     val theme = LocalComposeTheme.current.postCard
 
     var sortByMenuExpanded by remember { mutableStateOf(false) }

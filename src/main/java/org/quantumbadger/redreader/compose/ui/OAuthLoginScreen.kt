@@ -31,12 +31,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import info.guardianproject.netcipher.webkit.WebkitProxy
 import org.quantumbadger.redreader.RedReader
 import org.quantumbadger.redreader.common.TorCommon
-import org.quantumbadger.redreader.reddit.api.RedditOAuth.promptUri
+import org.quantumbadger.redreader.common.GlobalConfig
+import org.quantumbadger.redreader.common.PrefsUtility
 
 /**
  * Compose OAuth Login Screen — wraps the Reddit OAuth WebView in Compose.
@@ -135,7 +137,7 @@ private fun createOAuthWebView(
         settings.saveFormData = false
     }
     // ReCAPTCHA support
-    settings.supportMultipleWindows = true
+    settings.setSupportMultipleWindows(true)
     settings.javaScriptCanOpenWindowsAutomatically = true
 
     // Multi-window support for ReCAPTCHA
@@ -235,10 +237,28 @@ private fun createOAuthWebView(
         }
     }
 
+    // Build the OAuth authorize URI (mirrors RedditOAuth.promptUri)
+    val appId = PrefsUtility.pref_reddit_client_id_override() ?: GlobalConfig.appId
+    val promptUri = Uri.Builder()
+        .scheme("https")
+        .authority("www.reddit.com")
+        .path("/api/v1/authorize.compact")
+        .appendQueryParameter("response_type", "code")
+        .appendQueryParameter("duration", "permanent")
+        .appendQueryParameter("state", "Texas")
+        .appendQueryParameter("redirect_uri", OAUTH_REDIRECT_URI)
+        .appendQueryParameter("client_id", appId)
+        .appendQueryParameter("scope", OAUTH_SCOPES)
+        .build()
     webView.loadUrl(promptUri.toString())
     return webView
 }
 
+private const val OAUTH_REDIRECT_URI = "redreader://rr_oauth_redir"
+private const val OAUTH_SCOPES =
+    ("identity edit flair history modconfig modflair modlog modposts "
+        + "modwiki mysubreddits privatemessages read report save submit "
+        + "subscribe vote wikiedit wikiread account")
 private const val OAUTH_HOST = "rr_oauth_redir"
 private const val REDREADER_SCHEME = "redreader"
 private const val HTTP_SCHEME = "http"

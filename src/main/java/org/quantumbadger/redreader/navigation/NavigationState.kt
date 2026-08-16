@@ -27,8 +27,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
+import androidx.compose.runtime.saveable.Saver
 import androidx.navigation3.runtime.serialization.NavKeySerializer
-import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
+import kotlinx.serialization.json.Json
+
+private val navKeySaver = Saver<NavKey, String>(
+    save = { key -> Json.encodeToString(NavKeySerializer(), key) },
+    restore = { json -> Json.decodeFromString(NavKeySerializer(), json) }
+)
 
 /**
  * Create a navigation state that persists config changes and process death.
@@ -41,9 +47,7 @@ fun rememberNavigationState(
     startRoute: NavKey,
     topLevelRoutes: Set<NavKey>
 ): NavigationState {
-    val topLevelRoute = rememberSaveable(
-        stateSaver = MutableStateSerializer(NavKeySerializer())
-    ) {
+    val topLevelRoute = rememberSaveable(stateSaver = navKeySaver) {
         mutableStateOf(startRoute)
     }
 
@@ -75,6 +79,13 @@ class NavigationState(
 ) {
     var topLevelRoute: NavKey by topLevelRoute
         private set
+
+    /**
+     * Switch the active top-level route (tab switch).
+     */
+    fun switchTopLevel(route: NavKey) {
+        topLevelRoute = route
+    }
 
     /**
      * The combined back stack for the NavDisplay.

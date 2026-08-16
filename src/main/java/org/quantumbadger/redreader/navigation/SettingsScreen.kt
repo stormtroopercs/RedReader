@@ -255,7 +255,7 @@ private fun EnumSettingItem(item: SettingsItem.EnumSetting<*>) {
                     text = { Text(option.name) },
                     onClick = {
                         selected = option
-                        item.set(option)
+                        item.applyOption(option)
                         expanded = false
                     }
                 )
@@ -313,14 +313,16 @@ data class SettingsCategory(
     val items: List<SettingsItem>
 )
 
-sealed class SettingsItem(val key: String) {
+sealed class SettingsItem {
+    abstract val key: String
+
     data class BooleanSetting(
         override val key: String,
         val label: String,
         val description: String = "",
         val get: () -> Boolean,
         val set: (Boolean) -> Unit
-    ) : SettingsItem(key)
+    ) : SettingsItem()
 
     data class EnumSetting<T : Enum<T>>(
         override val key: String,
@@ -328,15 +330,22 @@ sealed class SettingsItem(val key: String) {
         val description: String = "",
         val entries: List<T>,
         val get: () -> T,
-        val set: (T) -> Unit
-    ) : SettingsItem(key)
+        private val set: (T) -> Unit
+    ) : SettingsItem() {
+        // Takes Any? (not T) so it stays callable on a star-projected
+        // EnumSetting<*> receiver; the option always comes from `entries`.
+        @Suppress("UNCHECKED_CAST")
+        fun applyOption(option: Any?) {
+            set(option as T)
+        }
+    }
 
     data class PreferenceItem(
         override val key: String,
         val label: String,
         val description: String = "",
         val onClick: () -> Unit
-    ) : SettingsItem(key)
+    ) : SettingsItem()
 }
 
 // ============================================================================
