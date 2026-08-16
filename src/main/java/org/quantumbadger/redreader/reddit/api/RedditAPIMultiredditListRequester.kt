@@ -144,7 +144,7 @@ class RedditAPIMultiredditListRequester(
         throw UnsupportedOperationException()
     }
 
-    override fun performWrite(values: MutableCollection<WritableHashSet?>?) {
+    override fun performWrite(values: MutableCollection<WritableHashSet?>) {
         throw UnsupportedOperationException()
     }
 }

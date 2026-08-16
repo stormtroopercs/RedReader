@@ -174,7 +174,7 @@ class RedditAPIIndividualSubredditDataRequester(
         throw UnsupportedOperationException()
     }
 
-    override fun performWrite(values: MutableCollection<RedditSubreddit?>?) {
+    override fun performWrite(values: MutableCollection<RedditSubreddit?>) {
         throw UnsupportedOperationException()
     }
 
