@@ -65,7 +65,7 @@ NavDisplay(
 ```
 
 ### ViewModel Integration
-- Uses `androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel` (NOT `androidx.hilt.navigation.compose.hiltViewModel`)
+- Uses `androidx.hilt.navigation.compose.hiltViewModel` (from `androidx.hilt:hilt-navigation-compose:1.2.0`). Note: `androidx.hilt.lifecycle.viewmodel.compose` does NOT exist as an artifact — the recipe's import was corrected at conversion time (commit "fix: Correct hiltViewModel import path").
 - `rememberViewModelStoreNavEntryDecorator()` in `entryDecorators` scopes ViewModels per NavEntry
 - Reference: `nav3-recipes/passingarguments/viewmodels/hilt/HiltViewModelsActivity.kt`
 

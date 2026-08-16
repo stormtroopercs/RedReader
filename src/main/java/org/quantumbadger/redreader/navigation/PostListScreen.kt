@@ -17,6 +17,7 @@
 
 package org.quantumbadger.redreader.navigation
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,18 +26,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Sort
@@ -48,71 +53,38 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScrollConnection
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.stateIn
 import org.quantumbadger.redreader.R
-import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.compose.net.NetRequestStatus
 import org.quantumbadger.redreader.compose.net.fetchImage
-import org.quantumbadger.redreader.compose.ui.RRErrorView
+import org.quantumbadger.redreader.compose.theme.ComposeThemePostCard
 import org.quantumbadger.redreader.compose.theme.LocalComposeTheme
-import org.quantumbadger.redreader.compose.theme.StyledText
-import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.compose.ui.RRErrorView
 import org.quantumbadger.redreader.common.UriString
-import org.quantumbadger.redreader.common.invokeIf
-import org.quantumbadger.redreader.common.invokeIfNotNull
-import org.quantumbadger.redreader.common.invokeIfNotNull
-import org.quantumbadger.redreader.image.ImageUrlInfo
-import org.quantumbadger.redreader.common.time.TimestampUTC
-import java.util.concurrent.TimeUnit
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.FlagOutlined
-import org.quantumbadger.redreader.common.Optional
-import kotlin.math.roundToInt
+import org.quantumbadger.redreader.reddit.PostSort
 
 /**
  * Post list screen composable.
@@ -124,20 +96,17 @@ import kotlin.math.roundToInt
 fun RealPostListScreen(
     subreddit: String,
     onNavigateBack: () -> Unit,
-    onNavigateToCommentList: (String) -> Unit
+    onNavigateToCommentList: (String) -> Unit,
+    onNavigateToUserProfile: (String) -> Unit,
+    onNavigateToPostSubmit: () -> Unit
 ) {
-    val context = LocalContext.current
     val viewModel: PostListViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val currentSort by viewModel.sortBy.collectAsStateWithLifecycle()
     val theme = LocalComposeTheme.current.postCard
 
     var sortByMenuExpanded by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-
-    // Refresh on sort change
-    val currentSort by remember(viewModel.sortBy) {
-        mutableIntStateOf(PrefsUtility.prefPostsSort(context).ordinal)
-    }
 
     Scaffold(
         topBar = {
@@ -152,7 +121,7 @@ fun RealPostListScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -160,13 +129,13 @@ fun RealPostListScreen(
                 actions = {
                     IconButton(onClick = viewModel::refresh) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
+                            imageVector = Icons.Filled.Refresh,
                             contentDescription = "Refresh"
                         )
                     }
                     IconButton(onClick = { sortByMenuExpanded = true }) {
                         Icon(
-                            imageVector = Icons.Default.Sort,
+                            imageVector = Icons.Filled.Sort,
                             contentDescription = "Sort"
                         )
                     }
@@ -175,29 +144,36 @@ fun RealPostListScreen(
                         onDismissRequest = { sortByMenuExpanded = false }
                     ) {
                         val sortOptions = listOf(
-                            "Best",
-                            "Hot",
-                            "New",
-                            "Top",
-                            "Rising"
+                            PostSort.HOT to "Hot",
+                            PostSort.NEW to "New",
+                            PostSort.RISING to "Rising",
+                            PostSort.TOP_ALL to "Top (All time)",
+                            PostSort.BEST to "Best"
                         )
-                        sortOptions.forEach { option ->
+                        sortOptions.forEach { (sort, label) ->
                             DropdownMenuItem(
-                                text = { Text(option) },
+                                text = {
+                                    Text(
+                                        text = label,
+                                        fontWeight =
+                                            if (sort == currentSort)
+                                                FontWeight.Bold
+                                            else
+                                                FontWeight.Normal
+                                    )
+                                },
                                 onClick = {
-                                    val newSort = when (option) {
-                                        "Best" -> PrefsUtility.SortType.BEST
-                                        "Hot" -> PrefsUtility.SortType.HOT
-                                        "New" -> PrefsUtility.SortType.NEW
-                                        "Top" -> PrefsUtility.SortType.TOP
-                                        "Rising" -> PrefsUtility.SortType.RISING
-                                        else -> PrefsUtility.SortType.BEST
-                                    }
-                                    PrefsUtility.prefPostsSort(context, newSort)
+                                    viewModel.setSortBy(sort)
                                     sortByMenuExpanded = false
                                 }
                             )
                         }
+                    }
+                    IconButton(onClick = onNavigateToPostSubmit) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Submit"
+                        )
                     }
                 }
             )
@@ -212,7 +188,6 @@ fun RealPostListScreen(
             when (val state = uiState) {
                 is PostListUiState.Loading -> {
                     if (state.isInitialLoad) {
-                        // Centered loading indicator for initial load
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -231,7 +206,9 @@ fun RealPostListScreen(
                         onPostClick = { post ->
                             onNavigateToCommentList(post.id)
                         },
-                        onRetry = { viewModel.fetchPosts(subreddit) }
+                        onAuthorClick = { author ->
+                            onNavigateToUserProfile(author)
+                        }
                     )
                 }
 
@@ -248,10 +225,10 @@ fun RealPostListScreen(
                         ) {
                             RRErrorView(error = state.error)
                             FilledTonalButton(
-                                onClick = { viewModel.fetchPosts(subreddit) },
+                                onClick = { viewModel.refresh() },
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                             ) {
-                                Icon(Icons.Default.Refresh, contentDescription = null)
+                                Icon(Icons.Filled.Refresh, contentDescription = null)
                                 Spacer(Modifier.width(8.dp))
                                 Text("Retry")
                             }
@@ -264,17 +241,16 @@ fun RealPostListScreen(
 }
 
 /**
- * Actual list of posts with pull-to-refresh capability.
+ * Actual list of posts.
  */
 @Composable
 private fun PostListContent(
     posts: List<PostItem>,
-    theme: org.quantumbadger.redreader.compose.theme.ComposeThemePostCard,
+    theme: ComposeThemePostCard,
     onPostClick: (PostItem) -> Unit,
-    onRetry: () -> Unit
+    onAuthorClick: (String) -> Unit
 ) {
-    var pullRefreshRefreshing by remember { mutableStateOf(false) }
-    val listState = rememberLazyListState()
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
 
     LazyColumn(
         state = listState,
@@ -301,7 +277,8 @@ private fun PostListContent(
                 PostItemCard(
                     post = post,
                     theme = theme,
-                    onClick = { onPostClick(post) }
+                    onClick = { onPostClick(post) },
+                    onAuthorClick = onAuthorClick
                 )
             }
         }
@@ -314,10 +291,10 @@ private fun PostListContent(
 @Composable
 private fun PostItemCard(
     post: PostItem,
-    theme: org.quantumbadger.redreader.compose.theme.ComposeThemePostCard,
-    onClick: () -> Unit
+    theme: ComposeThemePostCard,
+    onClick: () -> Unit,
+    onAuthorClick: (String) -> Unit
 ) {
-    val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
 
     Column(
@@ -327,14 +304,12 @@ private fun PostItemCard(
             .clickable(onClick = onClick)
     ) {
         // Thumbnail/media preview
-        post.thumbnailUri?.let { thumbnailUri ->
+        post.thumbnail?.let { thumbnail ->
             ThumbnailPreview(
-                uri = thumbnailUri,
+                uri = thumbnail,
+                theme = theme,
                 isVideo = post.isVideo,
-                isGallery = post.isGallery,
-                width = theme.previewImageWidth,
-                height = theme.previewImageHeight,
-                contentScale = ContentScale.Crop
+                isGallery = false
             )
         }
 
@@ -350,9 +325,8 @@ private fun PostItemCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.width(40.dp)
             ) {
-                // Upvote arrow (placeholder)
                 Icon(
-                    painter = painterResource(R.drawable.chevron_up_dark),
+                    imageVector = Icons.Filled.KeyboardArrowUp,
                     contentDescription = "Upvote",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
@@ -364,9 +338,8 @@ private fun PostItemCard(
                     fontWeight = FontWeight.Medium
                 )
 
-                // Downvote arrow (placeholder)
                 Icon(
-                    painter = painterResource(R.drawable.chevron_down_dark),
+                    imageVector = Icons.Filled.KeyboardArrowDown,
                     contentDescription = "Downvote",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
@@ -390,37 +363,28 @@ private fun PostItemCard(
 
                 Spacer(Modifier.height(4.dp))
 
-                // Meta: author, subreddit, time, score
+                // Meta: author, comment count, time, flair
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Author avatar (placeholder)
-                    post.authorUri?.let { authorUrl ->
-                        ThumbnailPreview(
-                            uri = authorUrl,
-                            size = 20.dp,
-                            shape = CircleShape,
-                            contentScale = ContentScale.Crop
+                    post.author?.takeIf { it.isNotBlank() }?.let { author ->
+                        Text(
+                            text = author,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.clickable { onAuthorClick(author) }
                         )
-                        Spacer(Modifier.width(6.dp))
                     }
 
-                    val timeAgo = post.createdUtcFormatted
                     Text(
-                        text = "p${post.numComments}",
+                        text = "  ·  ${post.numComments} comments",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Text(
-                        text = " · ",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Text(
-                        text = timeAgo,
+                        text = "  ·  ${formatTimeAgo(post.createdUtc)}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -462,7 +426,7 @@ private fun PostItemCard(
             Box {
                 IconButton(onClick = { expanded = true }) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
+                        imageVector = Icons.Filled.MoreVert,
                         contentDescription = "More options"
                     )
                 }
@@ -488,68 +452,72 @@ private fun PostItemCard(
 
         // Bottom divider
         if (post.linkFlairText != null || post.isCrosspost) {
-            Divider(theme = theme)
+            PostDivider(theme = theme)
         }
     }
 }
 
+/**
+ * Media/thumbnail preview. When [size] is null, renders a full-width 16:9
+ * preview; otherwise a fixed-size (e.g. avatar) preview clipped to [shape].
+ */
 @Composable
 private fun ThumbnailPreview(
     uri: String,
+    theme: ComposeThemePostCard,
+    modifier: Modifier = Modifier,
     isVideo: Boolean = false,
     isGallery: Boolean = false,
-    width: Int,
-    height: Int,
-    contentScale: ContentScale
+    size: androidx.compose.ui.unit.Dp? = null,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(8.dp),
+    contentScale: ContentScale = ContentScale.Crop
 ) {
+    val backgroundModifier = if (size != null) {
+        modifier.size(size).clip(shape)
+    } else {
+        modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(shape)
+    }
+
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(width.dp)
-            .invokeIf(isVideo || isGallery) {
-                background(MaterialTheme.colorScheme.primaryContainer)
-            },
+        modifier = backgroundModifier
+            .background(theme.previewImageBackgroundColor),
         contentAlignment = Alignment.Center
     ) {
-        val imageUri = uri
         val data by fetchImage(
-            org.quantumbadger.redreader.common.UriString.from(
-                java.net.URI.create(imageUri)
-            ),
-            scaleToMaxAxis = width
+            UriString(uri),
+            scaleToMaxAxis = 640
         )
 
         when (val it = data) {
-            is org.quantumbadger.redreader.compose.net.NetRequestStatus.Connecting -> {
+            is NetRequestStatus.Connecting -> {
                 CircularProgressIndicator(modifier = Modifier.padding(24.dp))
             }
 
-            is org.quantumbadger.redreader.compose.net.NetRequestStatus.Downloading -> {
+            is NetRequestStatus.Downloading -> {
                 CircularProgressIndicator(
                     modifier = Modifier.padding(24.dp),
                     progress = { it.fractionComplete }
                 )
             }
 
-            is org.quantumbadger.redreader.compose.net.NetRequestStatus.Failed -> {
+            is NetRequestStatus.Failed -> {
                 // Empty box for failed images
             }
 
-            is org.quantumbadger.redreader.compose.net.NetRequestStatus.Success -> {
+            is NetRequestStatus.Success -> {
                 Image(
                     bitmap = it.result.data,
                     contentDescription = null,
                     contentScale = contentScale,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(width.toFloat() / height.toFloat())
+                        .fillMaxSize()
                 )
 
                 if (isVideo) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(Color.Black.copy(0.3f)),
+                            .background(Color.Black.copy(alpha = 0.3f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -562,6 +530,8 @@ private fun ThumbnailPreview(
                 }
             }
         }
+        // isGallery reserved for a future gallery badge
+        if (isGallery) { /* no-op */ }
     }
 }
 
@@ -573,17 +543,34 @@ private fun formatScore(score: Int): String {
     }
 }
 
+private fun formatTimeAgo(timestampSeconds: Long): String {
+    val now = System.currentTimeMillis() / 1000
+    val diff = now - timestampSeconds
+
+    return when {
+        diff < 60 -> "$diff seconds ago"
+        diff < 3600 -> "${diff / 60} minutes ago"
+        diff < 86400 -> "${diff / 3600} hours ago"
+        diff < 604800 -> "${diff / 86400} days ago"
+        else -> {
+            val date = java.util.Date(timestampSeconds * 1000)
+            java.text.SimpleDateFormat("MMM d, yyyy", java.util.Locale.getDefault())
+                .format(date)
+        }
+    }
+}
+
 @Composable
-private fun Divider(theme: org.quantumbadger.redreader.compose.theme.ComposeThemePostCard) {
-    androidx.compose.foundation.Canvas(
+private fun PostDivider(theme: ComposeThemePostCard) {
+    Canvas(
         modifier = Modifier
             .fillMaxWidth()
             .height(1.dp),
         onDraw = {
             drawLine(
                 color = theme.iconColor.copy(alpha = 0.1f),
-                start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                end = androidx.compose.ui.geometry.Offset(size.width, 0f),
+                start = Offset(0f, 0f),
+                end = Offset(size.width, 0f),
                 strokeWidth = 1.dp.toPx()
             )
         }

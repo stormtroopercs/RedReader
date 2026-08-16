@@ -18,8 +18,14 @@
 package org.quantumbadger.redreader.navigation
 
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.IOException
+import java.util.UUID
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,19 +33,26 @@ import kotlinx.coroutines.launch
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest
+import org.quantumbadger.redreader.cache.CacheRequestCallbacks
 import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyIfNotCached
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.GenericFactory
 import org.quantumbadger.redreader.common.Priority
+import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.RRError
 import org.quantumbadger.redreader.common.UriString
-import org.quantumbadger.redreader.common.UriString.Companion.from
-import org.quantumbadger.redreader.reddit.kthings.RedditListing
+import org.quantumbadger.redreader.common.datastream.SeekableInputStream
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.reddit.PostSort
+import org.quantumbadger.redreader.reddit.kthings.JsonUtils.decodeRedditThingFromStream
 import org.quantumbadger.redreader.reddit.kthings.RedditThing
 import org.quantumbadger.redreader.reddit.url.PostListingURL
 import org.quantumbadger.redreader.reddit.url.RedditURLParser
 
 sealed class PostListUiState {
-    object Loading : PostListUiState()
+    data class Loading(val isInitialLoad: Boolean) : PostListUiState()
     data class Success(val posts: List<PostItem>) : PostListUiState()
-    data class Error(val message: String) : PostListUiState()
+    data class Error(val error: RRError) : PostListUiState()
 }
 
 data class PostItem(
@@ -56,6 +69,8 @@ data class PostItem(
     val isSpoiler: Boolean,
     val isStickied: Boolean,
     val isLocked: Boolean,
+    val isVideo: Boolean,
+    val isCrosspost: Boolean,
     val linkFlairText: String?,
     val authorFlairText: String?,
     val thumbnail: String?,
@@ -63,114 +78,158 @@ data class PostItem(
     val createdUtc: Long
 )
 
-class PostListViewModel(
-    private val context: Context,
-    subreddit: String
+@HiltViewModel
+class PostListViewModel @Inject constructor(
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    @Suppress("PropertyName")
-    private val _state = MutableStateFlow<PostListUiState>(PostListUiState.Loading)
+    private val _state = MutableStateFlow<PostListUiState>(PostListUiState.Loading(true))
     val state: StateFlow<PostListUiState> = _state.asStateFlow()
 
-    @Suppress("PropertyName")
-    private val _subreddit = MutableStateFlow(subreddit)
-    val subreddit: StateFlow<String> = _subreddit.asStateFlow()
+    private val _posts = MutableStateFlow<List<PostItem>>(emptyList())
+    val posts: StateFlow<List<PostItem>> = _posts.asStateFlow()
 
-    init {
-        fetchPosts(subreddit)
-    }
+    private val _sortBy = MutableStateFlow(PrefsUtility.pref_behaviour_postsort())
+    val sortBy: StateFlow<PostSort> = _sortBy.asStateFlow()
+
+    private var currentSubreddit: String = ""
 
     fun fetchPosts(subreddit: String) {
-        _subreddit.value = subreddit
+        currentSubreddit = subreddit
+        _state.value = PostListUiState.Loading(_state.value !is PostListUiState.Success)
         fetchPostListing(subreddit)
+    }
+
+    fun refresh() {
+        if (currentSubreddit.isEmpty()) return
+        _state.value = PostListUiState.Loading(false)
+        fetchPostListing(currentSubreddit)
+    }
+
+    fun setSortBy(sort: PostSort) {
+        if (sort == _sortBy.value) return
+        _sortBy.value = sort
+        PrefsUtility.pref_behaviour_postsort_set(sort)
+        refresh()
     }
 
     private fun fetchPostListing(subreddit: String) {
         viewModelScope.launch {
-            _state.value = PostListUiState.Loading
-
             try {
-                val cacheManager = CacheManager.getInstance(context)
                 val account = RedditAccountManager.getInstance(context).getDefaultAccount()
-
-                // Parse the URL for this subreddit
-                val postListingUrl = if (subreddit.isBlank()) {
-                    RedditURLParser.parse("https://www.reddit.com/")
-                } else {
-                    RedditURLParser.parse("https://www.reddit.com/r/$subreddit/")
-                }
-
-                if (postListingUrl !is PostListingURL) {
-                    _state.value = PostListUiState.Error("Invalid post listing URL")
+                if (account == null) {
+                    _state.value = PostListUiState.Error(
+                        RRError(title = "Not signed in", message = "Sign in to view post listings")
+                    )
                     return@launch
                 }
 
-                val cacheRequest = CacheRequest(
-                    from(postListingUrl.generateJsonUri()),
-                    account,
-                    null,
-                    DownloadStrategyIfNotCached.INSTANCE,
-                    true,
-                    null,
-                    Priority.HIGH,
-                    null
-                )
+                val rawUri = if (subreddit.isBlank()) {
+                    "https://www.reddit.com/"
+                } else {
+                    "https://www.reddit.com/r/$subreddit/"
+                }
+                val postListingUrl = RedditURLParser.parseProbablePostListing(Uri.parse(rawUri))
+                if (postListingUrl !is PostListingURL) {
+                    _state.value = PostListUiState.Error(
+                        RRError(title = "Invalid listing", message = "Invalid post listing URL")
+                    )
+                    return@launch
+                }
 
-                cacheManager.makeRequest(cacheRequest) { result ->
-                    when (result) {
-                        is CacheRequest.Result.Success -> {
-                            try {
-                                val listing = result.cacheFile.use { stream ->
-                                    stream.inputStream.use {
-                                        RedditListing.parse(stream)
-                                    }
-                                }
+                val jsonUri = postListingUrl.generateJsonUri()
+                if (jsonUri == null) {
+                    _state.value = PostListUiState.Error(
+                        RRError(title = "Invalid listing", message = "Could not build JSON URI")
+                    )
+                    return@launch
+                }
 
-                                val posts = when (listing) {
-                                    is RedditThing.Listing -> listing.children
-                                        .filterIsInstance<RedditThing.Post>()
-                                        .map { it.toPostItem() }
-                                    else -> emptyList()
-                                }
+                val callbacks = object : CacheRequestCallbacks {
+                    override fun onFailure(error: RRError) {
+                        _state.value = PostListUiState.Error(
+                            RRError(
+                                title = "Failed to load posts",
+                                message = error.message ?: error.toString()
+                            )
+                        )
+                    }
 
-                                _state.value = PostListUiState.Success(posts)
-                            } catch (e: Exception) {
-                                _state.value = PostListUiState.Error("Parse error: ${e.message}")
-                            }
-                        }
-                        is CacheRequest.Result.Failed -> {
+                    override fun onDataStreamComplete(
+                        streamFactory: GenericFactory<SeekableInputStream, IOException?>,
+                        timestamp: TimestampUTC?,
+                        session: UUID,
+                        fromCache: Boolean,
+                        mimetype: String?
+                    ) {
+                        try {
+                            val thing = decodeRedditThingFromStream(streamFactory.create())
+                            val listing = (thing as? RedditThing.Listing)?.data
+                                ?: throw RuntimeException(
+                                    "Expected listing, got " + thing.javaClass.name
+                                )
+
+                            val posts = listing.children
+                                .mapNotNull { it.ok() as? RedditThing.Post }
+                                .map { it.toPostItem() }
+
+                            _posts.value = posts
+                            _state.value = PostListUiState.Success(posts)
+                        } catch (e: Exception) {
                             _state.value = PostListUiState.Error(
-                                "Failed to load: ${result.failureReason.userMessage}"
+                                RRError(
+                                    title = "Parse error",
+                                    message = e.message,
+                                    t = e
+                                )
                             )
                         }
                     }
                 }
+
+                val request = CacheRequest(
+                    UriString(jsonUri.toString()),
+                    account,
+                    null,
+                    Priority(Constants.Priority.API_POST_LIST),
+                    DownloadStrategyIfNotCached.INSTANCE,
+                    Constants.FileType.POST_LIST,
+                    CacheRequest.DownloadQueueType.REDDIT_API,
+                    context,
+                    callbacks
+                )
+                CacheManager.getInstance(context).makeRequest(request)
             } catch (e: Exception) {
-                _state.value = PostListUiState.Error("Error: ${e.message}")
+                _state.value = PostListUiState.Error(
+                    RRError(title = "Error", message = e.message, t = e)
+                )
             }
         }
     }
 }
 
 private fun RedditThing.Post.toPostItem(): PostItem {
+    val p = data
     return PostItem(
-        id = id,
-        title = title?.decoded,
-        author = author?.decoded,
-        subreddit = subreddit.decoded,
-        score = score,
-        numComments = num_comments,
-        url = findUrl()?.toString(),
-        permalink = permalink.decoded,
-        isSelf = is_self,
-        isOver18 = over_18,
-        isSpoiler = spoiler,
-        isStickied = stickied,
-        isLocked = locked,
-        linkFlairText = link_flair_text?.decoded,
-        authorFlairText = author_flair_text?.decoded,
-        thumbnail = thumbnail?.decoded,
-        selftext = selftext?.decoded,
-        createdUtc = created_utc.timestampUTC.timeMs
+        id = p.name.toString(),
+        title = p.title?.decoded,
+        author = p.author?.decoded,
+        subreddit = p.subreddit.decoded,
+        score = p.score,
+        numComments = p.num_comments,
+        url = p.findUrl()?.value,
+        permalink = p.permalink.decoded,
+        isSelf = p.is_self,
+        isOver18 = p.over_18,
+        isSpoiler = p.spoiler,
+        isStickied = p.stickied,
+        isLocked = p.locked,
+        isVideo = p.is_video,
+        isCrosspost = p.crosspost_parent != null,
+        linkFlairText = p.link_flair_text?.decoded,
+        authorFlairText = p.author_flair_text?.decoded,
+        thumbnail = p.thumbnail?.decoded,
+        selftext = p.selftext?.decoded,
+        createdUtc = p.created_utc.value.toUtcSecs()
     )
 }
