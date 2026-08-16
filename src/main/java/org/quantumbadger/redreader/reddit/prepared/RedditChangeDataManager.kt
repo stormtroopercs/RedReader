@@ -299,17 +299,17 @@ class RedditChangeDataManager {
 
     fun update(timestamp: TimestampUTC, comment: RedditComment) {
         synchronized(mLock) {
-            val existingEntry = get(comment.getIdAndType())
+            val existingEntry = get(comment.idAndType)
             val updatedEntry = existingEntry.update(timestamp, comment)
-            set(comment.getIdAndType(), existingEntry, updatedEntry)
+            set(comment.idAndType, existingEntry, updatedEntry)
         }
     }
 
     fun update(timestamp: TimestampUTC, post: RedditPost) {
         synchronized(mLock) {
-            val existingEntry = get(post.getIdAndType())
+            val existingEntry = get(post.idAndType)
             val updatedEntry = existingEntry.update(timestamp, post)
-            set(post.getIdAndType(), existingEntry, updatedEntry)
+            set(post.idAndType, existingEntry, updatedEntry)
         }
     }
 

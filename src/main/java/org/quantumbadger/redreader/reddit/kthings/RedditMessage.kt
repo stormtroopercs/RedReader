@@ -40,6 +40,6 @@ data class RedditMessage(
 
 ) : Parcelable, RedditThingWithIdAndType {
 
-	override fun getIdAlone() = id
-	override fun getIdAndType() = name
+	override val idAlone get() = id
+	override val idAndType get() = name
 }

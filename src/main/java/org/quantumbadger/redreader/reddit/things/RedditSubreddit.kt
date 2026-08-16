@@ -40,7 +40,8 @@ import java.util.regex.Pattern
 
 class RedditSubreddit : Parcelable, Comparable<RedditSubreddit?>,
     WritableObject<SubredditCanonicalId?>, JsonDeserializable, HasUniqueId {
-    override fun getKey(): SubredditCanonicalId {
+    override val key: SubredditCanonicalId
+        get() {
         try {
             return this.canonicalId
         } catch (e: InvalidSubredditNameException) {
@@ -52,11 +53,9 @@ class RedditSubreddit : Parcelable, Comparable<RedditSubreddit?>,
                 ), e
             )
         }
-    }
+        }
 
-    override fun getTimestamp(): TimestampUTC {
-        return fromUtcMs(downloadTime)
-    }
+    override val timestamp: TimestampUTC get() = fromUtcMs(downloadTime)
 
     @WritableField
     var header_img: String? = null
@@ -204,9 +203,7 @@ class RedditSubreddit : Parcelable, Comparable<RedditSubreddit?>,
         context.startActivityForResult(intent, 1)
     }
 
-    override fun getUniqueId(): String {
-        return id!!
-    }
+    override val uniqueId: String get() = id!!
 
     companion object {
         @WritableObjectVersion

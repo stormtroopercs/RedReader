@@ -59,7 +59,7 @@ internal class PrioritisedDownloadQueue(context: Context?) {
             var next: CacheDownload?=null
 
             for (entry in redditDownloadsQueued) {
-                if (next == null || entry.getPriority().isHigherPriorityThan(next.getPriority())) {
+                if (next == null || entry.priority.isHigherPriorityThan(next.priority)) {
                     next = entry
                 }
             }

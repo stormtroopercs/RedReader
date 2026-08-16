@@ -216,9 +216,7 @@ class ImageViewScrollbars(
     }
 
     @Synchronized
-    override fun isAnimating(): Boolean {
-        return mIsVisible
-    }
+    override val isAnimating: Boolean get() = mIsVisible
 
     @Synchronized
     fun showBars() {

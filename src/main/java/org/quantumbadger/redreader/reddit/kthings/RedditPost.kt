@@ -164,13 +164,9 @@ data class RedditPost(
 		) : Parcelable
 	}
 
-	override fun getIdAlone(): String {
-		return id
-	}
+	override val idAlone: String get() = id
 
-	override fun getIdAndType(): RedditIdAndType {
-		return name
-	}
+	override val idAndType: RedditIdAndType get() = name
 
 	fun findUrl(): UriString? {
 

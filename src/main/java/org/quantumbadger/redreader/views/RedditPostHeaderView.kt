@@ -189,11 +189,11 @@ class RedditPostHeaderView(
                         )
 
                         val isUpvoted = changeDataManager.isUpvoted(
-                            post.src.getIdAndType()
+                            post.src.idAndType
                         )
 
                         val isDownvoted = changeDataManager.isDownvoted(
-                            post.src.getIdAndType()
+                            post.src.idAndType
                         )
                         if (isUpvoted) {
                             buttonAddUpvote.setVisibility(GONE)
@@ -222,13 +222,13 @@ class RedditPostHeaderView(
             }
 
             mChangeListenerAddTask = Runnable {
-                changeDataManager.addListener(post.src.getIdAndType(), changeListener)
-                changeListener.onRedditDataChange(post.src.getIdAndType())
+                changeDataManager.addListener(post.src.idAndType, changeListener)
+                changeListener.onRedditDataChange(post.src.idAndType)
             }
 
             mChangeListenerRemoveTask = Runnable {
                 changeDataManager.removeListener(
-                    post.src.getIdAndType(),
+                    post.src.idAndType,
                     changeListener
                 )
             }

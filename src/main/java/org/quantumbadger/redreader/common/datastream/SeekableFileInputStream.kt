@@ -31,9 +31,7 @@ class SeekableFileInputStream(file: File) : SeekableInputStream() {
         mFile = RandomAccessFile(file, "r")
     }
 
-    override fun getPosition(): Long {
-        return mPosition
-    }
+    override val position: Long get() = mPosition
 
     @Throws(IOException::class)
     override fun seek(position: Long) {

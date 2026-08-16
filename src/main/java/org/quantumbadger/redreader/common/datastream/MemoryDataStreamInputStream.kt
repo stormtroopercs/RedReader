@@ -50,9 +50,7 @@ class MemoryDataStreamInputStream(private val mStream: MemoryDataStream) : Seeka
         return bytesRead
     }
 
-    override fun getPosition(): Long {
-        return mPosition.toLong()
-    }
+    override val position: Long get() = mPosition.toLong()
 
     @Throws(IOException::class)
     override fun seek(position: Long) {

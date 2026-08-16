@@ -846,17 +846,17 @@ class RedditPreparedPost(
         get() = src.isSelfPost
 
     val isRead: Boolean
-        get() = mChangeDataManager.isRead(src.getIdAndType())
+        get() = mChangeDataManager.isRead(src.idAndType)
 
     fun bind(boundView: RedditPostView?) {
         mBoundView = boundView
-        mChangeDataManager.addListener(src.getIdAndType(), this)
+        mChangeDataManager.addListener(src.idAndType, this)
     }
 
     fun unbind(boundView: RedditPostView?) {
         if (mBoundView == boundView) {
             mBoundView = null
-            mChangeDataManager.removeListener(src.getIdAndType(), this)
+            mChangeDataManager.removeListener(src.idAndType, this)
         }
     }
 
@@ -887,23 +887,23 @@ class RedditPreparedPost(
     ) {
         val user: RedditAccount?=RedditAccountManager.Companion.getInstance(context).getDefaultAccount()
         RedditChangeDataManager.Companion.getInstance(user)
-            .markRead(now(), src.getIdAndType(), read)
+            .markRead(now(), src.idAndType, read)
     }
 
     val isUpvoted: Boolean
-        get() = mChangeDataManager.isUpvoted(src.getIdAndType())
+        get() = mChangeDataManager.isUpvoted(src.idAndType)
 
     val isDownvoted: Boolean
-        get() = mChangeDataManager.isDownvoted(src.getIdAndType())
+        get() = mChangeDataManager.isDownvoted(src.idAndType)
 
     val voteDirection: Int
         get() = if (this.isUpvoted) 1 else (if (this.isDownvoted) -1 else 0)
 
     val isSaved: Boolean
-        get() = mChangeDataManager.isSaved(src.getIdAndType())
+        get() = mChangeDataManager.isSaved(src.idAndType)
 
     val isHidden: Boolean
-        get() = java.lang.Boolean.TRUE == mChangeDataManager.isHidden(src.getIdAndType())
+        get() = java.lang.Boolean.TRUE == mChangeDataManager.isHidden(src.idAndType)
 
     private fun onThumbnailStreamAvailable(
         factory: GenericFactory<SeekableInputStream, IOException?>,

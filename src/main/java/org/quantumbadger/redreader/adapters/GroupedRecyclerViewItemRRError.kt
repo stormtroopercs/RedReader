@@ -36,9 +36,7 @@ class GroupedRecyclerViewItemRRError(
         }
     }
 
-    override fun getViewType(): Class<*> {
-        return GroupedRecyclerViewItemRRError::class.java
-    }
+    override val viewType: Class<*> get() = GroupedRecyclerViewItemRRError::class.java
 
     override fun onCreateViewHolder(viewGroup : ViewGroup): ErrorHolder {
         return ErrorHolder()
@@ -48,7 +46,5 @@ class GroupedRecyclerViewItemRRError(
         viewHolder.bind(mError)
     }
 
-    override fun isHidden(): Boolean {
-        return false
-    }
+    override val isHidden: Boolean get() = false
 }

@@ -80,9 +80,9 @@ class RedditRenderableComment
             score++
         }
 
-        if (changeDataManager.isUpvoted(getIdAndType())) {
+        if (changeDataManager.isUpvoted(idAndType)) {
             score++
-        } else if (changeDataManager.isDownvoted(getIdAndType())) {
+        } else if (changeDataManager.isDownvoted(idAndType)) {
             score--
         }
 
@@ -106,9 +106,9 @@ class RedditRenderableComment
         val pointsCol: Int
         val score = computeScore(changeDataManager)
 
-        if (changeDataManager.isUpvoted(getIdAndType())) {
+        if (changeDataManager.isUpvoted(idAndType)) {
             pointsCol = theme.rrPostSubtitleUpvoteCol
-        } else if (changeDataManager.isDownvoted(getIdAndType())) {
+        } else if (changeDataManager.isDownvoted(idAndType)) {
             pointsCol = theme.rrPostSubtitleDownvoteCol
         } else {
             pointsCol = theme.rrCommentHeaderBoldCol
@@ -467,7 +467,7 @@ class RedditRenderableComment
                     .append(separator)
             }
 
-            if (changeDataManager.isUpvoted(getIdAndType())) {
+            if (changeDataManager.isUpvoted(idAndType)) {
                 accessibilityHeader
                     .append(
                         context.getString(
@@ -477,7 +477,7 @@ class RedditRenderableComment
                     .append(separator)
             }
 
-            if (changeDataManager.isDownvoted(getIdAndType())) {
+            if (changeDataManager.isDownvoted(idAndType)) {
                 accessibilityHeader
                     .append(
                         context.getString(
@@ -663,13 +663,9 @@ class RedditRenderableComment
         )
     }
 
-    override fun getIdAlone(): String? {
-        return parsedComment.getIdAlone()
-    }
+    override val idAlone: String? get() = parsedComment.idAlone
 
-    override fun getIdAndType(): RedditIdAndType? {
-        return parsedComment.getIdAndType()
-    }
+    override val idAndType: RedditIdAndType? get() = parsedComment.idAndType
 
     private fun isScoreBelowThreshold(changeDataManager: RedditChangeDataManager): kotlin.Boolean {
         if (mMinimumCommentScore == null) {
@@ -684,7 +680,7 @@ class RedditRenderableComment
     }
 
     fun isCollapsed(changeDataManager: RedditChangeDataManager): kotlin.Boolean {
-        val collapsed = changeDataManager.isHidden(getIdAndType())
+        val collapsed = changeDataManager.isHidden(idAndType)
 
         if (collapsed != null) {
             return collapsed

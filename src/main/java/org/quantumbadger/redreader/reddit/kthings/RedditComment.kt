@@ -106,9 +106,9 @@ data class RedditComment(
 		val u: String
 	) : Parcelable
 
-	override fun getIdAlone() = id
+	override val idAlone get() = id
 
-	override fun getIdAndType() = name
+	override val idAndType get() = name
 
 	fun getContextUrl(): PostCommentListingURL {
 

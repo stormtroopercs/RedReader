@@ -125,13 +125,9 @@ class RedditParsedPost(
 		domain = src.domain?.decoded ?: activity.getString(R.string.post_domain_deleted)
     }
 
-    override fun getIdAlone(): String {
-        return src.idAlone
-    }
+    override val idAlone: String get() = src.idAlone
 
-    override fun getIdAndType(): RedditIdAndType {
-        return src.idAndType
-    }
+    override val idAndType: RedditIdAndType get() = src.idAndType
 
 	fun hasSelfText(): Boolean {
 		return rawSelfTextMarkdown != null && rawSelfTextMarkdown.length > 1

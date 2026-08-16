@@ -29,10 +29,11 @@ import org.quantumbadger.redreader.adapters.GroupedRecyclerViewAdapter
 
 class GroupedRecyclerViewItemListSectionHeaderView
     (private val mText: CharSequence) : GroupedRecyclerViewAdapter.Item<Any?>() {
-    override fun getViewType(): Class<*> {
+    override val viewType: Class<*>
+        get() {
         // There's no wrapper class for this view, so just use the item class
         return GroupedRecyclerViewItemListSectionHeaderView::class.java
-    }
+        }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup): RecyclerView.ViewHolder {
         return object : RecyclerView.ViewHolder(
@@ -61,7 +62,5 @@ class GroupedRecyclerViewItemListSectionHeaderView
         })
     }
 
-    override fun isHidden(): Boolean {
-        return false
-    }
+    override val isHidden: Boolean get() = false
 }

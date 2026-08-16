@@ -35,9 +35,7 @@ abstract class RRGLRenderableRenderHooks(private val mEntity: RRGLRenderable) : 
         mEntity.onRemoved()
     }
 
-    override fun isAnimating(): Boolean {
-        return mEntity.isAnimating
-    }
+    override val isAnimating: Boolean get() = mEntity.isAnimating
 
     protected abstract fun preRender(stack : RRGLMatrixStack, time: Long)
 

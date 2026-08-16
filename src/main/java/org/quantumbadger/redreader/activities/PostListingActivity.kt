@@ -275,7 +275,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
     override fun onPostCommentsSelected(post: RedditPreparedPost) {
         onLinkClicked(
             this,
-            PostCommentListingURL.Companion.forPostId(post.src.getIdAlone()).toUriString(),
+            PostCommentListingURL.Companion.forPostId(post.src.idAlone).toUriString(),
             false
         )
     }
@@ -512,9 +512,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         return true
     }
 
-    override fun getPostSort(): PostSort? {
-        return controller!!.sort
-    }
+    override val postSort: PostSort? get() = controller!!.sort
 
     companion object {
         private const val SAVEDSTATE_SESSION = "pla_session"

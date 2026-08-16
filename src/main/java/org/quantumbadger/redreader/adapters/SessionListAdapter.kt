@@ -133,7 +133,5 @@ class SessionListAdapter(
         })
     }
 
-    override fun getContentItemCount(): Int {
-        return sessions.size
-    }
+    override val contentItemCount: Int get() = sessions.size
 }

@@ -374,9 +374,7 @@ class PostListingFragment(
         }
     }
 
-    override fun getListingView(): View? {
-        return mOuter
-    }
+    override val listingView: View? get() = mOuter
 
     override fun onSaveInstanceState(): Bundle {
         val bundle = Bundle()
@@ -773,7 +771,7 @@ class PostListingFragment(
                             )
 
                             if (!isPostBlocked && (!post.over_18 || isNsfwAllowed)
-                                && mPostIds.add(post.getIdAlone())
+                                && mPostIds.add(post.idAlone)
                             ) {
                                 val downloadThisThumbnail = downloadThumbnails
                                         && (!post.over_18 || showNsfwThumbnails)
@@ -941,7 +939,7 @@ class PostListingFragment(
         positionInList: Int
     ) {
         val controller = CommentListingController(
-            PostCommentListingURL.Companion.forPostId(preparedPost.src.getIdAlone())
+            PostCommentListingURL.Companion.forPostId(preparedPost.src.idAlone)
         )
 
         val url = from(controller.uri)

@@ -143,7 +143,8 @@ class RedditCommentListItem
         return false
     }
 
-    override fun getViewType(): Class<*> {
+    override val viewType: Class<*>
+        get() {
         if (this.isComment) {
             return RedditCommentView::class.java
         }
@@ -153,7 +154,7 @@ class RedditCommentListItem
         }
 
         throw RuntimeException("Unknown item type")
-    }
+        }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup): RecyclerView.ViewHolder {
         val context = viewGroup.getContext()
@@ -188,7 +189,5 @@ class RedditCommentListItem
         }
     }
 
-    override fun isHidden(): Boolean {
-        return isHidden(mChangeDataManager)
-    }
+    override val isHidden: Boolean get() = isHidden(mChangeDataManager)
 }

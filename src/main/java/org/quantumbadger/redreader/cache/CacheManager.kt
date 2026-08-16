@@ -665,9 +665,7 @@ class CacheManager @Inject constructor(
             }
 
             mDiskCacheThreadPool.add(object : PrioritisedCachedThreadPool.Task() {
-                override fun getPriority(): Priority {
-                    return request.priority
-                }
+                override val priority: Priority get() = request.priority
 
                 override fun run() {
                     val streamFactory: GenericFactory<SeekableInputStream, IOException?> =                         GenericFactory {

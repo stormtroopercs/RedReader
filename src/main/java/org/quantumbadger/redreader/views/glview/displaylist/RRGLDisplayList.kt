@@ -23,7 +23,5 @@ class RRGLDisplayList : RRGLRenderableGroup() {
         super.renderInternal(matrixStack, time)
     }
 
-    override fun isAdded(): Boolean {
-        return true
-    }
+    override val isAdded: Boolean get() = true
 }

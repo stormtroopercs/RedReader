@@ -171,18 +171,14 @@ class MoreCommentsListingActivity : RefreshableActivity(), RedditAccountChangeLi
     override fun onPostCommentsSelected(post: RedditPreparedPost) {
         onLinkClicked(
             this,
-            PostCommentListingURL.Companion.forPostId(post.src.getIdAlone()).toUriString(),
+            PostCommentListingURL.Companion.forPostId(post.src.idAlone).toUriString(),
             false
         )
     }
 
-    override fun getCommentSort(): OptionsMenuUtility.Sort? {
-        return null
-    }
+    override val commentSort: OptionsMenuUtility.Sort? get() = null
 
-    override fun getSuggestedCommentSort(): PostCommentSort? {
-        return null
-    }
+    override val suggestedCommentSort: PostCommentSort? get() = null
 
     companion object {
         private const val EXTRA_SEARCH_STRING = "mcla_search_string"

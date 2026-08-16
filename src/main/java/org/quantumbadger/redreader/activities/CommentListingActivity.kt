@@ -244,7 +244,7 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
     override fun onPostCommentsSelected(post: RedditPreparedPost) {
         onLinkClicked(
             this,
-            PostCommentListingURL.forPostId(post.src.getIdAlone()).toUriString(),
+            PostCommentListingURL.forPostId(post.src.idAlone).toUriString(),
             false
         )
     }
@@ -253,17 +253,16 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
         return true
     }
 
-    override fun getCommentSort(): OptionsMenuUtility.Sort? {
-        return controller!!.sort
-    }
+    override val commentSort: OptionsMenuUtility.Sort? get() = controller!!.sort
 
-    override fun getSuggestedCommentSort(): PostCommentSort? {
+    override val suggestedCommentSort: PostCommentSort?
+        get() {
         if (mFragment == null || mFragment!!.post == null) {
             return null
         }
 
         return mFragment!!.post.src.suggestedCommentSort
-    }
+        }
 
     companion object {
         private const val TAG = "CommentListingActivity"

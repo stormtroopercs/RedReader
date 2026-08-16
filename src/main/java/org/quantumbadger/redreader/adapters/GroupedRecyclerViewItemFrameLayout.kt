@@ -29,9 +29,7 @@ internal class GroupedRecyclerViewItemFrameLayout(private val mChildView: View) 
 
     private var mParent: FrameLayout?=null
 
-    override fun getViewType(): Class<*> {
-        return this.javaClass
-    }
+    override val viewType: Class<*> get() = this.javaClass
 
     override fun onCreateViewHolder(viewGroup: ViewGroup): RecyclerView.ViewHolder {
         setLayoutMatchWidthWrapHeight(viewGroup)
@@ -54,9 +52,7 @@ internal class GroupedRecyclerViewItemFrameLayout(private val mChildView: View) 
         setLayoutMatchWidthWrapHeight(mChildView)
     }
 
-    override fun isHidden(): Boolean {
-        return mHidden
-    }
+    override val isHidden: Boolean get() = mHidden
 
     fun setHidden(hidden: Boolean) {
         mHidden = hidden

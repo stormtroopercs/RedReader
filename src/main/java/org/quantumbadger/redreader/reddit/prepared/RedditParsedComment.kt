@@ -84,13 +84,9 @@ class RedditParsedComment(
         }
     }
 
-    override fun getIdAlone(): String {
-        return rawComment.getIdAlone()
-    }
+    override val idAlone: String get() = rawComment.idAlone
 
-    override fun getIdAndType(): RedditIdAndType {
-        return rawComment.getIdAndType()
-    }
+    override val idAndType: RedditIdAndType get() = rawComment.idAndType
 
     private fun getFlairEmotes(
         flairRichtext: MutableList<MaybeParseError<FlairEmoteData?>?>,

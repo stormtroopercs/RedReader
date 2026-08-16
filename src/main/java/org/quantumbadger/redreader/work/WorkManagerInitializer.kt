@@ -44,12 +44,13 @@ class WorkManagerInitializer @Inject constructor(
     private val hiltWorkerFactory: HiltWorkerFactory
 ) : Configuration.Provider {
 
-    override fun getWorkManagerConfiguration(): Configuration {
+    override val workManagerConfiguration: Configuration
+        get() {
         return Configuration.Builder()
             .setWorkerFactory(hiltWorkerFactory)
             .setMinimumLoggingLevel(android.util.Log.DEBUG)
             .build()
-    }
+        }
 
     companion object {
         const val NEW_MESSAGE_CHECKER_WORK_NAME = "new_message_checker"

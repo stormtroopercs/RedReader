@@ -123,7 +123,8 @@ class RedditPostView(
         mOuterView.setTranslationX(position)
     }
 
-    protected override fun getFlingLeftText(): String {
+    override val flingLeftText: String
+        get() {
         mLeftFlingAction = RedditPostActions.ActionDescriptionPair.from(mPost!!, mLeftFlingPref)
 
         if (mLeftFlingAction != null) {
@@ -131,9 +132,10 @@ class RedditPostView(
         } else {
             return "Disabled"
         }
-    }
+        }
 
-    protected override fun getFlingRightText(): String {
+    override val flingRightText: String
+        get() {
         mRightFlingAction = RedditPostActions.ActionDescriptionPair.from(mPost!!, mRightFlingPref)
 
         if (mRightFlingAction != null) {
@@ -141,7 +143,7 @@ class RedditPostView(
         } else {
             return "Disabled"
         }
-    }
+        }
 
     override fun allowFlingingLeft(): Boolean {
         return mLeftFlingAction != null
@@ -567,7 +569,7 @@ class RedditPostView(
                                                 + ", preview URL was "
                                                 + preview.url
                                                 + " and post was "
-                                                + post.src.getIdAndType())
+                                                + post.src.idAndType)
                                     )
                                 }
 

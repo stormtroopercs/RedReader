@@ -62,7 +62,8 @@ open class RRGLRenderableGroup : RRGLRenderable() {
         }
     }
 
-    override fun isAnimating(): Boolean {
+    override val isAnimating: Boolean
+        get() {
         for (i in mChildren.indices) {
             val entity = mChildren.get(i)
             if (entity.isAnimating) {
@@ -70,7 +71,7 @@ open class RRGLRenderableGroup : RRGLRenderable() {
             }
         }
         return false
-    }
+        }
 
     override fun setOverallAlpha(alpha: Float) {
         for (i in mChildren.indices) {

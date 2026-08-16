@@ -86,13 +86,9 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
         return (HashSet<String>(escapedStringToList(serialised)).also { hashSet = it })
     }
 
-    override fun getKey(): String? {
-        return key
-    }
+    override val key: String? get() = key
 
-    override fun getTimestamp(): TimestampUTC {
-        return fromUtcMs(timestamp)
-    }
+    override val timestamp: TimestampUTC get() = fromUtcMs(timestamp)
 
     override fun iterator(): MutableIterator<String?> {
         return toHashset().iterator()

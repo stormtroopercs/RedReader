@@ -85,7 +85,7 @@ class RedditMultiredditSubscriptionManager @Inject constructor(
         timestampBound: TimestampBound
     ) {
         if (mMultireddits != null
-            && timestampBound.verifyTimestamp(mMultireddits!!.getTimestamp())
+            && timestampBound.verifyTimestamp(mMultireddits!!.timestamp)
         ) {
             return
         }

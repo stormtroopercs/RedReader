@@ -87,7 +87,7 @@ object RedditAPICommentAction {
         if (!user.isAnonymous) {
             if (!isArchived) {
                 if (itemPref.contains(RedditCommentAction.UPVOTE)) {
-                    if (!changeDataManager.isUpvoted(comment.getIdAndType())) {
+                    if (!changeDataManager.isUpvoted(comment.idAndType)) {
                         menu.add(
                             RCVMenuItem(
                                 activity,
@@ -107,7 +107,7 @@ object RedditAPICommentAction {
                 }
 
                 if (itemPref.contains(RedditCommentAction.DOWNVOTE)) {
-                    if (!changeDataManager.isDownvoted(comment.getIdAndType())) {
+                    if (!changeDataManager.isDownvoted(comment.idAndType)) {
                         menu.add(
                             RCVMenuItem(
                                 activity,
@@ -128,7 +128,7 @@ object RedditAPICommentAction {
             }
 
             if (itemPref.contains(RedditCommentAction.SAVE)) {
-                if (changeDataManager.isSaved(comment.getIdAndType())) {
+                if (changeDataManager.isSaved(comment.idAndType)) {
                     menu.add(
                         RCVMenuItem(
                             activity,
@@ -377,7 +377,7 @@ object RedditAPICommentAction {
             } else if (comment.subreddit != null) {
                 show(
                     activity,
-                    comment.getIdAndType(),
+                    comment.idAndType,
                     comment.subreddit.decoded,
                     true
                 )
@@ -397,7 +397,7 @@ object RedditAPICommentAction {
                 val intent = Intent(activity, CommentReplyActivity::class.java)
                 intent.putExtra(
                     CommentReplyActivity.Companion.PARENT_ID_AND_TYPE_KEY,
-                    comment.getIdAndType()
+                    comment.idAndType
                 )
                 intent.putExtra(
                     CommentReplyActivity.Companion.PARENT_MARKDOWN_KEY,
@@ -408,7 +408,7 @@ object RedditAPICommentAction {
 
             RedditCommentAction.EDIT -> {
                 val intent = Intent(activity, CommentEditActivity::class.java)
-                intent.putExtra("commentIdAndType", comment.getIdAndType())
+                intent.putExtra("commentIdAndType", comment.idAndType)
                 intent.putExtra(
                     "commentText",
                     comment.body!!.decoded
@@ -581,40 +581,40 @@ object RedditAPICommentAction {
             return
         }
 
-        val wasUpvoted = changeDataManager.isUpvoted(comment.getIdAndType())
-        val wasDownvoted = changeDataManager.isUpvoted(comment.getIdAndType())
+        val wasUpvoted = changeDataManager.isUpvoted(comment.idAndType)
+        val wasDownvoted = changeDataManager.isUpvoted(comment.idAndType)
 
         when (action) {
             RedditAPI.ACTION_DOWNVOTE -> if (!comment.archived) {
                 changeDataManager.markDownvoted(
                     now(),
-                    comment.getIdAndType()
+                    comment.idAndType
                 )
             }
 
             RedditAPI.ACTION_UNVOTE -> if (!comment.archived) {
                 changeDataManager.markUnvoted(
                     now(),
-                    comment.getIdAndType()
+                    comment.idAndType
                 )
             }
 
             RedditAPI.ACTION_UPVOTE -> if (!comment.archived) {
                 changeDataManager.markUpvoted(
                     now(),
-                    comment.getIdAndType()
+                    comment.idAndType
                 )
             }
 
             RedditAPI.ACTION_SAVE -> changeDataManager.markSaved(
                 now(),
-                comment.getIdAndType(),
+                comment.idAndType,
                 true
             )
 
             RedditAPI.ACTION_UNSAVE -> changeDataManager.markSaved(
                 now(),
-                comment.getIdAndType(),
+                comment.idAndType,
                 false
             )
 
@@ -656,35 +656,35 @@ object RedditAPICommentAction {
                             if (wasUpvoted) {
                                 changeDataManager.markUpvoted(
                                     now(),
-                                    comment.getIdAndType()
+                                    comment.idAndType
                                 )
                             } else if (wasDownvoted) {
                                 changeDataManager.markDownvoted(
                                     now(),
-                                    comment.getIdAndType()
+                                    comment.idAndType
                                 )
                             } else {
                                 changeDataManager.markUnvoted(
                                     now(),
-                                    comment.getIdAndType()
+                                    comment.idAndType
                                 )
                             }
                             changeDataManager.markSaved(
                                 now(),
-                                comment.getIdAndType(),
+                                comment.idAndType,
                                 false
                             )
                         }
 
                         RedditAPI.ACTION_SAVE -> changeDataManager.markSaved(
                             now(),
-                            comment.getIdAndType(),
+                            comment.idAndType,
                             false
                         )
 
                         RedditAPI.ACTION_UNSAVE -> changeDataManager.markSaved(
                             now(),
-                            comment.getIdAndType(),
+                            comment.idAndType,
                             true
                         )
 
@@ -692,7 +692,7 @@ object RedditAPICommentAction {
                         RedditAPI.ACTION_HIDE, RedditAPI.ACTION_UNHIDE -> {}
                     }
                 }
-            }, user, comment.getIdAndType(), action, activity
+            }, user, comment.idAndType, action, activity
         )
     }
 

@@ -47,9 +47,7 @@ class MultiredditPostListURL private constructor(
         return MultiredditPostListURL(username, name, newOrder, limit, before, after)
     }
 
-    override fun getOrder(): PostSort? {
-        return order
-    }
+    override val order: PostSort? get() = order
 
     override fun generateJsonUri(): Uri? {
         val builder = Uri.Builder()

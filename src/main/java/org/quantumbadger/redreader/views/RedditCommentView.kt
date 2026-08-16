@@ -98,7 +98,7 @@ class RedditCommentView(
         val comment = comment!!.asComment().parsedComment
 
         when (pref) {
-            CommentFlingAction.UPVOTE -> if (mChangeDataManager.isUpvoted(comment.getIdAndType())) {
+            CommentFlingAction.UPVOTE -> if (mChangeDataManager.isUpvoted(comment.idAndType)) {
                 return ActionDescriptionPair(
                     RedditCommentAction.UNVOTE,
                     string.action_vote_remove
@@ -110,7 +110,7 @@ class RedditCommentView(
                 )
             }
 
-            CommentFlingAction.DOWNVOTE -> if (mChangeDataManager.isDownvoted(comment.getIdAndType())) {
+            CommentFlingAction.DOWNVOTE -> if (mChangeDataManager.isDownvoted(comment.idAndType)) {
                 return ActionDescriptionPair(
                     RedditCommentAction.UNVOTE,
                     string.action_vote_remove
@@ -122,7 +122,7 @@ class RedditCommentView(
                 )
             }
 
-            CommentFlingAction.SAVE -> if (mChangeDataManager.isSaved(comment.getIdAndType())) {
+            CommentFlingAction.SAVE -> if (mChangeDataManager.isSaved(comment.idAndType)) {
                 return ActionDescriptionPair(
                     RedditCommentAction.UNSAVE,
                     string.action_unsave
@@ -217,7 +217,8 @@ class RedditCommentView(
         return null
     }
 
-    protected override fun getFlingLeftText(): String {
+    override val flingLeftText: String
+        get() {
         val context = getContext()
 
         val pref =             PrefsUtility.pref_behaviour_fling_comment_left()
@@ -229,9 +230,10 @@ class RedditCommentView(
         }
 
         return context.getString(mLeftFlingAction!!.descriptionRes)
-    }
+        }
 
-    protected override fun getFlingRightText(): String {
+    override val flingRightText: String
+        get() {
         val context = getContext()
 
         val pref =             PrefsUtility.pref_behaviour_fling_comment_right()
@@ -243,7 +245,7 @@ class RedditCommentView(
         }
 
         return context.getString(mRightFlingAction!!.descriptionRes)
-    }
+        }
 
     override fun allowFlingingLeft(): Boolean {
         return mLeftFlingAction != null
@@ -350,10 +352,10 @@ class RedditCommentView(
 
             if (this.comment !== comment) {
                 if (this.comment != null) {
-                    mChangeDataManager.removeListener(comment.asComment().getIdAndType(), this)
+                    mChangeDataManager.removeListener(comment.asComment().idAndType, this)
                 }
 
-                mChangeDataManager.addListener(comment.asComment().getIdAndType(), this)
+                mChangeDataManager.addListener(comment.asComment().idAndType, this)
             }
 
             this.comment = comment
@@ -392,7 +394,7 @@ class RedditCommentView(
             null
 
         val parentCommentTimestamp = if (comment.parent != null)
-            comment.parent.asComment().parsedComment.getRawComment()
+            comment.parent.asComment().parsedComment.rawComment
                 .created_utc.value
         else
             null

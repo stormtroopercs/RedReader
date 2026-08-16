@@ -565,7 +565,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
         onLinkClicked(
             this,
             UriString(
-                PostCommentListingURL.Companion.forPostId(post.src.getIdAlone())
+                PostCommentListingURL.Companion.forPostId(post.src.idAlone)
                     .generateJsonUri()
                     .toString()
             ),

@@ -351,9 +351,7 @@ class CacheDownload(
         })
     }
 
-    override fun getPriority(): Priority {
-        return mInitiator.priority
-    }
+    override val priority: Priority get() = mInitiator.priority
 
     override fun run() {
         doDownload()

@@ -31,25 +31,15 @@ class ImageTileSourceWholeBitmap(private val mBitmap: Bitmap) : ImageTileSource 
         mHeight = mBitmap.getHeight()
     }
 
-    override fun getWidth(): Int {
-        return mWidth
-    }
+    override val width: Int get() = mWidth
 
-    override fun getHeight(): Int {
-        return mHeight
-    }
+    override val height: Int get() = mHeight
 
-    override fun getTileSize(): Int {
-        return TILE_SIZE
-    }
+    override val tileSize: Int get() = TILE_SIZE
 
-    override fun getHTileCount(): Int {
-        return divideCeil(getWidth(), TILE_SIZE)
-    }
+    override val hTileCount: Int get() = divideCeil(width, TILE_SIZE)
 
-    override fun getVTileCount(): Int {
-        return divideCeil(getHeight(), TILE_SIZE)
-    }
+    override val vTileCount: Int get() = divideCeil(height, TILE_SIZE)
 
     override fun getTile(sampleSize: Int, tileX: Int, tileY: Int): Bitmap? {
         if (sampleSize == 1 && TILE_SIZE >= mWidth && TILE_SIZE >= mHeight) {

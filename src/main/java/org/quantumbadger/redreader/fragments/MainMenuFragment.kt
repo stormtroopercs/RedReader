@@ -168,9 +168,7 @@ class MainMenuFragment(
         FRONTPAGE, POPULAR, ALL, SUBREDDIT_SEARCH, CUSTOM
     }
 
-    override fun getListingView(): View? {
-        return mOuter
-    }
+    override val listingView: View? get() = mOuter
 
     override fun onSaveInstanceState(): Bundle? {
         return null

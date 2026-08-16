@@ -114,9 +114,7 @@ class InboxListingActivity : ViewsBaseActivity() {
         private val mListPosition: Int,
         private val mItem: RedditRenderableInboxItem
     ) : GroupedRecyclerViewAdapter.Item<Any?>() {
-        override fun getViewType(): Class<*> {
-            return RedditInboxItemView::class.java
-        }
+        override val viewType: Class<*> get() = RedditInboxItemView::class.java
 
         override fun onCreateViewHolder(viewGroup : ViewGroup): RecyclerView.ViewHolder {
             val view = RedditInboxItemView(this@InboxListingActivity, mTheme)
@@ -141,9 +139,7 @@ class InboxListingActivity : ViewsBaseActivity() {
             )
         }
 
-        override fun isHidden(): Boolean {
-            return false
-        }
+        override val isHidden: Boolean get() = false
     }
 
     // TODO load more on scroll to bottom?

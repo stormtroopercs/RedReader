@@ -35,9 +35,7 @@ class GroupedRecyclerViewItemListItemView(
     private val mSecondaryAction: Optional<View.OnClickListener?>,
     private val mSecondaryContentDesc: Optional<String?>
 ) : GroupedRecyclerViewAdapter.Item<Any?>() {
-    override fun getViewType(): Class<*> {
-        return ListItemView::class.java
-    }
+    override val viewType: Class<*> get() = ListItemView::class.java
 
     override fun onCreateViewHolder(viewGroup: ViewGroup): RecyclerView.ViewHolder {
         return object : RecyclerView.ViewHolder(ListItemView(viewGroup.getContext())) {}
@@ -57,7 +55,5 @@ class GroupedRecyclerViewItemListItemView(
         )
     }
 
-    override fun isHidden(): Boolean {
-        return false
-    }
+    override val isHidden: Boolean get() = false
 }

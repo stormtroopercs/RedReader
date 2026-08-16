@@ -51,9 +51,7 @@ class SubredditDetails : HasUniqueId {
         subscribers = null
     }
 
-    override fun getUniqueId(): String {
-        return id.toString()
-    }
+    override val uniqueId: String get() = id.toString()
 
     fun hasSidebar(): Boolean {
         return publicDescriptionHtmlEscaped != null && !publicDescriptionHtmlEscaped.isEmpty()

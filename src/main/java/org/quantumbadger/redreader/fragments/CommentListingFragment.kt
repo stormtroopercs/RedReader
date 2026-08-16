@@ -325,7 +325,7 @@ class CommentListingFragment(
 
             changeDataManager.markHidden(
                 now(),
-                comment.getIdAndType(),
+                comment.idAndType,
                 !comment.isCollapsed(changeDataManager)
             )
 
@@ -340,13 +340,9 @@ class CommentListingFragment(
         }
     }
 
-    override fun getListingView(): View? {
-        return mListingView
-    }
+    override val listingView: View? get() = mListingView
 
-    public override fun getOverlayView(): View? {
-        return mOverlayFrame
-    }
+    override val overlayView: View? get() = mOverlayFrame
 
     override fun onSaveInstanceState(): Bundle {
         val bundle = Bundle()

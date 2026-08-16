@@ -684,7 +684,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             commentListingController = CommentListingController(
                 PostCommentListingURL.Companion.forPostId(
                     post.src
-                        .getIdAlone()
+                        .idAlone
                 )
             )
             showBackButton(true)
@@ -712,7 +712,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
         } else {
             onLinkClicked(
                 this,
-                PostCommentListingURL.Companion.forPostId(post.src.getIdAlone()).toUriString(),
+                PostCommentListingURL.Companion.forPostId(post.src.idAlone).toUriString(),
                 false
             )
         }
@@ -1062,29 +1062,32 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             View.OnClickListener { v: View? -> onBackPressedDispatcher.onBackPressed() })
     }
 
-    override fun getPostSort(): PostSort? {
+    override val postSort: PostSort?
+        get() {
         if (postListingController == null) {
             return null
         }
 
         return postListingController!!.sort
-    }
+        }
 
-    override fun getCommentSort(): OptionsMenuUtility.Sort? {
+    override val commentSort: OptionsMenuUtility.Sort?
+        get() {
         if (commentListingController == null) {
             return null
         }
 
         return commentListingController!!.sort
-    }
+        }
 
-    override fun getSuggestedCommentSort(): PostCommentSort? {
+    override val suggestedCommentSort: PostCommentSort?
+        get() {
         if (commentListingFragment == null || commentListingFragment!!.post == null) {
             return null
         }
 
         return commentListingFragment!!.post.src.suggestedCommentSort
-    }
+        }
 
     companion object {
         private const val TAG = "MainActivity"

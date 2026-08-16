@@ -186,9 +186,7 @@ class AccountListAdapter(private val context: AppCompatActivity, private val fra
 		}
 	}
 
-	override fun getContentItemCount(): Int {
-		return accounts.size
-	}
+	override val contentItemCount: Int get() = accounts.size
 
 	private class AccountAction(
 		@StringRes val message: Int,

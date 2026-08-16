@@ -29,9 +29,7 @@ open class GroupedRecyclerViewItemView
     private var mHidden = false
 
 
-    override fun getViewType(): Class<*> {
-        return mViewType
-    }
+    override val viewType: Class<*> get() = mViewType
 
     override fun onCreateViewHolder(viewGroup : ViewGroup): RecyclerView.ViewHolder {
         val view = mFactory.apply(viewGroup)
@@ -42,9 +40,7 @@ open class GroupedRecyclerViewItemView
         // Nothing to do here
     }
 
-    override fun isHidden(): Boolean {
-        return mHidden
-    }
+    override val isHidden: Boolean get() = mHidden
 
     fun setHidden(hidden: Boolean) {
         mHidden = hidden

@@ -31,9 +31,7 @@ class RedditPostListItem
     private val mActivity: BaseActivity?,
     private val mLeftHandedMode: Boolean
 ) : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder?>() {
-    override fun getViewType(): Class<RedditPostView?> {
-        return RedditPostView::class.java
-    }
+    override val viewType: Class<RedditPostView?> get() = RedditPostView::class.java
 
     override fun onCreateViewHolder(viewGroup : ViewGroup): RecyclerView.ViewHolder {
         val view = RedditPostView(
@@ -51,7 +49,5 @@ class RedditPostListItem
         (viewHolder.itemView as RedditPostView).reset(mPost)
     }
 
-    override fun isHidden(): Boolean {
-        return false
-    }
+    override val isHidden: Boolean get() = false
 }

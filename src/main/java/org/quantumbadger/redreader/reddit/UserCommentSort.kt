@@ -59,9 +59,7 @@ enum class UserCommentSort(@field:StringRes @param:StringRes private val menuTit
         }
     }
 
-    override fun getMenuTitle(): Int {
-        return menuTitle
-    }
+    override val menuTitle: Int get() = menuTitle
 
     override fun onSortSelected(activity: AppCompatActivity) {
         (activity as OptionsMenuCommentsListener).onSortSelected(this)

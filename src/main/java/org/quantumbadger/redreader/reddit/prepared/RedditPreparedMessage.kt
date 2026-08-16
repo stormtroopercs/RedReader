@@ -81,7 +81,7 @@ class RedditPreparedMessage(
 
         body = HtmlReader.Companion.parse(message.body_html!!.decoded, activity)
 
-        idAndType = message.getIdAndType()
+        idAndType = message.idAndType
 
         val sb = BetterSSB()
 

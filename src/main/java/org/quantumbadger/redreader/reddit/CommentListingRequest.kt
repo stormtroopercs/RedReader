@@ -333,7 +333,7 @@ class CommentListingRequest(
                     Log.e(
                         TAG,
                         "Exception while processing media metadata for "
-                                + comment.getIdAndType(),
+                                + comment.idAndType,
                         e
                     )
                 }

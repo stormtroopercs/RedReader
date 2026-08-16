@@ -273,7 +273,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
         timestampBound: TimestampBound
     ) {
         if (subscriptions != null
-            && timestampBound.verifyTimestamp(subscriptions!!.getTimestamp())
+            && timestampBound.verifyTimestamp(subscriptions!!.timestamp)
         ) {
             return
         }
