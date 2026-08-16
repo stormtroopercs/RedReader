@@ -17,17 +17,18 @@
 
 package org.quantumbadger.redreader.navigation
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.NeverAlwaysOrWifiOnly
+import org.quantumbadger.redreader.reddit.PostCommentSort
+import org.quantumbadger.redreader.reddit.PostSort
+import org.quantumbadger.redreader.settings.types.AppearanceTheme
 import javax.inject.Inject
 
 /**
@@ -35,25 +36,21 @@ import javax.inject.Inject
  * Manages settings state and provides reactive updates via StateFlow.
  */
 @HiltViewModel
-class SettingsViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
-) : ViewModel() {
+class SettingsViewModel @Inject constructor() : ViewModel() {
 
     sealed class SettingsUiState {
         object Loading : SettingsUiState()
         data class Ready(
             val linkButtons: Boolean,
             val hideCommentsFromBlockedUsers: Boolean,
-            val theme: PrefsUtility.AppearanceTheme,
-            val imageQuality: PrefsUtility.ImageQuality,
-            val videoQuality: PrefsUtility.VideoQuality,
-            val gifQuality: PrefsUtility.GifQuality,
+            val theme: AppearanceTheme,
+            val imageQuality: NeverAlwaysOrWifiOnly,
             val postTapAction: PrefsUtility.PostTapAction,
-            val commentTapAction: PrefsUtility.CommentTapAction,
-            val postSort: PrefsUtility.PostSort,
-            val commentSort: PrefsUtility.PostCommentSort,
-            val imageViewerMode: PrefsUtility.ImageViewerMode,
-            val albumViewerMode: PrefsUtility.AlbumViewerMode,
+            val commentTapAction: PrefsUtility.CommentAction,
+            val postSort: PostSort,
+            val commentSort: PostCommentSort,
+            val imageViewerMode: PrefsUtility.ImageViewMode,
+            val albumViewerMode: PrefsUtility.AlbumViewMode,
             val statusBarMode: PrefsUtility.AppearanceStatusBarMode
         ) : SettingsUiState()
         data class Error(val message: String) : SettingsUiState()
@@ -70,19 +67,17 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _state.value = SettingsUiState.Ready(
-                    linkButtons = PrefsUtility.prefLinkbuttons(context),
-                    hideCommentsFromBlockedUsers = PrefsUtility.prefHideCommentsFromBlockedUsers(context),
-                    theme = PrefsUtility.prefTheme(context),
-                    imageQuality = PrefsUtility.prefImageQuality(context),
-                    videoQuality = PrefsUtility.prefVideoQuality(context),
-                    gifQuality = PrefsUtility.prefGifQuality(context),
-                    postTapAction = PrefsUtility.prefPostTapAction(context),
-                    commentTapAction = PrefsUtility.prefCommentTapAction(context),
-                    postSort = PrefsUtility.prefPostsSort(context),
-                    commentSort = PrefsUtility.prefCommentsSort(context),
-                    imageViewerMode = PrefsUtility.prefImageViewerMode(context),
-                    albumViewerMode = PrefsUtility.prefAlbumViewerMode(context),
-                    statusBarMode = PrefsUtility.prefStatusBarMode(context)
+                    linkButtons = PrefsUtility.pref_appearance_linkbuttons(),
+                    hideCommentsFromBlockedUsers = PrefsUtility.pref_appearance_hide_comments_from_blocked_users(),
+                    theme = PrefsUtility.appearance_theme(),
+                    imageQuality = PrefsUtility.images_high_res_thumbnails(),
+                    postTapAction = PrefsUtility.pref_behaviour_post_tap_action(),
+                    commentTapAction = PrefsUtility.pref_behaviour_actions_comment_tap(),
+                    postSort = PrefsUtility.pref_behaviour_postsort(),
+                    commentSort = PrefsUtility.pref_behaviour_commentsort(),
+                    imageViewerMode = PrefsUtility.pref_behaviour_imageview_mode(),
+                    albumViewerMode = PrefsUtility.pref_behaviour_albumview_mode(),
+                    statusBarMode = PrefsUtility.pref_appearance_android_status()
                 )
             } catch (e: Exception) {
                 _state.value = SettingsUiState.Error("Failed to load settings: ${e.message}")
@@ -91,91 +86,77 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setLinkButtons(enabled: Boolean) {
-        PrefsUtility.prefLinkbuttons_set(context, enabled)
+        PrefsUtility.pref_appearance_linkbuttons_set(enabled)
         updateState { ready ->
             ready.copy(linkButtons = enabled)
         }
     }
 
     fun setHideCommentsFromBlockedUsers(enabled: Boolean) {
-        PrefsUtility.prefHideCommentsFromBlockedUsers_set(context, enabled)
+        PrefsUtility.pref_appearance_hide_comments_from_blocked_users_set(enabled)
         updateState { ready ->
             ready.copy(hideCommentsFromBlockedUsers = enabled)
         }
     }
 
-    fun setTheme(theme: PrefsUtility.AppearanceTheme) {
-        PrefsUtility.prefTheme_set(context, theme)
+    fun setTheme(theme: AppearanceTheme) {
+        PrefsUtility.appearance_theme_set(theme)
         updateState { ready ->
             ready.copy(theme = theme)
         }
     }
 
-    fun setImageQuality(quality: PrefsUtility.ImageQuality) {
-        PrefsUtility.prefImageQuality_set(context, quality)
+    fun setImageQuality(quality: NeverAlwaysOrWifiOnly) {
+        PrefsUtility.images_high_res_thumbnails_set(quality)
         updateState { ready ->
             ready.copy(imageQuality = quality)
         }
     }
 
-    fun setVideoQuality(quality: PrefsUtility.VideoQuality) {
-        PrefsUtility.prefVideoQuality_set(context, quality)
-        updateState { ready ->
-            ready.copy(videoQuality = quality)
-        }
-    }
-
-    fun setGifQuality(quality: PrefsUtility.GifQuality) {
-        PrefsUtility.prefGifQuality_set(context, quality)
-        updateState { ready ->
-            ready.copy(gifQuality = quality)
-        }
-    }
-
     fun setPostTapAction(action: PrefsUtility.PostTapAction) {
-        PrefsUtility.prefPostTapAction_set(context, action)
+        PrefsUtility.pref_behaviour_post_tap_action_set(action)
         updateState { ready ->
             ready.copy(postTapAction = action)
         }
     }
 
-    fun setCommentTapAction(action: PrefsUtility.CommentTapAction) {
-        PrefsUtility.prefCommentTapAction_set(context, action)
+    fun setCommentTapAction(action: PrefsUtility.CommentAction) {
+        PrefsUtility.pref_behaviour_actions_comment_tap_set(action)
         updateState { ready ->
             ready.copy(commentTapAction = action)
         }
     }
 
-    fun setPostSort(sort: PrefsUtility.PostSort) {
-        PrefsUtility.prefPostsSort_set(context, sort)
+    fun setPostSort(sort: PostSort) {
+        PrefsUtility.pref_behaviour_postsort_set(sort)
         updateState { ready ->
             ready.copy(postSort = sort)
         }
     }
 
-    fun setCommentSort(sort: PrefsUtility.PostCommentSort) {
-        PrefsUtility.prefCommentsSort_set(context, sort)
+    fun setCommentSort(sort: PostCommentSort) {
+        PrefsUtility.pref_behaviour_commentsort_set(sort)
         updateState { ready ->
             ready.copy(commentSort = sort)
         }
     }
 
-    fun setImageViewerMode(mode: PrefsUtility.ImageViewerMode) {
-        PrefsUtility.prefImageViewerMode_set(context, mode)
+    fun setImageViewerMode(mode: PrefsUtility.ImageViewMode) {
+        PrefsUtility.pref_behaviour_imageview_mode_set(mode)
         updateState { ready ->
             ready.copy(imageViewerMode = mode)
         }
     }
 
-    fun setAlbumViewerMode(mode: PrefsUtility.AlbumViewerMode) {
-        PrefsUtility.prefAlbumViewerMode_set(context, mode)
+    fun setAlbumViewerMode(mode: PrefsUtility.AlbumViewMode) {
+        PrefsUtility.pref_behaviour_albumview_mode_set(mode)
         updateState { ready ->
             ready.copy(albumViewerMode = mode)
         }
     }
 
     fun setStatusBarMode(mode: PrefsUtility.AppearanceStatusBarMode) {
-        PrefsUtility.prefStatusBarMode_set(context, mode)
+        PrefsUtility.pref_appearance_android_status_set(mode)
         updateState { ready ->
             ready.copy(statusBarMode = mode)
         }

@@ -121,6 +121,88 @@ object PrefsUtility {
         sharedPrefs!!.edit().putBoolean(getPrefKey(id), newValue).apply()
     }
 
+    private fun setEnumString(id: Int, value: Enum<*>) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(id), StringUtils.asciiLowercase(value.name))
+            .apply()
+    }
+
+    fun pref_appearance_linkbuttons_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_linkbuttons_key, enabled)
+    }
+
+    fun pref_appearance_hide_comments_from_blocked_users_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_hide_comments_from_blocked_users_key, enabled)
+    }
+
+    fun appearance_theme_set(theme: AppearanceTheme) {
+        setEnumString(string.pref_appearance_theme_key, theme)
+    }
+
+    fun images_high_res_thumbnails_set(value: NeverAlwaysOrWifiOnly) {
+        setEnumString(string.pref_images_high_res_thumbnails_key, value)
+    }
+
+    fun pref_behaviour_post_tap_action_set(action: PostTapAction) {
+        setEnumString(string.pref_behaviour_post_tap_action_key, action)
+    }
+
+    fun pref_behaviour_actions_comment_tap_set(action: CommentAction) {
+        setEnumString(string.pref_behaviour_actions_comment_tap_key, action)
+    }
+
+    fun pref_behaviour_postsort_set(sort: PostSort) {
+        setEnumString(string.pref_behaviour_postsort_key, sort)
+    }
+
+    fun pref_behaviour_commentsort_set(sort: PostCommentSort) {
+        setEnumString(string.pref_behaviour_commentsort_key, sort)
+    }
+
+    fun pref_behaviour_imageview_mode_set(mode: ImageViewMode) {
+        setEnumString(string.pref_behaviour_imageview_mode_key, mode)
+    }
+
+    fun pref_behaviour_albumview_mode_set(mode: AlbumViewMode) {
+        setEnumString(string.pref_behaviour_albumview_mode_key, mode)
+    }
+
+    fun pref_appearance_android_status_set(mode: AppearanceStatusBarMode) {
+        setEnumString(string.pref_appearance_android_status_key, mode)
+    }
+
+    fun pref_appearance_bottom_toolbar_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_bottom_toolbar_key, enabled)
+    }
+
+    fun pref_appearance_hide_toolbar_on_scroll_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_hide_toolbar_on_scroll_key, enabled)
+    }
+
+    fun pref_behaviour_videoview_mode_set(mode: VideoViewMode) {
+        setEnumString(string.pref_behaviour_videoview_mode_key, mode)
+    }
+
+    fun pref_behaviour_gifview_mode_set(mode: GifViewMode) {
+        setEnumString(string.pref_behaviour_gifview_mode_key, mode)
+    }
+
+    fun pref_behaviour_fling_post_left_set(action: PostFlingAction) {
+        setEnumString(string.pref_behaviour_fling_post_left_key, action)
+    }
+
+    fun pref_behaviour_fling_post_right_set(action: PostFlingAction) {
+        setEnumString(string.pref_behaviour_fling_post_right_key, action)
+    }
+
+    fun pref_behaviour_actions_comment_longclick_set(action: CommentAction) {
+        setEnumString(string.pref_behaviour_actions_comment_longclick_key, action)
+    }
+
+    fun network_tor_set(enabled: Boolean) {
+        setBoolean(string.pref_network_tor_key, enabled)
+    }
+
     @Suppress("unused")
     private fun getLong(
         id: Int,
