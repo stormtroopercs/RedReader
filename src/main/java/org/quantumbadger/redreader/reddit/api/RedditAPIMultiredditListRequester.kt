@@ -44,22 +44,24 @@ import org.quantumbadger.redreader.common.General
 class RedditAPIMultiredditListRequester(
     private val context: Context,
     private val user: RedditAccount
-) : CacheDataSource<Key?, WritableHashSet?, RRError?> {
-    object Key {
-        val INSTANCE: Key = Key()
+) : CacheDataSource<RedditAPIMultiredditListRequester.Key, WritableHashSet, RRError> {
+    class Key {
+        companion object {
+            val INSTANCE: Key = Key()
+        }
     }
 
     override fun performRequest(
-        key: Key?,
+        key: Key,
         timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<WritableHashSet?, RRError?>
+        handler: RequestResponseHandler<WritableHashSet, RRError>
     ) {
         if (user.isAnonymous) {
             val now = now()
 
             handler.onRequestSuccess(
                 WritableHashSet(
-                    HashSet<String?>(),
+                    HashSet<String>(),
                     now,
                     user.canonicalUsername
                 ),
@@ -71,7 +73,7 @@ class RedditAPIMultiredditListRequester(
     }
 
     private fun doRequest(
-        handler: RequestResponseHandler<WritableHashSet?, RRError?>
+        handler: RequestResponseHandler<WritableHashSet, RRError>
     ) {
         val uri = Reddit.getUri(Reddit.PATH_MULTIREDDITS_MINE)
 
@@ -87,26 +89,26 @@ class RedditAPIMultiredditListRequester(
             CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
                 override fun onJsonParsed(
                     result: JsonValue,
-                    timestamp: TimestampUTC,
+                    timestamp: TimestampUTC?,
                     session: UUID,
                     fromCache: Boolean
                 ) {
                     try {
-                        val output = HashSet<String?>()
+                        val output = HashSet<String>()
 
                         val multiredditList = result.asArray()
 
                         for (multireddit in multiredditList!!) {
-                            val name = multireddit.asObject()!!
+                            val name = multireddit!!.asObject()!!
                                 .getObject("data")!!
                                 .getString("name")
-                            output.add(name)
+                            output.add(name!!)
                         }
 
                         handler.onRequestSuccess(
                             WritableHashSet(
                                 output,
-                                timestamp,
+                                timestamp!!,
                                 user.canonicalUsername
                             ), timestamp
                         )
@@ -134,17 +136,17 @@ class RedditAPIMultiredditListRequester(
     }
 
     override fun performRequest(
-        keys: MutableCollection<Key?>?, timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<HashMap<Key?, WritableHashSet?>?, RRError?>?
+        keys: MutableCollection<Key>, timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<HashMap<Key, WritableHashSet>, RRError>
     ) {
         throw UnsupportedOperationException()
     }
 
-    override fun performWrite(value: WritableHashSet?) {
+    override fun performWrite(value: WritableHashSet) {
         throw UnsupportedOperationException()
     }
 
-    override fun performWrite(values: MutableCollection<WritableHashSet?>) {
+    override fun performWrite(values: MutableCollection<WritableHashSet>) {
         throw UnsupportedOperationException()
     }
 }

@@ -25,7 +25,7 @@ interface WritableObject<K> {
 
     val key: K?
 
-    val timestamp: TimestampUTC?
+    val timestamp: TimestampUTC
 
     @Retention(AnnotationRetention.RUNTIME)
     @Target(AnnotationTarget.FIELD)

@@ -55,18 +55,18 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
     }
 
     override fun performRequest(
-        key: K?, timestampBound: TimestampBound,
+        key: K?, timestampBound: TimestampBound?,
         handler: RequestResponseHandler<V?, F?>
     ) {
-        toRead.offer(SingleReadOperation(timestampBound, handler, key))
+        toRead.offer(SingleReadOperation(timestampBound!!, handler, key))
         readThread.trigger()
     }
 
     override fun performRequest(
-        keys: MutableCollection<K?>, timestampBound: TimestampBound,
-        handler: RequestResponseHandler<HashMap<K?, V?>?, F?>
+        keys: MutableCollection<K?>, timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<HashMap<K?, V?>, F?>
     ) {
-        toRead.offer(BulkReadOperation(timestampBound, handler, keys))
+        toRead.offer(BulkReadOperation(timestampBound!!, handler, keys))
         readThread.trigger()
     }
 
@@ -90,7 +90,7 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
 
     private inner class BulkReadOperation(
         timestampBound: TimestampBound,
-        val responseHandler: RequestResponseHandler<HashMap<K?, V?>?, F?>,
+        val responseHandler: RequestResponseHandler<HashMap<K?, V?>, F?>,
         val keys: MutableCollection<K?>
     ) : ReadOperation(timestampBound) {
         override fun run() {
@@ -156,19 +156,19 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
             alternateSource.performRequest(
                 keys,
                 timestampBound,
-                object : RequestResponseHandler<HashMap<K?, V?>?, F?> {
+                object : RequestResponseHandler<HashMap<K?, V?>, F?> {
                     override fun onRequestFailed(failureReason: F?) {
                         responseHandler.onRequestFailed(failureReason)
                     }
 
                     override fun onRequestSuccess(
                         result: HashMap<K?, V?>,
-                        timeCached: TimestampUTC
+                        timeCached: TimestampUTC?
                     ) {
                         val timestamp: TimestampUTC?=if (outerOldestTimestamp == null)
                             timeCached
                         else
-                            oldest(outerOldestTimestamp, timeCached)
+                            oldest(outerOldestTimestamp, timeCached!!)
 
                         performWrite(result.values)
                         existingResult.putAll(result)

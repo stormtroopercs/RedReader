@@ -39,8 +39,8 @@ class WeakCache<K, V : WritableObject<K?>?, F>
     @Synchronized
     override fun performRequest(
         keys: MutableCollection<K?>,
-        timestampBound: TimestampBound,
-        handler: RequestResponseHandler<HashMap<K?, V?>?, F?>
+        timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<HashMap<K?, V?>, F?>
     ) {
         val keysRemaining = HashSet<K?>(keys)
         val cacheResult = HashMap<K?, V?>(keys.size)
@@ -51,7 +51,7 @@ class WeakCache<K, V : WritableObject<K?>?, F>
             if (entry != null) {
                 val value: V? = entry.data.get()
                 if (value != null
-                    && timestampBound.verifyTimestamp(value.timestamp)
+                    && timestampBound!!.verifyTimestamp(value.timestamp)
                 ) {
                     keysRemaining.remove(key)
                     cacheResult.put(key, value)
@@ -73,21 +73,21 @@ class WeakCache<K, V : WritableObject<K?>?, F>
             cacheDataSource.performRequest(
                 keysRemaining,
                 timestampBound,
-                object : RequestResponseHandler<HashMap<K?, V?>?, F?> {
+                object : RequestResponseHandler<HashMap<K?, V?>, F?> {
                     override fun onRequestFailed(failureReason: F?) {
                         handler.onRequestFailed(failureReason)
                     }
 
                     override fun onRequestSuccess(
                         result: HashMap<K?, V?>,
-                        timeCached: TimestampUTC
+                        timeCached: TimestampUTC?
                     ) {
                         cacheResult.putAll(result)
 
                         val timestamp: TimestampUTC?=if (oldestTimestampOuter == null)
                             timeCached
                         else
-                            oldest(timeCached, oldestTimestampOuter)
+                            oldest(timeCached!!, oldestTimestampOuter)
 
                         handler.onRequestSuccess(cacheResult, timestamp)
                     }
@@ -137,7 +137,7 @@ class WeakCache<K, V : WritableObject<K?>?, F>
                     synchronized(this@WeakCache) {
                         put(result, false)
                         if (updatedVersionListener != null) {
-                            cached.get(key).listeners.add(updatedVersionListener)
+                            cached.get(key)!!.listeners.add(updatedVersionListener)
                         }
                         handler.onRequestSuccess(result, timeCached)
                     }
@@ -164,11 +164,11 @@ class WeakCache<K, V : WritableObject<K?>?, F>
         if (oldEntry != null) {
             cached.put(
                 value.key,
-                WeakCache.CacheEntry(WeakReference<V?>(value), oldEntry.listeners)
+                CacheEntry(WeakReference<V?>(value), oldEntry.listeners)
             )
             oldEntry.listeners.map<V?>(updatedVersionListenerNotifier, value)
         } else {
-            cached.put(value.key, WeakCache.CacheEntry(WeakReference<V?>(value)))
+            cached.put(value.key, CacheEntry(WeakReference<V?>(value)))
         }
 
         if (writeDown) {
@@ -184,11 +184,11 @@ class WeakCache<K, V : WritableObject<K?>?, F>
             if (oldEntry != null) {
                 cached.put(
                     value.key,
-                    WeakCache.CacheEntry(WeakReference<V?>(value), oldEntry.listeners)
+                    CacheEntry(WeakReference<V?>(value), oldEntry.listeners)
                 )
                 oldEntry.listeners.map<V?>(updatedVersionListenerNotifier, value)
             } else {
-                cached.put(value.key, WeakCache.CacheEntry(WeakReference<V?>(value)))
+                cached.put(value.key, CacheEntry(WeakReference<V?>(value)))
             }
         }
 

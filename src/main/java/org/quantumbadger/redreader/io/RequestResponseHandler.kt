@@ -19,7 +19,7 @@ package org.quantumbadger.redreader.io
 import org.quantumbadger.redreader.common.time.TimestampUTC
 
 interface RequestResponseHandler<E, F> {
-    fun onRequestFailed(failureReason: F?)
+    fun onRequestFailed(failureReason: F)
 
-    fun onRequestSuccess(result: E?, timeCached: TimestampUTC?)
+    fun onRequestSuccess(result: E, timeCached: TimestampUTC?)
 }

@@ -37,8 +37,8 @@ class PermanentCache<K, V : WritableObject<K?>?, F>
 
     @Synchronized
     override fun performRequest(
-        keys: MutableCollection<K?>, timestampBound: TimestampBound,
-        handler: RequestResponseHandler<HashMap<K?, V?>?, F?>
+        keys: MutableCollection<K?>, timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<HashMap<K?, V?>, F?>
     ) {
         val keysRemaining = HashSet<K?>(keys)
         val cacheResult = HashMap<K?, V?>(keys.size)
@@ -48,7 +48,7 @@ class PermanentCache<K, V : WritableObject<K?>?, F>
             val entry: CacheEntry?=cached.get(key)
             if (entry != null) {
                 val value: V? = entry.data
-                if (timestampBound.verifyTimestamp(value!!.timestamp)) {
+                if (timestampBound!!.verifyTimestamp(value!!.timestamp)) {
                     keysRemaining.remove(key)
                     cacheResult.put(key, value)
                     if (oldestTimestamp == null) {
@@ -69,21 +69,21 @@ class PermanentCache<K, V : WritableObject<K?>?, F>
             cacheDataSource.performRequest(
                 keysRemaining,
                 timestampBound,
-                object : RequestResponseHandler<HashMap<K?, V?>?, F?> {
+                object : RequestResponseHandler<HashMap<K?, V?>, F?> {
                     override fun onRequestFailed(failureReason: F?) {
                         handler.onRequestFailed(failureReason)
                     }
 
                     override fun onRequestSuccess(
                         result: HashMap<K?, V?>,
-                        timeCached: TimestampUTC
+                        timeCached: TimestampUTC?
                     ) {
                         cacheResult.putAll(result)
 
                         val timestamp: TimestampUTC?=if (outerOldestTimestamp == null)
                             timeCached
                         else
-                            oldest(outerOldestTimestamp, timeCached)
+                            oldest(outerOldestTimestamp, timeCached!!)
 
                         handler.onRequestSuccess(
                             cacheResult,
@@ -134,7 +134,7 @@ class PermanentCache<K, V : WritableObject<K?>?, F>
                     synchronized(this@PermanentCache) {
                         put(result, false)
                         if (updatedVersionListener != null) {
-                            cached.get(key).listeners.add(updatedVersionListener)
+                            cached.get(key)!!.listeners.add(updatedVersionListener)
                         }
                         handler.onRequestSuccess(result, timeCached)
                     }
@@ -159,10 +159,10 @@ class PermanentCache<K, V : WritableObject<K?>?, F>
         val oldEntry: CacheEntry?=cached.get(value!!.key)
 
         if (oldEntry != null) {
-            cached.put(value.key, PermanentCache.CacheEntry(value, oldEntry.listeners))
+            cached.put(value.key, CacheEntry(value, oldEntry.listeners))
             oldEntry.listeners.map<V?>(updatedVersionListenerNotifier, value)
         } else {
-            cached.put(value.key, PermanentCache.CacheEntry(value))
+            cached.put(value.key, CacheEntry(value))
         }
 
         if (writeDown) {
@@ -176,10 +176,10 @@ class PermanentCache<K, V : WritableObject<K?>?, F>
             val oldEntry: CacheEntry?=cached.get(value!!.key)
 
             if (oldEntry != null) {
-                cached.put(value.key, PermanentCache.CacheEntry(value, oldEntry.listeners))
+                cached.put(value.key, CacheEntry(value, oldEntry.listeners))
                 oldEntry.listeners.map<V?>(updatedVersionListenerNotifier, value)
             } else {
-                cached.put(value.key, PermanentCache.CacheEntry(value))
+                cached.put(value.key, CacheEntry(value))
             }
         }
 
