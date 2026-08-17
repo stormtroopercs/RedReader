@@ -37,10 +37,10 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
     private var serialised: String?=null
 
     @WritableObjectKey
-    private val key: String?
+    private val mKey: String?
 
     @WritableObjectTimestamp
-    private val timestamp: Long
+    private val mTimestamp: Long
 
     constructor(
         data: HashSet<String>?,
@@ -48,20 +48,20 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
         key: String?
     ) {
         this.hashSet = data
-        this.timestamp = timestamp.toUtcMs()
-        this.key = key
+        this.mTimestamp = timestamp.toUtcMs()
+        this.mKey = key
         serialised = Companion.listToEscapedString(hashSet!!)
     }
 
     private constructor(serializedData: String?, timestamp: Long, key: String?) {
-        this.timestamp = timestamp
-        this.key = key
+        this.mTimestamp = timestamp
+        this.mKey = key
         serialised = serializedData
     }
 
     constructor(creationData: WritableObject.CreationData) {
-        this.timestamp = creationData.timestamp
-        this.key = creationData.key
+        this.mTimestamp = creationData.timestamp
+        this.mKey = creationData.key
     }
 
     override fun toString(): String {
@@ -73,8 +73,8 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
     fun serializeWithMetadata(): String {
         val result = ArrayList<String>(3)
         result.add(serialised!!)
-        result.add(timestamp.toString())
-        result.add(key!!)
+        result.add(mTimestamp.toString())
+        result.add(mKey!!)
         return listToEscapedString(result)
     }
 
@@ -86,9 +86,9 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
         return (HashSet<String>(escapedStringToList(serialised)).also { hashSet = it })
     }
 
-    override val key: String? get() = key
+    override val key: String? get() = mKey
 
-    override val timestamp: TimestampUTC get() = fromUtcMs(timestamp)
+    override val timestamp: TimestampUTC get() = fromUtcMs(mTimestamp)
 
     override fun iterator(): MutableIterator<String?> {
         return toHashset().iterator()
@@ -100,8 +100,8 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
         var DB_VERSION: Int = 1
 
         fun unserializeWithMetadata(raw: String?): WritableHashSet {
-            val data: ArrayList<String?> = escapedStringToList(raw)
-            return WritableHashSet(data.get(0), data.get(1)!!.toLong(), data.get(2))
+            val data: ArrayList<String> = escapedStringToList(raw)
+            return WritableHashSet(data.get(0), data.get(1).toLong(), data.get(2))
         }
 
         fun listToEscapedString(list: MutableCollection<String>): String {
@@ -128,9 +128,9 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
             return sb.toString()
         }
 
-        fun escapedStringToList(str: String?): ArrayList<String?> {
+        fun escapedStringToList(str: String?): ArrayList<String> {
             var str = str
-            val result = ArrayList<String?>()
+            val result = ArrayList<String>()
 
             if (str != null) {
                 // Workaround to improve parsing of lists saved by older versions of the app
