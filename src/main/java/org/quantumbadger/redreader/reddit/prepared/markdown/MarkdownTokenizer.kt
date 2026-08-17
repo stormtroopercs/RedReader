@@ -35,15 +35,15 @@ object MarkdownTokenizer {
     const val TOKEN_UNICODE_OPEN: Int = -12
     const val TOKEN_UNICODE_CLOSE: Int = -13
 
-    private val reverseLookup: Array<CharArray> = arrayOfNulls<CharArray>(20)
+    private val reverseLookup: Array<CharArray?> = arrayOfNulls<CharArray>(20)
 
-    private val linkPrefixes = arrayOf<CharArray?>(
+    private val linkPrefixes = arrayOf<CharArray>(
         "http://".toCharArray(),
         "https://".toCharArray(),
         "www.".toCharArray()
     )
 
-    private val linkPrefixes_reddit = arrayOf<CharArray?>(
+    private val linkPrefixes_reddit = arrayOf<CharArray>(
         "/r/".toCharArray(),
         "r/".toCharArray(),
         "/u/".toCharArray(),
@@ -140,12 +140,12 @@ object MarkdownTokenizer {
                     lastCharOk = true
                 }
 
-                ' ' -> {
+                ' '.code -> {
                     output.data[output.pos++] = ' '.code
                     lastCharOk = true
                 }
 
-                'h', 'w' -> {
+                'h'.code, 'w'.code -> {
                     if (inBrackets == 0 && lastCharOk) {
                         val linkStartType =                             getLinkStartType(input.data, i, input.pos)
                         if (linkStartType >= 0) {
@@ -215,7 +215,7 @@ object MarkdownTokenizer {
                     lastCharOk = false
                 }
 
-                'r', 'u', '/' -> {
+                'r'.code, 'u'.code, '/'.code -> {
                     if (inBrackets == 0 && lastCharOk) {
                         val linkStartType =                             getRedditLinkStartType(input.data, i, input.pos)
                         if (linkStartType >= 0) {
@@ -677,7 +677,7 @@ object MarkdownTokenizer {
                         toRevert[i] = true
                     }
 
-                    ' ' -> if (i < 1 || input.data[i - 1] == ' '.code) {
+                    ' '.code -> if (i < 1 || input.data[i - 1] == ' '.code) {
                         toDelete[i] = true
                     }
 
@@ -720,7 +720,7 @@ object MarkdownTokenizer {
 
             if (toRevert[i]) {
                 val revertTo = reverseLookup[20 + input.data[i]]
-                output.append(revertTo)
+                revertTo?.let { output.append(it) }
             } else {
                 output.data[output.pos++] = input.data[i]
             }
@@ -733,7 +733,7 @@ object MarkdownTokenizer {
             when (tokens.data[i]) {
                 TOKEN_PAREN_CLOSE -> return i
 
-                '"' -> {
+                '"'.code -> {
                     i = indexOfIgnoreEscaped(tokens, '"'.code, i + 1)
                     if (i < 0) {
                         return -1
@@ -775,14 +775,14 @@ object MarkdownTokenizer {
             val c = input.data[i]
 
             when (c) {
-                '*' -> if (i < input.pos - 1 && input.data[i + 1] == '*'.code) {
+                '*'.code -> if (i < input.pos - 1 && input.data[i + 1] == '*'.code) {
                     i++
                     output.data[output.pos++] = TOKEN_ASTERISK_DOUBLE
                 } else {
                     output.data[output.pos++] = TOKEN_ASTERISK
                 }
 
-                '_' -> if (i < input.pos - 1 && input.data[i + 1] == '_'.code) {
+                '_'.code -> if (i < input.pos - 1 && input.data[i + 1] == '_'.code) {
                     i++
                     output.data[output.pos++] = TOKEN_UNDERSCORE_DOUBLE
                 } else {
@@ -796,28 +796,28 @@ object MarkdownTokenizer {
                     }
                 }
 
-                '~' -> if (i < input.pos - 1 && input.data[i + 1] == '~'.code) {
+                '~'.code -> if (i < input.pos - 1 && input.data[i + 1] == '~'.code) {
                     i++
                     output.data[output.pos++] = TOKEN_TILDE_DOUBLE
                 } else {
                     output.data[output.pos++] = '~'.code
                 }
 
-                '^' -> output.data[output.pos++] = TOKEN_CARET
-                '`' -> output.data[output.pos++] = TOKEN_GRAVE
-                '[' -> output.data[output.pos++] = TOKEN_BRACKET_SQUARE_OPEN
-                ']' -> output.data[output.pos++] = TOKEN_BRACKET_SQUARE_CLOSE
-                '(' -> output.data[output.pos++] = TOKEN_PAREN_OPEN
-                ')' -> output.data[output.pos++] = TOKEN_PAREN_CLOSE
-                '&' -> output.data[output.pos++] = TOKEN_UNICODE_OPEN
-                ';' -> output.data[output.pos++] = TOKEN_UNICODE_CLOSE
-                '\\' -> if (i < input.pos - 1) {
+                '^'.code -> output.data[output.pos++] = TOKEN_CARET
+                '`'.code -> output.data[output.pos++] = TOKEN_GRAVE
+                '['.code -> output.data[output.pos++] = TOKEN_BRACKET_SQUARE_OPEN
+                ']'.code -> output.data[output.pos++] = TOKEN_BRACKET_SQUARE_CLOSE
+                '('.code -> output.data[output.pos++] = TOKEN_PAREN_OPEN
+                ')'.code -> output.data[output.pos++] = TOKEN_PAREN_CLOSE
+                '&'.code -> output.data[output.pos++] = TOKEN_UNICODE_OPEN
+                ';'.code -> output.data[output.pos++] = TOKEN_UNICODE_CLOSE
+                '\\'.code -> if (i < input.pos - 1) {
                     output.data[output.pos++] = input.data[++i]
                 } else {
                     output.data[output.pos++] = '\\'.code
                 }
 
-                '\t', '\r', '\u000C', '\n' -> output.data[output.pos++] = ' '.code
+                '\t'.code, '\r'.code, '\u000C'.code, '\n'.code -> output.data[output.pos++] = ' '.code
                 else -> output.data[output.pos++] = c
             }
             i++
@@ -1005,7 +1005,7 @@ object MarkdownTokenizer {
         for (i in startInclusive..<endExclusive) {
             val token = tokens[i]
             if (token < 0) {
-                outputLen += reverseLookup[20 + token].size
+                outputLen += (reverseLookup[20 + token]?.size ?: 0)
             } else {
                 outputLen++
             }
@@ -1017,8 +1017,11 @@ object MarkdownTokenizer {
         for (i in startInclusive..<endExclusive) {
             val token = tokens[i]
             if (token < 0) {
-                for (c in reverseLookup[20 + token]) {
-                    result[resultPos++] = c.code
+                val arr = reverseLookup[20 + token]
+                if (arr != null) {
+                    for (c in arr) {
+                        result[resultPos++] = c.code
+                    }
                 }
             } else {
                 result[resultPos++] = token
