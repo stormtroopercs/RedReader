@@ -1729,8 +1729,8 @@ object PrefsUtility {
         return result
     }
 
-    fun pref_menus_appbar_items(): EnumMap<AppbarItemsPref?, Int?> {
-        val appbarItemsInfo: Array<AppbarItemInfo?> = arrayOf<AppbarItemInfo?>(
+    fun pref_menus_appbar_items(): EnumMap<AppbarItemsPref, Int> {
+        val appbarItemsInfo: Array<AppbarItemInfo> = arrayOf(
             AppbarItemInfo(
                 AppbarItemsPref.SORT,
                 string.pref_menus_appbar_sort_key,
@@ -1804,20 +1804,20 @@ object PrefsUtility {
         )
 
 
-        val appbarItemsPrefs = EnumMap<AppbarItemsPref?, Int?>(AppbarItemsPref::class.java)
+        val appbarItemsPrefs = EnumMap<AppbarItemsPref, Int>(AppbarItemsPref::class.java)
 
         for (item in appbarItemsInfo) {
             try {
                 appbarItemsPrefs.put(
-                    item!!.itemPref, PrefsUtility.getString(
+                    item.itemPref, PrefsUtility.getString(
                         item.stringRes,
                         item.defaultValue.toString()
                     )!!.toInt()
                 )
             } catch (e: NumberFormatException) {
-                appbarItemsPrefs.put(item!!.itemPref, item.defaultValue)
+                appbarItemsPrefs.put(item.itemPref, item.defaultValue)
             } catch (e: NullPointerException) {
-                appbarItemsPrefs.put(item!!.itemPref, item.defaultValue)
+                appbarItemsPrefs.put(item.itemPref, item.defaultValue)
             }
         }
 
@@ -2248,7 +2248,7 @@ object PrefsUtility {
     }
 
     private class AppbarItemInfo(
-        val itemPref: AppbarItemsPref?,
+        val itemPref: AppbarItemsPref,
         val stringRes: Int,
         val defaultValue: Int
     )

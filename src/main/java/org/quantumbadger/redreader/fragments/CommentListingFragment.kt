@@ -630,7 +630,8 @@ class CommentListingFragment(
     }
 
     override fun onCreateOptionsMenu(menu: Menu) {
-        val appbarItemsPrefs: MutableMap<AppbarItemsPref?, Int?> =             PrefsUtility.pref_menus_appbar_items()
+        val appbarItemsPrefs: MutableMap<AppbarItemsPref, Int> =
+            PrefsUtility.pref_menus_appbar_items()
         val replyShowAsAction = OptionsMenuUtility.getOrThrow(
             appbarItemsPrefs,
             AppbarItemsPref.REPLY

@@ -24,9 +24,9 @@ import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuComm
 import org.quantumbadger.redreader.common.StringUtils
 
 enum class PostCommentSort(
-    key: String,
-    @StringRes menuTitle: Int,
-    @StringRes suggestedTitle: Int
+    val key: String,
+    @field:StringRes @param:StringRes override val menuTitle: Int,
+    @field:StringRes @param:StringRes val suggestedTitle: Int
 ) : OptionsMenuUtility.Sort {
     BEST("confidence", string.sort_comments_best, string.sort_comments_best_suggested),
     HOT("hot", string.sort_comments_hot, string.sort_comments_hot_suggested),
@@ -39,22 +39,6 @@ enum class PostCommentSort(
         string.sort_comments_controversial_suggested
     ),
     QA("qa", string.sort_comments_qa, string.sort_comments_qa_suggested);
-
-    val key: String?
-
-    @StringRes
-    private val menuTitle: Int
-
-    @StringRes
-    val suggestedTitle: Int
-
-    init {
-        this.key = key
-        this.menuTitle = menuTitle
-        this.suggestedTitle = suggestedTitle
-    }
-
-    override val menuTitle: Int get() = menuTitle
 
     override fun onSortSelected(activity: AppCompatActivity) {
         (activity as OptionsMenuCommentsListener).onSortSelected(this)

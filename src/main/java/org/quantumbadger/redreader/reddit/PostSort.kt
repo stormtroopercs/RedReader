@@ -24,7 +24,7 @@ import org.quantumbadger.redreader.activities.OptionsMenuUtility
 import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuPostsListener
 import org.quantumbadger.redreader.common.StringUtils
 
-enum class PostSort(@field:StringRes @param:StringRes private val menuTitle: Int) :
+enum class PostSort(@field:StringRes @param:StringRes override val menuTitle: Int) :
     OptionsMenuUtility.Sort {
     HOT(string.sort_posts_hot),
     NEW(string.sort_posts_new),
@@ -81,6 +81,10 @@ enum class PostSort(@field:StringRes @param:StringRes private val menuTitle: Int
                 builder.appendQueryParameter("sort", StringUtils.asciiLowercase(parts[0]!!))
                 builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]!!))
             }
+
+            // RISING / BEST / search-listing sorts add no params to a user post listing
+            // (original Java switch had no default case).
+            else -> {}
         }
     }
 
@@ -99,10 +103,12 @@ enum class PostSort(@field:StringRes @param:StringRes private val menuTitle: Int
                 )
                 builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]!!))
             }
+
+            // Search-listing sorts add no path to a subreddit listing
+            // (original Java switch had no default case).
+            else -> {}
         }
     }
-
-    override val menuTitle: Int get() = menuTitle
 
     override fun onSortSelected(activity: AppCompatActivity) {
         (activity as OptionsMenuPostsListener).onSortSelected(this)

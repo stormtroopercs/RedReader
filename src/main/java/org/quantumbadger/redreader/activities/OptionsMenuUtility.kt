@@ -498,7 +498,7 @@ object OptionsMenuUtility {
     fun pruneMenu(
         activity: Activity,
         menu: Menu,
-        appbarItemsPrefs: MutableMap<AppbarItemsPref?, Int?>,
+        appbarItemsPrefs: MutableMap<AppbarItemsPref, Int>,
         backButtonShown: Boolean
     ) {
         //Figure out how many buttons can fit
@@ -1042,8 +1042,11 @@ object OptionsMenuUtility {
         }
     }
 
+    // The SORTS groups are only consumed inside this class (addSortsToNewSubmenu).
+    // Kotlin forbids public members exposing a private nested type, so these are private
+    // (Java allowed `final static SortGroup` = package-private over a `private class`).
     @Suppress("PropertyName")
-    val CONTROVERSIAL_SORTS: SortGroup = SortGroup(
+    private val CONTROVERSIAL_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.CONTROVERSIAL_HOUR,
             PostSort.CONTROVERSIAL_DAY,
@@ -1056,7 +1059,7 @@ object OptionsMenuUtility {
     )
 
     @Suppress("PropertyName")
-    val TOP_SORTS: SortGroup = SortGroup(
+    private val TOP_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.TOP_HOUR,
             PostSort.TOP_DAY,
@@ -1069,7 +1072,7 @@ object OptionsMenuUtility {
     )
 
     @Suppress("PropertyName")
-    val RELEVANCE_SORTS: SortGroup = SortGroup(
+    private val RELEVANCE_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.RELEVANCE_HOUR,
             PostSort.RELEVANCE_DAY,
@@ -1082,7 +1085,7 @@ object OptionsMenuUtility {
     )
 
     @Suppress("PropertyName")
-    val NEW_SORTS: SortGroup = SortGroup(
+    private val NEW_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.NEW_HOUR,
             PostSort.NEW_DAY,
@@ -1095,7 +1098,7 @@ object OptionsMenuUtility {
     )
 
     @Suppress("PropertyName")
-    val HOT_SORTS: SortGroup = SortGroup(
+    private val HOT_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.HOT_HOUR,
             PostSort.HOT_DAY,
@@ -1108,7 +1111,7 @@ object OptionsMenuUtility {
     )
 
     @Suppress("PropertyName")
-    val COMMENTS_SORTS: SortGroup = SortGroup(
+    private val COMMENTS_SORTS: SortGroup = SortGroup(
         arrayOf<PostSort>(
             PostSort.COMMENTS_HOUR,
             PostSort.COMMENTS_DAY,
@@ -1204,7 +1207,7 @@ object OptionsMenuUtility {
     }
 
     @Suppress("PropertyName")
-    val CONTROVERSIAL_COMMENT_SORTS: SortGroup = SortGroup(
+    private val CONTROVERSIAL_COMMENT_SORTS: SortGroup = SortGroup(
         arrayOf<UserCommentSort>(
             UserCommentSort.CONTROVERSIAL_HOUR,
             UserCommentSort.CONTROVERSIAL_DAY,
@@ -1217,7 +1220,7 @@ object OptionsMenuUtility {
     )
 
     @Suppress("PropertyName")
-    val TOP_COMMENT_SORTS: SortGroup = SortGroup(
+    private val TOP_COMMENT_SORTS: SortGroup = SortGroup(
         arrayOf<UserCommentSort>(
             UserCommentSort.TOP_HOUR,
             UserCommentSort.TOP_DAY,
@@ -1299,7 +1302,7 @@ object OptionsMenuUtility {
         subMenu.setGroupCheckable(Menu.NONE, true, true)
 
         val activeSort: Sort?
-        if (sortGroup.sorts is Array<PostSort>) {
+        if (sortGroup.sorts.firstOrNull() is PostSort) {
             activeSort = (activity as OptionsMenuPostsListener).postSort
         } else {
             activeSort = (activity as OptionsMenuCommentsListener).commentSort
@@ -1359,9 +1362,9 @@ object OptionsMenuUtility {
             accountsMenu.getItem().setIcon(R.drawable.ic_accounts_dark)
 
             // Sort the accounts so they don't move around
-            Collections.sort<RedditAccount?>(
+            Collections.sort(
                 accountsList,
-                Comparator { o1: RedditAccount?, o2: RedditAccount? -> o1!!.username.compareTo(o2!!.username) })
+                Comparator { o1: RedditAccount, o2: RedditAccount -> o1.username.compareTo(o2.username) })
 
             //Add a MenuItem for each account, always putting Anonymous after the real accounts
             //Each account gets a radio button to show which one is active
@@ -1379,7 +1382,7 @@ object OptionsMenuUtility {
                         account.username
                 )
                     .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener { item: MenuItem? ->
-                        accountManager.setDefaultAccount(account)
+                        accountManager.defaultAccount = account
                         true
                     })
 
@@ -1409,8 +1412,8 @@ object OptionsMenuUtility {
 
     // Avoids IDE warnings about null pointers
     fun getOrThrow(
-        appbarItemsPref: MutableMap<AppbarItemsPref?, Int?>,
-        key: AppbarItemsPref?
+        appbarItemsPref: MutableMap<AppbarItemsPref, Int>,
+        key: AppbarItemsPref
     ): Int {
         val value = appbarItemsPref.get(key)
 
@@ -1463,7 +1466,7 @@ object OptionsMenuUtility {
     }
 
     interface Sort {
-        fun name(): String?
+        val name: String
 
         @get:StringRes
         val menuTitle: Int
@@ -1472,7 +1475,7 @@ object OptionsMenuUtility {
     }
 
     //The sorts of a SortGroup should always be of the same "base type" (e.g. only top post sorts).
-    private class SortGroup(val sorts: Array<Sort>, @field:StringRes val subMenuTitle: Int) {
+    private class SortGroup(val sorts: Array<out Sort>, @field:StringRes val subMenuTitle: Int) {
         fun equalsBaseAndType(sort: Sort?): Boolean {
             if (sort == null) {
                 return false
@@ -1482,9 +1485,9 @@ object OptionsMenuUtility {
                 return false
             }
 
-            val baseSort1 = sorts[0].name()!!.split("_".toRegex()).dropLastWhile { it.isEmpty() }
+            val baseSort1 = sorts[0].name.split("_".toRegex()).dropLastWhile { it.isEmpty() }
                 .toTypedArray()[0]
-            val baseSort2: String?=sort.name()!!.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
+            val baseSort2: String?=sort.name.split("_".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0]
 
             return baseSort1 == baseSort2
         }
@@ -1498,7 +1501,11 @@ object OptionsMenuUtility {
         const val MANAGER: Int = 4
     }
 
-    private interface OptionsMenuListener
+    // Base marker interface. Must be at least public because the public listener
+    // sub-interfaces (OptionsMenuPostsListener, OptionsMenuCommentsListener,
+    // OptionsMenuSubredditsListener) extend it — Kotlin forbids a public interface
+    // exposing a private supertype. (Java allowed package-private inheritance.)
+    interface OptionsMenuListener
 
     interface OptionsMenuSubredditsListener : OptionsMenuListener {
         fun onRefreshSubreddits()

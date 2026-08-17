@@ -24,7 +24,7 @@ import org.quantumbadger.redreader.activities.OptionsMenuUtility
 import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuCommentsListener
 import org.quantumbadger.redreader.common.StringUtils
 
-enum class UserCommentSort(@field:StringRes @param:StringRes private val menuTitle: Int) :
+enum class UserCommentSort(@field:StringRes @param:StringRes override val menuTitle: Int) :
     OptionsMenuUtility.Sort {
     NEW(string.sort_comments_new),
     HOT(string.sort_comments_hot),
@@ -58,8 +58,6 @@ enum class UserCommentSort(@field:StringRes @param:StringRes private val menuTit
             }
         }
     }
-
-    override val menuTitle: Int get() = menuTitle
 
     override fun onSortSelected(activity: AppCompatActivity) {
         (activity as OptionsMenuCommentsListener).onSortSelected(this)

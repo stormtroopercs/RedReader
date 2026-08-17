@@ -120,7 +120,7 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
         val sort = controller!!.sort
         if (sort != null) {
             outState.putBoolean(SAVEDSTATE_SORT_IS_USER, controller!!.isUserCommentListing)
-            outState.putString(SAVEDSTATE_SORT, sort.name())
+            outState.putString(SAVEDSTATE_SORT, sort.name)
         }
 
         if (mFragment != null) {
