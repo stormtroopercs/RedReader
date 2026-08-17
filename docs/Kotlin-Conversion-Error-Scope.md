@@ -5,9 +5,9 @@
 > fix-land commit is pushed so the reduction stays auditable.
 >
 > **Branch:** `java-to-kotlin-conversion`
-> **Current HEAD:** `739d185e`
-> **Last error count:** **1,501** (`compileDebugKotlin`)
-> **Doc updated:** 2026-08-15
+> **Current HEAD:** `0091e5a9` (all work pushed to origin)
+> **Last error count:** **1,101** (`compileDebugKotlin`)
+> **Doc updated:** 2026-08-16
 > **Toolchain:** Kotlin 2.4.10, AGP 9.3.1, compileSdk/targetSdk 36, JDK 17
 > (`JAVA_HOME=/opt/data/jdk-17.0.17+10`)
 
@@ -15,18 +15,23 @@
 
 ## 1. Headline numbers
 
-| Metric | Baseline (2026-08-14) | Current (2026-08-15) |
+| Metric | Baseline (2026-08-14) | Current (2026-08-16) |
 |---|---|---|
 | `compileDebugKotlin` exit code | `1` (build fails) | `1` (build fails) |
-| **Total `e:` error lines** | **2,719** | **1,501** |
-| Unique files with ≥1 error | 285 | 238 |
+| **Total `e:` error lines** | **2,719** | **1,101** |
+| Unique files with ≥1 error | 285 | 211 |
 | Production `.kt` files (converted) | 514 | 519 |
 | Remaining `.java` files | 16 (all test sources) | 16 (unchanged) |
-| Reduction | — | **−1,218 (−44.8%)** |
+| Reduction | — | **−1,618 (−59.5%)** |
 
-The build is **not yet green**. All 1,501 errors remain compile-time (Kotlin
+The build is **not yet green**. All 1,101 errors remain compile-time (Kotlin
 front end). `compileDebugKotlin` is the gating task; the 16 Java test sources
 are the next gate after it passes.
+
+**Headline milestone (this session):** the hand-written `navigation/` +
+`compose/` bucket (19 files) is now at **0 errors** — the entire rewire
+workstream (Phase R) is **DONE**. Every remaining error is in converted-Java
+sources (plus 10 in the vendored `gifplayer/GifDecoder.kt`).
 
 ### Progress trajectory (one commit per logical cluster)
 
@@ -43,49 +48,63 @@ are the next gate after it passes.
 | `dc4ac3b5` | Phase 2c — 25 more override param groups → non-null | 1,640 → 1,637 |
 | `fb6d0e23` | Phase 3c — `override fun getX()` → `override val x` (72 decls / 44 files) + 72 call-site renames | 1,637 → 1,620 |
 | `4b29efa5` | rewire — correct `hiltViewModel` import path (7 files) | 1,620 → 1,607 |
-| `739d185e` | rewire — SettingsViewModel + SettingsScreen onto real `PrefsUtility` API (+19 public setters added) | 1,607 → **1,501** |
+| `739d185e` | rewire — SettingsViewModel + SettingsScreen onto real `PrefsUtility` API (+19 public setters added) | 1,607 → 1,501 |
+| `2bf1f73c` | rewire — PostListViewModel + PostListScreen onto the real cache/listing API (+ AGENTS.md Hilt package fix) | 1,501 → 1,412 |
+| `fb5a86c6` | rewire — **all** hand-written `navigation/`+`compose/` files (19) | 1,412 → 1,362 (**hand-written bucket = 0**) |
+| `9cfad99d` | `Sort` interface + 3 sort enums + `OptionsMenuUtility` (array covariance / visibility / `Collections.sort` / `defaultAccount`) + `AppbarItemsPref` `EnumMap` chain | 1,362 → 1,254 |
+| `eb7d8a35` | `PrefsUtility` 10 `EnumSet<E?>` de-null + cache-age `HashMap` chain (`createFileTypeMap`/`pref_cache_maxage`/`pruneCache`) | 1,254 → 1,203 |
+| `3b2a69cd` | `asObject`/`getObject` over-nulled generics (base + override) + 5 call-site `<RedditThing?>` type args | 1,203 → 1,196 |
+| `f071b63d` | `UserPostListingURL` duplicate `order` decl (3-way conflict) + 3 return-type `?` | 1,196 → 1,174 |
+| `41c573ae` | `WritableHashSet` duplicate `key`/`timestamp` backing fields (annotation-discovered) | 1,174 → 1,155 |
+| `9662d8fc` | `MarkdownTokenizer` 20 `Char`→`Int` `when`-branch labels + null-safe `reverseLookup` table | 1,155 → 1,130 |
+| `0091e5a9` | `ImageViewScrollbars` `val`-in-`run{}` init fields + `@Synchronized` getter target | 1,130 → **1,101** |
 
 ---
 
-## 2. Current error taxonomy (1,501)
+## 2. Current error taxonomy (1,101)
 
 | Category | Count | % | Nature |
 |---|---|---|---|
-| Type mismatch (incl. `None of the following candidates`) | **447** | 29.8% | Nullable/non-null + API-shape drift |
-| Other / long tail | **404** | 26.9% | Diverse (see §4) |
-| Unresolved reference | **233** | 15.5% | Mostly the hand-written rewire + dropped members |
-| Only safe (`?.`) or non-null asserted (`!!.`) | **151** | 10.1% | Over-nullable *return types* from the converter |
-| `'overrides nothing'` | **80** | 5.3% | Residual override signature drift |
-| Class not abstract / unimplemented members | **55** | 3.7% | Enum abstract-member backfill + interface-anon |
-| Property must be initialized / abstract | **43** | 2.9% | Dropped field inits (SettingsFragment etc.) |
-| Access privilege (`Cannot access private`) | **33** | 2.2% | Visibility drift |
-| Cannot infer type | **32** | 2.1% | Lost explicit generics |
-| Return type not a subtype | **23** | 1.5% | Override return-type drift |
+| Type mismatch / argument (incl. `None of the following candidates`, `Condition type`) | **362** | 32.9% | Nullable/non-null + API-shape drift |
+| Other / long tail (access-weaken, inner-class ctor, `Optional` return, `break`/`continue`, `when`-exhaustive, smart-cast, etc.) | **171** | 15.5% | Diverse (see §4.3) |
+| Only safe (`?.`) on nullable receiver | **145** | 13.2% | Over-nullable *return types* from the converter |
+| Unresolved reference | **143** | 13.0% | Mostly the hand-written rewire (now done) + dropped members |
+| `overrides nothing` | **79** | 7.2% | Over-nulled interface family (§4.1) |
+| Class not abstract / unimplemented members | **55** | 5.0% | Interface-anon + enum backfill residue |
+| Access privilege (`Cannot access private` / `Cannot weaken protected`) | **27 + ~30** | ~5% | Visibility drift |
+| Property must be initialized / abstract | **25** | 2.3% | Dropped field inits (SettingsFragment etc.) |
+| Overload resolution ambiguity | **21** | 1.9% | Nullability overloads |
+| Return type not a subtype | **20** | 1.8% | Override return-type drift |
+| `val` cannot be reassigned | **12** | 1.1% | Java mutable field → `val` |
+| Cannot infer type | **13** | 1.2% | Lost explicit generics |
+| Type argument out of bounds / conflicting decls | **9 + 4** | ~1% | Generic bounds + duplicate decls |
 
 ### Split: converted-Java files vs hand-written Compose files
 
 | Bucket | Errors | Files |
 |---|---|---|
-| Converted-Java sources (legacy codebase) | **1,362** | ~220 |
-| Hand-written `navigation/` + `compose/` (new Compose UI) | **139** | 19 |
+| Converted-Java sources (`org/quantumbadger/redreader`) | **1,091** | 210 |
+| Vendored `jp/tomorrowkey/gifplayer` | **10** | 1 (`GifDecoder.kt`) |
+| Hand-written `navigation/` + `compose/` (new Compose UI) | **0** | 19 ✅ **DONE** |
 
-The hand-written bucket is being actively rewired (see §5); the converted-Java
-bucket is the nullability/enum/generics long tail.
+The hand-written rewire workstream is complete. The remaining 1,101 is the
+converted-Java nullability / interface / generics long tail.
 
 ### Current top files
 
 | File | Errors | Dominant issues |
 |---|---|---|
-| `navigation/PostListViewModel.kt` | **46** | phantom cache/parse API (rewire in flight) |
-| `reddit/PostSort.kt` | **46** | 40 enum entries missing abstract members + `when` exhaustiveness |
-| `settings/SettingsFragment.kt` | **45** | arg mismatches, unresolved refs, cannot-infer generics |
-| `common/PrefsUtility.kt` | **44** | mangled `EnumSet`/`noneOf` generics (31), type bounds |
-| `reddit/RedditAPI.kt` | **38** | nullability + candidates |
-| `navigation/PostListScreen.kt` | **37** | phantom types, `mutableIntStateOf` on enum (rewire planned) |
-| `fragments/PostListingFragment.kt` | **30** | nullability, candidates |
-| `views/imageview/ImageViewScrollbars.kt` | **29** | must-init + nullability |
+| `settings/SettingsFragment.kt` | **45** | arg mismatches, unresolved refs, cannot-infer generics, must-init |
+| `reddit/RedditAPI.kt` | **36** | nullability + `performRequest` overrides + candidates |
+| `fragments/PostListingFragment.kt` | **30** | nullability, candidates, safe-call |
 | `activities/MainActivity.kt` | **28** | nullability, unresolved |
-| `activities/OptionsMenuUtility.kt` | **26** | public exposes private type |
+| `fragments/CommentListingFragment.kt` | **25** | nullability, safe-call |
+| `reddit/api/RedditOAuth.kt` | **23** | missing imports (`RedditAccountManager`, `RequestFailureType`), `RefreshToken?` safe-call, token-result-status type mismatch |
+| `adapters/MainMenuListingManager.kt` | **22** | nullability, candidates |
+| `fragments/postsubmit/PostSubmitContentFragment.kt` | **21** | nullability, candidates |
+| `common/FeatureFlagHandler.kt` | **19** | nullable `getStringSet` + over-nulled `putStringSet` + private `id` |
+| `reddit/api/RedditSubredditSubscriptionManager.kt` | **18** | nullability |
+| `views/imageview/ImageViewDisplayListManager.kt` | **18** | nullable-arg (incl. 1 `ImageViewScrollbars` fallout) |
 
 ---
 
@@ -95,139 +114,158 @@ bucket is the nullability/enum/generics long tail.
 |---|---|---|
 | **0. Base-class & singleton accessors** | `RRFragment.getActivity`, manager companions, dropped statics | ✅ done (`26b31b41`) |
 | **1. Converter corruption sweep** | `=`→`>`, `!=`→`!`, `@JvmField` on const, reserved names, bad escapes, imports | ✅ done (`deb14b41`, `b75f3ecf`) |
-| **2. Nullability pass** | type mismatches, safe-calls, override param nullability | 🔄 mostly done — bulk passes landed (`a1bb0745`, `8944b570`, `dc4ac3b5`); remaining ~151 safe-call-on-nullable + tail of the 447 type mismatches folded into Phases 4/5 (need per-file original-Java nullability checks vs `2479dfa0^`) |
+| **2. Nullability pass** | type mismatches, safe-calls, override param nullability | ✅ bulk done (`a1bb0745`, `8944b570`, `dc4ac3b5`); remaining folded into Phases 4/5 |
 | **3. Getter/setter → property + overrides** | call-site renames, `getX()`→`x` overrides | ✅ done (`df4a6d4f`, `15685f23`, `fb6d0e23`) |
-| **4. Enums, interfaces, generics** | `PostSort`/`PostCommentSort`/`UserCommentSort` abstract-member backfill (55), `PrefsUtility` `EnumSet` bounds (44), interface-anon, cannot-infer (32) | ⏳ next up |
-| **5. Long-tail per-file** | visibility (33), must-init (43), return-subtype (23), safe-call null semantics (151), candidates (rest of 447) | ⏳ pending (case-by-case, original-Java reference at `2479dfa0^`) |
+| **4. Enums, interfaces, generics** | sort enums + `AppbarItemsPref` (`9cfad99d`), `PrefsUtility` `EnumSet` (`eb7d8a35`), `asObject`/`getObject` (`3b2a69cd`) | 🔄 mostly done — **remaining: the over-nulled `RequestResponseHandler`/`CacheDataSource`/`CacheRequestJSONParser.Listener` interface family (79 `overrides nothing` + 55 not-abstract ≈ 134)** |
+| **5. Long-tail per-file** | visibility, must-init, return-subtype, safe-call (145), type-mismatch (362), candidates | 🔄 in progress — case-by-case, original-Java reference at `2479dfa0^` |
 | **6. Iterate to green** | re-compile, fix cascades | ⏳ pending |
 | **7. Test sources (still Java)** | 16 `.java` test/androidTest files | ⏳ separate gate |
-| **R. Rewire hand-written Compose files** | 19 `navigation/`+`compose/` files onto the real converted API | 🔄 in flight (139 errors left, see §5) |
+| **R. Rewire hand-written Compose files** | 19 `navigation/`+`compose/` files onto the real converted API | ✅ **DONE** (`2bf1f73c` + `fb5a86c6`) — bucket = 0 errors |
 
 ---
 
 ## 4. Known root causes (verified)
 
-These were root-caused with the Kotlin 2.4.10 oracle (`kt_oracle.py`) and the
-original Java (`git show 2479dfa0^:<path>`):
+### 4.1 Over-nulled interface family (biggest single remaining cause)
 
-- **Override param nullability is invariant** — a child cannot narrow a base
-  param from `T?` to `T`. The converter over-nulled *bases*; the fix is to
-  standardize base + all implementors to non-null (body-safe: safe-calls
-  degrade to warnings). 50 groups + 25 groups already done; 80
-  `overrides nothing` remain (incl. 2 manual framework cases:
-  `getWorkManagerConfiguration` — androidx `Configuration.Provider`;
-  `asObject` — `JsonDeserializable`).
-- **`Optional<E?>` was converter damage** — original Java `Optional<E>` held a
-  nullable value but a non-null type param. De-nulled (`8944b570`).
-- **Method→property overrides** — converter turned base `fun getX()` into
-  `val x` while children kept `override fun getX()`; 72 converted
-  (`fb6d0e23`). `is*` properties keep the full name (`override val isHidden`).
-- **`hiltViewModel` import** — hand-written files used the non-existent package
-  `androidx.hilt.lifecycle.viewmodel.compose`; the real one (verified in the
-  jar: `androidx/hilt/navigation/compose/HiltViewModelKt`) is
-  `androidx.hilt.navigation.compose` (`4b29efa5`).
-- **Hand-written Compose files reference a settings API that was never
-  built.** `navigation/`+`compose/` were written against a *planned* settings
-  API (camelCase `prefLinkbuttons`, `prefPostsSort`, phantom enums
-  `ImageQuality`/`VideoQuality`/`GifQuality`, `CommentTapAction`,
-  `ImageViewerMode`, `AlbumViewerMode`, `SortType`…) that exists in neither
-  the original Java nor the converted Kotlin. Real API = snake_case `pref_*`
-  no-arg functions on the `PrefsUtility` object + real enums
-  (`PostSort`, `PostCommentSort`, `CommentAction`, `ImageViewMode`,
-  `AlbumViewMode`, `AppearanceTheme`, `AppearanceStatusBarMode`,
-  `GifViewMode`, `VideoViewMode`, `NeverAlwaysOrWifiOnly`). **User decision
-  (2026-08-15): rewire the hand-written files to the real converted API —
-  map to closest existing setting or drop; do NOT build the missing API.**
-- **`PrefsUtility` had no programmatic setters** (the original app persisted
-  prefs via the Preference-XML framework; only 2 programmatic setters existed).
-  19 public `prefX_set(...)` methods were added (`739d185e`) mirroring the
-  existing `set_pref_behaviour_notifications` write pattern.
-- **Safe-call-on-nullable tail (~151)** — over-nullable *return types*
-  (e.g. `RedditAccountManager.getDefaultAccount(): RedditAccount?` can
-  genuinely return null despite a non-null Java declaration). Needs
+The converter over-nulled the base interfaces `RequestResponseHandler`
+(original Java: `onRequestSuccess(E, TimestampUTC)` / `onRequestFailed(F)`, all
+non-null), `CacheDataSource` (original Java:
+`performRequest(K, TimestampBound, RequestResponseHandler<V,F>)`), and
+`CacheRequestJSONParser.Listener`. Because **Kotlin override params are
+invariant**, the over-nulled base signatures don't match any impl → **79
+`overrides nothing` + 55 "not abstract / unimplemented"** across ~30 files.
+The impls are *split* (some already non-null, some nullable), so the fix is to
+de-null the three base interfaces to match original Java **and** normalize the
+impl signatures — a large, delicate, interconnected multi-file change.
+**This is the highest-leverage remaining root cause but the riskiest; do it as
+a coordinated, compiler-verified pass.**
+
+### 4.2 Proven over-nulled-generic fixes (all landed this session)
+
+- **`Sort` interface** — original Java `String name()` (non-null) is satisfied
+  for free by `Enum.name()`; the converter wrote `fun name(): String?`
+  (unimplementable by Kotlin enums, whose `name` is a final `val`). Faithful
+  form = `val name: String`. Also `menuTitle` single declaration (constructor
+  `override val menuTitle`, no separate `get()` duplicate). `SortGroup`
+  `Array<out Sort>` for covariance; `instanceof PostSort[]` →
+  `sorts.firstOrNull() is PostSort`. (`9cfad99d`)
+- **`EnumSet<E?>` / `EnumMap<K?,V?>`** — `EnumSet<E>` requires
+  `E : Enum<E!>!`, so `EnumSet<E?>` violates the bound. De-nulled 10
+  `PrefsUtility` functions + `AppbarItemsPref` chain. (`eb7d8a35`)
+- **`asObject`/`getObject`** — original Java `<E extends JsonDeserializable>
+  E asObject(Class<E>)` / `getObject(...)`; converter over-nulled to
+  `<E : JsonDeserializable?> … (Class<E?>?) : E?`. De-nulled base + `JsonObject`
+  override + 5 `<RedditThing?>` call-site type args. (`3b2a69cd`)
+- **`Optional<E?>` was converter damage** — de-nulled (`8944b570`).
+
+### 4.3 Long-tail categories (Phase 5, case-by-case vs `2479dfa0^`)
+
+- **Duplicate-declaration bug class** — a converter artifact that creates a
+  backing field *and* an `override val` with the same name (e.g.
+  `UserPostListingURL.order`, `WritableHashSet.key`/`timestamp`, sort-enum
+  `menuTitle`). Fix = one declaration. (`f071b63d`, `41c573ae`)
+- **`Char` vs `Int` `when` labels** — Java `int c = str.charAt(i)` → Kotlin
+  `Char`, but `when(intVar)` needs `.code`. (`9662d8fc`)
+- **`val`-in-`run{}` init** — Kotlin forbids initializing a captured `val`
+  member inside a `run{}` lambda; drop the `run{}` wrappers. (`0091e5a9`)
+- **Safe-call-on-nullable (145)** — over-nullable *return types* (e.g.
+  `RedditAccountManager.getDefaultAccount(): RedditAccount?`). Needs
   case-by-case call-site null-handling, not blind de-nullable.
+- **Missing imports** — converter dropped same-package-adjacent imports
+  (e.g. `RedditOAuth`: `RedditAccountManager` =
+  `org.quantumbadger.redreader.account`, `RequestFailureType` =
+  `cache/CacheRequest`).
+- **`hiltViewModel` import** — real package is
+  `androidx.hilt.navigation.compose` (verified in the jar), not the
+  non-existent `androidx.hilt.lifecycle.viewmodel.compose`. (`4b29efa5`)
+- **Hand-written Compose files referenced a never-built settings API** —
+  rewired to the real converted `PrefsUtility` snake_case `pref_*` API (see
+  §5 name map). User decision 2026-08-15: rewire, do **not** build the missing
+  API.
 
 ---
 
-## 5. Rewire workstream — hand-written Compose files (139 errors)
+## 5. Rewire workstream — hand-written Compose files ✅ DONE
 
-| File | Errors | State |
-|---|---|---|
-| `navigation/SettingsViewModel.kt` | 0 (was 44) | ✅ rewritten onto real `PrefsUtility` getters/setters |
-| `navigation/SettingsScreen.kt` | 4 (was 66) | ✅ rewritten (inline mini-framework was internally broken: reserved `__` name, builder≠data-class, `override` on non-open base, `enumConstants` reflection, phantom types); 4 residuals left |
-| `navigation/PostListViewModel.kt` | **46** | 🔄 **rewrite in flight** — built on phantom cache API: `RedditURLParser.parse(String)` (real takes `Uri`), `CacheRequest(...)` private ctor, callback-less `makeRequest`, phantom `CacheRequest.Result.*`. Real flow to mirror (verified in `PostListingFragment`): `CacheRequest(UriString, user, session, Priority(API_POST_LIST), strategy, FileType.POST_LIST, DownloadQueueType.REDDIT_API, cache, context, CacheRequestCallbacks{ onDataStreamAvailable/Complete/onFailure })` → `decodeRedditThingFromStream(streamFactory.create())` → `RedditThing.Listing` → `listing.children: ArrayList<MaybeParseError<RedditThing?>>` → `RedditThing.Post.data` (`RedditPost` fields: `id`, `title: UrlEncodedString?`, `author: UrlEncodedString?`, `score: Int`, `num_comments: Int`, `permalink: UrlEncodedString`, `is_self`, `over_18`, `spoiler`, `stickied`, `locked`, `selftext: UrlEncodedString?`, `link_flair_text: UrlEncodedString?`, `created_utc: RedditTimestampUTC`, `findUrl(): UriString?`, `is_video`, `gallery_data`) |
-| `navigation/PostListScreen.kt` | **37** | 📋 planned (paired with the ViewModel rewire: consumes its `PostItem`); also fixes `PrefsUtility.prefPostsSort(context)` → `pref_behaviour_postsort()`, `PrefsUtility.SortType.*` → `PostSort.*`, `mutableIntStateOf` on enum ordinal |
-| `navigation/UserProfileViewModel.kt` | 9 | ⏳ small API fixes |
-| `navigation/CommentListViewModel.kt` | 7 | ⏳ small API fixes (mirror of the PostList cache flow with `FileType.COMMENT_LIST`) |
-| `compose/ui/OAuthLoginScreen.kt` | 6 | ⏳ small |
-| `compose/ui/UserProfileScreen.kt` | 6 | ⏳ small |
-| `compose/ui/UserProfileDialog.kt` (nav) | 3 | ⏳ small |
-| `navigation/AdaptiveNavigation.kt` / `AppNavigation.kt` | 3+3 | ⏳ named-arg drift + imports |
-| `compose/ctx/RRComposeContext.kt`, `compose/net/NetWrapper.kt`, `compose/ui/UserPropertiesDialog.kt`, `navigation/CommentListScreen.kt`, `navigation/MainScreen.kt`, `navigation/Navigator.kt`, `compose/ui/RedditTermsScreen.kt`, `navigation/InboxViewModel.kt`, `navigation/NavigationState.kt` | 1–2 each | ⏳ mostly mechanical imports |
-
-**Rewire name map (missing → real):**
+All 19 `navigation/` + `compose/` files are now at **0 errors**
+(`2bf1f73c` + `fb5a86c6`). Rewire name map (missing → real) retained for
+reference:
 
 | Phantom (hand-written) | Real (converted) |
 |---|---|
 | `prefLinkbuttons(context)` | `PrefsUtility.pref_appearance_linkbuttons()` |
 | `prefPostsSort(context)` | `PrefsUtility.pref_behaviour_postsort()` → `PostSort` |
 | `prefTheme` / `prefAppearanceTheme` | `PrefsUtility.appearance_theme()` → `AppearanceTheme` |
-| `SortType.BEST/HOT/NEW/TOP/RISING` | `PostSort.BEST/HOT/NEW/TOP/HOUR…` (entries verified in `reddit/PostSort.kt`) |
+| `SortType.BEST/HOT/NEW/TOP/RISING` | `PostSort.BEST/HOT/NEW/TOP/HOUR…` |
 | `ImageViewerMode` | `ImageViewMode` |
 | `AlbumViewerMode` | `AlbumViewMode` (top-level in `settings/types/AlbumViewMode.kt`) |
 | `CommentTapAction` | `CommentAction` via `pref_behaviour_actions_comment_tap()` |
 | `imageQuality` / `ImageQuality` | closest: `images_high_res_thumbnails(): NeverAlwaysOrWifiOnly` |
-| `videoQuality` / `gifQuality` | **dropped** (no quality enum exists anywhere) |
+| `videoQuality` / `gifQuality` | **dropped** (no quality enum exists) |
 | `hiltViewModel` (import) | `androidx.hilt.navigation.compose.hiltViewModel` |
 
 ---
 
 ## 6. Remaining work, in order
 
-1. **Finish the PostList pair rewire** (`PostListViewModel` 46 + `PostListScreen`
-   37) — the real cache flow is fully mapped (see §5); one commit.
-2. **Small hand-written fixes** (~56 errors across 13 files) — mostly
-   imports + named-args; one commit.
-3. **Phase 4: enums + generics** — `PostSort`/`PostCommentSort`/`UserCommentSort`
-   abstract-member backfill (55), `PrefsUtility` `EnumSet`/`noneOf` bounds (44),
-   cannot-infer (32), interface-anon remainder. One coordinated pass
-   (enum changes are API-visible — touches `when` sites across the app).
-4. **Phase 5: long tail** — the 151 safe-call-on-nullable errors need
-   per-file original-Java nullability checks (`git show 2479dfa0^:<path>`);
-   type-mismatch remainder (≈300 after Phase 4); must-init (43), access
-   (33), return-subtype (23).
-5. **Phase 6: iterate to green** `compileDebugKotlin`.
-6. **Phase 7: 16 Java test sources** — the next gate after green compile.
+1. **Interface-family de-nulling cascade** — the over-nulled
+   `RequestResponseHandler` / `CacheDataSource` / `CacheRequestJSONParser.
+   Listener` base interfaces (79 `overrides nothing` + 55 not-abstract ≈ 134,
+   ~30 files). Highest single leverage; do as a coordinated, compiler-verified
+   pass against original Java (`git show 2479dfa0^:<path>`). **Decide first:
+   tackle now vs defer to the per-file long tail** — the impls are split
+   nullability, so it's the riskiest remaining change.
+2. **Phase 5: per-file long tail** (top files in §2): `SettingsFragment` (45),
+   `RedditAPI` (36), `PostListingFragment` (30), `MainActivity` (28),
+   `CommentListingFragment` (25), `RedditOAuth` (23), … Each case-by-case vs
+   original-Java nullability.
+3. **Phase 6: iterate to green** `compileDebugKotlin`.
+4. **Phase 7: 16 Java test sources** — the next gate after green compile.
 
-Revised estimate to green `compileDebugKotlin`: **~5–8 working days**
-(the original 10–17 estimate was pre-Phases 0–3; the mechanical 830-error
-block is already gone, and the rewire workstream removes ~258 of the rest).
+Revised estimate to green `compileDebugKotlin`: **~4–6 working days**
+(the mechanical ~830-error block is gone, the ~258-error hand-written rewire
+is gone, and the sort/generics clusters are done; what remains is the
+interface cascade + per-file nullability tail).
 
 ---
 
-## 7. Risks & cautions (unchanged, still apply)
+## 7. Risks & cautions (still apply)
 
 - **Do NOT blind-rewrite from the original Java.** The current Kotlin API
   surface has evolved; verify what each file currently calls first. Simple
   utilities with no callers are safe to rewrite; complex ones with callers
   need careful analysis.
+- **Over-reach caution (NEW):** de-nulling a generic's *whole* chain breaks
+  other callers that were *self-consistently nullable*. E.g. de-nulling
+  `createFileTypeMap`/`pref_cache_maxage` initially broke `CacheManager`
+  (which stored the result in `HashMap<Int?, TimeDuration?>?`); the faithful
+  end state de-nulled the whole cache-age subgraph (original Java was
+  non-null throughout), but the lesson holds — re-baseline after each pass
+  and confirm against `2479dfa0^` before committing.
 - **Receiver-aware renames only** — confirm the receiver type has the
   property before `getFoo()` → `foo`.
 - **Cascading errors** — fixing a base class changes the error set; the count
   may rise before falling. Re-baseline after each pass.
-- **Enum changes are API-visible** — do `PostSort`/`PostCommentSort`/
-  `UserCommentSort` in one coordinated pass with their `when` sites.
+- **Enum changes are API-visible** — sort enums done; any further enum work
+  should be coordinated with their `when` sites.
 - **`SettingsFragment` is a single-file mountain** (45 left) — isolate if it
   gets risky.
+- **Oracle gotcha** — `/tmp/kc_cp.txt` must contain
+  `kotlin-compiler-embeddable` + `kotlin-stdlib` + annotations +
+  `kotlinx-coroutines`; a missing classpath → `ClassNotFoundException` → errors
+  silently suppressed (a stale `-no-stdlib` flag also hides stdlib/`java.util`
+  symbols). Rebuild the classpath before trusting any oracle result.
 - **`execute_code` sandbox `/tmp` ≠ terminal `/tmp`** — run build/log analysis
-  in `terminal`; copy artifacts into the repo if the sandbox needs them.
+  in `terminal`; terminal `/tmp` can be wiped (rebuild `/tmp/compile.log` +
+  `/tmp/kc_cp.txt` when missing).
 
 ## 8. Tooling in-repo
 
 | Script | Purpose |
 |---|---|
-| `build_check.sh` | compile + count: `bash build_check.sh` → `exit=1 total_errors=N` (handles `JAVA_HOME`) |
-| `kt_oracle.py` | Kotlin 2.4.10 pattern oracle — `from kt_oracle import kc` — compile-check candidate forms before bulk edits |
+| `build_check.sh` | compile + count: `bash build_check.sh [FILE_FILTER]` → `TOTAL: N` (handles `JAVA_HOME`); optional per-file filter prints that file's `e:` lines |
+| `kt_oracle.py` | Kotlin 2.4.10 pattern oracle — `from kt_oracle import kc` — compile-check candidate forms before bulk edits (classpath in `/tmp/kc_cp.txt`) |
 | `fix_getters.py` | bulk `get*()` call-site → property renames (receiver-aware, log-driven) |
 | `fix_override_null.py` / `fix_override_null2.py` | base+implementor override-param nullability standardizers |
 | `plan_ov5.py` | override-error planner (multi-line decls, BFS base resolver) → JSON plans |
@@ -239,9 +277,9 @@ block is already gone, and the rewire workstream removes ~258 of the rest).
 ```bash
 cd /opt/data/RedReader
 export JAVA_HOME=/opt/data/jdk-17.0.17+10
-./gradlew compileDebugKotlin --no-daemon 2>&1 | tee /tmp/compile.log
+./gradlew compileDebugKotlin --no-daemon > /tmp/compile.log 2>&1
 grep -c '^e:' /tmp/compile.log
-grep '^e:' /tmp/compile.log | sed 's/.*redreader\///; s/:.*//' | sort | uniq -c | sort -rn   # per-file
+grep '^e:' /tmp/compile.log | sed 's|file:///opt/data/RedReader/src/main/java/org/quantumbadger/redreader/||; s|\.kt:.*||' | sort | uniq -c | sort -rn   # per-file
 ```
 
 Original-Java semantics reference: `git show 2479dfa0^:<path>`.
