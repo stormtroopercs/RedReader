@@ -265,7 +265,7 @@ object RedditURLParser {
         }
 
         fun browserUrl(): UriString {
-            return UriString(Reddit.SCHEME_HTTPS + "://" + humanReadableUrl())
+            return UriString(Reddit.scheme + "://" + humanReadableUrl())
         }
 
         override fun toString(): String {
