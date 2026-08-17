@@ -21,7 +21,7 @@ abstract class JsonValue {
         NoSuchMethodException::class,
         InvocationTargetException::class
     )
-    open fun <E : JsonDeserializable?> asObject(clazz: Class<E?>?): E? {
+    open fun <E : JsonDeserializable> asObject(clazz: Class<E>): E? {
         return null
     }
 

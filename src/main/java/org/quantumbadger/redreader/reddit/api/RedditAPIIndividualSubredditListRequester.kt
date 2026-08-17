@@ -197,7 +197,7 @@ class RedditAPIIndividualSubredditListRequester(
                         }
 
                         for (v in subreddits!!) {
-                            val thing = v.asObject<RedditThing?>(RedditThing::class.java)
+                            val thing = v.asObject<RedditThing>(RedditThing::class.java)
                             val subreddit = thing!!.asSubreddit()
 
                             subreddit.downloadTime = timestamp.toUtcMs()

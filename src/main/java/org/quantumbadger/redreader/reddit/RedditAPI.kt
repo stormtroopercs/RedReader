@@ -551,7 +551,7 @@ object RedditAPI {
                         fromCache: Boolean
                     ) {
                         try {
-                            val userThing = result.asObject<RedditThing?>(RedditThing::class.java)
+                            val userThing = result.asObject<RedditThing>(RedditThing::class.java)
                             val userResult = userThing!!.asUser()
                             responseHandler.notifySuccess(userResult, timestamp)
                         } catch (t: Throwable) {
@@ -852,7 +852,7 @@ object RedditAPI {
                             val output = ArrayList<RedditSubreddit?>()
 
                             for (value in subreddits.get()) {
-                                val redditThing =                                     value.asObject<RedditThing?>(RedditThing::class.java)
+                                val redditThing =                                     value.asObject<RedditThing>(RedditThing::class.java)
                                 val subreddit = redditThing!!.asSubreddit()
                                 output.add(subreddit)
                             }

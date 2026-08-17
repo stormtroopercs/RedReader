@@ -38,7 +38,6 @@ import org.quantumbadger.redreader.common.Priority
 import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.RRError
 import org.quantumbadger.redreader.common.time.TimestampUTC
-import org.quantumbadger.redreader.jsonwrap.JsonObject
 import org.quantumbadger.redreader.jsonwrap.JsonValue
 import org.quantumbadger.redreader.reddit.things.RedditThing
 import org.quantumbadger.redreader.reddit.things.RedditUser
@@ -95,11 +94,8 @@ class UserProfileViewModel @Inject constructor(
                     ) {
                         try {
                             // /user/{name}/about.json is a raw user object (no {data: ...}
-                            // envelope), so parse the JsonObject and cast to RedditUser
-                            // directly. (RedditThing.asUser() expects the envelope form.)
-                            // JsonObject.asObject uses the non-nullable generic, unlike
-                            // the over-nulled base JsonValue.asObject.
-                            val user = (result as? JsonObject)?.asObject(RedditUser::class.java)
+                            // envelope), so parse it directly to RedditUser.
+                            val user = result.asObject(RedditUser::class.java)
                             if (user == null) {
                                 _state.value = UserProfileUiState.Error("User not found")
                                 return

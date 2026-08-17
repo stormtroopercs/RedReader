@@ -61,7 +61,7 @@ class JsonObject(parser: JsonParser) : JsonValue(),
         NoSuchMethodException::class,
         InvocationTargetException::class
     )
-    public override fun <E : JsonDeserializable?> asObject(clazz: Class<E>): E {
+    public override fun <E : JsonDeserializable> asObject(clazz: Class<E>): E {
         val obj = clazz.getConstructor().newInstance()
         populateObject(obj)
         return obj
@@ -127,9 +127,9 @@ class JsonObject(parser: JsonParser) : JsonValue(),
         NoSuchMethodException::class,
         InvocationTargetException::class
     )
-    fun <E : JsonDeserializable?> getObject(
+    fun <E : JsonDeserializable> getObject(
         id: String,
-        clazz: Class<E?>?
+        clazz: Class<E>
     ): E? {
         val value = get(id)
 
@@ -137,7 +137,7 @@ class JsonObject(parser: JsonParser) : JsonValue(),
             return null
         }
 
-        return value.asObject<E?>(clazz)
+        return value.asObject<E>(clazz)
     }
 
     fun getArray(id: String): JsonArray? {

@@ -76,7 +76,7 @@ class RedditAPIIndividualSubredditDataRequester(
                     fromCache: Boolean
                 ) {
                     try {
-                        val subredditThing = result.asObject<RedditThing?>(RedditThing::class.java)
+                        val subredditThing = result.asObject<RedditThing>(RedditThing::class.java)
                         val subreddit = subredditThing!!.asSubreddit()
                         subreddit.downloadTime = timestamp.toUtcMs()
                         handler.onRequestSuccess(subreddit, timestamp)

@@ -63,11 +63,11 @@ class JsonArray(parser: JsonParser) : JsonValue(), Iterable<JsonValue?> {
         NoSuchMethodException::class,
         InvocationTargetException::class
     )
-    fun <E : JsonDeserializable?> getObject(
+    fun <E : JsonDeserializable> getObject(
         id: Int,
-        clazz: Class<E?>?
+        clazz: Class<E>
     ): E? {
-        return get(id).asObject<E?>(clazz)
+        return get(id).asObject<E>(clazz)
     }
 
     fun getArray(id: Int): JsonArray? {
