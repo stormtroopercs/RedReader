@@ -148,7 +148,7 @@ class RedditPreparedPost(
         context: Context,
         headerMode: Boolean
     ): SpannableStringBuilder? {
-        val mPostSubtitleItems: EnumSet<AppearancePostSubtitleItem?>
+        val mPostSubtitleItems: EnumSet<AppearancePostSubtitleItem>
         val mPostAgeUnits: Int
         if (headerMode
             && PrefsUtility.appearance_post_subtitle_items_use_different_settings()
@@ -435,7 +435,7 @@ class RedditPreparedPost(
         context: Context,
         headerMode: Boolean
     ): String {
-        val mPostSubtitleItems: EnumSet<AppearancePostSubtitleItem?>
+        val mPostSubtitleItems: EnumSet<AppearancePostSubtitleItem>
         val mPostAgeUnits: Int
         if (headerMode
             && PrefsUtility.appearance_post_subtitle_items_use_different_settings()
@@ -673,7 +673,7 @@ class RedditPreparedPost(
         context: Context,
         headerMode: Boolean
     ): String {
-        val mPostSubtitleItems: EnumSet<AppearancePostSubtitleItem?>
+        val mPostSubtitleItems: EnumSet<AppearancePostSubtitleItem>
         if (headerMode
             && PrefsUtility.appearance_post_subtitle_items_use_different_settings()
         ) {

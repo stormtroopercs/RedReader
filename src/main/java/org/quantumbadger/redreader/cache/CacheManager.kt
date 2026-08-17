@@ -170,7 +170,7 @@ class CacheManager @Inject constructor(
         }
     }
 
-    private fun getCacheFileList(dir: File, currentFiles: HashSet<Long?>) {
+    private fun getCacheFileList(dir: File, currentFiles: HashSet<Long>) {
         val list = dir.listFiles()
         if (list == null) {
             return
@@ -219,7 +219,7 @@ class CacheManager @Inject constructor(
         val clearNothing = days((365 * 10).toLong())
 
         pruneCache(
-            PrefsUtility.createFileTypeMap<TimeDuration?>(
+            PrefsUtility.createFileTypeMap<TimeDuration>(
                 if (clearListings) clearEverything else clearNothing,
                 if (clearThumbnails) clearEverything else clearNothing,
                 if (clearImages) clearEverything else clearNothing
@@ -228,9 +228,9 @@ class CacheManager @Inject constructor(
     }
 
     @Synchronized
-    fun pruneCache(maxAge: java.util.HashMap<Int?, TimeDuration?>?) {
+    fun pruneCache(maxAge: java.util.HashMap<Int, TimeDuration>) {
         try {
-            val currentFiles = HashSet<Long?>(1024)
+            val currentFiles = HashSet<Long>(1024)
 
             val dirs: MutableList<File> = getCacheDirs(context)
             for (dir in dirs) {
@@ -262,29 +262,29 @@ class CacheManager @Inject constructor(
     }
 
     @get:Synchronized
-    val cacheDataUsages: HashMap<Int?, Long?>
+    val cacheDataUsages: HashMap<Int, Long>
         get() {
-            val dataUsagePerType =                 PrefsUtility.createFileTypeMap<Long?>(0L, 0L, 0L)
+            val dataUsagePerType =                 PrefsUtility.createFileTypeMap<Long>(0L, 0L, 0L)
 
             try {
-                val currentFiles =                     HashSet<Long?>(128)
+                val currentFiles =                     HashSet<Long>(128)
 
                 val dirs: MutableList<File> =                     getCacheDirs(context)
                 for (dir in dirs) {
                     getCacheFileList(dir, currentFiles)
                 }
 
-                val filesToCheckWithTypes =                     dbManager.getFilesToSize()
+                val filesToCheckWithTypes =                     dbManager.filesToSize
 
                 for (fileEntry in filesToCheckWithTypes.entries) {
-                    val id: Long = fileEntry.key!!
-                    val type: Int = fileEntry.value!!
+                    val id: Long = fileEntry.key
+                    val type: Int = fileEntry.value
 
                     val file = getExistingCacheFile(id)
                     if (file != null && dataUsagePerType.containsKey(type)) {
                         dataUsagePerType.put(
                             type,
-                            Objects.requireNonNull<Long?>(dataUsagePerType.get(type)) + file.length()
+                            (dataUsagePerType.get(type) ?: 0L) + file.length()
                         )
                     }
                 }

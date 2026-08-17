@@ -761,7 +761,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         object : Thread() {
             override fun run() {
-                val fileTypeDataUsages: HashMap<Int?, Long?> = cacheManager.cacheDataUsages
+                val fileTypeDataUsages: HashMap<Int, Long> = cacheManager.cacheDataUsages
 
                 for (cacheType in CacheType.entries) {
                     if (cacheType.fileTypes.size >= 1) {

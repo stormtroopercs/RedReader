@@ -243,10 +243,10 @@ internal class CacheDbManager(context: Context?) :
 
     @Synchronized
     fun getFilesToPrune(
-        currentFiles: HashSet<Long?>,
-        maxAge: java.util.HashMap<Int?, TimeDuration?>,
+        currentFiles: HashSet<Long>,
+        maxAge: java.util.HashMap<Int, TimeDuration>,
         defaultMaxAge: TimeDuration
-    ): ArrayList<Long?> {
+    ): ArrayList<Long> {
         val db = this.getWritableDatabase()
 
         val currentTime = now()
@@ -262,9 +262,9 @@ internal class CacheDbManager(context: Context?) :
             null
         )
 
-        val currentEntries = HashSet<Long?>()
-        val entriesToDelete = ArrayList<Long?>()
-        val filesToDelete = ArrayList<Long?>(32)
+        val currentEntries = HashSet<Long>()
+        val entriesToDelete = ArrayList<Long>()
+        val filesToDelete = ArrayList<Long>(32)
 
         while (cursor.moveToNext()) {
             val id = cursor.getLong(0)
@@ -274,7 +274,7 @@ internal class CacheDbManager(context: Context?) :
             val pruneIfBeforeMs: TimestampUTC
 
             if (maxAge.containsKey(type)) {
-                pruneIfBeforeMs = currentTime.subtract(maxAge.get(type)!!)
+                pruneIfBeforeMs = currentTime.subtract(maxAge.getValue(type))
             } else {
                 Log.e("RR DEBUG cache", "Using default age! Filetype " + type)
                 pruneIfBeforeMs = currentTime.subtract(defaultMaxAge)
@@ -332,7 +332,7 @@ internal class CacheDbManager(context: Context?) :
     }
 
     @get:Synchronized
-    val filesToSize: HashMap<Long?, Int?>
+    val filesToSize: HashMap<Long, Int>
         get() {
             val db = this.getWritableDatabase()
 
@@ -350,7 +350,7 @@ internal class CacheDbManager(context: Context?) :
                 null
             )
 
-            val filesToCheck =                 java.util.HashMap<Long?, Int?>(32)
+            val filesToCheck =                 java.util.HashMap<Long, Int>(32)
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(0)

@@ -37,7 +37,7 @@ class RRThemeAttributes(context: Context) {
     val rrCrosspostBackCol: Int
     val rrCrosspostTextCol: Int
 
-    private val mCommentHeaderItems: EnumSet<AppearanceCommentHeaderItem?>
+    private val mCommentHeaderItems: EnumSet<AppearanceCommentHeaderItem>
 
     val rrCommentFontScale: Float
     val rrCommentHeaderFontScale: Float

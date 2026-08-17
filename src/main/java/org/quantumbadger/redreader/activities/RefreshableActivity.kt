@@ -27,7 +27,7 @@ import org.quantumbadger.redreader.common.General
 
 abstract class RefreshableActivity : ViewsBaseActivity() {
     private var paused = false
-    private val refreshOnResume: EnumSet<RefreshableFragment?> =         EnumSet.noneOf<RefreshableFragment?>(
+    private val refreshOnResume: EnumSet<RefreshableFragment> =         EnumSet.noneOf<RefreshableFragment>(
             RefreshableFragment::class.java
         )
 

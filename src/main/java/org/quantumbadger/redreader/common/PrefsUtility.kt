@@ -103,7 +103,7 @@ object PrefsUtility {
     ): MutableSet<String>? {
         return sharedPrefs!!.getStringSet(
             getPrefKey(id),
-            hashsetFromArray<String?>(*mRes!!.getStringArray(defaultArrayRes))
+            hashsetFromArray<String>(*mRes!!.getStringArray(defaultArrayRes))
         )
     }
 
@@ -416,7 +416,7 @@ object PrefsUtility {
     // locales to each activity as it is created.
     private fun setAppLocales(locales: LocaleListCompat) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Objects.requireNonNull<LocaleManager?>(
+            Objects.requireNonNull<LocaleManager>(
                 appContext!!.getSystemService<LocaleManager?>(
                     LocaleManager::class.java
                 )
@@ -438,7 +438,7 @@ object PrefsUtility {
             // user may have changed it while the app wasn't running.
 
             val systemLocales = LocaleListCompat.wrap(
-                Objects.requireNonNull<LocaleManager?>(
+                Objects.requireNonNull<LocaleManager>(
                     appContext!!.getSystemService<LocaleManager?>(LocaleManager::class.java)
                 )
                     .getApplicationLocales()
@@ -803,13 +803,13 @@ object PrefsUtility {
         )
     }
 
-    fun appearance_post_subtitle_items(): EnumSet<AppearancePostSubtitleItem?> {
+    fun appearance_post_subtitle_items(): EnumSet<AppearancePostSubtitleItem> {
         val strings = getStringSet(
             string.pref_appearance_post_subtitle_items_key,
             R.array.pref_appearance_post_subtitle_items_default
         )
 
-        val result = EnumSet.noneOf<AppearancePostSubtitleItem?>(
+        val result = EnumSet.noneOf<AppearancePostSubtitleItem>(
             AppearancePostSubtitleItem::class.java
         )
         for (s in strings!!) {
@@ -837,13 +837,13 @@ object PrefsUtility {
         )
     }
 
-    fun appearance_post_header_subtitle_items(): EnumSet<AppearancePostSubtitleItem?> {
+    fun appearance_post_header_subtitle_items(): EnumSet<AppearancePostSubtitleItem> {
         val strings = getStringSet(
             string.pref_appearance_post_header_subtitle_items_key,
             R.array.pref_appearance_post_subtitle_items_default
         )
 
-        val result = EnumSet.noneOf<AppearancePostSubtitleItem?>(
+        val result = EnumSet.noneOf<AppearancePostSubtitleItem>(
             AppearancePostSubtitleItem::class.java
         )
         for (s in strings!!) {
@@ -871,13 +871,13 @@ object PrefsUtility {
         )
     }
 
-    fun appearance_comment_header_items(): EnumSet<AppearanceCommentHeaderItem?> {
+    fun appearance_comment_header_items(): EnumSet<AppearanceCommentHeaderItem> {
         val strings = getStringSet(
             string.pref_appearance_comment_header_items_key,
             R.array.pref_appearance_comment_header_items_default
         )
 
-        val result = EnumSet.noneOf<AppearanceCommentHeaderItem?>(
+        val result = EnumSet.noneOf<AppearanceCommentHeaderItem>(
             AppearanceCommentHeaderItem::class.java
         )
         for (s in strings!!) {
@@ -1489,12 +1489,12 @@ object PrefsUtility {
     }
 
     // pref_cache_maxage
-    fun <E> createFileTypeMap(
-        listings: E?,
-        thumbnails: E?,
-        images: E?
-    ): HashMap<Int?, E?> {
-        val maxAgeMap = HashMap<Int?, E?>(10)
+    fun <E : Any> createFileTypeMap(
+        listings: E,
+        thumbnails: E,
+        images: E
+    ): HashMap<Int, E> {
+        val maxAgeMap = HashMap<Int, E>(10)
 
         maxAgeMap.put(Constants.FileType.POST_LIST, listings)
         maxAgeMap.put(Constants.FileType.COMMENT_LIST, listings)
@@ -1511,7 +1511,7 @@ object PrefsUtility {
         return maxAgeMap
     }
 
-    fun pref_cache_maxage(): HashMap<Int?, TimeDuration?> {
+    fun pref_cache_maxage(): HashMap<Int, TimeDuration> {
         val maxAgeListing = hours(
             PrefsUtility.getString(
                 string.pref_cache_maxage_listing_key,
@@ -1533,8 +1533,7 @@ object PrefsUtility {
             )!!.toLong()
         )
 
-        return
-        TimeDuration > createFileTypeMap<TimeDuration?>(maxAgeListing, maxAgeThumb, maxAgeImage)
+        return createFileTypeMap(maxAgeListing, maxAgeThumb, maxAgeImage)
     }
 
     fun pref_cache_maxage_entry(): TimeDuration {
@@ -1621,13 +1620,13 @@ object PrefsUtility {
 
     /**//////////////////////////// */ // pref_menus
     /**//////////////////////////// */
-    fun pref_menus_post_context_items(): EnumSet<RedditPostActions.Action?> {
+    fun pref_menus_post_context_items(): EnumSet<RedditPostActions.Action> {
         val strings = getStringSet(
             string.pref_menus_post_context_items_key,
             R.array.pref_menus_post_context_items_default
         )
 
-        val result = EnumSet.noneOf<RedditPostActions.Action?>(
+        val result = EnumSet.noneOf<RedditPostActions.Action>(
             RedditPostActions.Action::class.java
         )
         for (s in strings!!) {
@@ -1637,13 +1636,13 @@ object PrefsUtility {
         return result
     }
 
-    fun pref_menus_post_toolbar_items(): EnumSet<RedditPostActions.Action?> {
+    fun pref_menus_post_toolbar_items(): EnumSet<RedditPostActions.Action> {
         val strings = getStringSet(
             string.pref_menus_post_toolbar_items_key,
             R.array.pref_menus_post_toolbar_items_return
         )
 
-        val result = EnumSet.noneOf<RedditPostActions.Action?>(
+        val result = EnumSet.noneOf<RedditPostActions.Action>(
             RedditPostActions.Action::class.java
         )
         for (s in strings!!) {
@@ -1653,13 +1652,13 @@ object PrefsUtility {
         return result
     }
 
-    fun pref_menus_link_context_items(): EnumSet<LinkHandler.LinkAction?> {
+    fun pref_menus_link_context_items(): EnumSet<LinkHandler.LinkAction> {
         val strings = getStringSet(
             string.pref_menus_link_context_items_key,
             R.array.pref_menus_link_context_items_return
         )
 
-        val result = EnumSet.noneOf<LinkHandler.LinkAction?>(LinkHandler.LinkAction::class.java)
+        val result = EnumSet.noneOf<LinkHandler.LinkAction>(LinkHandler.LinkAction::class.java)
         for (s in strings!!) {
             result.add(LinkHandler.LinkAction.valueOf(StringUtils.asciiUppercase(s)))
         }
@@ -1667,13 +1666,13 @@ object PrefsUtility {
         return result
     }
 
-    fun pref_menus_subreddit_context_items(): EnumSet<SubredditAction?> {
+    fun pref_menus_subreddit_context_items(): EnumSet<SubredditAction> {
         val strings = getStringSet(
             string.pref_menus_subreddit_context_items_key,
             R.array.pref_menus_subreddit_context_items_return
         )
 
-        val result = EnumSet.noneOf<SubredditAction?>(
+        val result = EnumSet.noneOf<SubredditAction>(
             SubredditAction::class.java
         )
         for (s in strings!!) {
@@ -1689,13 +1688,13 @@ object PrefsUtility {
         return result
     }
 
-    fun pref_menus_mainmenu_useritems(): EnumSet<MainMenuUserItems?> {
+    fun pref_menus_mainmenu_useritems(): EnumSet<MainMenuUserItems> {
         val strings = getStringSet(
             string.pref_menus_mainmenu_useritems_key,
             R.array.pref_menus_mainmenu_useritems_items_default
         )
 
-        val result = EnumSet.noneOf<MainMenuUserItems?>(
+        val result = EnumSet.noneOf<MainMenuUserItems>(
             MainMenuUserItems::class.java
         )
         for (s in strings!!) {
@@ -1705,13 +1704,13 @@ object PrefsUtility {
         return result
     }
 
-    fun pref_menus_mainmenu_shortcutitems(): EnumSet<MainMenuShortcutItems?>? {
+    fun pref_menus_mainmenu_shortcutitems(): EnumSet<MainMenuShortcutItems>? {
         val strings = getStringSet(
             string.pref_menus_mainmenu_shortcutitems_key,
             R.array.pref_menus_mainmenu_shortcutitems_items_default
         )
 
-        val result = EnumSet.noneOf<MainMenuShortcutItems?>(
+        val result = EnumSet.noneOf<MainMenuShortcutItems>(
             MainMenuShortcutItems::class.java
         )
         for (s in strings!!) {
@@ -1831,13 +1830,13 @@ object PrefsUtility {
         )
     }
 
-    fun pref_menus_comment_context_items(): EnumSet<RedditCommentAction?> {
+    fun pref_menus_comment_context_items(): EnumSet<RedditCommentAction> {
         val strings = getStringSet(
             string.pref_menus_comment_context_items_key,
             R.array.pref_menus_comment_context_items_return
         )
 
-        val result = EnumSet.noneOf<RedditCommentAction?>(
+        val result = EnumSet.noneOf<RedditCommentAction>(
             RedditCommentAction::class.java
         )
 
