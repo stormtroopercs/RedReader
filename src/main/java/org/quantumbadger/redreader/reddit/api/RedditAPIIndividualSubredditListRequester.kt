@@ -54,16 +54,16 @@ import org.quantumbadger.redreader.common.General
 class RedditAPIIndividualSubredditListRequester(
     private val context: Context,
     private val user: RedditAccount
-) : CacheDataSource<SubredditListType?, WritableHashSet?, RRError?> {
+) : CacheDataSource<SubredditListType, WritableHashSet, RRError> {
     override fun performRequest(
         type: SubredditListType,
         timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<WritableHashSet?, RRError?>
+        handler: RequestResponseHandler<WritableHashSet, RRError>
     ) {
         if (type == SubredditListType.DEFAULTS) {
             val now = now()
 
-            val data =                 HashSet<String?>(Reddit.DEFAULT_SUBREDDITS.size + 1)
+            val data =                 HashSet<String>(Reddit.DEFAULT_SUBREDDITS.size + 1)
 
             for (id in Reddit.DEFAULT_SUBREDDITS) {
                 data.add(id.toString())
@@ -98,7 +98,7 @@ class RedditAPIIndividualSubredditListRequester(
                     val curTime = now()
                     handler.onRequestSuccess(
                         WritableHashSet(
-                            HashSet<String?>(),
+                            HashSet<String>(),
                             curTime,
                             SubredditListType.MODERATED.name
                         ),
@@ -111,7 +111,7 @@ class RedditAPIIndividualSubredditListRequester(
                     val curTime = now()
                     handler.onRequestSuccess(
                         WritableHashSet(
-                            HashSet<String?>(),
+                            HashSet<String>(),
                             curTime,
                             SubredditListType.MULTIREDDITS.name
                         ),
@@ -133,7 +133,7 @@ class RedditAPIIndividualSubredditListRequester(
 
     private fun doSubredditListRequest(
         type: SubredditListType,
-        handler: RequestResponseHandler<WritableHashSet?, RRError?>,
+        handler: RequestResponseHandler<WritableHashSet, RRError>,
         after: String?
     ) {
         val uri: UriString
@@ -176,11 +176,11 @@ class RedditAPIIndividualSubredditListRequester(
             CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
                 override fun onJsonParsed(
                     result: JsonValue,
-                    timestamp: TimestampUTC,
+                    timestamp: TimestampUTC?,
                     session: UUID, fromCache: Boolean
                 ) {
                     try {
-                        val output = HashSet<String?>()
+                        val output = HashSet<String>()
                         val toWrite = ArrayList<RedditSubreddit?>()
 
                         val redditListing =                             result.asObject()!!.getObject("data")
@@ -197,10 +197,10 @@ class RedditAPIIndividualSubredditListRequester(
                         }
 
                         for (v in subreddits!!) {
-                            val thing = v.asObject<RedditThing>(RedditThing::class.java)
+                            val thing = v!!.asObject<RedditThing>(RedditThing::class.java)
                             val subreddit = thing!!.asSubreddit()
 
-                            subreddit.downloadTime = timestamp.toUtcMs()
+                            subreddit.downloadTime = timestamp!!.toUtcMs()
 
                             try {
                                 output.add(subreddit.canonicalId.toString())
@@ -222,22 +222,22 @@ class RedditAPIIndividualSubredditListRequester(
                         ) {
                             doSubredditListRequest(
                                 type,
-                                object : RequestResponseHandler<WritableHashSet?, RRError?> {
+                                object : RequestResponseHandler<WritableHashSet, RRError> {
                                     override fun onRequestFailed(
-                                        failureReason: RRError?
+                                        failureReason: RRError
                                     ) {
                                         handler.onRequestFailed(failureReason)
                                     }
 
                                     override fun onRequestSuccess(
                                         result: WritableHashSet,
-                                        timeCached: TimestampUTC
+                                        timeCached: TimestampUTC?
                                     ) {
                                         output.addAll(result.toHashset())
                                         handler.onRequestSuccess(
                                             WritableHashSet(
                                                 output,
-                                                timeCached,
+                                                timeCached!!,
                                                 type.name
                                             ), timeCached
                                         )
@@ -257,7 +257,7 @@ class RedditAPIIndividualSubredditListRequester(
                             handler.onRequestSuccess(
                                 WritableHashSet(
                                     output,
-                                    timestamp,
+                                    timestamp!!,
                                     type.name
                                 ), timestamp
                             )
@@ -293,19 +293,19 @@ class RedditAPIIndividualSubredditListRequester(
     }
 
     override fun performRequest(
-        keys: MutableCollection<SubredditListType?>?,
+        keys: MutableCollection<SubredditListType>,
         timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<HashMap<SubredditListType?, WritableHashSet?>?, RRError?>?
+        handler: RequestResponseHandler<HashMap<SubredditListType, WritableHashSet>, RRError>
     ) {
         // TODO batch API? or just make lots of requests and build up a hash map?
         throw UnsupportedOperationException()
     }
 
-    override fun performWrite(value: WritableHashSet?) {
+    override fun performWrite(value: WritableHashSet) {
         throw UnsupportedOperationException()
     }
 
-    override fun performWrite(values: MutableCollection<WritableHashSet?>) {
+    override fun performWrite(values: MutableCollection<WritableHashSet>) {
         throw UnsupportedOperationException()
     }
 }

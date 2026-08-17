@@ -51,11 +51,11 @@ import org.quantumbadger.redreader.common.General
 class RedditAPIIndividualSubredditDataRequester(
     private val context: Context,
     private val user: RedditAccount
-) : CacheDataSource<SubredditCanonicalId?, RedditSubreddit?, RRError?> {
+) : CacheDataSource<SubredditCanonicalId, RedditSubreddit, RRError> {
     override fun performRequest(
         subredditCanonicalId: SubredditCanonicalId,
         timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<RedditSubreddit?, RRError?>
+        handler: RequestResponseHandler<RedditSubreddit, RRError>
     ) {
         val url = Reddit.getUri(subredditCanonicalId.toString() + "/about.json")
 
@@ -71,14 +71,14 @@ class RedditAPIIndividualSubredditDataRequester(
             CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
                 override fun onJsonParsed(
                     result: JsonValue,
-                    timestamp: TimestampUTC,
+                    timestamp: TimestampUTC?,
                     session: UUID,
                     fromCache: Boolean
                 ) {
                     try {
                         val subredditThing = result.asObject<RedditThing>(RedditThing::class.java)
                         val subreddit = subredditThing!!.asSubreddit()
-                        subreddit.downloadTime = timestamp.toUtcMs()
+                        subreddit.downloadTime = timestamp!!.toUtcMs()
                         handler.onRequestSuccess(subreddit, timestamp)
 
                         RedditSubredditHistory.addSubreddit(user, subredditCanonicalId)
@@ -108,17 +108,17 @@ class RedditAPIIndividualSubredditDataRequester(
     override fun performRequest(
         subredditCanonicalIds: MutableCollection<SubredditCanonicalId>,
         timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<HashMap<SubredditCanonicalId?, RedditSubreddit?>?, RRError?>
+        handler: RequestResponseHandler<HashMap<SubredditCanonicalId, RedditSubreddit>, RRError>
     ) {
         // TODO if there's a bulk API to do this, that would be good... :)
 
-        val result = HashMap<SubredditCanonicalId?, RedditSubreddit?>()
+        val result = HashMap<SubredditCanonicalId, RedditSubreddit>()
         val stillOkay = AtomicBoolean(true)
         val requestsToGo = AtomicInteger(subredditCanonicalIds.size)
         val oldestResult = AtomicReference<TimestampUTC?>(null)
 
-        val innerHandler: RequestResponseHandler<RedditSubreddit?, RRError?> =
-            object : RequestResponseHandler<RedditSubreddit?, RRError?> {
+        val innerHandler: RequestResponseHandler<RedditSubreddit, RRError> =
+            object : RequestResponseHandler<RedditSubreddit, RRError> {
                 override fun onRequestFailed(failureReason : RRError) {
                     synchronized(result) {
                         if (stillOkay.get()) {
@@ -130,7 +130,7 @@ class RedditAPIIndividualSubredditDataRequester(
 
                 override fun onRequestSuccess(
                     innerResult: RedditSubreddit,
-                    timeCached: TimestampUTC
+                    timeCached: TimestampUTC?
                 ) {
                     synchronized(result) {
                         if (stillOkay.get()) {
@@ -146,7 +146,7 @@ class RedditAPIIndividualSubredditDataRequester(
                                         oldestResult.set(
                                             TimestampUTC.oldest(
                                                 oldestResult.get()!!,
-                                                timeCached
+                                                timeCached!!
                                             )
                                         )
                                     }
@@ -170,11 +170,11 @@ class RedditAPIIndividualSubredditDataRequester(
         }
     }
 
-    override fun performWrite(value: RedditSubreddit?) {
+    override fun performWrite(value: RedditSubreddit) {
         throw UnsupportedOperationException()
     }
 
-    override fun performWrite(values: MutableCollection<RedditSubreddit?>) {
+    override fun performWrite(values: MutableCollection<RedditSubreddit>) {
         throw UnsupportedOperationException()
     }
 
