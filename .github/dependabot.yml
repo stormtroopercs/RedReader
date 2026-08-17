@@ -1,0 +1,50 @@
+# Dependabot configuration for RedReader.
+#
+# Reference:
+#   https://docs.github.com/en/code-security/concepts/supply-chain-security/about-the-dependabot-yml-file
+#   https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
+#
+# RedReader is an Android project (Gradle Kotlin DSL, single root
+# build.gradle.kts) with GitHub Actions CI, so the two ecosystems to monitor
+# are `gradle` (dependencies in the root manifest) and `github-actions`
+# (action versions in .github/workflows).
+version: 2
+updates:
+  # Gradle dependencies from the root build.gradle.kts
+  # (AGP, Kotlin, AndroidX, Compose, Hilt, ...).
+  - package-ecosystem: "gradle"
+    directory: "/"
+    # Development currently happens on the conversion branch; Dependabot
+    # otherwise targets the repository default branch (master).
+    target-branch: "java-to-kotlin-conversion"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - "stormtroopercs"
+    groups:
+      # AndroidX family lands as a single PR.
+      androidx:
+        patterns:
+          - "androidx.*"
+      # Compose artifacts: keep BOM-bump PRs together with the individual
+      # androidx.compose.* pins they drive.
+      compose:
+        patterns:
+          - "androidx.compose.*"
+      # AGP + Android tooling.
+      android:
+        patterns:
+          - "com.android.*"
+      # Kotlin compiler, stdlib, and Kotlin plugins together.
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin.*"
+
+  # CI workflows: track pinned action versions in .github/workflows.
+  - package-ecosystem: "github-actions"
+    directory: "/.github/workflows"
+    target-branch: "java-to-kotlin-conversion"
+    schedule:
+      interval: "weekly"
+    assignees:
+      - "stormtroopercs"
