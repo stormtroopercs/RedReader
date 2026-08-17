@@ -74,7 +74,6 @@ class ImageViewScrollbars(
         mDimBorderWidth = glContext.dpToPixels(1f)
 
         // Vertical scroll bar
-        run {
             mVScroll = RRGLRenderableGroup()
             group.add(mVScroll)
 
@@ -97,10 +96,8 @@ class ImageViewScrollbars(
             mVScroll.add(mVScrollBorderTranslation)
             mVScroll.add(mVScrollBarTranslation)
             mVScroll.add(mVScrollMarkerTranslation)
-        }
 
         // Horizontal scroll bar
-        run {
             mHScroll = RRGLRenderableGroup()
             group.add(mHScroll)
 
@@ -123,7 +120,6 @@ class ImageViewScrollbars(
             mHScroll.add(mHScrollBorderTranslation)
             mHScroll.add(mHScrollBarTranslation)
             mHScroll.add(mHScrollMarkerTranslation)
-        }
     }
 
     fun update() {
@@ -215,7 +211,7 @@ class ImageViewScrollbars(
         super.onRemoved()
     }
 
-    @Synchronized
+    @get:Synchronized
     override val isAnimating: Boolean get() = mIsVisible
 
     @Synchronized
