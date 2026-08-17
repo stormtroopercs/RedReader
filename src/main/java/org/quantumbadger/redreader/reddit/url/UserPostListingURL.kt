@@ -34,7 +34,7 @@ class UserPostListingURL internal constructor(
     val before: String?,
     val after: RedditIdAndType?
 ) : PostListingURL() {
-    val order: PostSort?
+    override val order: PostSort?
 
     init {
         this.order = if (order == PostSort.RISING) PostSort.NEW else order
@@ -56,9 +56,7 @@ class UserPostListingURL internal constructor(
         return UserPostListingURL(type, user, newOrder, limit, before, after)
     }
 
-    override val order: PostSort? get() = order
-
-    override fun generateJsonUri(): Uri? {
+    override fun generateJsonUri(): Uri {
         val builder = Uri.Builder()
         builder.scheme(Reddit.scheme)
             .authority(Reddit.domain)
@@ -93,7 +91,7 @@ class UserPostListingURL internal constructor(
         return RedditURLParser.USER_POST_LISTING_URL
     }
 
-    override fun humanReadablePath(): String? {
+    override fun humanReadablePath(): String {
         val path = super.humanReadablePath()
 
         if (order == null || type != Type.SUBMITTED) {
@@ -111,7 +109,7 @@ class UserPostListingURL internal constructor(
         }
     }
 
-    override fun humanReadableName(context: Context, shorter: Boolean): String? {
+    override fun humanReadableName(context: Context, shorter: Boolean): String {
         val name: String
 
         when (type) {
