@@ -1,7 +1,7 @@
 package org.quantumbadger.redreader.jsonwrap
 
 class JsonBoolean private constructor(private val mValue: Boolean) : JsonValue() {
-    protected override fun prettyPrint(indent: Int, sb: StringBuilder) {
+    override fun prettyPrint(indent: Int, sb: StringBuilder) {
         sb.append(if (mValue) "true" else "false")
     }
 

@@ -310,11 +310,11 @@ object RedditAPI {
                         responseHandler.onSuccess(redirectUrl, thingId)
                     }
 
-                    protected override fun onCallbackException(t : Throwable) {
+                    override fun onCallbackException(t : Throwable) {
                         responseHandler.onCallbackException(t)
                     }
 
-                    protected override fun onFailure(error: RRError) {
+                    override fun onFailure(error: RRError) {
                         responseHandler.notifyFailure(error)
                     }
                 })
@@ -805,11 +805,11 @@ object RedditAPI {
                     }
                 }
 
-                protected override fun onCallbackException(t : Throwable) {
+                override fun onCallbackException(t : Throwable) {
                     handler.onCallbackException(t)
                 }
 
-                protected override fun onFailure(error: RRError) {
+                override fun onFailure(error: RRError) {
                     handler.onFailure(error)
                 }
             },

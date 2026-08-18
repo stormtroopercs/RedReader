@@ -197,11 +197,11 @@ class PMSendActivity : ViewsBaseActivity() {
                     })
                 }
 
-                protected override fun onCallbackException(t : Throwable) {
+                override fun onCallbackException(t : Throwable) {
                     handleGlobalError(this@PMSendActivity, t)
                 }
 
-                protected override fun onFailure(error: RRError) {
+                override fun onFailure(error: RRError) {
                     showResultDialog(this@PMSendActivity, error)
                     safeDismissDialog(progressDialog)
                 }

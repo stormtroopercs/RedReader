@@ -143,11 +143,11 @@ class CommentEditActivity : ViewsBaseActivity() {
                     })
                 }
 
-                protected override fun onCallbackException(t : Throwable) {
+                override fun onCallbackException(t : Throwable) {
                     BugReportActivity.Companion.handleGlobalError(this@CommentEditActivity, t)
                 }
 
-                protected override fun onFailure(error: RRError) {
+                override fun onFailure(error: RRError) {
                     showResultDialog(this@CommentEditActivity, error)
                     safeDismissDialog(progressDialog)
                 }

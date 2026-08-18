@@ -150,7 +150,7 @@ class JsonObject(parser: JsonParser) : JsonValue(),
         return value.asArray()
     }
 
-    protected override fun prettyPrint(indent: Int, sb: StringBuilder) {
+    override fun prettyPrint(indent: Int, sb: StringBuilder) {
         sb.append('{')
 
         val propertyKeySet = properties.keys
@@ -251,7 +251,7 @@ class JsonObject(parser: JsonParser) : JsonValue(),
         return properties.entries.iterator()
     }
 
-    protected override fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue?> {
+    override fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue?> {
         if (offset == keys.size) {
             return Optional.of<JsonValue?>(this)
         }

@@ -519,11 +519,11 @@ class PostSubmitContentFragment : Fragment() {
                         })
                     }
 
-                    protected override fun onCallbackException(t : Throwable) {
+                    override fun onCallbackException(t : Throwable) {
                         BugReportActivity.handleGlobalError(mContext!!, t)
                     }
 
-                    protected override fun onFailure(error: RRError) {
+                    override fun onFailure(error: RRError) {
                         val activity = getActivity()
 
                         if (activity != null) {

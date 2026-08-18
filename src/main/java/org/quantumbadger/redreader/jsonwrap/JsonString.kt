@@ -4,7 +4,7 @@ import org.apache.commons.text.StringEscapeUtils
 import org.quantumbadger.redreader.common.StringUtils
 
 class JsonString(private val mValue: String) : JsonValue() {
-    protected override fun prettyPrint(indent: Int, sb: StringBuilder) {
+    override fun prettyPrint(indent: Int, sb: StringBuilder) {
         sb.append('"').append(StringEscapeUtils.escapeJson(mValue)).append('"')
     }
 

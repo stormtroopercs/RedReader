@@ -635,11 +635,11 @@ object RedditAPICommentAction {
         RedditAPI.action(
             CacheManager.Companion.getInstance(activity),
             object : ActionResponseHandler(activity) {
-                protected override fun onCallbackException(t : Throwable) {
+                override fun onCallbackException(t : Throwable) {
                     throw RuntimeException(t)
                 }
 
-                protected override fun onFailure(error: RRError) {
+                override fun onFailure(error: RRError) {
                     revertOnFailure()
                     showResultDialog(activity, error)
                 }

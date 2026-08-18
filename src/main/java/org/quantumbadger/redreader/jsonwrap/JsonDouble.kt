@@ -1,7 +1,7 @@
 package org.quantumbadger.redreader.jsonwrap
 
 class JsonDouble(private val mValue: Double) : JsonValue() {
-    protected override fun prettyPrint(indent: Int, sb: StringBuilder) {
+    override fun prettyPrint(indent: Int, sb: StringBuilder) {
         sb.append(mValue)
     }
 

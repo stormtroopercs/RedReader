@@ -78,7 +78,7 @@ class JsonArray(parser: JsonParser) : JsonValue(), Iterable<JsonValue?> {
         return mContents.iterator()
     }
 
-    protected override fun prettyPrint(indent: Int, sb: StringBuilder) {
+    override fun prettyPrint(indent: Int, sb: StringBuilder) {
         sb.append('[')
 
         for (item in mContents.indices) {
@@ -109,7 +109,7 @@ class JsonArray(parser: JsonParser) : JsonValue(), Iterable<JsonValue?> {
         }
     }
 
-    protected override fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue?> {
+    override fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue?> {
         if (offset == keys.size) {
             return Optional.of<JsonValue?>(this)
         }
