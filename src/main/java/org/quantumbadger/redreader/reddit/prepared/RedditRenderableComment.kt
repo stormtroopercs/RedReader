@@ -637,7 +637,7 @@ class RedditRenderableComment
         textColor: Int?,
         textSize: Float?,
         showLinkButtons: kotlin.Boolean
-    ): View? {
+    ): View {
         return parsedComment.body
             .generateView(activity, textColor, textSize, showLinkButtons)
     }

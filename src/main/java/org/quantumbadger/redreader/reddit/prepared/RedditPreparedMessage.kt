@@ -178,9 +178,9 @@ class RedditPreparedMessage(
     }
 
     override fun getHeader(
-        theme: RRThemeAttributes?,
-        changeDataManager: RedditChangeDataManager?,
-        context: Context?,
+        theme: RRThemeAttributes,
+        changeDataManager: RedditChangeDataManager,
+        context: Context,
         commentAgeUnits: Int,
         postCreated: TimestampUTC?,
         parentCommentCreated: TimestampUTC?
@@ -189,14 +189,14 @@ class RedditPreparedMessage(
     }
 
     override fun getAccessibilityHeader(
-        theme: RRThemeAttributes?,
-        changeDataManager: RedditChangeDataManager?,
+        theme: RRThemeAttributes,
+        changeDataManager: RedditChangeDataManager,
         context: Context,
         commentAgeUnits: Int,
         postCreated: TimestampUTC?,
         parentCommentCreated: TimestampUTC?,
         collapsed: Boolean,
-        indentLevel: Optional<Int?>
+        indentLevel: Optional<Int>
     ): String {
         val accessibilityHeader = StringBuilder()
         val separator = " \n"

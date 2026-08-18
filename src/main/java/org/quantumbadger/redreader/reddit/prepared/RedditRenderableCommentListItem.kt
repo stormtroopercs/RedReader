@@ -26,29 +26,29 @@ import org.quantumbadger.redreader.common.time.TimestampUTC
 
 interface RedditRenderableCommentListItem {
     fun getHeader(
-        theme: RRThemeAttributes?,
-        changeDataManager: RedditChangeDataManager?,
-        context: Context?,
+        theme: RRThemeAttributes,
+        changeDataManager: RedditChangeDataManager,
+        context: Context,
         commentAgeUnits: Int,
         postCreated: TimestampUTC?,
         parentCommentCreated: TimestampUTC?
-    ): BetterSSB?
+    ): BetterSSB
 
     fun getAccessibilityHeader(
-        theme: RRThemeAttributes?,
-        changeDataManager: RedditChangeDataManager?,
-        context: Context?,
+        theme: RRThemeAttributes,
+        changeDataManager: RedditChangeDataManager,
+        context: Context,
         commentAgeUnits: Int,
         postCreated: TimestampUTC?,
         parentCommentCreated: TimestampUTC?,
         collapsed: Boolean,
-        indentLevel: Optional<Int?>
-    ): String?
+        indentLevel: Optional<Int>
+    ): String
 
     fun getBody(
-        activity: BaseActivity?,
+        activity: BaseActivity,
         textColor: Int?,
         textSize: Float?,
         showLinkButtons: Boolean
-    ): View?
+    ): View
 }

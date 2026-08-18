@@ -25,5 +25,5 @@ abstract class BodyElement protected constructor(val type: BlockType) {
         textColor: Int?,
         textSize: Float?,
         showLinkButtons: Boolean
-    ): View?
+    ): View
 }
