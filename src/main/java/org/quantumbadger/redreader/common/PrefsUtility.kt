@@ -100,11 +100,11 @@ object PrefsUtility {
     fun getStringSet(
         id: Int,
         defaultArrayRes: Int
-    ): MutableSet<String>? {
+    ): MutableSet<String> {
         return sharedPrefs!!.getStringSet(
             getPrefKey(id),
             hashsetFromArray<String>(*mRes!!.getStringArray(defaultArrayRes))
-        )
+        )!!
     }
 
     private fun getBoolean(

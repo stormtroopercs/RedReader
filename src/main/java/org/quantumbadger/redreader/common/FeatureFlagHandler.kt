@@ -62,7 +62,7 @@ object FeatureFlagHandler {
         defaultArrayRes: Int,
         context: Context,
         sharedPreferences: SharedPreferences
-    ): MutableSet<String?> {
+    ): MutableSet<String> {
         return sharedPreferences.getStringSet(
             context.getString(id),
             org.quantumbadger.redreader.common.General.hashsetFromArray<kotlin.String?>(
@@ -386,7 +386,7 @@ object FeatureFlagHandler {
         sharedPreferences: SharedPreferences,
         featureFlag: FeatureFlag
     ): FeatureFlagStatus {
-        val name = "rr_feature_flag_" + featureFlag.id
+        val name = featureFlag.getId()
 
         val current = sharedPreferences.getBoolean(name, false)
 
@@ -668,7 +668,7 @@ object FeatureFlagHandler {
 
                 class AppbarItemStrings internal constructor(
                     val stringRes: Int,
-                    val returnValue: String?
+                    val returnValue: String
                 )
 
                 val appbarItemsPrefStrings = arrayOf<AppbarItemStrings?>(

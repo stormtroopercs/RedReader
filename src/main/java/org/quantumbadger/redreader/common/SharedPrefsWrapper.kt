@@ -72,7 +72,7 @@ class SharedPrefsWrapper internal constructor(private val mPrefs: SharedPreferen
 
         fun putStringSet(
             key: String,
-            value: MutableSet<String?>?
+            value: MutableSet<String>?
         ): Editor {
             mEditor.putStringSet(key, value)
             return this
@@ -174,8 +174,8 @@ class SharedPrefsWrapper internal constructor(private val mPrefs: SharedPreferen
 
     fun getStringSet(
         key: String,
-        defValues: MutableSet<String?>?
-    ): MutableSet<String?>? {
+        defValues: Set<String>?
+    ): MutableSet<String>? {
         Locker(mRestoreLock.readLock()).use { ignored ->
             return mPrefs.getStringSet(key, defValues)
         }

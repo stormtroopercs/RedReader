@@ -251,7 +251,7 @@ object PrefsBackup {
                                     } else if (value is Int) {
                                         editor.putInt(key, value)
                                     } else if (value is MutableSet<*>) {
-                                        editor.putStringSet(key, value as MutableSet<String?>)
+                                        editor.putStringSet(key, value as MutableSet<String>)
                                     } else if (value is Boolean) {
                                         editor.putBoolean(key, value)
                                     } else if (value is Long) {
