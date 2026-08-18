@@ -60,7 +60,7 @@ class RedditFlairChoice private constructor(
     }
 
     companion object {
-        fun fromJsonList(json: JsonArray): Optional<MutableList<RedditFlairChoice?>?> {
+        fun fromJsonList(json: JsonArray): Optional<MutableList<RedditFlairChoice>> {
             val result = ArrayList<RedditFlairChoice?>(json.size())
 
             for (value in json) {
@@ -70,7 +70,7 @@ class RedditFlairChoice private constructor(
                     return Optional.Companion.empty<MutableList<RedditFlairChoice?>?>()
                 }
 
-                val choice: Optional<RedditFlairChoice?> = fromJson(`object`)
+                val choice: Optional<RedditFlairChoice> = fromJson(`object`)
 
                 if (choice.isEmpty) {
                     return Optional.Companion.empty<MutableList<RedditFlairChoice?>?>()
@@ -84,15 +84,15 @@ class RedditFlairChoice private constructor(
 
         fun fromJson(
             json: JsonObject
-        ): Optional<RedditFlairChoice?> {
+        ): Optional<RedditFlairChoice> {
             val flairText = json.getString("flair_text")
             val flairTemplateId = json.getString("flair_template_id")
 
             if (flairText == null || flairTemplateId == null) {
-                return Optional.Companion.empty<RedditFlairChoice?>()
+                return Optional.Companion.empty<RedditFlairChoice>()
             }
 
-            return Optional.Companion.of<RedditFlairChoice?>(
+            return Optional.Companion.of<RedditFlairChoice>(
                 RedditFlairChoice(
                     flairText,
                     flairTemplateId

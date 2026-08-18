@@ -242,7 +242,7 @@ class InboxListingActivity : ViewsBaseActivity() {
             context,
             object : CacheRequestCallbacks {
                 override fun onDataStreamComplete(
-                    streamFactory: GenericFactory<SeekableInputStream, IOException?>,
+                    streamFactory: GenericFactory<SeekableInputStream, IOException>,
                     timestamp: TimestampUTC,
                     session: UUID,
                     fromCache: Boolean,

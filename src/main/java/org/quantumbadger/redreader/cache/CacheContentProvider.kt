@@ -41,16 +41,16 @@ import org.quantumbadger.redreader.common.General
 class CacheContentProvider : ContentProvider() {
     private var mCacheManager: CacheManager?=null
 
-    private fun getReadableCacheFile(uri: Uri): Optional<ReadableCacheFile?> {
+    private fun getReadableCacheFile(uri: Uri): Optional<ReadableCacheFile> {
         val filename = filenameFromString(uri.toString())
 
-        val cacheId: Optional<Long?> = getCacheIdFromFilename(filename)
+        val cacheId: Optional<Long> = getCacheIdFromFilename(filename)
 
         if (!cacheId.isPresent) {
-            return Optional.Companion.empty<ReadableCacheFile?>()
+            return Optional.Companion.empty<ReadableCacheFile>()
         }
 
-        return Optional.Companion.of<ReadableCacheFile?>(
+        return Optional.Companion.of<ReadableCacheFile>(
             mCacheManager!!.getExistingCacheFileById(
                 cacheId.get(),
                 CacheCompressionType.NONE
@@ -58,11 +58,11 @@ class CacheContentProvider : ContentProvider() {
         ) // No compression is used for images
     }
 
-    private fun getFile(uri: Uri): Optional<File?> {
+    private fun getFile(uri: Uri): Optional<File> {
         val readableCacheFile = getReadableCacheFile(uri)
 
         if (!readableCacheFile.isPresent) {
-            return Optional.Companion.empty<File?>()
+            return Optional.Companion.empty<File>()
         }
 
         return readableCacheFile.get().file
@@ -208,26 +208,26 @@ class CacheContentProvider : ContentProvider() {
             )
         }
 
-        private fun getCacheIdFromFilename(filename: String): Optional<Long?> {
+        private fun getCacheIdFromFilename(filename: String): Optional<Long> {
             val filenameSplitDot: Array<String?> =                 filename.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
             if (filenameSplitDot.size != 2) {
                 Log.e(TAG, "Expecting one dot in filename: " + filename)
-                return Optional.Companion.empty<Long?>()
+                return Optional.Companion.empty<Long>()
             }
 
             val prefixRemoved = StringUtils.removePrefix(filenameSplitDot[0]!!, "redreader_dl_")
 
             if (!prefixRemoved.isPresent) {
                 Log.e(TAG, "Expecting redreader_dl_ prefix in filename: " + filename)
-                return Optional.Companion.empty<Long?>()
+                return Optional.Companion.empty<Long>()
             }
 
             try {
-                return Optional.Companion.of<Long?>(prefixRemoved.get().toLong())
+                return Optional.Companion.of<Long>(prefixRemoved.get().toLong())
             } catch (e: NumberFormatException) {
                 Log.e(TAG, "Invalid number in filename: " + filename, e)
-                return Optional.Companion.empty<Long?>()
+                return Optional.Companion.empty<Long>()
             }
         }
 

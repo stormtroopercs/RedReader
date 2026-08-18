@@ -152,7 +152,7 @@ object RedditAPI {
                             return
                         }
 
-                        val choices: Optional<MutableList<RedditFlairChoice?>?> = RedditFlairChoice.Companion.fromJsonList(array.get())
+                        val choices: Optional<MutableList<RedditFlairChoice>> = RedditFlairChoice.Companion.fromJsonList(array.get())
 
                         if (choices.isEmpty) {
                             responseHandler.onFailure(
@@ -290,8 +290,8 @@ object RedditAPI {
                     }
 
                     override fun onSuccess(
-                        redirectUrl: Optional<String?>,
-                        thingId: Optional<String?>
+                        redirectUrl: Optional<String>,
+                        thingId: Optional<String>
                     ) {
                         if (!sendRepliesToInbox) {
                             thingId.ifPresent(Consumer { commentFullname: String? ->
@@ -341,7 +341,7 @@ object RedditAPI {
                     }
 
                     override fun onDataStreamComplete(
-                        stream: GenericFactory<SeekableInputStream, IOException?>,
+                        stream: GenericFactory<SeekableInputStream, IOException>,
                         timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean,
@@ -632,7 +632,7 @@ object RedditAPI {
                     }
 
                     override fun onDataStreamComplete(
-                        stream: GenericFactory<SeekableInputStream, IOException?>,
+                        stream: GenericFactory<SeekableInputStream, IOException>,
                         timestamp: TimestampUTC?,
                         session: UUID,
                         fromCache: Boolean,
@@ -671,7 +671,7 @@ object RedditAPI {
         user: RedditAccount,
         context: Context,
         handler: ValueResponseHandler<SubredditListResponse?>,
-        after: Optional<String?>
+        after: Optional<String>
     ) {
         val maxCacheAgeMs = hours(1)
 
@@ -708,7 +708,7 @@ object RedditAPI {
         queryString: String,
         context: Context,
         handler: ValueResponseHandler<SubredditListResponse?>,
-        after: Optional<String?>
+        after: Optional<String>
     ) {
         val maxCacheAgeMs = minutes(1)
 
@@ -755,7 +755,7 @@ object RedditAPI {
             user,
             context,
             handler,
-            Optional.Companion.empty<String?>(),
+            Optional.Companion.empty<String>(),
             ArrayList<RedditSubreddit?>(128)
         )
     }
@@ -765,7 +765,7 @@ object RedditAPI {
         user: RedditAccount,
         context: AppCompatActivity,
         handler: ValueResponseHandler<ArrayList<RedditSubreddit?>?>,
-        after: Optional<String?>,
+        after: Optional<String>,
         results: ArrayList<RedditSubreddit?>
     ) {
         val builder = Reddit.getUriBuilder(
@@ -1057,7 +1057,7 @@ object RedditAPI {
                     mHandler.notifyFailure(
                         failureType,
                         "GenericResponseHandler",
-                        Optional.Companion.of<FailedRequestBody?>(FailedRequestBody(result))
+                        Optional.Companion.of<FailedRequestBody>(FailedRequestBody(result))
                     )
                 } else {
                     mHandler.notifySuccess()
@@ -1132,7 +1132,7 @@ object RedditAPI {
                     mResponseHandler.notifyFailure(
                         failureType,
                         null,
-                        Optional.Companion.of<FailedRequestBody?>(FailedRequestBody(result))
+                        Optional.Companion.of<FailedRequestBody>(FailedRequestBody(result))
                     )
                 } else {
                     mResponseHandler.onSuccess(
@@ -1164,6 +1164,6 @@ object RedditAPI {
 
     class SubredditListResponse(
         val subreddits: ArrayList<RedditSubreddit?>,
-        val after: Optional<String?>
+        val after: Optional<String>
     )
 }

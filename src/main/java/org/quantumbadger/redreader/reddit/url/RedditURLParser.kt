@@ -39,11 +39,11 @@ object RedditURLParser {
 
     private fun tryGetRedditUri(uri: Uri?): Optional<Uri> {
         if (uri == null || uri.getHost() == null || uri.getPath() == null) {
-            return Optional.Companion.empty<Uri?>()
+            return Optional.Companion.empty<Uri>()
         }
 
         if ("reddit" == uri.getScheme() && "reddit" == uri.getHost()) {
-            return Optional.Companion.of<Uri?>(
+            return Optional.Companion.of<Uri>(
                 uri.buildUpon()
                     .scheme("https")
                     .authority("reddit.com")
@@ -55,7 +55,7 @@ object RedditURLParser {
             val redirect = uri.getQueryParameter("\$og_redirect")
 
             if (redirect != null) {
-                return Optional.Companion.ofNullable<Uri?>(Uri.parse(redirect))
+                return Optional.Companion.ofNullable<Uri>(Uri.parse(redirect))
             }
         }
 
@@ -65,7 +65,7 @@ object RedditURLParser {
                     || uri.getHost()!!.endsWith(".google.com"))
                     && uri.getPath()!!.startsWith(ampPrefix))
         ) {
-            return Optional.Companion.ofNullable<Uri?>(
+            return Optional.Companion.ofNullable<Uri>(
                 Uri.parse(
                     "https://reddit.com" + uri.getPath()!!.substring(ampPrefix.length)
                 )
@@ -76,22 +76,22 @@ object RedditURLParser {
                 .dropLastWhile { it.isEmpty() }.toTypedArray()
 
         if (hostSegments.size < 2) {
-            return Optional.Companion.empty<Uri?>()
+            return Optional.Companion.empty<Uri>()
         }
 
         if (hostSegments[hostSegments.size - 1] == "com"
             && hostSegments[hostSegments.size - 2] == "reddit"
         ) {
-            return Optional.Companion.of<Uri?>(uri)
+            return Optional.Companion.of<Uri>(uri)
         }
 
         if (hostSegments[hostSegments.size - 1] == "it"
             && hostSegments[hostSegments.size - 2] == "redd"
         ) {
-            return Optional.Companion.of<Uri?>(uri)
+            return Optional.Companion.of<Uri>(uri)
         }
 
-        return Optional.Companion.empty<Uri?>()
+        return Optional.Companion.empty<Uri>()
     }
 
     fun parse(rawUri: Uri?): RedditURL? {

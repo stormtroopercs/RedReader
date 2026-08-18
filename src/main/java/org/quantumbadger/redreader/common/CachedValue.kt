@@ -20,7 +20,7 @@ import android.os.SystemClock
 import java.util.concurrent.atomic.AtomicReference
 
 class CachedValue<E>(
-    private val mFactory: GenericFactory<E?, RuntimeException?>,
+    private val mFactory: GenericFactory<E, RuntimeException>,
     private val mMaxAgeMs: Long
 ) {
     private class CacheEntry<E>(val value: E, val lastUpdateMs: Long)

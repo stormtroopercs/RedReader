@@ -62,16 +62,16 @@ class SubredditToolbar @JvmOverloads constructor(
     private var mRunnableOnSubscriptionsChange: Runnable?=null
     private var mRunnableOnPinnedChange: Runnable?=null
 
-    private var mSubredditDetails: Optional<SubredditDetails?> =         Optional.Companion.empty<SubredditDetails?>()
-    private var mUrl: Optional<UriString?> = Optional.Companion.empty<UriString?>()
+    private var mSubredditDetails: Optional<SubredditDetails> =         Optional.Companion.empty<SubredditDetails>()
+    private var mUrl: Optional<UriString> = Optional.Companion.empty<UriString>()
 
     private var mButtonInfo: ImageButton?=null
 
     fun bindSubreddit(
         subreddit: SubredditDetails,
-        url: Optional<UriString?>
+        url: Optional<UriString>
     ) {
-        mSubredditDetails = Optional.Companion.of<SubredditDetails?>(subreddit)
+        mSubredditDetails = Optional.Companion.of<SubredditDetails>(subreddit)
         mUrl = url
 
         if (subreddit.hasSidebar()) {

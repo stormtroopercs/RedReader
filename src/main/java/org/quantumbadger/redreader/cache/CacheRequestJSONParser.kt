@@ -59,7 +59,7 @@ class CacheRequestJSONParser(
     private val mNotifiedFailure = AtomicBoolean(false)
 
     override fun onDataStreamAvailable(
-        streamFactory: GenericFactory<SeekableInputStream, IOException?>,
+        streamFactory: GenericFactory<SeekableInputStream, IOException>,
         timestamp: TimestampUTC,
         session: UUID,
         fromCache: Boolean,
@@ -81,8 +81,8 @@ class CacheRequestJSONParser(
                                 e,
                                 null,
                                 null,
-                                General.ignoreIOException<SeekableInputStream?>(streamFactory)
-                                    .filter<FailedRequestBody>(FunctionOneArgWithReturn { `is`: Param? ->
+                                General.ignoreIOException<SeekableInputStream>(streamFactory)
+                                    .filter<FailedRequestBody>(FunctionOneArgWithReturn { `is` ->
                                         FailedRequestBody.Companion.from(
                                             `is`
                                         )

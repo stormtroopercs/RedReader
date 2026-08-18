@@ -110,7 +110,7 @@ class SubredditItemViewHolder(
             mSupportingText.setVisibility(View.GONE)
         }
 
-        mActions.bindSubreddit(subreddit, Optional.Companion.empty<UriString?>())
+        mActions.bindSubreddit(subreddit, Optional.Companion.empty<UriString>())
 
         mGoButton.setOnClickListener(
             View.OnClickListener { v: View? -> onLinkClicked(mActivity, subreddit.url) })

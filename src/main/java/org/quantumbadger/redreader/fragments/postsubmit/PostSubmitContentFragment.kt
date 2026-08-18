@@ -391,7 +391,7 @@ class PostSubmitContentFragment : Fragment() {
                         if (!mActive) {
                             return@Runnable
                         }
-                        ifActivityNotNull(Consumer { obj: E? -> obj.onContentFragmentSubredditDoesNotExist() })
+                        ifActivityNotNull(Consumer { obj -> obj.onContentFragmentSubredditDoesNotExist() })
                     })
                 }
 
@@ -400,7 +400,7 @@ class PostSubmitContentFragment : Fragment() {
                         if (!mActive) {
                             return@Runnable
                         }
-                        ifActivityNotNull(Consumer { obj: E? -> obj.onContentFragmentSubredditPermissionDenied() })
+                        ifActivityNotNull(Consumer { obj -> obj.onContentFragmentSubredditPermissionDenied() })
                     })
                 }
 
@@ -409,8 +409,8 @@ class PostSubmitContentFragment : Fragment() {
                         if (!mActive) {
                             return@Runnable
                         }
-                        ifActivityNotNull(Consumer { listener: Listener? ->
-                            listener!!.onContentFragmentFlairRequestError(error)
+                        ifActivityNotNull(Consumer { listener: Listener ->
+                            listener.onContentFragmentFlairRequestError(error)
                         })
                     })
                 }
@@ -498,8 +498,8 @@ class PostSubmitContentFragment : Fragment() {
                     }
 
                     override fun onSuccess(
-                        redirectUrl: Optional<String?>,
-                        thingId: Optional<String?>
+                        redirectUrl: Optional<String>,
+                        thingId: Optional<String>
                     ) {
                         AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
                             safeDismissDialog(progressDialog)
@@ -588,7 +588,7 @@ class PostSubmitContentFragment : Fragment() {
         lastSpoiler = false
     }
 
-    private fun ifActivityNotNull(action: Consumer<Listener?>) {
+    private fun ifActivityNotNull(action: Consumer<Listener>) {
         val activity = getActivity()
 
         if (activity != null) {

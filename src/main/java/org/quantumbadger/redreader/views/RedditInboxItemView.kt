@@ -126,7 +126,7 @@ class RedditInboxItemView(
                 null,
                 null,
                 false,
-                Optional.Companion.empty<Int?>()
+                Optional.Companion.empty<Int>()
             )
         )
 

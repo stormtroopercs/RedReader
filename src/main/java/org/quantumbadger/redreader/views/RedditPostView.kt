@@ -542,7 +542,7 @@ class RedditPostView(
                 mActivity,
                 object : CacheRequestCallbacks {
                     override fun onDataStreamComplete(
-                        stream: GenericFactory<SeekableInputStream, IOException?>,
+                        stream: GenericFactory<SeekableInputStream, IOException>,
                         timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean,

@@ -807,7 +807,7 @@ class RedditPreparedPost(
                 context,
                 object : CacheRequestCallbacks {
                     override fun onDataStreamComplete(
-                        factory: GenericFactory<SeekableInputStream, IOException?>,
+                        factory: GenericFactory<SeekableInputStream, IOException>,
                         timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean,
@@ -906,7 +906,7 @@ class RedditPreparedPost(
         get() = java.lang.Boolean.TRUE == mChangeDataManager.isHidden(src.idAndType)
 
     private fun onThumbnailStreamAvailable(
-        factory: GenericFactory<SeekableInputStream, IOException?>,
+        factory: GenericFactory<SeekableInputStream, IOException>,
         desiredSizePixels: Int
     ) {
         try {

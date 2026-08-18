@@ -458,20 +458,20 @@ class CacheManager @Inject constructor(
                 return mCachedUri
             }
 
-        val file: Optional<File?>
-            get() = Optional.ofNullable<File?>(
+        val file: Optional<File>
+            get() = Optional.ofNullable<File>(
                 getExistingCacheFile(this.id)
             )
 
-        fun lookupMimetype(): Optional<String?> {
+        fun lookupMimetype(): Optional<String> {
             val result = dbManager.selectById(
                 this.id
             )
 
             if (result.isPresent) {
-                return Optional.of<String?>(result.get().mimetype)
+                return Optional.of<String>(result.get().mimetype)
             } else {
-                return Optional.empty<String?>()
+                return Optional.empty<String>()
             }
         }
 
@@ -668,7 +668,7 @@ class CacheManager @Inject constructor(
                 override val priority: Priority get() = request.priority
 
                 override fun run() {
-                    val streamFactory: GenericFactory<SeekableInputStream, IOException?> =                         GenericFactory {
+                    val streamFactory: GenericFactory<SeekableInputStream, IOException> =                         GenericFactory {
                             val stream =                                 getCacheFileInputStream(entry.id, entry.cacheCompressionType)
                             if (stream == null) {
                                 dbManager.delete(entry.id)

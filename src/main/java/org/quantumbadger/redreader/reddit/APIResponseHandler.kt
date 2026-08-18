@@ -60,7 +60,7 @@ abstract class APIResponseHandler private constructor(val context: AppCompatActi
     fun notifyFailure(
         type: APIFailureType,
         debuggingContext: String?,
-        response: Optional<FailedRequestBody?>
+        response: Optional<FailedRequestBody>
     ) {
         notifyFailure(
             General.getGeneralErrorForFailure(
@@ -77,8 +77,8 @@ abstract class APIResponseHandler private constructor(val context: AppCompatActi
         abstract fun onSubmitErrors(errors: ArrayList<String?>)
 
         abstract fun onSuccess(
-            redirectUrl: Optional<String?>,
-            thingId: Optional<String?>
+            redirectUrl: Optional<String>,
+            thingId: Optional<String>
         )
     }
 

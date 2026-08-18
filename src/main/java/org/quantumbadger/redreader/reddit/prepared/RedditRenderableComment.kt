@@ -319,7 +319,7 @@ class RedditRenderableComment
         postCreated: TimestampUTC?,
         parentCommentCreated: TimestampUTC?,
         collapsed: kotlin.Boolean,
-        indentLevel: Optional<Int?>
+        indentLevel: Optional<Int>
     ): String {
         val commentAgeMode = PrefsUtility.appearance_comment_age_mode()
 

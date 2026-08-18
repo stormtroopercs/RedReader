@@ -81,7 +81,7 @@ class PostListingHeader(
 
             buttons.bindSubreddit(
                 SubredditDetails.Companion.newWithRuntimeException(subreddit),
-                Optional.Companion.of<UriString?>(url.browserUrl())
+                Optional.Companion.of<UriString>(url.browserUrl())
             )
         }
     }

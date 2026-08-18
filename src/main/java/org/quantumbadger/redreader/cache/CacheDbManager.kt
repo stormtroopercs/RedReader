@@ -107,7 +107,7 @@ internal class CacheDbManager(context: Context?) :
     }
 
     @Synchronized
-    fun selectById(id: Long): Optional<CacheEntry?> {
+    fun selectById(id: Long): Optional<CacheEntry> {
         val db = getReadableDatabase()
 
         db.query(
@@ -121,9 +121,9 @@ internal class CacheDbManager(context: Context?) :
         ).use { cursor ->
             val entries = readEntriesFromCursor(cursor)
             if (entries.isEmpty()) {
-                return Optional.Companion.empty<CacheEntry?>()
+                return Optional.Companion.empty<CacheEntry>()
             } else {
-                return Optional.Companion.of<CacheEntry?>(entries.get(0))
+                return Optional.Companion.of<CacheEntry>(entries.get(0))
             }
         }
     }

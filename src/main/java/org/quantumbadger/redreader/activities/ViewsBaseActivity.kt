@@ -46,7 +46,7 @@ import java.util.Locale
 import kotlin.math.max
 
 abstract class ViewsBaseActivity : BaseActivity() {
-    private var mActionbarTitleTextView: Optional<TextView?> = Optional.Companion.empty<TextView?>()
+    private var mActionbarTitleTextView: Optional<TextView> = Optional.Companion.empty<TextView>()
 
     private var mContentListing: FrameLayout?=null
     private var mContentOverlay: FrameLayout?=null
@@ -186,9 +186,9 @@ abstract class ViewsBaseActivity : BaseActivity() {
             mActionbarTitleOuterView = toolbar.findViewById<View>(R.id.actionbar_title_outer)
 
             if (baseActivityIsToolbarSearchBarEnabled()) {
-                mActionbarTitleTextView = Optional.Companion.empty<TextView?>()
+                mActionbarTitleTextView = Optional.Companion.empty<TextView>()
             } else {
-                mActionbarTitleTextView = Optional.Companion.of<TextView?>(
+                mActionbarTitleTextView = Optional.Companion.of<TextView>(
                     toolbar.findViewById<TextView?>(R.id.actionbar_title_text)
                 )
             }

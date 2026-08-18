@@ -125,35 +125,35 @@ object AnnouncementDownloader {
 
     fun getMostRecentUnreadAnnouncement(
         prefs: SharedPrefsWrapper
-    ): Optional<Announcement?> {
+    ): Optional<Announcement> {
         try {
             val hex = prefs.getString(PREF_KEY_PAYLOAD_STORAGE_HEX, "")
 
             if (hex == null || hex.isEmpty()) {
                 Log.i(TAG, "No announcement found in shared prefs")
-                return Optional.Companion.empty<Announcement?>()
+                return Optional.Companion.empty<Announcement>()
             }
 
             val announcement: Announcement=                Announcement.Companion.fromPayload(Payload.Companion.fromBytes(HexUtils.fromHex(hex)))
 
             if (announcement.isExpired) {
                 Log.i(TAG, "Announcement is expired: " + announcement.id)
-                return Optional.Companion.empty<Announcement?>()
+                return Optional.Companion.empty<Announcement>()
             }
 
             val lastReadId = prefs.getString(PREF_KEY_LAST_READ_ID, "")
 
             if (announcement.id == lastReadId) {
                 Log.i(TAG, "Announcement is already read: " + announcement.id)
-                return Optional.Companion.empty<Announcement?>()
+                return Optional.Companion.empty<Announcement>()
             }
 
             Log.i(TAG, "Got unread announcement: " + announcement.id)
 
-            return Optional.Companion.of<Announcement?>(announcement)
+            return Optional.Companion.of<Announcement>(announcement)
         } catch (t: Throwable) {
             Log.e(TAG, "Failed to parse stored announcement", t)
-            return Optional.Companion.empty<Announcement?>()
+            return Optional.Companion.empty<Announcement>()
         }
     }
 

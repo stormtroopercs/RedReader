@@ -59,9 +59,9 @@ class ListItemView(context: Context) : FrameLayout(context) {
         hideDivider: Boolean,
         clickListener: OnClickListener?,
         longClickListener: OnLongClickListener?,
-        secondaryIcon: Optional<Drawable?>,
-        secondaryAction: Optional<OnClickListener?>,
-        secondaryContentDesc: Optional<String?>
+        secondaryIcon: Optional<Drawable>,
+        secondaryAction: Optional<OnClickListener>,
+        secondaryContentDesc: Optional<String>
     ) {
         if (hideDivider) {
             mDivider.setVisibility(GONE)

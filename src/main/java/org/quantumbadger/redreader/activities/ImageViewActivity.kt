@@ -446,8 +446,8 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
 
     private fun onImageStreamReady(
         isNetwork: Boolean,
-        videoStream: GenericFactory<SeekableInputStream, IOException?>,
-        audioStream: GenericFactory<SeekableInputStream, IOException?>?,
+        videoStream: GenericFactory<SeekableInputStream, IOException>,
+        audioStream: GenericFactory<SeekableInputStream, IOException>?,
         mimetype: String?,
         videoStreamUri: Uri
     ) {
@@ -846,8 +846,8 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
         val resultLock = Any()
 
         val failed = AtomicBoolean(false)
-        val audio = AtomicReference<GenericFactory<SeekableInputStream, IOException?>?>()
-        val video = AtomicReference<GenericFactory<SeekableInputStream, IOException?>?>()
+        val audio = AtomicReference<GenericFactory<SeekableInputStream, IOException>?>()
+        val video = AtomicReference<GenericFactory<SeekableInputStream, IOException>?>()
         val videoMimetype = AtomicReference<String?>()
 
         CacheManager.Companion.getInstance(this).makeRequest(
@@ -906,7 +906,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
                     }
 
                     override fun onDataStreamAvailable(
-                        streamFactory: GenericFactory<SeekableInputStream, IOException?>,
+                        streamFactory: GenericFactory<SeekableInputStream, IOException>,
                         timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean,
@@ -959,7 +959,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
                         }
 
                         override fun onDataStreamAvailable(
-                            streamFactory: GenericFactory<SeekableInputStream, IOException?>,
+                            streamFactory: GenericFactory<SeekableInputStream, IOException>,
                             timestamp: TimestampUTC,
                             session: UUID,
                             fromCache: Boolean,
@@ -1036,8 +1036,8 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
     @UiThread
     private fun playWithExoplayer(
         isNetwork: Boolean,
-        videoStream: GenericFactory<SeekableInputStream, IOException?>,
-        audioStream: GenericFactory<SeekableInputStream, IOException?>?
+        videoStream: GenericFactory<SeekableInputStream, IOException>,
+        audioStream: GenericFactory<SeekableInputStream, IOException>?
     ) {
         checkThisIsUIThread()
 
@@ -1138,7 +1138,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
     }
 
     private fun playGIFWithMovie(
-        streamFactory: GenericFactory<SeekableInputStream, IOException?>
+        streamFactory: GenericFactory<SeekableInputStream, IOException>
     ) {
         Log.i(TAG, "Playing GIF using Movie API")
 
@@ -1181,7 +1181,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
     }
 
     private fun playGIFWithLegacyDecoder(
-        streamFactory: GenericFactory<SeekableInputStream, IOException?>
+        streamFactory: GenericFactory<SeekableInputStream, IOException>
     ) {
         Log.i(TAG, "Playing GIF using legacy decoder")
 
@@ -1236,7 +1236,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
     }
 
     private fun showImageWithInternalViewer(
-        streamFactory: GenericFactory<SeekableInputStream, IOException?>
+        streamFactory: GenericFactory<SeekableInputStream, IOException>
     ) {
         Log.i(TAG, "Showing image using internal viewer")
 

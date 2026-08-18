@@ -432,7 +432,7 @@ class RedditCommentView(
                 postTimestamp,
                 parentCommentTimestamp,
                 isCollapsed,
-                Optional.Companion.of<Int?>(comment.indent)
+                Optional.Companion.of<Int>(comment.indent)
             )
         )
 

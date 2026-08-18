@@ -223,13 +223,13 @@ class MainMenuListingManager(
                         false,
                         clickListener,
                         null,
-                        Optional.Companion.of<Drawable?>(rrIconAccountSearch),
-                        Optional.Companion.of<View.OnClickListener?>(View.OnClickListener { view: View? ->
+                        Optional.Companion.of<Drawable>(rrIconAccountSearch),
+                        Optional.Companion.of<View.OnClickListener>(View.OnClickListener { view: View? ->
                             mListener.onSelected(
                                 MainMenuFragment.Companion.MENU_MENU_ACTION_CUSTOM
                             )
                         }),
-                        Optional.Companion.of<String?>(
+                        Optional.Companion.of<String>(
                             activity.getString(
                                 string.mainmenu_custom_destination
                             )
@@ -667,9 +667,9 @@ class MainMenuListingManager(
             hideDivider,
             clickListener,
             null,
-            Optional.Companion.empty<Drawable?>(),
-            Optional.Companion.empty<View.OnClickListener?>(),
-            Optional.Companion.empty<String?>()
+            Optional.Companion.empty<Drawable>(),
+            Optional.Companion.empty<View.OnClickListener>(),
+            Optional.Companion.empty<String>()
         )
     }
 
@@ -707,9 +707,9 @@ class MainMenuListingManager(
             hideDivider,
             clickListener,
             longClickListener,
-            Optional.Companion.empty<Drawable?>(),
-            Optional.Companion.empty<View.OnClickListener?>(),
-            Optional.Companion.empty<String?>()
+            Optional.Companion.empty<Drawable>(),
+            Optional.Companion.empty<View.OnClickListener>(),
+            Optional.Companion.empty<String>()
         )
     }
 
@@ -730,9 +730,9 @@ class MainMenuListingManager(
             hideDivider,
             clickListener,
             null,
-            Optional.Companion.empty<Drawable?>(),
-            Optional.Companion.empty<View.OnClickListener?>(),
-            Optional.Companion.empty<String?>()
+            Optional.Companion.empty<Drawable>(),
+            Optional.Companion.empty<View.OnClickListener>(),
+            Optional.Companion.empty<String>()
         )
     }
 

@@ -143,7 +143,7 @@ class CommentListViewModel(
                         }
 
                         override fun onDataStreamComplete(
-                            streamFactory: org.quantumbadger.redreader.common.GenericFactory<SeekableInputStream, IOException?>,
+                            streamFactory: org.quantumbadger.redreader.common.GenericFactory<SeekableInputStream, IOException>,
                             timestamp: TimestampUTC,
                             session: java.util.UUID,
                             fromCache: Boolean,

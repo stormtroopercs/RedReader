@@ -166,7 +166,7 @@ object FileUtils {
         MIMETYPE_TO_EXTENSION.put("application/zip", "zip")
     }
 
-    fun getExtensionForMimetype(mimetype: String): Optional<String?> {
+    fun getExtensionForMimetype(mimetype: String): Optional<String> {
         val splitType: String
 
         if (mimetype.contains(";")) {
@@ -175,7 +175,7 @@ object FileUtils {
             splitType = mimetype
         }
 
-        return Optional.Companion.ofNullable<String?>(
+        return Optional.Companion.ofNullable<String>(
             MIMETYPE_TO_EXTENSION.get(
                 StringUtils.asciiLowercase(splitType)
             )
@@ -403,7 +403,7 @@ object FileUtils {
                                 filename,
                                 mimetype,
                                 cacheFile!!.file
-                                    .map<Long?>(FunctionOneArgWithReturn { obj: Param? -> obj.length() })
+                                    .map<Long>(FunctionOneArgWithReturn { obj -> obj.length() })
                                     .orElse(0L),
                                 CacheFileDataSource(cacheFile),
                                 Runnable {
@@ -640,25 +640,25 @@ object FileUtils {
     }
 
     @JvmStatic
-    fun getExtensionFromPath(path: String): Optional<String?> {
+    fun getExtensionFromPath(path: String): Optional<String> {
         val pathSegments = path.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
         if (pathSegments.size == 0) {
-            return Optional.Companion.empty<String?>()
+            return Optional.Companion.empty<String>()
         }
 
         val dotSegments = pathSegments[pathSegments.size - 1].split("\\.".toRegex())
             .dropLastWhile { it.isEmpty() }.toTypedArray()
 
         if (dotSegments.size < 2) {
-            return Optional.Companion.empty<String?>()
+            return Optional.Companion.empty<String>()
         }
 
         if (dotSegments.size == 2 && dotSegments[0].isEmpty()) {
-            return Optional.Companion.empty<String?>()
+            return Optional.Companion.empty<String>()
         }
 
-        return Optional.Companion.of<String?>(dotSegments[dotSegments.size - 1])
+        return Optional.Companion.of<String>(dotSegments[dotSegments.size - 1])
     }
 
     fun buildPath(

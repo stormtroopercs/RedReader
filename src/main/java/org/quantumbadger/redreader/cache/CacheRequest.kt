@@ -49,7 +49,7 @@ class CacheRequest private constructor(
     cache: Boolean,
     context: Context,
     private val mCallbacks: CacheRequestCallbacks
-) : Comparable<CacheRequest?> {
+) : Comparable<CacheRequest> {
     enum class DownloadQueueType {
         REDDIT_API,
         IMGUR_API,
@@ -84,7 +84,7 @@ class CacheRequest private constructor(
     val fileType: Int
 
     val queueType: DownloadQueueType?
-    val requestBody: Optional<HTTPRequestBody?>
+    val requestBody: Optional<HTTPRequestBody>
 
     val cache: Boolean
 
@@ -206,7 +206,7 @@ class CacheRequest private constructor(
         this.downloadStrategy = downloadStrategy
         this.fileType = fileType
         this.queueType = queueType
-        this.requestBody = Optional.Companion.ofNullable<HTTPRequestBody?>(requestBody)
+        this.requestBody = Optional.Companion.ofNullable<HTTPRequestBody>(requestBody)
         this.cache = (requestBody == null) && cache
 
         if (url == null) {
@@ -239,7 +239,7 @@ class CacheRequest private constructor(
     }
 
     fun notifyDataStreamAvailable(
-        streamFactory: GenericFactory<SeekableInputStream, IOException?>,
+        streamFactory: GenericFactory<SeekableInputStream, IOException>,
         timestamp: TimestampUTC,
         session: UUID,
         fromCache: Boolean,
@@ -249,7 +249,7 @@ class CacheRequest private constructor(
     }
 
     fun notifyDataStreamComplete(
-        streamFactory: GenericFactory<SeekableInputStream, IOException?>,
+        streamFactory: GenericFactory<SeekableInputStream, IOException>,
         timestamp: TimestampUTC,
         session: UUID,
         fromCache: Boolean,

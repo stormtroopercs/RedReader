@@ -21,11 +21,11 @@ object StringUtils {
     fun removePrefix(
         input: String,
         prefix: String
-    ): Optional<String?> {
+    ): Optional<String> {
         if (input.startsWith(prefix)) {
-            return Optional.Companion.of<String?>(input.substring(prefix.length))
+            return Optional.Companion.of<String>(input.substring(prefix.length))
         } else {
-            return Optional.Companion.empty<String?>()
+            return Optional.Companion.empty<String>()
         }
     }
 

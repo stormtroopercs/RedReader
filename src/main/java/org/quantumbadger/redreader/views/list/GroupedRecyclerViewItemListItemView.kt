@@ -31,9 +31,9 @@ class GroupedRecyclerViewItemListItemView(
     private val mHideDivider: Boolean,
     private val mClickListener: View.OnClickListener?,
     private val mLongClickListener: OnLongClickListener?,
-    private val mSecondaryIcon: Optional<Drawable?>,
-    private val mSecondaryAction: Optional<View.OnClickListener?>,
-    private val mSecondaryContentDesc: Optional<String?>
+    private val mSecondaryIcon: Optional<Drawable>,
+    private val mSecondaryAction: Optional<View.OnClickListener>,
+    private val mSecondaryContentDesc: Optional<String>
 ) : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder>() {
     override val viewType: Class<*> get() = ListItemView::class.java
 
