@@ -19,7 +19,7 @@ package org.quantumbadger.redreader.reddit.prepared.html
 import org.quantumbadger.redreader.common.UriString
 
 class HtmlRawElementTagAnchor(
-    children: ArrayList<HtmlRawElement?>?,
+    children: ArrayList<HtmlRawElement>,
     private val mHref: UriString
 ) : HtmlRawElementTagAttributeChange(children) {
     override fun onLinkButtons(linkButtons: ArrayList<LinkButtonDetails?>) {

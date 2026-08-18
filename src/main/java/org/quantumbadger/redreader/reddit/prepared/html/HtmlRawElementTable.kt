@@ -44,7 +44,7 @@ class HtmlRawElementTable(private val mChildren: ArrayList<HtmlRawElement>) : Ht
     override fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        destination: ArrayList<HtmlRawElement?>,
+        destination: ArrayList<HtmlRawElement>,
         linkButtons: ArrayList<LinkButtonDetails?>
     ) {
         destination.add(reduce(activeAttributes, activity, linkButtons))
@@ -52,9 +52,9 @@ class HtmlRawElementTable(private val mChildren: ArrayList<HtmlRawElement>) : Ht
 
     override fun generate(
         activity: AppCompatActivity,
-        destination: ArrayList<BodyElement?>
+        destination: ArrayList<BodyElement>
     ) {
-        val rows = ArrayList<BodyElement?>(mChildren.size)
+        val rows = ArrayList<BodyElement>(mChildren.size)
 
         for (child in mChildren) {
             child.generate(activity, rows)

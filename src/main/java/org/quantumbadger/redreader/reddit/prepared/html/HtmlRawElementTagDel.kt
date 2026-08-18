@@ -16,7 +16,7 @@
  */
 package org.quantumbadger.redreader.reddit.prepared.html
 
-class HtmlRawElementTagDel(children: ArrayList<HtmlRawElement?>?) :
+class HtmlRawElementTagDel(children: ArrayList<HtmlRawElement>) :
     HtmlRawElementTagAttributeChange(children) {
     override fun onStart(activeAttributes: HtmlTextAttributes) {
         activeAttributes.strikethrough++

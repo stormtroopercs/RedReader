@@ -27,7 +27,7 @@ class HtmlRawElementBreak : HtmlRawElement() {
     override fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        destination: ArrayList<HtmlRawElement?>,
+        destination: ArrayList<HtmlRawElement>,
         linkButtons: ArrayList<LinkButtonDetails?>
     ) {
         destination.add(this)
@@ -35,7 +35,7 @@ class HtmlRawElementBreak : HtmlRawElement() {
 
     override fun generate(
         activity: AppCompatActivity,
-        destination: ArrayList<BodyElement?>
+        destination: ArrayList<BodyElement>
     ) {
         // Nothing to do
     }

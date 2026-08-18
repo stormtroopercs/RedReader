@@ -16,7 +16,7 @@
  */
 package org.quantumbadger.redreader.reddit.prepared.html
 
-class HtmlRawElementTagCode(children: ArrayList<HtmlRawElement?>?) :
+class HtmlRawElementTagCode(children: ArrayList<HtmlRawElement>) :
     HtmlRawElementTagAttributeChange(children) {
     override fun onStart(activeAttributes: HtmlTextAttributes) {
         activeAttributes.monospace++

@@ -16,7 +16,7 @@
  */
 package org.quantumbadger.redreader.reddit.prepared.html
 
-class HtmlRawElementTagPassthrough(children: ArrayList<HtmlRawElement?>?) :
+class HtmlRawElementTagPassthrough(children: ArrayList<HtmlRawElement>) :
     HtmlRawElementTagAttributeChange(children) {
     override fun onStart(activeAttributes: HtmlTextAttributes) {
         // Do nothing

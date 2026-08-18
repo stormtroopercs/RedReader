@@ -45,7 +45,7 @@ class HtmlRawElementStyledText(
     override fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        destination: ArrayList<HtmlRawElement?>,
+        destination: ArrayList<HtmlRawElement>,
         linkButtons: ArrayList<LinkButtonDetails?>
     ) {
         destination.add(this)
@@ -53,7 +53,7 @@ class HtmlRawElementStyledText(
 
     override fun generate(
         activity: AppCompatActivity,
-        destination: ArrayList<BodyElement?>
+        destination: ArrayList<BodyElement>
     ) {
         throw RuntimeException(
             "Attempt to call generate() on styled text: should be inside a block"

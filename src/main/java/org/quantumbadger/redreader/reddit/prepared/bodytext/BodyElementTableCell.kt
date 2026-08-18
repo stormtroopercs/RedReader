@@ -22,7 +22,7 @@ import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.common.General.dpToPixels
 import org.quantumbadger.redreader.common.General
 
-class BodyElementTableCell(private val mElements: ArrayList<BodyElement?>) :
+class BodyElementTableCell(private val mElements: ArrayList<BodyElement>) :
     BodyElement(BlockType.TABLE_CELL) {
     override fun generateView(
         activity: BaseActivity,

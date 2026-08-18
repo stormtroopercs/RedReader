@@ -16,7 +16,7 @@
  */
 package org.quantumbadger.redreader.reddit.prepared.html
 
-class HtmlRawElementTagStrong(children: ArrayList<HtmlRawElement?>?) :
+class HtmlRawElementTagStrong(children: ArrayList<HtmlRawElement>) :
     HtmlRawElementTagAttributeChange(children) {
     override fun onStart(activeAttributes: HtmlTextAttributes) {
         activeAttributes.bold++

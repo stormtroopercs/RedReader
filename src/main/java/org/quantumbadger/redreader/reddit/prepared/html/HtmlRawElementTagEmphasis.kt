@@ -16,7 +16,7 @@
  */
 package org.quantumbadger.redreader.reddit.prepared.html
 
-class HtmlRawElementTagEmphasis(children: ArrayList<HtmlRawElement?>?) :
+class HtmlRawElementTagEmphasis(children: ArrayList<HtmlRawElement>) :
     HtmlRawElementTagAttributeChange(children) {
     override fun onStart(activeAttributes: HtmlTextAttributes) {
         activeAttributes.italic++

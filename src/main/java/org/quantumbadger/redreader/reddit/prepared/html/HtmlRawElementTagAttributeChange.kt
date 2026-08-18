@@ -38,7 +38,7 @@ abstract class HtmlRawElementTagAttributeChange(private val mChildren: ArrayList
     override fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        destination: ArrayList<HtmlRawElement?>,
+        destination: ArrayList<HtmlRawElement>,
         linkButtons: ArrayList<LinkButtonDetails?>
     ) {
         onStart(activeAttributes)
@@ -56,7 +56,7 @@ abstract class HtmlRawElementTagAttributeChange(private val mChildren: ArrayList
 
     override fun generate(
         activity: AppCompatActivity,
-        destination: ArrayList<BodyElement?>
+        destination: ArrayList<BodyElement>
     ) {
         throw RuntimeException("Attempt to call generate() on reducible element")
     }

@@ -26,7 +26,7 @@ import org.quantumbadger.redreader.common.General
 
 class BodyElementNumberedListElement(
     private val mListIndex: Int,
-    private val mElements: ArrayList<BodyElement?>
+    private val mElements: ArrayList<BodyElement>
 ) : BodyElement(BlockType.LIST_ELEMENT) {
     override fun generateView(
         activity: BaseActivity,

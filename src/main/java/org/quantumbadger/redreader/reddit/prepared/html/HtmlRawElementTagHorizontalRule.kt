@@ -28,7 +28,7 @@ class HtmlRawElementTagHorizontalRule : HtmlRawElement() {
     override fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        destination: ArrayList<HtmlRawElement?>,
+        destination: ArrayList<HtmlRawElement>,
         linkButtons: ArrayList<LinkButtonDetails?>
     ) {
         destination.add(this)
@@ -36,7 +36,7 @@ class HtmlRawElementTagHorizontalRule : HtmlRawElement() {
 
     override fun generate(
         activity: AppCompatActivity,
-        destination: ArrayList<BodyElement?>
+        destination: ArrayList<BodyElement>
     ) {
         destination.add(BodyElementHorizontalRule())
     }

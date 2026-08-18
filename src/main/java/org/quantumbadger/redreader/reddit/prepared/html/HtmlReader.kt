@@ -364,7 +364,7 @@ class HtmlReader(val html: String) {
                     activity
                 )
 
-                val generated = ArrayList<BodyElement?>()
+                val generated = ArrayList<BodyElement>()
 
                 reduced.generate(activity, generated)
 

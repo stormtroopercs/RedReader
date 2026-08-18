@@ -28,7 +28,7 @@ class HtmlRawElementQuote(private val mChild: HtmlRawElementBlock) : HtmlRawElem
     override fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        destination: ArrayList<HtmlRawElement?>,
+        destination: ArrayList<HtmlRawElement>,
         linkButtons: ArrayList<LinkButtonDetails?>
     ) {
         destination.add(
@@ -43,9 +43,9 @@ class HtmlRawElementQuote(private val mChild: HtmlRawElementBlock) : HtmlRawElem
 
     override fun generate(
         activity: AppCompatActivity,
-        destination: ArrayList<BodyElement?>
+        destination: ArrayList<BodyElement>
     ) {
-        val elements = ArrayList<BodyElement?>()
+        val elements = ArrayList<BodyElement>()
         mChild.generate(activity, elements)
 
         destination.add(BodyElementQuote(elements))

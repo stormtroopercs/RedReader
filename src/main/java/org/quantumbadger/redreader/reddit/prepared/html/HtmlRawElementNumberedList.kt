@@ -45,7 +45,7 @@ class HtmlRawElementNumberedList(private val mChildren: ArrayList<HtmlRawElement
     override fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        destination: ArrayList<HtmlRawElement?>,
+        destination: ArrayList<HtmlRawElement>,
         linkButtons: ArrayList<LinkButtonDetails?>
     ) {
         destination.add(reduce(activeAttributes, activity, linkButtons))
@@ -53,12 +53,12 @@ class HtmlRawElementNumberedList(private val mChildren: ArrayList<HtmlRawElement
 
     override fun generate(
         activity: AppCompatActivity,
-        destination: ArrayList<BodyElement?>
+        destination: ArrayList<BodyElement>
     ) {
         var number = 1
 
         for (child in mChildren) {
-            val thisElement = ArrayList<BodyElement?>()
+            val thisElement = ArrayList<BodyElement>()
             child.generate(activity, thisElement)
 
             destination.add(BodyElementNumberedListElement(number, thisElement))

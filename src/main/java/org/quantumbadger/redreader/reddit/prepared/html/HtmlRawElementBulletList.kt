@@ -45,7 +45,7 @@ class HtmlRawElementBulletList(private val mChildren: ArrayList<HtmlRawElement>)
     override fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        destination: ArrayList<HtmlRawElement?>,
+        destination: ArrayList<HtmlRawElement>,
         linkButtons: ArrayList<LinkButtonDetails?>
     ) {
         destination.add(reduce(activeAttributes, activity, linkButtons))
@@ -53,10 +53,10 @@ class HtmlRawElementBulletList(private val mChildren: ArrayList<HtmlRawElement>)
 
     override fun generate(
         activity: AppCompatActivity,
-        destination: ArrayList<BodyElement?>
+        destination: ArrayList<BodyElement>
     ) {
         for (child in mChildren) {
-            val thisBullet = ArrayList<BodyElement?>()
+            val thisBullet = ArrayList<BodyElement>()
             child.generate(activity, thisBullet)
 
             destination.add(BodyElementBullet(thisBullet))

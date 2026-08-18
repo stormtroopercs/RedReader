@@ -34,7 +34,7 @@ object HtmlRawElementInlineErrorMessage : HtmlRawElement() {
         text: String,
         element: HtmlRawElement
     ): HtmlRawElementTagPassthrough {
-        val children = ArrayList<HtmlRawElement?>()
+        val children = ArrayList<HtmlRawElement>()
 
         children.add(element)
         children.add(create(text))

@@ -63,13 +63,13 @@ abstract class HtmlRawElement {
     abstract fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        destination: ArrayList<HtmlRawElement?>,
+        destination: ArrayList<HtmlRawElement>,
         linkButtons: ArrayList<LinkButtonDetails?>
     )
 
     abstract fun generate(
         activity: AppCompatActivity,
-        destination: ArrayList<BodyElement?>
+        destination: ArrayList<BodyElement>
     )
 
     companion object {
@@ -78,7 +78,7 @@ abstract class HtmlRawElement {
             val startToken = reader.peek()
             reader.advance()
 
-            val children = ArrayList<HtmlRawElement?>()
+            val children = ArrayList<HtmlRawElement>()
 
             if (startToken.type == HtmlReader.TokenType.TAG_START_AND_END) {
                 when (startToken.text) {

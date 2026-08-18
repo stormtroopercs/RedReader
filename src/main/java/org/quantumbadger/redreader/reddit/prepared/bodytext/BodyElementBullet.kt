@@ -24,7 +24,7 @@ import org.quantumbadger.redreader.common.General.dpToPixels
 import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
 import org.quantumbadger.redreader.common.General
 
-class BodyElementBullet(private val mElements: ArrayList<BodyElement?>) :
+class BodyElementBullet(private val mElements: ArrayList<BodyElement>) :
     BodyElement(BlockType.LIST_ELEMENT) {
     override fun generateView(
         activity: BaseActivity,

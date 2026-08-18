@@ -29,7 +29,7 @@ class HtmlRawElementSpoiler(private val mChild: HtmlRawElementBlock) : HtmlRawEl
     override fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        destination: ArrayList<HtmlRawElement?>,
+        destination: ArrayList<HtmlRawElement>,
         linkButtons: ArrayList<LinkButtonDetails?>
     ) {
         destination.add(
@@ -44,9 +44,9 @@ class HtmlRawElementSpoiler(private val mChild: HtmlRawElementBlock) : HtmlRawEl
 
     override fun generate(
         activity: AppCompatActivity,
-        destination: ArrayList<BodyElement?>
+        destination: ArrayList<BodyElement>
     ) {
-        val elements = ArrayList<BodyElement?>()
+        val elements = ArrayList<BodyElement>()
         mChild.generate(activity, elements)
 
         destination.add(

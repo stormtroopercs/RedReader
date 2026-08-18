@@ -38,7 +38,7 @@ class HtmlRawElementPlainText(private val mText: String) : HtmlRawElement() {
     override fun reduce(
         attributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        destination: ArrayList<HtmlRawElement?>,
+        destination: ArrayList<HtmlRawElement>,
         linkButtons: ArrayList<LinkButtonDetails?>
     ) {
         var spans: ArrayList<CharacterStyle?>? = null
@@ -120,7 +120,7 @@ class HtmlRawElementPlainText(private val mText: String) : HtmlRawElement() {
 
     override fun generate(
         activity: AppCompatActivity,
-        destination: ArrayList<BodyElement?>
+        destination: ArrayList<BodyElement>
     ) {
         throw RuntimeException("Attempt to call generate() on reducible element")
     }
