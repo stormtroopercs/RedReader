@@ -27,13 +27,10 @@ import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
-import javax.inject.Inject
 import okhttp3.internal.closeQuietly
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.account.RedditAccount
+import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.common.AndroidCommon
 import org.quantumbadger.redreader.common.CachedStringHash
 import org.quantumbadger.redreader.common.Constants
@@ -44,6 +41,7 @@ import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.RRError
 import org.quantumbadger.redreader.common.RunnableOnce
 import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
 import org.quantumbadger.redreader.http.FailedRequestBody
 import org.quantumbadger.redreader.http.HTTPBackend
 import org.quantumbadger.redreader.http.HTTPBackend.RequestDetails
@@ -56,13 +54,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * Hilt-injected OAuth manager for Reddit authentication.
- * Replaces companion object singleton pattern.
+ * OAuth manager for Reddit authentication (singleton object).
  */
-@ViewModelScoped
-class RedditOAuth @Inject constructor(
-    @ApplicationContext private val context: Context
-) {
+object RedditOAuth {
     private val TAG = "RedditOAuth"
     @Suppress("PropertyName")
     private val REDIRECT_URI_NEW = "redreader://rr_oauth_redir"
@@ -146,7 +140,8 @@ class RedditOAuth @Inject constructor(
 
     fun needsRelogin(user: RedditAccount) = !user.isAnonymous && user.clientId != cachedAppId.hash
 
-    fun anyNeedRelogin(context: Context) =         RedditAccountManager.getAnon() // Placeholder - will use Hilt-injected manager
+    fun anyNeedRelogin(context: Context) =
+        RedditAccountManager.getInstance(context).accounts.any(this::needsRelogin)
 
     private fun handleRefreshTokenError(
         exception: Throwable?,
@@ -332,7 +327,7 @@ class RedditOAuth @Inject constructor(
                 override fun onSuccess(
                     mimetype: String?,
                     bodyBytes: Long?,
-                    body: InputStream?
+                    body: InputStream
                 ) {
                     try {
                         val jsonValue = JsonValue.parse(body)
@@ -441,7 +436,7 @@ class RedditOAuth @Inject constructor(
                 override fun onSuccess(
                     mimetype: String?,
                     bodyBytes: Long?,
-                    body: InputStream?
+                    body: InputStream
                 ) {
                     try {
                         val jsonValue = JsonValue.parse(body)
@@ -543,7 +538,7 @@ class RedditOAuth @Inject constructor(
                         cachedAppId.hash
                     )
                     account.setAccessToken(fetchRefreshTokenResult.accessToken)
-                    val accountManager = RedditAccountManager.getAnon() // Placeholder
+                    val accountManager = RedditAccountManager.getInstance(context)
                     accountManager.addAccount(account)
                     accountManager.defaultAccount = account
                     listener.onLoginSuccess(account)
@@ -574,7 +569,7 @@ class RedditOAuth @Inject constructor(
         val uri = ACCESS_TOKEN_URL
         val postFields = ArrayList<PostField>(2)
         postFields.add(PostField("grant_type", "refresh_token"))
-        postFields.add(PostField("refresh_token", user.refreshToken.token))
+        postFields.add(PostField("refresh_token", user.refreshToken!!.token))
         return try {
             val request = HTTPBackend.backend
                 .prepareRequest(
@@ -612,7 +607,7 @@ class RedditOAuth @Inject constructor(
                 override fun onSuccess(
                     mimetype: String?,
                     bodyBytes: Long?,
-                    body: InputStream?
+                    body: InputStream
                 ) {
                     try {
                         val jsonValue = JsonValue.parse(body)
@@ -627,7 +622,7 @@ class RedditOAuth @Inject constructor(
                     } catch (e: IOException) {
                         result.set(
                             FetchAccessTokenResult(
-                                FetchRefreshTokenResultStatus.CONNECTION_ERROR,
+                                FetchAccessTokenResultStatus.CONNECTION_ERROR,
                                 RRError(
                                     context.getString(R.string.error_connection_title),
                                     context.getString(R.string.error_connection_message),
@@ -722,7 +717,7 @@ class RedditOAuth @Inject constructor(
                 override fun onSuccess(
                     mimetype: String?,
                     bodyBytes: Long?,
-                    body: InputStream?
+                    body: InputStream
                 ) {
                     try {
                         val jsonValue = JsonValue.parse(body)
@@ -737,7 +732,7 @@ class RedditOAuth @Inject constructor(
                     } catch (e: IOException) {
                         result.set(
                             FetchAccessTokenResult(
-                                FetchRefreshTokenResultStatus.CONNECTION_ERROR,
+                                FetchAccessTokenResultStatus.CONNECTION_ERROR,
                                 RRError(
                                     context.getString(R.string.error_connection_title),
                                     context.getString(R.string.error_connection_message),
@@ -759,7 +754,7 @@ class RedditOAuth @Inject constructor(
             result.get()
         } catch (t: Throwable) {
             FetchAccessTokenResult(
-                FetchRefreshTokenResultStatus.UNKNOWN_ERROR,
+                FetchAccessTokenResultStatus.UNKNOWN_ERROR,
                 RRError(
                     context.getString(R.string.error_unknown_title),
                     context.getString(R.string.message_cannotlogin),
