@@ -84,7 +84,7 @@ object RedgifsAPIV2 {
                 CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
                     override fun onJsonParsed(
                         result: JsonValue,
-                        timestamp: TimestampUTC?,
+                        timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean
                     ) {
@@ -168,7 +168,7 @@ object RedgifsAPIV2 {
                 CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
                     override fun onJsonParsed(
                         result: JsonValue,
-                        timestamp: TimestampUTC?,
+                        timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean
                     ) {

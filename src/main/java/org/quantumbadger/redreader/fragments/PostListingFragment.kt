@@ -293,9 +293,9 @@ class PostListingFragment(
 
                     SubredditPostListURL.Type.SUBREDDIT -> {
                         // Request the subreddit data
-                        val subredditHandler: RequestResponseHandler<RedditSubreddit?, RRError?> =                             object : RequestResponseHandler<RedditSubreddit?, RRError?> {
+                        val subredditHandler: RequestResponseHandler<RedditSubreddit, RRError> =                             object : RequestResponseHandler<RedditSubreddit, RRError> {
                                 override fun onRequestFailed(
-                                    failureReason: RRError?
+                                    failureReason: RRError
                                 ) {
                                     // Ignore
                                     AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
@@ -306,7 +306,7 @@ class PostListingFragment(
                                 }
 
                                 override fun onRequestSuccess(
-                                    result: RedditSubreddit?,
+                                    result: RedditSubreddit,
                                     timeCached: TimestampUTC?
                                 ) {
                                     AndroidCommon.UI_THREAD_HANDLER.post(Runnable {

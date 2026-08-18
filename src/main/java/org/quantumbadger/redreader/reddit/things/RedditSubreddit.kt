@@ -74,7 +74,7 @@ class RedditSubreddit : Parcelable, Comparable<RedditSubreddit>,
     var id: String? = null
 
     @WritableField
-    var name: String? = null
+    var name: String = ""
 
     @WritableField
     var title: String? = null
@@ -155,7 +155,7 @@ class RedditSubreddit : Parcelable, Comparable<RedditSubreddit>,
         description_html = parcel.readString()
         public_description_html = parcel.readString()
         id = parcel.readString()
-        name = parcel.readString()
+        name = parcel.readString() ?: ""
         title = parcel.readString()
         display_name = parcel.readString()
         url = parcel.readString()

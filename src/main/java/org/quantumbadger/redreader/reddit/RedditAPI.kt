@@ -110,7 +110,7 @@ object RedditAPI {
                 object : CacheRequestJSONParser.Listener {
                     override fun onJsonParsed(
                         result: JsonValue,
-                        timestamp: TimestampUTC?,
+                        timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean
                     ) {
@@ -468,14 +468,14 @@ object RedditAPI {
         cm: CacheManager,
         responseHandler: ActionResponseHandler,
         user: RedditAccount,
-        subredditId: SubredditCanonicalId?,
+        subredditId: SubredditCanonicalId,
         @RedditSubredditAction action: Int,
         context: Context
     ) {
         RedditSubredditManager.Companion.getInstance(context, user).getSubreddit(
             subredditId,
             TimestampBound.Companion.ANY,
-            object : RequestResponseHandler<RedditSubreddit?, RRError?> {
+            object : RequestResponseHandler<RedditSubreddit, RRError> {
                 override fun onRequestFailed(failureReason: RRError) {
                     responseHandler.notifyFailure(failureReason)
                 }
@@ -545,7 +545,7 @@ object RedditAPI {
                 object : CacheRequestJSONParser.Listener {
                     override fun onJsonParsed(
                         result: JsonValue,
-                        timestamp: TimestampUTC?,
+                        timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean
                     ) {
@@ -835,7 +835,7 @@ object RedditAPI {
                 object : CacheRequestJSONParser.Listener {
                     override fun onJsonParsed(
                         result: JsonValue,
-                        timestamp: TimestampUTC?,
+                        timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean
                     ) {
@@ -1046,7 +1046,7 @@ object RedditAPI {
         CacheRequestJSONParser.Listener {
         override fun onJsonParsed(
             result: JsonValue,
-            timestamp: TimestampUTC?,
+            timestamp: TimestampUTC,
             session: UUID,
             fromCache: kotlin.Boolean
         ) {
@@ -1102,7 +1102,7 @@ object RedditAPI {
         CacheRequestJSONParser.Listener {
         override fun onJsonParsed(
             result: JsonValue,
-            timestamp: TimestampUTC?,
+            timestamp: TimestampUTC,
             session: UUID,
             fromCache: kotlin.Boolean
         ) {

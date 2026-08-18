@@ -64,7 +64,7 @@ object ImgurAPIV3 {
                 CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
                     override fun onJsonParsed(
                         result: JsonValue,
-                        timestamp: TimestampUTC?,
+                        timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean
                     ) {
@@ -123,7 +123,7 @@ object ImgurAPIV3 {
                 CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
                     override fun onJsonParsed(
                         result: JsonValue,
-                        timestamp: TimestampUTC?,
+                        timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean
                     ) {

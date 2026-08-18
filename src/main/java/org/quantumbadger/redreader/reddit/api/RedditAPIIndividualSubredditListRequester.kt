@@ -176,12 +176,12 @@ class RedditAPIIndividualSubredditListRequester(
             CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
                 override fun onJsonParsed(
                     result: JsonValue,
-                    timestamp: TimestampUTC?,
+                    timestamp: TimestampUTC,
                     session: UUID, fromCache: Boolean
                 ) {
                     try {
                         val output = HashSet<String>()
-                        val toWrite = ArrayList<RedditSubreddit?>()
+                        val toWrite = ArrayList<RedditSubreddit>()
 
                         val redditListing =                             result.asObject()!!.getObject("data")
 

@@ -225,7 +225,7 @@ class CommentListingRequest(
 
                 override fun onDataStreamAvailable(
                     streamFactory: GenericFactory<SeekableInputStream, IOException?>,
-                    timestamp: TimestampUTC?,
+                    timestamp: TimestampUTC,
                     session: UUID,
                     fromCache: Boolean,
                     mimetype: String?

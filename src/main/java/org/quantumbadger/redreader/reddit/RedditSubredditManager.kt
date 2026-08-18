@@ -51,27 +51,27 @@ class RedditSubredditManager private constructor(
     private val context: Context,
     private val user: RedditAccount
 ) {
-    private val subredditCache: WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>
+    private val subredditCache: WeakCache<SubredditCanonicalId, RedditSubreddit, RRError>
 
     init {
         // Subreddit cache
 
-        val subredditDb = RawObjectDB<SubredditCanonicalId?, RedditSubreddit?>(
+        val subredditDb = RawObjectDB<SubredditCanonicalId, RedditSubreddit>(
             context,
             getDbFilename("subreddits", user),
-            RedditSubreddit::class.java as Class<RedditSubreddit?>
+            RedditSubreddit::class.java
         )
 
-        val subredditDbWrapper =             ThreadedRawObjectDB<SubredditCanonicalId?, RedditSubreddit?, RRError?>(
+        val subredditDbWrapper =             ThreadedRawObjectDB<SubredditCanonicalId, RedditSubreddit, RRError>(
                 subredditDb,
                 RedditAPIIndividualSubredditDataRequester(context, user)
             )
 
-        subredditCache =             WeakCache<SubredditCanonicalId?, RedditSubreddit?, RRError?>(subredditDbWrapper)
+        subredditCache =             WeakCache<SubredditCanonicalId, RedditSubreddit, RRError>(subredditDbWrapper)
     }
     fun offerRawSubredditData(
-        toWrite: MutableCollection<RedditSubreddit?>?,
-        timestamp: TimestampUTC?
+        toWrite: MutableCollection<RedditSubreddit>,
+        timestamp: TimestampUTC
     ) {
         subredditCache.performWrite(toWrite)
     }
@@ -90,15 +90,11 @@ class RedditSubredditManager private constructor(
     }
 
     fun getSubreddit(
-        subredditCanonicalId: SubredditCanonicalId?,
-        timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<RedditSubreddit?, RRError?>,
-        updatedVersionListener: UpdatedVersionListener<SubredditCanonicalId?, RedditSubreddit?>?
+        subredditCanonicalId: SubredditCanonicalId,
+        timestampBound: TimestampBound,
+        handler: RequestResponseHandler<RedditSubreddit, RRError>,
+        updatedVersionListener: UpdatedVersionListener<SubredditCanonicalId, RedditSubreddit>?
     ) {
-        if (handler == null) {
-            return
-        }
-
         subredditCache.performRequest(
             subredditCanonicalId,
             timestampBound,
@@ -108,14 +104,10 @@ class RedditSubredditManager private constructor(
     }
 
     fun getSubreddits(
-        ids: MutableCollection<SubredditCanonicalId?>?,
-        timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<HashMap<SubredditCanonicalId?, RedditSubreddit?>?, RRError?>
+        ids: MutableCollection<SubredditCanonicalId>,
+        timestampBound: TimestampBound,
+        handler: RequestResponseHandler<HashMap<SubredditCanonicalId, RedditSubreddit>, RRError>
     ) {
-        if (ids == null || timestampBound == null || handler == null) {
-            return
-        }
-
         subredditCache.performRequest(ids, timestampBound, handler)
     }
 

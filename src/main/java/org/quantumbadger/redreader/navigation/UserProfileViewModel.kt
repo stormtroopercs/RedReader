@@ -88,7 +88,7 @@ class UserProfileViewModel @Inject constructor(
                 val listener = object : CacheRequestJSONParser.Listener {
                     override fun onJsonParsed(
                         result: JsonValue,
-                        timestamp: TimestampUTC?,
+                        timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean
                     ) {
