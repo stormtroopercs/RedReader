@@ -42,7 +42,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout.OnRefreshListener
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.R.string
 import org.quantumbadger.redreader.account.RedditAccount
-import org.quantumbadger.redreader.account.RedditAccount.equals
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.activities.OptionsMenuUtility

@@ -92,14 +92,11 @@ import org.quantumbadger.redreader.reddit.api.RedditPostActions.showActionMenu
 import org.quantumbadger.redreader.reddit.api.RedditSubredditSubscriptionManager
 import org.quantumbadger.redreader.reddit.kthings.JsonUtils.decodeRedditThingFromStream
 import org.quantumbadger.redreader.reddit.kthings.MaybeParseError
-import org.quantumbadger.redreader.reddit.kthings.RedditComment.subreddit
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
-import org.quantumbadger.redreader.reddit.kthings.RedditPost.subreddit
 import org.quantumbadger.redreader.reddit.kthings.RedditThing
 import org.quantumbadger.redreader.reddit.kthings.RedditThing.Listing
 import org.quantumbadger.redreader.reddit.kthings.RedditThing.Post
 import org.quantumbadger.redreader.reddit.prepared.RedditParsedPost
-import org.quantumbadger.redreader.reddit.prepared.RedditParsedPost.subreddit
 import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost
 import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
 import org.quantumbadger.redreader.reddit.things.RedditSubreddit

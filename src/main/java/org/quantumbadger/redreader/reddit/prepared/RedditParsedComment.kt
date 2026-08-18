@@ -23,7 +23,6 @@ import android.text.style.ImageSpan
 import android.util.Log
 import android.util.TypedValue
 import androidx.appcompat.app.AppCompatActivity
-import org.quantumbadger.redreader.account.RedditAccount.equals
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest
