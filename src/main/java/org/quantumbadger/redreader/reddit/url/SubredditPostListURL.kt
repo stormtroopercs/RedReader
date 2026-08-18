@@ -32,7 +32,7 @@ import org.quantumbadger.redreader.common.General
 class SubredditPostListURL private constructor(
     val type: Type,
     val subreddit: String?,
-    val order: PostSort?,
+    override val order: PostSort?,
     val limit: Int?,
     val before: String?,
     val after: RedditIdAndType?
@@ -53,9 +53,7 @@ class SubredditPostListURL private constructor(
         return SubredditPostListURL(type, subreddit, newOrder, limit, before, after)
     }
 
-    override val order: PostSort? get() = order
-
-    override fun generateJsonUri(): Uri? {
+    override fun generateJsonUri(): Uri {
         val builder = Uri.Builder()
         builder.scheme(Reddit.scheme)
             .authority(Reddit.domain)
@@ -97,7 +95,7 @@ class SubredditPostListURL private constructor(
         return RedditURLParser.SUBREDDIT_POST_LISTING_URL
     }
 
-    override fun humanReadablePath(): String? {
+    override fun humanReadablePath(): String {
         val path = super.humanReadablePath()
 
         if (order == null) {
@@ -113,7 +111,7 @@ class SubredditPostListURL private constructor(
         }
     }
 
-    override fun humanReadableName(context: Context, shorter: Boolean): String? {
+    override fun humanReadableName(context: Context, shorter: Boolean): String {
         when (type) {
             Type.FRONTPAGE -> return context.getString(string.mainmenu_frontpage)
 
@@ -125,13 +123,11 @@ class SubredditPostListURL private constructor(
                 try {
                     return SubredditCanonicalId(subreddit!!).toString()
                 } catch (e: InvalidSubredditNameException) {
-                    return subreddit
+                    return subreddit.orEmpty()
                 }
-
-                return subreddit
             }
 
-            Type.SUBREDDIT_COMBINATION, Type.ALL_SUBTRACTION -> return subreddit
+            Type.SUBREDDIT_COMBINATION, Type.ALL_SUBTRACTION -> return subreddit.orEmpty()
 
             else -> return super.humanReadableName(context, shorter)
         }

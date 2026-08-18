@@ -30,7 +30,7 @@ import org.quantumbadger.redreader.common.General
 class MultiredditPostListURL private constructor(
     val username: String?,
     val name: String,
-    val order: PostSort?,
+    override val order: PostSort?,
     val limit: Int?,
     val before: String?,
     val after: RedditIdAndType?
@@ -47,9 +47,7 @@ class MultiredditPostListURL private constructor(
         return MultiredditPostListURL(username, name, newOrder, limit, before, after)
     }
 
-    override val order: PostSort? get() = order
-
-    override fun generateJsonUri(): Uri? {
+    override fun generateJsonUri(): Uri {
         val builder = Uri.Builder()
         builder.scheme(Reddit.scheme)
             .authority(Reddit.domain)
@@ -90,7 +88,7 @@ class MultiredditPostListURL private constructor(
         return RedditURLParser.MULTIREDDIT_POST_LISTING_URL
     }
 
-    override fun humanReadablePath(): String? {
+    override fun humanReadablePath(): String {
         val path = super.humanReadablePath()
 
         if (order == null) {
