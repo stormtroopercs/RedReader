@@ -172,7 +172,7 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
     }
 
     override fun onRefreshComments() {
-        controller!!.setSession(null)
+        controller!!.session = null
         requestRefresh(RefreshableFragment.COMMENTS, true)
     }
 
@@ -218,7 +218,7 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
     }
 
     override fun onSessionSelected(session: UUID?, type: SessionChangeType?) {
-        controller!!.setSession(session)
+        controller!!.session = session
         requestRefresh(RefreshableFragment.COMMENTS, false)
     }
 
@@ -234,7 +234,7 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
             else
                 "<null>")
         )
-        controller!!.setSession(session)
+        controller!!.session = session
     }
 
     override fun onPostSelected(post: RedditPreparedPost) {

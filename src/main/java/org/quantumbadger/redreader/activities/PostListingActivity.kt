@@ -281,7 +281,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
     }
 
     override fun onRefreshPosts() {
-        controller!!.setSession(null)
+        controller!!.session = null
         requestRefresh(RefreshableFragment.POSTS, true)
     }
 
@@ -305,7 +305,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
     }
 
     override fun onSortSelected(order: PostSort?) {
-        controller!!.setSort(order)
+        controller!!.sort = order
         requestRefresh(RefreshableFragment.POSTS, false)
         invalidateOptionsMenu()
     }
@@ -454,7 +454,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
     }
 
     override fun onSessionSelected(session: UUID?, type: SessionChangeType?) {
-        controller!!.setSession(session)
+        controller!!.session = session
         requestRefresh(RefreshableFragment.POSTS, false)
     }
 
@@ -467,7 +467,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         type: SessionChangeType?,
         timestamp: TimestampUTC?
     ) {
-        controller!!.setSession(session)
+        controller!!.session = session
     }
 
     override fun baseActivityMustInterceptBack(): Boolean {

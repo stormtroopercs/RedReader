@@ -812,7 +812,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
     }
 
     override fun onRefreshComments() {
-        commentListingController!!.setSession(null)
+        commentListingController!!.session = null
         requestRefresh(RefreshableFragment.COMMENTS, true)
     }
 
@@ -851,7 +851,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
     }
 
     override fun onRefreshPosts() {
-        postListingController!!.setSession(null)
+        postListingController!!.session = null
         requestRefresh(RefreshableFragment.POSTS, true)
     }
 
@@ -876,7 +876,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
     }
 
     override fun onSortSelected(order: PostSort?) {
-        postListingController!!.setSort(order)
+        postListingController!!.sort = order
         requestRefresh(RefreshableFragment.POSTS, false)
     }
 
@@ -1000,12 +1000,12 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
     override fun onSessionSelected(session: UUID?, type: SessionChangeType) {
         when (type) {
             SessionChangeType.POSTS -> {
-                postListingController!!.setSession(session)
+                postListingController!!.session = session
                 requestRefresh(RefreshableFragment.POSTS, false)
             }
 
             SessionChangeType.COMMENTS -> {
-                commentListingController!!.setSession(session)
+                commentListingController!!.session = session
                 requestRefresh(RefreshableFragment.COMMENTS, false)
             }
         }
@@ -1025,11 +1025,11 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
     ) {
         when (type) {
             SessionChangeType.POSTS -> if (postListingController != null) {
-                postListingController!!.setSession(session)
+                postListingController!!.session = session
             }
 
             SessionChangeType.COMMENTS -> if (commentListingController != null) {
-                commentListingController!!.setSession(session)
+                commentListingController!!.session = session
             }
         }
     }
