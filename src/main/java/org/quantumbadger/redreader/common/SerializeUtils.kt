@@ -288,7 +288,7 @@ object SerializeUtils {
         companion object {
             @Throws(UnhandledTypeException::class)
             fun fromConstant(value: Byte): DataType {
-                if (value < 0 || value >= entries.toTypedArray().length) {
+                if (value < 0 || value >= entries.size) {
                     throw UnhandledTypeException("Unknown type constant " + value.toInt())
                 }
 

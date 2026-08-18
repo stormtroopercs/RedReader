@@ -61,25 +61,25 @@ class RedditFlairChoice private constructor(
 
     companion object {
         fun fromJsonList(json: JsonArray): Optional<MutableList<RedditFlairChoice>> {
-            val result = ArrayList<RedditFlairChoice?>(json.size())
+            val result = ArrayList<RedditFlairChoice>(json.size())
 
             for (value in json) {
                 val `object` = value.asObject()
 
                 if (`object` == null) {
-                    return Optional.Companion.empty<MutableList<RedditFlairChoice?>?>()
+                    return Optional.Companion.empty<MutableList<RedditFlairChoice>>()
                 }
 
                 val choice: Optional<RedditFlairChoice> = fromJson(`object`)
 
                 if (choice.isEmpty) {
-                    return Optional.Companion.empty<MutableList<RedditFlairChoice?>?>()
+                    return Optional.Companion.empty<MutableList<RedditFlairChoice>>()
                 }
 
                 result.add(choice.get())
             }
 
-            return Optional.Companion.of<MutableList<RedditFlairChoice?>?>(result)
+            return Optional.Companion.of<MutableList<RedditFlairChoice>>(result)
         }
 
         fun fromJson(

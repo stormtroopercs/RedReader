@@ -844,7 +844,7 @@ object General {
 
     @JvmStatic
 	fun <E> ignoreIOException(
-        factory: GenericFactory<E, IOException?>
+        factory: GenericFactory<E, IOException>
     ): Optional<E> {
         return try {
             Optional.of(factory.create())
