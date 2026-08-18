@@ -28,7 +28,7 @@ import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.adapters.GroupedRecyclerViewAdapter
 
 class GroupedRecyclerViewItemListSectionHeaderView
-    (private val mText: CharSequence) : GroupedRecyclerViewAdapter.Item<Any?>() {
+    (private val mText: CharSequence) : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder>() {
     override val viewType: Class<*>
         get() {
         // There's no wrapper class for this view, so just use the item class

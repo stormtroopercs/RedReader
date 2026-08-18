@@ -42,7 +42,7 @@ import org.quantumbadger.redreader.viewholders.VH1Text
 
 
 class AccountListAdapter(private val context: AppCompatActivity, private val fragment: Fragment) :
-	HeaderRecyclerAdapter<RecyclerView.ViewHolder?>() {
+	HeaderRecyclerAdapter<RecyclerView.ViewHolder>() {
 	private val accounts = RedditAccountManager.getInstance(context).accounts
 	private val rrIconAdd: Drawable?
 	private val rrIconUser: Drawable?
@@ -69,7 +69,7 @@ class AccountListAdapter(private val context: AppCompatActivity, private val fra
 	}
 
 	override fun onBindHeaderItemViewHolder(
-		holder: RecyclerView.ViewHolder?,
+		holder: RecyclerView.ViewHolder,
 		position: Int
 	) {
 		val vh = holder as VH1Text
@@ -104,7 +104,7 @@ class AccountListAdapter(private val context: AppCompatActivity, private val fra
 	}
 
 	override fun onBindContentItemViewHolder(
-		holder: RecyclerView.ViewHolder?,
+		holder: RecyclerView.ViewHolder,
 		position: Int
 	) {
 		val accountManager = RedditAccountManager.getInstance(context)

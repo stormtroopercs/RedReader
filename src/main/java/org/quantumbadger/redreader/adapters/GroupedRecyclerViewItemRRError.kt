@@ -27,7 +27,7 @@ import org.quantumbadger.redreader.views.liststatus.ErrorView
 class GroupedRecyclerViewItemRRError(
     private val mActivity: AppCompatActivity,
     private val mError: RRError
-) : GroupedRecyclerViewAdapter.Item<ErrorHolder?>() {
+) : GroupedRecyclerViewAdapter.Item<ErrorHolder>() {
     inner class ErrorHolder : RecyclerView.ViewHolder(FrameLayout(mActivity)) {
         fun bind(error: RRError) {
             val itemView = this.itemView as FrameLayout

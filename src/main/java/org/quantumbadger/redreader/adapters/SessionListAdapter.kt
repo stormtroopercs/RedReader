@@ -44,7 +44,7 @@ class SessionListAdapter(
     private val current: UUID?,
     private val type: SessionChangeType?,
     private val fragment: AppCompatDialogFragment
-) : HeaderRecyclerAdapter<RecyclerView.ViewHolder?>() {
+) : HeaderRecyclerAdapter<RecyclerView.ViewHolder>() {
     private val sessions: ArrayList<CacheEntry>
     private val rrIconRefresh: Drawable?
 
@@ -76,7 +76,7 @@ class SessionListAdapter(
     }
 
     override fun onBindHeaderItemViewHolder(
-        holder: RecyclerView.ViewHolder?,
+        holder: RecyclerView.ViewHolder,
         position: Int
     ) {
         val vh = holder as VH1Text
@@ -89,7 +89,7 @@ class SessionListAdapter(
     }
 
     override fun onBindContentItemViewHolder(
-        holder: RecyclerView.ViewHolder?,
+        holder: RecyclerView.ViewHolder,
         position: Int
     ) {
         val vh = holder as VH1Text

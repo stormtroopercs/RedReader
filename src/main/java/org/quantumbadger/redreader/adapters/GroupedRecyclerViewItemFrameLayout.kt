@@ -24,7 +24,7 @@ import org.quantumbadger.redreader.common.General.setLayoutMatchWidthWrapHeight
 import org.quantumbadger.redreader.common.General
 
 internal class GroupedRecyclerViewItemFrameLayout(private val mChildView: View) :
-    GroupedRecyclerViewAdapter.Item<Any?>() {
+    GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder>() {
     private var mHidden = false
 
     private var mParent: FrameLayout?=null

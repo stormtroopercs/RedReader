@@ -33,7 +33,7 @@ import org.quantumbadger.redreader.views.RedditCommentView
 
 class RedditCommentListItem
 
-    : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder?> {
+    : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder> {
     enum class Type {
         COMMENT, LOAD_MORE
     }

@@ -113,7 +113,7 @@ class InboxListingActivity : ViewsBaseActivity() {
     private inner class InboxItem(
         private val mListPosition: Int,
         private val mItem: RedditRenderableInboxItem
-    ) : GroupedRecyclerViewAdapter.Item<Any?>() {
+    ) : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder>() {
         override val viewType: Class<*> get() = RedditInboxItemView::class.java
 
         override fun onCreateViewHolder(viewGroup : ViewGroup): RecyclerView.ViewHolder {

@@ -25,7 +25,7 @@ open class GroupedRecyclerViewItemView
     (
     private val mViewType: Class<*>,
     private val mFactory: FunctionOneArgWithReturn<ViewGroup?, View>
-) : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder?>() {
+) : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder>() {
     private var mHidden = false
 
 

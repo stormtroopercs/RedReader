@@ -21,41 +21,37 @@ import android.view.ViewGroup.MarginLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import java.util.concurrent.atomic.AtomicLong
 
-class GroupedRecyclerViewAdapter(groups: Int) : RecyclerView.Adapter<RecyclerView.ViewHolder?>() {
-    abstract class Item<VH : RecyclerView.ViewHolder?> {
-        private val mUniqueId: Long = ITEM_UNIQUE_ID_GENERATOR.incrementAndGet()
-        private var mCurrentlyHidden = false
+class GroupedRecyclerViewAdapter(groups: Int) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    abstract class Item<VH : RecyclerView.ViewHolder> {
+        internal val mUniqueId: Long = ITEM_UNIQUE_ID_GENERATOR.incrementAndGet()
+        internal var mCurrentlyHidden = false
 
-        abstract val viewType: Class<*>?
+        abstract val viewType: Class<*>
 
-        abstract fun onCreateViewHolder(viewGroup : ViewGroup): VH?
+        abstract fun onCreateViewHolder(viewGroup : ViewGroup): VH
 
-        abstract fun onBindViewHolder(viewHolder: VH?)
+        abstract fun onBindViewHolder(viewHolder: VH)
 
         abstract val isHidden: Boolean
 
-        private fun onBindViewHolderInner(
-            viewHolder: RecyclerView.ViewHolder?
+        internal fun onBindViewHolderInner(
+            viewHolder: RecyclerView.ViewHolder
         ) {
-            onBindViewHolder(viewHolder as VH?)
+            onBindViewHolder(viewHolder as VH)
         }
     }
 
-    private val mItems: Array<ArrayList<Item<*>?>>
-    private val mItemViewTypeMap = HashMap<Class<*>?, Int?>()
-    private val mViewTypeItemMap = HashMap<Int?, Item<*>?>()
+    private val mItems: Array<ArrayList<Item<*>>>
+    private val mItemViewTypeMap = HashMap<Class<*>, Int>()
+    private val mViewTypeItemMap = HashMap<Int, Item<*>>()
 
     init {
-        mItems = arrayOfNulls<ArrayList<*>>(groups) as Array<ArrayList<Item<*>?>>
-
-        for (i in 0..<groups) {
-            mItems[i] = ArrayList<Item<*>?>()
-        }
+        mItems = Array(groups) { ArrayList<Item<*>>() }
 
         setHasStableIds(true)
     }
 
-    private fun getItemPositionInternal(groupId: Int, item: Item<*>?): Int {
+    private fun getItemPositionInternal(groupId: Int, item: Item<*>): Int {
         val group = mItems[groupId]
 
         for (i in group.indices) {
@@ -283,7 +279,7 @@ class GroupedRecyclerViewAdapter(groups: Int) : RecyclerView.Adapter<RecyclerVie
         }
     }
 
-    fun notifyItemChanged(groupId: Int, item: Item<*>?) {
+    fun notifyItemChanged(groupId: Int, item: Item<*>) {
         val position = getItemPositionInternal(groupId, item)
         notifyItemChanged(position)
     }

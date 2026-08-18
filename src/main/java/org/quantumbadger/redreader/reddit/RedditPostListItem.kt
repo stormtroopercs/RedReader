@@ -30,7 +30,7 @@ class RedditPostListItem
     private val mFragment: PostListingFragment?,
     private val mActivity: BaseActivity?,
     private val mLeftHandedMode: Boolean
-) : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder?>() {
+) : GroupedRecyclerViewAdapter.Item<RecyclerView.ViewHolder>() {
     override val viewType: Class<RedditPostView?> get() = RedditPostView::class.java
 
     override fun onCreateViewHolder(viewGroup : ViewGroup): RecyclerView.ViewHolder {

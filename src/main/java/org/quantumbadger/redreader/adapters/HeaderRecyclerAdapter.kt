@@ -22,8 +22,8 @@ import androidx.recyclerview.widget.RecyclerView
 /**
  * Created by veyndan on 18/04/2016.
  */
-abstract class HeaderRecyclerAdapter<VH : RecyclerView.ViewHolder?>
-    : RecyclerView.Adapter<VH?>() {
+abstract class HeaderRecyclerAdapter<VH : RecyclerView.ViewHolder>
+    : RecyclerView.Adapter<VH>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         when (viewType) {
             TYPE_HEADER -> return onCreateHeaderItemViewHolder(parent)
@@ -32,9 +32,9 @@ abstract class HeaderRecyclerAdapter<VH : RecyclerView.ViewHolder?>
         }
     }
 
-    protected abstract fun onCreateHeaderItemViewHolder(parent : ViewGroup): VH?
+    protected abstract fun onCreateHeaderItemViewHolder(parent : ViewGroup): VH
 
-    protected abstract fun onCreateContentItemViewHolder(parent : ViewGroup): VH?
+    protected abstract fun onCreateContentItemViewHolder(parent : ViewGroup): VH
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         if (position == 0) {
@@ -44,9 +44,9 @@ abstract class HeaderRecyclerAdapter<VH : RecyclerView.ViewHolder?>
         }
     }
 
-    protected abstract fun onBindHeaderItemViewHolder(holder: VH?, position: Int)
+    protected abstract fun onBindHeaderItemViewHolder(holder: VH, position: Int)
 
-    protected abstract fun onBindContentItemViewHolder(holder: VH?, position: Int)
+    protected abstract fun onBindContentItemViewHolder(holder: VH, position: Int)
 
     override fun getItemCount(): Int {
         return this.contentItemCount + HEADER_SIZE
