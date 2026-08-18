@@ -68,7 +68,7 @@ class VideoGestureHandler
         return true
     }
 
-    override fun onFingerDown(finger: Finger?) {
+    override fun onFingerDown(finger: Finger) {
         if (mCurrentTouchState == null) {
             mCurrentTouchState = TouchState.ONE_FINGER_DOWN
             mDragFinger = finger

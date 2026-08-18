@@ -22,20 +22,14 @@ import org.quantumbadger.redreader.common.MutableFloatPoint2D
 
 class FingerTracker(private val mListener: FingerListener) {
     interface FingerListener {
-        fun onFingerDown(finger: Finger?)
+        fun onFingerDown(finger: Finger)
 
         fun onFingersMoved()
 
-        fun onFingerUp(finger: Finger?)
+        fun onFingerUp(finger: Finger)
     }
 
-    private val mFingers: Array<Finger> = arrayOfNulls<Finger>(10)
-
-    init {
-        for (i in mFingers.indices) {
-            mFingers[i] = Finger()
-        }
-    }
+    private val mFingers: Array<Finger> = Array(10) { Finger() }
 
     fun onTouchEvent(event: MotionEvent) {
         val action = event.getActionMasked()

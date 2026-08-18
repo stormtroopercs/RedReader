@@ -285,7 +285,7 @@ class ImageViewDisplayListManager(
     }
 
     @Synchronized
-    override fun onFingerDown(finger: Finger?) {
+    override fun onFingerDown(finger: Finger) {
         if (mScrollbars == null) {
             return
         }

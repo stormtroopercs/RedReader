@@ -44,7 +44,7 @@ class BasicGestureHandler
         return true
     }
 
-    override fun onFingerDown(finger: Finger?) {
+    override fun onFingerDown(finger: Finger) {
         mCurrentFingerCount++
 
         if (mCurrentFingerCount > 1) {
@@ -60,7 +60,7 @@ class BasicGestureHandler
         }
     }
 
-    override fun onFingerUp(finger: Finger?) {
+    override fun onFingerUp(finger: Finger) {
         mCurrentFingerCount--
 
         if (mFirstFinger != null) {
