@@ -128,7 +128,7 @@ class RedditParsedComment(
 
                             override fun onDataStreamComplete(
                                 stream: GenericFactory<SeekableInputStream, IOException?>,
-                                timestamp: TimestampUTC?,
+                                timestamp: TimestampUTC,
                                 session: UUID,
                                 fromCache: Boolean,
                                 mimetype: String?

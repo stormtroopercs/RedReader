@@ -250,7 +250,7 @@ class CacheRequest private constructor(
 
     fun notifyDataStreamComplete(
         streamFactory: GenericFactory<SeekableInputStream, IOException?>,
-        timestamp: TimestampUTC?,
+        timestamp: TimestampUTC,
         session: UUID,
         fromCache: Boolean,
         mimetype: String?
