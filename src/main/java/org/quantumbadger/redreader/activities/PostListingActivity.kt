@@ -453,18 +453,18 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
         invalidateOptionsMenu()
     }
 
-    override fun onSessionSelected(session: UUID?, type: SessionChangeType?) {
+    override fun onSessionSelected(session: UUID?, type: SessionChangeType) {
         controller!!.session = session
         requestRefresh(RefreshableFragment.POSTS, false)
     }
 
-    override fun onSessionRefreshSelected(type: SessionChangeType?) {
+    override fun onSessionRefreshSelected(type: SessionChangeType) {
         onRefreshPosts()
     }
 
     override fun onSessionChanged(
         session: UUID?,
-        type: SessionChangeType?,
+        type: SessionChangeType,
         timestamp: TimestampUTC?
     ) {
         controller!!.session = session

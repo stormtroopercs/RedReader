@@ -24,9 +24,9 @@ interface SessionChangeListener {
         POSTS, COMMENTS
     }
 
-    fun onSessionSelected(session: UUID?, type: SessionChangeType?)
+    fun onSessionSelected(session: UUID?, type: SessionChangeType)
 
-    fun onSessionRefreshSelected(type: SessionChangeType?)
+    fun onSessionRefreshSelected(type: SessionChangeType)
 
-    fun onSessionChanged(session: UUID?, type: SessionChangeType?, timestamp: TimestampUTC?)
+    fun onSessionChanged(session: UUID?, type: SessionChangeType, timestamp: TimestampUTC?)
 }

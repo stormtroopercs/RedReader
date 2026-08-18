@@ -25,9 +25,9 @@ import org.quantumbadger.redreader.R
  * A view holder for a one line, text only list item.
  */
 class VH1Text(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    val text: MaterialTextView?
+    val text: MaterialTextView
 
     init {
-        text = itemView.findViewById<MaterialTextView?>(R.id.recycler_item_text)
+        text = itemView.findViewById<MaterialTextView>(R.id.recycler_item_text)!!
     }
 }

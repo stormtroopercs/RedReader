@@ -213,11 +213,11 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onSessionRefreshSelected(type: SessionChangeType?) {
+    override fun onSessionRefreshSelected(type: SessionChangeType) {
         onRefreshComments()
     }
 
-    override fun onSessionSelected(session: UUID?, type: SessionChangeType?) {
+    override fun onSessionSelected(session: UUID?, type: SessionChangeType) {
         controller!!.session = session
         requestRefresh(RefreshableFragment.COMMENTS, false)
     }

@@ -42,7 +42,7 @@ class SessionListAdapter(
     private val context: Context,
     url: UriString?,
     private val current: UUID?,
-    private val type: SessionChangeType?,
+    private val type: SessionChangeType,
     private val fragment: AppCompatDialogFragment
 ) : HeaderRecyclerAdapter<RecyclerView.ViewHolder>() {
     private val sessions: ArrayList<CacheEntry>
