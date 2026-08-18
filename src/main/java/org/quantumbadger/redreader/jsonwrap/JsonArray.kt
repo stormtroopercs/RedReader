@@ -8,7 +8,7 @@ import org.quantumbadger.redreader.common.Optional
 import org.quantumbadger.redreader.jsonwrap.JsonObject.JsonDeserializable
 import java.lang.reflect.InvocationTargetException
 
-class JsonArray(parser: JsonParser) : JsonValue(), Iterable<JsonValue?> {
+class JsonArray(parser: JsonParser) : JsonValue(), Iterable<JsonValue> {
     private val mContents = ArrayList<JsonValue>(16)
 
     init {
@@ -74,7 +74,7 @@ class JsonArray(parser: JsonParser) : JsonValue(), Iterable<JsonValue?> {
         return get(id).asArray()
     }
 
-    override fun iterator(): MutableIterator<JsonValue?> {
+    override fun iterator(): MutableIterator<JsonValue> {
         return mContents.iterator()
     }
 
@@ -109,25 +109,25 @@ class JsonArray(parser: JsonParser) : JsonValue(), Iterable<JsonValue?> {
         }
     }
 
-    override fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue?> {
+    override fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue> {
         if (offset == keys.size) {
-            return Optional.of<JsonValue?>(this)
+            return Optional.of(this)
         }
 
         if (keys[offset] !is Int) {
-            return Optional.empty<JsonValue?>()
+            return Optional.empty<JsonValue>()
         }
 
         val key = keys[offset] as Int
 
         if (key < 0 || key >= mContents.size) {
-            return Optional.empty<JsonValue?>()
+            return Optional.empty<JsonValue>()
         }
 
         val next = mContents[key]
 
         if (next == null) {
-            return Optional.empty<JsonValue?>()
+            return Optional.empty<JsonValue>()
         }
 
         return next.getAtPathInternal(offset + 1, *keys)

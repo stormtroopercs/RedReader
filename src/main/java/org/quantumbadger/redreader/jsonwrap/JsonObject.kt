@@ -4,17 +4,14 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
 import org.quantumbadger.redreader.common.Optional
-import java.lang.Double
-import java.lang.Float
-import java.lang.Long
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Modifier
 
 class JsonObject(parser: JsonParser) : JsonValue(),
-    Iterable<Map.MutableEntry<String?, JsonValue?>?> {
+    Iterable<MutableMap.MutableEntry<String, JsonValue>> {
     interface JsonDeserializable
 
-    private val properties = HashMap<String?, JsonValue?>()
+    private val properties = HashMap<String, JsonValue>()
 
     init {
         if (parser.currentToken() != JsonToken.START_OBJECT) {
@@ -42,7 +39,7 @@ class JsonObject(parser: JsonParser) : JsonValue(),
             parser.nextToken()
             val value: JsonValue = JsonValue.parse(parser)
 
-            properties.put(fieldName, value)
+            properties.put(fieldName!!, value)
         }
 
         parser.nextToken()
@@ -68,6 +65,10 @@ class JsonObject(parser: JsonParser) : JsonValue(),
     }
 
     fun get(name: String?): JsonValue? {
+        if (name == null) {
+            return null
+        }
+
         return properties[name]
     }
 
@@ -154,7 +155,7 @@ class JsonObject(parser: JsonParser) : JsonValue(),
         sb.append('{')
 
         val propertyKeySet = properties.keys
-        val fieldNames = propertyKeySet.toTypedArray<String?>()
+        val fieldNames = propertyKeySet.toTypedArray()
 
         for (prop in fieldNames.indices) {
             if (prop != 0) {
@@ -213,13 +214,13 @@ class JsonObject(parser: JsonParser) : JsonValue(),
 
                 val fieldType = objectField.type
 
-                if (fieldType == Long::class.java || fieldType == Long.TYPE) {
+                if (fieldType == Long::class.java || fieldType == java.lang.Long.TYPE) {
                     objectField[o] = jsonValue.asLong()
-                } else if (fieldType == Double::class.java || fieldType == Double.TYPE) {
+                } else if (fieldType == Double::class.java || fieldType == java.lang.Double.TYPE) {
                     objectField[o] = jsonValue.asDouble()
-                } else if (fieldType == Int::class.java || fieldType == Int.TYPE) {
+                } else if (fieldType == Int::class.java) {
                     objectField[o] =                         if (jsonValue.asLong() == null) null else jsonValue.asLong()!!.toInt()
-                } else if (fieldType == Float::class.java || fieldType == Float.TYPE) {
+                } else if (fieldType == Float::class.java || fieldType == java.lang.Float.TYPE) {
                     objectField[o] =                         if (jsonValue.asDouble() == null) null else jsonValue.asDouble()!!.toFloat()
                 } else if (fieldType == Boolean::class.java || fieldType == java.lang.Boolean.TYPE) {
                     objectField[o] = jsonValue.asBoolean()
@@ -247,19 +248,19 @@ class JsonObject(parser: JsonParser) : JsonValue(),
         }
     }
 
-    override fun iterator(): MutableIterator<Map.MutableEntry<String?, JsonValue?>?> {
+    override fun iterator(): MutableIterator<MutableMap.MutableEntry<String, JsonValue>> {
         return properties.entries.iterator()
     }
 
-    override fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue?> {
+    override fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue> {
         if (offset == keys.size) {
-            return Optional.of<JsonValue?>(this)
+            return Optional.of(this)
         }
 
         val next = properties[keys[offset].toString()]
 
         if (next == null) {
-            return Optional.empty<JsonValue?>()
+            return Optional.empty<JsonValue>()
         }
 
         return next.getAtPathInternal(offset + 1, *keys)

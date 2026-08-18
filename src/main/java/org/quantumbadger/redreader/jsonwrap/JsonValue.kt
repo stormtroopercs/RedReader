@@ -53,46 +53,46 @@ abstract class JsonValue {
 
     abstract fun prettyPrint(indent: Int, sb : StringBuilder)
 
-    fun getAtPath(vararg keys: Any?): Optional<JsonValue?> {
+    fun getAtPath(vararg keys: Any?): Optional<JsonValue> {
         return getAtPathInternal(0, *keys)
     }
 
-    fun getObjectAtPath(vararg keys: Any?): Optional<JsonObject?> {
+    fun getObjectAtPath(vararg keys: Any?): Optional<JsonObject> {
         val result = getAtPath(*keys)
 
         if (result.isEmpty) {
-            return Optional.empty<JsonObject?>()
+            return Optional.empty<JsonObject>()
         }
 
-        return Optional.ofNullable<JsonObject?>(result.get().asObject())
+        return Optional.ofNullable<JsonObject>(result.get().asObject())
     }
 
-    fun getArrayAtPath(vararg keys: Any?): Optional<JsonArray?> {
+    fun getArrayAtPath(vararg keys: Any?): Optional<JsonArray> {
         val result = getAtPath(*keys)
 
         if (result.isEmpty) {
-            return Optional.empty<JsonArray?>()
+            return Optional.empty<JsonArray>()
         }
 
-        return Optional.ofNullable<JsonArray?>(result.get().asArray())
+        return Optional.ofNullable<JsonArray>(result.get().asArray())
     }
 
-    fun getStringAtPath(vararg keys: Any?): Optional<String?> {
+    fun getStringAtPath(vararg keys: Any?): Optional<String> {
         val result = getAtPath(*keys)
 
         if (result.isEmpty) {
-            return Optional.empty<String?>()
+            return Optional.empty<String>()
         }
 
-        return Optional.ofNullable<String?>(result.get().asString())
+        return Optional.ofNullable<String>(result.get().asString())
     }
 
-    open fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue?> {
+    open fun getAtPathInternal(offset: Int, vararg keys: Any?): Optional<JsonValue> {
         if (offset == keys.size) {
-            return Optional.of<JsonValue?>(this)
+            return Optional.of(this)
         }
 
-        return Optional.empty<JsonValue?>()
+        return Optional.empty<JsonValue>()
     }
 
     companion object {

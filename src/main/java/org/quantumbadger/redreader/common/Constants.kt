@@ -170,7 +170,7 @@ object Constants {
         const val PATH_COMMENTS: String = "/comments/"
         const val PATH_ME: String = "/api/v1/me"
 
-        fun getUriBuilder(path: String?): Uri.Builder? {
+        fun getUriBuilder(path: String): Uri.Builder {
             return Uri.parse(getUri(path).toString()).buildUpon()
         }
 
