@@ -169,7 +169,7 @@ class RedditRenderableComment
         val flair = parsedComment.flair
 
         if (theme.shouldShow(AppearanceCommentHeaderItem.FLAIR)
-            && flair != null && !flair.isEmpty()
+            && flair != null && !flair.isEmpty
         ) {
             if (theme.shouldShow(AppearanceCommentHeaderItem.AUTHOR)) {
                 sb.append("  ", 0)
@@ -426,7 +426,7 @@ class RedditRenderableComment
         val flair = parsedComment.flair
 
         if (theme.shouldShow(AppearanceCommentHeaderItem.FLAIR)
-            && flair != null && !flair.isEmpty()
+            && flair != null && !flair.isEmpty
         ) {
             accessibilityHeader
                 .append(

@@ -113,7 +113,7 @@ class CacheContentProvider : ContentProvider() {
 
         val file = readableCacheFile.get().file
 
-        if (!file.isPresent()) {
+        if (!file.isPresent) {
             Log.e(TAG, "Couldn't get underlying file: " + uri)
             return MatrixCursor(COLUMNS, 0)
         }

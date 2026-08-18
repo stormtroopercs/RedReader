@@ -319,7 +319,7 @@ class CommentListingFragment(
         val changeDataManager: RedditChangeDataManager=RedditChangeDataManager.Companion.getInstance(mUser)
         val item = view.comment
 
-        if (item.isComment()) {
+        if (item.isComment) {
             val comment = item.asComment()
 
             changeDataManager.markHidden(
@@ -382,7 +382,7 @@ class CommentListingFragment(
             CommentAction.COLLAPSE -> handleCommentVisibilityToggle(view)
             CommentAction.ACTION_MENU -> {
                 val item = view.comment
-                if (item != null && item.isComment()) {
+                if (item != null && item.isComment) {
                     RedditAPICommentAction.showActionMenu(
                         getActivity(),
                         this,
@@ -400,7 +400,7 @@ class CommentListingFragment(
         when (PrefsUtility.pref_behaviour_actions_comment_longclick()) {
             CommentAction.ACTION_MENU -> {
                 val item = view.comment
-                if (item != null && item.isComment()) {
+                if (item != null && item.isComment) {
                     RedditAPICommentAction.showActionMenu(
                         getActivity(),
                         this,

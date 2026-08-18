@@ -109,7 +109,7 @@ class RRGLDisplayListRenderer(
         mScene!!.startRender(mMatrixStack, time)
         mMatrixStack!!.assertAtRoot()
 
-        if (animating || mScene!!.isAnimating()) {
+        if (animating || mScene!!.isAnimating) {
             mSurfaceView.requestRender()
         }
     }
