@@ -18,6 +18,7 @@ package org.quantumbadger.redreader.settings
 
 import android.app.Activity
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.text.Html
@@ -103,7 +104,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         savedInstanceState: Bundle?,
         rootKey: String?
     ) {
-        val context: Context?=getActivity()
+        val context: Context = requireActivity()
 
         val panel = requireArguments().getString("panel")
         val resource: Int
@@ -369,7 +370,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             val contentResolver: ContentResolver=activity.getContentResolver()
                             PrefsBackup.backup(
                                 activity,
-                                BackupDestination { contentResolver.openOutputStream(data.getData()) },
+                                object : PrefsBackup.BackupDestination {
+                                    override fun openOutputStream() = contentResolver.openOutputStream(data.data!!)!!
+                                },
                                 Runnable {
                                     General.quickToast(
                                         context!!,
@@ -409,7 +412,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
                             val contentResolver: ContentResolver=activity.getContentResolver()
                             PrefsBackup.restore(
                                 activity,
-                                BackupSource { contentResolver.openInputStream(data.getData()) },
+                                object : PrefsBackup.BackupSource {
+                                    override fun openInputStream() = contentResolver.openInputStream(data.data!!)!!
+                                },
                                 Runnable {
                                     General.quickToast(
                                         context!!,
@@ -443,8 +448,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             val thumbnailPref: ListPreference? = findPreference(
                 getString(R.string.pref_appearance_thumbnails_show_list_key)
             )
-            val thumbnailNsfwPref: Preference = findPreference(getString(R.string.pref_appearance_thumbnails_nsfw_show_key))
-            val thumbnailSpoilerPref: Preference = findPreference(getString(R.string.pref_appearance_thumbnails_spoiler_show_key))
+            val thumbnailNsfwPref: Preference = findPreference<Preference>(getString(R.string.pref_appearance_thumbnails_nsfw_show_key))!!
+            val thumbnailSpoilerPref: Preference = findPreference<Preference>(getString(R.string.pref_appearance_thumbnails_spoiler_show_key))!!
             if (thumbnailPref != null) {
                 thumbnailPref.setOnPreferenceChangeListener(Preference.OnPreferenceChangeListener { preference: Preference?, newValue: Any? ->
                     val index = thumbnailPref.findIndexOfValue(newValue as String?)
@@ -460,8 +465,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             val inlineImagesPref: ListPreference? = findPreference(
                 getString(R.string.pref_images_inline_image_previews_key)
             )
-            val inlineImagesNsfwPref: Preference = findPreference(getString(R.string.pref_images_inline_image_previews_nsfw_key))
-            val inlineImagesSpoilerPref: Preference = findPreference(getString(R.string.pref_images_inline_image_previews_spoiler_key))
+            val inlineImagesNsfwPref: Preference = findPreference<Preference>(getString(R.string.pref_images_inline_image_previews_nsfw_key))!!
+            val inlineImagesSpoilerPref: Preference = findPreference<Preference>(getString(R.string.pref_images_inline_image_previews_spoiler_key))!!
             if (inlineImagesPref != null) {
                 inlineImagesPref.setOnPreferenceChangeListener(Preference.OnPreferenceChangeListener { preference: Preference?, newValue: Any? ->
                     val index = inlineImagesPref.findIndexOfValue(newValue as String?)
@@ -477,9 +482,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             val sharingDomainPref: ListPreference? = findPreference(
                 getString(R.string.pref_behaviour_sharing_domain_key)
             )
-            val shareAsPermalinkPref: Preference = findPreference(
+            val shareAsPermalinkPref: Preference = findPreference<Preference>(
                 getString(R.string.pref_behaviour_share_permalink_key)
-            )
+            )!!
             if (sharingDomainPref != null) {
                 sharingDomainPref.setOnPreferenceChangeListener(Preference.OnPreferenceChangeListener { preference: Preference?, newValue: Any? ->
                     val index = sharingDomainPref.findIndexOfValue(newValue as String?)
@@ -604,11 +609,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun showChooseStorageLocationDialog() {
-        val context: Context?=getActivity()
+        val context: Context = requireActivity()
 
-        val currentStorage: String=PrefsUtility.pref_cache_location(context)
+        val currentStorage: String?=PrefsUtility.pref_cache_location(context)
 
-        val checkPaths: MutableList<File?> = CacheManager.Companion.getCacheDirs(context)
+        val checkPaths: MutableList<File> = CacheManager.Companion.getCacheDirs(context)
 
         val folders: MutableList<File?> = ArrayList<File?>(checkPaths.size)
 
@@ -649,7 +654,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             .setSingleChoiceItems(
                 choices.toTypedArray<CharSequence?>(),
                 selectedIndex,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, i: Int ->
+                DialogInterface.OnClickListener { dialog: DialogInterface, i: Int ->
                     dialog.dismiss()
                     val path = folders.get(i)!!.getAbsolutePath()
                     PrefsUtility.pref_cache_location(context, path)
@@ -657,13 +662,13 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 })
             .setNegativeButton(
                 R.string.dialog_close,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, i: Int -> dialog.dismiss() })
+                DialogInterface.OnClickListener { dialog: DialogInterface, i: Int -> dialog.dismiss() })
             .create()
             .show()
     }
 
     private fun updateStorageLocationText(path: String?) {
-        findPreference(getString(R.string.pref_cache_location_key)).setSummary(
+        findPreference<Preference>(getString(R.string.pref_cache_location_key))!!.setSummary(
             path
         )
     }
@@ -708,10 +713,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun showCacheClearDialog() {
-        val context: Context?=getActivity()
+        val context: Context = requireActivity()
         val cacheManager: CacheManager = CacheManager.Companion.getInstance(context)
 
-        val cachesToClear = EnumMap<CacheType?, kotlin.Boolean?>(CacheType::class.java)
+        val cachesToClear = EnumMap<CacheType, Boolean>(CacheType::class.java)
         val cacheItemStrings = arrayOfNulls<String>(CacheType.entries.size)
 
         for (cacheType in CacheType.entries) {
@@ -723,21 +728,21 @@ class SettingsFragment : PreferenceFragmentCompat() {
             .setTitle(R.string.pref_cache_clear_title)
             .setMultiChoiceItems(
                 cacheItemStrings, null,
-                OnMultiChoiceClickListener { dialog: DialogInterface?, which: Int, isChecked: kotlin.Boolean ->  //Subtract 1, since progressBar gets put at position 0.
+                DialogInterface.OnMultiChoiceClickListener { dialog: DialogInterface, which: Int, isChecked: Boolean ->  //Subtract 1, since progressBar gets put at position 0.
                     cachesToClear.put(CacheType.entries[which - 1], isChecked)
                 })
             .setPositiveButton(
                 R.string.dialog_clear,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int ->
+                DialogInterface.OnClickListener { dialog: DialogInterface, id: Int ->
                     object : Thread() {
                         override fun run() {
                             cacheManager.pruneCache(
-                                cachesToClear.get(CacheType.LISTINGS),
-                                cachesToClear.get(CacheType.THUMBNAILS),
-                                cachesToClear.get(CacheType.IMAGES)
+                                cachesToClear.get(CacheType.LISTINGS)!!,
+                                cachesToClear.get(CacheType.THUMBNAILS)!!,
+                                cachesToClear.get(CacheType.IMAGES)!!
                             )
 
-                            if (Objects.requireNonNull<kotlin.Boolean?>(cachesToClear.get(CacheType.FLAGS))) {
+                            if (cachesToClear.get(CacheType.FLAGS)!!) {
                                 RedditChangeDataManager.Companion.pruneAllUsersWhereOlderThan(
                                     TimeDuration.ms(0)
                                 )

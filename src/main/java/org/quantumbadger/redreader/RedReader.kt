@@ -69,7 +69,7 @@ class RedReader : Application() {
         }
     }
 
-    private lateinit var packageInfo: AndroidCommon.PackageInfo
+    lateinit var packageInfo: AndroidCommon.PackageInfo
 
     @Inject
     lateinit var cacheManager: CacheManager
