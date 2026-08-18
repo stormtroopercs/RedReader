@@ -21,7 +21,7 @@ import android.os.Parcelable
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.jsonwrap.JsonObject.JsonDeserializable
 
-class SubredditCanonicalId(name: String) : Comparable<SubredditCanonicalId?>, Parcelable,
+class SubredditCanonicalId(name: String) : Comparable<SubredditCanonicalId>, Parcelable,
     JsonDeserializable {
     private val mId: String
 

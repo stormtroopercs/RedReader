@@ -16,6 +16,7 @@
  */
 package org.quantumbadger.redreader.reddit.api
 
+import android.annotation.SuppressLint
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.components.ViewModelComponent
@@ -40,11 +41,9 @@ class RedditMultiredditSubscriptionManager @Inject constructor(
     @ApplicationContext private val mContext: Context
 ) {
     private val notifier = MultiredditListChangeNotifier()
-    private val listeners = WeakReferenceListManager<MultiredditListChangeListener?>()
+    private val listeners = WeakReferenceListManager<MultiredditListChangeListener>()
 
     private var mMultireddits: WritableHashSet?
-
-    private val db: RawObjectDB<String?, WritableHashSet?>?
 
     init {
         mMultireddits = db!!.getById(mUser.canonicalUsername)
@@ -61,7 +60,7 @@ class RedditMultiredditSubscriptionManager @Inject constructor(
 
     @Synchronized
     private fun onNewSubscriptionListReceived(
-        newSubscriptions: HashSet<String?>?,
+        newSubscriptions: HashSet<String>,
         timestamp: TimestampUTC
     ) {
         mMultireddits = WritableHashSet(
@@ -73,15 +72,15 @@ class RedditMultiredditSubscriptionManager @Inject constructor(
         listeners.map(notifier)
 
         // TODO threaded? or already threaded due to cache manager
-        db!!.put(mMultireddits)
+        db!!.put(mMultireddits!!)
     }
 
     @get:Synchronized
-    val subscriptionList: ArrayList<String?>
-        get() = java.util.ArrayList<String?>(mMultireddits!!.toHashset())
+    val subscriptionList: ArrayList<String>
+        get() = java.util.ArrayList<String>(mMultireddits!!.toHashset())
 
     fun triggerUpdate(
-        handler: RequestResponseHandler<HashSet<String?>?, RRError?>?,
+        handler: RequestResponseHandler<HashSet<String>, RRError>?,
         timestampBound: TimestampBound
     ) {
         if (mMultireddits != null
@@ -93,7 +92,7 @@ class RedditMultiredditSubscriptionManager @Inject constructor(
         RedditAPIMultiredditListRequester(mContext, mUser).performRequest(
             RedditAPIMultiredditListRequester.Key.INSTANCE,
             timestampBound,
-            object : RequestResponseHandler<WritableHashSet?, RRError?> {
+            object : RequestResponseHandler<WritableHashSet, RRError> {
                 // TODO handle failed requests properly -- retry? then notify listeners
                 override fun onRequestFailed(failureReason : RRError) {
                     if (handler != null) {
@@ -103,10 +102,10 @@ class RedditMultiredditSubscriptionManager @Inject constructor(
 
                 override fun onRequestSuccess(
                     result: WritableHashSet,
-                    timeCached: TimestampUTC
+                    timeCached: TimestampUTC?
                 ) {
                     val newSubscriptions = result.toHashset()
-                    onNewSubscriptionListReceived(newSubscriptions, timeCached)
+                    onNewSubscriptionListReceived(newSubscriptions, timeCached!!)
                     if (handler != null) {
                         handler.onRequestSuccess(newSubscriptions, timeCached)
                     }
@@ -117,13 +116,13 @@ class RedditMultiredditSubscriptionManager @Inject constructor(
 
     interface MultiredditListChangeListener {
         fun onMultiredditListUpdated(
-            multiredditSubscriptionManager: RedditMultiredditSubscriptionManager?
+            multiredditSubscriptionManager: RedditMultiredditSubscriptionManager
         )
     }
 
     private inner class MultiredditListChangeNotifier
 
-        : WeakReferenceListManager.Operator<MultiredditListChangeListener?> {
+        : WeakReferenceListManager.Operator<MultiredditListChangeListener> {
         override fun operate(listener: MultiredditListChangeListener) {
             listener.onMultiredditListUpdated(
                 this@RedditMultiredditSubscriptionManager
@@ -132,12 +131,22 @@ class RedditMultiredditSubscriptionManager @Inject constructor(
     }
 
     companion object {
+        @SuppressLint("StaticFieldLeak")
+        private var db: RawObjectDB<String, WritableHashSet>? = null
+
         @JvmStatic
         fun getSingleton(
             context: Context,
             account: RedditAccount
         ): RedditMultiredditSubscriptionManager {
-            return RedditMultiredditSubscriptionManager(account, context)
+            if (db == null) {
+                db = RawObjectDB<String, WritableHashSet>(
+                    context.applicationContext,
+                    "rr_multireddit_subscriptions.db",
+                    WritableHashSet::class.java
+                )
+            }
+            return RedditMultiredditSubscriptionManager(account, context.applicationContext)
         }
     }
 }

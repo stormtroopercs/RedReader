@@ -18,9 +18,9 @@ package org.quantumbadger.redreader.io
 
 import org.quantumbadger.redreader.common.collections.WeakReferenceListManager.ArgOperator
 
-class UpdatedVersionListenerNotifier<K, V : WritableObject<K?>?>
-    : ArgOperator<UpdatedVersionListener<K?, V?>?, V?> {
-    override fun operate(listener: UpdatedVersionListener<K?, V?>, data: V?) {
+class UpdatedVersionListenerNotifier<K, V : WritableObject<K>>
+    : ArgOperator<UpdatedVersionListener<K, V>, V> {
+    override fun operate(listener: UpdatedVersionListener<K, V>, data: V) {
         listener.onUpdatedVersion(data)
     }
 }

@@ -16,6 +16,7 @@
  */
 package org.quantumbadger.redreader.reddit.api
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -65,7 +66,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
 ) {
     private val TAG = "SubscriptionManager"
 
-    inner class ListenerContext private constructor(private val mListener: SubredditSubscriptionStateChangeListener?) {
+    inner class ListenerContext(private val mListener: SubredditSubscriptionStateChangeListener) {
         fun removeListener() {
             synchronized(this@RedditSubredditSubscriptionManager) {
                 listeners.remove(mListener)
@@ -74,28 +75,26 @@ class RedditSubredditSubscriptionManager @Inject constructor(
     }
 
     private val notifier = SubredditSubscriptionStateChangeNotifier()
-    private val listeners = WeakReferenceListManager<SubredditSubscriptionStateChangeListener?>()
+    private val listeners = WeakReferenceListManager<SubredditSubscriptionStateChangeListener>()
 
     private var subscriptions: WritableHashSet?
 
-    private val pendingSubscriptions = HashSet<SubredditCanonicalId?>()
-    private val pendingUnsubscriptions = HashSet<SubredditCanonicalId?>()
+    private val pendingSubscriptions = HashSet<SubredditCanonicalId>()
+    private val pendingUnsubscriptions = HashSet<SubredditCanonicalId>()
 
     private var mLastUpdateRequestTime = TimestampUTC.ZERO
-
-    private val db: RawObjectDB<String?, WritableHashSet?>?
 
     init {
         subscriptions = db!!.getById(user.canonicalUsername)
 
         if (subscriptions != null) {
-            addToHistory(user, this.subscriptionList)
+            addToHistory(user, subscriptionList!!)
         }
     }
 
     @Synchronized
     fun addListener(
-        listener: SubredditSubscriptionStateChangeListener?
+        listener: SubredditSubscriptionStateChangeListener
     ): ListenerContext {
         listeners.add(listener)
         return ListenerContext(listener)
@@ -126,28 +125,28 @@ class RedditSubredditSubscriptionManager @Inject constructor(
     }
 
     @Synchronized
-    private fun onSubscriptionAttempt(id: SubredditCanonicalId?) {
+    private fun onSubscriptionAttempt(id: SubredditCanonicalId) {
         pendingSubscriptions.add(id)
-        listeners.map<SubredditSubscriptionChangeType?>(
+        listeners.map<SubredditSubscriptionChangeType>(
             notifier,
             SubredditSubscriptionChangeType.SUBSCRIPTION_ATTEMPTED
         )
     }
 
     @Synchronized
-    private fun onUnsubscriptionAttempt(id: SubredditCanonicalId?) {
+    private fun onUnsubscriptionAttempt(id: SubredditCanonicalId) {
         pendingUnsubscriptions.add(id)
-        listeners.map<SubredditSubscriptionChangeType?>(
+        listeners.map<SubredditSubscriptionChangeType>(
             notifier,
             SubredditSubscriptionChangeType.UNSUBSCRIPTION_ATTEMPTED
         )
     }
 
     @Synchronized
-    private fun onSubscriptionChangeAttemptFailed(id: SubredditCanonicalId?) {
+    private fun onSubscriptionChangeAttemptFailed(id: SubredditCanonicalId) {
         pendingUnsubscriptions.remove(id)
         pendingSubscriptions.remove(id)
-        listeners.map<SubredditSubscriptionChangeType?>(
+        listeners.map<SubredditSubscriptionChangeType>(
             notifier,
             SubredditSubscriptionChangeType.LIST_UPDATED
         )
@@ -164,7 +163,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
 
         pendingSubscriptions.remove(id)
         subscriptions!!.toHashset().add(id.toString())
-        listeners.map<SubredditSubscriptionChangeType?>(
+        listeners.map<SubredditSubscriptionChangeType>(
             notifier,
             SubredditSubscriptionChangeType.LIST_UPDATED
         )
@@ -181,7 +180,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
 
         pendingUnsubscriptions.remove(id)
         subscriptions!!.toHashset().remove(id.toString())
-        listeners.map<SubredditSubscriptionChangeType?>(
+        listeners.map<SubredditSubscriptionChangeType>(
             notifier,
             SubredditSubscriptionChangeType.LIST_UPDATED
         )
@@ -189,17 +188,16 @@ class RedditSubredditSubscriptionManager @Inject constructor(
 
     @Synchronized
     private fun onNewSubscriptionListReceived(
-        newSubscriptions: HashSet<SubredditCanonicalId?>,
+        newSubscriptions: HashSet<SubredditCanonicalId>,
         timestamp: TimestampUTC
     ) {
         pendingSubscriptions.clear()
         pendingUnsubscriptions.clear()
 
-        val newSubscriptionsStrings =             CollectionStream<SubredditCanonicalId?>(newSubscriptions)
-                .map<String?>(MapStream.Operator { obj: SubredditCanonicalId? -> obj.toString() })
-                .collect<HashSet<String?>>(
-                    HashSet<String?>()
-                )
+        val newSubscriptionsStrings =
+            CollectionStream<SubredditCanonicalId>(newSubscriptions)
+                .map<String>(MapStream.Operator { obj: SubredditCanonicalId -> obj.toString() })
+                .collect<HashSet<String>>(HashSet<String>())
 
         subscriptions = WritableHashSet(
             newSubscriptionsStrings,
@@ -208,38 +206,38 @@ class RedditSubredditSubscriptionManager @Inject constructor(
         )
 
         // TODO threaded? or already threaded due to cache manager
-        db!!.put(subscriptions)
+        db!!.put(subscriptions!!)
 
         addToHistory(user, newSubscriptions)
 
-        listeners.map<SubredditSubscriptionChangeType?>(
+        listeners.map<SubredditSubscriptionChangeType>(
             notifier,
             SubredditSubscriptionChangeType.LIST_UPDATED
         )
     }
 
     @get:Synchronized
-    val subscriptionList: ArrayList<SubredditCanonicalId?>?
+    val subscriptionList: ArrayList<SubredditCanonicalId>?
         get() {
             if (subscriptions == null) {
                 return null
             }
 
-            return CollectionStream<String?>(subscriptions!!.toHashset())
-                .mapRethrowExceptions<SubredditCanonicalId?>(MapStreamRethrowExceptions.Operator { name: SubredditCanonicalId? ->
+            return CollectionStream<String>(subscriptions!!.toHashset())
+                .mapRethrowExceptions<SubredditCanonicalId>(MapStreamRethrowExceptions.Operator { name: String ->
                     SubredditCanonicalId(
                         name
                     )
                 })
-                .collect<java.util.ArrayList<SubredditCanonicalId?>?>(java.util.ArrayList<SubredditCanonicalId?>())
+                .collect<java.util.ArrayList<SubredditCanonicalId>>(java.util.ArrayList<SubredditCanonicalId>())
         }
 
     @Synchronized
     fun triggerUpdateIfNotReady(
-        onFailure: FunctionOneArgNoReturn<RRError?>?
+        onFailure: FunctionOneArgNoReturn<RRError>?
     ) {
-        val handler: RequestResponseHandler<HashSet<SubredditCanonicalId?>?, RRError?> =
-            object : RequestResponseHandler<HashSet<SubredditCanonicalId?>?, RRError?> {
+        val handler: RequestResponseHandler<HashSet<SubredditCanonicalId>, RRError> =
+            object : RequestResponseHandler<HashSet<SubredditCanonicalId>, RRError> {
                 override fun onRequestFailed(failureReason : RRError) {
                     if (onFailure != null) {
                         onFailure.apply(failureReason)
@@ -247,7 +245,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
                 }
 
                 override fun onRequestSuccess(
-                    result: HashSet<SubredditCanonicalId?>?,
+                    result: HashSet<SubredditCanonicalId>,
                     timeCached: TimestampUTC?
                 ) {
                     // Do nothing
@@ -269,7 +267,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
 
     @Synchronized
     fun triggerUpdate(
-        handler: RequestResponseHandler<HashSet<SubredditCanonicalId?>?, RRError?>?,
+        handler: RequestResponseHandler<HashSet<SubredditCanonicalId>, RRError>?,
         timestampBound: TimestampBound
     ) {
         if (subscriptions != null
@@ -283,7 +281,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
         RedditAPIIndividualSubredditListRequester(context, user).performRequest(
             SubredditListType.SUBSCRIBED,
             timestampBound,
-            object : RequestResponseHandler<WritableHashSet?, RRError?> {
+            object : RequestResponseHandler<WritableHashSet, RRError> {
                 // TODO handle failed requests properly -- retry? then notify listeners
                 override fun onRequestFailed(failureReason : RRError) {
                     if (handler != null) {
@@ -293,11 +291,12 @@ class RedditSubredditSubscriptionManager @Inject constructor(
 
                 override fun onRequestSuccess(
                     result: WritableHashSet,
-                    timeCached: TimestampUTC
+                    timeCached: TimestampUTC?
                 ) {
                     val newSubscriptionStrings = result.toHashset()
 
-                    val newSubscriptions =                         HashSet<SubredditCanonicalId?>()
+                    val newSubscriptions =
+                        HashSet<SubredditCanonicalId>()
 
                     for (id in newSubscriptionStrings) {
                         try {
@@ -307,7 +306,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
                         }
                     }
 
-                    onNewSubscriptionListReceived(newSubscriptions, timeCached)
+                    onNewSubscriptionListReceived(newSubscriptions, timeCached!!)
                     if (handler != null) {
                         handler.onRequestSuccess(newSubscriptions, timeCached)
                     }
@@ -321,7 +320,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
         activity: AppCompatActivity
     ) {
         RedditAPI.subscriptionAction(
-            CacheManager.getSingleton(context),
+            CacheManager.getInstance(context),
             SubredditActionResponseHandler(
                 activity,
                 RedditAPI.SUBSCRIPTION_ACTION_SUBSCRIBE,
@@ -341,7 +340,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
         activity: AppCompatActivity
     ) {
         RedditAPI.subscriptionAction(
-            CacheManager.getSingleton(context),
+            CacheManager.getInstance(context),
             SubredditActionResponseHandler(
                 activity,
                 RedditAPI.SUBSCRIPTION_ACTION_UNSUBSCRIBE,
@@ -374,11 +373,11 @@ class RedditSubredditSubscriptionManager @Inject constructor(
             }
         }
 
-        protected override fun onCallbackException(t : Throwable) {
+        override fun onCallbackException(t : Throwable) {
             handleGlobalError(context, t)
         }
 
-        protected override fun onFailure(error: RRError) {
+        override fun onFailure(error: RRError) {
             if (error.httpStatus != null && error.httpStatus == 404) {
                 // Weirdly, reddit returns a 404 if we were already subscribed/unsubscribed to
                 // this subreddit.
@@ -399,15 +398,15 @@ class RedditSubredditSubscriptionManager @Inject constructor(
 
     interface SubredditSubscriptionStateChangeListener {
         fun onSubredditSubscriptionListUpdated(
-            subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+            subredditSubscriptionManager: RedditSubredditSubscriptionManager
         )
 
         fun onSubredditSubscriptionAttempted(
-            subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+            subredditSubscriptionManager: RedditSubredditSubscriptionManager
         )
 
         fun onSubredditUnsubscriptionAttempted(
-            subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+            subredditSubscriptionManager: RedditSubredditSubscriptionManager
         )
     }
 
@@ -419,7 +418,7 @@ class RedditSubredditSubscriptionManager @Inject constructor(
 
     private inner class SubredditSubscriptionStateChangeNotifier
 
-        : ArgOperator<SubredditSubscriptionStateChangeListener?, SubredditSubscriptionChangeType?> {
+        : ArgOperator<SubredditSubscriptionStateChangeListener, SubredditSubscriptionChangeType> {
         override fun operate(
             listener: SubredditSubscriptionStateChangeListener,
             changeType: SubredditSubscriptionChangeType
@@ -445,17 +444,29 @@ class RedditSubredditSubscriptionManager @Inject constructor(
     }
 
     companion object {
+        @SuppressLint("StaticFieldLeak")
+        private var db: RawObjectDB<String, WritableHashSet>? = null
+
         @JvmStatic
         fun getSingleton(
             context: Context,
             account: RedditAccount
         ): RedditSubredditSubscriptionManager {
-            return RedditSubredditSubscriptionManager(account, context)
+            if (db == null) {
+                db = RawObjectDB<String, WritableHashSet>(
+                    context.applicationContext,
+                    "rr_subscriptions.db",
+                    WritableHashSet::class.java
+                )
+            }
+            val singleton = RedditSubredditSubscriptionManager(account, context.applicationContext)
+            singleton.triggerUpdateIfNotReady()
+            return singleton
         }
 
         private fun addToHistory(
-            account: RedditAccount?,
-            newSubscriptions: MutableCollection<SubredditCanonicalId?>?
+            account: RedditAccount,
+            newSubscriptions: MutableCollection<SubredditCanonicalId>
         ) {
             RedditSubredditHistory.addSubreddits(account, newSubscriptions)
         }

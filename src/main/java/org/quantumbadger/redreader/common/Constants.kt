@@ -65,13 +65,13 @@ object Constants {
 
     object Reddit {
         @Suppress("PropertyName")
-        val DEFAULT_SUBREDDITS: ArrayList<SubredditCanonicalId?>
+        val DEFAULT_SUBREDDITS: ArrayList<SubredditCanonicalId>
 
         @Suppress("PropertyName")
         val BOT_USERNAMES_LOWERCASE: HashSet<String?>
 
         init {
-            val defaultSubredditStrings = arrayOf<String?>(
+            val defaultSubredditStrings = arrayOf<String>(
                 "/r/Art",
                 "/r/AskReddit",
                 "/r/askscience",
@@ -123,21 +123,17 @@ object Constants {
                 "/r/writingprompts"
             )
 
-            DEFAULT_SUBREDDITS = CollectionStream<String?>(*defaultSubredditStrings)
-                .mapRethrowExceptions<SubredditCanonicalId?> { name: String? ->
-                    if (name == null) {
-                        null
-                    } else {
-                        SubredditCanonicalId(
-                            name
-                        )
-                    }
+            DEFAULT_SUBREDDITS = CollectionStream<String>(*defaultSubredditStrings)
+                .mapRethrowExceptions<SubredditCanonicalId> { name: String ->
+                    SubredditCanonicalId(
+                        name
+                    )
                 }
-                .collect<ArrayList<SubredditCanonicalId?>>(
-                    ArrayList<SubredditCanonicalId?>(
+                .collect<ArrayList<SubredditCanonicalId>>(
+                    ArrayList<SubredditCanonicalId>(
                         defaultSubredditStrings.size
                     )
-                )!!
+                )
 
             BOT_USERNAMES_LOWERCASE = HashSet<String?>()
             BOT_USERNAMES_LOWERCASE.add("automoderator")

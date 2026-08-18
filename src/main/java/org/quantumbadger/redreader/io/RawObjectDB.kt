@@ -46,27 +46,20 @@ import kotlin.arrayOfNulls
 import kotlin.compareTo
 import kotlin.toString
 
-class RawObjectDB<K, E : WritableObject<K?>?>(
+class RawObjectDB<K, E : WritableObject<K>>(
     context: Context,
     dbFilename: String?,
-    clazz: Class<E?>
-) : SQLiteOpenHelper() {
-    private val clazz: Class<E?>
+    clazz: Class<E>
+) : SQLiteOpenHelper(context.getApplicationContext(), dbFilename, null, Companion.getDbVersion(clazz)) {
+    private val clazz: Class<E>
 
     private val fields: Array<Field>
     private val fieldNames: Array<String?>
 
     init {
-        super(
-            context.getApplicationContext(),
-            dbFilename,
-            null,
-            Companion.getDbVersion(clazz)
-        )
-
         this.clazz = clazz
 
-        val fields = LinkedList<Field?>()
+        val fields = LinkedList<Field>()
         for (field in clazz.getDeclaredFields()) {
             if ((field.getModifiers() and Modifier.TRANSIENT) == 0 && !field.isAnnotationPresent(
                     WritableObjectKey::class.java
@@ -79,7 +72,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
             }
         }
 
-        this.fields = fields.toTypedArray<Field?>()
+        this.fields = fields.toTypedArray()
 
         fieldNames = arrayOfNulls<String>(this.fields.size + 2)
         for (i in this.fields.indices) {
@@ -93,7 +86,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
         if (fieldType == Int::class.java || fieldType == Long::class.java || fieldType == Integer.TYPE || fieldType == Long.TYPE) {
             return " INTEGER"
         } else if (fieldType == Boolean::class.java
-            || fieldType == Boolean.TYPE
+            || fieldType == java.lang.Boolean.TYPE
         ) {
             return " INTEGER"
         } else {
@@ -131,7 +124,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
     }
 
     @get:Synchronized
-    val all: MutableCollection<E?>
+    val all: MutableCollection<E>
         get() {
             getReadableDatabase().use { db ->
                 try {
@@ -144,7 +137,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
                         null,
                         null
                     ).use { cursor ->
-                        val result = LinkedList<E?>()
+                        val result = LinkedList<E>()
                         while (cursor.moveToNext()) {
                             result.add(readFromCursor(cursor))
                         }
@@ -157,7 +150,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
         }
 
     @Synchronized
-    fun getById(id: K?): E? {
+    fun getById(id: K): E? {
         val queryResult = getByField(FIELD_ID, id.toString())
         if (queryResult.size != 1) {
             return null
@@ -167,7 +160,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
     }
 
     @Synchronized
-    fun getByField(field: String, value: String?): ArrayList<E?> {
+    fun getByField(field: String, value: String): ArrayList<E> {
         getReadableDatabase().use { db ->
             try {
                 db.query(
@@ -179,7 +172,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
                     null,
                     null
                 ).use { cursor ->
-                    val result = ArrayList<E?>(cursor.getCount())
+                    val result = ArrayList<E>(cursor.getCount())
                     while (cursor.moveToNext()) {
                         result.add(readFromCursor(cursor))
                     }
@@ -196,8 +189,8 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
         InstantiationException::class,
         InvocationTargetException::class
     )
-    private fun readFromCursor(cursor: Cursor): E? {
-        val obj: E?
+    private fun readFromCursor(cursor: Cursor): E {
+        val obj: E
         try {
             val constructor = clazz.getConstructor(WritableObject.CreationData::class.java)
             val id = cursor.getString(fields.size)
@@ -223,7 +216,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
                 field.setLong(obj, cursor.getLong(i))
             } else if (fieldType == kotlin.Boolean::class.java) {
                 field.set(obj, if (cursor.isNull(i)) null else cursor.getInt(i) != 0)
-            } else if (fieldType == Boolean.TYPE) {
+            } else if (fieldType == java.lang.Boolean.TYPE) {
                 field.setBoolean(obj, cursor.getInt(i) != 0)
             } else if (fieldType == WritableHashSet::class.java) {
                 field.set(
@@ -249,7 +242,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
     }
 
     @Synchronized
-    fun put(`object`: E?) {
+    fun put(`object`: E) {
         val db = getWritableDatabase()
 
         try {
@@ -271,7 +264,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
     }
 
     @Synchronized
-    fun putAll(objects: MutableCollection<E?>) {
+    fun putAll(objects: MutableCollection<E>) {
         val db = getWritableDatabase()
 
         try {
@@ -295,8 +288,8 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
     }
 
     @Throws(IllegalAccessException::class)
-    private fun toContentValues(obj: E?, result: ContentValues): ContentValues {
-        result.put(FIELD_ID, obj!!.key.toString())
+    private fun toContentValues(obj: E, result: ContentValues): ContentValues {
+        result.put(FIELD_ID, obj.key.toString())
         result.put(FIELD_TIMESTAMP, obj.timestamp.toUtcMs())
 
         for (i in fields.indices) {
@@ -316,7 +309,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
             } else if (fieldType == kotlin.Boolean::class.java) {
                 val `val` = field.get(obj) as kotlin.Boolean?
                 result.put(fieldNames[i], if (`val` == null) null else (if (`val`) 1 else 0))
-            } else if (fieldType == Boolean.TYPE) {
+            } else if (fieldType == java.lang.Boolean.TYPE) {
                 result.put(fieldNames[i], if (field.getBoolean(obj)) 1 else 0)
             } else if (fieldType == WritableHashSet::class.java) {
                 result.put(
@@ -336,7 +329,7 @@ class RawObjectDB<K, E : WritableObject<K?>?>(
         private const val FIELD_ID = "RawObjectDB_id"
         private const val FIELD_TIMESTAMP = "RawObjectDB_timestamp"
 
-        private fun <E> getDbVersion(clazz: Class<E?>): Int {
+        private fun <E> getDbVersion(clazz: Class<E>): Int {
             for (field in clazz.getDeclaredFields()) {
                 if (field.isAnnotationPresent(WritableObjectVersion::class.java)) {
                     field.setAccessible(true)

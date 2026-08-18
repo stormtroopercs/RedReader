@@ -16,6 +16,6 @@
  */
 package org.quantumbadger.redreader.io
 
-interface UpdatedVersionListener<K, V : WritableObject<K?>?> {
-    fun onUpdatedVersion(data: V?)
+interface UpdatedVersionListener<K, V : WritableObject<K>> {
+    fun onUpdatedVersion(data: V)
 }

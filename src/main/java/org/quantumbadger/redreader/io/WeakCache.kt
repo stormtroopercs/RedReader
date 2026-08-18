@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.quantumbadger.redreader.io
 
@@ -22,32 +22,32 @@ import org.quantumbadger.redreader.common.time.TimestampUTC
 import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.oldest
 import java.lang.ref.WeakReference
 
-class WeakCache<K, V : WritableObject<K?>?, F>
-    (private val cacheDataSource: CacheDataSource<K?, V?, F?>) : CacheDataSource<K?, V?, F?> {
-    private val cached: HashMap<K?, CacheEntry?> = HashMap<K?, CacheEntry?>()
+class WeakCache<K, V : WritableObject<K>, F>
+    (private val cacheDataSource: CacheDataSource<K, V, F>) : CacheDataSource<K, V, F> {
+    private val cached: HashMap<K, CacheEntry> = HashMap<K, CacheEntry>()
 
-    private val updatedVersionListenerNotifier = UpdatedVersionListenerNotifier<K?, V?>()
+    private val updatedVersionListenerNotifier = UpdatedVersionListenerNotifier<K, V>()
 
     override fun performRequest(
-        key: K?,
+        key: K,
         timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<V?, F?>
+        handler: RequestResponseHandler<V, F>
     ) {
         performRequest(key, timestampBound, handler, null)
     }
 
     @Synchronized
     override fun performRequest(
-        keys: MutableCollection<K?>,
+        keys: MutableCollection<K>,
         timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<HashMap<K?, V?>, F?>
+        handler: RequestResponseHandler<HashMap<K, V>, F>
     ) {
-        val keysRemaining = HashSet<K?>(keys)
-        val cacheResult = HashMap<K?, V?>(keys.size)
-        var oldestTimestamp: TimestampUTC?=null
+        val keysRemaining = HashSet<K>(keys)
+        val cacheResult = HashMap<K, V>(keys.size)
+        var oldestTimestamp: TimestampUTC? = null
 
         for (key in keys) {
-            val entry: CacheEntry?=cached.get(key)
+            val entry: CacheEntry? = cached.get(key)
             if (entry != null) {
                 val value: V? = entry.data.get()
                 if (value != null
@@ -73,18 +73,18 @@ class WeakCache<K, V : WritableObject<K?>?, F>
             cacheDataSource.performRequest(
                 keysRemaining,
                 timestampBound,
-                object : RequestResponseHandler<HashMap<K?, V?>, F?> {
-                    override fun onRequestFailed(failureReason: F?) {
+                object : RequestResponseHandler<HashMap<K, V>, F> {
+                    override fun onRequestFailed(failureReason: F) {
                         handler.onRequestFailed(failureReason)
                     }
 
                     override fun onRequestSuccess(
-                        result: HashMap<K?, V?>,
+                        result: HashMap<K, V>,
                         timeCached: TimestampUTC?
                     ) {
                         cacheResult.putAll(result)
 
-                        val timestamp: TimestampUTC?=if (oldestTimestampOuter == null)
+                        val timestamp: TimestampUTC? = if (oldestTimestampOuter == null)
                             timeCached
                         else
                             oldest(timeCached!!, oldestTimestampOuter)
@@ -98,22 +98,22 @@ class WeakCache<K, V : WritableObject<K?>?, F>
     }
 
     @Synchronized
-    override fun performWrite(value: V?) {
+    override fun performWrite(value: V) {
         put(value, true)
     }
 
-    override fun performWrite(values: MutableCollection<V?>) {
+    override fun performWrite(values: MutableCollection<V>) {
         put(values, true)
     }
 
     @Synchronized
     fun performRequest(
-        key: K?, timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<V?, F?>,
-        updatedVersionListener: UpdatedVersionListener<K?, V?>?
+        key: K, timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<V, F>,
+        updatedVersionListener: UpdatedVersionListener<K, V>?
     ) {
         if (timestampBound != null) {
-            val existingEntry: CacheEntry?=cached.get(key)
+            val existingEntry: CacheEntry? = cached.get(key)
             if (existingEntry != null) {
                 val existing: V? = existingEntry.data.get()
                 if (existing != null
@@ -128,12 +128,12 @@ class WeakCache<K, V : WritableObject<K?>?, F>
         cacheDataSource.performRequest(
             key,
             timestampBound,
-            object : RequestResponseHandler<V?, F?> {
-                override fun onRequestFailed(failureReason: F?) {
+            object : RequestResponseHandler<V, F> {
+                override fun onRequestFailed(failureReason: F) {
                     handler.onRequestFailed(failureReason)
                 }
 
-                override fun onRequestSuccess(result: V?, timeCached: TimestampUTC?) {
+                override fun onRequestSuccess(result: V, timeCached: TimestampUTC?) {
                     synchronized(this@WeakCache) {
                         put(result, false)
                         if (updatedVersionListener != null) {
@@ -146,29 +146,29 @@ class WeakCache<K, V : WritableObject<K?>?, F>
     }
 
     @Synchronized
-    fun forceUpdate(key: K?) {
-        cacheDataSource.performRequest(key, null, object : RequestResponseHandler<V?, F?> {
-            override fun onRequestFailed(failureReason: F?) {
+    fun forceUpdate(key: K) {
+        cacheDataSource.performRequest(key, null, object : RequestResponseHandler<V, F> {
+            override fun onRequestFailed(failureReason: F) {
             }
 
-            override fun onRequestSuccess(result: V?, timeCached: TimestampUTC?) {
+            override fun onRequestSuccess(result: V, timeCached: TimestampUTC?) {
                 put(result, false)
             }
         })
     }
 
     @Synchronized
-    private fun put(value: V?, writeDown: Boolean) {
-        val oldEntry: CacheEntry?=cached.get(value!!.key)
+    private fun put(value: V, writeDown: Boolean) {
+        val oldEntry: CacheEntry? = cached.get(value.key)
 
         if (oldEntry != null) {
             cached.put(
                 value.key,
-                CacheEntry(WeakReference<V?>(value), oldEntry.listeners)
+                CacheEntry(WeakReference<V>(value), oldEntry.listeners)
             )
-            oldEntry.listeners.map<V?>(updatedVersionListenerNotifier, value)
+            oldEntry.listeners.map<V>(updatedVersionListenerNotifier, value)
         } else {
-            cached.put(value.key, CacheEntry(WeakReference<V?>(value)))
+            cached.put(value.key, CacheEntry(WeakReference<V>(value)))
         }
 
         if (writeDown) {
@@ -177,18 +177,18 @@ class WeakCache<K, V : WritableObject<K?>?, F>
     }
 
     @Synchronized
-    private fun put(values: MutableCollection<V?>, writeDown: Boolean) {
+    private fun put(values: MutableCollection<V>, writeDown: Boolean) {
         for (value in values) {
-            val oldEntry: CacheEntry?=cached.get(value!!.key)
+            val oldEntry: CacheEntry? = cached.get(value.key)
 
             if (oldEntry != null) {
                 cached.put(
                     value.key,
-                    CacheEntry(WeakReference<V?>(value), oldEntry.listeners)
+                    CacheEntry(WeakReference<V>(value), oldEntry.listeners)
                 )
-                oldEntry.listeners.map<V?>(updatedVersionListenerNotifier, value)
+                oldEntry.listeners.map<V>(updatedVersionListenerNotifier, value)
             } else {
-                cached.put(value.key, CacheEntry(WeakReference<V?>(value)))
+                cached.put(value.key, CacheEntry(WeakReference<V>(value)))
             }
         }
 
@@ -198,7 +198,7 @@ class WeakCache<K, V : WritableObject<K?>?, F>
     }
 
     private inner class CacheEntry(
-        val data: WeakReference<V?>,
-        val listeners: WeakReferenceListManager<UpdatedVersionListener<K?, V?>?> = WeakReferenceListManager<UpdatedVersionListener<K?, V?>?>()
+        val data: WeakReference<V>,
+        val listeners: WeakReferenceListManager<UpdatedVersionListener<K, V>> = WeakReferenceListManager<UpdatedVersionListener<K, V>>()
     )
 }

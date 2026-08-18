@@ -38,8 +38,8 @@ import java.util.Locale
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-class RedditSubreddit : Parcelable, Comparable<RedditSubreddit?>,
-    WritableObject<SubredditCanonicalId?>, JsonDeserializable, HasUniqueId {
+class RedditSubreddit : Parcelable, Comparable<RedditSubreddit>,
+    WritableObject<SubredditCanonicalId>, JsonDeserializable, HasUniqueId {
     override val key: SubredditCanonicalId
         get() {
         try {

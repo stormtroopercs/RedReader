@@ -17,13 +17,11 @@
 package org.quantumbadger.redreader.io
 
 import org.quantumbadger.redreader.common.time.TimestampUTC
-import java.lang.annotation.Retention
-import java.lang.annotation.Target
 
 interface WritableObject<K> {
-    class CreationData(val key: String?, val timestamp: Long)
+    class CreationData(val key: String, val timestamp: Long)
 
-    val key: K?
+    val key: K
 
     val timestamp: TimestampUTC
 

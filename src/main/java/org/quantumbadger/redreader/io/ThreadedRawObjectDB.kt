@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.quantumbadger.redreader.io
 
@@ -22,24 +22,24 @@ import org.quantumbadger.redreader.common.time.TimestampUTC
 import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.oldest
 import java.util.concurrent.LinkedBlockingQueue
 
-class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
+class ThreadedRawObjectDB<K, V : WritableObject<K>, F>
     (
-    private val db: RawObjectDB<K?, V?>,
-    private val alternateSource: CacheDataSource<K?, V?, F?>
-) : CacheDataSource<K?, V?, F?> {
+    private val db: RawObjectDB<K, V>,
+    private val alternateSource: CacheDataSource<K, V, F>
+) : CacheDataSource<K, V, F> {
     private val writeThread = TriggerableThread(Runnable { this.doWrite() }, 1500)
 
     private val readThread = TriggerableThread(Runnable { this.doRead() }, 0)
 
-    private val toWrite = HashMap<K?, V?>()
-    private val toRead: LinkedBlockingQueue<ReadOperation?> = LinkedBlockingQueue<ReadOperation?>()
+    private val toWrite = HashMap<K, V>()
+    private val toRead: LinkedBlockingQueue<ReadOperation> = LinkedBlockingQueue<ReadOperation>()
     private val ioLock = Any()
 
     private fun doWrite() {
         synchronized(ioLock) {
-            val values: ArrayList<V?>
+            val values: ArrayList<V>
             synchronized(toWrite) {
-                values = ArrayList<V?>(toWrite.values)
+                values = ArrayList<V>(toWrite.values)
                 toWrite.clear()
             }
             db.putAll(values)
@@ -49,39 +49,39 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
     private fun doRead() {
         synchronized(ioLock) {
             while (!toRead.isEmpty()) {
-                toRead.remove()!!.run()
+                toRead.remove().run()
             }
         }
     }
 
     override fun performRequest(
-        key: K?, timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<V?, F?>
+        key: K, timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<V, F>
     ) {
         toRead.offer(SingleReadOperation(timestampBound!!, handler, key))
         readThread.trigger()
     }
 
     override fun performRequest(
-        keys: MutableCollection<K?>, timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<HashMap<K?, V?>, F?>
+        keys: MutableCollection<K>, timestampBound: TimestampBound?,
+        handler: RequestResponseHandler<HashMap<K, V>, F>
     ) {
         toRead.offer(BulkReadOperation(timestampBound!!, handler, keys))
         readThread.trigger()
     }
 
-    override fun performWrite(value: V?) {
+    override fun performWrite(value: V) {
         synchronized(toWrite) {
-            toWrite.put(value!!.key, value)
+            toWrite.put(value.key, value)
         }
 
         writeThread.trigger()
     }
 
-    override fun performWrite(values: MutableCollection<V?>) {
+    override fun performWrite(values: MutableCollection<V>) {
         synchronized(toWrite) {
             for (value in values) {
-                toWrite.put(value!!.key, value)
+                toWrite.put(value.key, value)
             }
         }
 
@@ -90,12 +90,12 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
 
     private inner class BulkReadOperation(
         timestampBound: TimestampBound,
-        val responseHandler: RequestResponseHandler<HashMap<K?, V?>, F?>,
-        val keys: MutableCollection<K?>
+        val responseHandler: RequestResponseHandler<HashMap<K, V>, F>,
+        val keys: MutableCollection<K>
     ) : ReadOperation(timestampBound) {
         override fun run() {
-            val existingResult = HashMap<K?, V?>(keys.size)
-            var oldestTimestamp: TimestampUTC?=null
+            val existingResult = HashMap<K, V>(keys.size)
+            var oldestTimestamp: TimestampUTC? = null
 
             synchronized(toWrite) {
                 val iter = keys.iterator()
@@ -156,16 +156,16 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
             alternateSource.performRequest(
                 keys,
                 timestampBound,
-                object : RequestResponseHandler<HashMap<K?, V?>, F?> {
-                    override fun onRequestFailed(failureReason: F?) {
+                object : RequestResponseHandler<HashMap<K, V>, F> {
+                    override fun onRequestFailed(failureReason: F) {
                         responseHandler.onRequestFailed(failureReason)
                     }
 
                     override fun onRequestSuccess(
-                        result: HashMap<K?, V?>,
+                        result: HashMap<K, V>,
                         timeCached: TimestampUTC?
                     ) {
-                        val timestamp: TimestampUTC?=if (outerOldestTimestamp == null)
+                        val timestamp: TimestampUTC? = if (outerOldestTimestamp == null)
                             timeCached
                         else
                             oldest(outerOldestTimestamp, timeCached!!)
@@ -183,8 +183,8 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
 
     private inner class SingleReadOperation(
         timestampBound: TimestampBound,
-        val responseHandler: RequestResponseHandler<V?, F?>,
-        val key: K?
+        val responseHandler: RequestResponseHandler<V, F>,
+        val key: K
     ) : ReadOperation(timestampBound) {
         override fun run() {
             synchronized(toWrite) {
@@ -212,13 +212,13 @@ class ThreadedRawObjectDB<K, V : WritableObject<K?>?, F>
             alternateSource.performRequest(
                 key,
                 timestampBound,
-                object : RequestResponseHandler<V?, F?> {
-                    override fun onRequestFailed(failureReason: F?) {
+                object : RequestResponseHandler<V, F> {
+                    override fun onRequestFailed(failureReason: F) {
                         responseHandler.onRequestFailed(failureReason)
                     }
 
                     override fun onRequestSuccess(
-                        result: V?,
+                        result: V,
                         timeCached: TimestampUTC?
                     ) {
                         performWrite(result)

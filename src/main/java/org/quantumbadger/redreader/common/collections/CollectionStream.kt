@@ -18,21 +18,21 @@ package org.quantumbadger.redreader.common.collections
 
 import java.util.Arrays
 
-class CollectionStream<Type>(iterable: Iterable<Type?>) : Stream<Type?>() {
-    private val mIterator: MutableIterator<Type?>
+class CollectionStream<Type>(iterable: Iterable<Type>) : Stream<Type>() {
+    private val mIterator: Iterator<Type>
 
     init {
         mIterator = iterable.iterator()
     }
 
     @SafeVarargs
-    constructor(vararg array: Type?) : this(Arrays.asList<Type?>(*array))
+    constructor(vararg array: Type) : this(Arrays.asList<Type>(*array))
 
     override fun hasNext(): Boolean {
         return mIterator.hasNext()
     }
 
-    override fun take(): Type? {
+    override fun take(): Type {
         return mIterator.next()
     }
 }

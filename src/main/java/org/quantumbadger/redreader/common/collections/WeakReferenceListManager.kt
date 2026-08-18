@@ -19,7 +19,7 @@ package org.quantumbadger.redreader.common.collections
 import java.lang.ref.WeakReference
 
 class WeakReferenceListManager<E> {
-    private val data = ArrayList<WeakReference<E?>?>()
+    private val data = ArrayList<WeakReference<E>>()
 
     @Synchronized
     fun size(): Int {
@@ -27,16 +27,16 @@ class WeakReferenceListManager<E> {
     }
 
     @Synchronized
-    fun add(`object`: E?) {
-        data.add(WeakReference<E?>(`object`))
+    fun add(`object`: E) {
+        data.add(WeakReference<E>(`object`))
     }
 
     @Synchronized
-    fun map(operator: Operator<E?>) {
+    fun map(operator: Operator<E>) {
         val iterator = data.iterator()
 
         while (iterator.hasNext()) {
-            val `object` = iterator.next()!!.get()
+            val `object` = iterator.next().get()
 
             if (`object` == null) {
                 iterator.remove()
@@ -47,11 +47,11 @@ class WeakReferenceListManager<E> {
     }
 
     @Synchronized
-    fun <A> map(operator: ArgOperator<E?, A?>, arg: A?) {
+    fun <A> map(operator: ArgOperator<E, A>, arg: A) {
         val iterator = data.iterator()
 
         while (iterator.hasNext()) {
-            val `object` = iterator.next()!!.get()
+            val `object` = iterator.next().get()
 
             if (`object` == null) {
                 iterator.remove()
@@ -62,11 +62,11 @@ class WeakReferenceListManager<E> {
     }
 
     @Synchronized
-    fun remove(`object`: E?) {
+    fun remove(`object`: E) {
         val iterator = data.iterator()
 
         while (iterator.hasNext()) {
-            if (iterator.next()!!.get() === `object`) {
+            if (iterator.next().get() === `object`) {
                 iterator.remove()
             }
         }
@@ -77,7 +77,7 @@ class WeakReferenceListManager<E> {
         val iterator = data.iterator()
 
         while (iterator.hasNext()) {
-            val `object` = iterator.next()!!.get()
+            val `object` = iterator.next().get()
 
             if (`object` == null) {
                 iterator.remove()
@@ -90,10 +90,10 @@ class WeakReferenceListManager<E> {
         get() = data.isEmpty()
 
     fun interface Operator<E> {
-        fun operate(`object`: E?)
+        fun operate(`object`: E)
     }
 
     interface ArgOperator<E, A> {
-        fun operate(`object`: E?, arg: A?)
+        fun operate(`object`: E, arg: A)
     }
 }

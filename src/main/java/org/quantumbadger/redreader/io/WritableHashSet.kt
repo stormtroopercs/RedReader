@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.quantumbadger.redreader.io
 
@@ -23,29 +23,24 @@ import org.quantumbadger.redreader.io.WritableObject.WritableField
 import org.quantumbadger.redreader.io.WritableObject.WritableObjectKey
 import org.quantumbadger.redreader.io.WritableObject.WritableObjectTimestamp
 import org.quantumbadger.redreader.io.WritableObject.WritableObjectVersion
-import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
-import kotlin.collections.Iterable
-import kotlin.collections.MutableCollection
-import kotlin.collections.MutableIterator
 
-class WritableHashSet : WritableObject<String?>, Iterable<String?> {
+class WritableHashSet : WritableObject<String>, Iterable<String> {
     @Transient
     private var hashSet: HashSet<String>? = null
 
     @WritableField
-    private var serialised: String?=null
+    private var serialised: String? = null
 
     @WritableObjectKey
-    private val mKey: String?
+    private val mKey: String
 
     @WritableObjectTimestamp
     private val mTimestamp: Long
 
     constructor(
-        data: HashSet<String>?,
+        data: HashSet<String>,
         timestamp: TimestampUTC,
-        key: String?
+        key: String
     ) {
         this.hashSet = data
         this.mTimestamp = timestamp.toUtcMs()
@@ -53,7 +48,7 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
         serialised = Companion.listToEscapedString(hashSet!!)
     }
 
-    private constructor(serializedData: String?, timestamp: Long, key: String?) {
+    private constructor(serializedData: String, timestamp: Long, key: String) {
         this.mTimestamp = timestamp
         this.mKey = key
         serialised = serializedData
@@ -74,8 +69,8 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
         val result = ArrayList<String>(3)
         result.add(serialised!!)
         result.add(mTimestamp.toString())
-        result.add(mKey!!)
-        return listToEscapedString(result)
+        result.add(mKey)
+        return Companion.listToEscapedString(result)
     }
 
     @Synchronized
@@ -83,14 +78,14 @@ class WritableHashSet : WritableObject<String?>, Iterable<String?> {
         if (hashSet != null) {
             return hashSet!!
         }
-        return (HashSet<String>(escapedStringToList(serialised)).also { hashSet = it })
+        return (HashSet<String>(Companion.escapedStringToList(serialised)).also { hashSet = it })
     }
 
-    override val key: String? get() = mKey
+    override val key: String get() = mKey
 
     override val timestamp: TimestampUTC get() = fromUtcMs(mTimestamp)
 
-    override fun iterator(): MutableIterator<String?> {
+    override fun iterator(): MutableIterator<String> {
         return toHashset().iterator()
     }
 

@@ -19,16 +19,16 @@ package org.quantumbadger.redreader.common.collections
 import org.quantumbadger.redreader.common.collections.WeakReferenceListManager.ArgOperator
 
 class WeakReferenceListHashMapManager<K, V> {
-    private val mData = HashMap<K?, WeakReferenceListManager<V?>?>()
+    private val mData = HashMap<K, WeakReferenceListManager<V>>()
 
     private var mCleanupCounter: Byte = 0
 
     @Synchronized
-    fun add(key: K?, value: V?) {
+    fun add(key: K, value: V) {
         var list = mData.get(key)
 
         if (list == null) {
-            list = WeakReferenceListManager<V?>()
+            list = WeakReferenceListManager<V>()
             mData.put(key, list)
         }
 
@@ -41,7 +41,7 @@ class WeakReferenceListHashMapManager<K, V> {
     }
 
     @Synchronized
-    fun remove(key: K?, value: V?) {
+    fun remove(key: K, value: V) {
         val list = mData.get(key)
 
         if (list != null) {
@@ -51,8 +51,8 @@ class WeakReferenceListHashMapManager<K, V> {
 
     @Synchronized
     fun map(
-        key: K?,
-        operator: WeakReferenceListManager.Operator<V?>?
+        key: K,
+        operator: WeakReferenceListManager.Operator<V>
     ) {
         val list = mData.get(key)
 
@@ -63,14 +63,14 @@ class WeakReferenceListHashMapManager<K, V> {
 
     @Synchronized
     fun <A> map(
-        key: K?,
-        operator: ArgOperator<V?, A?>?,
-        arg: A?
+        key: K,
+        operator: ArgOperator<V, A>,
+        arg: A
     ) {
         val list = mData.get(key)
 
         if (list != null) {
-            list.map<A?>(operator, arg)
+            list.map<A>(operator, arg)
         }
     }
 

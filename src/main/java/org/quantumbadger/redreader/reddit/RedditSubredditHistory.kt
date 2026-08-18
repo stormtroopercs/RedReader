@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
  */
 package org.quantumbadger.redreader.reddit
 
@@ -24,13 +24,13 @@ import java.util.Collections
 // Keeps an in-memory list of all known subreddits per account
 object RedditSubredditHistory {
     @Suppress("PropertyName")
-    private val SUBREDDITS = HashMap<RedditAccount?, HashSet<SubredditCanonicalId?>?>()
+    private val SUBREDDITS = HashMap<RedditAccount, HashSet<SubredditCanonicalId>>()
 
-    private fun getForAccount(account: RedditAccount?): HashSet<SubredditCanonicalId?> {
+    private fun getForAccount(account: RedditAccount): HashSet<SubredditCanonicalId> {
         var result = SUBREDDITS.get(account)
 
         if (result == null) {
-            result = HashSet<SubredditCanonicalId?>(Reddit.DEFAULT_SUBREDDITS)
+            result = HashSet<SubredditCanonicalId>(Reddit.DEFAULT_SUBREDDITS)
             SUBREDDITS.put(account, result)
         }
 
@@ -39,30 +39,30 @@ object RedditSubredditHistory {
 
     @Synchronized
     fun addSubreddit(
-        account: RedditAccount?,
-        id: SubredditCanonicalId?
+        account: RedditAccount,
+        id: SubredditCanonicalId
     ) {
         getForAccount(account).add(id)
     }
 
     @Synchronized
     fun addSubreddits(
-        account: RedditAccount?,
-        ids: MutableCollection<SubredditCanonicalId?>
+        account: RedditAccount,
+        ids: MutableCollection<SubredditCanonicalId>
     ) {
         getForAccount(account).addAll(ids)
     }
 
     @Synchronized
     fun getSubredditsSorted(
-        account: RedditAccount?
-    ): ArrayList<SubredditCanonicalId?> {
-        val result = ArrayList<SubredditCanonicalId?>(
+        account: RedditAccount
+    ): ArrayList<SubredditCanonicalId> {
+        val result = ArrayList<SubredditCanonicalId>(
             getForAccount(
                 account
             )
         )
-        Collections.sort<SubredditCanonicalId?>(result)
+        Collections.sort<SubredditCanonicalId>(result)
         return result
     }
 }
