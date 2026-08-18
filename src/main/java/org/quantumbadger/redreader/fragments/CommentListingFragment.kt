@@ -117,7 +117,7 @@ class CommentListingFragment(
 
     private val mRecyclerView: RecyclerView
 
-    private val mListingView: View?
+    private val mListingView: View
     private val mOverlayFrame: FrameLayout
     private val mFloatingToolbar: LinearLayout?
 
@@ -339,7 +339,7 @@ class CommentListingFragment(
         }
     }
 
-    override val listingView: View? get() = mListingView
+    override val listingView: View get() = mListingView
 
     override val overlayView: View? get() = mOverlayFrame
 

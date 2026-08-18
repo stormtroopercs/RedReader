@@ -487,7 +487,7 @@ class MainMenuListingManager(
             )
 
             if (pinnedSubredditsSort == PinnedSubredditSort.NAME) {
-                Collections.sort<SubredditCanonicalId?>(pinnedSubreddits)
+                Collections.sort<SubredditCanonicalId>(pinnedSubreddits)
             }
 
             var isFirst = true
@@ -519,7 +519,7 @@ class MainMenuListingManager(
             )
 
             if (blockedSubredditsSort == BlockedSubredditSort.NAME) {
-                Collections.sort<SubredditCanonicalId?>(blockedSubreddits)
+                Collections.sort<SubredditCanonicalId>(blockedSubreddits)
             }
 
             var isFirst = true
@@ -538,11 +538,12 @@ class MainMenuListingManager(
         checkThisIsUIThread()
 
         if (mMultiredditHeaderItem == null) {
-            mMultiredditHeaderItem = GroupedRecyclerViewItemListSectionHeaderView(
+            val headerItem = GroupedRecyclerViewItemListSectionHeaderView(
                 context.getString(string.mainmenu_header_multireddits)
             )
 
-            adapter.appendToGroup(GROUP_MULTIREDDITS_HEADER, mMultiredditHeaderItem)
+            mMultiredditHeaderItem = headerItem
+            adapter.appendToGroup(GROUP_MULTIREDDITS_HEADER, headerItem)
         }
     }
 
@@ -553,7 +554,7 @@ class MainMenuListingManager(
         adapter.removeAllFromGroup(GROUP_MULTIREDDITS_HEADER)
     }
 
-    fun setMultiredditsError(errorView: ErrorView?) {
+    fun setMultiredditsError(errorView: ErrorView) {
         AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
             adapter.removeAllFromGroup(GROUP_MULTIREDDITS_ITEMS)
             adapter.appendToGroup(
@@ -563,7 +564,7 @@ class MainMenuListingManager(
         })
     }
 
-    fun setSubredditsError(errorView: ErrorView?) {
+    fun setSubredditsError(errorView: ErrorView) {
         AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
             adapter.removeAllFromGroup(GROUP_SUBREDDITS_ITEMS)
             adapter.appendToGroup(
@@ -573,11 +574,11 @@ class MainMenuListingManager(
         })
     }
 
-    fun setSubreddits(subscriptions: MutableCollection<SubredditCanonicalId?>) {
+    fun setSubreddits(subscriptions: Collection<SubredditCanonicalId>) {
         val subscriptionsSorted = ArrayList<SubredditCanonicalId>(
             subscriptions
         )
-        Collections.sort<SubredditCanonicalId?>(subscriptionsSorted)
+        Collections.sort<SubredditCanonicalId>(subscriptionsSorted)
 
         AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
             if (mSubredditSubscriptions != null
@@ -607,9 +608,9 @@ class MainMenuListingManager(
         })
     }
 
-    fun setMultireddits(subscriptions: MutableCollection<String?>) {
+    fun setMultireddits(subscriptions: Collection<String>) {
         val subscriptionsSorted = ArrayList<String>(subscriptions)
-        Collections.sort<String?>(subscriptionsSorted)
+        Collections.sort<String>(subscriptionsSorted)
 
         AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
             if (mMultiredditSubscriptions != null

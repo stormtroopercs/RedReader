@@ -59,7 +59,7 @@ class MainMenuFragment(
 
     private val mManager: MainMenuListingManager
 
-    private val mOuter: View?
+    private val mOuter: View
 
     init {
         val context: Context = getActivity()
@@ -104,13 +104,13 @@ class MainMenuFragment(
 
         if (force) {
             multiredditSubscriptionManager.triggerUpdate(
-                object : RequestResponseHandler<HashSet<String?>?, RRError?> {
+                object : RequestResponseHandler<HashSet<String>, RRError> {
                     override fun onRequestFailed(failureReason: RRError) {
                         onMultiredditError(failureReason)
                     }
 
                     override fun onRequestSuccess(
-                        result: HashSet<String?>?,
+                        result: HashSet<String>,
                         timeCached: TimestampUTC?
                     ) {
                         multiredditSubscriptionManager.addListener(this@MainMenuFragment)
@@ -120,13 +120,13 @@ class MainMenuFragment(
             )
 
             subredditSubscriptionManager.triggerUpdate(
-                object : RequestResponseHandler<HashSet<SubredditCanonicalId?>?, RRError?> {
+                object : RequestResponseHandler<HashSet<SubredditCanonicalId>, RRError> {
                     override fun onRequestFailed(failureReason: RRError) {
                         onSubredditError(failureReason)
                     }
 
                     override fun onRequestSuccess(
-                        result: HashSet<SubredditCanonicalId?>?,
+                        result: HashSet<SubredditCanonicalId>,
                         timeCached: TimestampUTC?
                     ) {
                         subredditSubscriptionManager.addListener(this@MainMenuFragment)
@@ -146,7 +146,7 @@ class MainMenuFragment(
 
             if (subredditSubscriptionManager.areSubscriptionsReady()) {
                 onSubredditSubscriptionsChanged(
-                    subredditSubscriptionManager.subscriptionList
+                    subredditSubscriptionManager.subscriptionList!!
                 )
             }
 
@@ -165,19 +165,19 @@ class MainMenuFragment(
         FRONTPAGE, POPULAR, ALL, SUBREDDIT_SEARCH, CUSTOM
     }
 
-    override val listingView: View? get() = mOuter
+    override val listingView: View get() = mOuter
 
     override fun onSaveInstanceState(): Bundle? {
         return null
     }
 
     fun onSubredditSubscriptionsChanged(
-        subscriptions: MutableCollection<SubredditCanonicalId?>?
+        subscriptions: Collection<SubredditCanonicalId>
     ) {
         mManager.setSubreddits(subscriptions)
     }
 
-    fun onMultiredditSubscriptionsChanged(subscriptions: MutableCollection<String?>?) {
+    fun onMultiredditSubscriptionsChanged(subscriptions: Collection<String>) {
         mManager.setMultireddits(subscriptions)
     }
 
@@ -200,7 +200,7 @@ class MainMenuFragment(
     override fun onSubredditSubscriptionListUpdated(
         subredditSubscriptionManager: RedditSubredditSubscriptionManager
     ) {
-        onSubredditSubscriptionsChanged(subredditSubscriptionManager.subscriptionList)
+        onSubredditSubscriptionsChanged(subredditSubscriptionManager.subscriptionList!!)
     }
 
     override fun onMultiredditListUpdated(

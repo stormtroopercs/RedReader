@@ -137,7 +137,7 @@ class PostListingFragment(
     private val mPostListingManager: PostListingManager
     private val mRecyclerView: RecyclerView
 
-    private val mOuter: View?
+    private val mOuter: View
 
     private var mAfter: RedditIdAndType?=null
     private var mLastAfter: RedditIdAndType?=null
@@ -371,7 +371,7 @@ class PostListingFragment(
         }
     }
 
-    override val listingView: View? get() = mOuter
+    override val listingView: View get() = mOuter
 
     override fun onSaveInstanceState(): Bundle {
         val bundle = Bundle()

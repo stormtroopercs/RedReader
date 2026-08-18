@@ -1704,7 +1704,7 @@ object PrefsUtility {
         return result
     }
 
-    fun pref_menus_mainmenu_shortcutitems(): EnumSet<MainMenuShortcutItems>? {
+    fun pref_menus_mainmenu_shortcutitems(): EnumSet<MainMenuShortcutItems> {
         val strings = getStringSet(
             string.pref_menus_mainmenu_shortcutitems_key,
             R.array.pref_menus_mainmenu_shortcutitems_items_default
@@ -1853,7 +1853,7 @@ object PrefsUtility {
 
     /**//////////////////////////// */ // pref_pinned_subreddits
     /**//////////////////////////// */
-    fun pref_pinned_subreddits(): MutableList<SubredditCanonicalId?> {
+    fun pref_pinned_subreddits(): MutableList<SubredditCanonicalId> {
         return pref_subreddits_list(string.pref_pinned_subreddits_key)
     }
 
@@ -1893,13 +1893,13 @@ object PrefsUtility {
         )
     }
 
-    fun pref_pinned_subreddits_check(id: SubredditCanonicalId?): Boolean {
+    fun pref_pinned_subreddits_check(id: SubredditCanonicalId): Boolean {
         return pref_pinned_subreddits().contains(id)
     }
 
     /**//////////////////////////// */ // pref_blocked_subreddits
     /**//////////////////////////// */
-    fun pref_blocked_subreddits(): MutableList<SubredditCanonicalId?> {
+    fun pref_blocked_subreddits(): MutableList<SubredditCanonicalId> {
         return pref_subreddits_list(string.pref_blocked_subreddits_key)
     }
 
@@ -1929,7 +1929,7 @@ object PrefsUtility {
         quickToast(context, string.unblock_done)
     }
 
-    fun pref_blocked_subreddits_check(subreddit: SubredditCanonicalId?): Boolean {
+    fun pref_blocked_subreddits_check(subreddit: SubredditCanonicalId): Boolean {
         return pref_blocked_subreddits().contains(subreddit)
     }
 
@@ -1974,11 +1974,11 @@ object PrefsUtility {
         sharedPrefs!!.edit().putString(context.getString(prefId), resultStr).apply()
     }
 
-    fun pref_subreddits_list(prefId: Int): MutableList<SubredditCanonicalId?> {
+    fun pref_subreddits_list(prefId: Int): MutableList<SubredditCanonicalId> {
         val value = getString(prefId, "")
         val list: ArrayList<String> = WritableHashSet.Companion.escapedStringToList(value)
 
-        val result = ArrayList<SubredditCanonicalId?>(list.size)
+        val result = ArrayList<SubredditCanonicalId>(list.size)
 
         try {
             for (str in list) {
