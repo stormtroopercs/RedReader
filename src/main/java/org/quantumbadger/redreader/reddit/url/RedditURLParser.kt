@@ -23,7 +23,6 @@ import org.quantumbadger.redreader.common.Constants.Reddit
 import org.quantumbadger.redreader.common.Optional
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.common.UriString
-import java.lang.annotation.Retention
 
 object RedditURLParser {
     const val SUBREDDIT_POST_LISTING_URL: Int = 0
@@ -196,10 +195,7 @@ object RedditURLParser {
         return UnknownPostListURL(uri)
     }
 
-    @IntDef(
-        [SUBREDDIT_POST_LISTING_URL, USER_POST_LISTING_URL, SEARCH_POST_LISTING_URL, UNKNOWN_POST_LISTING_URL, USER_PROFILE_URL, USER_COMMENT_LISTING_URL, UNKNOWN_COMMENT_LISTING_URL, POST_COMMENT_LISTING_URL, MULTIREDDIT_POST_LISTING_URL, COMPOSE_MESSAGE_URL, OPAQUE_SHARED_URL
-        ]
-    )
+    @IntDef(SUBREDDIT_POST_LISTING_URL, USER_POST_LISTING_URL, SEARCH_POST_LISTING_URL, UNKNOWN_POST_LISTING_URL, USER_PROFILE_URL, USER_COMMENT_LISTING_URL, UNKNOWN_COMMENT_LISTING_URL, POST_COMMENT_LISTING_URL, MULTIREDDIT_POST_LISTING_URL, COMPOSE_MESSAGE_URL, OPAQUE_SHARED_URL)
     @Retention(AnnotationRetention.SOURCE)
     annotation class PathType
 

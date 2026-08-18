@@ -46,7 +46,6 @@ import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 import org.quantumbadger.redreader.reddit.url.PostListingURL
 import org.quantumbadger.redreader.views.ScrollbarRecyclerViewManager
 import org.quantumbadger.redreader.views.liststatus.ErrorView
-import java.lang.annotation.Retention
 
 class MainMenuFragment(
     parent: AppCompatActivity,
@@ -54,9 +53,7 @@ class MainMenuFragment(
     force: Boolean
 ) : RRFragment(parent, savedInstanceState), MainMenuSelectionListener,
     SubredditSubscriptionStateChangeListener, MultiredditListChangeListener {
-    @IntDef(
-        [MENU_MENU_ACTION_FRONTPAGE, MENU_MENU_ACTION_PROFILE, MENU_MENU_ACTION_INBOX, MENU_MENU_ACTION_SUBMITTED, MENU_MENU_ACTION_SUBMITTED_COMMENTS, MENU_MENU_ACTION_UPVOTED, MENU_MENU_ACTION_DOWNVOTED, MENU_MENU_ACTION_SAVED, MENU_MENU_ACTION_MODMAIL, MENU_MENU_ACTION_HIDDEN, MENU_MENU_ACTION_CUSTOM, MENU_MENU_ACTION_ALL, MENU_MENU_ACTION_POPULAR, MENU_MENU_ACTION_SENT_MESSAGES, MENU_MENU_ACTION_FIND_SUBREDDIT]
-    )
+    @IntDef(MENU_MENU_ACTION_FRONTPAGE, MENU_MENU_ACTION_PROFILE, MENU_MENU_ACTION_INBOX, MENU_MENU_ACTION_SUBMITTED, MENU_MENU_ACTION_SUBMITTED_COMMENTS, MENU_MENU_ACTION_UPVOTED, MENU_MENU_ACTION_DOWNVOTED, MENU_MENU_ACTION_SAVED, MENU_MENU_ACTION_MODMAIL, MENU_MENU_ACTION_HIDDEN, MENU_MENU_ACTION_CUSTOM, MENU_MENU_ACTION_ALL, MENU_MENU_ACTION_POPULAR, MENU_MENU_ACTION_SENT_MESSAGES, MENU_MENU_ACTION_FIND_SUBREDDIT)
     @Retention(AnnotationRetention.SOURCE)
     annotation class MainMenuAction
 

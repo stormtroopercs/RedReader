@@ -24,11 +24,10 @@ import androidx.annotation.IntDef
 import org.quantumbadger.redreader.common.General.dpToPixels
 import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.General
-import java.lang.annotation.Retention
 
 class BezelSwipeOverlay(context: Context?, private val listener: BezelSwipeListener) :
     View(context) {
-    @IntDef([LEFT, RIGHT])
+    @IntDef(LEFT, RIGHT)
     @Retention(AnnotationRetention.SOURCE)
     annotation class SwipeEdge
 

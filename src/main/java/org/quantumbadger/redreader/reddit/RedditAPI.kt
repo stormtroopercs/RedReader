@@ -75,7 +75,6 @@ import kotlin.String
 import kotlin.Throwable
 import kotlin.arrayOf
 import org.quantumbadger.redreader.common.General
-import java.lang.annotation.Retention
 
 object RedditAPI {
     const val ACTION_UPVOTE: Int = 0
@@ -1033,13 +1032,11 @@ object RedditAPI {
         )
     }
 
-    @IntDef(
-        [ACTION_UPVOTE, ACTION_UNVOTE, ACTION_DOWNVOTE, ACTION_SAVE, ACTION_HIDE, ACTION_UNSAVE, ACTION_UNHIDE, ACTION_DELETE]
-    )
+    @IntDef(ACTION_UPVOTE, ACTION_UNVOTE, ACTION_DOWNVOTE, ACTION_SAVE, ACTION_HIDE, ACTION_UNSAVE, ACTION_UNHIDE, ACTION_DELETE)
     @Retention(AnnotationRetention.SOURCE)
     annotation class RedditAction
 
-    @IntDef([SUBSCRIPTION_ACTION_SUBSCRIBE, SUBSCRIPTION_ACTION_UNSUBSCRIBE])
+    @IntDef(SUBSCRIPTION_ACTION_SUBSCRIBE, SUBSCRIPTION_ACTION_UNSUBSCRIBE)
     @Retention(
         AnnotationRetention.SOURCE
     )
