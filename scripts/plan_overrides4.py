@@ -1,5 +1,5 @@
 import re, os, json, collections
-base = '/opt/data/RedReader/src/main/java/org/quantumbadger/redreader'
+base = str(Path(__file__).resolve().parent.parent / 'src/main/java/org/quantumbadger/redreader')
 log = open('/tmp/compile.log').read()
 lines = log.splitlines()
 
