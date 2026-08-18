@@ -191,7 +191,7 @@ class RedditAccountManager @Inject constructor(
 
     @get:Synchronized
     @set:Synchronized
-    var defaultAccount: RedditAccount?
+    var defaultAccount: RedditAccount
         get() {
             if (defaultAccountCache == null) {
                 val db = getReadableDatabase()
@@ -199,7 +199,7 @@ class RedditAccountManager @Inject constructor(
                 db.close()
             }
 
-            return defaultAccountCache
+            return defaultAccountCache!!
         }
         set(newDefault) {
             val db = getWritableDatabase()
@@ -214,7 +214,7 @@ class RedditAccountManager @Inject constructor(
                     TABLE,
                     FIELD_USERNAME
                 ),
-                arrayOf<String>(newDefault!!.username)
+                arrayOf<String>(newDefault.username)
             )
 
             reloadAccounts(db)
@@ -227,7 +227,7 @@ class RedditAccountManager @Inject constructor(
      * Legacy accessor for converted call sites that still use the
      * Java-style `getDefaultAccount()` call form.
      */
-    fun getDefaultAccount(): RedditAccount? {
+    fun getDefaultAccount(): RedditAccount {
         return defaultAccount
     }
 
