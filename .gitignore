@@ -83,3 +83,6 @@ reddit_auth.txt
 /*.txt
 *.log
 *.har
+
+__pycache__/
+*.pyc
