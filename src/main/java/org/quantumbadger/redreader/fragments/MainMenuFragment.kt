@@ -213,12 +213,12 @@ class MainMenuFragment(
     }
 
     override fun onSubredditSubscriptionAttempted(
-        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager
     ) {
     }
 
     override fun onSubredditUnsubscriptionAttempted(
-        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager
     ) {
     }
 

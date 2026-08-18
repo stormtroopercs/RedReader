@@ -1035,19 +1035,19 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
     }
 
     override fun onSubredditSubscriptionListUpdated(
-        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager
     ) {
         postInvalidateOptionsMenu()
     }
 
     override fun onSubredditSubscriptionAttempted(
-        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager
     ) {
         postInvalidateOptionsMenu()
     }
 
     override fun onSubredditUnsubscriptionAttempted(
-        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager
     ) {
         postInvalidateOptionsMenu()
     }

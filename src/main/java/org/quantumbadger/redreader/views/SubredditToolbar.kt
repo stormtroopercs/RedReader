@@ -236,7 +236,7 @@ class SubredditToolbar @JvmOverloads constructor(
     }
 
     override fun onSubredditSubscriptionListUpdated(
-        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager
     ) {
         if (mRunnableOnSubscriptionsChange != null) {
             AndroidCommon.UI_THREAD_HANDLER.post(mRunnableOnSubscriptionsChange!!)
@@ -244,7 +244,7 @@ class SubredditToolbar @JvmOverloads constructor(
     }
 
     override fun onSubredditSubscriptionAttempted(
-        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager
     ) {
         if (mRunnableOnSubscriptionsChange != null) {
             AndroidCommon.UI_THREAD_HANDLER.post(mRunnableOnSubscriptionsChange!!)
@@ -252,7 +252,7 @@ class SubredditToolbar @JvmOverloads constructor(
     }
 
     override fun onSubredditUnsubscriptionAttempted(
-        subredditSubscriptionManager: RedditSubredditSubscriptionManager?
+        subredditSubscriptionManager: RedditSubredditSubscriptionManager
     ) {
         if (mRunnableOnSubscriptionsChange != null) {
             AndroidCommon.UI_THREAD_HANDLER.post(mRunnableOnSubscriptionsChange!!)
