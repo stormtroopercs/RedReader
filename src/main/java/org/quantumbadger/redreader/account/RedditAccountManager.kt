@@ -50,7 +50,7 @@ class RedditAccountManager @Inject constructor(
     private var accountsCache: MutableList<RedditAccount?>? = null
     private var defaultAccountCache: RedditAccount?=null
 
-    private val updateNotifier: UpdateNotifier<RedditAccountChangeListener?> = object : UpdateNotifier<RedditAccountChangeListener?>() {
+    private val updateNotifier: UpdateNotifier<RedditAccountChangeListener> = object : UpdateNotifier<RedditAccountChangeListener>() {
             override fun notifyListener(listener: RedditAccountChangeListener) {
                 listener.onRedditAccountChanged()
             }
@@ -289,11 +289,11 @@ class RedditAccountManager @Inject constructor(
         }
     }
 
-    fun addUpdateListener(listener: RedditAccountChangeListener?) {
+    fun addUpdateListener(listener: RedditAccountChangeListener) {
         updateNotifier.addListener(listener)
     }
 
-    fun removeUpdateListener(listener: RedditAccountChangeListener?) {
+    fun removeUpdateListener(listener: RedditAccountChangeListener) {
         updateNotifier.removeListener(listener)
     }
 

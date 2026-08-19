@@ -253,7 +253,7 @@ abstract class BaseActivity : AppCompatActivity(),
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
-        permissions: Array<String?>,
+        permissions: Array<String>,
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -314,8 +314,8 @@ abstract class BaseActivity : AppCompatActivity(),
 
 
     protected open fun onSharedPreferenceChangedInner(
-        prefs: SharedPrefsWrapper?,
-        key: String?
+        prefs: SharedPrefsWrapper,
+        key: String
     ) {
         // Do nothing
     }

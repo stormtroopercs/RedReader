@@ -98,7 +98,7 @@ class CommentListingRequest(
 
         fun onCommentListingRequestPostDownloaded(post : RedditPreparedPost)
 
-        fun onCommentListingRequestAllItemsDownloaded(items: ArrayList<RedditCommentListItem>?)
+        fun onCommentListingRequestAllItemsDownloaded(items: ArrayList<RedditCommentListItem>)
     }
 
     private fun onThingDownloaded(

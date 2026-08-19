@@ -47,8 +47,8 @@ interface RedditRenderableCommentListItem {
 
     fun getBody(
         activity: BaseActivity,
-        textColor: Int?,
-        textSize: Float?,
+        textColor: Int,
+        textSize: Float,
         showLinkButtons: Boolean
     ): View
 }

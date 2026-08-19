@@ -117,14 +117,14 @@ object RedditAPI {
                         if (result.asObject() != null
                             && Objects.requireNonNull<JsonObject?>(result.asObject()).isEmpty
                         ) {
-                            responseHandler.onSuccess(mutableListOf<RedditFlairChoice?>())
+                            responseHandler.onSuccess(mutableListOf<RedditFlairChoice>())
                             return
                         }
 
                         if (result.asString() != null
                             && Objects.requireNonNull<String?>(result.asString()) == "{}"
                         ) {
-                            responseHandler.onSuccess(mutableListOf<RedditFlairChoice?>())
+                            responseHandler.onSuccess(mutableListOf<RedditFlairChoice>())
                             return
                         }
 
@@ -633,7 +633,7 @@ object RedditAPI {
 
                     override fun onDataStreamComplete(
                         stream: GenericFactory<SeekableInputStream, IOException>,
-                        timestamp: TimestampUTC?,
+                        timestamp: TimestampUTC,
                         session: UUID,
                         fromCache: Boolean,
                         mimetype: String?
@@ -786,7 +786,7 @@ object RedditAPI {
             uri,
             user,
             context,
-            object : ValueResponseHandler<SubredditListResponse?>(context) {
+            object : ValueResponseHandler<SubredditListResponse>(context) {
                 protected override fun onSuccess(value: SubredditListResponse) {
                     results.addAll(value.subreddits)
 
@@ -1089,7 +1089,7 @@ object RedditAPI {
     }
 
     interface FlairSelectorResponseHandler {
-        fun onSuccess(choices: MutableCollection<RedditFlairChoice?>)
+        fun onSuccess(choices: MutableCollection<RedditFlairChoice>)
 
         fun onSubredditDoesNotExist()
 

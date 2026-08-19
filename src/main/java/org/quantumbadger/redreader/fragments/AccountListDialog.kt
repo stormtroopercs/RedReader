@@ -50,8 +50,12 @@ class AccountListDialog private constructor() : AppCompatDialogFragment(),
     override fun onActivityResult(
         requestCode: Int,
         resultCode: Int,
-        data: Intent
+        data: Intent?
     ) {
+        if (data == null) {
+            return
+        }
+
         if (requestCode == 123 && requestCode == resultCode && data.hasExtra("url")) {
             val uri = Uri.parse(data.getStringExtra("url"))
             RedditOAuth.completeLogin(mActivity!!, uri, RunnableOnce.DO_NOTHING)

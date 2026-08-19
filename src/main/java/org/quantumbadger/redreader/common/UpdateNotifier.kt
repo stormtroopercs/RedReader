@@ -20,15 +20,15 @@ import java.lang.ref.WeakReference
 import java.util.LinkedList
 
 abstract class UpdateNotifier<E> {
-    private val listeners = LinkedList<WeakReference<E?>?>()
+    private val listeners = LinkedList<WeakReference<E>>()
 
     @Synchronized
-    fun addListener(updateListener: E?) {
-        listeners.add(WeakReference<E?>(updateListener))
+    fun addListener(updateListener: E) {
+        listeners.add(WeakReference<E>(updateListener))
     }
 
     @Synchronized
-    fun removeListener(updateListener: E?) {
+    fun removeListener(updateListener: E) {
         val iter = listeners.iterator()
 
         while (iter.hasNext()) {
@@ -55,5 +55,5 @@ abstract class UpdateNotifier<E> {
         }
     }
 
-    protected abstract fun notifyListener(listener: E?)
+    protected abstract fun notifyListener(listener: E)
 }

@@ -569,7 +569,7 @@ class CommentListingFragment(
     }
 
     override fun onCommentListingRequestAllItemsDownloaded(
-        items: ArrayList<RedditCommentListItem?>?
+        items: ArrayList<RedditCommentListItem>
     ) {
         mCommentListingManager.addComments(items)
 

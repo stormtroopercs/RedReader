@@ -41,7 +41,7 @@ abstract class RefreshableActivity : ViewsBaseActivity() {
     }
 
     override fun onSharedPreferenceChangedInner(
-        prefs: SharedPrefsWrapper?,
+        prefs: SharedPrefsWrapper,
         key: String
     ) {
         if (PrefsUtility.isRestartRequired(this, key)) {

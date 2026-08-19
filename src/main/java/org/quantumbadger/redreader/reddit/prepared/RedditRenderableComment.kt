@@ -634,9 +634,9 @@ class RedditRenderableComment
 
     override fun getBody(
         activity: BaseActivity,
-        textColor: Int?,
-        textSize: Float?,
-        showLinkButtons: kotlin.Boolean
+        textColor: Int,
+        textSize: Float,
+        showLinkButtons: Boolean
     ): View {
         return parsedComment.body
             .generateView(activity, textColor, textSize, showLinkButtons)
