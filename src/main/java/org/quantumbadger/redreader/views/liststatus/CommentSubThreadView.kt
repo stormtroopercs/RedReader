@@ -16,6 +16,7 @@
  */
 package org.quantumbadger.redreader.views.liststatus
 
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity

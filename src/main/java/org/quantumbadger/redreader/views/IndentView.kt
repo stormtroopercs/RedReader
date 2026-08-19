@@ -42,7 +42,7 @@ internal class IndentView @JvmOverloads constructor(
 
     private val mPrefDrawLines: Boolean
 
-    private var mLineBuffer: FloatArray
+    private var mLineBuffer: FloatArray = FloatArray(0)
 
     init {
         mPixelsPerIndent = dpToPixels(context, 10.0f)

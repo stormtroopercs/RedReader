@@ -388,8 +388,9 @@ class RedditCommentView(
 
         val ageUnits = PrefsUtility.appearance_comment_age_units()
 
-        val postTimestamp = if (mFragment != null && mFragment.post != null)
-            mFragment.post.src.createdTimeUTC
+        val post = mFragment?.post
+        val postTimestamp = if (post != null)
+            post.src.createdTimeUTC
         else
             null
 
@@ -543,8 +544,8 @@ class RedditCommentView(
         when (pref) {
             CommentAction.COLLAPSE -> return string.action_collapse
             CommentAction.ACTION_MENU -> return string.action_actionmenu
+            CommentAction.NOTHING -> return null
         }
-        return null
     }
 
     private fun addAccessibilityActionFromDescriptionPair(

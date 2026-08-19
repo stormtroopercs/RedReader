@@ -23,7 +23,7 @@ import org.quantumbadger.redreader.common.GenericFactory
 import org.quantumbadger.redreader.common.datastream.SeekableInputStream
 import java.io.IOException
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(UnstableApi::class)
 class ExoPlayerSeekableInputStreamDataSourceFactory(
     private val mIsNetwork: Boolean,
     private val mStreamFactory: GenericFactory<SeekableInputStream, IOException>

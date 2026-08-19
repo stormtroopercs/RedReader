@@ -101,8 +101,8 @@ class InboxListingActivity : ViewsBaseActivity() {
     private var inboxType: InboxType?=null
     private var mOnlyShowUnread = false
 
-    private var mTheme: RRThemeAttributes?=null
-    private var mChangeDataManager: RedditChangeDataManager?=null
+    private lateinit var mTheme: RRThemeAttributes
+    private lateinit var mChangeDataManager: RedditChangeDataManager
 
     private val itemHandler: Handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {

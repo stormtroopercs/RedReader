@@ -269,9 +269,7 @@ class RedditPostView(
         when (PrefsUtility.pref_behaviour_post_tap_action()) {
             PostTapAction.LINK -> {
                 mOuterView.setOnClickListener(OnClickListener { v: View? ->
-                    fragmentParent.onPostSelected(
-                        mPost
-                    )
+                    fragmentParent.onPostSelected(mPost!!)
                 })
                 removeClickListeners(mThumbnailView)
                 removeClickListeners(mImagePreviewOuter)
@@ -280,22 +278,16 @@ class RedditPostView(
 
             PostTapAction.COMMENTS -> {
                 mOuterView.setOnClickListener(OnClickListener { v: View? ->
-                    fragmentParent.onPostCommentsSelected(
-                        mPost
-                    )
+                    fragmentParent.onPostCommentsSelected(mPost!!)
                 })
 
                 mThumbnailView.setOnClickListener(OnClickListener { v: View? ->
-                    fragmentParent.onPostSelected(
-                        mPost
-                    )
+                    fragmentParent.onPostSelected(mPost!!)
                 })
                 mThumbnailView.setOnLongClickListener(longClickListener)
 
                 mImagePreviewOuter.setOnClickListener(OnClickListener { v: View? ->
-                    fragmentParent.onPostSelected(
-                        mPost
-                    )
+                    fragmentParent.onPostSelected(mPost!!)
                 })
                 mImagePreviewOuter.setOnLongClickListener(longClickListener)
 
@@ -304,18 +296,14 @@ class RedditPostView(
 
             PostTapAction.TITLE_COMMENTS -> {
                 mOuterView.setOnClickListener(OnClickListener { v: View? ->
-                    fragmentParent.onPostSelected(
-                        mPost
-                    )
+                    fragmentParent.onPostSelected(mPost!!)
                 })
 
                 removeClickListeners(mThumbnailView)
                 removeClickListeners(mImagePreviewOuter)
 
                 title.setOnClickListener(OnClickListener { v: View? ->
-                    fragmentParent.onPostCommentsSelected(
-                        mPost
-                    )
+                    fragmentParent.onPostCommentsSelected(mPost!!)
                 })
                 title.setOnLongClickListener(longClickListener)
             }
@@ -325,9 +313,7 @@ class RedditPostView(
 
         if (mCommentsButtonPref) {
             mCommentsButton.setOnClickListener(OnClickListener { v: View? ->
-                fragmentParent.onPostCommentsSelected(
-                    mPost
-                )
+                fragmentParent.onPostCommentsSelected(mPost!!)
             })
         }
 
@@ -343,17 +329,15 @@ class RedditPostView(
         mLeftFlingPref =             PrefsUtility.pref_behaviour_fling_post_left()
         mRightFlingPref =             PrefsUtility.pref_behaviour_fling_post_right()
 
-        run {
-            val attr = context.obtainStyledAttributes(
-                intArrayOf(
-                    R.attr.rrPostTitleCol,
-                    R.attr.rrPostTitleReadCol,
-                )
+        val attr = context.obtainStyledAttributes(
+            intArrayOf(
+                R.attr.rrPostTitleCol,
+                R.attr.rrPostTitleReadCol,
             )
-            rrPostTitleCol = attr.getColor(0, 0)
-            rrPostTitleReadCol = attr.getColor(1, 0)
-            attr.recycle()
-        }
+        )
+        rrPostTitleCol = attr.getColor(0, 0)
+        rrPostTitleReadCol = attr.getColor(1, 0)
+        attr.recycle()
 
         mThumbnailSizePrefPixels = (dpScale * PrefsUtility.images_thumbnail_size_dp()).toInt()
     }
@@ -647,7 +631,7 @@ class RedditPostView(
         val turnOff = mFooter.findViewById<Button>(R.id.inline_preview_prompt_turn_off_button)
 
         keepShowing.setOnClickListener(OnClickListener { v: View? ->
-            RRAnimationShrinkHeight(promptView).start()
+            RRAnimationShrinkHeight(promptView!!).start()
             sharedPrefs.edit()
                 .putBoolean(PROMPT_PREF_KEY, true)
                 .apply()

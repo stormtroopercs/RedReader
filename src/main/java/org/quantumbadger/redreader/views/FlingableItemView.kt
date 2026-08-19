@@ -55,21 +55,19 @@ abstract class FlingableItemView(context: Context) : SwipableItemView(context) {
 
         val rrListBackgroundCol: Int
 
-        run {
-            val attr = context.obtainStyledAttributes(
-                intArrayOf(
-                    R.attr.rrIconFfLeft,
-                    R.attr.rrIconFfRight,
-                    R.attr.rrIconTick,
-                    R.attr.rrListBackgroundCol
-                )
+        val attr = context.obtainStyledAttributes(
+            intArrayOf(
+                R.attr.rrIconFfLeft,
+                R.attr.rrIconFfRight,
+                R.attr.rrIconTick,
+                R.attr.rrListBackgroundCol
             )
-            rrIconFfLeft = attr.getDrawable(0)
-            rrIconFfRight = attr.getDrawable(1)
-            rrIconTick = attr.getDrawable(2)
-            rrListBackgroundCol = attr.getColor(3, General.COLOR_INVALID)
-            attr.recycle()
-        }
+        )
+        rrIconFfLeft = attr.getDrawable(0)
+        rrIconFfRight = attr.getDrawable(1)
+        rrIconTick = attr.getDrawable(2)
+        rrListBackgroundCol = attr.getColor(3, General.COLOR_INVALID)
+        attr.recycle()
 
         mFlingHintOuter = LayoutInflater.from(context)
             .inflate(R.layout.fling_hint, null, false) as FrameLayout
@@ -127,7 +125,7 @@ abstract class FlingableItemView(context: Context) : SwipableItemView(context) {
         mFlingHintOuter.setTranslationY(mFlingHintYPos)
     }
 
-    private inner class FlingHintAnimation(params: LiveDHM.Params?) : RRDHMAnimation(params) {
+    private inner class FlingHintAnimation(params: LiveDHM.Params) : RRDHMAnimation(params) {
         override fun onUpdatedPosition(position: Float) {
             mFlingHintYPos = position
             updateFlingHintPosition()

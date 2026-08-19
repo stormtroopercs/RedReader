@@ -27,7 +27,7 @@ import org.quantumbadger.redreader.common.datastream.SeekableInputStream
 import java.io.IOException
 import java.util.Objects
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(UnstableApi::class)
 class ExoPlayerSeekableInputStreamDataSource(
     isNetwork: Boolean,
     private val mStreamFactory: GenericFactory<SeekableInputStream, IOException>
@@ -60,7 +60,7 @@ class ExoPlayerSeekableInputStreamDataSource(
             return 0
         }
 
-        val result = Objects.requireNonNull<SeekableInputStream?>(mCurrentStream)
+        val result = Objects.requireNonNull<SeekableInputStream>(mCurrentStream)
             .read(buffer, offset, readLength)
 
         if (result < 0) {

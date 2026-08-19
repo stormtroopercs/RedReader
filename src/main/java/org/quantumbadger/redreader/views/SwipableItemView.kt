@@ -143,7 +143,7 @@ abstract class SwipableItemView(context: Context) : FrameLayout(context) {
         }
     }
 
-    private inner class SwipeAnimation(params: LiveDHM.Params?) : RRDHMAnimation(params) {
+    private inner class SwipeAnimation(params: LiveDHM.Params) : RRDHMAnimation(params) {
         override fun onUpdatedPosition(position: Float) {
             mOverallSwipeDelta = position
             updateOffset()

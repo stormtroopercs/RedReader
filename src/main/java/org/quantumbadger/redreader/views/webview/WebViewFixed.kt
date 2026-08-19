@@ -154,7 +154,7 @@ class WebViewFixed : WebView {
             // Add javascript interface to be called when the video ends
             // (must be done before page load)
             // Must match Javascript interface name of VideoEnabledWebChromeClient
-            addJavascriptInterface(WebViewFixed.JavascriptInterface(), "_VideoEnabledWebView")
+            addJavascriptInterface(JavascriptInterface(), "_VideoEnabledWebView")
 
             addedJavascriptInterface = true
         }

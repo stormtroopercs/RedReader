@@ -96,11 +96,9 @@ class VideoGestureHandler
     }
 
     override fun onFingersMoved() {
-        if (mCurrentTouchState == null) {
-            return
-        }
+        val state = mCurrentTouchState ?: return
 
-        when (mCurrentTouchState) {
+        when (state) {
             TouchState.ONE_FINGER_DOWN -> {
                 run {
                     if (mDragFinger!!.mTotalPosDifference.distanceSquared()
@@ -163,11 +161,9 @@ class VideoGestureHandler
             return
         }
 
-        if (mCurrentTouchState == null) {
-            return
-        }
+        val state = mCurrentTouchState ?: return
 
-        when (mCurrentTouchState) {
+        when (state) {
             TouchState.ONE_FINGER_DOWN -> {
                 mListener.onHorizontalSwipeEnd()
 

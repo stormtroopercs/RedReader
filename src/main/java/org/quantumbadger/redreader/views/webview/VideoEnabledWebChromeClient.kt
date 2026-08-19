@@ -265,10 +265,11 @@ open class VideoEnabledWebChromeClient : WebChromeClient, MediaPlayer.OnPrepared
 
             // Call back (only in API level <19, because in API level 19+ with chromium webview it
             // crashes)
-            if (videoViewCallback != null
-                && !videoViewCallback.javaClass.getName().contains(".chromium.")
+            val callback = videoViewCallback
+            if (callback != null
+                && !callback.javaClass.getName().contains(".chromium.")
             ) {
-                videoViewCallback!!.onCustomViewHidden()
+                callback.onCustomViewHidden()
             }
 
             // Reset video related variables

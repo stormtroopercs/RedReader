@@ -21,6 +21,7 @@ import android.content.DialogInterface
 import android.graphics.Color
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
@@ -57,7 +58,7 @@ import kotlin.math.max
 import kotlin.math.min
 import org.quantumbadger.redreader.common.General
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(UnstableApi::class)
 class ExoPlayerWrapperView(
     context: Context,
     mediaSource: MediaSource,
@@ -354,31 +355,29 @@ class ExoPlayerWrapperView(
 
             updateProgressRunnable.run()
 
-            run {
-                val timeAndSpeedLayout = LinearLayout(context)
-                timeAndSpeedLayout.setOrientation(LinearLayout.HORIZONTAL)
-                controlBar.addView(timeAndSpeedLayout)
+            val timeAndSpeedLayout = LinearLayout(context)
+            timeAndSpeedLayout.setOrientation(LinearLayout.HORIZONTAL)
+            controlBar.addView(timeAndSpeedLayout)
 
-                mTimeTextView = TextView(context)
-                timeAndSpeedLayout.addView(mTimeTextView)
-                mTimeTextView.setTextColor(Color.WHITE)
-                mTimeTextView.setTextSize(18f)
+            mTimeTextView = TextView(context)
+            timeAndSpeedLayout.addView(mTimeTextView)
+            mTimeTextView.setTextColor(Color.WHITE)
+            mTimeTextView.setTextSize(18f)
 
-                mSpeedTextView = TextView(context)
-                timeAndSpeedLayout.addView(mSpeedTextView)
-                mSpeedTextView.setTextColor(Color.WHITE)
-                // Initially empty
-                mSpeedTextView.setText("")
+            mSpeedTextView = TextView(context)
+            timeAndSpeedLayout.addView(mSpeedTextView)
+            mSpeedTextView.setTextColor(Color.WHITE)
+            // Initially empty
+            mSpeedTextView.setText("")
 
-                val marginSidesPx = dpToPixels(context, 16f)
-                val marginBottomPx = dpToPixels(context, 8f)
+            val marginSidesPx = dpToPixels(context, 16f)
+            val marginBottomPx = dpToPixels(context, 8f)
 
-                (mTimeTextView.getLayoutParams() as MarginLayoutParams)
-                    .setMargins(marginSidesPx, 0, marginSidesPx, marginBottomPx)
-                mTimeTextView.setImportantForAccessibility(
-                    IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-                )
-            }
+            (mTimeTextView.getLayoutParams() as MarginLayoutParams)
+                .setMargins(marginSidesPx, 0, marginSidesPx, marginBottomPx)
+            mTimeTextView.setImportantForAccessibility(
+                IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            )
 
             mControlView.setVisibility(GONE)
         } else {

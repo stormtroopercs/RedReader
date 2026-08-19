@@ -17,15 +17,8 @@
 package org.quantumbadger.redreader.views
 
 import android.view.Choreographer
-import javax.inject.Inject
-import javax.inject.Singleton
 
-/**
- * Hilt-injected choreographer for frame callbacks.
- * Replaces companion object singleton pattern.
- */
-@Singleton
-class RRChoreographer @Inject constructor() : Choreographer.FrameCallback {
+class RRChoreographer : Choreographer.FrameCallback {
     interface Callback {
         fun doFrame(frameTimeNanos: Long)
     }
@@ -34,7 +27,6 @@ class RRChoreographer @Inject constructor() : Choreographer.FrameCallback {
     private var mCallbackCount = 0
     private var mPosted = false
 
-    @Suppress("PropertyName")
     private val CHOREOGRAPHER: Choreographer = Choreographer.getInstance()
 
     fun postFrameCallback(callback: Callback) {
@@ -55,5 +47,10 @@ class RRChoreographer @Inject constructor() : Choreographer.FrameCallback {
         for (i in 0..<callbackCount) {
             mCallbacks[i]!!.doFrame(frameTimeNanos)
         }
+    }
+
+    companion object {
+        @JvmStatic
+        val INSTANCE = RRChoreographer()
     }
 }

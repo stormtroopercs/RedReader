@@ -109,20 +109,20 @@ class RedditCommentListItem
     val isLoadMore: Boolean
         get() = mType == Type.LOAD_MORE
 
-    fun asComment(): RedditRenderableComment? {
+    fun asComment(): RedditRenderableComment {
         if (!this.isComment) {
             throw RuntimeException("Called asComment() on non-comment item")
         }
 
-        return mComment
+        return mComment!!
     }
 
-    fun asLoadMore(): RedditMore? {
+    fun asLoadMore(): RedditMore {
         if (!this.isLoadMore) {
             throw RuntimeException("Called asLoadMore() on non-load-more item")
         }
 
-        return mMoreComments
+        return mMoreComments!!
     }
 
     fun isCollapsed(changeDataManager: RedditChangeDataManager): Boolean {

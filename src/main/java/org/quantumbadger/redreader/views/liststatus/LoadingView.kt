@@ -27,7 +27,7 @@ import org.quantumbadger.redreader.R.string
 import java.util.Locale
 
 class LoadingView(
-    context: Context?,
+    context: Context,
     initialText: String,
     progressBarEnabled: Boolean,
     indeterminate: Boolean

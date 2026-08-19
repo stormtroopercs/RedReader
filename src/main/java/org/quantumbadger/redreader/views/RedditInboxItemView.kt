@@ -46,7 +46,7 @@ class RedditInboxItemView(
 
     private var currentItem: RedditRenderableInboxItem?=null
 
-    private val mActivity: BaseActivity?
+    private val mActivity: BaseActivity
 
     init {
         mActivity = activity
@@ -97,9 +97,9 @@ class RedditInboxItemView(
     }
 
     fun reset(
-        context: BaseActivity?,
-        changeDataManager: RedditChangeDataManager?,
-        theme: RRThemeAttributes?,
+        context: BaseActivity,
+        changeDataManager: RedditChangeDataManager,
+        theme: RRThemeAttributes,
         item: RedditRenderableInboxItem,
         showDividerAtTop: Boolean
     ) {
