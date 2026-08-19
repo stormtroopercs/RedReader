@@ -21,24 +21,26 @@ import android.text.style.BackgroundColorSpan
 import android.text.style.CharacterStyle
 import android.text.style.ForegroundColorSpan
 
-object HtmlRawElementInlineErrorMessage : HtmlRawElement() {
-    fun create(text: String): HtmlRawElementStyledText {
-        val spans = ArrayList<CharacterStyle?>()
-        spans.add(BackgroundColorSpan(Color.RED))
-        spans.add(ForegroundColorSpan(Color.WHITE))
+abstract class HtmlRawElementInlineErrorMessage : HtmlRawElement() {
+    companion object {
+        fun create(text: String): HtmlRawElementStyledText {
+            val spans = ArrayList<CharacterStyle?>()
+            spans.add(BackgroundColorSpan(Color.RED))
+            spans.add(ForegroundColorSpan(Color.WHITE))
 
-        return HtmlRawElementStyledText(text, spans)
-    }
+            return HtmlRawElementStyledText(text, spans)
+        }
 
-    fun appendError(
-        text: String,
-        element: HtmlRawElement
-    ): HtmlRawElementTagPassthrough {
-        val children = ArrayList<HtmlRawElement>()
+        fun appendError(
+            text: String,
+            element: HtmlRawElement
+        ): HtmlRawElementTagPassthrough {
+            val children = ArrayList<HtmlRawElement>()
 
-        children.add(element)
-        children.add(create(text))
+            children.add(element)
+            children.add(create(text))
 
-        return HtmlRawElementTagPassthrough(children)
+            return HtmlRawElementTagPassthrough(children)
+        }
     }
 }
