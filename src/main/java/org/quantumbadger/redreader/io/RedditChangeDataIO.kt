@@ -16,12 +16,9 @@
  */
 package org.quantumbadger.redreader.io
 
+import android.annotation.SuppressLint
 import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
-import javax.inject.Inject
-import javax.inject.Singleton
+import android.util.Log
 import org.quantumbadger.redreader.common.TriggerableThread
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
 import java.io.BufferedInputStream
@@ -32,12 +29,8 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
-import android.util.Log
 
-@ViewModelScoped
-class RedditChangeDataIO @Inject constructor(
-    @ApplicationContext private val context: Context
-) {
+class RedditChangeDataIO private constructor(private val mContext: Context) {
     private val mLock = Any()
 
     private val mIsInitialReadStarted = AtomicBoolean(false)
@@ -49,14 +42,14 @@ class RedditChangeDataIO @Inject constructor(
             val startTime = System.currentTimeMillis()
 
             try {
-                val dataFileTmpLocation: File = this.dataFileWriteTmpLocation
+                val dataFileTmpLocation: File = dataFileWriteTmpLocation
 
                 Log.i(
                     TAG,
                     String.format(
                         Locale.US,
                         "Writing tmp data file at '%s'",
-                        dataFileTmpLocation.getAbsolutePath()
+                        dataFileTmpLocation.absolutePath
                     )
                 )
 
@@ -69,14 +62,14 @@ class RedditChangeDataIO @Inject constructor(
 
                 dos.writeInt(DB_VERSION)
 
-                RedditChangeDataManager.Companion.writeAllUsers(dos)
+                RedditChangeDataManager.writeAllUsers(dos)
 
                 dos.flush()
                 dos.close()
 
                 Log.i(TAG, "Write successful. Atomically replacing data file...")
 
-                val dataFileLocation: File = this.dataFileLocation
+                val dataFileLocation: File = this@RedditChangeDataIO.dataFileLocation
 
                 if (!dataFileTmpLocation.renameTo(dataFileLocation)) {
                     Log.e(TAG, "Atomic replace failed!")
@@ -139,7 +132,7 @@ class RedditChangeDataIO @Inject constructor(
                 String.format(
                     Locale.US,
                     "Data file at '%s'",
-                    dataFileLocation.getAbsolutePath()
+                    dataFileLocation.absolutePath
                 )
             )
 
@@ -171,7 +164,7 @@ class RedditChangeDataIO @Inject constructor(
                     return
                 }
 
-                RedditChangeDataManager.Companion.readAllUsers(dis, mContext)
+                RedditChangeDataManager.readAllUsers(dis, mContext)
 
                 Log.i(TAG, "Initial read successful.")
             } finally {
@@ -208,5 +201,34 @@ class RedditChangeDataIO @Inject constructor(
         private const val DB_VERSION = 1
         private const val DB_FILENAME = "rr_change_data.dat"
         private const val DB_WRITETMP_FILENAME = "rr_change_data_tmp.dat"
+
+        @SuppressLint("StaticFieldLeak")
+        private var INSTANCE: RedditChangeDataIO? = null
+
+        private var STATIC_UPDATE_PENDING = false
+
+        fun getInstance(context: Context): RedditChangeDataIO {
+            synchronized(this) {
+                if (INSTANCE == null) {
+                    INSTANCE = RedditChangeDataIO(context.getApplicationContext())
+
+                    if (STATIC_UPDATE_PENDING) {
+                        INSTANCE!!.notifyUpdate()
+                    }
+                }
+
+                return INSTANCE!!
+            }
+        }
+
+        fun notifyUpdateStatic() {
+            synchronized(this) {
+                if (INSTANCE != null) {
+                    INSTANCE!!.notifyUpdate()
+                } else {
+                    STATIC_UPDATE_PENDING = true
+                }
+            }
+        }
     }
 }

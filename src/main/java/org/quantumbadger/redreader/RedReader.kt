@@ -35,6 +35,8 @@ import org.quantumbadger.redreader.common.GlobalConfig
 import org.quantumbadger.redreader.common.GlobalExceptionHandler
 import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.compose.prefs.ComposePrefsSingleton
+import org.quantumbadger.redreader.io.RedditChangeDataIO
+import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
 import javax.inject.Inject
 
 /**
@@ -105,6 +107,13 @@ class RedReader : Application() {
                 Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
                 CacheManager.getInstance(this@RedReader).pruneTemp()
                 CacheManager.getInstance(this@RedReader).pruneCache()
+            }
+        }.start()
+
+        object : Thread() {
+            override fun run() {
+                RedditChangeDataIO.getInstance(this@RedReader).runInitialReadInThisThread()
+                RedditChangeDataManager.pruneAllUsersDefaultMaxAge()
             }
         }.start()
     }

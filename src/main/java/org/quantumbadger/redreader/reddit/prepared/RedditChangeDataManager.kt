@@ -48,7 +48,7 @@ class RedditChangeDataManager {
     }
 
     private class Entry {
-        private val mTimestamp: TimestampUTC
+        val mTimestamp: TimestampUTC
 
         val isUpvoted: Boolean
         val isDownvoted: Boolean
@@ -81,7 +81,7 @@ class RedditChangeDataManager {
             this.isHidden = isHidden
         }
 
-        private constructor(dis: ExtendedDataInputStream) {
+        constructor(dis: ExtendedDataInputStream) {
             mTimestamp = fromUtcMs(dis.readLong())
             this.isUpvoted = dis.readBoolean()
             this.isDownvoted = dis.readBoolean()
@@ -216,8 +216,8 @@ class RedditChangeDataManager {
     private class ListenerNotifyOperator
 
         : ArgOperator<Listener?, RedditIdAndType?> {
-        override fun operate(listener: Listener, arg: RedditIdAndType?) {
-            listener.onRedditDataChange(arg)
+        override fun operate(listener: Listener?, arg: RedditIdAndType?) {
+            listener?.onRedditDataChange(arg)
         }
 
         companion object {
@@ -225,7 +225,7 @@ class RedditChangeDataManager {
         }
     }
 
-    private val mEntries = HashMap<RedditIdAndType?, Entry?>()
+    private val mEntries = HashMap<RedditIdAndType?, Entry>()
     private val mLock = Any()
 
     private val mListeners = WeakReferenceListHashMapManager<RedditIdAndType?, Listener?>()
@@ -278,7 +278,7 @@ class RedditChangeDataManager {
         })
     }
 
-    private fun insertAll(entries: HashMap<RedditIdAndType?, Entry?>) {
+    private fun insertAll(entries: HashMap<RedditIdAndType?, Entry>) {
         synchronized(mLock) {
             for (entry in entries.entries) {
                 val newEntry: Entry = entry.value!!
@@ -406,9 +406,9 @@ class RedditChangeDataManager {
         }
     }
 
-    private fun snapshot(): HashMap<RedditIdAndType?, Entry?> {
+    private fun snapshot(): HashMap<RedditIdAndType?, Entry> {
         synchronized(mLock) {
-            return HashMap<RedditIdAndType?, Entry?>(mEntries)
+            return HashMap<RedditIdAndType?, Entry>(mEntries)
         }
     }
 
@@ -486,8 +486,8 @@ class RedditChangeDataManager {
             }
         }
 
-        private fun snapshotAllUsers(): HashMap<RedditAccount?, HashMap<RedditIdAndType?, Entry?>?> {
-            val result = HashMap<RedditAccount?, HashMap<RedditIdAndType?, Entry?>?>()
+        private fun snapshotAllUsers(): HashMap<RedditAccount?, HashMap<RedditIdAndType?, Entry>?> {
+            val result = HashMap<RedditAccount?, HashMap<RedditIdAndType?, Entry>?>()
 
             synchronized(INSTANCE_MAP) {
                 for (account in INSTANCE_MAP.keys) {
@@ -502,7 +502,7 @@ class RedditChangeDataManager {
         fun writeAllUsers(dos: ExtendedDataOutputStream) {
             Log.i(TAG, "Taking snapshot...")
 
-            val data: HashMap<RedditAccount?, HashMap<RedditIdAndType?, Entry?>?> =                 snapshotAllUsers()
+            val data: HashMap<RedditAccount?, HashMap<RedditIdAndType?, Entry>?> =                 snapshotAllUsers()
 
             Log.i(TAG, "Writing to stream...")
 
@@ -543,7 +543,7 @@ class RedditChangeDataManager {
         @Throws(IOException::class)
         fun readAllUsers(
             dis: ExtendedDataInputStream,
-            context: Context?
+            context: Context
         ) {
             Log.i(TAG, "Reading from stream...")
 
@@ -567,7 +567,7 @@ class RedditChangeDataManager {
                     )
                 }
 
-                val entries = HashMap<RedditIdAndType?, Entry?>(entryCount)
+                val entries = HashMap<RedditIdAndType?, Entry>(entryCount)
 
                 for (j in 0..<entryCount) {
                     val thingId = RedditIdAndType(dis.readUTF())
