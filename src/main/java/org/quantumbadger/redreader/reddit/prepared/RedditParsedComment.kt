@@ -68,7 +68,7 @@ class RedditParsedComment(
 
         val flair = mapIfNotNull<UrlEncodedString?, String>(
             rawComment.author_flair_text,
-            UrlEncodedString::decoded
+            { it?.decoded }
         )
 
         if (flair != null) {
@@ -88,7 +88,7 @@ class RedditParsedComment(
     override val idAndType: RedditIdAndType get() = rawComment.idAndType
 
     private fun getFlairEmotes(
-        flairRichtext: MutableList<MaybeParseError<FlairEmoteData?>?>,
+        flairRichtext: List<MaybeParseError<FlairEmoteData>>,
         activity: AppCompatActivity
     ) {
         val alignment: Int
@@ -176,8 +176,8 @@ class RedditParsedComment(
                                             alignment
                                         )
                                         runOnUiThread(Runnable {
-                                            if (this.flair != null) {
-                                                flair!!.replace(placeholder, span)
+                                            if (this@RedditParsedComment.flair != null) {
+                                                this@RedditParsedComment.flair!!.replace(placeholder, span)
                                             }
                                         })
                                     }

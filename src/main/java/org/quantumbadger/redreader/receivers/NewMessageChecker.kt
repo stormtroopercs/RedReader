@@ -165,7 +165,7 @@ class NewMessageChecker : BroadcastReceiver() {
                                     General.nullAlternative<String>(
                                         org.quantumbadger.redreader.common.General.mapIfNotNull<UrlEncodedString?, String>(
                                             comment.author,
-                                            UrlEncodedString::decoded
+                                            { it?.decoded }
                                         )!!,
                                         unknownUser
                                     )
@@ -181,11 +181,11 @@ class NewMessageChecker : BroadcastReceiver() {
                                     General.nullAlternative<String>(
                                         org.quantumbadger.redreader.common.General.mapIfNotNull<UrlEncodedString?, String>(
                                             message.author,
-                                            UrlEncodedString::decoded
+                                            { it?.decoded }
                                         )!!,
                                         org.quantumbadger.redreader.common.General.mapIfNotNull<UrlEncodedString?, String>(
                                             message.subreddit_name_prefixed,
-                                            UrlEncodedString::decoded
+                                            { it?.decoded }
                                         )!!,
                                         unknownUser
                                     )

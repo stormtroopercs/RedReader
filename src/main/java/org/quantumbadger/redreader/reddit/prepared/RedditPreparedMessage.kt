@@ -109,11 +109,11 @@ class RedditPreparedMessage(
             val author: String?=General.nullAlternative<String>(
                 org.quantumbadger.redreader.common.General.mapIfNotNull<UrlEncodedString?, String>(
                     src.author,
-                    UrlEncodedString::decoded
+                    { it?.decoded }
                 )!!,
                 org.quantumbadger.redreader.common.General.mapIfNotNull<UrlEncodedString?, String>(
                     src.subreddit_name_prefixed,
-                    UrlEncodedString::decoded
+                    { it?.decoded }
                 )!!,
                 "[" + applicationContext.getString(string.general_unknown) + "]"
             )
@@ -149,7 +149,7 @@ class RedditPreparedMessage(
         intent.putExtra(CommentReplyActivity.Companion.PARENT_ID_AND_TYPE_KEY, idAndType)
         intent.putExtra(
             CommentReplyActivity.Companion.PARENT_MARKDOWN_KEY,
-            mapIfNotNull<UrlEncodedString?, String>(src.body_html, UrlEncodedString::decoded)
+            mapIfNotNull<UrlEncodedString?, String>(src.body_html, { it?.decoded })
         )
         intent.putExtra(
             CommentReplyActivity.Companion.PARENT_TYPE,

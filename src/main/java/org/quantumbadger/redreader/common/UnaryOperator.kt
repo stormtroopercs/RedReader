@@ -16,6 +16,6 @@
  */
 package org.quantumbadger.redreader.common
 
-interface UnaryOperator<E, R> {
+fun interface UnaryOperator<E, R> {
     fun operate(value: E?): R?
 }
