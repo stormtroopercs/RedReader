@@ -45,7 +45,7 @@ class BoundsHelper(
         }
 
         val scale = mCoordinateHelper.scale
-        val posOffset = mCoordinateHelper.getPositionOffset()
+        val posOffset = mCoordinateHelper.positionOffset
 
         val scaledImageWidth = mImageResolutionX.toFloat() * scale
         val scaledImageHeight = mImageResolutionY.toFloat() * scale

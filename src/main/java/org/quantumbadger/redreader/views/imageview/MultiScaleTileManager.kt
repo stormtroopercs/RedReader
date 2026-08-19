@@ -18,11 +18,11 @@ package org.quantumbadger.redreader.views.imageview
 
 import android.graphics.Bitmap
 class MultiScaleTileManager(
-    imageTileSource: ImageTileSource?,
-    thread: ImageViewTileLoaderThread?,
+    imageTileSource: ImageTileSource,
+    thread: ImageViewTileLoaderThread,
     x: Int,
     y: Int,
-    listener: ImageViewTileLoader.Listener?
+    listener: ImageViewTileLoader.Listener
 ) {
     private val mTileLoaders: Array<ImageViewTileLoader?>
 

@@ -33,19 +33,19 @@ class RRGLDisplayListRenderer(
 ) : GLSurfaceView.Renderer, Refreshable {
     interface DisplayListManager : FingerListener {
         fun onGLSceneCreate(
-            scene: RRGLDisplayList?,
-            context: RRGLContext?,
-            refreshable: Refreshable?
+            scene: RRGLDisplayList,
+            context: RRGLContext,
+            refreshable: Refreshable
         )
 
         fun onGLSceneResolutionChange(
-            scene: RRGLDisplayList?,
-            context: RRGLContext?,
+            scene: RRGLDisplayList,
+            context: RRGLContext,
             width: Int,
             height: Int
         )
 
-        fun onGLSceneUpdate(scene: RRGLDisplayList?, context: RRGLContext?): Boolean
+        fun onGLSceneUpdate(scene: RRGLDisplayList, context: RRGLContext): Boolean
 
         fun onUIAttach()
 
@@ -54,22 +54,22 @@ class RRGLDisplayListRenderer(
 
     private val mPixelMatrix = FloatArray(16)
 
-    private var mScene: RRGLDisplayList?=null
-    private var mGLContext: RRGLContext?=null
-    private var mMatrixStack: RRGLMatrixStack?=null
+    private lateinit var mScene: RRGLDisplayList
+    private lateinit var mGLContext: RRGLContext
+    private lateinit var mMatrixStack: RRGLMatrixStack
 
     override fun onSurfaceCreated(ignore: GL10?, config: EGLConfig?) {
         mGLContext = RRGLContext(mSurfaceView.getContext())
         mMatrixStack = RRGLMatrixStack(mGLContext)
         mScene = RRGLDisplayList()
 
-        mGLContext!!.setClearColor(0f, 0f, 0f, 1f)
+        mGLContext.setClearColor(0f, 0f, 0f, 1f)
 
         mDisplayListManager.onGLSceneCreate(mScene, mGLContext, this)
     }
 
     override fun onSurfaceChanged(ignore: GL10?, width: Int, height: Int) {
-        mGLContext!!.setViewport(width, height)
+        mGLContext.setViewport(width, height)
 
         val hScale = 2f / width.toFloat()
         val vScale = -2f / height.toFloat()
@@ -101,15 +101,15 @@ class RRGLDisplayListRenderer(
 
         val animating = mDisplayListManager.onGLSceneUpdate(mScene, mGLContext)
 
-        mGLContext!!.clear()
+        mGLContext.clear()
 
-        mGLContext!!.activatePixelMatrix(mPixelMatrix, 0)
+        mGLContext.activatePixelMatrix(mPixelMatrix, 0)
 
-        mMatrixStack!!.assertAtRoot()
-        mScene!!.startRender(mMatrixStack, time)
-        mMatrixStack!!.assertAtRoot()
+        mMatrixStack.assertAtRoot()
+        mScene.startRender(mMatrixStack, time)
+        mMatrixStack.assertAtRoot()
 
-        if (animating || mScene!!.isAnimating) {
+        if (animating || mScene.isAnimating) {
             mSurfaceView.requestRender()
         }
     }

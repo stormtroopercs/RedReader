@@ -63,8 +63,8 @@ class ImageViewDisplayListManager(
 
     private val mTileLoaders: Array<Array<MultiScaleTileManager?>?>
     private val mTiles: Array<Array<RRGLRenderableTexturedQuad?>?>
-    private var mTileVisibility: Array<BooleanArray?>
-    private var mTileLoaded: Array<BooleanArray>
+    private lateinit var mTileVisibility: Array<BooleanArray?>
+    private lateinit var mTileLoaded: Array<BooleanArray>
     private var mLastSampleSize = 1
 
     private var mRefreshable: Refreshable?=null
@@ -105,7 +105,7 @@ class ImageViewDisplayListManager(
         refreshable: Refreshable
     ) {
         mTileVisibility = Array<BooleanArray?>(mHTileCount) { BooleanArray(mVTileCount) }
-        mTileLoaded = Array<BooleanArray?>(mHTileCount) { BooleanArray(mVTileCount) }
+        mTileLoaded = Array(mHTileCount) { BooleanArray(mVTileCount) }
         mRefreshable = refreshable
         mScreenDensity = glContext.screenDensity
 
@@ -115,11 +115,11 @@ class ImageViewDisplayListManager(
 
         mOverallScale = RRGLRenderableScale(group)
         mOverallTranslation = RRGLRenderableTranslation(mOverallScale)
-        scene.add(mOverallTranslation)
+        scene.add(mOverallTranslation!!)
 
         for (x in 0..<mHTileCount) {
             for (y in 0..<mVTileCount) {
-                val quad =                     RRGLRenderableTexturedQuad(glContext, mNotLoadedTexture)
+                val quad =                     RRGLRenderableTexturedQuad(glContext, mNotLoadedTexture!!)
                 mTiles[x]!![y] = quad
 
                 val scale = RRGLRenderableScale(quad)
@@ -154,13 +154,13 @@ class ImageViewDisplayListManager(
             mImageTileSource.height
         )
 
-        scene.add(mScrollbars)
+        scene.add(mScrollbars!!)
     }
 
     @Synchronized
     override fun onGLSceneResolutionChange(
-        scene: RRGLDisplayList?,
-        context: RRGLContext?,
+        scene: RRGLDisplayList,
+        context: RRGLContext,
         width: Int,
         height: Int
     ) {
@@ -185,8 +185,8 @@ class ImageViewDisplayListManager(
 
     @Synchronized
     override fun onGLSceneUpdate(
-        scene: RRGLDisplayList?,
-        context: RRGLContext?
+        scene: RRGLDisplayList,
+        context: RRGLContext
     ): Boolean {
         if (mScaleAnimation != null) {
             if (!mScaleAnimation!!.onStep()) {
@@ -198,7 +198,7 @@ class ImageViewDisplayListManager(
             mBoundsHelper!!.applyBounds()
         }
 
-        val positionOffset = mCoordinateHelper.getPositionOffset()
+        val positionOffset = mCoordinateHelper.positionOffset
         val scale = mCoordinateHelper.scale
 
         mOverallTranslation!!.setPosition(positionOffset)
@@ -262,7 +262,7 @@ class ImageViewDisplayListManager(
                             }
                         }
                     } else if (!isTileWanted) {
-                        mTiles[x]!![y]!!.setTexture(mNotLoadedTexture)
+                        mTiles[x]!![y]!!.setTexture(mNotLoadedTexture!!)
                     }
 
                     mTileVisibility[x]!![y] = isTileVisible
@@ -424,6 +424,8 @@ class ImageViewDisplayListManager(
                 mCoordinateHelper.scaleAboutScreenPoint(newCentre, scaleDifference)
                 mCoordinateHelper.translateScreen(oldCentre, newCentre)
             }
+
+            TouchState.DOUBLE_TAP_WAIT_NO_FINGERS_DOWN, null -> {}
         }
     }
 
@@ -499,10 +501,12 @@ class ImageViewDisplayListManager(
                     mPinchFinger2 = mSpareFingers.pop()
                 }
             }
+
+            TouchState.DOUBLE_TAP_WAIT_NO_FINGERS_DOWN, null -> {}
         }
     }
 
-    private fun onDoubleTap(position: MutableFloatPoint2D?) {
+    private fun onDoubleTap(position: MutableFloatPoint2D) {
         val minScale = mBoundsHelper!!.getMinScale()
         val currentScale = mCoordinateHelper.scale
 

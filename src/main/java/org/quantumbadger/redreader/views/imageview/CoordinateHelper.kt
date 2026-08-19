@@ -22,6 +22,10 @@ class CoordinateHelper {
     var scale: Float = 1.0f
     val positionOffset: MutableFloatPoint2D = MutableFloatPoint2D()
 
+    fun setScale(scale: Float) {
+        this.scale = scale
+    }
+
     fun getPositionOffset(result: MutableFloatPoint2D) {
         result.set(this.positionOffset)
     }
@@ -65,8 +69,8 @@ class CoordinateHelper {
     }
 
     fun translateScreen(
-        oldScreenPos: MutableFloatPoint2D?,
-        newScreenPos: MutableFloatPoint2D?
+        oldScreenPos: MutableFloatPoint2D,
+        newScreenPos: MutableFloatPoint2D
     ) {
         positionOffset.add(newScreenPos)
         positionOffset.sub(oldScreenPos)
