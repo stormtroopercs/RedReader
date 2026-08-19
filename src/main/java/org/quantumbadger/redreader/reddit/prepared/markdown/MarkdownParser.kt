@@ -17,14 +17,10 @@
 package org.quantumbadger.redreader.reddit.prepared.markdown
 
 object MarkdownParser {
-    fun parse(raw: CharArray?): MarkdownParagraphGroup {
-        val rawLines: Array<CharArrSubstring?> = CharArrSubstring.Companion.generateFromLines(raw)
+    fun parse(raw: CharArray): MarkdownParagraphGroup {
+        val rawLines: Array<CharArrSubstring> = CharArrSubstring.Companion.generateFromLines(raw)
 
-        val lines = arrayOfNulls<MarkdownLine>(rawLines.size)
-
-        for (i in rawLines.indices) {
-            lines[i] = MarkdownLine.Companion.generate(rawLines[i])
-        }
+        val lines = Array(rawLines.size) { MarkdownLine.Companion.generate(rawLines[it]) }
 
         val mergedLines = ArrayList<MarkdownLine>(rawLines.size)
         var currentLine: MarkdownLine?=null
@@ -54,6 +50,8 @@ object MarkdownParser {
                             mergedLines.add(currentLine)
                             currentLine = lines[i]
                         }
+
+                        else -> {}
                     }
 
                 }
@@ -66,7 +64,7 @@ object MarkdownParser {
             mergedLines.add(currentLine)
         }
 
-        val outputParagraphs =             ArrayList<MarkdownParagraph?>(mergedLines.size)
+        val outputParagraphs =             ArrayList<MarkdownParagraph>(mergedLines.size)
 
         for (line in mergedLines) {
             val lastParagraph = if (outputParagraphs.isEmpty())
@@ -81,7 +79,7 @@ object MarkdownParser {
             }
         }
 
-        return MarkdownParagraphGroup(outputParagraphs.toTypedArray<MarkdownParagraph?>())
+        return MarkdownParagraphGroup(outputParagraphs.toTypedArray())
     }
 
     enum class MarkdownParagraphType {

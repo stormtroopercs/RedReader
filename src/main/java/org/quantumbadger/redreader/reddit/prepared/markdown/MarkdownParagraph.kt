@@ -40,15 +40,15 @@ import org.quantumbadger.redreader.views.LinkifiedTextView
 class MarkdownParagraph(
     val raw: CharArrSubstring?,
     val parent: MarkdownParagraph?,
-    val type: MarkdownParagraphType?,
+    val type: MarkdownParagraphType,
     val tokens: IntArray?,
     val level: Int,
     val number: Int
 ) {
     val spanned: Spanned?
-    val links: MutableList<Link?>
+    val links: MutableList<Link>
 
-    class Link(val title: String?, val subtitle: String?, private val url: UriString?) {
+    class Link(val title: String, val subtitle: String?, private val url: UriString) {
         fun onClicked(activity: BaseActivity) {
             onLinkClicked(activity, url, false)
         }
@@ -59,7 +59,7 @@ class MarkdownParagraph(
     }
 
     init {
-        links = ArrayList<Link?>()
+        links = ArrayList<Link>()
         spanned = internalGenerateSpanned()
 
         if (tokens == null && raw != null) {
@@ -159,7 +159,7 @@ class MarkdownParagraph(
 
                     val urlBuilder = StringBuilder(urlEnd - urlStart)
 
-                    val j = urlStart + 1
+                    var j = urlStart + 1
                     while (j < urlEnd) {
                         urlBuilder.append(tokens[j].toChar())
                         j++
@@ -244,7 +244,7 @@ class MarkdownParagraph(
                     builder.append(' ')
                 }
 
-                ' ' -> {
+                ' '.code -> {
                     builder.append(' ')
 
                     if (caretStart >= 0 && parentOpenCount == parentCloseCount) {
@@ -264,7 +264,7 @@ class MarkdownParagraph(
                     }
                 }
 
-                '(' -> if (caretStart >= 0) {
+                '('.code -> if (caretStart >= 0) {
                     parentOpenCount++
                     if (caretStart != builder.length) {
                         builder.append('(')
@@ -274,7 +274,7 @@ class MarkdownParagraph(
                     builder.append('(')
                 }
 
-                ')' -> if (caretStart >= 0) {
+                ')'.code -> if (caretStart >= 0) {
                     parentCloseCount++
                     if (parentOpenCount != parentCloseCount) {
                         builder.append(')')

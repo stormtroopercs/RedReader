@@ -135,10 +135,10 @@ class CharArrSubstring internal constructor(val arr: CharArray, val start: Int, 
             return CharArrSubstring(src, 0, src.size)
         }
 
-        fun generateFromLines(src: CharArray): Array<CharArrSubstring?> {
+        fun generateFromLines(src: CharArray): Array<CharArrSubstring> {
             var curPos = 0
 
-            val result = LinkedList<CharArrSubstring?>()
+            val result = LinkedList<CharArrSubstring>()
 
             var nextLinebreak: Int
 
@@ -149,7 +149,7 @@ class CharArrSubstring internal constructor(val arr: CharArray, val start: Int, 
 
             result.add(CharArrSubstring(src, curPos, src.size - curPos))
 
-            return result.toTypedArray<CharArrSubstring?>()
+            return result.toTypedArray()
         }
 
         private fun indexOfLinebreak(raw: CharArray, startPos: Int): Int {

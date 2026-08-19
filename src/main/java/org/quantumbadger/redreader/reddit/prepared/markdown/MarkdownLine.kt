@@ -19,8 +19,8 @@ package org.quantumbadger.redreader.reddit.prepared.markdown
 import org.quantumbadger.redreader.reddit.prepared.markdown.MarkdownParser.MarkdownParagraphType
 
 class MarkdownLine internal constructor(
-    val src: CharArrSubstring,
-    val type: MarkdownParagraphType?,
+    val src: CharArrSubstring?,
+    val type: MarkdownParagraphType,
     val spacesAtStart: Int,
     val spacesAtEnd: Int,
     val prefixLength: Int,
@@ -28,9 +28,9 @@ class MarkdownLine internal constructor(
     val number: Int
 ) {
     fun rejoin(toAppend: MarkdownLine): MarkdownLine {
-        src.arr[src.start + src.length] = ' '
+        src!!.arr[src.start + src.length] = ' '
         return MarkdownLine(
-            src.rejoin(toAppend.src),
+            src.rejoin(toAppend.src!!),
             type,
             spacesAtStart,
             toAppend.spacesAtEnd,
@@ -41,7 +41,7 @@ class MarkdownLine internal constructor(
     }
 
     fun tokenize(parent: MarkdownParagraph?): MarkdownParagraph {
-        val cleanedSrc =             if (prefixLength == 0) src else src.substring(prefixLength)
+        val cleanedSrc =             if (prefixLength == 0) src!! else src!!.substring(prefixLength)
 
         if (type != MarkdownParagraphType.CODE
             && type != MarkdownParagraphType.HLINE
@@ -73,6 +73,8 @@ class MarkdownLine internal constructor(
 
     private val isPlainText: Boolean
         get() {
+            val src = this.src!!
+
             for (i in prefixLength..<src.length) {
                 when (src.arr[i + src.start]) {
                     '*', '_', '^', '`', '\\', '[', '~', '#', '&' -> return false
