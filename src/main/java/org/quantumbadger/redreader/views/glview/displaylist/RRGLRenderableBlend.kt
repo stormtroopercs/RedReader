@@ -19,7 +19,7 @@ package org.quantumbadger.redreader.views.glview.displaylist
 import android.opengl.GLES20
 import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
-class RRGLRenderableBlend(entity: RRGLRenderable?) : RRGLRenderableRenderHooks(entity) {
+class RRGLRenderableBlend(entity: RRGLRenderable) : RRGLRenderableRenderHooks(entity) {
     override fun preRender(stack : RRGLMatrixStack, time: Long) {
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)

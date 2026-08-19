@@ -26,7 +26,7 @@ class RRGLContext(context: Context) {
     private val mProgramTexture: RRGLProgramTexture
     private val mProgramColour: RRGLProgramColour
 
-    private var mPixelMatrix: FloatArray?
+    private var mPixelMatrix: FloatArray? = null
     private var mPixelMatrixOffset = 0
 
     private var mProgramCurrent: RRGLProgramVertices?=null

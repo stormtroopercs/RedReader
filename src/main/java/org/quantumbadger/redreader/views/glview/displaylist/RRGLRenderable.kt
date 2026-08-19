@@ -31,7 +31,7 @@ abstract class RRGLRenderable {
         this.isVisible = true
     }
 
-    fun startRender(stack: RRGLMatrixStack?, time: Long) {
+    fun startRender(stack: RRGLMatrixStack, time: Long) {
         if (this.isVisible) {
             renderInternal(stack, time)
         }

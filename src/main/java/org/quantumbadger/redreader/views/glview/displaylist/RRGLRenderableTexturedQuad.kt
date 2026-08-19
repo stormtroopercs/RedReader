@@ -28,13 +28,13 @@ class RRGLRenderableTexturedQuad(
     private var mTexture: RRGLTexture
 ) : RRGLRenderable() {
     fun setTexture(newTexture: RRGLTexture) {
-        if (isAdded()) {
+        if (isAdded) {
             mTexture.releaseReference()
         }
 
         mTexture = newTexture
 
-        if (isAdded()) {
+        if (isAdded) {
             mTexture.addReference()
         }
     }

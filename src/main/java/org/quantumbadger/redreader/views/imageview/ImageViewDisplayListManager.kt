@@ -114,7 +114,7 @@ class ImageViewDisplayListManager(
         val group = RRGLRenderableGroup()
 
         mOverallScale = RRGLRenderableScale(group)
-        mOverallTranslation = RRGLRenderableTranslation(mOverallScale)
+        mOverallTranslation = RRGLRenderableTranslation(mOverallScale!!)
         scene.add(mOverallTranslation!!)
 
         for (x in 0..<mHTileCount) {

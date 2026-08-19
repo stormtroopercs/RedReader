@@ -19,7 +19,7 @@ package org.quantumbadger.redreader.views.glview.displaylist
 import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
 
-class RRGLRenderableScale(entity: RRGLRenderable?) : RRGLRenderableRenderHooks(entity) {
+class RRGLRenderableScale(entity: RRGLRenderable) : RRGLRenderableRenderHooks(entity) {
     private var mScaleX = 1f
     private var mScaleY = 1f
 

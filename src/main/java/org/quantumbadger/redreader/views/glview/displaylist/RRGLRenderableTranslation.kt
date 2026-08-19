@@ -20,7 +20,7 @@ import org.quantumbadger.redreader.common.MutableFloatPoint2D
 import org.quantumbadger.redreader.views.glview.program.RRGLMatrixStack
 
 
-class RRGLRenderableTranslation(entity: RRGLRenderable?) : RRGLRenderableRenderHooks(entity) {
+class RRGLRenderableTranslation(entity: RRGLRenderable) : RRGLRenderableRenderHooks(entity) {
     private var mPositionX = 0f
     private var mPositionY = 0f
 

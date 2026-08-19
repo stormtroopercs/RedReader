@@ -23,20 +23,20 @@ open class RRGLRenderableGroup : RRGLRenderable() {
 
     fun add(child: RRGLRenderable) {
         mChildren.add(child)
-        if (isAdded()) {
+        if (isAdded) {
             child.onAdded()
         }
     }
 
     fun remove(child: RRGLRenderable) {
-        if (isAdded()) {
+        if (isAdded) {
             child.onRemoved()
         }
         mChildren.remove(child)
     }
 
     override fun onAdded() {
-        if (!isAdded()) {
+        if (!isAdded) {
             for (entity in mChildren) {
                 entity.onAdded()
             }
@@ -55,7 +55,7 @@ open class RRGLRenderableGroup : RRGLRenderable() {
     override fun onRemoved() {
         super.onRemoved()
 
-        if (!isAdded()) {
+        if (!isAdded) {
             for (entity in mChildren) {
                 entity.onRemoved()
             }
