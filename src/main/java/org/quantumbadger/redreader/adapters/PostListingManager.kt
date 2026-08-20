@@ -20,12 +20,12 @@ import android.content.Context
 import org.quantumbadger.redreader.reddit.RedditPostListItem
 import java.util.Collections
 
-class PostListingManager(context: Context?) : RedditListingManager(context) {
+class PostListingManager(context: Context) : RedditListingManager(context) {
     var postCount: Int = 0
         private set
 
-    fun addPosts(posts: MutableCollection<RedditPostListItem?>) {
-        addItems(Collections.unmodifiableCollection<GroupedRecyclerViewAdapter.Item<*>?>(posts))
+    fun addPosts(posts: MutableCollection<RedditPostListItem>) {
+        addItems(Collections.unmodifiableCollection<GroupedRecyclerViewAdapter.Item<*>>(posts))
         this.postCount += posts.size
     }
 }

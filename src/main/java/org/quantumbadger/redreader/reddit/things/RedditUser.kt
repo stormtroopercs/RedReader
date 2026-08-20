@@ -96,20 +96,20 @@ class RedditUser : Parcelable, JsonDeserializable {
         if (has_mail == null) {
             parcel.writeInt(0)
         } else {
-            parcel.writeInt(if (has_mail) 1 else -1)
+            parcel.writeInt(if (has_mail == true) 1 else -1)
         }
 
         if (has_mod_mail == null) {
             parcel.writeInt(0)
         } else {
-            parcel.writeInt(if (has_mod_mail) 1 else -1)
+            parcel.writeInt(if (has_mod_mail == true) 1 else -1)
         }
 
-        parcel.writeInt(if (is_friend) 1 else 0)
-        parcel.writeInt(if (is_gold) 1 else 0)
-        parcel.writeInt(if (is_mod) 1 else 0)
-        parcel.writeInt(if (over_18) 1 else 0)
-        parcel.writeInt(if (is_blocked) 1 else 0)
+        parcel.writeInt(if (is_friend == true) 1 else 0)
+        parcel.writeInt(if (is_gold == true) 1 else 0)
+        parcel.writeInt(if (is_mod == true) 1 else 0)
+        parcel.writeInt(if (over_18 == true) 1 else 0)
+        parcel.writeInt(if (is_blocked == true) 1 else 0)
 
         parcel.writeString(id)
         parcel.writeString(name)

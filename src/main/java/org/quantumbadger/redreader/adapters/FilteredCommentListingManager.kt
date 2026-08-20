@@ -22,7 +22,7 @@ import org.quantumbadger.redreader.reddit.RedditCommentListItem
 import java.util.Collections
 
 class FilteredCommentListingManager(
-    context: Context?,
+    context: Context,
     private val mSearchString: String?
 ) : RedditListingManager(context) {
     var commentCount: Int = 0
@@ -38,7 +38,7 @@ class FilteredCommentListingManager(
 
     private fun filter(
         comments: MutableCollection<RedditCommentListItem>
-    ): MutableCollection<GroupedRecyclerViewAdapter.Item<*>?> {
+    ): MutableCollection<GroupedRecyclerViewAdapter.Item<*>> {
         val searchComments: MutableCollection<RedditCommentListItem>
 
         if (mSearchString == null) {
@@ -60,7 +60,7 @@ class FilteredCommentListingManager(
             }
         }
 
-        return Collections.unmodifiableCollection<GroupedRecyclerViewAdapter.Item<*>?>(
+        return Collections.unmodifiableCollection<GroupedRecyclerViewAdapter.Item<*>>(
             searchComments
         )
     }

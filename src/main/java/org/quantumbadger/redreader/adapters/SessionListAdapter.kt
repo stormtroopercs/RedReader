@@ -40,7 +40,7 @@ import java.util.UUID
 
 class SessionListAdapter(
     private val context: Context,
-    url: UriString?,
+    url: UriString,
     private val current: UUID?,
     private val type: SessionChangeType,
     private val fragment: AppCompatDialogFragment

@@ -56,7 +56,7 @@ abstract class RedditListingManager protected constructor(context: Context) {
         }
     }
 
-    fun addFooterError(view: ErrorView?) {
+    fun addFooterError(view: ErrorView) {
         checkThisIsUIThread()
         mAdapter.appendToGroup(
             GROUP_FOOTER_ERRORS,
@@ -64,7 +64,7 @@ abstract class RedditListingManager protected constructor(context: Context) {
         )
     }
 
-    fun addPostHeader(view: RedditPostHeaderView?) {
+    fun addPostHeader(view: RedditPostHeaderView) {
         checkThisIsUIThread()
         mAdapter.appendToGroup(
             GROUP_HEADER,
@@ -73,7 +73,7 @@ abstract class RedditListingManager protected constructor(context: Context) {
         doWorkaround()
     }
 
-    fun addPostListingHeader(view: View?) {
+    fun addPostListingHeader(view: View) {
         checkThisIsUIThread()
         mAdapter.appendToGroup(
             GROUP_HEADER,
@@ -82,7 +82,7 @@ abstract class RedditListingManager protected constructor(context: Context) {
         doWorkaround()
     }
 
-    fun addPostSelfText(view: View?) {
+    fun addPostSelfText(view: View) {
         checkThisIsUIThread()
         mAdapter.appendToGroup(
             GROUP_POST_SELFTEXT,
@@ -91,7 +91,7 @@ abstract class RedditListingManager protected constructor(context: Context) {
         doWorkaround()
     }
 
-    fun addNotification(view: View?) {
+    fun addNotification(view: View) {
         checkThisIsUIThread()
         mAdapter.appendToGroup(
             GROUP_NOTIFICATIONS,
@@ -100,19 +100,19 @@ abstract class RedditListingManager protected constructor(context: Context) {
         doWorkaround()
     }
 
-    fun addItems(items: MutableCollection<GroupedRecyclerViewAdapter.Item<*>?>?) {
+    fun addItems(items: MutableCollection<GroupedRecyclerViewAdapter.Item<*>>) {
         checkThisIsUIThread()
         mAdapter.appendToGroup(GROUP_ITEMS, items)
         doWorkaround()
     }
 
-    fun addViewToItems(view: View?) {
+    fun addViewToItems(view: View) {
         checkThisIsUIThread()
         mAdapter.appendToGroup(GROUP_ITEMS, GroupedRecyclerViewItemFrameLayout(view))
         doWorkaround()
     }
 
-    fun addLoadMoreButton(view: View?) {
+    fun addLoadMoreButton(view: View) {
         checkThisIsUIThread()
         mAdapter.appendToGroup(
             GROUP_LOAD_MORE_BUTTON,

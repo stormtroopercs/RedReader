@@ -120,7 +120,7 @@ abstract class APIResponseHandler private constructor(val context: AppCompatActi
 
     abstract class UserResponseHandler protected constructor(context: AppCompatActivity) :
         APIResponseHandler(context) {
-        fun notifySuccess(result: RedditUser?, timestamp: TimestampUTC?) {
+        fun notifySuccess(result: RedditUser, timestamp: TimestampUTC) {
             try {
                 onSuccess(result, timestamp)
             } catch (t1: Throwable) {

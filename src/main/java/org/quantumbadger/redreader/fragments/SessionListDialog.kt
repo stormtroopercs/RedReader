@@ -80,7 +80,7 @@ class SessionListDialog : AppCompatDialogFragment(), RedditAccountChangeListener
         builder.setView(rv)
 
         rv!!.setLayoutManager(LinearLayoutManager(context))
-        rv!!.setAdapter(SessionListAdapter(context, url, current, type!!, this))
+        rv!!.setAdapter(SessionListAdapter(context!!, url!!, current, type!!, this))
         rv!!.setHasFixedSize(true)
 
         RedditAccountManager.Companion.getInstance(context).addUpdateListener(this)
