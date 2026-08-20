@@ -250,7 +250,7 @@ class PostListingFragment(
         }
 
         mRequest = createPostListingRequest(
-            from(mPostListingURL!!.generateJsonUri()),
+            from(mPostListingURL!!.generateJsonUri()!!),
             RedditAccountManager.Companion.getInstance(context).getDefaultAccount(),
             session,
             downloadStrategy,
@@ -263,10 +263,10 @@ class PostListingFragment(
                 setHeader(
                     SearchListingHeader(
                         getActivity(),
-                        mPostListingURL as SearchPostListURL?
+                        mPostListingURL as SearchPostListURL
                     )
                 )
-                CacheManager.Companion.getInstance(context).makeRequest(mRequest)
+                CacheManager.Companion.getInstance(context).makeRequest(mRequest!!)
             }
 
             RedditURLParser.USER_POST_LISTING_URL, RedditURLParser.MULTIREDDIT_POST_LISTING_URL -> {
@@ -275,7 +275,7 @@ class PostListingFragment(
                     mPostListingURL!!.humanReadableUrl(),
                     null
                 )
-                CacheManager.Companion.getInstance(context).makeRequest(mRequest)
+                CacheManager.Companion.getInstance(context).makeRequest(mRequest!!)
             }
 
             RedditURLParser.SUBREDDIT_POST_LISTING_URL -> {
@@ -284,11 +284,11 @@ class PostListingFragment(
                 when (subredditPostListURL.type) {
                     SubredditPostListURL.Type.FRONTPAGE, SubredditPostListURL.Type.ALL, SubredditPostListURL.Type.SUBREDDIT_COMBINATION, SubredditPostListURL.Type.ALL_SUBTRACTION, SubredditPostListURL.Type.POPULAR -> {
                         setHeader(
-                            mPostListingURL.humanReadableName(getActivity(), true),
-                            mPostListingURL!!.humanReadableUrl(),
+                            subredditPostListURL.humanReadableName(getActivity(), true),
+                            subredditPostListURL.humanReadableUrl(),
                             null
                         )
-                        CacheManager.Companion.getInstance(context).makeRequest(mRequest)
+                        CacheManager.Companion.getInstance(context).makeRequest(mRequest!!)
                     }
 
                     SubredditPostListURL.Type.SUBREDDIT -> {
@@ -301,7 +301,7 @@ class PostListingFragment(
                                     AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
                                         CacheManager.Companion.getInstance(
                                             context
-                                        ).makeRequest(mRequest)
+                                        ).makeRequest(mRequest!!)
                                     })
                                 }
 
@@ -310,8 +310,8 @@ class PostListingFragment(
                                     timeCached: TimestampUTC?
                                 ) {
                                     AndroidCommon.UI_THREAD_HANDLER.post(Runnable {
-                                        this.subreddit = result
-                                        if (subreddit!!.over18
+                                        this@PostListingFragment.subreddit = result
+                                        if (subreddit!!.over18 == true
                                             && !PrefsUtility.pref_behaviour_nsfw()
                                         ) {
                                             mPostListingManager.setLoadingVisible(false)
@@ -333,7 +333,7 @@ class PostListingFragment(
                                         } else {
                                             onSubredditReceived()
                                             CacheManager.Companion.getInstance(context)
-                                                .makeRequest(mRequest)
+                                                .makeRequest(mRequest!!)
                                         }
                                     })
                                 }
@@ -436,7 +436,7 @@ class PostListingFragment(
             getActivity(),
             title,
             subtitle,
-            mPostListingURL,
+            mPostListingURL!!,
             subreddit
         )
 
@@ -498,7 +498,7 @@ class PostListingFragment(
                 mLastAfter = mAfter
                 mReadyToDownloadMore = false
 
-                val newUri = mPostListingURL!!.after(mAfter).generateJsonUri()
+                val newUri = mPostListingURL!!.after(mAfter!!).generateJsonUri()!!
 
                 // TODO customise (currently 3 hrs)
                 val strategy: DownloadStrategy = if (mTimestamp!!.elapsed()
@@ -517,7 +517,7 @@ class PostListingFragment(
                     false
                 )
                 mPostListingManager.setLoadingVisible(true)
-                CacheManager.Companion.getInstance(getActivity()).makeRequest(mRequest)
+                CacheManager.Companion.getInstance(getActivity()).makeRequest(mRequest!!)
             } else if (mPostCountLimit > 0 && mPostRefreshCount.get() <= 0) {
                 if (mLoadMoreView == null) {
                     mLoadMoreView = LayoutInflater.from(context)
@@ -668,7 +668,7 @@ class PostListingFragment(
 
                         val listing = thing.data
 
-                        val posts: ArrayList<MaybeParseError<RedditThing?>?> = listing.children
+                        val posts: ArrayList<MaybeParseError<RedditThing>> = listing.children
 
                         val isNsfwAllowed = PrefsUtility.pref_behaviour_nsfw()
 
@@ -737,7 +737,7 @@ class PostListingFragment(
                                     + (if (precacheComments) "ON" else "OFF")
                         )
 
-                        val cm: CacheManager? = CacheManager.Companion.getInstance(activity)
+                        val cm: CacheManager = CacheManager.Companion.getInstance(activity)
 
                         val showSubredditName =                             !(mPostListingURL != null && (mPostListingURL!!.pathType()
                                     == RedditURLParser.SUBREDDIT_POST_LISTING_URL) && (mPostListingURL!!.asSubredditPostListURL().type
@@ -939,7 +939,7 @@ class PostListingFragment(
             PostCommentListingURL.Companion.forPostId(preparedPost.src.idAlone)
         )
 
-        val url = from(controller.uri)
+        val url = from(controller.uri!!)
 
         CacheManager.Companion.getInstance(activity)
             .makeRequest(

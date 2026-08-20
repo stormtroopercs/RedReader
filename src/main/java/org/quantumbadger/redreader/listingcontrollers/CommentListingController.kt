@@ -93,7 +93,7 @@ class CommentListingController(url: RedditURL) {
         get() = commentListingUrl.generateJsonUri()
 
     fun get(
-        parent: AppCompatActivity?,
+        parent: AppCompatActivity,
         force: Boolean,
         savedInstanceState: Bundle?
     ): CommentListingFragment {
@@ -103,7 +103,7 @@ class CommentListingController(url: RedditURL) {
         return CommentListingFragment(
             parent,
             savedInstanceState,
-            listOfOne<RedditURL?>(this.commentListingUrl),
+            listOfOne<RedditURL>(this.commentListingUrl),
             this.session,
             this.searchString,
             force

@@ -126,8 +126,8 @@ class WebViewFragment : Fragment(), PostSelectionListener {
             )
 
             post = RedditPreparedPost(
-                mActivity,
-                CacheManager.Companion.getInstance(mActivity),
+                mActivity!!,
+                CacheManager.Companion.getInstance(mActivity!!),
                 0,
                 parsedPost,
                 TimestampUTC.ZERO,
@@ -155,7 +155,7 @@ class WebViewFragment : Fragment(), PostSelectionListener {
             General.dpToPixels(mActivity!!, 10f),
             0
         )
-        val fullscreenViewFrame =             outer!!.findViewById<FrameLayout?>(R.id.web_view_fragment_fullscreen_frame)
+        val fullscreenViewFrame =             outer!!.findViewById<FrameLayout>(R.id.web_view_fragment_fullscreen_frame)
 
         val chromeClient: VideoEnabledWebChromeClient = object : VideoEnabledWebChromeClient(
             loadingViewFrame,
@@ -265,7 +265,7 @@ class WebViewFragment : Fragment(), PostSelectionListener {
         if (mUrl != null) {
             webView!!.loadUrl(mUrl!!.value)
         } else {
-            webView!!.loadHtmlUTF8WithBaseURL("https://reddit.com/", html)
+            webView!!.loadHtmlUTF8WithBaseURL("https://reddit.com/", html!!)
         }
 
         webView!!.setWebViewClient(object : WebViewClient() {
@@ -420,7 +420,7 @@ class WebViewFragment : Fragment(), PostSelectionListener {
                             if (url != view.getUrl()) {
                                 return@Runnable
                             }
-                            if (goingBack && url == currentUrl) {
+                            if (goingBack && url.equals(currentUrl)) {
                                 quickToast(
                                     mActivity,
                                     String.format(
@@ -458,7 +458,7 @@ class WebViewFragment : Fragment(), PostSelectionListener {
         outerFrame.addView(outer)
 
         if (post != null) {
-            val toolbarOverlay = SideToolbarOverlay(mActivity)
+            val toolbarOverlay = SideToolbarOverlay(mActivity!!)
 
             val bezelOverlay = BezelSwipeOverlay(
                 mActivity,

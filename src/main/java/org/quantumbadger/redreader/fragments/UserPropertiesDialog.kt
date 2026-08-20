@@ -28,13 +28,13 @@ import java.util.Objects
 
 class UserPropertiesDialog : PropertiesDialog() {
     override fun getTitle(context : Context): String {
-        return Objects.requireNonNull<RedditUser?>(
+        return Objects.requireNonNull<RedditUser>(
             BundleCompat.getParcelable<RedditUser?>(
                 requireArguments(),
                 "user",
                 RedditUser::class.java
             )
-        ).name
+        ).name!!
     }
 
     override fun prepare(
@@ -96,7 +96,7 @@ class UserPropertiesDialog : PropertiesDialog() {
                 propView(
                     context,
                     string.userprofile_isfriend,
-                    if (user.is_friend) string.general_true else string.general_false,
+                    if (user.is_friend == true) string.general_true else string.general_false,
                     false
                 )
             )
@@ -107,7 +107,7 @@ class UserPropertiesDialog : PropertiesDialog() {
                 propView(
                     context,
                     string.userprofile_isgold,
-                    if (user.is_gold) string.general_true else string.general_false,
+                    if (user.is_gold == true) string.general_true else string.general_false,
                     false
                 )
             )
@@ -118,7 +118,7 @@ class UserPropertiesDialog : PropertiesDialog() {
                 propView(
                     context,
                     string.userprofile_moderator,
-                    if (user.is_mod) string.general_true else string.general_false,
+                    if (user.is_mod == true) string.general_true else string.general_false,
                     false
                 )
             )
@@ -129,7 +129,7 @@ class UserPropertiesDialog : PropertiesDialog() {
                 propView(
                     context,
                     string.userprofile_tag_admin,
-                    if (user.is_employee) string.general_true else string.general_false,
+                    if (user.is_employee == true) string.general_true else string.general_false,
                     false
                 )
             )
@@ -140,7 +140,7 @@ class UserPropertiesDialog : PropertiesDialog() {
                 propView(
                     context,
                     string.userprofile_tag_suspended,
-                    if (user.is_suspended) string.general_true else string.general_false,
+                    if (user.is_suspended == true) string.general_true else string.general_false,
                     false
                 )
             )
@@ -151,7 +151,7 @@ class UserPropertiesDialog : PropertiesDialog() {
                 propView(
                     context,
                     string.userprofile_tag_blocked,
-                    if (user.is_blocked) string.general_true else string.general_false,
+                    if (user.is_blocked == true) string.general_true else string.general_false,
                     false
                 )
             )

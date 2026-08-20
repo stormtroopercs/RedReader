@@ -96,15 +96,15 @@ import org.quantumbadger.redreader.common.General
 class CommentListingFragment(
     parent: AppCompatActivity,
     savedInstanceState: Bundle?,
-    urls: ArrayList<RedditURL?>?,
+    urls: ArrayList<RedditURL>,
     session: UUID?,
     searchString: String?,
     forceDownload: Boolean
 ) : RRFragment(parent, savedInstanceState), PostSelectionListener, CommentListener,
     CommentListingRequest.Listener {
-    private val mUser: RedditAccount?
-    private val mAllUrls: ArrayList<RedditURL?>?
-    private val mUrlsToDownload: LinkedList<RedditURL?>
+    private val mUser: RedditAccount
+    private val mAllUrls: ArrayList<RedditURL>
+    private val mUrlsToDownload: LinkedList<RedditURL>
     private val mSession: UUID?
     private val mDownloadStrategy: DownloadStrategy
 
@@ -142,7 +142,7 @@ class CommentListingFragment(
         mCommentListingManager = FilteredCommentListingManager(parent, searchString)
         mAllUrls = urls
 
-        mUrlsToDownload = LinkedList<RedditURL?>(mAllUrls)
+        mUrlsToDownload = LinkedList(mAllUrls)
 
         this.mSession = session
 
@@ -275,13 +275,13 @@ class CommentListingFragment(
             context,
             object : BezelSwipeListener {
                 override fun onSwipe(@BezelSwipeOverlay.SwipeEdge edge: Int): Boolean {
-                    if (this.post == null) {
+                    if (this@CommentListingFragment.post == null) {
                         return false
                     }
 
                     toolbarOverlay.setContents(
                         generateToolbar(
-                            this.post,
+                            this@CommentListingFragment.post!!,
                             getActivity() as BaseActivity,
                             true,
                             toolbarOverlay
@@ -319,7 +319,7 @@ class CommentListingFragment(
         val changeDataManager: RedditChangeDataManager=RedditChangeDataManager.Companion.getInstance(mUser)
         val item = view.comment
 
-        if (item.isComment) {
+        if (item != null && item.isComment) {
             val comment = item.asComment()
 
             changeDataManager.markHidden(
@@ -360,14 +360,14 @@ class CommentListingFragment(
     }
 
     @SuppressLint("WrongConstant")
-    private fun makeNextRequest(context: Context?) {
+    private fun makeNextRequest(context: Context) {
         if (!mUrlsToDownload.isEmpty()) {
             CommentListingRequest(
                 context,
                 this,
                 getActivity() as BaseActivity,
                 mUrlsToDownload.getFirst(),
-                mAllUrls!!.size == 1,
+                mAllUrls.size == 1,
                 mUrlsToDownload.getFirst(),
                 mUser,
                 mSession,
@@ -393,6 +393,7 @@ class CommentListingFragment(
                     )
                 }
             }
+            CommentAction.NOTHING -> {}
         }
     }
 
@@ -447,7 +448,7 @@ class CommentListingFragment(
 
             val postHeader = RedditPostHeaderView(
                 activity,
-                this.post
+                post
             )
 
             mCommentListingManager.addPostHeader(postHeader)

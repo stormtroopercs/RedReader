@@ -38,7 +38,7 @@ import org.quantumbadger.redreader.views.RedditPostView.PostSelectionListener
 
 class MoreCommentsListingActivity : RefreshableActivity(), RedditAccountChangeListener,
     OptionsMenuCommentsListener, PostSelectionListener {
-    private val mUrls = ArrayList<RedditURL?>(32)
+    private val mUrls = ArrayList<RedditURL>(32)
 
     private var mFragment: CommentListingFragment?=null
 

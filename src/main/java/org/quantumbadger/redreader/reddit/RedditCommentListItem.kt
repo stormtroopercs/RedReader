@@ -42,9 +42,9 @@ class RedditCommentListItem
 
     val indent: Int
     val parent: RedditCommentListItem?
-    private val mFragment: CommentListingFragment?
-    private val mActivity: BaseActivity?
-    private val mCommentListingUrl: RedditURL?
+    private val mFragment: CommentListingFragment
+    private val mActivity: BaseActivity
+    private val mCommentListingUrl: RedditURL
 
     private val mComment: RedditRenderableComment?
     private val mMoreComments: RedditMore?
@@ -54,9 +54,9 @@ class RedditCommentListItem
     constructor(
         comment: RedditRenderableComment?,
         parent: RedditCommentListItem?,
-        fragment: CommentListingFragment?,
-        activity: BaseActivity?,
-        commentListingUrl: RedditURL?
+        fragment: CommentListingFragment,
+        activity: BaseActivity,
+        commentListingUrl: RedditURL
     ) {
         this.parent = parent
         mFragment = fragment
@@ -80,9 +80,9 @@ class RedditCommentListItem
     constructor(
         moreComments: RedditMore?,
         parent: RedditCommentListItem?,
-        fragment: CommentListingFragment?,
-        activity: BaseActivity?,
-        commentListingUrl: RedditURL?
+        fragment: CommentListingFragment,
+        activity: BaseActivity,
+        commentListingUrl: RedditURL
     ) {
         this.parent = parent
         mFragment = fragment

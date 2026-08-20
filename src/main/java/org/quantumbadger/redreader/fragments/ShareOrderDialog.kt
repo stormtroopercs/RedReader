@@ -39,7 +39,7 @@ import java.util.LinkedList
 class ShareOrderDialog : AppCompatDialogFragment(), ShareOrderCallbackListener {
     private var packageManager: PackageManager?=null
     private var shareIntent: Intent?=null
-    private var orderedAppList: MutableList<ResolveInfo?>? = null
+    private var orderedAppList: MutableList<ResolveInfo>? = null
     private var context: Context?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,22 +67,22 @@ class ShareOrderDialog : AppCompatDialogFragment(), ShareOrderCallbackListener {
         )
         val listView = ListView(context)
         builder.setView(listView)
-        listView.setAdapter(ShareOrderAdapter(context, orderedAppList, this))
+        listView.setAdapter(ShareOrderAdapter(context!!, orderedAppList!!, this))
 
         return builder.create()
     }
 
-    private fun prioritizeTopApps(unorderedList: MutableList<ResolveInfo?>): MutableList<ResolveInfo?> {
+    private fun prioritizeTopApps(unorderedList: MutableList<ResolveInfo>): MutableList<ResolveInfo> {
         if (unorderedList.isEmpty()) {
             General.quickToast(context!!, string.error_toast_no_share_app_installed)
             dismiss()
         }
 
         // Make a copy of the list since the original is not modifiable
-        val orderedList = LinkedList<ResolveInfo?>(unorderedList)
+        val orderedList = LinkedList<ResolveInfo>(unorderedList)
 
         val prioritizedAppNames =             Arrays.asList<String?>(
-                *PrefsUtility.pref_behaviour_sharing_dialog_data_get()
+                *PrefsUtility.pref_behaviour_sharing_dialog_data_get()!!
                     .split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
             )
         val prioritizedApps = arrayOfNulls<ResolveInfo>(prioritizedAppNames.size)
@@ -106,7 +106,7 @@ class ShareOrderDialog : AppCompatDialogFragment(), ShareOrderCallbackListener {
         // Combine the two lists in order, respecting unavailable apps (null values in the Array)
         for (i in prioritizedApps.indices.reversed()) {
             if (prioritizedApps[i] != null) {
-                orderedList.addFirst(prioritizedApps[i])
+                orderedList.addFirst(prioritizedApps[i]!!)
             }
         }
 
@@ -128,7 +128,7 @@ class ShareOrderDialog : AppCompatDialogFragment(), ShareOrderCallbackListener {
     private fun persistPriority(selectedApplication: ActivityInfo) {
         val priorityAppList =             LinkedList<String?>(
                 Arrays.asList<String?>(
-                    *PrefsUtility.pref_behaviour_sharing_dialog_data_get()
+                    *PrefsUtility.pref_behaviour_sharing_dialog_data_get()!!
                         .split(";".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 )
             )
@@ -139,7 +139,7 @@ class ShareOrderDialog : AppCompatDialogFragment(), ShareOrderCallbackListener {
         }
 
         PrefsUtility.pref_behaviour_sharing_dialog_data_set(
-            context,
+            context!!,
             StringUtils.join(priorityAppList, ";")
         )
     }

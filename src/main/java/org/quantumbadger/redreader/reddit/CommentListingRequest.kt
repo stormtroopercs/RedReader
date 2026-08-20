@@ -68,9 +68,9 @@ import org.quantumbadger.redreader.common.General
 
 class CommentListingRequest(
     private val mContext: Context,
-    private val mFragment: CommentListingFragment?,
+    private val mFragment: CommentListingFragment,
     private val mActivity: BaseActivity,
-    private val mCommentListingURL: RedditURL?,
+    private val mCommentListingURL: RedditURL,
     private val mParsePostSelfText: Boolean,
     private val mUrl: RedditURL,
     private val mUser: RedditAccount,
@@ -104,7 +104,7 @@ class CommentListingRequest(
     private fun onThingDownloaded(
         thingResponse: RedditThingResponse,
         session: UUID,
-        timestamp: TimestampUTC?,
+        timestamp: TimestampUTC,
         fromCache: Boolean
     ) {
         var parentPostAuthor: String?=null
@@ -173,7 +173,7 @@ class CommentListingRequest(
         }
 
         // Download comments
-        val topLevelComments: ArrayList<MaybeParseError<RedditThing?>> = commentListing.children
+        val topLevelComments: ArrayList<MaybeParseError<RedditThing>> = commentListing.children
 
         val items = ArrayList<RedditCommentListItem>(200)
 
@@ -202,7 +202,7 @@ class CommentListingRequest(
     }
 
     private fun createCommentListingCacheRequest(): CacheRequest {
-        val url = from(mUrl.generateJsonUri())
+        val url = from(mUrl.generateJsonUri()!!)
 
         return CacheRequest(
             url,

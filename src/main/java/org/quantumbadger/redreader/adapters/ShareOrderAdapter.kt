@@ -30,7 +30,7 @@ import org.quantumbadger.redreader.R
 
 class ShareOrderAdapter(
     private val context: Context,
-    private val appList: MutableList<ResolveInfo?>,
+    private val appList: MutableList<ResolveInfo>,
     private val fragment: AppCompatDialogFragment
 ) : BaseAdapter() {
     private val packageManager: PackageManager
