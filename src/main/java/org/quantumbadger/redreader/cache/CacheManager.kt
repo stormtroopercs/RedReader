@@ -299,7 +299,7 @@ class CacheManager @Inject constructor(
         requests.put(request)
     }
 
-    fun getSessions(url: UriString?, user: RedditAccount): MutableList<CacheEntry> {
+    fun getSessions(url: UriString, user: RedditAccount): MutableList<CacheEntry> {
         return dbManager.select(url, user.username, null)
     }
 
@@ -315,7 +315,7 @@ class CacheManager @Inject constructor(
         return ReadableCacheFile(cacheId, cacheCompressionType)
     }
 
-    inner class WritableCacheFile private constructor(
+    inner class WritableCacheFile internal constructor(
         val mUrl: UriString,
         val mUser: RedditAccount,
         val mFileType: Int,
@@ -334,7 +334,7 @@ class CacheManager @Inject constructor(
         private var mCompressedLength: Long = 0
 
         init {
-            location = this.preferredCacheLocation
+            location = this@CacheManager.preferredCacheLocation
             mTmpFile = File(location, UUID.randomUUID().toString() + tempExt)
 
             mOutStream = FileOutputStream(mTmpFile)
@@ -431,7 +431,7 @@ class CacheManager @Inject constructor(
         }
     }
 
-    inner class ReadableCacheFile private constructor(
+    inner class ReadableCacheFile internal constructor(
         val id: Long,
         private val mCacheCompressionType: CacheCompressionType
     ) {
@@ -469,7 +469,7 @@ class CacheManager @Inject constructor(
             )
 
             if (result.isPresent) {
-                return Optional.of<String>(result.get().mimetype)
+                return Optional.of<String>(result.get().mimetype!!)
             } else {
                 return Optional.empty<String>()
             }

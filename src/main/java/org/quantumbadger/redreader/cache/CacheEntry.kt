@@ -25,7 +25,7 @@ import java.util.UUID
 class CacheEntry internal constructor(cursor: Cursor) {
     val id: Long
     val url: UriString
-    val session: UUID?
+    val session: UUID
     val timestamp: TimestampUTC
     val mimetype: String?
     val cacheCompressionType: CacheCompressionType

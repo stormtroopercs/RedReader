@@ -77,7 +77,7 @@ class CacheContentProvider : ContentProvider() {
     }
 
     override fun onCreate(): Boolean {
-        mCacheManager = CacheManager.Companion.getInstance(getContext())
+        mCacheManager = CacheManager.Companion.getInstance(getContext()!!)
         return true
     }
 

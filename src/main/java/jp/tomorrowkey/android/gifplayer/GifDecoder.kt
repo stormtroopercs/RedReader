@@ -22,9 +22,9 @@ class GifDecoder {
      */
     var loopCount: Int = 1 // iterations; 0 = repeat forever
         protected set
-    protected var gct: IntArray? // global color table
-    protected var lct: IntArray? // local color table
-    protected var act: IntArray? // active color table
+    protected var gct: IntArray? = null // global color table
+    protected var lct: IntArray? = null // local color table
+    protected var act: IntArray? = null // active color table
     protected var bgIndex: Int = 0 // background color index
     protected var bgColor: Int = 0 // background color
     protected var lastBgColor: Int = 0 // previous bg color
@@ -51,10 +51,10 @@ class GifDecoder {
     protected var transIndex: Int = 0 // transparent color index
 
     // LZW decoder working arrays
-    protected var prefix: ShortArray?
-    protected var suffix: ByteArray?
-    protected var pixelStack: ByteArray?
-    protected var pixels: ByteArray?
+    protected var prefix: ShortArray? = null
+    protected var suffix: ByteArray? = null
+    protected var pixelStack: ByteArray? = null
+    protected var pixels: ByteArray? = null
     protected var frames: Vector<GifFrame?>? = null // frames read from current file
 
     /**
@@ -65,7 +65,7 @@ class GifDecoder {
     var frameCount: Int = 0
         protected set
 
-    private class GifFrame(var image: Bitmap?, var delay: Int)
+    class GifFrame(var image: Bitmap?, var delay: Int)
 
     /**
      * Gets display duration for specified frame.
@@ -458,8 +458,8 @@ class GifDecoder {
                         0xf9 -> readGraphicControlExt()
                         0xff -> {
                             readBlock()
-                            val app = ""
-                            val i = 0
+                            var app = ""
+                            var i = 0
                             while (i < 11) {
                                 app += Char(block[i].toUShort())
                                 i++

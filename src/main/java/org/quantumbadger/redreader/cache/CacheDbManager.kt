@@ -133,7 +133,7 @@ internal class CacheDbManager(context: Context?) :
         url: UriString,
         user: String?,
         session: UUID?
-    ): MutableList<CacheEntry?> {
+    ): MutableList<CacheEntry> {
         val db = getReadableDatabase()
 
         val queryString: String
@@ -175,8 +175,8 @@ internal class CacheDbManager(context: Context?) :
         }
     }
 
-    private fun readEntriesFromCursor(cursor: Cursor): MutableList<CacheEntry?> {
-        val result = ArrayList<CacheEntry?>()
+    private fun readEntriesFromCursor(cursor: Cursor): MutableList<CacheEntry> {
+        val result = ArrayList<CacheEntry>()
 
         while (cursor.moveToNext()) {
             result.add(CacheEntry(cursor))

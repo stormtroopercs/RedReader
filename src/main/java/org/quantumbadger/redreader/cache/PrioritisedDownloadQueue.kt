@@ -30,7 +30,7 @@ internal class PrioritisedDownloadQueue(context: Context?) {
     }
 
     @Synchronized
-    fun add(request: CacheRequest, manager: CacheManager?) {
+    fun add(request: CacheRequest, manager: CacheManager) {
         val download = CacheDownload(request, manager)
 
         if (request.queueType == DownloadQueueType.REDDIT_API) {
@@ -46,7 +46,7 @@ internal class PrioritisedDownloadQueue(context: Context?) {
     }
 
     @get:Synchronized
-    private val nextRedditInQueue: CacheDownload?
+    private val nextRedditInQueue: CacheDownload
         get() {
             while (redditDownloadsQueued.isEmpty()) {
                 try {
@@ -66,14 +66,14 @@ internal class PrioritisedDownloadQueue(context: Context?) {
 
             redditDownloadsQueued.remove(next)
 
-            return next
+            return next!!
         }
 
     private inner class RedditQueueProcessor : Thread("Reddit Queue Processor") {
         override fun run() {
             while (true) {
                 synchronized(this) {
-                    val download: CacheDownload?=this.nextRedditInQueue
+                    val download: CacheDownload = this@PrioritisedDownloadQueue.nextRedditInQueue
                     CacheDownloadThread(
                         download,
                         true,
