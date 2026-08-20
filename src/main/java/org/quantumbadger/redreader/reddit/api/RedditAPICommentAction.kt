@@ -63,7 +63,7 @@ object RedditAPICommentAction {
         activity: AppCompatActivity,
         commentListingFragment: CommentListingFragment?,
         comment: RedditRenderableComment,
-        commentView: RedditCommentView,
+        commentView: RedditCommentView?,
         changeDataManager: RedditChangeDataManager,
         isPostLocked: Boolean
     ) {
@@ -323,7 +323,7 @@ object RedditAPICommentAction {
 
     fun onActionMenuItemSelected(
         renderableComment: RedditRenderableComment,
-        commentView: RedditCommentView,
+        commentView: RedditCommentView?,
         activity: AppCompatActivity,
         commentListingFragment: CommentListingFragment?,
         action: RedditCommentAction,
@@ -331,7 +331,7 @@ object RedditAPICommentAction {
     ) {
         val comment =             renderableComment.parsedComment.rawComment
 
-        val postLocked =             commentListingFragment != null && commentListingFragment.post != null && commentListingFragment.post.isLocked
+        val postLocked =             commentListingFragment?.post?.isLocked == true
 
         when (action) {
             RedditCommentAction.UPVOTE -> action(
@@ -387,10 +387,10 @@ object RedditAPICommentAction {
             RedditCommentAction.REPLY -> {
                 if (comment.archived) {
                     quickToast(activity, string.error_archived_reply, Toast.LENGTH_SHORT)
-                    break
+                    					return
                 } else if ((comment.locked || postLocked) && !comment.can_mod_post) {
                     quickToast(activity, string.error_locked_reply, Toast.LENGTH_SHORT)
-                    break
+                    					return
                 }
 
                 val intent = Intent(activity, CommentReplyActivity::class.java)
@@ -449,19 +449,19 @@ object RedditAPICommentAction {
             }
 
             RedditCommentAction.COMMENT_LINKS -> {
-                val linksInComment: MutableList<String?> = comment.computeAllLinksString()
+                val linksInComment = comment.computeAllLinksString()
 
                 if (linksInComment.isEmpty()) {
                     quickToast(activity, string.error_toast_no_urls_in_comment)
                 } else {
-                    val linksArr =                         linksInComment.toTypedArray<String?>()
+                    val linksArr =                         linksInComment.toTypedArray()
 
                     val builder = MaterialAlertDialogBuilder(activity)
 
                     builder.setItems(
                         linksArr,
                         DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
-                            onLinkClicked(activity, UriString(linksArr[which]!!), false)
+                            onLinkClicked(activity, UriString(linksArr[which]), false)
                             dialog!!.dismiss()
                         })
 
@@ -532,7 +532,7 @@ object RedditAPICommentAction {
             }
 
             RedditCommentAction.COLLAPSE -> {
-                commentListingFragment!!.handleCommentVisibilityToggle(commentView)
+                commentListingFragment!!.handleCommentVisibilityToggle(commentView!!)
             }
 
             RedditCommentAction.USER_PROFILE -> onLinkClicked(

@@ -84,7 +84,7 @@ class AccountListDialog private constructor() : AppCompatDialogFragment(),
         val paddingPx = General.dpToPixels(mActivity!!, 16f)
         rv!!.setPadding(paddingPx, paddingPx, paddingPx, 0)
 
-        RedditAccountManager.getInstance(mActivity).addUpdateListener(this)
+        RedditAccountManager.getInstance(mActivity!!).addUpdateListener(this)
 
         builder.setNeutralButton(mActivity!!.getString(R.string.dialog_close), null)
 

@@ -22,8 +22,8 @@ class HtmlRawElementTagAnchor(
     children: ArrayList<HtmlRawElement>,
     private val mHref: UriString
 ) : HtmlRawElementTagAttributeChange(children) {
-    override fun onLinkButtons(linkButtons: ArrayList<LinkButtonDetails?>) {
-        val text = getPlainText().trim { it <= ' ' }
+    override fun onLinkButtons(linkButtons: ArrayList<LinkButtonDetails>) {
+        val text = plainText.trim { it <= ' ' }
 
         linkButtons.add(
             LinkButtonDetails(

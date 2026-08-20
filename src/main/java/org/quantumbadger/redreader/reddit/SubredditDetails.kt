@@ -37,7 +37,7 @@ class SubredditDetails : HasUniqueId {
 
     constructor(subreddit: RedditSubreddit) {
         id = subreddit.canonicalId
-        name = subreddit.display_name
+        name = subreddit.display_name!!
         url = subreddit.getUrl()
         publicDescriptionHtmlEscaped = subreddit.public_description_html
         subscribers = subreddit.subscribers
@@ -63,7 +63,7 @@ class SubredditDetails : HasUniqueId {
         intent.putExtra(
             "html", RedditSubreddit.Companion.getSidebarHtmlStatic(
                 PrefsUtility.isNightMode,
-                publicDescriptionHtmlEscaped
+                publicDescriptionHtmlEscaped!!
             )
         )
 

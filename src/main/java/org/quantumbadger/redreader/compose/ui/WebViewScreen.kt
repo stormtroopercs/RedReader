@@ -51,7 +51,8 @@ import androidx.lifecycle.LifecycleEventObserver
 fun WebViewScreen(
     url: String,
     title: String? = null,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onUrlChanged: ((String?) -> Unit)? = null
 ) {
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
     val context = LocalContext.current
@@ -110,7 +111,7 @@ fun WebViewScreen(
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             AndroidView(
                 factory = { ctx ->
-                    createWebView(ctx, url).also { webViewRef = it }
+                    createWebView(ctx, url, onUrlChanged).also { webViewRef = it }
                 },
                 update = { webView ->
                     if (webView.url != url) {
@@ -194,15 +195,22 @@ fun HtmlViewScreen(
 }
 
 @SuppressLint("SetJavaScriptEnabled")
-private fun createWebView(context: android.content.Context, url: String): WebView {
+private fun createWebView(
+    context: android.content.Context,
+    url: String,
+    onUrlChanged: ((String?) -> Unit)? = null
+): WebView {
     val webView = WebView(context)
-    setupWebViewBasic(webView)
+    setupWebViewBasic(webView, onUrlChanged)
     webView.loadUrl(url)
     return webView
 }
 
 @SuppressLint("SetJavaScriptEnabled")
-private fun setupWebViewBasic(webView: WebView) {
+private fun setupWebViewBasic(
+    webView: WebView,
+    onUrlChanged: ((String?) -> Unit)? = null
+) {
     val settings = webView.settings
     settings.javaScriptEnabled = true
     settings.useWideViewPort = true
@@ -219,6 +227,10 @@ private fun setupWebViewBasic(webView: WebView) {
         ): Boolean {
             // Let all URLs load in this WebView
             return false
+        }
+
+        override fun onPageFinished(view: WebView?, url: String?) {
+            onUrlChanged?.invoke(url)
         }
     }
 }

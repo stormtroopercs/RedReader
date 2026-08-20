@@ -30,7 +30,7 @@ class HtmlRawElementSpoiler(private val mChild: HtmlRawElementBlock) : HtmlRawEl
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
         destination: ArrayList<HtmlRawElement>,
-        linkButtons: ArrayList<LinkButtonDetails?>
+        linkButtons: ArrayList<LinkButtonDetails>
     ) {
         destination.add(
             HtmlRawElementSpoiler(

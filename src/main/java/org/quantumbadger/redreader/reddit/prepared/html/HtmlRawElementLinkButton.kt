@@ -29,7 +29,7 @@ class HtmlRawElementLinkButton(private val mDetails: LinkButtonDetails) : HtmlRa
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
         destination: ArrayList<HtmlRawElement>,
-        linkButtons: ArrayList<LinkButtonDetails?>
+        linkButtons: ArrayList<LinkButtonDetails>
     ) {
         destination.add(this)
     }

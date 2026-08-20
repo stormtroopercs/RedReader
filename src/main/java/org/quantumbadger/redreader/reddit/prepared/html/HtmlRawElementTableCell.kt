@@ -29,7 +29,7 @@ class HtmlRawElementTableCell(private val mChild: HtmlRawElementBlock) : HtmlRaw
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
         destination: ArrayList<HtmlRawElement>,
-        linkButtons: ArrayList<LinkButtonDetails?>
+        linkButtons: ArrayList<LinkButtonDetails>
     ) {
         destination.add(
             HtmlRawElementTableCell(

@@ -31,7 +31,7 @@ class HtmlRawElementNumberedList(private val mChildren: ArrayList<HtmlRawElement
     fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        linkButtons: ArrayList<LinkButtonDetails?>
+        linkButtons: ArrayList<LinkButtonDetails>
     ): HtmlRawElementNumberedList {
         val reduced = ArrayList<HtmlRawElement>()
 
@@ -46,7 +46,7 @@ class HtmlRawElementNumberedList(private val mChildren: ArrayList<HtmlRawElement
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
         destination: ArrayList<HtmlRawElement>,
-        linkButtons: ArrayList<LinkButtonDetails?>
+        linkButtons: ArrayList<LinkButtonDetails>
     ) {
         destination.add(reduce(activeAttributes, activity, linkButtons))
     }

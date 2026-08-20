@@ -93,7 +93,7 @@ object RedgifsAPIV2 {
                                 parseRedgifsV2(
                                     result
                                         .getObjectAtPath("gif")
-                                        .orThrow<RuntimeException?>(GenericFactory {
+                                        .orThrow<RuntimeException>(GenericFactory {
                                             RuntimeException(
                                                 "No element 'gif'"
                                             )

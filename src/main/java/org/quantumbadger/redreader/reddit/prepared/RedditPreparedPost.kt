@@ -65,7 +65,7 @@ class RedditPreparedPost(
     cm: CacheManager,
     listId: Int,
     val src: RedditParsedPost,
-    timestamp: TimestampUTC?,
+    timestamp: TimestampUTC,
     val showSubreddit: Boolean,
     showThumbnails: Boolean,
     allowHighResThumbnails: Boolean,
@@ -875,15 +875,15 @@ class RedditPreparedPost(
         fun betterThumbnailAvailable(thumbnail: Bitmap?, usageId: Int)
     }
 
-    fun markAsRead(context: Context?) {
+    fun markAsRead(context: Context) {
         if (PrefsUtility.pref_behaviour_mark_posts_as_read()) {
             markAsRead(context, true)
         }
     }
 
     fun markAsRead(
-        context: Context?,
-        read: Boolean?
+        context: Context,
+        read: Boolean
     ) {
         val user: RedditAccount?=RedditAccountManager.Companion.getInstance(context).getDefaultAccount()
         RedditChangeDataManager.Companion.getInstance(user)

@@ -32,6 +32,6 @@ class BootReceiver : BroadcastReceiver() {
             return
         }
 
-        Alarms.onBoot(context)
+        Alarms.onBoot(context!!)
     }
 }

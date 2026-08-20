@@ -29,6 +29,7 @@ import org.quantumbadger.redreader.common.General.setLayoutMatchParent
 import org.quantumbadger.redreader.common.General
 
 abstract class RRFragment protected constructor(
+    @get:JvmName("getActivityProp")
     protected val activity: AppCompatActivity,
     savedInstanceState: Bundle?
 ) {

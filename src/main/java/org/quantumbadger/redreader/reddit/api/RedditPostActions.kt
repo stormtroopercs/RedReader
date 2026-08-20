@@ -509,8 +509,7 @@ object RedditPostActions {
 			Action.GOTO_SUBREDDIT -> {
 				try {
 					val intent = Intent(activity, PostListingActivity::class.java)
-					intent.data = SubredditPostListURL.getSubreddit(post.src.subreddit)
-						.generateJsonUri()
+					intent.data = SubredditPostListURL.getSubreddit(post.src.subreddit)?.generateJsonUri()
 					activity.startActivityForResult(intent, 1)
 				} catch (e: InvalidSubredditNameException) {
 					Toast.makeText(
@@ -531,7 +530,7 @@ object RedditPostActions {
 
 			Action.USER_PROFILE -> LinkHandler.onLinkClicked(
 				activity,
-				UriString(UserProfileURL(post.src.author).toString())
+				UriString(UserProfileURL(post.src.author!!).toString())
 			)
 
 			Action.PROPERTIES -> PostPropertiesDialog.newInstance(post.src.src)

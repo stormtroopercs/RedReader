@@ -21,7 +21,7 @@ import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement
 
 abstract class HtmlRawElementTagAttributeChange(private val mChildren: ArrayList<HtmlRawElement>) :
     HtmlRawElementTag() {
-    protected open fun onLinkButtons(linkButtons: ArrayList<LinkButtonDetails?>) {
+    protected open fun onLinkButtons(linkButtons: ArrayList<LinkButtonDetails>) {
         // Add nothing by default
     }
 
@@ -39,7 +39,7 @@ abstract class HtmlRawElementTagAttributeChange(private val mChildren: ArrayList
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
         destination: ArrayList<HtmlRawElement>,
-        linkButtons: ArrayList<LinkButtonDetails?>
+        linkButtons: ArrayList<LinkButtonDetails>
     ) {
         onStart(activeAttributes)
 

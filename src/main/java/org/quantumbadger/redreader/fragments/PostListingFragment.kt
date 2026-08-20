@@ -457,7 +457,7 @@ class PostListingFragment(
         }
     }
 
-    private fun setHeader(view: View?) {
+    private fun setHeader(view: View) {
         getActivity().runOnUiThread(Runnable { mPostListingManager.addPostListingHeader(view) })
     }
 
@@ -529,7 +529,7 @@ class PostListingFragment(
                         onLoadMoreItemsCheck()
                     })
 
-                    mPostListingManager.addLoadMoreButton(mLoadMoreView)
+                    mPostListingManager.addLoadMoreButton(mLoadMoreView!!)
                 }
             }
         }
@@ -743,7 +743,7 @@ class PostListingFragment(
                                     == RedditURLParser.SUBREDDIT_POST_LISTING_URL) && (mPostListingURL!!.asSubredditPostListURL().type
                                     == SubredditPostListURL.Type.SUBREDDIT))
 
-                        val downloadedPosts = ArrayList<RedditPostListItem?>(25)
+                        val downloadedPosts = ArrayList<RedditPostListItem>(25)
 
                         for (postThingValue in posts) {
                             if (postThingValue !is MaybeParseError.Ok<*>) {

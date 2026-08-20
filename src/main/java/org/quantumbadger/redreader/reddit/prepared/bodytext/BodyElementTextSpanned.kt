@@ -44,22 +44,23 @@ class BodyElementTextSpanned(
         textColor: Int?,
         textSize: Float?,
         showLinkButtons: Boolean
-    ): View? {
-        mTextView = LinkifiedTextView(activity)
+    ): View {
+        val textView = LinkifiedTextView(activity)
+        mTextView = textView
 
         if (textColor != null) {
-            mTextView!!.setTextColor(textColor)
+            textView.setTextColor(textColor)
         }
         if (textSize != null) {
-            mTextView!!.setTextSize(textSize)
+            textView.setTextSize(textSize)
         }
 
-        mTextView!!.setText(mSpanned, BufferType.SPANNABLE)
+        textView.setText(mSpanned, BufferType.SPANNABLE)
 
         if (PrefsUtility.pref_accessibility_separate_body_text_lines()) {
-            mTextView!!.setFocusable(true)
+            textView.setFocusable(true)
         }
 
-        return mTextView
+        return textView
     }
 }

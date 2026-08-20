@@ -28,7 +28,7 @@ class HtmlRawElementBreak : HtmlRawElement() {
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
         destination: ArrayList<HtmlRawElement>,
-        linkButtons: ArrayList<LinkButtonDetails?>
+        linkButtons: ArrayList<LinkButtonDetails>
     ) {
         destination.add(this)
     }

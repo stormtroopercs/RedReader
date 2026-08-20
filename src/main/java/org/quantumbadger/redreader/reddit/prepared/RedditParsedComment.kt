@@ -73,7 +73,7 @@ class RedditParsedComment(
 
         if (flair != null) {
             this.flair = BetterSSB()
-            flair.append(flair)
+            this.flair!!.append(flair)
 
             if (rawComment.author_flair_richtext != null) {
                 getFlairEmotes(rawComment.author_flair_richtext, activity)

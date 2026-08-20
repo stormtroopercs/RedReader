@@ -36,6 +36,17 @@ import org.quantumbadger.redreader.fragments.WebViewFragment
  */
 class WebViewActivity : ViewsBaseActivity() {
 
+    private var mUrl: UriString? = null
+
+    /**
+     * The URL the WebView is currently displaying (or null if none loaded yet).
+     * Restored by the Compose-wrapper migration which had dropped the legacy
+     * [WebViewActivity.getCurrentUrl] accessor that
+     * [org.quantumbadger.redreader.reddit.api.RedditPostActions] still calls.
+     */
+    val currentUrl: UriString?
+        get() = mUrl
+
     override fun onCreate(savedInstanceState: Bundle?) {
         PrefsUtility.applyTheme(this)
         super.onCreate(savedInstanceState)
@@ -48,10 +59,13 @@ class WebViewActivity : ViewsBaseActivity() {
             return
         }
 
+        mUrl = url
+
         setContent {
             WebViewScreen(
                 url = url.value,
-                onNavigateBack = ::finish
+                onNavigateBack = ::finish,
+                onUrlChanged = { loaded -> mUrl = loaded?.let { UriString(it) } }
             )
         }
     }

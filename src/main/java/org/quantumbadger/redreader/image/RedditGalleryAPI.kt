@@ -87,7 +87,7 @@ class RedditGalleryAPI {
 
             CacheManager.getInstance(context).makeRequest(
                 CacheRequest(
-					UriString.from(apiUrl),
+					UriString.from(apiUrl!!),
                     RedditAccountManager.getInstance(context).defaultAccount,
                     null,
                     priority,

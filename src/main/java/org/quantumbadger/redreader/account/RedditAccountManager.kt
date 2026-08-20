@@ -191,6 +191,7 @@ class RedditAccountManager @Inject constructor(
 
     @get:Synchronized
     @set:Synchronized
+    @get:JvmName("getDefaultAccountProp")
     var defaultAccount: RedditAccount
         get() {
             if (defaultAccountCache == null) {
@@ -329,6 +330,7 @@ class RedditAccountManager @Inject constructor(
             instance = i
         }
 
+        @get:JvmName("getAnonProp")
         val anon: RedditAccount = RedditAccount(
             "",
             null,

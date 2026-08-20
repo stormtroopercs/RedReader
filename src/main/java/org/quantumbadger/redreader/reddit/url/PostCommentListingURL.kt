@@ -102,7 +102,7 @@ class PostCommentListingURL(
         return builder.build()
     }
 
-    fun generateNonJsonUri(): Uri? {
+    fun generateNonJsonUri(): Uri {
         val builder = Uri.Builder()
         builder.scheme(Reddit.scheme)
             .authority(Reddit.humanReadableDomain)

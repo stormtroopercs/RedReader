@@ -37,11 +37,11 @@ class HtmlRawElementBlock : HtmlRawElement {
 
     constructor(
         blockType: BlockType,
-        vararg children: HtmlRawElement?
+        vararg children: HtmlRawElement
     ) {
         mBlockType = blockType
         mChildren = ArrayList<HtmlRawElement>(children.size)
-        mChildren.addAll(Arrays.asList<HtmlRawElement?>(*children))
+        mChildren.addAll(Arrays.asList(*children))
     }
 
     override fun getPlainText(stringBuilder: StringBuilder) {
@@ -72,7 +72,7 @@ class HtmlRawElementBlock : HtmlRawElement {
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
         destination: ArrayList<HtmlRawElement>,
-        linkButtons: ArrayList<LinkButtonDetails?>
+        linkButtons: ArrayList<LinkButtonDetails>
     ) {
         destination.add(reduce(activeAttributes, activity))
     }

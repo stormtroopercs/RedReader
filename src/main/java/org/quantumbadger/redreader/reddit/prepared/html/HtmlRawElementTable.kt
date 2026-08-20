@@ -30,7 +30,7 @@ class HtmlRawElementTable(private val mChildren: ArrayList<HtmlRawElement>) : Ht
     fun reduce(
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
-        linkButtons: ArrayList<LinkButtonDetails?>
+        linkButtons: ArrayList<LinkButtonDetails>
     ): HtmlRawElementTable {
         val reduced = ArrayList<HtmlRawElement>()
 
@@ -45,7 +45,7 @@ class HtmlRawElementTable(private val mChildren: ArrayList<HtmlRawElement>) : Ht
         activeAttributes: HtmlTextAttributes,
         activity: AppCompatActivity,
         destination: ArrayList<HtmlRawElement>,
-        linkButtons: ArrayList<LinkButtonDetails?>
+        linkButtons: ArrayList<LinkButtonDetails>
     ) {
         destination.add(reduce(activeAttributes, activity, linkButtons))
     }

@@ -138,7 +138,7 @@ object UserProfileDialog {
 							)
 						}
 
-						if (StringUtils.asciiLowercase(user.name) != StringUtils.asciiLowercase(
+						if (StringUtils.asciiLowercase(user.name!!) != StringUtils.asciiLowercase(
 							accountManager.getDefaultAccount().canonicalUsername
 						)) {
 							chipYou.visibility = View.GONE

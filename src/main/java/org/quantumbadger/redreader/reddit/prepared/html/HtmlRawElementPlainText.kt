@@ -39,7 +39,7 @@ class HtmlRawElementPlainText(private val mText: String) : HtmlRawElement() {
         attributes: HtmlTextAttributes,
         activity: AppCompatActivity,
         destination: ArrayList<HtmlRawElement>,
-        linkButtons: ArrayList<LinkButtonDetails?>
+        linkButtons: ArrayList<LinkButtonDetails>
     ) {
         var spans: ArrayList<CharacterStyle?>? = null
 

@@ -256,7 +256,7 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 
 						val contentType = response.header("Content-Type")
 
-						listener.onSuccess(contentType, bodyLength, bodyStream)
+						listener.onSuccess(contentType, bodyLength, bodyStream!!)
 					} else {
 						if (isSensitiveDebugLoggingEnabled) {
 							Log.e(

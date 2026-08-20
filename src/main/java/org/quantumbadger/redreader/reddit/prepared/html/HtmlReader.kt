@@ -326,7 +326,7 @@ class HtmlReader(val html: String) {
 
         private fun isNameChar(c: Char): Boolean {
             when (c) {
-                0, ' ', '\'', '"', '>', '/', '=' -> return false
+                '\u0000', ' ', '\'', '"', '>', '/', '=' -> return false
 
                 else -> return true
             }

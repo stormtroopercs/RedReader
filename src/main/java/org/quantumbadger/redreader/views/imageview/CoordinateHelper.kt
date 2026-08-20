@@ -19,6 +19,7 @@ package org.quantumbadger.redreader.views.imageview
 import org.quantumbadger.redreader.common.MutableFloatPoint2D
 
 class CoordinateHelper {
+    @set:JvmName("setScaleProp")
     var scale: Float = 1.0f
     val positionOffset: MutableFloatPoint2D = MutableFloatPoint2D()
 

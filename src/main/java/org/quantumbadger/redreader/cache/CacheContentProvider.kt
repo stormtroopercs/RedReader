@@ -71,7 +71,7 @@ class CacheContentProvider : ContentProvider() {
     @Throws(FileNotFoundException::class)
     override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor? {
         return ParcelFileDescriptor.open(
-            getFile(uri).orThrow<FileNotFoundException?>(GenericFactory { FileNotFoundException(uri.toString()) }),
+            getFile(uri).orThrow<FileNotFoundException>(GenericFactory { FileNotFoundException(uri.toString()) }),
             ParcelFileDescriptor.MODE_READ_ONLY
         )
     }

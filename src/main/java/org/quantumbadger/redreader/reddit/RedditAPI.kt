@@ -96,7 +96,7 @@ object RedditAPI {
         subreddit: SubredditCanonicalId,
         responseHandler: FlairSelectorResponseHandler
     ) {
-        val postFields = LinkedList<PostField?>()
+        val postFields = LinkedList<PostField>()
         postFields.add(PostField("is_newlink", "true"))
 
         val apiUrl = Reddit.getUri(subreddit.toString() + "/api/flairselector")
@@ -115,7 +115,7 @@ object RedditAPI {
                         fromCache: Boolean
                     ) {
                         if (result.asObject() != null
-                            && Objects.requireNonNull<JsonObject?>(result.asObject()).isEmpty
+                            && result.asObject()!!.isEmpty
                         ) {
                             responseHandler.onSuccess(mutableListOf<RedditFlairChoice>())
                             return
@@ -202,7 +202,7 @@ object RedditAPI {
         flairId: String?,
         context: Context
     ) {
-        val postFields = LinkedList<PostField?>()
+        val postFields = LinkedList<PostField>()
         postFields.add(PostField("api_type", "json"))
         postFields.add(PostField("kind", if (isSelfPost) "self" else "link"))
         postFields.add(
@@ -246,7 +246,7 @@ object RedditAPI {
         body: String,
         context: Context
     ) {
-        val postFields = LinkedList<PostField?>()
+        val postFields = LinkedList<PostField>()
         postFields.add(PostField("api_type", "json"))
         postFields.add(PostField("subject", subject))
         postFields.add(PostField("to", recipient))
@@ -273,7 +273,7 @@ object RedditAPI {
         sendRepliesToInbox: Boolean,
         context: AppCompatActivity
     ) {
-        val postFields = LinkedList<PostField?>()
+        val postFields = LinkedList<PostField>()
         postFields.add(PostField("api_type", "json"))
         postFields.add(PostField("thing_id", parentIdAndType.value))
         postFields.add(PostField("text", markdown))
@@ -327,7 +327,7 @@ object RedditAPI {
         user: RedditAccount,
         context: Context
     ) {
-        val postFields = LinkedList<PostField?>()
+        val postFields = LinkedList<PostField>()
 
         cm.makeRequest(
             createPostRequestUnprocessedResponse(
@@ -361,7 +361,7 @@ object RedditAPI {
         markdown: String,
         context: Context
     ) {
-        val postFields = LinkedList<PostField?>()
+        val postFields = LinkedList<PostField>()
         postFields.add(PostField("thing_id", commentIdAndType.value))
         postFields.add(PostField("text", markdown))
 
@@ -384,7 +384,7 @@ object RedditAPI {
         @RedditAction action: Int,
         context: Context
     ) {
-        val postFields = LinkedList<PostField?>()
+        val postFields = LinkedList<PostField>()
         postFields.add(PostField("id", idAndType.value))
 
         val url = prepareActionUri(action, postFields)
@@ -402,7 +402,7 @@ object RedditAPI {
 
     private fun prepareActionUri(
         @RedditAction action: Int,
-        postFields: LinkedList<PostField?>
+        postFields: LinkedList<PostField>
     ): UriString {
         when (action) {
             ACTION_DOWNVOTE -> {
@@ -440,10 +440,10 @@ object RedditAPI {
         user: RedditAccount,
         idAndType: RedditIdAndType,
         subredditName: String?,
-        reasonFields: MutableList<PostField?>,
+        reasonFields: List<PostField>,
         context: Context
     ) {
-        val postFields = LinkedList<PostField?>()
+        val postFields = LinkedList<PostField>()
         postFields.add(PostField("api_type", "json"))
         postFields.add(PostField("thing_id", idAndType.value))
 
@@ -484,7 +484,7 @@ object RedditAPI {
                     subreddit: RedditSubreddit,
                     timeCached: TimestampUTC?
                 ) {
-                    val postFields = LinkedList<PostField?>()
+                    val postFields = LinkedList<PostField>()
 
                     postFields.add(PostField("sr", subreddit.name))
 
@@ -507,7 +507,7 @@ object RedditAPI {
 
     private fun subscriptionPrepareActionUri(
         @RedditSubredditAction action: Int,
-        postFields: LinkedList<PostField?>
+        postFields: LinkedList<PostField>
     ): UriString {
         when (action) {
             SUBSCRIPTION_ACTION_SUBSCRIBE -> {
@@ -587,7 +587,7 @@ object RedditAPI {
         user: RedditAccount,
         context: Context
     ) {
-        val postFields = LinkedList<PostField?>()
+        val postFields = LinkedList<PostField>()
         postFields.add(PostField("name", usernameToUnblock))
         postFields.add(PostField("container", currentUserFullname))
         postFields.add(PostField("type", "enemy"))
@@ -610,7 +610,7 @@ object RedditAPI {
         user: RedditAccount,
         context: Context
     ) {
-        val postFields = LinkedList<PostField?>()
+        val postFields = LinkedList<PostField>()
         postFields.add(PostField("name", usernameToBlock))
         postFields.add(PostField("api_type", "json"))
 
@@ -652,7 +652,7 @@ object RedditAPI {
         state: Boolean,
         context: Context
     ) {
-        val postFields = LinkedList<PostField?>()
+        val postFields = LinkedList<PostField>()
         postFields.add(PostField("id", fullname))
         postFields.add(PostField("state", state.toString()))
         cm.makeRequest(
@@ -670,7 +670,7 @@ object RedditAPI {
         cm: CacheManager,
         user: RedditAccount,
         context: Context,
-        handler: ValueResponseHandler<SubredditListResponse?>,
+        handler: ValueResponseHandler<SubredditListResponse>,
         after: Optional<String>
     ) {
         val maxCacheAgeMs = hours(1)
@@ -707,7 +707,7 @@ object RedditAPI {
         user: RedditAccount,
         queryString: String,
         context: Context,
-        handler: ValueResponseHandler<SubredditListResponse?>,
+        handler: ValueResponseHandler<SubredditListResponse>,
         after: Optional<String>
     ) {
         val maxCacheAgeMs = minutes(1)
@@ -787,7 +787,7 @@ object RedditAPI {
             user,
             context,
             object : ValueResponseHandler<SubredditListResponse>(context) {
-                protected override fun onSuccess(value: SubredditListResponse) {
+                override fun onSuccess(value: SubredditListResponse) {
                     results.addAll(value.subreddits)
 
                     if (value.after.isEmpty) {
@@ -821,7 +821,7 @@ object RedditAPI {
         uri: UriString,
         user: RedditAccount,
         context: Context,
-        handler: ValueResponseHandler<SubredditListResponse?>,
+        handler: ValueResponseHandler<SubredditListResponse>,
         downloadStrategy: DownloadStrategy
     ) {
         cm.makeRequest(
@@ -975,7 +975,7 @@ object RedditAPI {
     private fun createPostRequest(
         url: UriString,
         user: RedditAccount,
-        postFields: MutableList<PostField?>,
+        postFields: MutableList<PostField>,
         context: Context,
         handler: CacheRequestJSONParser.Listener
     ): CacheRequest {
@@ -991,7 +991,7 @@ object RedditAPI {
     private fun createPostRequestUnprocessedResponse(
         url: UriString,
         user: RedditAccount,
-        postFields: MutableList<PostField?>,
+        postFields: MutableList<PostField>,
         context: Context,
         callbacks: CacheRequestCallbacks
     ): CacheRequest {
