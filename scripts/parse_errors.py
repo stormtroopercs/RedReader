@@ -23,7 +23,7 @@ for f, c in per_file.most_common(25):
     print(f"{c:4d}  {f}")
 
 # Save full per-file detail to workspace for reading
-out = Path("/opt/data/err_analysis.json")
+out = Path("/opt/data/redreader-project/tmp/err_analysis.json")
 data = {f: [{"line": ln, "msg": m} for ln, m in file_errors[f]] for f in per_file}
 out.write_text(json.dumps(data, indent=1))
 print(f"\nSaved per-file detail -> {out}")

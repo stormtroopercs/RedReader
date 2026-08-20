@@ -116,6 +116,6 @@ sample("getter-as-function", lambda m: "cannot be invoked as a function" in m, 8
 sample("Other Z", lambda m: catname(m)=="Z", 10)
 
 # Save structured
-with open("/opt/data/errs_full.json", "w") as f:
+with open("/opt/data/redreader-project/tmp/errs_full.json", "w") as f:
     json.dump([{"file": p, "line": ln, "msg": m} for p, ln, m in errs2], f)
-print("\nsaved /opt/data/errs_full.json")
+print("\nsaved /opt/data/redreader-project/tmp/errs_full.json")

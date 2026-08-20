@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /opt/data/RedReader
+cd /opt/data/redreader-project/RedReader
 B=1d35f61e
 f=src/main/java/org/quantumbadger/redreader/reddit/RedditAPI.kt
 echo "===== 0. CURRENT error counts in downstream files ====="
