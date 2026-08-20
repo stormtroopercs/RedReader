@@ -94,14 +94,14 @@ class PostSubmitContentFragment : Fragment() {
 
             fun fromBundle(bundle: Bundle): Args {
                 return Args(
-                    Objects.requireNonNull<String?>(bundle.getString(KEY_USER)),
-                    Objects.requireNonNull<SubredditCanonicalId?>(
-                        BundleCompat.getParcelable<SubredditCanonicalId?>(
+                    Objects.requireNonNull(bundle.getString(KEY_USER))!!,
+                    Objects.requireNonNull(
+                        BundleCompat.getParcelable(
                             bundle,
                             KEY_SUBREDDIT,
                             SubredditCanonicalId::class.java
                         )
-                    ),
+                    )!!,
                     bundle.getString(KEY_URL)
                 )
             }
@@ -177,9 +177,9 @@ class PostSubmitContentFragment : Fragment() {
     ): View? {
         setHasOptionsMenu(true)
 
-        mContext = Objects.requireNonNull<ViewGroup?>(container).getContext()
+        mContext = Objects.requireNonNull<ViewGroup?>(container)!!.context
 
-        val accountManager: RedditAccountManager =             RedditAccountManager.Companion.getInstance(mContext)
+        val accountManager: RedditAccountManager =             RedditAccountManager.Companion.getInstance(mContext!!)
 
         val args: Args = Args.Companion.fromBundle(requireArguments())
 
@@ -269,7 +269,7 @@ class PostSubmitContentFragment : Fragment() {
 
         mTypeSpinner!!.setText(POST_TYPE_LINK)
 
-        AndroidCommon.setAutoCompleteTextViewItemsNoFilter(mTypeSpinner!!, POST_TYPES)
+        AndroidCommon.setAutoCompleteTextViewItemsNoFilter(mTypeSpinner!!, POST_TYPES.toList())
 
         if (args.url != null) {
             mTextEditBodyUrl!!.setText(args.url)
@@ -313,7 +313,7 @@ class PostSubmitContentFragment : Fragment() {
         mFlairSpinner!!.setEnabled(true)
         mFlairSpinner!!.setAlpha(1.0f)
 
-        val choiceStrings = ArrayList<String?>(choices.size + 1)
+        val choiceStrings = ArrayList<String>(choices.size + 1)
         mFlairIds.clear()
 
         val noneSelected = appContext.getString(string.post_submit_flair_none_selected)
@@ -325,7 +325,7 @@ class PostSubmitContentFragment : Fragment() {
             mFlairIds.put(choice.text, choice.templateId)
         }
 
-        AndroidCommon.setAutoCompleteTextViewItemsNoFilter(mFlairSpinner!!, choiceStrings)
+        AndroidCommon.setAutoCompleteTextViewItemsNoFilter(mFlairSpinner!!, choiceStrings.toList())
 
         mFlairSpinner!!.setText(noneSelected)
     }
@@ -367,7 +367,7 @@ class PostSubmitContentFragment : Fragment() {
     private fun requestSubredditDetails() {
         RedditAPI.flairSelectorForNewLink(
             mContext!!,
-            CacheManager.Companion.getInstance(mContext),
+            CacheManager.Companion.getInstance(mContext!!),
             mSelectedAccount!!,
             mSelectedSubreddit!!,
             object : FlairSelectorResponseHandler {
@@ -476,7 +476,7 @@ class PostSubmitContentFragment : Fragment() {
                     true
                 })
 
-                val cm: CacheManager?=CacheManager.Companion.getInstance(mContext)
+                val cm: CacheManager = CacheManager.Companion.getInstance(mContext!!)
 
                 val handler: SubmitResponseHandler=object : SubmitResponseHandler(
                     activity as AppCompatActivity
@@ -553,7 +553,7 @@ class PostSubmitContentFragment : Fragment() {
                 RedditAPI.submit(
                     cm,
                     handler,
-                    mSelectedAccount,
+                    mSelectedAccount!!,
                     isSelfPost,
                     subreddit,
                     postTitle,
@@ -562,7 +562,7 @@ class PostSubmitContentFragment : Fragment() {
                     markAsNsfw,
                     markAsSpoiler,
                     flairId,
-                    mContext
+                    mContext!!
                 )
 
                 progressDialog.show()
@@ -604,7 +604,7 @@ class PostSubmitContentFragment : Fragment() {
         private const val POST_TYPE_IMGUR = "Upload to Imgur"
 
         @Suppress("PropertyName")
-        private val POST_TYPES = arrayOf<String?>(POST_TYPE_LINK, POST_TYPE_SELF, POST_TYPE_IMGUR)
+        private val POST_TYPES = arrayOf(POST_TYPE_LINK, POST_TYPE_SELF, POST_TYPE_IMGUR)
 
         private var lastType: String?=null
         private var lastTitle: String?=null

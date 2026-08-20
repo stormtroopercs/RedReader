@@ -87,15 +87,15 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
     private class AutocompleteEntry(val listId: Long, val nameWithoutPrefix: String)
 
     private inner class AutocompleteAdapter(context: Context?) : RecyclerView.Adapter<VH1Text?>() {
-        private val mAllSuggestions: ArrayList<AutocompleteEntry?> = ArrayList<AutocompleteEntry?>()
+        private val mAllSuggestions: ArrayList<AutocompleteEntry> = ArrayList<AutocompleteEntry>()
 
-        private val mCurrentSuggestions: ArrayList<AutocompleteEntry?> = ArrayList<AutocompleteEntry?>()
+        private val mCurrentSuggestions: ArrayList<AutocompleteEntry> = ArrayList<AutocompleteEntry>()
 
         init {
             setHasStableIds(true)
 
             val allSuggestions = RedditSubredditHistory.getSubredditsSorted(
-                RedditAccountManager.Companion.getInstance(context)
+                RedditAccountManager.Companion.getInstance(context!!)
                     .getDefaultAccount()
             )
 
@@ -103,7 +103,7 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
                 mAllSuggestions.add(
                     AutocompleteEntry(
                         i.toLong(),
-                        allSuggestions.get(i)!!.displayNameLowercase
+                        allSuggestions[i].displayNameLowercase
                     )
                 )
             }
@@ -121,36 +121,32 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
             val searchString: String
 
             try {
-                searchString = RedditSubreddit.Companion.stripRPrefix(currentText)
+                searchString = RedditSubreddit.Companion.stripRPrefix(currentText)!!
             } catch (e: InvalidSubredditNameException) {
                 mCurrentSuggestions.addAll(mAllSuggestions)
                 notifyDataSetChanged()
                 return
             }
 
-            val possibleSuggestions: ArrayList<AutocompleteEntry?> = ArrayList<AutocompleteEntry?>(mAllSuggestions)
+            val possibleSuggestions: ArrayList<AutocompleteEntry> = ArrayList<AutocompleteEntry>(mAllSuggestions)
 
-            run {
-                val it: MutableIterator<AutocompleteEntry> = possibleSuggestions.iterator()
-                while (it.hasNext()) {
-                    val entry = it.next()
+            val it1: MutableIterator<AutocompleteEntry> = possibleSuggestions.iterator()
+            while (it1.hasNext()) {
+                val entry = it1.next()
 
-                    if (entry.nameWithoutPrefix.startsWith(searchString)) {
-                        mCurrentSuggestions.add(entry)
-                        it.remove()
-                    }
+                if (entry.nameWithoutPrefix.startsWith(searchString)) {
+                    mCurrentSuggestions.add(entry)
+                    it1.remove()
                 }
             }
 
-            run {
-                val it: MutableIterator<AutocompleteEntry> = possibleSuggestions.iterator()
-                while (it.hasNext()) {
-                    val entry = it.next()
+            val it2: MutableIterator<AutocompleteEntry> = possibleSuggestions.iterator()
+            while (it2.hasNext()) {
+                val entry = it2.next()
 
-                    if (entry.nameWithoutPrefix.contains(searchString)) {
-                        mCurrentSuggestions.add(entry)
-                        it.remove()
-                    }
+                if (entry.nameWithoutPrefix.contains(searchString)) {
+                    mCurrentSuggestions.add(entry)
+                    it2.remove()
                 }
             }
 
@@ -214,7 +210,7 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
     ): View? {
         val args: Args = Args.Companion.fromBundle(requireArguments())
 
-        val context = Objects.requireNonNull<ViewGroup?>(container).getContext()
+        val context = Objects.requireNonNull<ViewGroup?>(container)!!.context
 
         val root = inflater.inflate(R.layout.subreddit_selection, container, false)
 
@@ -235,11 +231,11 @@ class PostSubmitSubredditSelectionFragment : Fragment() {
 
         val accountManager: RedditAccountManager = RedditAccountManager.Companion.getInstance(context)
 
-        val usernames = ArrayList<String?>()
+        val usernames = ArrayList<String>()
 
-        Stream.Companion.from<RedditAccount?>(accountManager.accounts)
-            .filter(RedditAccount::isNotAnonymous)
-            .forEach(Consumer { account: RedditAccount? -> usernames.add(account!!.username) })
+        Stream.Companion.from<RedditAccount>(accountManager.accounts)
+            .filter { it.isNotAnonymous }
+            .forEach(Consumer { account: RedditAccount -> usernames.add(account.username) })
 
         if (usernames.isEmpty()) {
             val activity = getActivity()

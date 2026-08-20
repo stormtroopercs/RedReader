@@ -17,9 +17,9 @@
 package org.quantumbadger.redreader.common.streams
 
 class FilterStream<E>(
-    private val mInner: Stream<E?>,
-    private val mPredicate: Predicate<E?>
-) : Stream<E?> {
+    private val mInner: Stream<E>,
+    private val mPredicate: Predicate<E>
+) : Stream<E> {
     private var mHasNext = true
     private var mNext: E? = null
 
@@ -29,9 +29,10 @@ class FilterStream<E>(
 
     private fun moveToNext() {
         while (mInner.hasNext()) {
-            mNext = mInner.next()
+            val next = mInner.next()
 
-            if (mPredicate.matches(mNext)) {
+            if (mPredicate.matches(next)) {
+                mNext = next
                 return
             }
         }
@@ -44,8 +45,8 @@ class FilterStream<E>(
         return mHasNext
     }
 
-    override fun next(): E? {
-        val result = mNext
+    override fun next(): E {
+        val result = mNext!!
         moveToNext()
         return result
     }
