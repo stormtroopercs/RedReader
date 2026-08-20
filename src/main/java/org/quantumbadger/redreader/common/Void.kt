@@ -16,6 +16,9 @@
  */
 package org.quantumbadger.redreader.common
 
-object Void {
-    val INSTANCE: Void = Void()
+class Void private constructor() {
+    companion object {
+        @JvmField
+        val INSTANCE: Void = Void()
+    }
 }

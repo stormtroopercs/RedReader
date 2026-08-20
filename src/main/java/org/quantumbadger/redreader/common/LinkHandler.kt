@@ -753,7 +753,7 @@ object LinkHandler {
 
 		ImgurAPIV3.getAlbumInfo(
 			context,
-			albumUrl,
+			albumUrl!!,
 			albumId,
 			priority,
 			true,
@@ -768,7 +768,7 @@ object LinkHandler {
 
 					ImgurAPIV3.getAlbumInfo(
 						context,
-						albumUrl,
+						albumUrl!!,
 						albumId,
 						priority,
 						false,
@@ -783,7 +783,7 @@ object LinkHandler {
 
 								ImgurAPI.getAlbumInfo(
 									context,
-									albumUrl,
+									albumUrl!!,
 									albumId,
 									priority,
 									object : AlbumInfoRetryListener(listener) {

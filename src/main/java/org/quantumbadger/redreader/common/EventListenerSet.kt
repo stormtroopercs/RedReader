@@ -23,7 +23,7 @@ class EventListenerSet<E> {
 
     private var mMostRecentEvent: E? = null
 
-    private val mListeners = ThreadCheckedVar<HashSet<Listener<E?>>?>(HashSet<Listener<E?>?>())
+    private val mListeners = ThreadCheckedVar<HashSet<Listener<E>>>(HashSet())
 
     fun send(event: E?) {
         mMostRecentEvent = event
@@ -32,12 +32,12 @@ class EventListenerSet<E> {
         }
     }
 
-    fun register(listener: Listener<E?>?): E? {
-        mListeners.get()!!.add(listener!!)
+    fun register(listener: Listener<E>): E? {
+        mListeners.get()!!.add(listener)
         return mMostRecentEvent
     }
 
-    fun unregister(listener: Listener<E?>?) {
-        mListeners.get()!!.remove(listener!!)
+    fun unregister(listener: Listener<E>) {
+        mListeners.get()!!.remove(listener)
     }
 }

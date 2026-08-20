@@ -18,7 +18,7 @@ package org.quantumbadger.redreader.common
 
 class PrioritisedCachedThreadPool(private val mMaxThreads: Int, private val mThreadName: String?) {
     private val mTasks = ArrayList<Task?>(16)
-    private val mExecutor: Executor = PrioritisedCachedThreadPool.Executor()
+    private val mExecutor: Executor by lazy { Executor() }
 
     private var mThreadNameCount = 0
 

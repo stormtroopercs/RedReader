@@ -235,7 +235,7 @@ object FileUtils {
             DownloadImageToSaveSuccessCallback { info: ImageInfo, cacheFile: ReadableCacheFile?, mimetype: String? ->
                 val externalUri: Uri?=CacheContentProvider.Companion.getUriForFile(
                     cacheFile!!.id,
-                    mimetype,
+                    mimetype!!,
                     getExtensionFromPath(info.original.url.value).orElse("jpg")
                 )
                 Log.i(TAG, "Sharing image with external uri: " + externalUri)
@@ -500,12 +500,12 @@ object FileUtils {
                             MediaUtils.muxFiles(
                                 file,
                                 arrayOf<File>(
-                                    cacheFile.file.orThrow<RuntimeException?>(GenericFactory {
+                                    cacheFile.file.orThrow<RuntimeException>(GenericFactory {
                                         RuntimeException(
                                             "Audio file not found"
                                         )
                                     }),
-                                    video.file.orThrow<RuntimeException?>(GenericFactory {
+                                    video.file.orThrow<RuntimeException>(GenericFactory {
                                         RuntimeException(
                                             "Video file not found"
                                         )

@@ -93,7 +93,7 @@ object PrefsBackup {
                 dos.write(MAGIC_HEADER)
                 SerializeUtils.serialize(dos, map)
                 dos.flush()
-            } catch (e: UnhandledTypeException) {
+            } catch (e: SerializeUtils.UnhandledTypeException) {
                 BugReportActivity.handleGlobalError(activity, e)
                 return@Runnable
             } catch (e: IOException) {
@@ -211,7 +211,7 @@ object PrefsBackup {
                     val doRestore = Runnable {
                         Log.i(TAG, "Restoring " + restorePrefs.size + " value(s)")
                         General.getSharedPrefs(activity)
-                            .performActionWithWriteLock(Consumer { sharedPrefs: SharedPreferences? ->
+                            .performActionWithWriteLock(Consumer { sharedPrefs: SharedPreferences ->
                                 val keysToRemove: HashSet<String?> = HashSet<String?>(sharedPrefs.getAll().keys)
                                 for (ignoredPref in IGNORED_PREFS) {
                                     keysToRemove.remove(ignoredPref)
@@ -314,7 +314,7 @@ object PrefsBackup {
                         e
                     )
                 )
-            } catch (e: UnhandledTypeException) {
+            } catch (e: SerializeUtils.UnhandledTypeException) {
                 General.showResultDialog(
                     activity, RRError(
                         activity.getString(

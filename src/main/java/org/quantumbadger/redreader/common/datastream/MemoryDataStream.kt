@@ -108,7 +108,7 @@ class MemoryDataStream {
                 }
             }
             if (mFailed != null) {
-                throw mFailed
+                throw mFailed!!
             }
 
             if (mSize > position) {
@@ -142,7 +142,7 @@ class MemoryDataStream {
                 }
             }
             if (mFailed != null) {
-                throw mFailed
+                throw mFailed!!
             }
 
             if (mSize > startingPosition) {
@@ -174,7 +174,7 @@ class MemoryDataStream {
                 }
             }
             if (mFailed != null) {
-                throw mFailed
+                throw mFailed!!
             }
         }
 

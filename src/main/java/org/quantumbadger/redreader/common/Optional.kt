@@ -41,8 +41,7 @@ class Optional<E> private constructor(private val mValue: E?) {
         return mValue
     }
 
-    @Throws(T::class)
-    fun <T : Exception?> orThrow(
+    fun <T : Exception> orThrow(
         factory: GenericFactory<T, RuntimeException>
     ): E {
         if (mValue == null) {

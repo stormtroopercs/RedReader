@@ -16,7 +16,7 @@
  */
 package org.quantumbadger.redreader.common
 
-class TriggerableThreadGroup(threads: Int, task: Runnable?) {
+class TriggerableThreadGroup(threads: Int, task: Runnable) {
     private val mThreads: Array<TriggerableThread?>
     private var mNextThreadToTrigger = 0
 

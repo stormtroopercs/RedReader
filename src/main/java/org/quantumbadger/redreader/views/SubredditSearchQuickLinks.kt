@@ -75,13 +75,13 @@ class SubredditSearchQuickLinks @JvmOverloads constructor(
     private fun doBind() {
         if (mBinding != null) {
             mBindingListener = EventListenerSet.Listener { query -> this.update(query) }
-            update(mBinding!!.register(mBindingListener))
+            update(mBinding!!.register(mBindingListener!!))
         }
     }
 
     private fun doUnbind() {
         if (mBinding != null && mBindingListener != null) {
-            mBinding!!.unregister(mBindingListener)
+            mBinding!!.unregister(mBindingListener!!)
             mBindingListener = null
         }
     }

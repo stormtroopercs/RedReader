@@ -20,7 +20,7 @@ import java.util.ArrayDeque
 
 class CachedThreadPool(private val mMaxThreads: Int, private val mThreadName: String?) {
     private val mTasks = ArrayDeque<Runnable>(16)
-    private val mExecutor: Executor = CachedThreadPool.Executor()
+    private val mExecutor: Executor by lazy { Executor() }
 
     private var mThreadNameCount = 0
 

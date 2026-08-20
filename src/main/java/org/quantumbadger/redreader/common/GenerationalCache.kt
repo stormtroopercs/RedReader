@@ -16,33 +16,35 @@
  */
 package org.quantumbadger.redreader.common
 
-class GenerationalCache<In : HasUniqueId?, Out>(private val mCreator: FunctionOneArgWithReturn<In?, Out?>) {
-    private var mPreviousGen = HashMap<String?, Out?>()
-    private var mThisGen = HashMap<String?, Out?>()
+class GenerationalCache<In : HasUniqueId, Out>(private val mCreator: FunctionOneArgWithReturn<In, Out>) {
+    private var mPreviousGen = HashMap<String, Out>()
+    private var mThisGen = HashMap<String, Out>()
 
 
     fun get(`in`: In): Out {
-        val uniqueId = `in`!!.uniqueId
+        val uniqueId = `in`.uniqueId
 
-        var result = mThisGen.get(uniqueId)
+        val current: Out? = mThisGen.get(uniqueId)
 
-        if (result != null) {
-            return result
+        if (current != null) {
+            return current
         }
 
-        result = mPreviousGen.get(uniqueId)
+        val previous: Out? = mPreviousGen.get(uniqueId)
 
-        if (result == null) {
-            result = mCreator.apply(`in`)
-            mThisGen.put(uniqueId, result)
+        if (previous != null) {
+            mThisGen.put(uniqueId, previous)
+            return previous
         }
 
-        mThisGen.put(uniqueId, result)
-        return result
+        val created = mCreator.apply(`in`)
+
+        mThisGen.put(uniqueId, created)
+        return created
     }
 
     fun nextGeneration() {
         mPreviousGen = mThisGen
-        mThisGen = HashMap<String?, Out?>()
+        mThisGen = HashMap<String, Out>()
     }
 }

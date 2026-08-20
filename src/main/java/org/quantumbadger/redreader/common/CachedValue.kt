@@ -25,7 +25,7 @@ class CachedValue<E>(
 ) {
     private class CacheEntry<E>(val value: E, val lastUpdateMs: Long)
 
-    private val mEntry = AtomicReference<CacheEntry<E?>?>(null)
+    private val mEntry = AtomicReference<CacheEntry<E>?>()
 
     fun get(): E {
         val timeNow = SystemClock.uptimeMillis()
@@ -36,8 +36,8 @@ class CachedValue<E>(
             return entry.value
         }
 
-        val newValue: E? = mFactory.create()
-        mEntry.set(CacheEntry<E?>(newValue, timeNow))
+        val newValue: E = mFactory.create()
+        mEntry.set(CacheEntry<E>(newValue, timeNow))
         return newValue
     }
 }

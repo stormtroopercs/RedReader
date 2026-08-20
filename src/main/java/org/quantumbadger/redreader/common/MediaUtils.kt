@@ -38,12 +38,12 @@ object MediaUtils {
     ) {
         Thread(Runnable {
             class InputFile internal constructor(
-                val file: File?,
+                val file: File,
                 val extractor: MediaExtractor,
-                private val mTrackIds: MutableMap<Int?, Int?>
+                private val mTrackIds: MutableMap<Int, Int>
             ) : Closeable {
                 fun getOutputTrackId(inputTrackId: Int): Int {
-                    return@Runnable mTrackIds.get(inputTrackId)
+                    return mTrackIds.get(inputTrackId)!!
                 }
 
                 @Throws(IOException::class)
@@ -70,7 +70,7 @@ object MediaUtils {
 
                     mediaExtractor.setDataSource(path)
 
-                    val trackIds = HashMap<Int?, Int?>()
+                    val trackIds = HashMap<Int, Int>()
 
                     for (inputTrackId in 0..<mediaExtractor.getTrackCount()) {
                         mediaExtractor.selectTrack(inputTrackId)
@@ -135,7 +135,7 @@ object MediaUtils {
                                     iterator.remove()
                                     Log.i(
                                         MediaUtils.TAG, "No bytes to read from "
-                                                + file.file!!.getAbsolutePath()
+                                                + file.file.getAbsolutePath()
                                     )
                                     break
                                 } else {
@@ -216,7 +216,7 @@ object MediaUtils {
                         Log.e(
                             TAG,
                             "Failed to clean up input file "
-                                    + file.file!!.getAbsolutePath(),
+                                    + file.file.getAbsolutePath(),
                             e
                         )
                     }

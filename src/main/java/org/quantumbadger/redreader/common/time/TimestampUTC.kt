@@ -3,14 +3,12 @@ package org.quantumbadger.redreader.common.time
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
-import kotlinx.serialization.Serializable
 import java.util.Locale
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 @OptIn(ExperimentalTime::class)
-@Serializable
 data class TimestampUTC(
 	val value: Instant
 ) : Comparable<TimestampUTC> {

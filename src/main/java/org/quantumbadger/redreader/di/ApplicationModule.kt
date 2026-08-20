@@ -25,7 +25,6 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import okhttp3.OkHttpClient
 import org.quantumbadger.redreader.cache.CacheManager
 import javax.inject.Singleton
 
@@ -53,12 +52,6 @@ object ApplicationModule {
     @Singleton
     fun provideContext(@ApplicationContext context: Context): Context {
         return context.applicationContext
-    }
-
-    @Provides
-    @Singleton
-    fun provideNetworkModule(okHttpClient: OkHttpClient): NetworkModule {
-        return NetworkModule(okHttpClient)
     }
 
     @Provides

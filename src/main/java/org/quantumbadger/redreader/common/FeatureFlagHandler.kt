@@ -77,9 +77,9 @@ object FeatureFlagHandler {
         // It will return ALREADY_UPGRADED if the feature was already present
         // in the last version, or if this is a fresh install of the app.
 
-        getSharedPrefs(context).performActionWithWriteLock(Consumer { prefs: SharedPreferences? ->
+        getSharedPrefs(context).performActionWithWriteLock(Consumer { prefs: SharedPreferences ->
             if (FeatureFlagHandler.getAndSetFeatureFlag(
-                    prefs!!,
+                    prefs,
                     FeatureFlag.COMMENT_HEADER_SUBREDDIT_FEATURE
                 )
                 == FeatureFlagStatus.UPGRADE_NEEDED

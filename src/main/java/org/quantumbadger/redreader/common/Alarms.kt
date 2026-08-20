@@ -110,15 +110,15 @@ object Alarms {
             this.startOnBoot = startOnBoot
         }
 
-        private fun interval(): Long {
+        internal fun interval(): Long {
             return interval
         }
 
-        private fun alarmClass(): Class<out BroadcastReceiver?>? {
+        internal fun alarmClass(): Class<out BroadcastReceiver?>? {
             return alarmClass
         }
 
-        private fun startOnBoot(): Boolean {
+        internal fun startOnBoot(): Boolean {
             return startOnBoot
         }
     }

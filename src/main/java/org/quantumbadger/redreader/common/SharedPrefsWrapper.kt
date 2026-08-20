@@ -23,7 +23,7 @@ import java.util.concurrent.locks.ReadWriteLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 class SharedPrefsWrapper internal constructor(private val mPrefs: SharedPreferences) {
-    inner class Editor @SuppressLint("CommitPrefEdits") private constructor() {
+    inner class Editor @SuppressLint("CommitPrefEdits") constructor() {
         private val mEditor: SharedPreferences.Editor
 
         init {
@@ -191,10 +191,10 @@ class SharedPrefsWrapper internal constructor(private val mPrefs: SharedPreferen
     }
 
     fun edit(): Editor {
-        return SharedPrefsWrapper.Editor()
+        return Editor()
     }
 
-    fun performActionWithWriteLock(action: Consumer<SharedPreferences?>) {
+    fun performActionWithWriteLock(action: Consumer<SharedPreferences>) {
         Log.i(TAG, "Acquiring write lock")
 
         Locker(mRestoreLock.writeLock()).use { ignored ->
