@@ -89,8 +89,8 @@ class CommentListingController(url: RedditURL) {
             return null
         }
 
-    val uri: Uri?
-        get() = commentListingUrl.generateJsonUri()
+    val uri: Uri
+        get() = commentListingUrl.generateJsonUri()!!
 
     fun get(
         parent: AppCompatActivity,

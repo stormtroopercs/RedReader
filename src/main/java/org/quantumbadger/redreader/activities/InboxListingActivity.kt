@@ -106,7 +106,7 @@ class InboxListingActivity : ViewsBaseActivity() {
 
     private val itemHandler: Handler = object : Handler(Looper.getMainLooper()) {
         override fun handleMessage(msg: Message) {
-            adapter!!.appendToGroup(0, msg.obj as GroupedRecyclerViewAdapter.Item<*>?)
+            adapter!!.appendToGroup(0, msg.obj as GroupedRecyclerViewAdapter.Item<*>)
         }
     }
 
@@ -351,7 +351,7 @@ class InboxListingActivity : ViewsBaseActivity() {
                                 ) {
                                     // TODO make RedditThing generic (and override data)?
 
-                                    val replies: ArrayList<MaybeParseError<RedditThing?>> = (message.src.replies.value as Listing)
+                                    val replies: ArrayList<MaybeParseError<RedditThing>> = (message.src.replies.value as Listing)
                                             .data.children
 
                                     for (childMsgValue

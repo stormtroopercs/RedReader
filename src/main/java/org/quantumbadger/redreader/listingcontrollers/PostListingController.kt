@@ -114,11 +114,11 @@ class PostListingController(url: PostListingURL, context: Context?) {
             }
         }
 
-    val uri: Uri?
-        get() = url.generateJsonUri()
+    val uri: Uri
+        get() = url.generateJsonUri()!!
 
     fun get(
-        parent: AppCompatActivity?,
+        parent: AppCompatActivity,
         force: Boolean,
         savedInstanceState: Bundle?
     ): PostListingFragment {
@@ -172,7 +172,7 @@ class PostListingController(url: PostListingURL, context: Context?) {
             && url.asSearchPostListURL().subreddit != null
         ) {
             try {
-                return SubredditCanonicalId(url.asSearchPostListURL().subreddit)
+                return SubredditCanonicalId(url.asSearchPostListURL().subreddit!!)
             } catch (e: InvalidSubredditNameException) {
                 throw RuntimeException(e)
             }

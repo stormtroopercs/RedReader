@@ -161,7 +161,7 @@ class CommentEditActivity : ViewsBaseActivity() {
                 cm,
                 handler,
                 selectedAccount,
-                commentIdAndType,
+                commentIdAndType!!,
                 textEdit!!.getText().toString(),
                 this
             )

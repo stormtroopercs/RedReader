@@ -74,7 +74,7 @@ class ImgurUploadActivity : ViewsBaseActivity() {
 
     private var mThumbnailView: ImageView?=null
 
-    private var mImageData: ByteArray?
+    private var mImageData: ByteArray? = null
 
     private var mUploadButton: Button?=null
 

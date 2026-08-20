@@ -188,7 +188,7 @@ abstract class ViewsBaseActivity : BaseActivity() {
             if (baseActivityIsToolbarSearchBarEnabled()) {
                 mActionbarTitleTextView = Optional.Companion.empty<TextView>()
             } else {
-                mActionbarTitleTextView = Optional.Companion.of<TextView>(
+                mActionbarTitleTextView = Optional.Companion.ofNullable<TextView>(
                     toolbar.findViewById<TextView?>(R.id.actionbar_title_text)
                 )
             }

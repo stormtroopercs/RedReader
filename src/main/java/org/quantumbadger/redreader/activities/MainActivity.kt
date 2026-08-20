@@ -328,15 +328,15 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
                     RedditAccountManager.Companion.getInstance(this).getDefaultAccount()
                 )
 
-                val autocompleteAdapter = ArrayAdapter<String?>(
+                val autocompleteAdapter = ArrayAdapter<String>(
                     this,
                     android.R.layout.simple_dropdown_item_1line,
-                    CollectionStream<SubredditCanonicalId?>(subredditHistory)
-                        .map<String?>(MapStream.Operator { obj: SubredditCanonicalId? -> obj.displayNameLowercase })
-                        .collect<ArrayList<String?>?>(ArrayList<String?>())
+                    CollectionStream<SubredditCanonicalId>(subredditHistory)
+                        .map(MapStream.Operator { obj: SubredditCanonicalId -> obj.displayNameLowercase })
+                        .collect(ArrayList<String>())
                 )
 
-                editText.setAdapter<ArrayAdapter<String?>?>(autocompleteAdapter)
+                editText.setAdapter(autocompleteAdapter)
                 editText.setOnEditorActionListener(OnEditorActionListener { v: TextView?, actionId: Int, event: KeyEvent? ->
                     var handled = false
                     if (actionId == EditorInfo.IME_ACTION_GO
@@ -412,7 +412,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
                         val typeName: String?=typeReturnValues[destinationType.getSelectedItemPosition()]
 
                         if ("subreddit" == typeName) {
-                            editText.setAdapter<ArrayAdapter<String?>?>(autocompleteAdapter)
+                            editText.setAdapter(autocompleteAdapter)
                         } else {
                             editText.setAdapter(null)
                         }
@@ -484,9 +484,9 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
                     .replace(" ", "")
 
                 try {
-                    val normalizedName: String?=RedditSubreddit.Companion.stripRPrefix(
+                    val normalizedName: String = RedditSubreddit.Companion.stripRPrefix(
                         subredditInput
-                    )
+                    )!!
                     val redditURL: RedditURL?=SubredditPostListURL.Companion.getSubreddit(normalizedName)
                     if (redditURL == null
                         || (redditURL.pathType()
@@ -502,7 +502,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             }
 
             "user" -> {
-                val userInput = editText.getText().toString().trim { it <= ' ' }.replace(" ", "")
+                var userInput = editText.getText().toString().trim { it <= ' ' }.replace(" ", "")
 
                 if (!userInput.startsWith("/u/")
                     && !userInput.startsWith("/user/")
@@ -531,14 +531,13 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
 
                 if (StringUtils.isEmpty(query)) {
                     quickToast(this, string.mainmenu_custom_empty_search_query)
-                    break
+                } else {
+                    val url: SearchPostListURL = SearchPostListURL.Companion.build(null, query)
+
+                    val intent = Intent(this, PostListingActivity::class.java)
+                    intent.setData(url.generateJsonUri())
+                    this.startActivity(intent)
                 }
-
-                val url: SearchPostListURL = SearchPostListURL.Companion.build(null, query)
-
-                val intent = Intent(this, PostListingActivity::class.java)
-                intent.setData(url.generateJsonUri())
-                this.startActivity(intent)
             }
         }
     }
@@ -753,7 +752,7 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             && postListingFragment != null && postListingFragment!!.subreddit != null
         ) {
             subredditSubscriptionState = subredditSubscriptionManager.getSubscriptionState(
-                postListingController!!.subredditCanonicalName()
+                postListingController!!.subredditCanonicalName()!!
             )
         } else {
             subredditSubscriptionState = null
@@ -1086,7 +1085,8 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             return null
         }
 
-        return commentListingFragment!!.post.src.suggestedCommentSort
+        val post = commentListingFragment!!.post
+        return post!!.src.suggestedCommentSort
         }
 
     companion object {

@@ -63,9 +63,9 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
             val url = intent.getDataString()
             val searchString = intent.getStringExtra(EXTRA_SEARCH_STRING)
             controller = CommentListingController(
-                RedditURLParser.parseProbableCommentListing(Uri.parse(url))
+                RedditURLParser.parseProbableCommentListing(Uri.parse(url!!))
             )
-            controller!!.setSearchString(searchString)
+            controller!!.searchString = searchString
 
             var fragmentSavedInstanceState: Bundle?=null
 
@@ -261,7 +261,8 @@ class CommentListingActivity : RefreshableActivity(), RedditAccountChangeListene
             return null
         }
 
-        return mFragment!!.post.src.suggestedCommentSort
+        val post = mFragment!!.post
+        return post!!.src.suggestedCommentSort
         }
 
     companion object {

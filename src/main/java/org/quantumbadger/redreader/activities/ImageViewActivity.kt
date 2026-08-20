@@ -204,12 +204,12 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
         if (intent.hasExtra("albumUrl")) {
             getAlbumInfo(
                 this,
-                Objects.requireNonNull<UriString?>(
-                    IntentCompat.getParcelableExtra<UriString?>(
+                Objects.requireNonNull(
+                    IntentCompat.getParcelableExtra(
                         intent, "albumUrl",
                         UriString::class.java
                     )
-                ),
+                )!!,
                 Priority(Constants.Priority.IMAGE_VIEW),
                 object : GetAlbumInfoListener {
                     override fun onFailure(error: RRError) {
@@ -497,7 +497,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
 
                 try {
                     videoStream.create().use { `is` ->
-                        `is`.readRemainingAsBytes(ByteArrayCallback { buf: ByteArray?, offset: Int, length: Int ->
+                        `is`.readRemainingAsBytes(ByteArrayCallback { buf: ByteArray, offset: Int, length: Int ->
                             Log.i(
                                 TAG, "Video fully downloaded, starting playback"
                             )
@@ -824,15 +824,12 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
     }
 
     private fun manageAspectRatioIndicator(progressBar: DonutProgress) {
-        findAspectRatio@ if (PrefsUtility.pref_appearance_show_aspect_ratio_indicator()) {
+        if (PrefsUtility.pref_appearance_show_aspect_ratio_indicator()) {
             if (mImageInfo!!.original.size != null && mImageInfo!!.original.size!!.height > 0) {
                 progressBar.setLoadingImageAspectRatio(mImageInfo!!.original.size!!.width.toFloat() / mImageInfo!!.original.size!!.height)
-            } else {
-                break@findAspectRatio
+                progressBar.setAspectIndicatorDisplay(true)
+                return
             }
-
-            progressBar.setAspectIndicatorDisplay(true)
-            return
         }
 
         progressBar.setAspectIndicatorDisplay(false)
@@ -969,7 +966,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
                                 if (video.get() != null) {
                                     onImageStreamReady(
                                         !fromCache,
-                                        video.get(),
+                                        video.get()!!,
                                         streamFactory,
                                         videoMimetype.get(),
                                         Uri.parse(uri.toString())
@@ -1032,7 +1029,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
         finish()
     }
 
-    @OptIn(markerClass = UnstableApi::class)
+    @OptIn(UnstableApi::class)
     @UiThread
     private fun playWithExoplayer(
         isNetwork: Boolean,
@@ -1096,7 +1093,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
 
             val muteByDefault = PrefsUtility.pref_behaviour_video_mute_default()
 
-            mVideoPlayerWrapper!!.setMuted(muteByDefault)
+            mVideoPlayerWrapper!!.isMuted = muteByDefault
 
             val iconMuted = R.drawable.ic_volume_off_white_24dp
             val iconUnmuted = R.drawable.ic_volume_up_white_24dp
@@ -1113,13 +1110,13 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
                         View.OnClickListener { view: View? ->
                             val button = muteButton.get()
                             if (mVideoPlayerWrapper!!.isMuted) {
-                                mVideoPlayerWrapper!!.setMuted(false)
+                                mVideoPlayerWrapper!!.isMuted = false
                                 button.setImageResource(iconUnmuted)
                                 button.setContentDescription(
                                     getResources().getString(string.video_mute)
                                 )
                             } else {
-                                mVideoPlayerWrapper!!.setMuted(true)
+                                mVideoPlayerWrapper!!.isMuted = true
                                 button.setImageResource(iconMuted)
                                 button.setContentDescription(
                                     getResources().getString(string.video_unmute)
@@ -1145,7 +1142,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
         try {
             streamFactory.create().use { `is` ->
                 Log.i(TAG, "Got input stream of type " + `is`.javaClass.getCanonicalName())
-                `is`.readRemainingAsBytes(ByteArrayCallback { buf: ByteArray?, offset: Int, length: Int ->
+                `is`.readRemainingAsBytes(ByteArrayCallback { buf: ByteArray, offset: Int, length: Int ->
                     Log.i(TAG, "Got byte array")
                     val movie: Movie
 
@@ -1265,7 +1262,7 @@ class ImageViewActivity : ViewsBaseActivity(), PostSelectionListener,
                 return@Runnable
             }
             mImageViewDisplayerManager = ImageViewDisplayListManager(imageTileSource, this)
-            surfaceView = RRGLSurfaceView(this, mImageViewDisplayerManager)
+            surfaceView = RRGLSurfaceView(this, mImageViewDisplayerManager!!)
             setMainView(surfaceView!!)
             if (mIsPaused) {
                 surfaceView!!.onPause()

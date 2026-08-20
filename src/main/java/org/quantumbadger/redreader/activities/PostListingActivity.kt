@@ -179,7 +179,7 @@ class PostListingActivity : RefreshableActivity(), RedditAccountChangeListener,
             && fragment != null && fragment!!.subreddit != null
         ) {
             subredditSubscriptionState = subredditSubscriptionManager.getSubscriptionState(
-                controller!!.subredditCanonicalName()
+                controller!!.subredditCanonicalName()!!
             )
         } else {
             subredditSubscriptionState = null
