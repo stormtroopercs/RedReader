@@ -19,7 +19,7 @@ package org.quantumbadger.redreader.reddit.url
 import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 
 abstract class CommentListingURL : RedditURL() {
-    abstract fun after(after: String?): CommentListingURL?
+    abstract fun after(after: String?): CommentListingURL
 
-    abstract fun limit(limit: Int?): CommentListingURL?
+    abstract fun limit(limit: Int?): CommentListingURL
 }

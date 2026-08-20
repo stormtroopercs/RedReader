@@ -36,7 +36,7 @@ class SearchPostListURL : PostListingURL {
     val name: String?
 
     val query: String?
-    val order: PostSort?
+    override var order: PostSort?
     val limit: Int?
     val before: String?
     val after: RedditIdAndType?
@@ -158,12 +158,16 @@ class SearchPostListURL : PostListingURL {
         }
 
         if (order != null) {
-            when (order) {
+            val sortOrder = order
+            when (sortOrder) {
                 PostSort.RELEVANCE_HOUR, PostSort.RELEVANCE_DAY, PostSort.RELEVANCE_WEEK, PostSort.RELEVANCE_MONTH, PostSort.RELEVANCE_YEAR, PostSort.RELEVANCE_ALL, PostSort.NEW_HOUR, PostSort.NEW_DAY, PostSort.NEW_WEEK, PostSort.NEW_MONTH, PostSort.NEW_YEAR, PostSort.NEW_ALL, PostSort.HOT_HOUR, PostSort.HOT_DAY, PostSort.HOT_WEEK, PostSort.HOT_MONTH, PostSort.HOT_YEAR, PostSort.HOT_ALL, PostSort.TOP_HOUR, PostSort.TOP_DAY, PostSort.TOP_WEEK, PostSort.TOP_MONTH, PostSort.TOP_YEAR, PostSort.TOP_ALL, PostSort.COMMENTS_HOUR, PostSort.COMMENTS_DAY, PostSort.COMMENTS_WEEK, PostSort.COMMENTS_MONTH, PostSort.COMMENTS_YEAR, PostSort.COMMENTS_ALL -> {
-                    val parts: Array<String?> =                         order.name.split("_".toRegex()).dropLastWhile { it.isEmpty() }
+                    val parts: Array<String> =                         sortOrder.name.split("_".toRegex()).dropLastWhile { it.isEmpty() }
                             .toTypedArray()
-                    builder.appendQueryParameter("sort", StringUtils.asciiLowercase(parts[0]!!))
-                    builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]!!))
+                    builder.appendQueryParameter("sort", StringUtils.asciiLowercase(parts[0]))
+                    builder.appendQueryParameter("t", StringUtils.asciiLowercase(parts[1]))
+                }
+                else -> {
+                    // Java switch had no default: non-searchable sorts fall through to no-op
                 }
             }
         }

@@ -22,7 +22,7 @@ import org.quantumbadger.redreader.common.Constants.Reddit
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.reddit.url.RedditURLParser.RedditURL
 
-class UserProfileURL(val username: String?) : RedditURL() {
+class UserProfileURL(val username: String) : RedditURL() {
     override fun generateJsonUri(): Uri? {
         val builder = Uri.Builder()
         builder.scheme(Reddit.scheme)
@@ -41,16 +41,16 @@ class UserProfileURL(val username: String?) : RedditURL() {
         return RedditURLParser.USER_PROFILE_URL
     }
 
-    override fun humanReadableName(context : Context, shorter: Boolean): String? {
+    override fun humanReadableName(context : Context, shorter: Boolean): String {
         return username
     }
 
     companion object {
         fun parse(uri: Uri): UserProfileURL? {
-            val pathSegments: Array<String?>
+            val pathSegments: Array<String>
             run {
                 val pathSegmentsList = uri.getPathSegments()
-                val pathSegmentsFiltered = ArrayList<String?>(
+                val pathSegmentsFiltered = ArrayList<String>(
                     pathSegmentsList.size
                 )
                 for (segment in pathSegmentsList) {
@@ -66,7 +66,7 @@ class UserProfileURL(val username: String?) : RedditURL() {
                     }
                 }
 
-                pathSegments = pathSegmentsFiltered.toTypedArray<String?>()
+                pathSegments = pathSegmentsFiltered.toTypedArray()
             }
 
             if (pathSegments.size != 2) {

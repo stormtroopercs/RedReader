@@ -183,7 +183,7 @@ object RedditURLParser {
             return matchURL
         }
 
-        return UnknownCommentListURL(uri)
+        return UnknownCommentListURL(uri!!)
     }
 
     fun parseProbablePostListing(uri: Uri?): RedditURL {
@@ -192,7 +192,7 @@ object RedditURLParser {
             return matchURL
         }
 
-        return UnknownPostListURL(uri)
+        return UnknownPostListURL(uri!!)
     }
 
     @IntDef(SUBREDDIT_POST_LISTING_URL, USER_POST_LISTING_URL, SEARCH_POST_LISTING_URL, UNKNOWN_POST_LISTING_URL, USER_PROFILE_URL, USER_COMMENT_LISTING_URL, UNKNOWN_COMMENT_LISTING_URL, POST_COMMENT_LISTING_URL, MULTIREDDIT_POST_LISTING_URL, COMPOSE_MESSAGE_URL, OPAQUE_SHARED_URL)
@@ -200,7 +200,7 @@ object RedditURLParser {
     annotation class PathType
 
     abstract class RedditURL {
-        abstract fun generateJsonUri(): Uri
+        abstract fun generateJsonUri(): Uri?
 
         @PathType
         abstract fun pathType(): Int
@@ -246,7 +246,7 @@ object RedditURLParser {
         }
 
         open fun humanReadablePath(): String {
-            val src = generateJsonUri()
+            val src = generateJsonUri()!!
 
             val builder = StringBuilder()
 
@@ -265,7 +265,7 @@ object RedditURLParser {
         }
 
         override fun toString(): String {
-            return generateJsonUri().toString()
+            return generateJsonUri()!!.toString()
         }
 
         fun toUriString(): UriString {

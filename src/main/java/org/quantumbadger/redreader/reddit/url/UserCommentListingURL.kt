@@ -89,7 +89,7 @@ class UserCommentListingURL internal constructor(
             val pathSegments: Array<String>
             run {
                 val pathSegmentsList = uri.getPathSegments()
-                val pathSegmentsFiltered = ArrayList<String?>(
+                val pathSegmentsFiltered = ArrayList<String>(
                     pathSegmentsList.size
                 )
                 for (segment in pathSegmentsList) {
@@ -105,7 +105,7 @@ class UserCommentListingURL internal constructor(
                     }
                 }
 
-                pathSegments = pathSegmentsFiltered.toTypedArray<String?>()
+                pathSegments = pathSegmentsFiltered.toTypedArray()
             }
 
             val order: UserCommentSort?

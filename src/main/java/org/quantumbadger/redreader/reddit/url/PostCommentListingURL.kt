@@ -145,7 +145,7 @@ class PostCommentListingURL(
         return RedditURLParser.POST_COMMENT_LISTING_URL
     }
 
-    override fun humanReadableName(context : Context, shorter: Boolean): String? {
+    override fun humanReadableName(context : Context, shorter: Boolean): String {
         return super.humanReadableName(context, shorter)
     }
 
@@ -245,7 +245,7 @@ class PostCommentListingURL(
                     } catch (ignored: Throwable) {
                     }
                 } else if (parameterKey.equals("sort", ignoreCase = true)) {
-                    order = PostCommentSort.Companion.lookup(uri.getQueryParameter(parameterKey))
+                    order = PostCommentSort.Companion.lookup(uri.getQueryParameter(parameterKey)!!)
                 }
             }
 
