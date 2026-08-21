@@ -13,7 +13,7 @@ Open-source Reddit client for Android. 100% Kotlin production code (514 .kt file
 | AGP | 9.3.1 |
 | Compose BOM | 2026.08.00 |
 | Navigation | **Navigation 3** (1.0.0) |
-| compileSdk / targetSdk | 36 |
+| compileSdk / targetSdk | 37 / 36 |
 | minSdk | 23 |
 | Hilt | 2.60.1 (DI) |
 | Room | 2.8.0 (4 entities, 4 DAOs) |
