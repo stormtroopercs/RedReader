@@ -22,9 +22,12 @@ import android.net.Uri
 import android.util.Log
 import com.github.luben.zstd.Zstd
 import com.github.luben.zstd.ZstdInputStream
+import dagger.hilt.EntryPoints
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.internal.GeneratedComponentManagerHolder
 import javax.inject.Inject
 import javax.inject.Singleton
+import org.quantumbadger.redreader.RedReader.Companion.CacheManagerEntryPoint
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
@@ -91,9 +94,35 @@ class CacheManager @Inject constructor(
         @Volatile
         private var instance: CacheManager?=null
 
+        /**
+         * Resolves the Hilt-backed singleton, lazily building the root
+         * SingletonComponent if [RedReader.onCreate] hasn't run yet.
+         *
+         * ContentProviders (CacheContentProvider) are installed by
+         * ActivityThread during handleBindApplication -> installContentProviders,
+         * which happens BEFORE Application.onCreate(). Any getInstance() call
+         * in that window (or in other contexts not yet created, such as
+         * background services or receivers) must not throw, so fall back to
+         * Hilt's entry point instead. Hilt memoizes both the root component
+         * and its providers, so this returns the exact same instance that
+         * RedReader.onCreate() later injects (the original Java singleton
+         * was likewise a lazy, process-wide one).
+         */
         fun getInstance(context: Context): CacheManager {
-            return instance ?: synchronized(this) {
-                instance ?: throw IllegalStateException("CacheManager not initialized by Hilt")
+            instance?.let { return it }
+            synchronized(this) {
+                instance?.let { return it }
+                val app = context.applicationContext as? GeneratedComponentManagerHolder
+                    ?: throw IllegalStateException(
+                        "CacheManager not initialized: application is not a Hilt app"
+                    )
+                val entryPoint = EntryPoints.get(
+                    app.componentManager().generatedComponent(),
+                    CacheManagerEntryPoint::class.java
+                )
+                val manager = entryPoint.cacheManager()
+                instance = manager
+                return manager
             }
         }
 

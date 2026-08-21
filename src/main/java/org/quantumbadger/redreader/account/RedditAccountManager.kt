@@ -28,10 +28,13 @@ import org.quantumbadger.redreader.reddit.api.RedditOAuth.RefreshToken
 import java.util.LinkedList
 import java.util.Locale
 
+import dagger.hilt.EntryPoints
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.internal.GeneratedComponentManagerHolder
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
+import org.quantumbadger.redreader.RedReader.Companion.CacheManagerEntryPoint
 import android.database.Cursor
 
 /**
@@ -312,11 +315,27 @@ class RedditAccountManager @Inject constructor(
 
         /**
          * Legacy accessor for pre-Hilt call sites.
-         * Returns the Hilt-managed singleton (wired via setInstance in RedReader.onCreate).
+         * Returns the Hilt-managed singleton, lazily resolving it through the
+         * root SingletonComponent when RedReader.onCreate() hasn't wired the
+         * static instance yet (ContentProviders and other components are
+         * installed before Application.onCreate(), so they cannot rely on the
+         * pre-wired instance).
          */
         fun getInstance(context: Context): RedditAccountManager {
-            return instance ?: synchronized(this) {
-                instance ?: throw IllegalStateException("RedditAccountManager not initialized by Hilt")
+            instance?.let { return it }
+            synchronized(this) {
+                instance?.let { return it }
+                val app = context.applicationContext as? GeneratedComponentManagerHolder
+                    ?: throw IllegalStateException(
+                        "RedditAccountManager not initialized: application is not a Hilt app"
+                    )
+                val entryPoint = EntryPoints.get(
+                    app.componentManager().generatedComponent(),
+                    CacheManagerEntryPoint::class.java
+                )
+                val manager = entryPoint.redditAccountManager()
+                instance = manager
+                return manager
             }
         }
 

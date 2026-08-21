@@ -68,6 +68,8 @@ class RedReader : Application() {
         @InstallIn(SingletonComponent::class)
         interface CacheManagerEntryPoint {
             fun cacheManager(): CacheManager
+
+            fun redditAccountManager(): RedditAccountManager
         }
     }
 
