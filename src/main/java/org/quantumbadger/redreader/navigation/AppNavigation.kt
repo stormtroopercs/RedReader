@@ -18,7 +18,6 @@
 package org.quantumbadger.redreader.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -27,6 +26,9 @@ import androidx.navigation3.ui.NavDisplay
 /**
  * App-wide navigation using Navigation 3.
  *
+ * The caller (the Activity) owns the [NavigationState] so it can drive back
+ * navigation from the system back button; this graph only consumes it.
+ *
  * Uses the standard Nav 3 pattern:
  *   - NavigationState (holds back stacks per top-level route)
  *   - Navigator (navigate/goBack actions)
@@ -34,13 +36,8 @@ import androidx.navigation3.ui.NavDisplay
  *   - NavDisplay with entryDecorators (saveable state + ViewModel scoping)
  */
 @Composable
-fun AppNavGraph() {
-    val navigationState = rememberNavigationState(
-        startRoute = Main,
-        topLevelRoutes = TOP_LEVEL_ROUTES
-    )
-
-    val navigator = remember { Navigator(navigationState) }
+fun AppNavGraph(navigationState: NavigationState) {
+    val navigator = Navigator(navigationState)
 
     NavDisplay(
         backStack = navigationState.backStack,

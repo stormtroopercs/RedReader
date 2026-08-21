@@ -103,4 +103,14 @@ class NavigationState(
         }
         combined
     }
+
+    /**
+     * Whether a back action is available from the current position: a child
+     * entry to pop on the active top-level stack, or a non-start top-level
+     * route to return from.
+     */
+    fun canGoBack(): Boolean {
+        val stack = backStacks[topLevelRoute] ?: return false
+        return stack.size > 1 || topLevelRoute != startRoute
+    }
 }
