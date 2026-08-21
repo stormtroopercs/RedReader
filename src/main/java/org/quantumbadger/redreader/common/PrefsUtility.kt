@@ -2057,6 +2057,14 @@ object PrefsUtility {
         return valueTrimmed
     }
 
+    fun pref_reddit_client_id_override_set(value: String?) {
+        val trimmed = value?.trim { it <= ' ' }
+        // putString with a null value removes the entry (framework semantics)
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_reddit_client_id_override_key), trimmed)
+            .apply()
+    }
+
     private const val REDDIT_USER_AGREEMENT_PREF = "accepted_reddit_user_agreement"
     @Suppress("PropertyName")
     private val REDDIT_USER_AGREEMENT_DECLINED = -1

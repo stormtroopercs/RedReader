@@ -25,11 +25,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -41,12 +43,17 @@ import androidx.compose.ui.unit.dp
 /**
  * Main screen composable.
  * Replaces MainMenuFragment with Compose UI.
+ *
+ * [accountName] is the signed-in Reddit username, or null when not
+ * authenticated; the account row offers sign-in in that case.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    accountName: String? = null,
     onNavigateToPostList: (String) -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onNavigateToLogin: () -> Unit = {}
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -73,6 +80,31 @@ fun MainScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            item(key = "account") {
+                ListItem(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = accountName.isNullOrBlank(), onClick = onNavigateToLogin),
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null
+                        )
+                    },
+                    headlineContent = {
+                        Text(
+                            text = accountName?.takeIf { it.isNotBlank() }?.let { "u/$it" } ?: "Sign in to Reddit",
+                            fontWeight = if (accountName.isNullOrBlank()) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal
+                        )
+                    },
+                    supportingContent = {
+                        if (accountName.isNullOrBlank()) {
+                            Text(text = "Login required to view posts")
+                        }
+                    }
+                )
+            }
+
             items(
                 items = listOf("frontpage", "popular", "all"),
                 key = { it }

@@ -42,8 +42,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -130,6 +132,7 @@ private fun SettingsContent(
                     is SettingsItem.BooleanSetting -> BooleanSettingItem(item)
                     is SettingsItem.EnumSetting<*> -> EnumSettingItem(item)
                     is SettingsItem.PreferenceItem -> PreferenceItem(item)
+                    is SettingsItem.StringSetting -> StringSettingItem(item)
                 }
             }
         }
@@ -303,6 +306,53 @@ private fun PreferenceItem(item: SettingsItem.PreferenceItem) {
     }
 }
 
+/**
+ * String setting (text input), written to PrefsUtility on commit.
+ */
+@Composable
+private fun StringSettingItem(item: SettingsItem.StringSetting) {
+    var text by remember(item.key) {
+        mutableStateOf(item.get() ?: "")
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = item.label,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
+        )
+
+        item.description.takeIf { it.isNotBlank() }?.let { desc ->
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = desc,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Spacer(Modifier.height(6.dp))
+
+        OutlinedTextField(
+            value = text,
+            onValueChange = { text = it },
+            placeholder = { Text(item.placeholder) },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        TextButton(
+            onClick = { item.set(text.ifBlank { null }) },
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text("Save")
+        }
+    }
+}
+
 // ============================================================================
 // Data models
 // ============================================================================
@@ -345,6 +395,15 @@ sealed class SettingsItem {
         val label: String,
         val description: String = "",
         val onClick: () -> Unit
+    ) : SettingsItem()
+
+    data class StringSetting(
+        override val key: String,
+        val label: String,
+        val description: String = "",
+        val placeholder: String = "",
+        val get: () -> String?,
+        val set: (String?) -> Unit
     ) : SettingsItem()
 }
 
@@ -504,6 +563,14 @@ private fun getSettingsCategories(): List<SettingsCategory> {
                     description = "Route traffic through the Tor network",
                     get = { PrefsUtility.network_tor() },
                     set = PrefsUtility::network_tor_set
+                ),
+                SettingsItem.StringSetting(
+                    key = "reddit_client_id_override",
+                    label = "Reddit client ID override",
+                    description = "Override the compiled-in Reddit OAuth client ID (self-compiled builds)",
+                    placeholder = "Your Reddit OAuth client ID",
+                    get = { PrefsUtility.pref_reddit_client_id_override() },
+                    set = PrefsUtility::pref_reddit_client_id_override_set
                 )
             )
         ),

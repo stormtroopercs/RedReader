@@ -17,11 +17,24 @@
 
 package org.quantumbadger.redreader.navigation
 
+import android.net.Uri
+import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import org.quantumbadger.redreader.account.RedditAccountChangeListener
+import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.common.RunnableOnce
+import org.quantumbadger.redreader.reddit.api.RedditOAuth
 
 /**
  * App-wide navigation using Navigation 3.
@@ -49,12 +62,28 @@ fun AppNavGraph(navigationState: NavigationState) {
         entryProvider = entryProvider {
             // Top-level: Main screen
             entry<Main> {
+                val context = LocalContext.current
+                val accountManager = remember { RedditAccountManager.getInstance(context) }
+                val accountName = remember {
+                    mutableStateOf(accountManager.defaultAccount.username)
+                }
+                DisposableEffect(accountManager) {
+                    val listener = RedditAccountChangeListener {
+                        accountName.value = accountManager.defaultAccount.username
+                    }
+                    accountManager.addUpdateListener(listener)
+                    onDispose { accountManager.removeUpdateListener(listener) }
+                }
                 MainScreen(
+                    accountName = accountName.value,
                     onNavigateToPostList = { subreddit ->
                         navigator.navigate(PostList(subreddit))
                     },
                     onNavigateToSettings = {
                         navigator.navigate(Settings)
+                    },
+                    onNavigateToLogin = {
+                        navigator.navigate(OAuthLogin)
                     }
                 )
             }
@@ -198,13 +227,27 @@ fun AppNavGraph(navigationState: NavigationState) {
 
             // Child: OAuth Login
             entry<OAuthLogin> {
+                val context = LocalContext.current
                 org.quantumbadger.redreader.compose.ui.OAuthLoginScreen(
                     onOAuthComplete = { callbackUrl ->
-                        // TODO: handle OAuth callback
-                        navigator.goBack()
+                        // Exchange the code for tokens and store the account
+                        // (mirrors the legacy AccountListDialog.onActivityResult
+                        // path). completeLogin shows its own progress and
+                        // success/failure dialogs.
+                        val activity = context as? AppCompatActivity
+                        if (activity == null) {
+                            Log.e("AppNavigation", "No host activity for OAuth callback")
+                            navigator.goBack()
+                            return@OAuthLoginScreen
+                        }
+                        RedditOAuth.completeLogin(
+                            activity,
+                            Uri.parse(callbackUrl),
+                            RunnableOnce(Runnable { navigator.goBack() })
+                        )
                     },
                     onOAuthError = { error ->
-                        // TODO: show error dialog
+                        Log.e("AppNavigation", "OAuth failed: $error")
                         navigator.goBack()
                     }
                 )
