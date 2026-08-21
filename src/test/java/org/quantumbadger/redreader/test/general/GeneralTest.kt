@@ -12,33 +12,27 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http:></http:>//www.gnu.org/licenses/>.
  ******************************************************************************/
+package org.quantumbadger.redreader.test.general
 
-package org.quantumbadger.redreader.test.general;
+import org.junit.Assert.assertEquals
+import org.junit.Test
+import org.quantumbadger.redreader.common.StringUtils
+import java.util.Locale
 
-import org.junit.Test;
-import org.quantumbadger.redreader.common.StringUtils;
+class GeneralTest {
 
-import java.util.Locale;
+    @Test
+    fun testAsciiUppercase() {
 
-import static org.junit.Assert.assertEquals;
+        for (c in 0 until 128) {
+            val ch = c.toChar()
+            val str = "This is a test" + ch
+            assertEquals(str.uppercase(Locale.ENGLISH), StringUtils.asciiUppercase(str))
 
-public class GeneralTest {
-
-	@Test
-	public void testAsciiUppercase() {
-
-		for(char c = 0; c < 128; c++) {
-			{
-				final String str = "This is a test" + new String(new char[]{c});
-				assertEquals(str.toUpperCase(Locale.ENGLISH), StringUtils.asciiUppercase(str));
-			}
-
-			{
-				final String str = "" + c + c + c + c + c + "A" + c + "A";
-				assertEquals(str.toUpperCase(Locale.ENGLISH), StringUtils.asciiUppercase(str));
-			}
-		}
-	}
+            val str2 = "${ch}${ch}${ch}${ch}${ch}A${ch}A"
+            assertEquals(str2.uppercase(Locale.ENGLISH), StringUtils.asciiUppercase(str2))
+        }
+    }
 }
