@@ -25,6 +25,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
+import dagger.hilt.android.AndroidEntryPoint
 import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.navigation.AppNavGraph
 import org.quantumbadger.redreader.navigation.Main
@@ -41,6 +42,7 @@ import org.quantumbadger.redreader.navigation.TOP_LEVEL_ROUTES
  * not expose a back API to the Activity, so back navigation is driven through
  * [baseActivityOnBackPressed].
  */
+@AndroidEntryPoint
 class MainActivityCompose : ComposeBaseActivity() {
 
     private val navigationState = NavigationState(
