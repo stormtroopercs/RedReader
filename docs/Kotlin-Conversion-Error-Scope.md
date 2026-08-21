@@ -262,24 +262,27 @@ interface cascade + per-file nullability tail).
 
 ## 8. Tooling in-repo
 
+All conversion/build tooling lives in `scripts/`:
+
 | Script | Purpose |
 |---|---|
-| `build_check.sh` | compile + count: `bash build_check.sh [FILE_FILTER]` → `TOTAL: N` (handles `JAVA_HOME`); optional per-file filter prints that file's `e:` lines |
-| `kt_oracle.py` | Kotlin 2.4.10 pattern oracle — `from kt_oracle import kc` — compile-check candidate forms before bulk edits (classpath in `/tmp/kc_cp.txt`) |
-| `fix_getters.py` | bulk `get*()` call-site → property renames (receiver-aware, log-driven) |
-| `fix_override_null.py` / `fix_override_null2.py` | base+implementor override-param nullability standardizers |
-| `plan_ov5.py` | override-error planner (multi-line decls, BFS base resolver) → JSON plans |
-| `apply_propconvert.py` | `override fun getX()` → `override val x` converter |
-| `extract_nohint*.py`, `analyze_argmismatch*.py`, `analyze_overrides.py` | log analysis helpers |
+| `scripts/build_check.sh` | compile + count: `bash scripts/build_check.sh [FILE_FILTER]` → `TOTAL: N` (handles `JAVA_HOME`); optional per-file filter prints that file's `e:` lines |
+| `scripts/kt_oracle.py` | Kotlin 2.4.10 pattern oracle — `from kt_oracle import kc` — compile-check candidate forms before bulk edits (classpath in `/tmp/kc_cp.txt`) |
+| `scripts/fix_getters.py` | bulk `get*()` call-site → property renames (receiver-aware, log-driven) |
+| `scripts/fix_override_null.py` / `scripts/fix_override_null2.py` | base+implementor override-param nullability standardizers |
+| `scripts/plan_ov5.py` | override-error planner (multi-line decls, BFS base resolver) → JSON plans |
+| `scripts/apply_propconvert.py` | `override fun getX()` → `override val x` converter |
+| `scripts/extract_nohint*.py`, `scripts/analyze_argmismatch*.py`, `scripts/analyze_overrides.py` | log analysis helpers |
+| `scripts/compile_count.sh`, `scripts/scope_analysis.py`, `scripts/analyze_clusters.py`, `scripts/blast_radius*.sh`, `scripts/parse_errors.py`, `scripts/summarize_compile.sh`, `scripts/verify_unit.sh` | error-counting / scoping / cluster-analysis / build-verify helpers |
 
 ## 9. Reproduction
 
 ```bash
-cd /opt/data/RedReader
-export JAVA_HOME=/opt/data/jdk-17.0.17+10
+cd /opt/data/redreader-project/RedReader
+export JAVA_HOME=/opt/data/redreader-project/jdk-17.0.17+10
 ./gradlew compileDebugKotlin --no-daemon > /tmp/compile.log 2>&1
 grep -c '^e:' /tmp/compile.log
-grep '^e:' /tmp/compile.log | sed 's|file:///opt/data/RedReader/src/main/java/org/quantumbadger/redreader/||; s|\.kt:.*||' | sort | uniq -c | sort -rn   # per-file
+grep '^e:' /tmp/compile.log | sed 's|file:///opt/data/redreader-project/RedReader/src/main/java/org/quantumbadger/redreader/||; s|\.kt:.*||' | sort | uniq -c | sort -rn   # per-file
 ```
 
 Original-Java semantics reference: `git show 2479dfa0^:<path>`.
