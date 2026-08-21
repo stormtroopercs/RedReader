@@ -18,10 +18,12 @@
 package org.quantumbadger.redreader.benchmark
 
 import android.view.KeyEvent
+import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.StartupTimingMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import org.junit.Rule
 import org.junit.Test
 
@@ -41,9 +43,11 @@ class StartupBenchmark {
         benchmarkRule.measureRepeated(
             packageName = "org.quantumbadger.redreader",
             metrics = listOf(StartupTimingMetric()),
-            startupMode = StartupMode.COLD
+            startupMode = StartupMode.COLD,
+            iterations = 3,
+            compilationMode = CompilationMode.DEFAULT
         ) {
-            pressBack()
+            device.wait(Until.hasObject(By.pkg("org.quantumbadger.redreader")), 10_000)
         }
     }
 
@@ -52,9 +56,11 @@ class StartupBenchmark {
         benchmarkRule.measureRepeated(
             packageName = "org.quantumbadger.redreader",
             metrics = listOf(StartupTimingMetric()),
-            startupMode = StartupMode.WARM
+            startupMode = StartupMode.WARM,
+            iterations = 3,
+            compilationMode = CompilationMode.DEFAULT
         ) {
-            pressBack()
+            device.pressKeyCode(KeyEvent.KEYCODE_BACK)
         }
     }
 
@@ -63,9 +69,11 @@ class StartupBenchmark {
         benchmarkRule.measureRepeated(
             packageName = "org.quantumbadger.redreader",
             metrics = listOf(StartupTimingMetric()),
-            startupMode = StartupMode.HOT
+            startupMode = StartupMode.HOT,
+            iterations = 3,
+            compilationMode = CompilationMode.DEFAULT
         ) {
-            pressBack()
+            device.pressKeyCode(KeyEvent.KEYCODE_BACK)
         }
     }
 }
