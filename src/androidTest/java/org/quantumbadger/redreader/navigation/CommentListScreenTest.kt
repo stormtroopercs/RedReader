@@ -41,7 +41,7 @@ class CommentListScreenTest {
         composeTestRule.setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    CommentListScreen(
+                    RealCommentListScreen(
                         postId = "test_post_id",
                         onNavigateBack = { /* no-op */ }
                     )
@@ -60,7 +60,7 @@ class CommentListScreenTest {
         composeTestRule.setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    CommentListScreen(
+                    RealCommentListScreen(
                         postId = "test_post_id",
                         onNavigateBack = { backClicked = true }
                     )

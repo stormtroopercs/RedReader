@@ -21,6 +21,7 @@ import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import dagger.hilt.android.testing.HiltTestApplication
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
@@ -36,7 +37,7 @@ import javax.inject.Inject
  */
 @HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [30])
+@Config(sdk = [30], application = HiltTestApplication::class)
 class HiltIntegrationTest {
 
     @get:Rule(order = 0)

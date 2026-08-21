@@ -146,6 +146,8 @@ dependencies {
 
 	testImplementation(libs.junit)
 	testImplementation(libs.robolectric)
+	testImplementation(libs.hilt.android.testing)
+	kspTest(libs.hilt.compiler)
 
 	androidTestImplementation(libs.androidx.test.core)
 	androidTestImplementation(libs.androidx.test.espresso.core)
