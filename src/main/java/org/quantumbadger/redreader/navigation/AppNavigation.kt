@@ -40,7 +40,7 @@ fun AppNavGraph(navigationState: NavigationState) {
     val navigator = Navigator(navigationState)
 
     NavDisplay(
-        backStack = navigationState.backStack,
+        backStack = navigationState.activeBackStack,
         onBack = { navigator.goBack() },
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),

@@ -60,7 +60,7 @@ fun AdaptiveAppNavigation() {
     val navigator = remember { Navigator(navigationState) }
 
     NavDisplay(
-        backStack = navigationState.backStack,
+        backStack = navigationState.activeBackStack,
         onBack = { navigator.goBack() },
         entryDecorators = listOf(
             rememberSaveableStateHolderNavEntryDecorator(),

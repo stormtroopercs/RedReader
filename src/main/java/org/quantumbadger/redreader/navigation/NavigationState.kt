@@ -88,21 +88,13 @@ class NavigationState(
     }
 
     /**
-     * The combined back stack for the NavDisplay.
-     * Contains entries from all active top-level stacks in order.
+     * The back stack for the currently active top-level route. This is the
+     * list passed to NavDisplay: it is a live [SnapshotStateList], so
+     * pushing/popping child routes (or switching top-level routes) recomposes
+     * the display.
      */
-    val backStack: SnapshotStateList<NavKey> by lazy {
-        val combined = mutableStateListOf<NavKey>()
-        val stacksInUse = if (topLevelRoute == startRoute) {
-            listOf(startRoute)
-        } else {
-            listOf(startRoute, topLevelRoute)
-        }
-        stacksInUse.forEach { key ->
-            backStacks[key]?.let { combined.addAll(it) }
-        }
-        combined
-    }
+    val activeBackStack: List<NavKey>
+        get() = backStacks[topLevelRoute] ?: emptyList()
 
     /**
      * Whether a back action is available from the current position: a child
