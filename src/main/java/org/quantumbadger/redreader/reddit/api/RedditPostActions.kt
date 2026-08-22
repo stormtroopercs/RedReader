@@ -508,9 +508,14 @@ object RedditPostActions {
 
 			Action.GOTO_SUBREDDIT -> {
 				try {
-					val intent = Intent(activity, PostListingActivity::class.java)
-					intent.data = SubredditPostListURL.getSubreddit(post.src.subreddit)?.generateJsonUri()
-					activity.startActivityForResult(intent, 1)
+					// A subreddit listing maps to the in-app Compose PostList route.
+					val subreddit = SubredditPostListURL.getSubreddit(post.src.subreddit)?.asSubredditPostListURL()?.subreddit
+					if (subreddit != null) {
+						val intent = Intent(activity, MainActivityCompose::class.java)
+						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_POST_LISTING)
+						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, subreddit)
+						activity.startActivity(intent)
+					}
 				} catch (e: InvalidSubredditNameException) {
 					Toast.makeText(
 						activity,

@@ -62,6 +62,7 @@ import org.quantumbadger.redreader.image.RedgifsAPI
 import org.quantumbadger.redreader.image.RedgifsAPIV2
 import org.quantumbadger.redreader.image.StreamableAPI
 import org.quantumbadger.redreader.reddit.kthings.RedditPost
+import org.quantumbadger.redreader.reddit.url.MultiredditPostListURL
 import org.quantumbadger.redreader.reddit.url.OpaqueSharedURL
 import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
 import org.quantumbadger.redreader.reddit.url.RedditURLParser
@@ -201,27 +202,37 @@ object LinkHandler {
 
 				RedditURLParser.SUBREDDIT_POST_LISTING_URL -> {
 					val url = redditURL as? SubredditPostListURL
-					val subreddit = url?.subreddit
-					if (subreddit != null) {
-						// A subreddit listing maps 1:1 to the in-app Compose PostList route.
+					// A subreddit / frontpage / all / popular listing maps to the in-app
+					// Compose PostList route (the VM maps the path to the matching
+					// Reddit listing URL).
+					val listPath = when {
+						url == null -> null
+						url.subreddit != null -> url.subreddit
+						url.type == SubredditPostListURL.Type.FRONTPAGE -> "frontpage"
+						url.type == SubredditPostListURL.Type.POPULAR -> "popular"
+						url.type == SubredditPostListURL.Type.ALL -> "all"
+						else -> null
+					}
+					if (listPath != null) {
 						val intent = Intent(activity, MainActivityCompose::class.java)
 						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_POST_LISTING)
-						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, subreddit)
+						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, listPath)
 						activity.startActivity(intent)
 						return
 					}
-					// frontpage/all/popular listings carry no subreddit; fall through to the legacy activity.
+					// An unmodeled listing type falls through to the legacy activity.
 					val intent = Intent(activity, PostListingActivity::class.java)
 					intent.setData(redditURL.generateJsonUri())
 					activity.startActivityForResult(intent, 1)
 					return
-				}
-				RedditURLParser.USER_POST_LISTING_URL -> {
+					}
+					RedditURLParser.USER_POST_LISTING_URL -> {
 					val url = redditURL as? UserPostListingURL
-					// Only the anonymous user-submitted listing maps to the in-app PostList route;
-					// saved/hidden/voted listings need that user's session.
-					if (url != null && url.type == UserPostListingURL.Type.SUBMITTED && url.user != null) {
-						val listPath = "u/" + url.user + "/submitted"
+					// All user post listings (submitted/saved/hidden/upvoted/downvoted)
+					// map to the in-app Compose PostList route; the VM builds
+					// /u/<user>/<type>/.
+					if (url != null && url.user != null) {
+						val listPath = "u/" + url.user + "/" + url.type.name.lowercase()
 						val intent = Intent(activity, MainActivityCompose::class.java)
 						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_POST_LISTING)
 						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, listPath)
@@ -233,7 +244,27 @@ object LinkHandler {
 					activity.startActivityForResult(intent, 1)
 					return
 				}
-				RedditURLParser.MULTIREDDIT_POST_LISTING_URL, RedditURLParser.SEARCH_POST_LISTING_URL, RedditURLParser.UNKNOWN_POST_LISTING_URL -> {
+				RedditURLParser.MULTIREDDIT_POST_LISTING_URL -> {
+					val url = redditURL as? MultiredditPostListURL
+					// A multireddit maps to the in-app Compose PostList route; the VM
+					// builds /me/m/<name>/ (the default user's own) or
+					// /u/<user>/m/<name>/ (another user's).
+					if (url != null) {
+						val listPath = if (url.username != null) "u/" + url.username + "/m/" + url.name else "m/" + url.name
+						val intent = Intent(activity, MainActivityCompose::class.java)
+						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_POST_LISTING)
+						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, listPath)
+						activity.startActivity(intent)
+						return
+					}
+					val intent = Intent(activity, PostListingActivity::class.java)
+					intent.setData(redditURL.generateJsonUri())
+					activity.startActivityForResult(intent, 1)
+					return
+				}
+				RedditURLParser.SEARCH_POST_LISTING_URL, RedditURLParser.UNKNOWN_POST_LISTING_URL -> {
+					// Search and unknown listings are not yet modeled by the in-app
+					// PostList route; they open the legacy activity.
 					val intent = Intent(activity, PostListingActivity::class.java)
 					intent.setData(redditURL.generateJsonUri())
 					activity.startActivityForResult(intent, 1)

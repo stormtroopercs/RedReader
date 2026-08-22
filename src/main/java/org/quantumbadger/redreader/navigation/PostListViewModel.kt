@@ -99,15 +99,17 @@ class PostListViewModel @Inject constructor(
 
     /**
      * Derive a human-readable title for the listing [listPath] the screen will
-     * show: the bare subreddit name becomes "r/<name>", and the user-submitted
-     * listing "u/<user>/submitted" becomes "u/<user>/submitted".
+     * show: the bare subreddit name becomes "r/<name>", the user listings
+     * ("u/<user>/submitted", "u/<user>/saved", …) keep their path, and a
+     * multireddit ("m/<name>" or "u/<user>/m/<name>") keeps its path.
      */
     private fun resolveTitle(listPath: String) {
         val t = when {
             listPath.isBlank() || listPath == "frontpage" -> "frontpage"
             listPath == "popular" -> "popular"
             listPath == "all" -> "all"
-            listPath.startsWith("u/") && listPath.endsWith("/submitted") -> listPath
+            listPath.startsWith("u/") -> listPath
+            listPath.startsWith("m/") -> listPath
             else -> "r/" + listPath
         }
         _title.value = t
@@ -149,6 +151,7 @@ class PostListViewModel @Inject constructor(
                     listPath == "popular" -> "https://www.reddit.com/r/popular/"
                     listPath == "all" -> "https://www.reddit.com/r/all/"
                     listPath.startsWith("u/") -> "https://www.reddit.com/$listPath/"
+                    listPath.startsWith("m/") -> "https://www.reddit.com/me/$listPath/"
                     else -> "https://www.reddit.com/r/$listPath/"
                 }
                 val postListingUrl = RedditURLParser.parseProbablePostListing(Uri.parse(rawUri))
