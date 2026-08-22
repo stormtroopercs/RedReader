@@ -34,6 +34,7 @@ import org.quantumbadger.redreader.navigation.Main
 import org.quantumbadger.redreader.navigation.NavigationState
 import org.quantumbadger.redreader.navigation.Navigator
 import org.quantumbadger.redreader.navigation.Settings
+import org.quantumbadger.redreader.navigation.SubredditSearch
 import org.quantumbadger.redreader.navigation.TOP_LEVEL_ROUTES
 
 /**
@@ -98,16 +99,18 @@ class MainActivityCompose : ComposeBaseActivity() {
     }
 
     /**
-     * Handle a cold-start deep-link extra. Currently the inbox and changelog
-     * are wired: a notification tap opens the Compose inbox (Main + Inbox),
-     * and the legacy settings' changelog link opens the Compose changelog
-     * (Settings + Changelog, so back returns to settings). Unknown routes
-     * fall back to the default main screen.
+     * Handle a cold-start deep-link extra. Currently the inbox, changelog and
+     * subreddit search are wired: a notification tap opens the Compose inbox
+     * (Main + Inbox), the legacy settings' changelog link opens the Compose
+     * changelog (Settings + Changelog, so back returns to settings), and the
+     * legacy main-menu search item opens the Compose subreddit search (Main +
+     * SubredditSearch). Unknown routes fall back to the default main screen.
      */
     private fun deepLinkRoute(route: String) {
         when (route) {
             DEEP_LINK_INBOX -> navigationState.navigateTo(Main, Inbox)
             DEEP_LINK_CHANGELOG -> navigationState.navigateTo(Settings, Changelog)
+            DEEP_LINK_SEARCH -> navigationState.navigateTo(Main, SubredditSearch)
         }
     }
 
@@ -120,5 +123,8 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: the changelog (Settings top level + Changelog child). */
         const val DEEP_LINK_CHANGELOG = "changelog"
+
+        /** Deep-link route: subreddit search (Main top level + SubredditSearch child). */
+        const val DEEP_LINK_SEARCH = "search"
     }
 }

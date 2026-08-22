@@ -477,7 +477,14 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             }
 
             MainMenuFragment.Companion.MENU_MENU_ACTION_FIND_SUBREDDIT -> {
-                startActivity(Intent(this, SubredditSearchActivity::class.java))
+                startActivity(
+                    Intent(this, MainActivityCompose::class.java).apply {
+                        putExtra(
+                            MainActivityCompose.EXTRA_DEEP_LINK,
+                            MainActivityCompose.DEEP_LINK_SEARCH
+                        )
+                    }
+                )
             }
         }
     }

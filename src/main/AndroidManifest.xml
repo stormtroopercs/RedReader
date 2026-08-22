@@ -205,10 +205,6 @@
                   android:configChanges="orientation|screenSize|keyboardHidden"
                   android:launchMode="singleInstance"/>
 
-		<activity android:name=".activities.SubredditSearchActivity"
-				  android:configChanges="orientation|screenSize|keyboardHidden"
-				  android:windowSoftInputMode="adjustResize"/>
-
 		<activity android:name=".activities.RedditTermsActivity"
 				  android:configChanges="orientation|screenSize|keyboardHidden"
 				  android:launchMode="singleInstance"/>
