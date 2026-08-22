@@ -73,7 +73,7 @@ import androidx.preference.PreferenceFragmentCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.quantumbadger.redreader.RedReader
 import org.quantumbadger.redreader.activities.BugReportActivity
-import org.quantumbadger.redreader.activities.ChangelogActivity
+import org.quantumbadger.redreader.activities.MainActivityCompose
 import org.quantumbadger.redreader.activities.HtmlViewActivity
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.common.AndroidCommon
@@ -298,7 +298,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         if (changelogPref != null) {
             changelogPref.setOnPreferenceClickListener(Preference.OnPreferenceClickListener { preference: Preference? ->
-                val intent: Intent = Intent(context, ChangelogActivity::class.java)
+                val intent: Intent = Intent(context, MainActivityCompose::class.java).apply {
+                    putExtra(
+                        MainActivityCompose.EXTRA_DEEP_LINK,
+                        MainActivityCompose.DEEP_LINK_CHANGELOG
+                    )
+                }
                 context!!.startActivity(intent)
                 true
             })

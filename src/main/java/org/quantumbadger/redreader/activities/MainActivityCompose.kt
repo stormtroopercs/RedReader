@@ -28,10 +28,12 @@ import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.AndroidEntryPoint
 import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.navigation.AppNavGraph
+import org.quantumbadger.redreader.navigation.Changelog
 import org.quantumbadger.redreader.navigation.Inbox
 import org.quantumbadger.redreader.navigation.Main
 import org.quantumbadger.redreader.navigation.NavigationState
 import org.quantumbadger.redreader.navigation.Navigator
+import org.quantumbadger.redreader.navigation.Settings
 import org.quantumbadger.redreader.navigation.TOP_LEVEL_ROUTES
 
 /**
@@ -96,13 +98,16 @@ class MainActivityCompose : ComposeBaseActivity() {
     }
 
     /**
-     * Handle a cold-start deep-link extra. Currently only the inbox is wired:
-     * a notification tap should open the Compose inbox (not the legacy inbox
-     * activity). Unknown routes fall back to the default main screen.
+     * Handle a cold-start deep-link extra. Currently the inbox and changelog
+     * are wired: a notification tap opens the Compose inbox (Main + Inbox),
+     * and the legacy settings' changelog link opens the Compose changelog
+     * (Settings + Changelog, so back returns to settings). Unknown routes
+     * fall back to the default main screen.
      */
     private fun deepLinkRoute(route: String) {
-        if (route == DEEP_LINK_INBOX) {
-            navigationState.navigateTo(Main, Inbox)
+        when (route) {
+            DEEP_LINK_INBOX -> navigationState.navigateTo(Main, Inbox)
+            DEEP_LINK_CHANGELOG -> navigationState.navigateTo(Settings, Changelog)
         }
     }
 
@@ -112,5 +117,8 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: the inbox (Main top level + Inbox child). */
         const val DEEP_LINK_INBOX = "inbox"
+
+        /** Deep-link route: the changelog (Settings top level + Changelog child). */
+        const val DEEP_LINK_CHANGELOG = "changelog"
     }
 }

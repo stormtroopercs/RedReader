@@ -161,8 +161,8 @@ class EdgeToEdgeInsetsTest {
     fun testSystemBarScrimsAppliedOnInsetDispatch() {
 
         // PMSendActivity still uses the legacy ViewsBaseActivity scrim path
-        // (ChangelogActivity was converted to a Compose wrapper, whose insets
-        // are handled by the Compose composition instead)
+        // (the Compose activities — e.g. MainActivityCompose — handle their
+        // insets via the Compose composition instead)
         val controller: ActivityController<PMSendActivity> =
             Robolectric.buildActivity(PMSendActivity::class.java).setup()
 
