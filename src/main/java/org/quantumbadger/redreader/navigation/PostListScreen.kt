@@ -96,6 +96,7 @@ import org.quantumbadger.redreader.reddit.PostSort
 @Composable
 fun RealPostListScreen(
     subreddit: String,
+    searchQuery: String? = null,
     onNavigateBack: () -> Unit,
     onNavigateToCommentList: (String) -> Unit,
     onNavigateToUserProfile: (String) -> Unit,
@@ -106,8 +107,8 @@ fun RealPostListScreen(
     val currentSort by viewModel.sortBy.collectAsStateWithLifecycle()
     val listTitle by viewModel.title.collectAsStateWithLifecycle()
 
-    LaunchedEffect(subreddit) {
-        viewModel.fetchPosts(subreddit)
+    LaunchedEffect(subreddit, searchQuery) {
+        viewModel.fetchPosts(subreddit, searchQuery)
     }
     val theme = LocalComposeTheme.current.postCard
 

@@ -138,7 +138,8 @@ class MainActivityCompose : ComposeBaseActivity() {
             DEEP_LINK_POST_LISTING -> {
                 val subreddit = intent?.getStringExtra(EXTRA_POST_LISTING_SUBREDDIT)
                 if (subreddit != null) {
-                    navigationState.navigateTo(Main, PostList(subreddit))
+                    val searchQuery = intent?.getStringExtra(EXTRA_POST_LISTING_SEARCH_QUERY)
+                    navigationState.navigateTo(Main, PostList(subreddit, searchQuery))
                 }
             }
             DEEP_LINK_COMMENT_LISTING -> {
@@ -202,9 +203,13 @@ class MainActivityCompose : ComposeBaseActivity() {
         /** Deep-link route: Reddit terms of service (Settings top level + RedditTerms child). */
         const val DEEP_LINK_TERMS = "terms"
 
-        /** Intent extra carrying the listing path for the post-listing deep link (a subreddit name, or frontpage / popular / all / u/<user>/submitted). */
+        /** Intent extra carrying the listing path for the post-listing deep link (a subreddit name, or frontpage / popular / all / u/<user>/… / m/<name>). */
         const val EXTRA_POST_LISTING_SUBREDDIT =
             "org.quantumbadger.redreader.extra.POST_LISTING_SUBREDDIT"
+
+        /** Intent extra carrying the search query for the post-listing deep link (null for a non-search listing). */
+        const val EXTRA_POST_LISTING_SEARCH_QUERY =
+            "org.quantumbadger.redreader.extra.POST_LISTING_SEARCH_QUERY"
 
         /** Deep-link route: a post listing (Main top level + PostList child). */
         const val DEEP_LINK_POST_LISTING = "post_listing"

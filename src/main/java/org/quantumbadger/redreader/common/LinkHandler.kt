@@ -64,6 +64,7 @@ import org.quantumbadger.redreader.image.StreamableAPI
 import org.quantumbadger.redreader.reddit.kthings.RedditPost
 import org.quantumbadger.redreader.reddit.url.MultiredditPostListURL
 import org.quantumbadger.redreader.reddit.url.OpaqueSharedURL
+import org.quantumbadger.redreader.reddit.url.SearchPostListURL
 import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
 import org.quantumbadger.redreader.reddit.url.RedditURLParser
 import org.quantumbadger.redreader.reddit.url.SubredditPostListURL
@@ -262,9 +263,30 @@ object LinkHandler {
 					activity.startActivityForResult(intent, 1)
 					return
 				}
-				RedditURLParser.SEARCH_POST_LISTING_URL, RedditURLParser.UNKNOWN_POST_LISTING_URL -> {
-					// Search and unknown listings are not yet modeled by the in-app
-					// PostList route; they open the legacy activity.
+				RedditURLParser.SEARCH_POST_LISTING_URL -> {
+					// A search listing maps to the in-app Compose PostList route,
+					// carrying the location (a subreddit, a multireddit
+					// m/<name> / u/<user>/m/<name>, or none for a global search)
+					// and the query.
+					val url = redditURL as? SearchPostListURL
+					val location = when {
+						url == null -> ""
+						url.type == SearchPostListURL.Type.MULTI && url.name != null ->
+							if (url.username != null) "u/${url.username}/m/${url.name}" else "m/${url.name}"
+						else -> url.subreddit.orEmpty()
+					}
+					val query = url?.query
+					val intent = Intent(activity, MainActivityCompose::class.java)
+					intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_POST_LISTING)
+					intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, location)
+					if (query != null) {
+						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SEARCH_QUERY, query)
+					}
+					activity.startActivity(intent)
+					return
+				}
+				RedditURLParser.UNKNOWN_POST_LISTING_URL -> {
+					// An unmodeled listing type opens the legacy activity.
 					val intent = Intent(activity, PostListingActivity::class.java)
 					intent.setData(redditURL.generateJsonUri())
 					activity.startActivityForResult(intent, 1)

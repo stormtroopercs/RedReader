@@ -91,6 +91,7 @@ fun AdaptiveAppNavigation() {
             entry<PostList> { key ->
                 RealPostListScreen(
                     subreddit = key.subreddit,
+                    searchQuery = key.searchQuery,
                     onNavigateBack = { navigator.goBack() },
                     onNavigateToCommentList = { postId ->
                         navigator.navigate(CommentList(postId))

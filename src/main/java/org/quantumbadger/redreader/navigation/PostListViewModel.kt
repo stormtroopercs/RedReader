@@ -48,6 +48,7 @@ import org.quantumbadger.redreader.reddit.kthings.JsonUtils.decodeRedditThingFro
 import org.quantumbadger.redreader.reddit.kthings.RedditThing
 import org.quantumbadger.redreader.reddit.url.PostListingURL
 import org.quantumbadger.redreader.reddit.url.RedditURLParser
+import org.quantumbadger.redreader.reddit.url.SearchPostListURL
 
 sealed class PostListUiState {
     data class Loading(val isInitialLoad: Boolean) : PostListUiState()
@@ -96,15 +97,17 @@ class PostListViewModel @Inject constructor(
     val title: StateFlow<String> = _title.asStateFlow()
 
     private var currentListPath: String = ""
+    private var currentSearchQuery: String? = null
 
     /**
-     * Derive a human-readable title for the listing [listPath] the screen will
-     * show: the bare subreddit name becomes "r/<name>", the user listings
+     * Derive a human-readable title for the listing the screen will show. For a
+     * search, "<location>: <query>" (global when the location is empty).
+     * Otherwise: the bare subreddit name becomes "r/<name>", the user listings
      * ("u/<user>/submitted", "u/<user>/saved", …) keep their path, and a
      * multireddit ("m/<name>" or "u/<user>/m/<name>") keeps its path.
      */
-    private fun resolveTitle(listPath: String) {
-        val t = when {
+    private fun resolveTitle(listPath: String, searchQuery: String?) {
+        val base = when {
             listPath.isBlank() || listPath == "frontpage" -> "frontpage"
             listPath == "popular" -> "popular"
             listPath == "all" -> "all"
@@ -112,20 +115,25 @@ class PostListViewModel @Inject constructor(
             listPath.startsWith("m/") -> listPath
             else -> "r/" + listPath
         }
-        _title.value = t
+        _title.value = if (searchQuery != null) {
+            if (listPath.isBlank()) "Search: $searchQuery" else "$base: $searchQuery"
+        } else {
+            base
+        }
     }
 
-    fun fetchPosts(listPath: String) {
+    fun fetchPosts(listPath: String, searchQuery: String? = null) {
         currentListPath = listPath
-        resolveTitle(listPath)
+        currentSearchQuery = searchQuery
+        resolveTitle(listPath, searchQuery)
         _state.value = PostListUiState.Loading(_state.value !is PostListUiState.Success)
-        fetchList(listPath)
+        fetchList(listPath, searchQuery)
     }
 
     fun refresh() {
-        if (currentListPath.isEmpty()) return
+        if (currentListPath.isEmpty() && currentSearchQuery == null) return
         _state.value = PostListUiState.Loading(false)
-        fetchList(currentListPath)
+        fetchList(currentListPath, currentSearchQuery)
     }
 
     fun setSortBy(sort: PostSort) {
@@ -135,7 +143,7 @@ class PostListViewModel @Inject constructor(
         refresh()
     }
 
-    private fun fetchList(listPath: String) {
+    private fun fetchList(listPath: String, searchQuery: String?) {
         viewModelScope.launch {
             try {
                 val account = RedditAccountManager.getInstance(context).getDefaultAccount()
@@ -146,28 +154,45 @@ class PostListViewModel @Inject constructor(
                     return@launch
                 }
 
-                val rawUri = when {
-                    listPath.isBlank() || listPath == "frontpage" -> "https://www.reddit.com/"
-                    listPath == "popular" -> "https://www.reddit.com/r/popular/"
-                    listPath == "all" -> "https://www.reddit.com/r/all/"
-                    listPath.startsWith("u/") -> "https://www.reddit.com/$listPath/"
-                    listPath.startsWith("m/") -> "https://www.reddit.com/me/$listPath/"
-                    else -> "https://www.reddit.com/r/$listPath/"
-                }
-                val postListingUrl = RedditURLParser.parseProbablePostListing(Uri.parse(rawUri))
-                if (postListingUrl !is PostListingURL) {
-                    _state.value = PostListUiState.Error(
-                        RRError(title = "Invalid listing", message = "Invalid post listing URL")
-                    )
-                    return@launch
-                }
-
-                val jsonUri = postListingUrl.generateJsonUri()
-                if (jsonUri == null) {
-                    _state.value = PostListUiState.Error(
-                        RRError(title = "Invalid listing", message = "Could not build JSON URI")
-                    )
-                    return@launch
+                val jsonUri: Uri
+                if (searchQuery != null) {
+                    // A search listing: build a SearchPostListURL from the location
+                    // (a subreddit name, a multireddit path m/<name> or
+                    // u/<user>/m/<name>, or null for a global search) + the query.
+                    val location = listPath.ifEmpty { null }
+                    val searchUrl = SearchPostListURL.build(location, searchQuery)
+                    val uri = searchUrl.generateJsonUri()
+                    if (uri == null) {
+                        _state.value = PostListUiState.Error(
+                            RRError(title = "Invalid listing", message = "Could not build search URI")
+                        )
+                        return@launch
+                    }
+                    jsonUri = uri
+                } else {
+                    val rawUri = when {
+                        listPath.isBlank() || listPath == "frontpage" -> "https://www.reddit.com/"
+                        listPath == "popular" -> "https://www.reddit.com/r/popular/"
+                        listPath == "all" -> "https://www.reddit.com/r/all/"
+                        listPath.startsWith("u/") -> "https://www.reddit.com/$listPath/"
+                        listPath.startsWith("m/") -> "https://www.reddit.com/me/$listPath/"
+                        else -> "https://www.reddit.com/r/$listPath/"
+                    }
+                    val postListingUrl = RedditURLParser.parseProbablePostListing(Uri.parse(rawUri))
+                    if (postListingUrl !is PostListingURL) {
+                        _state.value = PostListUiState.Error(
+                            RRError(title = "Invalid listing", message = "Invalid post listing URL")
+                        )
+                        return@launch
+                    }
+                    val uri = postListingUrl.generateJsonUri()
+                    if (uri == null) {
+                        _state.value = PostListUiState.Error(
+                            RRError(title = "Invalid listing", message = "Could not build JSON URI")
+                        )
+                        return@launch
+                    }
+                    jsonUri = uri
                 }
 
                 val callbacks = object : CacheRequestCallbacks {

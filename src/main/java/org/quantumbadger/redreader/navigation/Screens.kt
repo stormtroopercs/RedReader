@@ -44,7 +44,7 @@ data object Main : NavKey
 data object Settings : NavKey
 
 @Serializable
-data class PostList(val subreddit: String) : NavKey
+data class PostList(val subreddit: String, val searchQuery: String? = null) : NavKey
 
 @Serializable
 data class CommentList(val postId: String) : NavKey
