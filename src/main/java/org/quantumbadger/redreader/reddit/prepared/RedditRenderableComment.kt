@@ -23,7 +23,6 @@ import android.view.View
 import androidx.annotation.StringRes
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.common.BetterSSB
 import org.quantumbadger.redreader.common.Constants.Reddit
@@ -39,7 +38,6 @@ import org.quantumbadger.redreader.common.ScreenreaderPronunciation
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.common.time.TimeFormatHelper.format
 import org.quantumbadger.redreader.common.time.TimestampUTC
-import org.quantumbadger.redreader.reddit.api.RedditAPICommentAction
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 import org.quantumbadger.redreader.reddit.things.RedditThingWithIdAndType
 import java.util.Observable
@@ -61,7 +59,7 @@ class RedditRenderableComment
     private val mShowScore: Boolean,
     private val mShowSubreddit: Boolean,
     private val mNeverAutoCollapse: Boolean
-) : RedditRenderableInboxItem, RedditThingWithIdAndType {
+) : RedditRenderableCommentListItem, RedditThingWithIdAndType {
     private var isBlockedUser = false
 
     fun setBlockedUser(blocked: Boolean) {
@@ -640,27 +638,6 @@ class RedditRenderableComment
     ): View {
         return parsedComment.body
             .generateView(activity, textColor, textSize, showLinkButtons)
-    }
-
-    override fun handleInboxClick(activity: BaseActivity) {
-        // TODO nullability
-        val commentContext = Reddit.getUri(parsedComment.rawComment.context!!.decoded)
-        onLinkClicked(activity, commentContext)
-    }
-
-    override fun handleInboxLongClick(activity : BaseActivity) {
-        val changeDataManager: RedditChangeDataManager=RedditChangeDataManager.Companion.getInstance(
-            RedditAccountManager.Companion.getInstance(activity).getDefaultAccount()
-        )
-
-        RedditAPICommentAction.showActionMenu(
-            activity,
-            null,
-            this,
-            null,
-            changeDataManager,  // There's no reasonable way for us to know from here.
-            false
-        )
     }
 
     override val idAlone: String? get() = parsedComment.idAlone

@@ -447,19 +447,32 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             MainMenuFragment.Companion.MENU_MENU_ACTION_INBOX -> startActivity(
                 Intent(
                     this,
-                    InboxListingActivity::class.java
-                )
+                    MainActivityCompose::class.java
+                ).apply {
+                    putExtra(
+                        MainActivityCompose.EXTRA_DEEP_LINK,
+                        MainActivityCompose.DEEP_LINK_INBOX
+                    )
+                }
             )
 
+            // The Compose inbox renders the unified inbox only; sent-messages and
+            // modmail are not yet modeled, so both fall back to the same view.
             MainMenuFragment.Companion.MENU_MENU_ACTION_SENT_MESSAGES -> {
-                val intent = Intent(this, InboxListingActivity::class.java)
-                intent.putExtra("inboxType", "sent")
+                val intent = Intent(this, MainActivityCompose::class.java)
+                intent.putExtra(
+                    MainActivityCompose.EXTRA_DEEP_LINK,
+                    MainActivityCompose.DEEP_LINK_INBOX
+                )
                 startActivity(intent)
             }
 
             MainMenuFragment.Companion.MENU_MENU_ACTION_MODMAIL -> {
-                val intent = Intent(this, InboxListingActivity::class.java)
-                intent.putExtra("inboxType", "modmail")
+                val intent = Intent(this, MainActivityCompose::class.java)
+                intent.putExtra(
+                    MainActivityCompose.EXTRA_DEEP_LINK,
+                    MainActivityCompose.DEEP_LINK_INBOX
+                )
                 startActivity(intent)
             }
 

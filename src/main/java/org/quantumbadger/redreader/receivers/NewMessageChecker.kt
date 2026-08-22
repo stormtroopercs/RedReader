@@ -31,7 +31,7 @@ import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.R.string
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.account.RedditAccountManager
-import org.quantumbadger.redreader.activities.InboxListingActivity
+import org.quantumbadger.redreader.activities.MainActivityCompose
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest
 import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
@@ -301,7 +301,9 @@ class NewMessageChecker : BroadcastReceiver() {
                 .setChannelId(NOTIFICATION_CHANNEL_ID)
                 .setColor(Color.rgb(0xd3, 0x2f, 0x2f))
 
-            val intent = Intent(context, InboxListingActivity::class.java)
+            val intent = Intent(context, MainActivityCompose::class.java).apply {
+                putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_INBOX)
+            }
 
             var flags = 0
 

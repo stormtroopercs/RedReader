@@ -88,6 +88,22 @@ class NavigationState(
     }
 
     /**
+     * Land directly on [child] under the [root] top-level route: switch to
+     * [root] (resetting its back stack to the base) and push [child]. Used for
+     * cold-start deep links (e.g. tapping a notification) where the app should
+     * open on a child screen of a top-level route rather than at the root.
+     */
+    fun navigateTo(root: NavKey, child: NavKey) {
+        topLevelRoute = root
+        val stack = backStacks[root] ?: return
+        if (stack.size != 1 || stack[0] != root) {
+            stack.clear()
+            stack.add(root)
+        }
+        stack.add(child)
+    }
+
+    /**
      * The back stack for the currently active top-level route. This is the
      * list passed to NavDisplay: it is a live [SnapshotStateList], so
      * pushing/popping child routes (or switching top-level routes) recomposes

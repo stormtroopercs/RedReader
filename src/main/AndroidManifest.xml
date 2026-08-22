@@ -208,9 +208,6 @@
                   android:configChanges="orientation|screenSize|keyboardHidden"
                   android:launchMode="singleInstance"/>
 
-        <activity android:name=".activities.InboxListingActivity"
-                  android:configChanges="orientation|screenSize|keyboardHidden"/>
-
 		<activity android:name=".activities.SubredditSearchActivity"
 				  android:configChanges="orientation|screenSize|keyboardHidden"
 				  android:windowSoftInputMode="adjustResize"/>

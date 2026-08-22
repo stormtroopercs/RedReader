@@ -1,7 +1,7 @@
 # RedReader — Project Context
 
 ## Overview
-Open-source Reddit client for Android. 100% Kotlin repo (519 .kt files, 0 .java — 493 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`).
+Open-source Reddit client for Android. 100% Kotlin repo (515 .kt files, 0 .java — 489 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`).
 
 ## Branch
 **`java-to-kotlin-conversion`** — main development branch.

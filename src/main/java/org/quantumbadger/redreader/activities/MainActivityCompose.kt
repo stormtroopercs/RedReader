@@ -28,6 +28,7 @@ import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.AndroidEntryPoint
 import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.navigation.AppNavGraph
+import org.quantumbadger.redreader.navigation.Inbox
 import org.quantumbadger.redreader.navigation.Main
 import org.quantumbadger.redreader.navigation.NavigationState
 import org.quantumbadger.redreader.navigation.Navigator
@@ -58,6 +59,13 @@ class MainActivityCompose : ComposeBaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Cold-start deep link: e.g. the new-message notification opens the app
+        // directly on the Compose inbox (Main top level + Inbox child).
+        if (savedInstanceState == null) {
+            intent?.getStringExtra(EXTRA_DEEP_LINK)
+                ?.let { deepLinkRoute(it) }
+        }
+
         setContentCompose {
             Surface(
                 modifier = Modifier.fillMaxSize(),
@@ -85,5 +93,24 @@ class MainActivityCompose : ComposeBaseActivity() {
 
     override fun baseActivityMustInterceptBack(): Boolean {
         return navigationState.canGoBack()
+    }
+
+    /**
+     * Handle a cold-start deep-link extra. Currently only the inbox is wired:
+     * a notification tap should open the Compose inbox (not the legacy inbox
+     * activity). Unknown routes fall back to the default main screen.
+     */
+    private fun deepLinkRoute(route: String) {
+        if (route == DEEP_LINK_INBOX) {
+            navigationState.navigateTo(Main, Inbox)
+        }
+    }
+
+    companion object {
+        /** Intent extra carrying a cold-start deep-link route name. */
+        const val EXTRA_DEEP_LINK = "org.quantumbadger.redreader.extra.DEEP_LINK"
+
+        /** Deep-link route: the inbox (Main top level + Inbox child). */
+        const val DEEP_LINK_INBOX = "inbox"
     }
 }
