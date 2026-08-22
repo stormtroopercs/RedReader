@@ -30,11 +30,13 @@ import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.navigation.Album
 import org.quantumbadger.redreader.navigation.AppNavGraph
 import org.quantumbadger.redreader.navigation.Changelog
+import org.quantumbadger.redreader.navigation.CommentList
 import org.quantumbadger.redreader.navigation.CommentReply
 import org.quantumbadger.redreader.navigation.Inbox
 import org.quantumbadger.redreader.navigation.Main
 import org.quantumbadger.redreader.navigation.NavigationState
 import org.quantumbadger.redreader.navigation.Navigator
+import org.quantumbadger.redreader.navigation.PostList
 import org.quantumbadger.redreader.navigation.RedditTerms
 import org.quantumbadger.redreader.navigation.Settings
 import org.quantumbadger.redreader.navigation.SubredditSearch
@@ -132,6 +134,18 @@ class MainActivityCompose : ComposeBaseActivity() {
             DEEP_LINK_TERMS -> {
                 navigationState.navigateTo(Settings, RedditTerms)
             }
+            DEEP_LINK_POST_LISTING -> {
+                val subreddit = intent?.getStringExtra(EXTRA_POST_LISTING_SUBREDDIT)
+                if (subreddit != null) {
+                    navigationState.navigateTo(Main, PostList(subreddit))
+                }
+            }
+            DEEP_LINK_COMMENT_LISTING -> {
+                val postId = intent?.getStringExtra(EXTRA_COMMENT_LISTING_POST_ID)
+                if (postId != null) {
+                    navigationState.navigateTo(Main, CommentList(postId))
+                }
+            }
         }
     }
 
@@ -180,5 +194,19 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: Reddit terms of service (Settings top level + RedditTerms child). */
         const val DEEP_LINK_TERMS = "terms"
+
+        /** Intent extra carrying the subreddit for the post-listing deep link. */
+        const val EXTRA_POST_LISTING_SUBREDDIT =
+            "org.quantumbadger.redreader.extra.POST_LISTING_SUBREDDIT"
+
+        /** Deep-link route: a subreddit post listing (Main top level + PostList child). */
+        const val DEEP_LINK_POST_LISTING = "post_listing"
+
+        /** Intent extra carrying the post id for the comment-listing deep link. */
+        const val EXTRA_COMMENT_LISTING_POST_ID =
+            "org.quantumbadger.redreader.extra.COMMENT_LISTING_POST_ID"
+
+        /** Deep-link route: a post comment listing (Main top level + CommentList child). */
+        const val DEEP_LINK_COMMENT_LISTING = "comment_listing"
     }
 }

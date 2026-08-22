@@ -66,6 +66,7 @@ import org.quantumbadger.redreader.reddit.kthings.RedditPost
 import org.quantumbadger.redreader.reddit.url.OpaqueSharedURL
 import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
 import org.quantumbadger.redreader.reddit.url.RedditURLParser
+import org.quantumbadger.redreader.reddit.url.SubredditPostListURL
 import java.util.Locale
 import java.util.regex.Pattern
 import kotlin.concurrent.thread
@@ -197,14 +198,51 @@ object LinkHandler {
 					return
 				}
 
-				RedditURLParser.SUBREDDIT_POST_LISTING_URL, RedditURLParser.MULTIREDDIT_POST_LISTING_URL, RedditURLParser.USER_POST_LISTING_URL, RedditURLParser.SEARCH_POST_LISTING_URL, RedditURLParser.UNKNOWN_POST_LISTING_URL -> {
+				RedditURLParser.SUBREDDIT_POST_LISTING_URL -> {
+					val url = redditURL as? SubredditPostListURL
+					val subreddit = url?.subreddit
+					if (subreddit != null) {
+						// A subreddit listing maps 1:1 to the in-app Compose PostList route.
+						val intent = Intent(activity, MainActivityCompose::class.java)
+						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_POST_LISTING)
+						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, subreddit)
+						activity.startActivity(intent)
+						return
+					}
+					// frontpage/all/popular listings carry no subreddit; fall through to the legacy activity.
+					val intent = Intent(activity, PostListingActivity::class.java)
+					intent.setData(redditURL.generateJsonUri())
+					activity.startActivityForResult(intent, 1)
+					return
+				}
+				RedditURLParser.MULTIREDDIT_POST_LISTING_URL, RedditURLParser.USER_POST_LISTING_URL, RedditURLParser.SEARCH_POST_LISTING_URL, RedditURLParser.UNKNOWN_POST_LISTING_URL -> {
 					val intent = Intent(activity, PostListingActivity::class.java)
 					intent.setData(redditURL.generateJsonUri())
 					activity.startActivityForResult(intent, 1)
 					return
 				}
 
-				RedditURLParser.POST_COMMENT_LISTING_URL, RedditURLParser.USER_COMMENT_LISTING_URL, RedditURLParser.UNKNOWN_COMMENT_LISTING_URL -> {
+				RedditURLParser.POST_COMMENT_LISTING_URL -> {
+					val url = redditURL as? PostCommentListingURL
+					val postId = url?.postId
+					if (postId != null) {
+						// A post comment listing maps 1:1 to the in-app Compose CommentList route.
+						val intent = Intent(activity, MainActivityCompose::class.java)
+						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_COMMENT_LISTING)
+						intent.putExtra(MainActivityCompose.EXTRA_COMMENT_LISTING_POST_ID, postId)
+						activity.startActivity(intent)
+						return
+					}
+					// user/unknown comment listings fall through to the legacy activity.
+					val intent = Intent(
+						activity,
+						CommentListingActivity::class.java
+					)
+					intent.setData(redditURL.generateJsonUri())
+					activity.startActivityForResult(intent, 1)
+					return
+				}
+				RedditURLParser.USER_COMMENT_LISTING_URL, RedditURLParser.UNKNOWN_COMMENT_LISTING_URL -> {
 					val intent = Intent(
 						activity,
 						CommentListingActivity::class.java
