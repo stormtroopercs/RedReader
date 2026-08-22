@@ -21,19 +21,27 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
 /**
  * Compose UI test for InboxScreen.
  * Verifies that inbox screen displays correctly.
+ *
+ * Hosted in [HiltTestHostActivity] (a @AndroidEntryPoint) because [InboxScreen]
+ * resolves its ViewModel with hiltViewModel(), which requires a Hilt
+ * component-holder host — the plain ComponentActivity that createComposeRule()
+ * launches is not one.
  */
+@RunWith(AndroidJUnit4::class)
 class InboxScreenTest {
 
     @get:Rule
-    val composeTestRule = createComposeRule()
+    val composeTestRule = createAndroidComposeRule(HiltTestHostActivity::class.java)
 
     @Test
     fun inboxScreen_displaysTitle() {

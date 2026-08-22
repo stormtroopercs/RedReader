@@ -21,12 +21,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipe
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertEquals
 
 /**
  * Compose UI test for SettingsScreen.
@@ -65,12 +71,39 @@ class SettingsScreenTest {
             }
         }
 
-        // Verify settings categories are displayed
-        composeTestRule.onNodeWithText("Appearance").assertExists()
-        composeTestRule.onNodeWithText("Behaviour").assertExists()
-        composeTestRule.onNodeWithText("Network").assertExists()
-        composeTestRule.onNodeWithText("Cache").assertExists()
-        composeTestRule.onNodeWithText("About").assertExists()
+        // Verify the settings categories are all reachable. They are laid out
+        // in a LazyColumn, so only the first two are composed in the initial
+        // viewport — scroll the list and collect the category headers as they
+        // come into view.
+        val expected = listOf("Appearance", "Behaviour", "Network", "Cache", "About")
+        val seen = mutableSetOf<String>()
+
+        fun recordVisible() {
+            for (category in expected) {
+                if (composeTestRule
+                        .onAllNodesWithText(category)
+                        .fetchSemanticsNodes().isNotEmpty()
+                ) {
+                    seen += category
+                }
+            }
+        }
+
+        recordVisible()
+        repeat(15) {
+            if (seen.containsAll(expected)) return@repeat
+            // Scroll the LazyColumn: a downward drag in the lower half of the
+            // screen (absolute coordinates — the host activity fills the screen).
+            composeTestRule.onRoot().performTouchInput {
+                swipe(
+                    start = Offset(540f, 1200f),
+                    end = Offset(540f, 400f)
+                )
+            }
+            recordVisible()
+        }
+
+        assertEquals(expected.toSet(), seen)
     }
 
     @Test

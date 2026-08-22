@@ -156,7 +156,6 @@ dependencies {
 	androidTestImplementation(libs.androidx.test.junit)
 	androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 	androidTestImplementation(platform(libs.androidx.compose.bom))
-	androidTestImplementation("androidx.compose.ui:ui-test-manifest")
 	androidTestImplementation(libs.androidx.benchmark.macro)
 }
 

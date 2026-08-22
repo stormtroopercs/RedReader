@@ -56,6 +56,24 @@
 
 		<meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
 
+				 <!-- Host activity for androidx.compose.ui.test.junit4.createComposeRule()
+				      (the rule launches a plain ComponentActivity to host setContent).
+				      Without this declaration the intent resolves to the test process
+				      ("resolved to different process") and every Compose UI test fails.
+				      See https://developer.android.com/develop/ui/compose/testing -->
+				 <activity android:name="androidx.activity.ComponentActivity"
+				           android:exported="false"
+				           tools:ignore="MissingClass" />
+
+				 <!-- Hilt component-holder host for Compose screen tests whose screens
+				      call hiltViewModel() (Inbox/UserProfile/CommentList). Lives in the
+				      app (main) source set so it is part of the app's Hilt graph — an
+				      @AndroidEntryPoint in the androidTest source set would not get its
+				      GeneratedInjector wired into the app's SingletonComponent. Test-only:
+				      no intent filters, never launched from the UI. -->
+				 <activity android:name=".compose.ui.HiltTestHostActivity"
+				           android:exported="false" />
+
 		<activity android:name=".activities.MainActivityCompose"
 				  android:configChanges="orientation|screenSize|keyboardHidden"
 				  android:clearTaskOnLaunch="false"

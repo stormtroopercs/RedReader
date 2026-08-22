@@ -17,38 +17,48 @@
 
 package org.quantumbadger.redreader.navigation
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.quantumbadger.redreader.compose.ctx.RRComposeContextTest
+import org.quantumbadger.redreader.compose.ui.HiltTestHostActivity
 
 /**
  * Compose UI test for CommentListScreen.
  * Verifies that comment list screen displays correctly.
+ *
+ * Hosted in [HiltTestHostActivity] (a @AndroidEntryPoint) because
+ * [RealCommentListScreen] resolves its ViewModel with hiltViewModel(), which
+ * requires a Hilt component-holder host — the plain ComponentActivity that
+ * createComposeRule() launches is not one. The screen is wrapped in
+ * RRComposeContextTest, which provides the LocalComposeTheme /
+ * LocalComposePrefs / LocalLauncher that its error and loading views consume.
  */
+@RunWith(AndroidJUnit4::class)
 class CommentListScreenTest {
 
     @get:Rule
-    val composeTestRule = createComposeRule()
+    val composeTestRule = createAndroidComposeRule(HiltTestHostActivity::class.java)
+
+    private fun setContent(onNavigateBack: () -> Unit) {
+        composeTestRule.setContent {
+            RRComposeContextTest {
+                RealCommentListScreen(
+                    postId = "test_post_id",
+                    onNavigateBack = onNavigateBack
+                )
+            }
+        }
+    }
 
     @Test
     fun commentListScreen_displaysTitle() {
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    RealCommentListScreen(
-                        postId = "test_post_id",
-                        onNavigateBack = { /* no-op */ }
-                    )
-                }
-            }
-        }
+        setContent(onNavigateBack = { /* no-op */ })
 
         // Verify comment list title is displayed
         composeTestRule.onNodeWithText("Comments").assertExists()
@@ -58,16 +68,7 @@ class CommentListScreenTest {
     fun commentListScreen_backButtonWorks() {
         var backClicked = false
 
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    RealCommentListScreen(
-                        postId = "test_post_id",
-                        onNavigateBack = { backClicked = true }
-                    )
-                }
-            }
-        }
+        setContent(onNavigateBack = { backClicked = true })
 
         // Click back button
         composeTestRule.onNodeWithContentDescription("Back").performClick()

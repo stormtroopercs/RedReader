@@ -56,6 +56,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -86,6 +87,10 @@ fun RealCommentListScreen(
 ) {
     val viewModel: CommentListViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(postId) {
+        viewModel.fetchComments(postId)
+    }
 
     Scaffold(
         topBar = {

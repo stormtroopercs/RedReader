@@ -20,6 +20,8 @@ package org.quantumbadger.redreader.navigation
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -47,6 +49,7 @@ import org.quantumbadger.redreader.common.invokeIf
 import org.quantumbadger.redreader.common.time.TimestampUTC
 import java.io.IOException
 import java.util.UUID
+import javax.inject.Inject
 import kotlin.math.max
 
 /**
@@ -80,9 +83,9 @@ data class CommentItem(
     val replyDepth: Int = 0
 )
 
-class CommentListViewModel(
-    private val context: Context,
-    postId: String
+@HiltViewModel
+class CommentListViewModel @Inject constructor(
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     @Suppress("PropertyName")
@@ -90,12 +93,8 @@ class CommentListViewModel(
     val state: StateFlow<CommentListUiState> = _state.asStateFlow()
 
     @Suppress("PropertyName")
-    private val _postId = MutableStateFlow(postId)
+    private val _postId = MutableStateFlow("")
     val postId: StateFlow<String> = _postId.asStateFlow()
-
-    init {
-        fetchComments(postId)
-    }
 
     fun fetchComments(postId: String) {
         _postId.value = postId

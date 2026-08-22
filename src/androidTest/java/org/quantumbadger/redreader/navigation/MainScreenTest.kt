@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import org.junit.Rule
@@ -97,8 +98,8 @@ class MainScreenTest {
             }
         }
 
-        // Click on settings button
-        composeTestRule.onNodeWithText("Settings").performClick()
+        // Click on settings button (it's an Icon, addressed by content description)
+        composeTestRule.onNodeWithContentDescription("Settings").performClick()
 
         // Verify settings navigation was triggered
         assert(settingsNavigated) { "Settings navigation should have been triggered" }
