@@ -20,6 +20,7 @@ package org.quantumbadger.redreader.activities
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.webkit.WebView
 import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.compose.ui.HtmlViewScreen
 import java.io.ByteArrayOutputStream
@@ -28,8 +29,16 @@ import java.io.IOException
 /**
  * Thin Compose wrapper around [HtmlViewScreen].
  * Keeps the legacy [showAsset] API so existing call sites still work.
+ *
+ * The loaded HTML can navigate to another page, in which case system back
+ * must walk the WebView's own history before closing the screen. That is
+ * handled here (synchronously, against the live WebView) rather than in a
+ * Compose BackHandler: [ComposeBaseActivity] deliberately routes system back
+ * through BaseActivity's OnBackPressedCallback instead of a Compose dispatcher.
  */
 class HtmlViewActivity : ComposeBaseActivity() {
+
+    private var webView: WebView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,9 +55,36 @@ class HtmlViewActivity : ComposeBaseActivity() {
             HtmlViewScreen(
                 html = html,
                 title = title,
-                onNavigateBack = ::finish
+                onNavigateBack = ::finish,
+                onWebViewCreated = { webView = it }
             )
         }
+    }
+
+    /**
+     * Consume a system back press to walk the WebView back while it has
+     * history to go back through; otherwise return false so BaseActivity
+     * performs its default (finish) behaviour.
+     */
+    override fun baseActivityOnBackPressed(): Boolean {
+        val webView = webView ?: return false
+        return if (webView.canGoBack()) {
+            webView.goBack()
+            true
+        } else {
+            false
+        }
+    }
+
+    /**
+     * The WebView's history can change at any time, and this activity can't
+     * observe every change; on API levels below 36 the callback is always
+     * enabled so [baseActivityOnBackPressed] is consulted on every press.
+     * Report the current WebView history so the predictive-back path (API 36+)
+     * keeps the callback enabled while there is history to walk.
+     */
+    override fun baseActivityMustInterceptBack(): Boolean {
+        return webView?.canGoBack() == true
     }
 
     companion object {

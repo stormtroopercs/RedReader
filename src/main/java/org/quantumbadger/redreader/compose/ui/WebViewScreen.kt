@@ -131,10 +131,10 @@ fun WebViewScreen(
 fun HtmlViewScreen(
     html: String,
     title: String,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onWebViewCreated: (WebView) -> Unit = {}
 ) {
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // WebView lifecycle management
@@ -164,7 +164,13 @@ fun HtmlViewScreen(
             TopAppBar(
                 title = { Text(title) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        if (webViewRef?.canGoBack() == true) {
+                            webViewRef?.goBack()
+                        } else {
+                            onNavigateBack()
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.ArrowBack,
                             contentDescription = "Back"
@@ -187,6 +193,7 @@ fun HtmlViewScreen(
                         null
                     )
                     webViewRef = webView
+                    onWebViewCreated(webView)
                     webView
                 }
             )

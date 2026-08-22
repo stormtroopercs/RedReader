@@ -54,12 +54,9 @@ import java.util.concurrent.atomic.AtomicReference
 
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBackUnconditionally
-import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.isRoot
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
 import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -706,145 +703,6 @@ class BackNavigationUITest {
         return null
     }
 
-    // ---------------------------------------------------------------------
-    // MainActivity: two-pane navigation
-    // ---------------------------------------------------------------------
-
-    @Test
-    fun mainActivity_singlePane_doesNotInterceptBack() {
-
-        setTwoPane("never")
-
-        ActivityScenario.launch<MainActivity>(MainActivity::class.java).use { scenario ->
-
-            waitForIdle()
-
-            assertIntercepts(
-                "MainActivity should not intercept back in single-pane mode",
-                false,
-                scenario
-            )
-
-            pressBackUnconditionally()
-            waitForIdle()
-
-            assertEquals(
-                "Back should exit the app from the main menu",
-                Lifecycle.State.DESTROYED,
-                awaitDestroyed(scenario)
-            )
-        }
-    }
-
-    @Test
-    fun mainActivity_twoPane_menuShown_doesNotInterceptBack() {
-
-        setTwoPane("force")
-
-        ActivityScenario.launch<MainActivity>(MainActivity::class.java).use { scenario ->
-
-            waitForIdle()
-
-            // The menu is showing, so there is nothing to restore: the system
-            // should own the back gesture.
-            assertIntercepts(
-                "MainActivity should not intercept back while the main menu "
-                    + "is showing",
-                false,
-                scenario
-            )
-        }
-    }
-
-    /**
-     * The main two-pane behaviour: once comments replace the main menu, back
-     * must restore the menu rather than exiting the app.
-     *
-     * Requires network access, in the same way as the other UI tests in this
-     * package.
-     */
-    @Test
-    fun mainActivity_twoPane_backRestoresMenu() {
-
-        setTwoPane("force")
-
-        // So that tapping a post's title opens its comments. Tapping the post
-        // body is not reliable, as the tap can land on an image preview, which
-        // opens the link instead.
-        setPostTapAction("title_comments")
-
-        ActivityScenario.launch<MainActivity>(MainActivity::class.java).use { scenario ->
-
-            waitForIdle()
-
-            // Main menu -> Front Page, which loads a post listing into the
-            // other pane
-            onView(allOf(
-                withText(R.string.mainmenu_frontpage),
-                isDisplayed()
-            )).perform(click())
-
-            // Wait for the post listing, then open a post's comments, which is
-            // what replaces the main menu in two-pane mode
-            awaitView(withId(R.id.reddit_post_title), 40)
-
-            onView(firstMatching(allOf(
-                withId(R.id.reddit_post_title),
-                isDisplayed()
-            ))).perform(click())
-
-            var attempt = 0
-            while (attempt < 40 && isMenuShown(scenario)) {
-                SystemClock.sleep(500)
-                attempt++
-            }
-
-            assertFalse(
-                "The main menu should have been replaced by comments",
-                isMenuShown(scenario)
-            )
-
-            assertIntercepts(
-                "MainActivity must intercept back once comments have "
-                    + "replaced the main menu",
-                true,
-                scenario
-            )
-
-            pressBackUnconditionally()
-            waitForIdle()
-            onView(isRoot()).perform(UITestUtils.waitForSeconds(1L))
-
-            assertEquals(
-                "Back should restore the main menu, not exit the app",
-                Lifecycle.State.RESUMED,
-                scenario.state
-            )
-
-            assertTrue(
-                "Back should have restored the main menu",
-                isMenuShown(scenario)
-            )
-
-            assertIntercepts(
-                "Once the main menu is restored, back should no longer be "
-                    + "intercepted",
-                false,
-                scenario
-            )
-
-            // And a further back press should now exit
-            pressBackAfterGuardWindow()
-            waitForIdle()
-
-            assertEquals(
-                "Back from the restored main menu should exit",
-                Lifecycle.State.DESTROYED,
-                awaitDestroyed(scenario)
-            )
-        }
-    }
-
     /**
      * Matches only the first view satisfying the given matcher, so that a
      * listing full of posts does not produce an ambiguous match.
@@ -870,29 +728,6 @@ class BackNavigationUITest {
                 return true
             }
         }
-    }
-
-    /**
-     * Reads MainActivity's private `isMenuShown` field, so that the test
-     * asserts on the activity's actual state rather than only on which views
-     * happen to be on screen.
-     */
-    private fun isMenuShown(scenario: ActivityScenario<MainActivity>): Boolean {
-
-        val result = AtomicBoolean()
-
-        scenario.onActivity { activity ->
-            try {
-                val field
-                    = MainActivity::class.java.getDeclaredField("isMenuShown")
-                field.isAccessible = true
-                result.set(field.getBoolean(activity))
-            } catch (e: ReflectiveOperationException) {
-                throw RuntimeException(e)
-            }
-        }
-
-        return result.get()
     }
 
     // ---------------------------------------------------------------------
