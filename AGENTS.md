@@ -1,7 +1,7 @@
 # RedReader — Project Context
 
 ## Overview
-Open-source Reddit client for Android. 100% Kotlin repo (513 .kt files, 0 .java — 487 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`).
+Open-source Reddit client for Android. 100% Kotlin repo (512 .kt files, 0 .java — 486 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`).
 
 ## Branch
 **`java-to-kotlin-conversion`** — main development branch.
@@ -40,13 +40,13 @@ All production code is under `src/main/java/org/quantumbadger/redreader/`:
 Migrated from Navigation 2 (NavController/NavHost) to Navigation 3.
 
 ### Key Files
-- `navigation/Screens.kt` — `@Serializable NavKey` definitions (15 routes: Main, Settings, PostList, CommentList, UserProfile, Inbox, PostSubmit, SubredditSearch, CommentReply, RedditTerms, Changelog, BugReport, WebViewRoute, HtmlView, OAuthLogin)
+- `navigation/Screens.kt` — `@Serializable NavKey` definitions (16 routes: Main, Settings, PostList, CommentList, UserProfile, Inbox, PostSubmit, SubredditSearch, CommentReply, RedditTerms, Changelog, BugReport, WebViewRoute, HtmlView, OAuthLogin, Album)
 - `navigation/NavigationState.kt` — `rememberNavigationState()` + `NavigationState` class (per-top-level back stacks)
 - `navigation/Navigator.kt` — `Navigator` class (navigate/goBack actions)
 - `navigation/AppNavigation.kt` — `AppNavGraph(navigationState: NavigationState)` — entryProvider + NavDisplay with entryDecorators
 - `navigation/AdaptiveNavigation.kt` — `AdaptiveAppNavigation()` — adaptive layout variant
 - `navigation/MainScreen.kt` — Main screen composable
-- `activities/MainActivityCompose.kt` — Entry point; owns the `NavigationState` at activity scope (routes system back through `baseActivityOnBackPressed`/`baseActivityMustInterceptBack`) and renders `AppNavGraph(navigationState)`. Also handles cold-start deep-link extras (`EXTRA_DEEP_LINK`: `"inbox"` → Main+Inbox, `"changelog"` → Settings+Changelog, `"search"` → Main+SubredditSearch) used by the re-routed legacy entry points (new-message notification, legacy settings links, legacy main-menu search)
+- `activities/MainActivityCompose.kt` — Entry point; owns the `NavigationState` at activity scope (routes system back through `baseActivityOnBackPressed`/`baseActivityMustInterceptBack`) and renders `AppNavGraph(navigationState)`. Also handles cold-start deep-link extras (`EXTRA_DEEP_LINK`: `"inbox"` → Main+Inbox, `"changelog"` → Settings+Changelog, `"search"` → Main+SubredditSearch, `"album"` → Main+Album(url) with the URL in `EXTRA_ALBUM_URL`) used by the re-routed legacy entry points (new-message notification, legacy settings links, legacy main-menu search, album link handling)
 
 ### Pattern
 ```kotlin
