@@ -48,9 +48,9 @@ import org.quantumbadger.redreader.navigation.InboxViewModel
 @Composable
 fun InboxScreen(
     onNavigateBack: () -> Unit,
-    onMarkAllRead: () -> Unit,
     onSendMessage: () -> Unit,
-    viewModel: InboxViewModel = hiltViewModel()
+    viewModel: InboxViewModel = hiltViewModel(),
+    onMarkAllRead: () -> Unit = { viewModel.markAllAsRead() }
 ) {
     val state by viewModel.state.collectAsState()
 

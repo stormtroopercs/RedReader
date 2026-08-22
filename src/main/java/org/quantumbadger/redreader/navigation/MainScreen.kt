@@ -53,7 +53,8 @@ fun MainScreen(
     accountName: String? = null,
     onNavigateToPostList: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToLogin: () -> Unit = {}
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToInbox: () -> Unit = {}
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -102,6 +103,13 @@ fun MainScreen(
                             Text(text = "Login required to view posts")
                         }
                     }
+                )
+            }
+
+            item(key = "inbox") {
+                MainListItem(
+                    title = "Messages",
+                    onClick = { onNavigateToInbox() }
                 )
             }
 

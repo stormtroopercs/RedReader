@@ -84,6 +84,9 @@ fun AppNavGraph(navigationState: NavigationState) {
                     },
                     onNavigateToLogin = {
                         navigator.navigate(OAuthLogin)
+                    },
+                    onNavigateToInbox = {
+                        navigator.navigate(Inbox)
                     }
                 )
             }
@@ -142,9 +145,6 @@ fun AppNavGraph(navigationState: NavigationState) {
             entry<Inbox> {
                 org.quantumbadger.redreader.compose.ui.InboxScreen(
                     onNavigateBack = { navigator.goBack() },
-                    onMarkAllRead = {
-                        // TODO: wire up inbox mark-all-read
-                    },
                     onSendMessage = {
                         navigator.navigate(CommentReply(postId = "", commentId = null))
                     }
