@@ -104,6 +104,7 @@ fun RealPostListScreen(
     val viewModel: PostListViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val currentSort by viewModel.sortBy.collectAsStateWithLifecycle()
+    val listTitle by viewModel.title.collectAsStateWithLifecycle()
 
     LaunchedEffect(subreddit) {
         viewModel.fetchPosts(subreddit)
@@ -119,7 +120,7 @@ fun RealPostListScreen(
                 scrollBehavior = null,
                 title = {
                     Text(
-                        text = "r/$subreddit",
+                        text = listTitle.ifEmpty { "r/$subreddit" },
                         fontWeight = FontWeight.SemiBold
                     )
                 },

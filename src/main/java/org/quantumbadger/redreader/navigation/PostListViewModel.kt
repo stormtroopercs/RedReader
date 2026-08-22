@@ -92,18 +92,38 @@ class PostListViewModel @Inject constructor(
     private val _sortBy = MutableStateFlow(PrefsUtility.pref_behaviour_postsort())
     val sortBy: StateFlow<PostSort> = _sortBy.asStateFlow()
 
-    private var currentSubreddit: String = ""
+    private val _title = MutableStateFlow("")
+    val title: StateFlow<String> = _title.asStateFlow()
 
-    fun fetchPosts(subreddit: String) {
-        currentSubreddit = subreddit
+    private var currentListPath: String = ""
+
+    /**
+     * Derive a human-readable title for the listing [listPath] the screen will
+     * show: the bare subreddit name becomes "r/<name>", and the user-submitted
+     * listing "u/<user>/submitted" becomes "u/<user>/submitted".
+     */
+    private fun resolveTitle(listPath: String) {
+        val t = when {
+            listPath.isBlank() || listPath == "frontpage" -> "frontpage"
+            listPath == "popular" -> "popular"
+            listPath == "all" -> "all"
+            listPath.startsWith("u/") && listPath.endsWith("/submitted") -> listPath
+            else -> "r/" + listPath
+        }
+        _title.value = t
+    }
+
+    fun fetchPosts(listPath: String) {
+        currentListPath = listPath
+        resolveTitle(listPath)
         _state.value = PostListUiState.Loading(_state.value !is PostListUiState.Success)
-        fetchPostListing(subreddit)
+        fetchList(listPath)
     }
 
     fun refresh() {
-        if (currentSubreddit.isEmpty()) return
+        if (currentListPath.isEmpty()) return
         _state.value = PostListUiState.Loading(false)
-        fetchPostListing(currentSubreddit)
+        fetchList(currentListPath)
     }
 
     fun setSortBy(sort: PostSort) {
@@ -113,7 +133,7 @@ class PostListViewModel @Inject constructor(
         refresh()
     }
 
-    private fun fetchPostListing(subreddit: String) {
+    private fun fetchList(listPath: String) {
         viewModelScope.launch {
             try {
                 val account = RedditAccountManager.getInstance(context).getDefaultAccount()
@@ -124,10 +144,12 @@ class PostListViewModel @Inject constructor(
                     return@launch
                 }
 
-                val rawUri = if (subreddit.isBlank()) {
-                    "https://www.reddit.com/"
-                } else {
-                    "https://www.reddit.com/r/$subreddit/"
+                val rawUri = when {
+                    listPath.isBlank() || listPath == "frontpage" -> "https://www.reddit.com/"
+                    listPath == "popular" -> "https://www.reddit.com/r/popular/"
+                    listPath == "all" -> "https://www.reddit.com/r/all/"
+                    listPath.startsWith("u/") -> "https://www.reddit.com/$listPath/"
+                    else -> "https://www.reddit.com/r/$listPath/"
                 }
                 val postListingUrl = RedditURLParser.parseProbablePostListing(Uri.parse(rawUri))
                 if (postListingUrl !is PostListingURL) {

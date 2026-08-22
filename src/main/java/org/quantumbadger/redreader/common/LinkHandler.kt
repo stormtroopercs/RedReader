@@ -67,6 +67,7 @@ import org.quantumbadger.redreader.reddit.url.OpaqueSharedURL
 import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
 import org.quantumbadger.redreader.reddit.url.RedditURLParser
 import org.quantumbadger.redreader.reddit.url.SubredditPostListURL
+import org.quantumbadger.redreader.reddit.url.UserPostListingURL
 import java.util.Locale
 import java.util.regex.Pattern
 import kotlin.concurrent.thread
@@ -215,7 +216,24 @@ object LinkHandler {
 					activity.startActivityForResult(intent, 1)
 					return
 				}
-				RedditURLParser.MULTIREDDIT_POST_LISTING_URL, RedditURLParser.USER_POST_LISTING_URL, RedditURLParser.SEARCH_POST_LISTING_URL, RedditURLParser.UNKNOWN_POST_LISTING_URL -> {
+				RedditURLParser.USER_POST_LISTING_URL -> {
+					val url = redditURL as? UserPostListingURL
+					// Only the anonymous user-submitted listing maps to the in-app PostList route;
+					// saved/hidden/voted listings need that user's session.
+					if (url != null && url.type == UserPostListingURL.Type.SUBMITTED && url.user != null) {
+						val listPath = "u/" + url.user + "/submitted"
+						val intent = Intent(activity, MainActivityCompose::class.java)
+						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_POST_LISTING)
+						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, listPath)
+						activity.startActivity(intent)
+						return
+					}
+					val intent = Intent(activity, PostListingActivity::class.java)
+					intent.setData(redditURL.generateJsonUri())
+					activity.startActivityForResult(intent, 1)
+					return
+				}
+				RedditURLParser.MULTIREDDIT_POST_LISTING_URL, RedditURLParser.SEARCH_POST_LISTING_URL, RedditURLParser.UNKNOWN_POST_LISTING_URL -> {
 					val intent = Intent(activity, PostListingActivity::class.java)
 					intent.setData(redditURL.generateJsonUri())
 					activity.startActivityForResult(intent, 1)
