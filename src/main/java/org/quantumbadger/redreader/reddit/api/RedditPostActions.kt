@@ -36,8 +36,8 @@ import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.activities.BugReportActivity
 import org.quantumbadger.redreader.activities.CommentEditActivity
-import org.quantumbadger.redreader.activities.CommentReplyActivity
 import org.quantumbadger.redreader.activities.MainActivity
+import org.quantumbadger.redreader.activities.MainActivityCompose
 import org.quantumbadger.redreader.activities.PostListingActivity
 import org.quantumbadger.redreader.activities.WebViewActivity
 import org.quantumbadger.redreader.cache.CacheManager
@@ -569,14 +569,14 @@ object RedditPostActions {
 				} else if (post.isLocked && !post.canModerate) {
 					General.quickToast(activity, R.string.error_locked_reply, Toast.LENGTH_SHORT)
 				} else {
-					val intent = Intent(activity, CommentReplyActivity::class.java)
+					val intent = Intent(activity, MainActivityCompose::class.java)
 					intent.putExtra(
-						CommentReplyActivity.PARENT_ID_AND_TYPE_KEY,
-						post.src.idAndType
+						MainActivityCompose.EXTRA_DEEP_LINK,
+						MainActivityCompose.DEEP_LINK_COMMENT_REPLY
 					)
 					intent.putExtra(
-						CommentReplyActivity.PARENT_MARKDOWN_KEY,
-						post.src.unescapedSelfText
+						MainActivityCompose.EXTRA_COMMENT_REPLY_ID_AND_TYPE,
+						post.src.idAndType.toString()
 					)
 					activity.startActivity(intent)
 				}

@@ -179,9 +179,6 @@
                   android:configChanges="orientation|screenSize|keyboardHidden"
                   android:theme="@style/RR.Dark"/>
 
-        <activity android:name=".activities.CommentReplyActivity"
-                  android:configChanges="orientation|screenSize|keyboardHidden"/>
-
         <activity android:name=".activities.CommentEditActivity"
                   android:configChanges="orientation|screenSize|keyboardHidden"/>
 

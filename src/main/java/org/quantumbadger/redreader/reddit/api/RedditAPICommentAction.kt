@@ -30,7 +30,7 @@ import org.quantumbadger.redreader.R.string
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.CommentEditActivity
-import org.quantumbadger.redreader.activities.CommentReplyActivity
+import org.quantumbadger.redreader.activities.MainActivityCompose
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.common.General.quickToast
 import org.quantumbadger.redreader.common.General.showMustBeLoggedInDialog
@@ -393,14 +393,14 @@ object RedditAPICommentAction {
                     					return
                 }
 
-                val intent = Intent(activity, CommentReplyActivity::class.java)
+                val intent = Intent(activity, MainActivityCompose::class.java)
                 intent.putExtra(
-                    CommentReplyActivity.Companion.PARENT_ID_AND_TYPE_KEY,
-                    comment.idAndType
+                    MainActivityCompose.EXTRA_DEEP_LINK,
+                    MainActivityCompose.DEEP_LINK_COMMENT_REPLY
                 )
                 intent.putExtra(
-                    CommentReplyActivity.Companion.PARENT_MARKDOWN_KEY,
-                    comment.body!!.decoded
+                    MainActivityCompose.EXTRA_COMMENT_REPLY_ID_AND_TYPE,
+                    comment.idAndType.toString()
                 )
                 activity.startActivity(intent)
             }

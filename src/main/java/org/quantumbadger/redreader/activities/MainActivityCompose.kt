@@ -30,6 +30,7 @@ import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.navigation.Album
 import org.quantumbadger.redreader.navigation.AppNavGraph
 import org.quantumbadger.redreader.navigation.Changelog
+import org.quantumbadger.redreader.navigation.CommentReply
 import org.quantumbadger.redreader.navigation.Inbox
 import org.quantumbadger.redreader.navigation.Main
 import org.quantumbadger.redreader.navigation.NavigationState
@@ -120,7 +121,31 @@ class MainActivityCompose : ComposeBaseActivity() {
                     navigationState.navigateTo(Main, Album(albumUrl))
                 }
             }
+            DEEP_LINK_COMMENT_REPLY -> {
+                val idAndType = intent?.getStringExtra(EXTRA_COMMENT_REPLY_ID_AND_TYPE)
+                if (idAndType != null) {
+                    val (postId, commentId) = parseCommentReplyIds(idAndType)
+                    navigationState.navigateTo(Main, CommentReply(postId, commentId))
+                }
+            }
         }
+    }
+
+    /**
+     * Split a Reddit id-and-type string into the [CommentReply] route's
+     * (postId, commentId) parameters. "t3_<id>" (a post) yields that post id
+     * with a null comment id; "t1_<postId>_<commentId>" (a comment) yields
+     * "t3_<postId>" as the post id and the comment id, since Reddit comment
+     * ids nest under the post id.
+     */
+    private fun parseCommentReplyIds(idAndType: String): Pair<String, String?> {
+        if (idAndType.startsWith("t1_")) {
+            val commentId = idAndType.removePrefix("t1_")
+            val underscore = commentId.lastIndexOf('_')
+            val postId = if (underscore > 0) "t3_" + commentId.substring(0, underscore) else ""
+            return postId to commentId
+        }
+        return idAndType to null
     }
 
     companion object {
@@ -141,5 +166,12 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: an album/gallery (Main top level + Album child). */
         const val DEEP_LINK_ALBUM = "album"
+
+        /** Intent extra carrying the comment id-and-type for the comment-reply deep link. */
+        const val EXTRA_COMMENT_REPLY_ID_AND_TYPE =
+            "org.quantumbadger.redreader.extra.COMMENT_REPLY_ID_AND_TYPE"
+
+        /** Deep-link route: reply to a post or comment (Main top level + CommentReply child). */
+        const val DEEP_LINK_COMMENT_REPLY = "comment_reply"
     }
 }
