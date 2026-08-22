@@ -1,7 +1,7 @@
 # RedReader — Project Context
 
 ## Overview
-Open-source Reddit client for Android. 100% Kotlin repo (511 .kt files, 0 .java — 485 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`).
+Open-source Reddit client for Android. 100% Kotlin repo (510 .kt files, 0 .java — 484 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`).
 
 ## Branch
 **`java-to-kotlin-conversion`** — main development branch.
@@ -46,7 +46,7 @@ Migrated from Navigation 2 (NavController/NavHost) to Navigation 3.
 - `navigation/AppNavigation.kt` — `AppNavGraph(navigationState: NavigationState)` — entryProvider + NavDisplay with entryDecorators
 - `navigation/AdaptiveNavigation.kt` — `AdaptiveAppNavigation()` — adaptive layout variant
 - `navigation/MainScreen.kt` — Main screen composable
-- `activities/MainActivityCompose.kt` — Entry point; owns the `NavigationState` at activity scope (routes system back through `baseActivityOnBackPressed`/`baseActivityMustInterceptBack`) and renders `AppNavGraph(navigationState)`. Also handles cold-start deep-link extras (`EXTRA_DEEP_LINK`: `"inbox"` → Main+Inbox, `"changelog"` → Settings+Changelog, `"search"` → Main+SubredditSearch, `"album"` → Main+Album(url) with the URL in `EXTRA_ALBUM_URL`, `"comment_reply"` → Main+CommentReply(postId, commentId) with the id-and-type in `EXTRA_COMMENT_REPLY_ID_AND_TYPE`) used by the re-routed legacy entry points (new-message notification, legacy settings links, legacy main-menu search, album link handling, comment/post reply actions)
+- `activities/MainActivityCompose.kt` — Entry point; owns the `NavigationState` at activity scope (routes system back through `baseActivityOnBackPressed`/`baseActivityMustInterceptBack`) and renders `AppNavGraph(navigationState)`. Also handles cold-start deep-link extras (`EXTRA_DEEP_LINK`: `"inbox"` → Main+Inbox, `"changelog"` → Settings+Changelog, `"search"` → Main+SubredditSearch, `"album"` → Main+Album(url) with the URL in `EXTRA_ALBUM_URL`, `"comment_reply"` → Main+CommentReply(postId, commentId) with the id-and-type in `EXTRA_COMMENT_REPLY_ID_AND_TYPE`, `"terms"` → Settings+RedditTerms) used by the re-routed legacy entry points (new-message notification, legacy settings links, legacy main-menu search, album link handling, comment/post reply actions, accept-terms error resolution)
 
 ### Pattern
 ```kotlin
