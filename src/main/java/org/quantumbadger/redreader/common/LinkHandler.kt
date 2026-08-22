@@ -45,7 +45,6 @@ import org.quantumbadger.redreader.common.General.quickToast
 import org.quantumbadger.redreader.common.PrefsUtility.AlbumViewMode
 import org.quantumbadger.redreader.common.PrefsUtility.SharingDomain
 import org.quantumbadger.redreader.fragments.ShareOrderDialog
-import org.quantumbadger.redreader.fragments.UserProfileDialog.show
 import org.quantumbadger.redreader.http.HTTPBackend
 import org.quantumbadger.redreader.image.AlbumInfo
 import org.quantumbadger.redreader.image.DeviantArtAPI
@@ -313,7 +312,12 @@ object LinkHandler {
 				}
 
 				RedditURLParser.USER_PROFILE_URL -> {
-					show(activity, redditURL.asUserProfileURL().username)
+					// A user profile maps 1:1 to the in-app Compose UserProfile route.
+					val username = redditURL.asUserProfileURL().username
+					val intent = Intent(activity, MainActivityCompose::class.java)
+					intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_USER_PROFILE)
+					intent.putExtra(MainActivityCompose.EXTRA_USER_PROFILE_USERNAME, username)
+					activity.startActivity(intent)
 					return
 				}
 			}

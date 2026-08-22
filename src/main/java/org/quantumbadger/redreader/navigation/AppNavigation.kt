@@ -135,9 +135,6 @@ fun AppNavGraph(navigationState: NavigationState) {
                     },
                     onNavigateToComments = {
                         navigator.navigate(CommentList("u/${key.username}/comments"))
-                    },
-                    onSendMessage = {
-                        navigator.navigate(CommentReply(postId = "", commentId = null))
                     }
                 )
             }

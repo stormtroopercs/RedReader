@@ -17,37 +17,51 @@
 
 package org.quantumbadger.redreader.compose.ui
 
+import android.content.Context
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.activities.OAuthLoginActivity
+import org.quantumbadger.redreader.activities.PMSendActivity
 import org.quantumbadger.redreader.compose.net.NetRequestStatus
 import org.quantumbadger.redreader.compose.net.fetchImage
+import org.quantumbadger.redreader.common.RRError
 import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.navigation.UserProfileViewModel
+import org.quantumbadger.redreader.reddit.api.RedditOAuth
+import org.quantumbadger.redreader.reddit.things.RedditUser
 
 /**
  * Compose User Profile Screen.
- * Full-screen user profile with karma, badges, and actions.
+ * Full-screen user profile with karma, badges, avatar, account age and the
+ * same actions the legacy user-profile dialog offered: view posts / comments,
+ * send a message, more-info, and block / unblock (via the Reddit API, with a
+ * re-login offer when the block permission is denied).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,13 +70,49 @@ fun UserProfileScreen(
     onNavigateBack: () -> Unit,
     onNavigateToPosts: () -> Unit,
     onNavigateToComments: () -> Unit,
-    onSendMessage: () -> Unit,
     viewModel: UserProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+
+    // Raw RedditUser shown by the "more info" dialog (compose UserPropertiesDialog).
+    var moreInfoUser by remember { mutableStateOf<RedditUser?>(null) }
+
+    // Transient block/unblock feedback surfaces.
+    var permissionDeniedDialog by remember { mutableStateOf(false) }
+    var failureDialogError by remember { mutableStateOf<RRError?>(null) }
 
     LaunchedEffect(username) {
         viewModel.loadProfile(username)
+    }
+
+    // OAuth re-login (block permission denied): result code 123 carries the
+    // callback URL, mirroring the legacy
+    // UserProfileDialog.launchAndCompleteLogin.
+    val reLoginLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val data = result.data
+        if (data != null && result.resultCode == 123 && data.hasExtra("url")) {
+            val uri = data.getStringExtra("url")?.toUri()
+            if (uri != null && context is BaseActivity) {
+                RedditOAuth.completeLogin(
+                    context,
+                    uri,
+                    org.quantumbadger.redreader.common.RunnableOnce.DO_NOTHING
+                )
+            }
+        }
+    }
+
+    // Surface a block/unblock feedback event exactly once, then clear it.
+    LaunchedEffect(viewModel.blockFeedback.value) {
+        val feedback = viewModel.blockFeedback.value ?: return@LaunchedEffect
+        viewModel.clearBlockFeedback()
+        when (feedback) {
+            UserProfileViewModel.BlockFeedback.PermissionDenied -> permissionDeniedDialog = true
+            is UserProfileViewModel.BlockFeedback.Failure -> failureDialogError = feedback.error
+        }
     }
 
     Scaffold(
@@ -103,9 +153,21 @@ fun UserProfileScreen(
             is UserProfileViewModel.UserProfileUiState.Ready -> {
                 UserProfileContent(
                     uiState = uiState,
+                    viewModel = viewModel,
+                    context = context,
+                    onMoreInfo = { moreInfoUser = it },
                     onNavigateToPosts = onNavigateToPosts,
                     onNavigateToComments = onNavigateToComments,
-                    onSendMessage = onSendMessage,
+                    onSendMessage = {
+                        // Mirror the legacy dialog: open the PM composer for the
+                        // profiled user (signed in only).
+                        if (context is AppCompatActivity) {
+                            context.startActivity(
+                                Intent(context, PMSendActivity::class.java)
+                                    .putExtra(PMSendActivity.EXTRA_RECIPIENT, uiState.username)
+                            )
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -136,11 +198,52 @@ fun UserProfileScreen(
             }
         }
     }
+
+    if (permissionDeniedDialog) {
+        AlertDialog(
+            onDismissRequest = { permissionDeniedDialog = false },
+            title = { Text(stringResource(R.string.block_permission_denied_title)) },
+            text = { Text(stringResource(R.string.block_permission_denied_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        permissionDeniedDialog = false
+                        if (context is BaseActivity) {
+                            reLoginLauncher.launch(Intent(context, OAuthLoginActivity::class.java))
+                        }
+                    }
+                ) { Text(stringResource(R.string.block_permission_denied_relogin)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { permissionDeniedDialog = false }) {
+                    Text(stringResource(R.string.dialog_cancel))
+                }
+            }
+        )
+    }
+
+    failureDialogError?.let { error ->
+        AlertDialog(
+            onDismissRequest = { failureDialogError = null },
+            title = { Text(error.title ?: "Error") },
+            text = { Text(error.message ?: "The request failed. Please try again.") },
+            confirmButton = {
+                TextButton(onClick = { failureDialogError = null }) { Text("OK") }
+            }
+        )
+    }
+
+    moreInfoUser?.let { user ->
+        UserPropertiesDialog(user = user, onDismiss = { moreInfoUser = null })
+    }
 }
 
 @Composable
 private fun UserProfileContent(
     uiState: UserProfileViewModel.UserProfileUiState.Ready,
+    viewModel: UserProfileViewModel,
+    context: Context,
+    onMoreInfo: (RedditUser) -> Unit,
     onNavigateToPosts: () -> Unit,
     onNavigateToComments: () -> Unit,
     onSendMessage: () -> Unit,
@@ -153,7 +256,7 @@ private fun UserProfileContent(
     ) {
         // User header with avatar
         item {
-            UserHeader(uiState)
+            UserHeader(uiState = uiState, onMoreInfo = onMoreInfo)
         }
 
         // Karma summary
@@ -169,10 +272,22 @@ private fun UserProfileContent(
         // Quick actions
         item {
             QuickActions(
+                canMessage = uiState.canMessage,
                 onNavigateToPosts = onNavigateToPosts,
                 onNavigateToComments = onNavigateToComments,
                 onSendMessage = onSendMessage
             )
+        }
+
+        // Block / unblock (signed in, and not viewing your own profile)
+        if (uiState.canBlock) {
+            item {
+                BlockActions(
+                    uiState = uiState,
+                    viewModel = viewModel,
+                    context = context
+                )
+            }
         }
 
         // Account details
@@ -183,7 +298,10 @@ private fun UserProfileContent(
 }
 
 @Composable
-private fun UserHeader(uiState: UserProfileViewModel.UserProfileUiState.Ready) {
+private fun UserHeader(
+    uiState: UserProfileViewModel.UserProfileUiState.Ready,
+    onMoreInfo: (RedditUser) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -216,6 +334,25 @@ private fun UserHeader(uiState: UserProfileViewModel.UserProfileUiState.Ready) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            uiState.accountAge?.let { age ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = age,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            uiState.latestUser?.let { user ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "More info",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable { onMoreInfo(user) }
+                )
+            }
         }
     }
 }
@@ -367,6 +504,27 @@ private fun AccountBadges(uiState: UserProfileViewModel.UserProfileUiState.Ready
                         color = MaterialTheme.colorScheme.secondary
                     )
                 }
+                if (uiState.isSuspended) {
+                    BadgeChip(
+                        icon = Icons.Default.Block,
+                        label = "Suspended",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                if (uiState.isFriend) {
+                    BadgeChip(
+                        icon = Icons.Default.Star,
+                        label = "Friend",
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                if (uiState.isSelf) {
+                    BadgeChip(
+                        icon = Icons.Default.Person,
+                        label = "You",
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
         }
     }
@@ -402,6 +560,7 @@ private fun BadgeChip(
 
 @Composable
 private fun QuickActions(
+    canMessage: Boolean,
     onNavigateToPosts: () -> Unit,
     onNavigateToComments: () -> Unit,
     onSendMessage: () -> Unit
@@ -438,15 +597,94 @@ private fun QuickActions(
                 onClick = onNavigateToComments
             )
 
-            Divider()
-
-            // Send message
-            ActionRow(
-                icon = Icons.Default.Email,
-                label = "Send Message",
-                onClick = onSendMessage
-            )
+            // Send message (signed in only, mirroring the legacy dialog)
+            if (canMessage) {
+                Divider()
+                ActionRow(
+                    icon = Icons.Default.Email,
+                    label = "Send Message",
+                    onClick = onSendMessage
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun BlockActions(
+    uiState: UserProfileViewModel.UserProfileUiState.Ready,
+    viewModel: UserProfileViewModel,
+    context: Context
+) {
+    var confirmBlock by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Block,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = if (uiState.isBlocked) "Blocked"
+                    else stringResource(R.string.userprofile_button_block),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            if (uiState.isBlocked) {
+                Button(
+                    onClick = {
+                        (context as? AppCompatActivity)?.let {
+                            viewModel.unblockUser(it, uiState.username)
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.userprofile_button_unblock))
+                }
+            } else {
+                Button(
+                    onClick = { confirmBlock = true }
+                ) {
+                    Text(stringResource(R.string.userprofile_button_block))
+                }
+            }
+        }
+    }
+
+    if (confirmBlock) {
+        AlertDialog(
+            onDismissRequest = { confirmBlock = false },
+            title = { Text(stringResource(R.string.block_confirmation)) },
+            text = { Text(stringResource(R.string.are_you_sure_block_user)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmBlock = false
+                        (context as? AppCompatActivity)?.let {
+                            viewModel.blockUser(it, uiState.username)
+                        }
+                    }
+                ) { Text(stringResource(R.string.dialog_yes)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmBlock = false }) {
+                    Text(stringResource(R.string.dialog_cancel))
+                }
+            }
+        )
     }
 }
 

@@ -18,6 +18,9 @@
 package org.quantumbadger.redreader.navigation
 
 import android.content.Context
+import android.content.Intent
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,23 +31,38 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.activities.OAuthLoginActivity
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest
 import org.quantumbadger.redreader.cache.CacheRequestJSONParser
+import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyAlways
 import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyIfNotCached
+import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.common.Constants
 import org.quantumbadger.redreader.common.Priority
 import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.StringUtils
+import org.quantumbadger.redreader.common.time.TimeFormatHelper
 import org.quantumbadger.redreader.common.time.TimestampUTC
 import org.quantumbadger.redreader.jsonwrap.JsonValue
-import org.quantumbadger.redreader.reddit.things.RedditThing
+import org.quantumbadger.redreader.reddit.APIResponseHandler.ActionResponseHandler
+import org.quantumbadger.redreader.reddit.APIResponseHandler.UserResponseHandler
+import org.quantumbadger.redreader.reddit.RedditAPI
+import org.quantumbadger.redreader.reddit.api.RedditOAuth.completeLogin
 import org.quantumbadger.redreader.reddit.things.RedditUser
 
 /**
  * ViewModel for user profile display.
  * Manages user profile state and provides reactive updates via StateFlow.
+ *
+ * In addition to rendering the profile (karma, badges, avatar, account age),
+ * this backs the in-app [UserProfileScreen] with the same actions the legacy
+ * user-profile dialog offered: blocking / unblocking a user (via
+ * [RedditAPI.blockUser] / [RedditAPI.unblockUser]), re-login when the block
+ * permission is denied, and the raw [RedditUser] for the "more info" dialog.
  */
 @HiltViewModel
 class UserProfileViewModel @Inject constructor(
@@ -61,14 +79,40 @@ class UserProfileViewModel @Inject constructor(
             val isGold: Boolean,
             val isMod: Boolean,
             val isEmployee: Boolean,
+            val isSuspended: Boolean,
+            val isFriend: Boolean,
+            val isBlocked: Boolean,
+            val isSelf: Boolean,
+            val canBlock: Boolean,
+            val canMessage: Boolean,
             val iconUrl: String?,
-            val accountType: String
+            val accountType: String,
+            val accountAge: String?,
+            val latestUser: RedditUser?
         ) : UserProfileUiState()
         data class Error(val message: String) : UserProfileUiState()
     }
 
+    /**
+     * Transient feedback for a block/unblock action. Non-null only until the
+     * UI has handled it (then cleared via [clearBlockFeedback]).
+     */
+    sealed class BlockFeedback {
+        /** The account lacks the `block_user` permission (HTTP 403). */
+        object PermissionDenied : BlockFeedback()
+        /** The action failed for another reason. */
+        data class Failure(val error: RRError) : BlockFeedback()
+    }
+
     private val _state = MutableStateFlow<UserProfileUiState>(UserProfileUiState.Loading)
     val state: StateFlow<UserProfileUiState> = _state.asStateFlow()
+
+    private val _blockFeedback = MutableStateFlow<BlockFeedback?>(null)
+    val blockFeedback: StateFlow<BlockFeedback?> = _blockFeedback.asStateFlow()
+
+    fun clearBlockFeedback() {
+        _blockFeedback.value = null
+    }
 
     private var currentUsername: String = ""
 
@@ -103,6 +147,23 @@ class UserProfileViewModel @Inject constructor(
                                 _state.value = UserProfileUiState.Error("User not found")
                                 return
                             }
+                            val default = RedditAccountManager.getInstance(context).getDefaultAccount()
+                            val isAnonymous = default.isAnonymous
+                            val isSelf = user.name != null && !default.isAnonymous &&
+                                StringUtils.asciiLowercase(user.name!!) ==
+                                StringUtils.asciiLowercase(default.canonicalUsername)
+
+                            val accountAge = user.created_utc?.let { createdUtc ->
+                                TimeFormatHelper.format(
+                                    TimestampUTC.now().elapsedPeriodSince(
+                                        TimestampUTC.fromUtcSecs(createdUtc)
+                                    ),
+                                    context,
+                                    R.string.user_profile_account_age,
+                                    1
+                                )
+                            }
+
                             _state.value = UserProfileUiState.Ready(
                                 username = user.name ?: username,
                                 karma = (user.link_karma ?: 0) + (user.comment_karma ?: 0),
@@ -111,8 +172,16 @@ class UserProfileViewModel @Inject constructor(
                                 isGold = user.is_gold == true,
                                 isMod = user.is_mod == true,
                                 isEmployee = user.is_employee == true,
+                                isSuspended = user.is_suspended == true,
+                                isFriend = user.is_friend == true,
+                                isBlocked = user.is_blocked == true,
+                                isSelf = isSelf,
+                                canBlock = !isAnonymous && !isSelf,
+                                canMessage = !isAnonymous,
                                 iconUrl = user.iconUrl?.value,
-                                accountType = "Reddit User"
+                                accountType = "Reddit User",
+                                accountAge = accountAge,
+                                latestUser = user
                             )
                         } catch (t: Throwable) {
                             _state.value = UserProfileUiState.Error(
@@ -149,36 +218,126 @@ class UserProfileViewModel @Inject constructor(
     }
 
     /**
-     * Block a user.
+     * Block a user via [RedditAPI.blockUser]. On success the profile flips to
+     * the blocked state; on a 403 the [BlockFeedback.PermissionDenied] event is
+     * raised (the UI offers a re-login); otherwise a
+     * [BlockFeedback.Failure] is raised.
      *
-     * The real API call ([org.quantumbadger.redreader.reddit.RedditAPI.blockUser])
-     * requires an [androidx.appcompat.app.AppCompatActivity] for its response
-     * handler, so it is invoked from the legacy [UserProfileDialog] activity
-     * path. This updates local state optimistically.
+     * [activity] is the hosting activity (the response handlers post to its UI
+     * thread and the API needs a non-application context for the request).
      */
-    fun blockUser(username: String) {
-        viewModelScope.launch {
-            _state.value = UserProfileUiState.Ready(
-                username = username,
-                karma = 0,
-                linkKarma = 0,
-                commentKarma = 0,
-                isGold = false,
-                isMod = false,
-                isEmployee = false,
-                iconUrl = null,
-                accountType = "Blocked User"
-            )
-        }
+    fun blockUser(activity: AppCompatActivity, username: String) {
+        val cm = CacheManager.getInstance(activity)
+        val currentUser = RedditAccountManager.getInstance(activity).defaultAccount
+
+        RedditAPI.blockUser(
+            cm,
+            username,
+            object : RedditAPI.BlockUserResponseHandler {
+                override fun onSuccess() {
+                    activity.runOnUiThread {
+                        (state.value as? UserProfileUiState.Ready)?.let { ready ->
+                            _state.value = ready.copy(isBlocked = true)
+                        }
+                    }
+                }
+
+                override fun onBlockUserPermissionDenied() {
+                    activity.runOnUiThread {
+                        _blockFeedback.value = BlockFeedback.PermissionDenied
+                    }
+                }
+
+                override fun onFailure(error: RRError) {
+                    activity.runOnUiThread {
+                        _blockFeedback.value = BlockFeedback.Failure(error)
+                    }
+                }
+            },
+            currentUser,
+            activity
+        )
     }
 
     /**
-     * Unblock a user (see [blockUser] for why the API call lives in the
-     * legacy activity path).
+     * Unblock a user via [RedditAPI.unblockUser]. The unblock endpoint needs the
+     * current user's fullname as the `container` field, so this is a two-step
+     * call: first [RedditAPI.getUser] for the current account to read its
+     * fullname, then [RedditAPI.unblockUser]. Mirrors the legacy user-profile
+     * dialog's two-step unblock.
      */
-    fun unblockUser(username: String) {
-        viewModelScope.launch {
-            loadProfile(username)
+    fun unblockUser(activity: AppCompatActivity, username: String) {
+        val cm = CacheManager.getInstance(activity)
+        val currentUser = RedditAccountManager.getInstance(activity).defaultAccount
+
+        RedditAPI.getUser(
+            cm,
+            currentUser.username,
+            object : UserResponseHandler(activity) {
+                override fun onDownloadStarted() {}
+
+                override fun onSuccess(redditUser: RedditUser, timestamp: TimestampUTC) {
+                    val currentUserFullname = redditUser.fullname()
+                    RedditAPI.unblockUser(
+                        cm,
+                        username,
+                        currentUserFullname,
+                        object : ActionResponseHandler(activity) {
+                            override fun onSuccess() {
+                                activity.runOnUiThread {
+                                    (state.value as? UserProfileUiState.Ready)?.let { ready ->
+                                        _state.value = ready.copy(isBlocked = false)
+                                    }
+                                }
+                            }
+
+                            override fun onFailure(error: RRError) {
+                                activity.runOnUiThread {
+                                    _blockFeedback.value = BlockFeedback.Failure(error)
+                                }
+                            }
+
+                            override fun onCallbackException(t: Throwable) {
+                                activity.runOnUiThread {
+                                    _blockFeedback.value = BlockFeedback.Failure(RRError(t = t))
+                                }
+                            }
+                        },
+                        currentUser,
+                        activity
+                    )
+                }
+
+                override fun onCallbackException(t: Throwable) {
+                    activity.runOnUiThread {
+                        _blockFeedback.value = BlockFeedback.Failure(RRError(t = t))
+                    }
+                }
+
+                override fun onFailure(error: RRError) {
+                    activity.runOnUiThread {
+                        _blockFeedback.value = BlockFeedback.Failure(error)
+                    }
+                }
+            },
+            currentUser,
+            DownloadStrategyAlways.INSTANCE,
+            activity
+        )
+    }
+
+    /**
+     * Kick off the OAuth re-login flow (used when a block is denied for
+     * missing `block_user` permission). Mirrors the legacy
+     * `UserProfileDialog.launchAndCompleteLogin`.
+     */
+    fun startReLogin(activity: BaseActivity) {
+        val loginIntent = Intent(activity, OAuthLoginActivity::class.java)
+        activity.startActivityForResultWithCallback(loginIntent) { resultCode, data ->
+            if (data != null && resultCode == 123 && data.hasExtra("url")) {
+                val uri = data.getStringExtra("url")!!.toUri()
+                completeLogin(activity, uri, org.quantumbadger.redreader.common.RunnableOnce.DO_NOTHING)
+            }
         }
     }
 
