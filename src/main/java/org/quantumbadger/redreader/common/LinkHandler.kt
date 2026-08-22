@@ -31,10 +31,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.quantumbadger.redreader.R
-import org.quantumbadger.redreader.activities.AlbumListingActivity
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.activities.CommentListingActivity
 import org.quantumbadger.redreader.activities.ImageViewActivity
+import org.quantumbadger.redreader.activities.MainActivityCompose
 import org.quantumbadger.redreader.activities.PMSendActivity
 import org.quantumbadger.redreader.activities.PostListingActivity
 import org.quantumbadger.redreader.activities.WebViewActivity
@@ -136,10 +136,14 @@ object LinkHandler {
 				AlbumViewMode.INTERNAL_LIST -> {
 					val intent = Intent(
 						activity,
-						AlbumListingActivity::class.java
-					)
-					intent.setData(normalUrl)
-					intent.putExtra("post", post)
+						MainActivityCompose::class.java
+					).apply {
+						putExtra(
+							MainActivityCompose.EXTRA_DEEP_LINK,
+							MainActivityCompose.DEEP_LINK_ALBUM
+						)
+						putExtra(MainActivityCompose.EXTRA_ALBUM_URL, normalUrlString.value)
+					}
 					activity.startActivity(intent)
 					return
 				}

@@ -35,6 +35,7 @@ import kotlinx.serialization.Serializable
  *   - PostSubmit(subreddit)
  *   - SubredditSearch
  *   - CommentReply(postId, commentId?)
+ *   - Album(url)
  */
 @Serializable
 data object Main : NavKey
@@ -80,6 +81,9 @@ data class HtmlView(val html: String, val title: String) : NavKey
 
 @Serializable
 data object OAuthLogin : NavKey
+
+@Serializable
+data class Album(val url: String) : NavKey
 
 /** All top-level routes (displayed in navigation bar/rail/drawer). */
 val TOP_LEVEL_ROUTES = setOf<NavKey>(Main, Settings)

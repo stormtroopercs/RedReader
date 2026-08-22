@@ -34,6 +34,7 @@ import androidx.navigation3.ui.NavDisplay
 import org.quantumbadger.redreader.account.RedditAccountChangeListener
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.common.RunnableOnce
+import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.reddit.api.RedditOAuth
 
 /**
@@ -223,6 +224,14 @@ fun AppNavGraph(navigationState: NavigationState) {
                     html = key.html,
                     title = key.title,
                     onNavigateBack = { navigator.goBack() }
+                )
+            }
+
+            // Child: Album (imgur / reddit gallery)
+            entry<Album> { key ->
+                org.quantumbadger.redreader.compose.ui.AlbumScreen(
+                    albumUrl = UriString(key.url),
+                    onBackPressed = { navigator.goBack() }
                 )
             }
 

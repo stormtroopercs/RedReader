@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.AndroidEntryPoint
 import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
+import org.quantumbadger.redreader.navigation.Album
 import org.quantumbadger.redreader.navigation.AppNavGraph
 import org.quantumbadger.redreader.navigation.Changelog
 import org.quantumbadger.redreader.navigation.Inbox
@@ -99,24 +100,35 @@ class MainActivityCompose : ComposeBaseActivity() {
     }
 
     /**
-     * Handle a cold-start deep-link extra. Currently the inbox, changelog and
-     * subreddit search are wired: a notification tap opens the Compose inbox
-     * (Main + Inbox), the legacy settings' changelog link opens the Compose
-     * changelog (Settings + Changelog, so back returns to settings), and the
-     * legacy main-menu search item opens the Compose subreddit search (Main +
-     * SubredditSearch). Unknown routes fall back to the default main screen.
+     * Handle a cold-start deep-link extra. Currently the inbox, changelog,
+     * subreddit search and album are wired: a notification tap opens the Compose
+     * inbox (Main + Inbox), the legacy settings' changelog link opens the
+     * Compose changelog (Settings + Changelog, so back returns to settings),
+     * the legacy main-menu search item opens the Compose subreddit search
+     * (Main + SubredditSearch), and a tapped album/gallery link opens the
+     * Compose album (Main + Album(url), with the URL in [EXTRA_ALBUM_URL]).
+     * Unknown routes fall back to the default main screen.
      */
     private fun deepLinkRoute(route: String) {
         when (route) {
             DEEP_LINK_INBOX -> navigationState.navigateTo(Main, Inbox)
             DEEP_LINK_CHANGELOG -> navigationState.navigateTo(Settings, Changelog)
             DEEP_LINK_SEARCH -> navigationState.navigateTo(Main, SubredditSearch)
+            DEEP_LINK_ALBUM -> {
+                val albumUrl = intent?.getStringExtra(EXTRA_ALBUM_URL)
+                if (albumUrl != null) {
+                    navigationState.navigateTo(Main, Album(albumUrl))
+                }
+            }
         }
     }
 
     companion object {
         /** Intent extra carrying a cold-start deep-link route name. */
         const val EXTRA_DEEP_LINK = "org.quantumbadger.redreader.extra.DEEP_LINK"
+
+        /** Intent extra carrying the album URL for the album deep link. */
+        const val EXTRA_ALBUM_URL = "org.quantumbadger.redreader.extra.ALBUM_URL"
 
         /** Deep-link route: the inbox (Main top level + Inbox child). */
         const val DEEP_LINK_INBOX = "inbox"
@@ -126,5 +138,8 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: subreddit search (Main top level + SubredditSearch child). */
         const val DEEP_LINK_SEARCH = "search"
+
+        /** Deep-link route: an album/gallery (Main top level + Album child). */
+        const val DEEP_LINK_ALBUM = "album"
     }
 }
