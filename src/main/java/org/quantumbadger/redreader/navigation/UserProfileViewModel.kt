@@ -56,8 +56,11 @@ class UserProfileViewModel @Inject constructor(
         data class Ready(
             val username: String,
             val karma: Int,
+            val linkKarma: Int,
+            val commentKarma: Int,
             val isGold: Boolean,
             val isMod: Boolean,
+            val isEmployee: Boolean,
             val iconUrl: String?,
             val accountType: String
         ) : UserProfileUiState()
@@ -103,9 +106,12 @@ class UserProfileViewModel @Inject constructor(
                             _state.value = UserProfileUiState.Ready(
                                 username = user.name ?: username,
                                 karma = (user.link_karma ?: 0) + (user.comment_karma ?: 0),
+                                linkKarma = user.link_karma ?: 0,
+                                commentKarma = user.comment_karma ?: 0,
                                 isGold = user.is_gold == true,
                                 isMod = user.is_mod == true,
-                                iconUrl = user.icon_img,
+                                isEmployee = user.is_employee == true,
+                                iconUrl = user.iconUrl?.value,
                                 accountType = "Reddit User"
                             )
                         } catch (t: Throwable) {
@@ -155,8 +161,11 @@ class UserProfileViewModel @Inject constructor(
             _state.value = UserProfileUiState.Ready(
                 username = username,
                 karma = 0,
+                linkKarma = 0,
+                commentKarma = 0,
                 isGold = false,
                 isMod = false,
+                isEmployee = false,
                 iconUrl = null,
                 accountType = "Blocked User"
             )

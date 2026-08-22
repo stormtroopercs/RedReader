@@ -17,6 +17,7 @@
 
 package org.quantumbadger.redreader.compose.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -33,11 +34,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import org.quantumbadger.redreader.compose.net.NetRequestStatus
+import org.quantumbadger.redreader.compose.net.fetchImage
+import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.navigation.UserProfileViewModel
 
 /**
@@ -192,21 +197,7 @@ private fun UserHeader(uiState: UserProfileViewModel.UserProfileUiState.Ready) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Avatar
-            Surface(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape),
-                color = MaterialTheme.colorScheme.secondaryContainer
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "User avatar",
-                    modifier = Modifier
-                        .size(48.dp)
-                        .padding(4.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            }
+            UserAvatar(uiState.iconUrl)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -226,6 +217,53 @@ private fun UserHeader(uiState: UserProfileViewModel.UserProfileUiState.Ready) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+private fun UserAvatar(iconUrl: String?) {
+    val uri = remember(iconUrl) {
+        iconUrl?.takeIf { it.isNotEmpty() }?.let { UriString(it) }
+    }
+
+    val imageState: State<NetRequestStatus<org.quantumbadger.redreader.compose.net.FileRequestResult<ImageBitmap>>>? =
+        if (uri != null) fetchImage(uri, scaleToMaxAxis = 256) else null
+
+    Box(
+        modifier = Modifier
+            .size(80.dp)
+            .clip(CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        when {
+            imageState == null -> AvatarPlaceholder()
+            imageState.value is NetRequestStatus.Success -> {
+                val bitmap = (imageState.value as NetRequestStatus.Success).result.data
+                Image(
+                    bitmap = bitmap,
+                    contentDescription = "User avatar",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                )
+            }
+            else -> AvatarPlaceholder()
+        }
+    }
+}
+
+@Composable
+private fun AvatarPlaceholder() {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Icon(
+            imageVector = Icons.Default.Person,
+            contentDescription = "User avatar",
+            modifier = Modifier.size(48.dp),
+            tint = MaterialTheme.colorScheme.onSecondaryContainer
+        )
     }
 }
 
@@ -256,11 +294,11 @@ private fun KarmaSummary(uiState: UserProfileViewModel.UserProfileUiState.Ready)
                 )
                 KarmaCard(
                     label = "Post",
-                    value = uiState.karma / 2
+                    value = uiState.linkKarma
                 )
                 KarmaCard(
                     label = "Comment",
-                    value = uiState.karma - uiState.karma / 2
+                    value = uiState.commentKarma
                 )
             }
         }
@@ -322,9 +360,9 @@ private fun AccountBadges(uiState: UserProfileViewModel.UserProfileUiState.Ready
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-                if (uiState.isGold) {
+                if (uiState.isEmployee) {
                     BadgeChip(
-                        icon = Icons.Filled.Star,
+                        icon = Icons.Default.Badge,
                         label = "Employee",
                         color = MaterialTheme.colorScheme.secondary
                     )

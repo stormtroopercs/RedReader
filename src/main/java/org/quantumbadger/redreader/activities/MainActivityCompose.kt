@@ -41,6 +41,7 @@ import org.quantumbadger.redreader.navigation.RedditTerms
 import org.quantumbadger.redreader.navigation.Settings
 import org.quantumbadger.redreader.navigation.SubredditSearch
 import org.quantumbadger.redreader.navigation.TOP_LEVEL_ROUTES
+import org.quantumbadger.redreader.navigation.UserProfile
 
 /**
  * Compose-based MainActivity using Navigation 3.
@@ -146,6 +147,12 @@ class MainActivityCompose : ComposeBaseActivity() {
                     navigationState.navigateTo(Main, CommentList(listingPath))
                 }
             }
+            DEEP_LINK_USER_PROFILE -> {
+                val username = intent?.getStringExtra(EXTRA_USER_PROFILE_USERNAME)
+                if (username != null) {
+                    navigationState.navigateTo(Main, UserProfile(username))
+                }
+            }
         }
     }
 
@@ -208,5 +215,12 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: a comment listing (Main top level + CommentList child). */
         const val DEEP_LINK_COMMENT_LISTING = "comment_listing"
+
+        /** Intent extra carrying the username for the user-profile deep link. */
+        const val EXTRA_USER_PROFILE_USERNAME =
+            "org.quantumbadger.redreader.extra.USER_PROFILE_USERNAME"
+
+        /** Deep-link route: a user profile (Main top level + UserProfile child). */
+        const val DEEP_LINK_USER_PROFILE = "user_profile"
     }
 }
