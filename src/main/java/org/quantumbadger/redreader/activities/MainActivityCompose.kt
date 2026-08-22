@@ -141,9 +141,9 @@ class MainActivityCompose : ComposeBaseActivity() {
                 }
             }
             DEEP_LINK_COMMENT_LISTING -> {
-                val postId = intent?.getStringExtra(EXTRA_COMMENT_LISTING_POST_ID)
-                if (postId != null) {
-                    navigationState.navigateTo(Main, CommentList(postId))
+                val listingPath = intent?.getStringExtra(EXTRA_COMMENT_LISTING_POST_ID)
+                if (listingPath != null) {
+                    navigationState.navigateTo(Main, CommentList(listingPath))
                 }
             }
         }
@@ -195,18 +195,18 @@ class MainActivityCompose : ComposeBaseActivity() {
         /** Deep-link route: Reddit terms of service (Settings top level + RedditTerms child). */
         const val DEEP_LINK_TERMS = "terms"
 
-        /** Intent extra carrying the subreddit for the post-listing deep link. */
+        /** Intent extra carrying the listing path for the post-listing deep link (a subreddit name, or frontpage / popular / all / u/<user>/submitted). */
         const val EXTRA_POST_LISTING_SUBREDDIT =
             "org.quantumbadger.redreader.extra.POST_LISTING_SUBREDDIT"
 
-        /** Deep-link route: a subreddit post listing (Main top level + PostList child). */
+        /** Deep-link route: a post listing (Main top level + PostList child). */
         const val DEEP_LINK_POST_LISTING = "post_listing"
 
-        /** Intent extra carrying the post id for the comment-listing deep link. */
+        /** Intent extra carrying the listing path for the comment-listing deep link (a post id, or u/<user>/comments). */
         const val EXTRA_COMMENT_LISTING_POST_ID =
             "org.quantumbadger.redreader.extra.COMMENT_LISTING_POST_ID"
 
-        /** Deep-link route: a post comment listing (Main top level + CommentList child). */
+        /** Deep-link route: a comment listing (Main top level + CommentList child). */
         const val DEEP_LINK_COMMENT_LISTING = "comment_listing"
     }
 }

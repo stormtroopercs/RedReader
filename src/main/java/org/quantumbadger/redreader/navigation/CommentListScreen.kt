@@ -87,6 +87,7 @@ fun RealCommentListScreen(
 ) {
     val viewModel: CommentListViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
+    val listTitle by viewModel.title.collectAsStateWithLifecycle()
 
     LaunchedEffect(postId) {
         viewModel.fetchComments(postId)
@@ -98,7 +99,7 @@ fun RealCommentListScreen(
                 scrollBehavior = null,
                 title = {
                     Text(
-                        text = "Comments",
+                        text = listTitle.ifEmpty { "Comments" },
                         fontWeight = FontWeight.SemiBold
                     )
                 },

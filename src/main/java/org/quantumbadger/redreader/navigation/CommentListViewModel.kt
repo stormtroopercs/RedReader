@@ -44,7 +44,9 @@ import org.quantumbadger.redreader.reddit.kthings.MaybeParseError
 import org.quantumbadger.redreader.reddit.kthings.RedditFieldReplies
 import org.quantumbadger.redreader.reddit.kthings.RedditThing
 import org.quantumbadger.redreader.reddit.kthings.RedditThingResponse
-import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
+import org.quantumbadger.redreader.reddit.url.CommentListingURL
+import org.quantumbadger.redreader.reddit.url.RedditURLParser
+import android.net.Uri
 import org.quantumbadger.redreader.common.invokeIf
 import org.quantumbadger.redreader.common.time.TimestampUTC
 import java.io.IOException
@@ -96,16 +98,26 @@ class CommentListViewModel @Inject constructor(
     private val _postId = MutableStateFlow("")
     val postId: StateFlow<String> = _postId.asStateFlow()
 
-    fun fetchComments(postId: String) {
-        _postId.value = postId
-        fetchPostComments(postId)
+    private val _title = MutableStateFlow("")
+    val title: StateFlow<String> = _title.asStateFlow()
+
+    /**
+     * Fetch the comment listing identified by [listingPath]: a bare post id
+     * (a post's comment listing) or a `u/<user>/comments` path (a user's
+     * comment listing). The path is mapped to the matching Reddit
+     * comment-listing URL and the screen title is derived from it.
+     */
+    fun fetchComments(listingPath: String) {
+        _postId.value = listingPath
+        _title.value = if (listingPath.startsWith("u/")) listingPath else "Comments"
+        fetchList(listingPath)
     }
 
     fun refresh() {
         fetchComments(_postId.value)
     }
 
-    private fun fetchPostComments(postId: String) {
+    private fun fetchList(listingPath: String) {
         viewModelScope.launch {
             _state.value = CommentListUiState.Loading
 
@@ -121,8 +133,22 @@ class CommentListViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Build the URL for this post's comments
-                val url = PostCommentListingURL.forPostId(postId)
+                // A bare post id is a post's comment listing; a u/<user>/comments
+                // path is a user's comment listing.
+                val rawUri = if (listingPath.startsWith("u/")) {
+                    "https://www.reddit.com/$listingPath/"
+                } else {
+                    "https://www.reddit.com/comments/$listingPath/"
+                }
+                val url = RedditURLParser.parseProbableCommentListing(Uri.parse(rawUri))
+                if (url !is CommentListingURL) {
+                    AndroidCommon.runOnUiThread {
+                        _state.value = CommentListUiState.Error(
+                            RRError(title = "Invalid listing", message = "Invalid comment listing URL")
+                        )
+                    }
+                    return@launch
+                }
                 val uri = UriString(url.generateJsonUri().toString())
 
                 val cacheRequest = CacheRequest(

@@ -67,6 +67,7 @@ import org.quantumbadger.redreader.reddit.url.OpaqueSharedURL
 import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
 import org.quantumbadger.redreader.reddit.url.RedditURLParser
 import org.quantumbadger.redreader.reddit.url.SubredditPostListURL
+import org.quantumbadger.redreader.reddit.url.UserCommentListingURL
 import org.quantumbadger.redreader.reddit.url.UserPostListingURL
 import java.util.Locale
 import java.util.regex.Pattern
@@ -260,7 +261,27 @@ object LinkHandler {
 					activity.startActivityForResult(intent, 1)
 					return
 				}
-				RedditURLParser.USER_COMMENT_LISTING_URL, RedditURLParser.UNKNOWN_COMMENT_LISTING_URL -> {
+				RedditURLParser.USER_COMMENT_LISTING_URL -> {
+					val url = redditURL as? UserCommentListingURL
+					// A user's comment listing maps to the in-app Compose CommentList route;
+					// an unknown comment listing falls through to the legacy activity.
+					if (url != null && url.user != null) {
+						val listPath = "u/" + url.user + "/comments"
+						val intent = Intent(activity, MainActivityCompose::class.java)
+						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_COMMENT_LISTING)
+						intent.putExtra(MainActivityCompose.EXTRA_COMMENT_LISTING_POST_ID, listPath)
+						activity.startActivity(intent)
+						return
+					}
+					val intent = Intent(
+						activity,
+						CommentListingActivity::class.java
+					)
+					intent.setData(redditURL.generateJsonUri())
+					activity.startActivityForResult(intent, 1)
+					return
+				}
+				RedditURLParser.UNKNOWN_COMMENT_LISTING_URL -> {
 					val intent = Intent(
 						activity,
 						CommentListingActivity::class.java

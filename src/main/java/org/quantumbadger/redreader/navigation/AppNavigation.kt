@@ -134,7 +134,7 @@ fun AppNavGraph(navigationState: NavigationState) {
                         navigator.navigate(PostList("u/${key.username}/submitted"))
                     },
                     onNavigateToComments = {
-                        navigator.navigate(PostList("u/${key.username}/comments"))
+                        navigator.navigate(CommentList("u/${key.username}/comments"))
                     },
                     onSendMessage = {
                         navigator.navigate(CommentReply(postId = "", commentId = null))
