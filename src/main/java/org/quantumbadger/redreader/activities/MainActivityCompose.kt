@@ -35,6 +35,7 @@ import org.quantumbadger.redreader.navigation.Inbox
 import org.quantumbadger.redreader.navigation.Main
 import org.quantumbadger.redreader.navigation.NavigationState
 import org.quantumbadger.redreader.navigation.Navigator
+import org.quantumbadger.redreader.navigation.RedditTerms
 import org.quantumbadger.redreader.navigation.Settings
 import org.quantumbadger.redreader.navigation.SubredditSearch
 import org.quantumbadger.redreader.navigation.TOP_LEVEL_ROUTES
@@ -128,6 +129,9 @@ class MainActivityCompose : ComposeBaseActivity() {
                     navigationState.navigateTo(Main, CommentReply(postId, commentId))
                 }
             }
+            DEEP_LINK_TERMS -> {
+                navigationState.navigateTo(Settings, RedditTerms)
+            }
         }
     }
 
@@ -173,5 +177,8 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: reply to a post or comment (Main top level + CommentReply child). */
         const val DEEP_LINK_COMMENT_REPLY = "comment_reply"
+
+        /** Deep-link route: Reddit terms of service (Settings top level + RedditTerms child). */
+        const val DEEP_LINK_TERMS = "terms"
     }
 }

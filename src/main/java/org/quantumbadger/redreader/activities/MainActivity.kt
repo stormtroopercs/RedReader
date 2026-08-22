@@ -46,7 +46,6 @@ import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuCommentsListener
 import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuPostsListener
 import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuSubredditsListener
-import org.quantumbadger.redreader.activities.RedditTermsActivity.Companion.launch
 import org.quantumbadger.redreader.activities.SessionChangeListener.SessionChangeType
 import org.quantumbadger.redreader.adapters.MainMenuSelectionListener
 import org.quantumbadger.redreader.common.AndroidCommon.promptForNotificationPermission
@@ -145,14 +144,6 @@ class MainActivity : RefreshableActivity(), MainMenuSelectionListener, RedditAcc
             // Workaround for issue where a new MainActivity is created despite
             // the app already running
 
-            finish()
-            return
-        }
-
-        if (!PrefsUtility.isRedditUserAgreementAccepted
-            && !PrefsUtility.isRedditUserAgreementDeclined
-        ) {
-            launch(this, true)
             finish()
             return
         }

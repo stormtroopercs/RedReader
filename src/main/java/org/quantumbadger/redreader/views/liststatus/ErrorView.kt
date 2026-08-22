@@ -17,12 +17,13 @@
 package org.quantumbadger.redreader.views.liststatus
 
 import android.graphics.Color
+import android.content.Intent
 import android.view.LayoutInflater
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import com.google.android.material.textview.MaterialTextView
 import org.quantumbadger.redreader.R
-import org.quantumbadger.redreader.activities.RedditTermsActivity
+import org.quantumbadger.redreader.activities.MainActivityCompose
 import org.quantumbadger.redreader.common.RRError
 import org.quantumbadger.redreader.compose.ctx.GlobalNetworkRetry
 import org.quantumbadger.redreader.fragments.AccountListDialog
@@ -51,7 +52,12 @@ class ErrorView(activity: AppCompatActivity, error: RRError) : StatusListItemVie
 			when (this) {
 				RRError.Resolution.ACCEPT_REDDIT_TERMS -> {
 					resolveButton.setOnClickListener {
-						RedditTermsActivity.launch(activity, false)
+						val intent = Intent(activity, MainActivityCompose::class.java)
+						intent.putExtra(
+							MainActivityCompose.EXTRA_DEEP_LINK,
+							MainActivityCompose.DEEP_LINK_TERMS
+						)
+						activity.startActivity(intent)
 					}
 				}
 				RRError.Resolution.ACCOUNTS_LIST -> {

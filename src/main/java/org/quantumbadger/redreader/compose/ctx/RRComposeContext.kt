@@ -31,7 +31,7 @@ import org.quantumbadger.redreader.account.RedditAccountChangeListener
 import org.quantumbadger.redreader.account.RedditAccountId
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity
-import org.quantumbadger.redreader.activities.RedditTermsActivity
+import org.quantumbadger.redreader.activities.MainActivityCompose
 import org.quantumbadger.redreader.common.AndroidCommon
 import org.quantumbadger.redreader.common.General
 import org.quantumbadger.redreader.common.LinkHandler
@@ -140,7 +140,12 @@ fun RRComposeContext(
 				}
 
 				Dest.RedditTerms -> {
-					RedditTermsActivity.launch(activity, false)
+					val intent = Intent(activity, MainActivityCompose::class.java)
+					intent.putExtra(
+						MainActivityCompose.EXTRA_DEEP_LINK,
+						MainActivityCompose.DEEP_LINK_TERMS
+					)
+					activity.startActivity(intent)
 				}
 			}
 		},
