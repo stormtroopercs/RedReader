@@ -82,7 +82,8 @@ fun AdaptiveAppNavigation() {
             // Top-level: Settings screen
             entry<Settings> {
                 SettingsScreen(
-                    onNavigateBack = { navigator.goBack() }
+                    onNavigateBack = { navigator.goBack() },
+                    onNavigateToChangelog = { navigator.navigate(Changelog) }
                 )
             }
 

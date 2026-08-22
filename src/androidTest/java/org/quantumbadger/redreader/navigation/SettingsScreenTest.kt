@@ -49,7 +49,8 @@ class SettingsScreenTest {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     SettingsScreen(
-                        onNavigateBack = { /* no-op */ }
+                        onNavigateBack = { /* no-op */ },
+                        onNavigateToChangelog = { /* no-op */ }
                     )
                 }
             }
@@ -65,7 +66,8 @@ class SettingsScreenTest {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     SettingsScreen(
-                        onNavigateBack = { /* no-op */ }
+                        onNavigateBack = { /* no-op */ },
+                        onNavigateToChangelog = { /* no-op */ }
                     )
                 }
             }
@@ -114,7 +116,8 @@ class SettingsScreenTest {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     SettingsScreen(
-                        onNavigateBack = { backClicked = true }
+                        onNavigateBack = { backClicked = true },
+                        onNavigateToChangelog = { /* no-op */ }
                     )
                 }
             }

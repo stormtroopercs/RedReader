@@ -17,6 +17,9 @@
 
 package org.quantumbadger.redreader.navigation
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,8 +58,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import org.quantumbadger.redreader.activities.HtmlViewActivity
 import org.quantumbadger.redreader.BuildConfig
 import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.PrefsUtility.AppearanceStatusBarMode
@@ -76,7 +81,8 @@ import org.quantumbadger.redreader.settings.types.AppearanceTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToChangelog: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -106,7 +112,10 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-        SettingsContent(modifier = Modifier.padding(paddingValues))
+        SettingsContent(
+            modifier = Modifier.padding(paddingValues),
+            onNavigateToChangelog = onNavigateToChangelog
+        )
     }
 }
 
@@ -115,9 +124,11 @@ fun SettingsScreen(
  */
 @Composable
 private fun SettingsContent(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateToChangelog: () -> Unit
 ) {
-    val settings = getSettingsCategories()
+    val context = LocalContext.current
+    val settings = getSettingsCategories(context, onNavigateToChangelog)
 
     LazyColumn(
         modifier = modifier.fillMaxSize()
@@ -411,7 +422,10 @@ sealed class SettingsItem {
 // Build settings categories (wired to real PrefsUtility getters/setters)
 // ============================================================================
 
-private fun getSettingsCategories(): List<SettingsCategory> {
+private fun getSettingsCategories(
+    context: Context,
+    onNavigateToChangelog: () -> Unit
+): List<SettingsCategory> {
     return listOf(
         // ─── Appearance ───
         SettingsCategory(
@@ -598,25 +612,34 @@ private fun getSettingsCategories(): List<SettingsCategory> {
                     key = "version",
                     label = "Version",
                     description = "RedReader ${BuildConfig.VERSION_NAME}",
-                    onClick = { /* no-op */ }
+                    onClick = { /* informational only */ }
                 ),
                 SettingsItem.PreferenceItem(
                     key = "changelog",
                     label = "Changelog",
                     description = "View what's new",
-                    onClick = { /* TODO: open changelog */ }
+                    onClick = onNavigateToChangelog
                 ),
                 SettingsItem.PreferenceItem(
                     key = "license",
                     label = "License",
                     description = "View open-source license",
-                    onClick = { /* TODO: open license */ }
+                    onClick = { HtmlViewActivity.showAsset(context, "license.html") }
                 ),
                 SettingsItem.PreferenceItem(
                     key = "github",
                     label = "GitHub",
                     description = "View source code on GitHub",
-                    onClick = { /* TODO: open GitHub */ }
+                    onClick = {
+                        runCatching {
+                            context.startActivity(
+                                Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://github.com/RedReaderOrg/RedReader")
+                                )
+                            )
+                        }
+                    }
                 )
             )
         )
