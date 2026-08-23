@@ -116,12 +116,28 @@ object LinkHandler {
 		val normalUrlString = UriString(normalUrl.toString())
 
 		if (!forceNoImage && isProbablyAnImage(normalUrlString)) {
-			// A direct still-image file URL, or a direct .gif file URL, opens
-			// the in-app Compose image viewer (a child route on Main, so
-			// system back returns to the previous screen). Hosts that resolve
-			// GIFs via their APIs (gfycat / redgifs / giphy), video, and album
-			// (multi-image) URLs keep the legacy ImageViewActivity.
-			if (isDirectStillImage(normalUrlString) || isDirectGifFile(normalUrlString)) {
+			// An in-album image whose album is directly fetchable opens the
+			// in-app Compose image viewer's album pager (swipe between images);
+			// a standalone direct still-image or .gif file URL opens the
+			// single-image viewer. Both are child routes on Main, so system
+			// back returns to the previous screen. Albums containing video
+			// (or whose images are page/API URLs that need host resolution),
+			// and API-resolved GIF hosts (gfycat / redgifs / giphy), keep the
+			// legacy ImageViewActivity.
+			val inAlbum = albumInfo != null && albumImageIndex != null
+			if (inAlbum && isAlbumDirectlyFetchable(albumInfo)) {
+				val intent = Intent(activity, MainActivityCompose::class.java).apply {
+					putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_IMAGE)
+					putExtra(MainActivityCompose.EXTRA_IMAGE_URL, normalUrlString.value)
+					putExtra(MainActivityCompose.EXTRA_IMAGE_GIF, isDirectGifFile(normalUrlString))
+					putExtra(MainActivityCompose.EXTRA_IMAGE_ALBUM_URL, albumInfo!!.url.value)
+					putExtra(MainActivityCompose.EXTRA_IMAGE_ALBUM_INDEX, albumImageIndex)
+				}
+				activity.startActivity(intent)
+				return
+			}
+
+			if (!inAlbum && (isDirectStillImage(normalUrlString) || isDirectGifFile(normalUrlString))) {
 				val intent = Intent(activity, MainActivityCompose::class.java).apply {
 					putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_IMAGE)
 					putExtra(MainActivityCompose.EXTRA_IMAGE_URL, normalUrlString.value)
@@ -822,6 +838,31 @@ object LinkHandler {
 			return false
 		}
 		return url.value.lowercase().endsWith(".gif")
+	}
+
+	/**
+	 * Whether every image in [album] can be shown by the in-app Compose image
+	 * viewer's album pager — i.e. no video, and each image's `original` URL is
+	 * a direct still or GIF file URL (see [isDirectStillImage] /
+	 * [isDirectGifFile]). Albums that contain video, or whose images are
+	 * page/API URLs that need resolution, keep the legacy
+	 * [ImageViewActivity] (which resolves them via the host APIs).
+	 */
+	@JvmStatic
+	fun isAlbumDirectlyFetchable(album: AlbumInfo?): Boolean {
+		if (album == null || album.images.isEmpty()) {
+			return false
+		}
+		for (image in album.images) {
+			if (image.mediaType == ImageInfo.MediaType.VIDEO) {
+				return false
+			}
+			val url = image.original.url
+			if (!isDirectStillImage(url) && !isDirectGifFile(url)) {
+				return false
+			}
+		}
+		return true
 	}
 
 	private val STILL_IMAGE_EXTENSIONS = arrayOf(".jpg", ".jpeg", ".png", ".webp")

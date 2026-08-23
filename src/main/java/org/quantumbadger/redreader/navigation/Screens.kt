@@ -86,11 +86,13 @@ data object OAuthLogin : NavKey
 @Serializable
 data class Album(val url: String) : NavKey
 
-/** Full-screen image viewer (direct still-image and GIF file URLs). */
+/** Full-screen image viewer (direct still-image/GIF file URLs, or an album). */
 @Serializable
 data class Image(
     val url: String,
-    val isGif: Boolean = false
+    val isGif: Boolean = false,
+    val albumUrl: String? = null,
+    val albumIndex: Int = 0
 ) : NavKey
 
 /** All top-level routes (displayed in navigation bar/rail/drawer). */

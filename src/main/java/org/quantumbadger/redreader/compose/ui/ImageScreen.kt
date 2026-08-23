@@ -29,8 +29,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,43 +51,60 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.compose.net.NetRequestStatus
+import org.quantumbadger.redreader.compose.net.fetchAlbum
 import org.quantumbadger.redreader.compose.net.fetchGif
 import org.quantumbadger.redreader.compose.net.fetchImage
 import org.quantumbadger.redreader.compose.theme.LocalComposeTheme
 import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.image.AlbumInfo
+import org.quantumbadger.redreader.image.ImageInfo
 import org.quantumbadger.redreader.views.GIFView
 import kotlin.math.max
 
 /**
  * In-app Compose full-screen image viewer.
  *
- * Still-image URLs ([isGif] false) load at up to [maxCanvasDimension] px on
- * the longest axis via [fetchImage] (the same cache-backed loader [NetImage]
- * uses); animated-GIF URLs load as an Android [Movie] via [fetchGif] (the same
- * `readRemainingAsBytes` + `GIFView.prepareMovie` path the legacy
- * `ImageViewActivity` uses) and render with the legacy [GIFView] via
- * `AndroidView`. Both render centred on a full-screen surface with two-finger
- * pinch-to-zoom, panning while zoomed, and double-tap to toggle zoom. The
- * legacy `ImageViewActivity` remains the destination for video and album
- * (multi-image) URLs.
+ * Three modes:
+ *  - Single still: [albumUrl] null, [isGif] false — loads via [fetchImage]
+ *    (the same cache-backed loader [NetImage] uses, scaled to a 2048 px
+ *    longest axis) and renders with [ZoomableImage].
+ *  - Single GIF: [albumUrl] null, [isGif] true — loads as an Android [Movie]
+ *    via [fetchGif] (the same `readRemainingAsBytes` +
+ *    `GIFView.prepareMovie` path the legacy `ImageViewActivity` uses) and
+ *    renders with the legacy [GIFView] via [ZoomableGif].
+ *  - Album: [albumUrl] non-null — resolves via [fetchAlbum] and shows a
+ *    horizontal [HorizontalPager] over the album's images (swipe between
+ *    them), each page a still or GIF per its [ImageInfo.mediaType]; the
+ *    tapped image opens at [albumIndex].
+ *
+ * All modes share the same two-finger pinch-zoom, pan-while-zoomed, and
+ * double-tap-to-zoom gestures, and the same slim back bar. The legacy
+ * `ImageViewActivity` remains the destination for video, albums that contain
+ * video or non-direct (page-URL) images, and API-resolved GIF hosts.
  */
 @Composable
 fun ImageScreen(
     url: UriString,
     isGif: Boolean = false,
+    albumUrl: UriString? = null,
+    albumIndex: Int = 0,
     onBackPressed: () -> Unit,
     maxCanvasDimension: Int = 2048
 ) {
     val theme = LocalComposeTheme.current
 
-    val data by fetchImage(url, scaleToMaxAxis = maxCanvasDimension)
-    val gifData by fetchGif(url)
+    val barTitle = if (albumUrl != null) {
+        stringResource(R.string.image_gallery)
+    } else {
+        url.value.substringAfterLast('/').takeIf { it.isNotBlank() } ?: "Image"
+    }
 
     Column(
         modifier = Modifier
@@ -107,67 +127,150 @@ fun ImageScreen(
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                text = url.value.substringAfterLast('/').takeIf { it.isNotBlank() }
-                    ?: "Image",
+                text = barTitle,
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }
 
-        if (isGif) {
-            when (val it = gifData) {
-                NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = theme.album.toolbarIconColor)
-                    }
-                }
+        if (albumUrl != null) {
+            AlbumPager(
+                albumUrl = albumUrl,
+                startIndex = albumIndex,
+                theme = theme
+            )
+        } else {
+            MediaImage(
+                url = url,
+                isGif = isGif,
+                maxCanvasDimension = maxCanvasDimension,
+                theme = theme
+            )
+        }
+    }
+}
 
-                is NetRequestStatus.Failed -> {
-                    RRErrorView(error = it.error)
-                }
+/**
+ * Loads and renders a single image (still via [fetchImage], GIF via
+ * [fetchGif]) with spinner / error states and the shared zoom gestures.
+ */
+@Composable
+private fun MediaImage(
+    url: UriString,
+    isGif: Boolean,
+    maxCanvasDimension: Int,
+    theme: org.quantumbadger.redreader.compose.theme.ComposeTheme
+) {
+    val data by fetchImage(url, scaleToMaxAxis = maxCanvasDimension)
+    val gifData by fetchGif(url)
 
-                is NetRequestStatus.Success -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ZoomableGif(movie = it.result.data)
-                    }
+    if (isGif) {
+        when (val it = gifData) {
+            NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+                MediaSpinner(theme)
+            }
+            is NetRequestStatus.Failed -> {
+                RRErrorView(error = it.error)
+            }
+            is NetRequestStatus.Success -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ZoomableGif(movie = it.result.data)
                 }
             }
-        } else {
-            when (val it = data) {
-                NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = theme.album.toolbarIconColor)
+        }
+    } else {
+        when (val it = data) {
+            NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+                MediaSpinner(theme)
+            }
+            is NetRequestStatus.Failed -> {
+                RRErrorView(error = it.error)
+            }
+            is NetRequestStatus.Success -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    ZoomableImage(bitmap = it.result.data)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MediaSpinner(theme: org.quantumbadger.redreader.compose.theme.ComposeTheme) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(color = theme.album.toolbarIconColor)
+    }
+}
+
+/**
+ * Album mode: resolves [albumUrl] via [fetchAlbum] and shows a horizontal
+ * pager over its images (swipe left/right), opening at [startIndex]. A
+ * "N of M" indicator sits at the bottom. Each page renders through
+ * [MediaImage] (still or GIF per its media type).
+ */
+@Composable
+private fun AlbumPager(
+    albumUrl: UriString,
+    startIndex: Int,
+    theme: org.quantumbadger.redreader.compose.theme.ComposeTheme
+) {
+    val album by fetchAlbum(albumUrl)
+
+    when (val it = album) {
+        NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+            MediaSpinner(theme)
+        }
+
+        is NetRequestStatus.Failed -> {
+            RRErrorView(error = it.error)
+        }
+
+        is NetRequestStatus.Success -> {
+            if (it.result.images.isEmpty()) {
+                MediaSpinner(theme)
+            } else {
+                val pagerState = rememberPagerState(
+                    initialPage = startIndex.coerceIn(0, it.result.images.size - 1)
+                ) { it.result.images.size }
+
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        val image = it.result.images[page]
+                        MediaImage(
+                            url = image.original.url,
+                            isGif = image.mediaType == ImageInfo.MediaType.GIF
+                                || image.isAnimated == true,
+                            maxCanvasDimension = 2048,
+                            theme = theme
+                        )
                     }
-                }
 
-                is NetRequestStatus.Failed -> {
-                    RRErrorView(error = it.error)
-                }
-
-                is NetRequestStatus.Success -> {
+                    // "N of M" position indicator.
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 24.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        ZoomableImage(bitmap = it.result.data)
+                        Text(
+                            text = "${pagerState.currentPage + 1} / ${it.result.images.size}",
+                            color = theme.album.toolbarIconColor
+                        )
                     }
                 }
             }
