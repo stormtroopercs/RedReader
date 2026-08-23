@@ -63,14 +63,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.quantumbadger.redreader.activities.HtmlViewActivity
 import org.quantumbadger.redreader.BuildConfig
+import org.quantumbadger.redreader.common.NeverAlwaysOrWifiOnly
 import org.quantumbadger.redreader.common.PrefsUtility
+import org.quantumbadger.redreader.common.PrefsUtility.AlbumViewMode
 import org.quantumbadger.redreader.common.PrefsUtility.AppearanceStatusBarMode
 import org.quantumbadger.redreader.common.PrefsUtility.CommentAction
-import org.quantumbadger.redreader.common.PrefsUtility.GifViewMode
-import org.quantumbadger.redreader.common.PrefsUtility.ImageViewMode
 import org.quantumbadger.redreader.common.PrefsUtility.PostFlingAction
 import org.quantumbadger.redreader.common.PrefsUtility.PostTapAction
-import org.quantumbadger.redreader.common.PrefsUtility.VideoViewMode
 import org.quantumbadger.redreader.reddit.PostCommentSort
 import org.quantumbadger.redreader.settings.types.AppearanceTheme
 
@@ -144,6 +143,7 @@ private fun SettingsContent(
                     is SettingsItem.EnumSetting<*> -> EnumSettingItem(item)
                     is SettingsItem.PreferenceItem -> PreferenceItem(item)
                     is SettingsItem.StringSetting -> StringSettingItem(item)
+                    is SettingsItem.ChoiceSetting -> ChoiceSettingItem(item)
                 }
             }
         }
@@ -270,6 +270,72 @@ private fun EnumSettingItem(item: SettingsItem.EnumSetting<*>) {
                     onClick = {
                         selected = option
                         item.applyOption(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Choice setting (free-form labels/values, mirrors the legacy ListPreference).
+ */
+@Composable
+private fun ChoiceSettingItem(item: SettingsItem.ChoiceSetting) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = item.selected()
+    val selectedLabel = item.options.firstOrNull { it.second == selected }?.first
+        ?: selected
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = { expanded = true })
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = item.label,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+
+            item.description.takeIf { it.isNotBlank() }?.let { desc ->
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = desc,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Text(
+            text = selectedLabel ?: "",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(Modifier.width(8.dp))
+        Icon(
+            imageVector = Icons.Default.ArrowForward,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            item.options.forEach { (label, value) ->
+                DropdownMenuItem(
+                    text = { Text(label) },
+                    onClick = {
+                        item.set(value)
                         expanded = false
                     }
                 )
@@ -416,6 +482,24 @@ sealed class SettingsItem {
         val get: () -> String?,
         val set: (String?) -> Unit
     ) : SettingsItem()
+
+    /**
+     * A choice with free-form labels and values (mirrors the legacy ListPreference:
+     * entry labels shown to the user, entry values stored in prefs).
+     */
+    data class ChoiceSetting(
+        override val key: String,
+        val label: String,
+        val description: String = "",
+        val options: List<Pair<String, String>>,
+        val get: () -> String?,
+        val set: (String) -> Unit
+    ) : SettingsItem() {
+        fun selected(): String? {
+            val value = get()
+            return value ?: options.firstOrNull()?.second
+        }
+    }
 }
 
 // ============================================================================
@@ -479,6 +563,195 @@ private fun getSettingsCategories(
             )
         ),
 
+        // ─── Inline image previews ───
+        SettingsCategory(
+            id = "inline_previews",
+            title = "Inline image previews",
+            items = listOf(
+                SettingsItem.EnumSetting(
+                    key = "images_inline_image_previews",
+                    label = "Inline image previews",
+                    description = "Show inline image previews in comment threads",
+                    entries = NeverAlwaysOrWifiOnly.entries,
+                    get = { PrefsUtility.images_inline_image_previews() },
+                    set = PrefsUtility::images_inline_image_previews_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "images_inline_image_previews_nsfw",
+                    label = "Show NSFW previews",
+                    description = "Show inline previews for images marked NSFW",
+                    get = { PrefsUtility.images_inline_image_previews_nsfw() },
+                    set = PrefsUtility::images_inline_image_previews_nsfw_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "images_inline_image_previews_spoiler",
+                    label = "Show spoiler previews",
+                    description = "Show inline previews for images marked as spoilers",
+                    get = { PrefsUtility.images_inline_image_previews_spoiler() },
+                    set = PrefsUtility::images_inline_image_previews_spoiler_set
+                )
+            )
+        ),
+
+        // ─── Image / video viewer ───
+        SettingsCategory(
+            id = "image_video_viewer",
+            title = "Image / video viewer",
+            items = listOf(
+                SettingsItem.BooleanSetting(
+                    key = "video_playback_controls",
+                    label = "Enable video playback controls",
+                    get = { PrefsUtility.pref_behaviour_video_playback_controls() },
+                    set = PrefsUtility::pref_behaviour_video_playback_controls_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "video_frame_step",
+                    label = "Enable stepping frame by frame",
+                    get = { PrefsUtility.pref_behaviour_video_frame_step() },
+                    set = PrefsUtility::pref_behaviour_video_frame_step_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "video_mute_default",
+                    label = "Mute videos by default",
+                    get = { PrefsUtility.pref_behaviour_video_mute_default() },
+                    set = PrefsUtility::pref_behaviour_video_mute_default_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "video_zoom_default",
+                    label = "Crop videos to fill screen",
+                    get = { PrefsUtility.pref_behaviour_video_zoom_default() },
+                    set = PrefsUtility::pref_behaviour_video_zoom_default_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "imagevideo_tap_close",
+                    label = "Tap to close images/videos",
+                    description = "Does not affect videos if playback controls are enabled",
+                    get = { PrefsUtility.pref_behaviour_imagevideo_tap_close() },
+                    set = PrefsUtility::pref_behaviour_imagevideo_tap_close_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "videos_download_before_playing",
+                    label = "Fully download videos before starting playback",
+                    get = { PrefsUtility.pref_videos_download_before_playing() },
+                    set = PrefsUtility::pref_videos_download_before_playing_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "albumview_mode",
+                    label = "Album viewer",
+                    description = "How multi-image albums are opened",
+                    entries = AlbumViewMode.entries,
+                    get = { PrefsUtility.pref_behaviour_albumview_mode() },
+                    set = PrefsUtility::pref_behaviour_albumview_mode_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "image_viewer_show_floating_toolbar",
+                    label = "Show floating buttons over images and videos",
+                    get = { PrefsUtility.pref_appearance_image_viewer_show_floating_toolbar() },
+                    set = PrefsUtility::pref_appearance_image_viewer_show_floating_toolbar_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "show_aspect_ratio_indicator",
+                    label = "Show aspect ratio indicator",
+                    description = "Show a visual of loading media when available",
+                    get = { PrefsUtility.pref_appearance_show_aspect_ratio_indicator() },
+                    set = PrefsUtility::pref_appearance_show_aspect_ratio_indicator_set
+                )
+            )
+        ),
+
+        // ─── Album viewer ───
+        SettingsCategory(
+            id = "album_viewer",
+            title = "Album viewer",
+            items = listOf(
+                SettingsItem.BooleanSetting(
+                    key = "album_skip_to_first",
+                    label = "Automatically open first album image",
+                    get = { PrefsUtility.pref_album_skip_to_first() },
+                    set = PrefsUtility::pref_album_skip_to_first_set
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "gallery_swipe_length",
+                    label = "Album swipe length",
+                    description = "How far to swipe to advance between album images",
+                    options = listOf(
+                        "25 dp" to "25",
+                        "50 dp" to "50",
+                        "100 dp" to "100",
+                        "150 dp" to "150",
+                        "200 dp" to "200",
+                        "250 dp" to "250",
+                        "300 dp" to "300"
+                    ),
+                    get = {
+                        PrefsUtility.getString(
+                            org.quantumbadger.redreader.R.string.pref_behaviour_gallery_swipe_length_key,
+                            "150"
+                        )
+                    },
+                    set = PrefsUtility::pref_behaviour_gallery_swipe_length_set
+                )
+            )
+        ),
+
+        // ─── Thumbnails ───
+        SettingsCategory(
+            id = "thumbnails",
+            title = "Thumbnails",
+            items = listOf(
+                SettingsItem.EnumSetting(
+                    key = "thumbnails_show",
+                    label = "Show thumbnails",
+                    entries = NeverAlwaysOrWifiOnly.entries,
+                    get = { PrefsUtility.appearance_thumbnails_show() },
+                    set = PrefsUtility::appearance_thumbnails_show_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "thumbnails_nsfw_show",
+                    label = "Show NSFW thumbnails",
+                    get = { PrefsUtility.appearance_thumbnails_nsfw_show() },
+                    set = PrefsUtility::appearance_thumbnails_nsfw_show_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "thumbnails_spoiler_show",
+                    label = "Show spoiler thumbnails",
+                    get = { PrefsUtility.appearance_thumbnails_spoiler_show() },
+                    set = PrefsUtility::appearance_thumbnails_spoiler_show_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "high_res_thumbnails",
+                    label = "High resolution thumbnails",
+                    entries = NeverAlwaysOrWifiOnly.entries,
+                    get = { PrefsUtility.images_high_res_thumbnails() },
+                    set = PrefsUtility::images_high_res_thumbnails_set
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "thumbnail_size",
+                    label = "Thumbnail size",
+                    options = listOf(
+                        "0.4x" to "24",
+                        "0.5x" to "32",
+                        "0.75x" to "48",
+                        "1.0x" to "64",
+                        "1.1x" to "70",
+                        "1.25x" to "80",
+                        "1.5x" to "96",
+                        "2.0x" to "128",
+                        "2.5x" to "160",
+                        "3.0x" to "192",
+                        "4.0x" to "256"
+                    ),
+                    get = {
+                        PrefsUtility.getString(
+                            org.quantumbadger.redreader.R.string.pref_images_thumbnail_size_key,
+                            "64"
+                        )
+                    },
+                    set = PrefsUtility::images_thumbnail_size_set
+                )
+            )
+        ),
+
         // ─── Behaviour ───
         SettingsCategory(
             id = "behaviour",
@@ -491,30 +764,6 @@ private fun getSettingsCategories(
                     entries = PostTapAction.entries,
                     get = { PrefsUtility.pref_behaviour_post_tap_action() },
                     set = PrefsUtility::pref_behaviour_post_tap_action_set
-                ),
-                SettingsItem.EnumSetting(
-                    key = "imageview_mode",
-                    label = "Image viewer mode",
-                    description = "How images are displayed",
-                    entries = ImageViewMode.entries,
-                    get = { PrefsUtility.pref_behaviour_imageview_mode() },
-                    set = PrefsUtility::pref_behaviour_imageview_mode_set
-                ),
-                SettingsItem.EnumSetting(
-                    key = "videoview_mode",
-                    label = "Video viewer mode",
-                    description = "How videos are displayed",
-                    entries = VideoViewMode.entries,
-                    get = { PrefsUtility.pref_behaviour_videoview_mode() },
-                    set = PrefsUtility::pref_behaviour_videoview_mode_set
-                ),
-                SettingsItem.EnumSetting(
-                    key = "gifview_mode",
-                    label = "GIF viewer mode",
-                    description = "How animated images are displayed",
-                    entries = GifViewMode.entries,
-                    get = { PrefsUtility.pref_behaviour_gifview_mode() },
-                    set = PrefsUtility::pref_behaviour_gifview_mode_set
                 ),
                 SettingsItem.EnumSetting(
                     key = "fling_post_left",

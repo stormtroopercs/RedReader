@@ -142,6 +142,74 @@ object PrefsUtility {
         setEnumString(string.pref_images_high_res_thumbnails_key, value)
     }
 
+    fun images_inline_image_previews_set(value: NeverAlwaysOrWifiOnly) {
+        setEnumString(string.pref_images_inline_image_previews_key, value)
+    }
+
+    fun appearance_thumbnails_show_set(value: NeverAlwaysOrWifiOnly) {
+        setEnumString(string.pref_appearance_thumbnails_show_list_key, value)
+    }
+
+    fun images_inline_image_previews_nsfw_set(enabled: Boolean) {
+        setBoolean(string.pref_images_inline_image_previews_nsfw_key, enabled)
+    }
+
+    fun images_inline_image_previews_spoiler_set(enabled: Boolean) {
+        setBoolean(string.pref_images_inline_image_previews_spoiler_key, enabled)
+    }
+
+    fun appearance_thumbnails_nsfw_show_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_thumbnails_nsfw_show_key, enabled)
+    }
+
+    fun appearance_thumbnails_spoiler_show_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_thumbnails_spoiler_show_key, enabled)
+    }
+
+    fun images_thumbnail_size_set(dp: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_images_thumbnail_size_key), dp).apply()
+    }
+
+    fun pref_behaviour_video_playback_controls_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_video_playback_controls_key, enabled)
+    }
+
+    fun pref_behaviour_video_frame_step_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_video_frame_step_key, enabled)
+    }
+
+    fun pref_behaviour_video_mute_default_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_video_mute_default_key, enabled)
+    }
+
+    fun pref_behaviour_video_zoom_default_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_video_zoom_default_key, enabled)
+    }
+
+    fun pref_behaviour_imagevideo_tap_close_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_imagevideo_tap_close_key, enabled)
+    }
+
+    fun pref_videos_download_before_playing_set(enabled: Boolean) {
+        setBoolean(string.pref_videos_download_before_playing_key, enabled)
+    }
+
+    fun pref_behaviour_gallery_swipe_length_set(dp: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_behaviour_gallery_swipe_length_key), dp).apply()
+    }
+
+    fun pref_appearance_image_viewer_show_floating_toolbar_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_image_viewer_show_floating_toolbar_key, enabled)
+    }
+
+    fun pref_appearance_show_aspect_ratio_indicator_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_show_aspect_ratio_indicator_key, enabled)
+    }
+
+    fun pref_album_skip_to_first_set(enabled: Boolean) {
+        setBoolean(string.pref_album_skip_to_first_key, enabled)
+    }
+
     fun pref_behaviour_post_tap_action_set(action: PostTapAction) {
         setEnumString(string.pref_behaviour_post_tap_action_key, action)
     }
