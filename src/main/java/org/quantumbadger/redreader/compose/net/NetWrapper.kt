@@ -317,6 +317,44 @@ fun fetchGif(
 	)
 }
 
+/**
+ * Fetches a video stream (not decoded) for the in-app Compose image viewer's
+ * video path. Returns the [FileRequestMetadata] (whose [FileRequestMetadata.
+ * streamFactory] is the cache-backed [GenericFactory] the media3
+ * `ExoPlayerSeekableInputStreamDataSource` reads from) rather than a decoded
+ * result.
+ */
+@Composable
+fun fetchVideoStream(
+	uri: UriString,
+	user: RedditAccountId = LocalRedditUser.current
+): State<NetRequestStatus<FileRequestResult<Unit>>> {
+
+	val context = LocalContext.current.applicationContext
+
+	val filter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<Unit>> = remember(uri, user) {
+		{ metadata ->
+			NetRequestStatus.Success(
+				FileRequestResult(
+					metadata = metadata,
+					data = Unit
+				)
+			)
+		}
+	}
+
+	return fetchFile(
+		uri = uri,
+		user = user,
+		priority = Priority(Constants.Priority.IMAGE_VIEW),
+		downloadStrategy = DownloadStrategyIfNotCached.INSTANCE,
+		fileType = Constants.FileType.IMAGE,
+		queueType = CacheRequest.DownloadQueueType.IMMEDIATE,
+		cache = true,
+		filter = filter
+	)
+}
+
 // TODO make this a member of an interface, provided in a CompositionLocal, to allow mocking for previews/etc?
 @Composable
 private fun <T> fetchFile(

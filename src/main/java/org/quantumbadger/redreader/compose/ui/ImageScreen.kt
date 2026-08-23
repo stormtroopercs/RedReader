@@ -18,6 +18,7 @@
 package org.quantumbadger.redreader.compose.ui
 
 import android.graphics.Movie
+import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -56,43 +57,56 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.compose.net.NetRequestStatus
 import org.quantumbadger.redreader.compose.net.fetchAlbum
 import org.quantumbadger.redreader.compose.net.fetchGif
 import org.quantumbadger.redreader.compose.net.fetchImage
+import org.quantumbadger.redreader.compose.net.fetchVideoStream
 import org.quantumbadger.redreader.compose.theme.LocalComposeTheme
 import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.image.AlbumInfo
 import org.quantumbadger.redreader.image.ImageInfo
 import org.quantumbadger.redreader.views.GIFView
+import org.quantumbadger.redreader.views.video.ExoPlayerSeekableInputStreamDataSource
+import org.quantumbadger.redreader.views.video.ExoPlayerSeekableInputStreamDataSourceFactory
+import org.quantumbadger.redreader.views.video.ExoPlayerWrapperView
 import kotlin.math.max
 
 /**
  * In-app Compose full-screen image viewer.
  *
  * Three modes:
- *  - Single still: [albumUrl] null, [isGif] false — loads via [fetchImage]
- *    (the same cache-backed loader [NetImage] uses, scaled to a 2048 px
- *    longest axis) and renders with [ZoomableImage].
+ *  - Single still: [albumUrl] null, [isGif] false, [isVideo] false — loads
+ *    via [fetchImage] (the same cache-backed loader [NetImage] uses, scaled
+ *    to a 2048 px longest axis) and renders with [ZoomableImage].
  *  - Single GIF: [albumUrl] null, [isGif] true — loads as an Android [Movie]
  *    via [fetchGif] (the same `readRemainingAsBytes` +
  *    `GIFView.prepareMovie` path the legacy `ImageViewActivity` uses) and
  *    renders with the legacy [GIFView] via [ZoomableGif].
+ *  - Single video: [albumUrl] null, [isVideo] true — streams via
+ *    [fetchVideoStream] and plays in the legacy [ExoPlayerWrapperView]
+ *    ([VideoImage]).
  *  - Album: [albumUrl] non-null — resolves via [fetchAlbum] and shows a
  *    horizontal [HorizontalPager] over the album's images (swipe between
- *    them), each page a still or GIF per its [ImageInfo.mediaType]; the
- *    tapped image opens at [albumIndex].
+ *    them), each page a still, GIF, or video per its [ImageInfo.mediaType];
+ *    the tapped image opens at [albumIndex].
  *
- * All modes share the same two-finger pinch-zoom, pan-while-zoomed, and
- * double-tap-to-zoom gestures, and the same slim back bar. The legacy
- * `ImageViewActivity` remains the destination for video, albums that contain
- * video or non-direct (page-URL) images, and API-resolved GIF hosts.
+ * All still/GIF pages share the same two-finger pinch-zoom, pan-while-zoomed,
+ * and double-tap-to-zoom gestures, and the same slim back bar. The legacy
+ * `ImageViewActivity` remains the destination for API-resolved GIF hosts
+ * (gfycat / redgifs / giphy) and albums containing non-direct (page-URL)
+ * images that need host resolution.
  */
 @Composable
 fun ImageScreen(
     url: UriString,
     isGif: Boolean = false,
+    isVideo: Boolean = false,
     albumUrl: UriString? = null,
     albumIndex: Int = 0,
     onBackPressed: () -> Unit,
@@ -144,6 +158,7 @@ fun ImageScreen(
             MediaImage(
                 url = url,
                 isGif = isGif,
+                isVideo = isVideo,
                 maxCanvasDimension = maxCanvasDimension,
                 theme = theme
             )
@@ -152,54 +167,111 @@ fun ImageScreen(
 }
 
 /**
- * Loads and renders a single image (still via [fetchImage], GIF via
- * [fetchGif]) with spinner / error states and the shared zoom gestures.
+ * Loads and renders a single media item: still via [fetchImage], GIF via
+ * [fetchGif], or video via [fetchVideoStream] — with spinner / error states.
+ * Stills and GIFs get the shared pinch-zoom gestures; video plays in the
+ * legacy [ExoPlayerWrapperView] (self-contained player with controls).
  */
 @Composable
 private fun MediaImage(
     url: UriString,
     isGif: Boolean,
+    isVideo: Boolean,
     maxCanvasDimension: Int,
     theme: org.quantumbadger.redreader.compose.theme.ComposeTheme
 ) {
     val data by fetchImage(url, scaleToMaxAxis = maxCanvasDimension)
     val gifData by fetchGif(url)
+    val videoData by fetchVideoStream(url)
 
-    if (isGif) {
-        when (val it = gifData) {
-            NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
-                MediaSpinner(theme)
-            }
-            is NetRequestStatus.Failed -> {
-                RRErrorView(error = it.error)
-            }
-            is NetRequestStatus.Success -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    ZoomableGif(movie = it.result.data)
+    when {
+        isVideo -> {
+            when (val it = videoData) {
+                NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+                    MediaSpinner(theme)
+                }
+                is NetRequestStatus.Failed -> {
+                    RRErrorView(error = it.error)
+                }
+                is NetRequestStatus.Success -> {
+                    it.result.metadata?.let { metadata ->
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            VideoImage(streamFactory = metadata.streamFactory, theme = theme)
+                        }
+                    } ?: MediaSpinner(theme)
                 }
             }
         }
-    } else {
-        when (val it = data) {
-            NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
-                MediaSpinner(theme)
+
+        isGif -> {
+            when (val it = gifData) {
+                NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+                    MediaSpinner(theme)
+                }
+                is NetRequestStatus.Failed -> {
+                    RRErrorView(error = it.error)
+                }
+                is NetRequestStatus.Success -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ZoomableGif(movie = it.result.data)
+                    }
+                }
             }
-            is NetRequestStatus.Failed -> {
-                RRErrorView(error = it.error)
-            }
-            is NetRequestStatus.Success -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    ZoomableImage(bitmap = it.result.data)
+        }
+
+        else -> {
+            when (val it = data) {
+                NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+                    MediaSpinner(theme)
+                }
+                is NetRequestStatus.Failed -> {
+                    RRErrorView(error = it.error)
+                }
+                is NetRequestStatus.Success -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ZoomableImage(bitmap = it.result.data)
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * Plays a video from a cache-backed [org.quantumbadger.redreader.common.
+ * GenericFactory] stream in the legacy [ExoPlayerWrapperView] (a
+ * self-contained media3 `PlayerView` wrapper: builds its own `ExoPlayer`,
+ * autoplays, honours the video zoom / playback-controls prefs, and exposes
+ * its own control bar). The [media source] is built exactly as the legacy
+ * `ImageViewActivity.playWithExoplayer` does, so playback routes through the
+ * same cache pipeline.
+ */
+@OptIn(UnstableApi::class)
+@Composable
+private fun VideoImage(
+    streamFactory: org.quantumbadger.redreader.common.GenericFactory<org.quantumbadger.redreader.common.datastream.SeekableInputStream, java.io.IOException>,
+    theme: org.quantumbadger.redreader.compose.theme.ComposeTheme,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        factory = { context ->
+            val mediaSource: MediaSource = ProgressiveMediaSource
+                .Factory(ExoPlayerSeekableInputStreamDataSourceFactory(true, streamFactory))
+                .createMediaSource(MediaItem.fromUri(ExoPlayerSeekableInputStreamDataSource.URI))
+            ExoPlayerWrapperView(context, mediaSource, ExoPlayerWrapperView.Listener {}, 0)
+        },
+        onRelease = { it.release() },
+        modifier = modifier.fillMaxSize()
+    )
 }
 
 @Composable
@@ -255,6 +327,7 @@ private fun AlbumPager(
                             url = image.original.url,
                             isGif = image.mediaType == ImageInfo.MediaType.GIF
                                 || image.isAnimated == true,
+                            isVideo = image.mediaType == ImageInfo.MediaType.VIDEO,
                             maxCanvasDimension = 2048,
                             theme = theme
                         )

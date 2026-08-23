@@ -117,19 +117,19 @@ object LinkHandler {
 
 		if (!forceNoImage && isProbablyAnImage(normalUrlString)) {
 			// An in-album image whose album is directly fetchable opens the
-			// in-app Compose image viewer's album pager (swipe between images);
-			// a standalone direct still-image or .gif file URL opens the
-			// single-image viewer. Both are child routes on Main, so system
-			// back returns to the previous screen. Albums containing video
-			// (or whose images are page/API URLs that need host resolution),
-			// and API-resolved GIF hosts (gfycat / redgifs / giphy), keep the
+			// in-app Compose image viewer's album pager (swipe between images,
+			// stills / GIFs / direct video files); a standalone direct
+			// still-image, .gif, or video file URL opens the single-media
+			// viewer. Both are child routes on Main, so system back returns
+			// to the previous screen. Albums whose images are page/API URLs
+			// that need host resolution, and API-resolved GIF / video hosts
+			// (gfycat / redgifs / giphy / streamable / v.redd.it), keep the
 			// legacy ImageViewActivity.
 			val inAlbum = albumInfo != null && albumImageIndex != null
 			if (inAlbum && isAlbumDirectlyFetchable(albumInfo)) {
 				val intent = Intent(activity, MainActivityCompose::class.java).apply {
 					putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_IMAGE)
 					putExtra(MainActivityCompose.EXTRA_IMAGE_URL, normalUrlString.value)
-					putExtra(MainActivityCompose.EXTRA_IMAGE_GIF, isDirectGifFile(normalUrlString))
 					putExtra(MainActivityCompose.EXTRA_IMAGE_ALBUM_URL, albumInfo!!.url.value)
 					putExtra(MainActivityCompose.EXTRA_IMAGE_ALBUM_INDEX, albumImageIndex)
 				}
@@ -137,11 +137,12 @@ object LinkHandler {
 				return
 			}
 
-			if (!inAlbum && (isDirectStillImage(normalUrlString) || isDirectGifFile(normalUrlString))) {
+			if (!inAlbum && (isDirectStillImage(normalUrlString) || isDirectGifFile(normalUrlString) || isDirectVideoFile(normalUrlString))) {
 				val intent = Intent(activity, MainActivityCompose::class.java).apply {
 					putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_IMAGE)
 					putExtra(MainActivityCompose.EXTRA_IMAGE_URL, normalUrlString.value)
 					putExtra(MainActivityCompose.EXTRA_IMAGE_GIF, isDirectGifFile(normalUrlString))
+					putExtra(MainActivityCompose.EXTRA_IMAGE_VIDEO, isDirectVideoFile(normalUrlString))
 				}
 				activity.startActivity(intent)
 				return
@@ -841,11 +842,33 @@ object LinkHandler {
 	}
 
 	/**
+	 * Whether [url] is a direct video file URL (`.mp4` / `.webm` / etc.),
+	 * suitable for the in-app Compose image viewer's video path (streamed
+	 * raw via [fetchVideoStream] into the legacy `ExoPlayerWrapperView`).
+	 * Page URLs (v.redd.it, streamable, gfycat hosts) that need host-API
+	 * resolution don't match and keep the legacy [ImageViewActivity].
+	 */
+	@JvmStatic
+	fun isDirectVideoFile(url: UriString?): Boolean {
+		if (url == null) {
+			return false
+		}
+		val lower = url.value.lowercase()
+		for (ext in DIRECT_VIDEO_EXTENSIONS) {
+			if (lower.endsWith(ext)) {
+				return true
+			}
+		}
+		return false
+	}
+
+	/**
 	 * Whether every image in [album] can be shown by the in-app Compose image
-	 * viewer's album pager — i.e. no video, and each image's `original` URL is
-	 * a direct still or GIF file URL (see [isDirectStillImage] /
-	 * [isDirectGifFile]). Albums that contain video, or whose images are
-	 * page/API URLs that need resolution, keep the legacy
+	 * viewer's album pager — i.e. each image's `original` URL is a direct
+	 * file the viewer can load as-is: a still ([isDirectStillImage]), a GIF
+	 * ([isDirectGifFile]), or a direct video file ([isDirectVideoFile],
+	 * played in the legacy `ExoPlayerWrapperView`). Albums whose images are
+	 * page/API URLs that need resolution keep the legacy
 	 * [ImageViewActivity] (which resolves them via the host APIs).
 	 */
 	@JvmStatic
@@ -854,11 +877,13 @@ object LinkHandler {
 			return false
 		}
 		for (image in album.images) {
-			if (image.mediaType == ImageInfo.MediaType.VIDEO) {
-				return false
-			}
 			val url = image.original.url
-			if (!isDirectStillImage(url) && !isDirectGifFile(url)) {
+			val isVideo = image.mediaType == ImageInfo.MediaType.VIDEO
+			if (isVideo) {
+				if (!isDirectVideoFile(url)) {
+					return false
+				}
+			} else if (!isDirectStillImage(url) && !isDirectGifFile(url)) {
 				return false
 			}
 		}
@@ -866,6 +891,8 @@ object LinkHandler {
 	}
 
 	private val STILL_IMAGE_EXTENSIONS = arrayOf(".jpg", ".jpeg", ".png", ".webp")
+
+	private val DIRECT_VIDEO_EXTENSIONS = arrayOf(".mp4", ".webm", ".m4v", ".mkv", ".3gp", ".mov")
 
 	@JvmStatic
 	fun getImgurImageInfo(

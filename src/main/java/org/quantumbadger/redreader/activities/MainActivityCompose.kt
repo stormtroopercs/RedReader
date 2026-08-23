@@ -130,11 +130,12 @@ class MainActivityCompose : ComposeBaseActivity() {
                 val imageUrl = intent?.getStringExtra(EXTRA_IMAGE_URL)
                 if (imageUrl != null) {
                     val isGif = intent?.getBooleanExtra(EXTRA_IMAGE_GIF, false) ?: false
+                    val isVideo = intent?.getBooleanExtra(EXTRA_IMAGE_VIDEO, false) ?: false
                     val albumUrl = intent?.getStringExtra(EXTRA_IMAGE_ALBUM_URL)
                     val albumIndex = intent?.getIntExtra(EXTRA_IMAGE_ALBUM_INDEX, 0) ?: 0
                     navigationState.navigateTo(
                         Main,
-                        Image(imageUrl, isGif, albumUrl, albumIndex)
+                        Image(imageUrl, isGif, isVideo, albumUrl, albumIndex)
                     )
                 }
             }
@@ -211,6 +212,9 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Intent extra flagging the image deep link as an animated GIF. */
         const val EXTRA_IMAGE_GIF = "org.quantumbadger.redreader.extra.IMAGE_GIF"
+
+        /** Intent extra flagging the image deep link as a video. */
+        const val EXTRA_IMAGE_VIDEO = "org.quantumbadger.redreader.extra.IMAGE_VIDEO"
 
         /** Intent extra carrying the album URL for an in-album image deep link. */
         const val EXTRA_IMAGE_ALBUM_URL = "org.quantumbadger.redreader.extra.IMAGE_ALBUM_URL"
