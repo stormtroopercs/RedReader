@@ -55,7 +55,7 @@ compose-bom = "2026.08.00"
 androidx-compose-constraintlayout = "1.1.1"
 navigation-compose = "2.8.0"
 
-nav3 = "1.0.0"
+nav3 = "1.1.6"
 lifecycle-viewmodel-nav3 = "2.11.0-beta01"
 
 [libraries]
