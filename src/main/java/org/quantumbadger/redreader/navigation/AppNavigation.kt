@@ -233,6 +233,14 @@ fun AppNavGraph(navigationState: NavigationState) {
                 )
             }
 
+            // Child: full-screen still-image viewer (direct image URLs)
+            entry<Image> { key ->
+                org.quantumbadger.redreader.compose.ui.ImageScreen(
+                    url = UriString(key.url),
+                    onBackPressed = { navigator.goBack() }
+                )
+            }
+
             // Child: OAuth Login
             entry<OAuthLogin> {
                 val context = LocalContext.current

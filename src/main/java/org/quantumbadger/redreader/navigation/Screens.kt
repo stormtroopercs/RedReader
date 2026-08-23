@@ -36,6 +36,7 @@ import kotlinx.serialization.Serializable
  *   - SubredditSearch
  *   - CommentReply(postId, commentId?)
  *   - Album(url)
+ *   - Image(url)
  */
 @Serializable
 data object Main : NavKey
@@ -84,6 +85,10 @@ data object OAuthLogin : NavKey
 
 @Serializable
 data class Album(val url: String) : NavKey
+
+/** Full-screen still-image viewer (direct image URLs). */
+@Serializable
+data class Image(val url: String) : NavKey
 
 /** All top-level routes (displayed in navigation bar/rail/drawer). */
 val TOP_LEVEL_ROUTES = setOf<NavKey>(Main, Settings)

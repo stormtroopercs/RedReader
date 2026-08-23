@@ -116,6 +116,19 @@ object LinkHandler {
 		val normalUrlString = UriString(normalUrl.toString())
 
 		if (!forceNoImage && isProbablyAnImage(normalUrlString)) {
+			// A direct still-image file URL opens the in-app Compose image
+			// viewer (a child route on Main, so system back returns to the
+			// previous screen). Animated GIFs, video, and album (multi-image)
+			// URLs keep the legacy ImageViewActivity.
+			if (isDirectStillImage(normalUrlString)) {
+				val intent = Intent(activity, MainActivityCompose::class.java).apply {
+					putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_IMAGE)
+					putExtra(MainActivityCompose.EXTRA_IMAGE_URL, normalUrlString.value)
+				}
+				activity.startActivity(intent)
+				return
+			}
+
 			val intent = Intent(activity, ImageViewActivity::class.java)
 			intent.setData(normalUrl)
 			intent.putExtra("post", post)
@@ -764,6 +777,37 @@ object LinkHandler {
 
 		return getImageUrlPatternMatch(url) != null
 	}
+
+	/**
+	 * Whether [url] is an unambiguously-still direct image file, suitable for
+	 * the in-app Compose image viewer. This is the subset of [isProbablyAnImage]
+	 * that is a *direct* still-image file URL (the Compose viewer fetches the
+	 * URL as-is via [fetchImage]). It excludes animated GIF hosts (gfycat /
+	 * redgifs / giphy), video hosts (streamable / v.redd.it), album URLs, and
+	 * page URLs that need host-API resolution (imgflip / makeameme /
+	 * deviantart) — those still go to the legacy [ImageViewActivity]. Matches
+	 * i.redd.it direct uploads or any URL ending in a still-image extension.
+	 */
+	@JvmStatic
+	fun isDirectStillImage(url: UriString?): Boolean {
+		if (url == null) {
+			return false
+		}
+
+		if (reddituploadsPattern.matcher(url.value).find()) {
+			return true
+		}
+
+		val lower = url.value.lowercase()
+		for (ext in STILL_IMAGE_EXTENSIONS) {
+			if (lower.endsWith(ext)) {
+				return true
+			}
+		}
+		return false
+	}
+
+	private val STILL_IMAGE_EXTENSIONS = arrayOf(".jpg", ".jpeg", ".png", ".webp")
 
 	@JvmStatic
 	fun getImgurImageInfo(

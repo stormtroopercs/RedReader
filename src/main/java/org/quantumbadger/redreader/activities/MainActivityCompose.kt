@@ -33,6 +33,7 @@ import org.quantumbadger.redreader.navigation.Changelog
 import org.quantumbadger.redreader.navigation.CommentList
 import org.quantumbadger.redreader.navigation.CommentReply
 import org.quantumbadger.redreader.navigation.Inbox
+import org.quantumbadger.redreader.navigation.Image
 import org.quantumbadger.redreader.navigation.Main
 import org.quantumbadger.redreader.navigation.NavigationState
 import org.quantumbadger.redreader.navigation.Navigator
@@ -125,6 +126,12 @@ class MainActivityCompose : ComposeBaseActivity() {
                     navigationState.navigateTo(Main, Album(albumUrl))
                 }
             }
+            DEEP_LINK_IMAGE -> {
+                val imageUrl = intent?.getStringExtra(EXTRA_IMAGE_URL)
+                if (imageUrl != null) {
+                    navigationState.navigateTo(Main, Image(imageUrl))
+                }
+            }
             DEEP_LINK_COMMENT_REPLY -> {
                 val idAndType = intent?.getStringExtra(EXTRA_COMMENT_REPLY_ID_AND_TYPE)
                 if (idAndType != null) {
@@ -192,6 +199,12 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: an album/gallery (Main top level + Album child). */
         const val DEEP_LINK_ALBUM = "album"
+
+        /** Intent extra carrying the image URL for the image deep link. */
+        const val EXTRA_IMAGE_URL = "org.quantumbadger.redreader.extra.IMAGE_URL"
+
+        /** Deep-link route: a full-screen still image (Main top level + Image child). */
+        const val DEEP_LINK_IMAGE = "image"
 
         /** Intent extra carrying the comment id-and-type for the comment-reply deep link. */
         const val EXTRA_COMMENT_REPLY_ID_AND_TYPE =
