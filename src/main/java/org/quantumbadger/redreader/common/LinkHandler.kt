@@ -116,14 +116,16 @@ object LinkHandler {
 		val normalUrlString = UriString(normalUrl.toString())
 
 		if (!forceNoImage && isProbablyAnImage(normalUrlString)) {
-			// A direct still-image file URL opens the in-app Compose image
-			// viewer (a child route on Main, so system back returns to the
-			// previous screen). Animated GIFs, video, and album (multi-image)
-			// URLs keep the legacy ImageViewActivity.
-			if (isDirectStillImage(normalUrlString)) {
+			// A direct still-image file URL, or a direct .gif file URL, opens
+			// the in-app Compose image viewer (a child route on Main, so
+			// system back returns to the previous screen). Hosts that resolve
+			// GIFs via their APIs (gfycat / redgifs / giphy), video, and album
+			// (multi-image) URLs keep the legacy ImageViewActivity.
+			if (isDirectStillImage(normalUrlString) || isDirectGifFile(normalUrlString)) {
 				val intent = Intent(activity, MainActivityCompose::class.java).apply {
 					putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_IMAGE)
 					putExtra(MainActivityCompose.EXTRA_IMAGE_URL, normalUrlString.value)
+					putExtra(MainActivityCompose.EXTRA_IMAGE_GIF, isDirectGifFile(normalUrlString))
 				}
 				activity.startActivity(intent)
 				return
@@ -805,6 +807,21 @@ object LinkHandler {
 			}
 		}
 		return false
+	}
+
+	/**
+	 * Whether [url] is a direct animated-GIF file URL (`.gif`), suitable for
+	 * the in-app Compose image viewer's GIF path (fetched raw via [fetchGif]
+	 * and decoded with [GIFView.prepareMovie]). Hosts that resolve GIFs via
+	 * their APIs (gfycat / redgifs / giphy — see [getImageUrlPatternMatch])
+	 * do not match this and keep the legacy [ImageViewActivity].
+	 */
+	@JvmStatic
+	fun isDirectGifFile(url: UriString?): Boolean {
+		if (url == null) {
+			return false
+		}
+		return url.value.lowercase().endsWith(".gif")
 	}
 
 	private val STILL_IMAGE_EXTENSIONS = arrayOf(".jpg", ".jpeg", ".png", ".webp")

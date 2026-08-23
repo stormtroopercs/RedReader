@@ -18,6 +18,7 @@
 package org.quantumbadger.redreader.compose.net
 
 import android.graphics.BitmapFactory
+import android.graphics.Movie
 import android.util.Log
 import android.net.Uri
 import androidx.compose.runtime.Composable
@@ -67,6 +68,7 @@ import org.quantumbadger.redreader.image.ImageSize
 import org.quantumbadger.redreader.jsonwrap.JsonValue
 import org.quantumbadger.redreader.reddit.api.SubredditReportFlow
 import org.quantumbadger.redreader.reddit.api.SubredditRules
+import org.quantumbadger.redreader.views.GIFView
 import java.io.IOException
 import java.util.UUID
 import kotlin.math.max
@@ -231,6 +233,77 @@ fun fetchImage(
 				}
 			}
 		}
+
+	return fetchFile(
+		uri = uri,
+		user = user,
+		priority = Priority(Constants.Priority.IMAGE_VIEW),
+		downloadStrategy = DownloadStrategyIfNotCached.INSTANCE,
+		fileType = Constants.FileType.IMAGE,
+		queueType = CacheRequest.DownloadQueueType.IMMEDIATE,
+		cache = true,
+		filter = filter
+	)
+}
+
+/**
+ * Fetches an animated GIF as an Android [Movie] for the in-app Compose image
+ * viewer. Reads the cached stream to bytes (the same `readRemainingAsBytes`
+ * the legacy `ImageViewActivity` GIF path uses) and decodes with
+ * [GIFView.prepareMovie] (the same `Movie.decodeByteArray` path, including
+ * its "Invalid GIF" guard).
+ */
+@Composable
+fun fetchGif(
+	uri: UriString,
+	user: RedditAccountId = LocalRedditUser.current
+): State<NetRequestStatus<FileRequestResult<Movie>>> {
+
+	val TAG = "NetWrapper:fetchGif"
+
+	val context = LocalContext.current.applicationContext
+
+	val filter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<Movie>> = remember(uri, user) {
+		{
+			try {
+				var movie: Movie? = null
+				it.streamFactory.create().use { stream ->
+					stream.readRemainingAsBytes { buf, offset, length ->
+						try {
+							movie = GIFView.prepareMovie(buf, offset, length)
+						} catch (e: OutOfMemoryError) {
+							throw e
+						}
+					}
+				}
+				movie
+					?: throw RuntimeException("GIF did not produce a Movie")
+
+				NetRequestStatus.Success(
+					FileRequestResult(
+						metadata = it,
+						data = movie
+					)
+				)
+			} catch (e: OutOfMemoryError) {
+				NetRequestStatus.Failed(
+					RRError(
+						title = context.getString(R.string.imageview_oom),
+						url = uri,
+						t = e
+					)
+				)
+			} catch (e: Exception) {
+				NetRequestStatus.Failed(
+					RRError(
+						title = context.getString(R.string.error_image_decode_failed),
+						url = uri,
+						t = e
+					)
+				)
+			}
+		}
+	}
 
 	return fetchFile(
 		uri = uri,

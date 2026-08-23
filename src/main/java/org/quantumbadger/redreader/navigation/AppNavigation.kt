@@ -237,6 +237,7 @@ fun AppNavGraph(navigationState: NavigationState) {
             entry<Image> { key ->
                 org.quantumbadger.redreader.compose.ui.ImageScreen(
                     url = UriString(key.url),
+                    isGif = key.isGif,
                     onBackPressed = { navigator.goBack() }
                 )
             }

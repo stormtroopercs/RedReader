@@ -17,6 +17,7 @@
 
 package org.quantumbadger.redreader.compose.ui
 
+import android.graphics.Movie
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -50,32 +51,40 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.compose.net.NetRequestStatus
+import org.quantumbadger.redreader.compose.net.fetchGif
 import org.quantumbadger.redreader.compose.net.fetchImage
 import org.quantumbadger.redreader.compose.theme.LocalComposeTheme
 import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.views.GIFView
 import kotlin.math.max
 
 /**
- * In-app Compose full-screen still-image viewer.
+ * In-app Compose full-screen image viewer.
  *
- * Loads the image at up to [maxCanvasDimension] px on the longest axis via
- * [fetchImage] (the same cache-backed loader [NetImage] uses) and renders it
- * centred on a full-screen surface with two-finger pinch-to-zoom, panning
- * while zoomed, and double-tap to toggle zoom. The legacy `ImageViewActivity`
- * remains the destination for animated GIFs, video, and album (multi-image)
- * URLs; this route is for unambiguously-still direct image URLs.
+ * Still-image URLs ([isGif] false) load at up to [maxCanvasDimension] px on
+ * the longest axis via [fetchImage] (the same cache-backed loader [NetImage]
+ * uses); animated-GIF URLs load as an Android [Movie] via [fetchGif] (the same
+ * `readRemainingAsBytes` + `GIFView.prepareMovie` path the legacy
+ * `ImageViewActivity` uses) and render with the legacy [GIFView] via
+ * `AndroidView`. Both render centred on a full-screen surface with two-finger
+ * pinch-to-zoom, panning while zoomed, and double-tap to toggle zoom. The
+ * legacy `ImageViewActivity` remains the destination for video and album
+ * (multi-image) URLs.
  */
 @Composable
 fun ImageScreen(
     url: UriString,
+    isGif: Boolean = false,
     onBackPressed: () -> Unit,
     maxCanvasDimension: Int = 2048
 ) {
     val theme = LocalComposeTheme.current
 
     val data by fetchImage(url, scaleToMaxAxis = maxCanvasDimension)
+    val gifData by fetchGif(url)
 
     Column(
         modifier = Modifier
@@ -106,28 +115,60 @@ fun ImageScreen(
             )
         }
 
-        when (val it = data) {
-            NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = theme.album.toolbarIconColor)
+        if (isGif) {
+            when (val it = gifData) {
+                NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = theme.album.toolbarIconColor)
+                    }
+                }
+
+                is NetRequestStatus.Failed -> {
+                    RRErrorView(error = it.error)
+                }
+
+                is NetRequestStatus.Success -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ZoomableGif(movie = it.result.data)
+                    }
                 }
             }
+        } else {
+            when (val it = data) {
+                NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = theme.album.toolbarIconColor)
+                    }
+                }
 
-            is NetRequestStatus.Failed -> {
-                RRErrorView(error = it.error)
-            }
+                is NetRequestStatus.Failed -> {
+                    RRErrorView(error = it.error)
+                }
 
-            is NetRequestStatus.Success -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    ZoomableImage(bitmap = it.result.data)
+                is NetRequestStatus.Success -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ZoomableImage(bitmap = it.result.data)
+                    }
                 }
             }
         }
@@ -135,7 +176,7 @@ fun ImageScreen(
 }
 
 /**
- * Two-finger pinch-zoomable, pannable, double-tap-to-zoom image.
+ * Two-finger pinch-zoomable, pannable, double-tap-to-zoom still image.
  *
  * [scale] is clamped to [1f, 4f]; panning is clamped so the visible portion of
  * the image can never be dragged fully off the container.
@@ -176,6 +217,67 @@ private fun ZoomableImage(
         bitmap = bitmap,
         contentDescription = null,
         contentScale = ContentScale.Fit,
+        modifier = modifier
+            .fillMaxSize()
+            .onGloballyPositioned { containerSize = it.size }
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                translationX = offset.x
+                translationY = offset.y
+            }
+            .pointerInput(Unit) {
+                detectTransformGestures { _, gesturePan, gestureZoom, _ ->
+                    val newScale = (scale * gestureZoom).coerceIn(1f, 4f)
+                    val newOffset = if (newScale <= 1f) {
+                        Offset.Zero
+                    } else {
+                        clampOffset(offset + gesturePan)
+                    }
+                    scale = newScale
+                    offset = newOffset
+                }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = {
+                        if (scale > 1.01f) {
+                            scale = 1f
+                            offset = Offset.Zero
+                        } else {
+                            scale = 2.5f
+                        }
+                    }
+                )
+            }
+    )
+}
+
+/**
+ * Zoomable animated-GIF view. Wraps the legacy [GIFView] (which animates the
+ * [movie] and self-centres it) in an `AndroidView`, applying the same
+ * pinch-zoom / pan / double-tap gestures as [ZoomableImage]. The [GIFView]
+ * fills its bounds, so the fitted-size clamp is the container size itself.
+ */
+@Composable
+private fun ZoomableGif(
+    movie: Movie,
+    modifier: Modifier = Modifier
+) {
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }
+
+    fun maxOffsetX() = max(0f, (scale - 1f) * containerSize.width / 2f)
+    fun maxOffsetY() = max(0f, (scale - 1f) * containerSize.height / 2f)
+
+    fun clampOffset(o: Offset) = Offset(
+        x = o.x.coerceIn(-maxOffsetX(), maxOffsetX()),
+        y = o.y.coerceIn(-maxOffsetY(), maxOffsetY())
+    )
+
+    AndroidView(
+        factory = { context -> GIFView(context, movie) },
         modifier = modifier
             .fillMaxSize()
             .onGloballyPositioned { containerSize = it.size }
