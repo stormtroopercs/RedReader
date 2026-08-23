@@ -1,7 +1,7 @@
 # RedReader — Project Context
 
 ## Overview
-Open-source Reddit client for Android. 100% Kotlin repo (508 .kt files, 0 .java — 482 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`).
+Open-source Reddit client for Android. 100% Kotlin repo (485 .kt files, 0 .java — 459 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`). The legacy listing stack (`PostListingActivity`/`CommentListingActivity`/`MoreCommentsListingActivity` and their fragments/controllers/views/managers) has been retired; the in-app Compose `PostList`/`CommentList`/`UserProfile` screens are the only listing paths.
 
 ## Branch
 **`java-to-kotlin-conversion`** — main development branch.
