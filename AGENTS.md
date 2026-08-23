@@ -14,7 +14,7 @@ Work proceeds incrementally per legacy surface: port to Compose → re-point its
 | Kotlin | 2.4.10 |
 | AGP | 9.3.1 (never downgrade below the 9.x series) |
 | Compose BOM | 2026.08.00 |
-| Navigation | Navigation 3 (catalog 1.0.0, resolves to 1.0.1) |
+| Navigation | Navigation 3 (1.1.6) |
 | compileSdk / targetSdk / minSdk | 37 / 37 / 23 |
 | Hilt / Room / OkHttp | 2.60.1 / 2.8.0 / 5.3.0 |
 
