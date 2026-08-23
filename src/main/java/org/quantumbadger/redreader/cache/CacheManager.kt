@@ -375,7 +375,7 @@ class CacheManager @Inject constructor(
 
         @Throws(IOException::class)
         fun writeWholeFile(
-            buf: ByteArray?,
+            buf: ByteArray,
             offset: Int,
             length: Int
         ) {
