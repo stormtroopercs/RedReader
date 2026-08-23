@@ -35,22 +35,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.quantumbadger.redreader.navigation.PostSubmitViewModel
+import org.quantumbadger.redreader.navigation.PostSubmitViewModel.FlairState
+import org.quantumbadger.redreader.navigation.PostSubmitViewModel.ImgurState
 import org.quantumbadger.redreader.navigation.PostSubmitViewModel.PostType
 import org.quantumbadger.redreader.navigation.PostSubmitViewModel.SubmitUiState
+import org.quantumbadger.redreader.reddit.RedditFlairChoice
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 
 /**
  * Compose post-submission screen (replaces `PostSubmitActivity` + its two
- * fragments).
+ * fragments + `ImgurUploadActivity`).
  *
  * Form state and the `api/submit` request live in [PostSubmitViewModel].
  * The subreddit picker is an in-screen dialog over the account's subreddit
@@ -58,28 +64,49 @@ import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
  * ranking the legacy `PostSubmitSubredditSelectionFragment` used), with a
  * free-form "post to r/<name>" action for subreddits not in the history.
  *
- * Flair selection and Imgur upload are intentionally out of scope (the
- * request omits `flair_id` and the "Upload to Imgur" type is not offered).
+ * Flair: when the selected subreddit offers flair for new links, a flair
+ * dropdown (the same `api/flairselector` request the legacy content fragment
+ * fetched) appears and the chosen `flair_id` is sent with the submission.
+ * Imgur upload: link posts offer an "Upload to Imgur" chip (the same
+ * multipart `api.imgur.com/3/image` request the legacy `ImgurUploadActivity`
+ * issued); a successful upload fills the URL field with the imgur URL.
+ * A shared-text launch (ACTION_SEND) pre-fills the URL and opens the
+ * subreddit picker up front.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostSubmitScreen(
     subreddit: String,
+    shareUrl: String? = null,
     onNavigateBack: () -> Unit,
     onSubmitted: () -> Unit,
 ) {
     val viewModel: PostSubmitViewModel = hiltViewModel()
     val context = LocalContext.current
     val submitState by viewModel.submitState.collectAsStateWithLifecycle()
+    val flairState by viewModel.flairState.collectAsStateWithLifecycle()
+    val imgurState by viewModel.imgurState.collectAsStateWithLifecycle()
 
     var title by remember { mutableStateOf("") }
     var bodyText by remember { mutableStateOf("") }
-    var bodyUrl by remember { mutableStateOf("") }
+    // A shared-text launch (ACTION_SEND) pre-fills the link URL.
+    var bodyUrl by remember { mutableStateOf(shareUrl ?: "") }
     var postType by remember { mutableStateOf<PostType>(PostType.Link) }
     var selectedSubreddit by remember { mutableStateOf(subreddit) }
     var showSubredditPicker by remember { mutableStateOf(false) }
+    var showFlairDropdown by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
     var initialized by remember { mutableStateOf(false) }
+
+    val imgurPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            (context as? AppCompatActivity)?.let {
+                viewModel.uploadImgur(it, uri)
+            }
+        }
+    }
 
     // Seed the (per-navigation-entry) ViewModel from the route parameters.
     LaunchedEffect(Unit) {
@@ -87,6 +114,27 @@ fun PostSubmitScreen(
             initialized = true
             viewModel.setSubreddit(selectedSubreddit)
             viewModel.setPostType(postType)
+            shareUrl?.let { viewModel.setBodyUrl(it) }
+            if (selectedSubreddit.isBlank()) {
+                // A share launch (ACTION_SEND) arrives with no subreddit —
+                // open the picker up front, as the legacy selection fragment did.
+                showSubredditPicker = true
+            }
+        }
+    }
+
+    // Load the flair selector when the target subreddit changes.
+    LaunchedEffect(selectedSubreddit) {
+        if (selectedSubreddit.isNotBlank()) {
+            viewModel.loadFlairFor(selectedSubreddit)
+        }
+    }
+
+    // An Imgur upload that succeeded fills the link-post URL field.
+    LaunchedEffect(imgurState) {
+        if (imgurState is ImgurState.Success) {
+            bodyUrl = (imgurState as ImgurState.Success).url
+            viewModel.setBodyUrl(bodyUrl)
         }
     }
 
@@ -213,6 +261,51 @@ fun PostSubmitScreen(
                 }
             }
 
+            // Flair selector (available when the subreddit offers flair)
+            if (flairState is FlairState.Available || flairState is FlairState.Loading) {
+                ExposedDropdownMenuBox(
+                    expanded = showFlairDropdown,
+                    onExpandedChange = {
+                        if (flairState is FlairState.Available) {
+                            showFlairDropdown = !showFlairDropdown
+                        }
+                    }
+                ) {
+                    OutlinedTextField(
+                        value = (viewModel.selectedFlair?.text
+                            ?: if (flairState is FlairState.Loading) "Loading flair..." else "No flair"),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Flair") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showFlairDropdown) },
+                        modifier = Modifier
+                            .menuAnchor()
+                            .fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = showFlairDropdown,
+                        onDismissRequest = { showFlairDropdown = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("No flair") },
+                            onClick = {
+                                viewModel.setSelectedFlair(null)
+                                showFlairDropdown = false
+                            }
+                        )
+                        (flairState as? FlairState.Available)?.choices?.forEach { choice ->
+                            DropdownMenuItem(
+                                text = { Text(choice.text) },
+                                onClick = {
+                                    viewModel.setSelectedFlair(choice)
+                                    showFlairDropdown = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             // Title field
             OutlinedTextField(
                 value = title,
@@ -281,6 +374,54 @@ fun PostSubmitScreen(
                     isError = bodyUrl.isNotBlank() &&
                         !bodyUrl.trim().startsWith("http")
                 )
+
+                // "Upload to Imgur" (the legacy ImgurUploadActivity's job)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AssistChip(
+                        onClick = { imgurPicker.launch("image/*") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.PhotoLibrary,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        label = { Text("Upload to Imgur") },
+                        enabled = imgurState !is ImgurState.Uploading
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    when (val state = imgurState) {
+                        is ImgurState.Uploading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Uploading...",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        is ImgurState.Success -> {
+                            Text(
+                                "Uploaded (${state.summary})",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF4CAF50)
+                            )
+                        }
+                        is ImgurState.Error -> {
+                            Text(
+                                state.message,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        ImgurState.Idle -> Unit
+                    }
+                }
             }
 
             // Error from a failed submit

@@ -154,6 +154,7 @@ fun AppNavGraph(navigationState: NavigationState) {
             entry<PostSubmit> { key ->
                 org.quantumbadger.redreader.compose.ui.PostSubmitScreen(
                     subreddit = key.subreddit,
+                    shareUrl = key.shareUrl,
                     onNavigateBack = { navigator.goBack() },
                     onSubmitted = {
                         navigator.goBack()

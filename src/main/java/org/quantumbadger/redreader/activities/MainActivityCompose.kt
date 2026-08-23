@@ -75,6 +75,24 @@ class MainActivityCompose : ComposeBaseActivity() {
         if (savedInstanceState == null) {
             intent?.getStringExtra(EXTRA_DEEP_LINK)
                 ?.let { deepLinkRoute(it) }
+
+            // ACTION_SEND share launch: another app shares text to RedReader,
+            // which opens the post form with the shared text pre-filled as the
+            // link URL and the subreddit picker up front (the job the legacy
+            // PostSubmitActivity did via its SEND intent-filter + subreddit
+            // selection fragment).
+            if (intent != null
+                && android.content.Intent.ACTION_SEND.equals(intent.action, true)
+                && intent.hasExtra(android.content.Intent.EXTRA_TEXT)
+            ) {
+                val sharedText = intent.getStringExtra(android.content.Intent.EXTRA_TEXT)
+                if (sharedText != null) {
+                    navigationState.navigateTo(
+                        Main,
+                        PostSubmit("", sharedText)
+                    )
+                }
+            }
         }
 
         setContentCompose {
@@ -172,7 +190,8 @@ class MainActivityCompose : ComposeBaseActivity() {
             DEEP_LINK_POST_SUBMIT -> {
                 val subreddit = intent?.getStringExtra(EXTRA_POST_SUBMIT_SUBREDDIT)
                 if (subreddit != null) {
-                    navigationState.navigateTo(Main, PostSubmit(subreddit))
+                    val shareUrl = intent?.getStringExtra(EXTRA_POST_SUBMIT_SHARE_URL)
+                    navigationState.navigateTo(Main, PostSubmit(subreddit, shareUrl))
                 }
             }
         }
@@ -270,6 +289,10 @@ class MainActivityCompose : ComposeBaseActivity() {
         /** Intent extra carrying the subreddit for the post-submit deep link. */
         const val EXTRA_POST_SUBMIT_SUBREDDIT =
             "org.quantumbadger.redreader.extra.POST_SUBMIT_SUBREDDIT"
+
+        /** Intent extra carrying the shared text for the post-submit deep link. */
+        const val EXTRA_POST_SUBMIT_SHARE_URL =
+            "org.quantumbadger.redreader.extra.POST_SUBMIT_SHARE_URL"
 
         /** Deep-link route: the post submission form (Main top level + PostSubmit child). */
         const val DEEP_LINK_POST_SUBMIT = "post_submit"

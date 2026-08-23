@@ -56,8 +56,9 @@ data class UserProfile(val username: String) : NavKey
 @Serializable
 data object Inbox : NavKey
 
+/** Post submission form (subreddit + optional shared-text prefill). */
 @Serializable
-data class PostSubmit(val subreddit: String) : NavKey
+data class PostSubmit(val subreddit: String, val shareUrl: String? = null) : NavKey
 
 @Serializable
 data object SubredditSearch : NavKey

@@ -87,6 +87,12 @@
                 <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
         </activity>
 
         <activity android:name=".settings.SettingsActivity"
@@ -150,9 +156,6 @@
 
         </activity>
 
-        <activity android:name=".activities.ImgurUploadActivity"
-				  android:configChanges="orientation|screenSize|keyboardHidden" />
-
         <activity android:name=".activities.WebViewActivity"
                   android:configChanges="orientation|screenSize|keyboardHidden"
                   android:theme="@style/RR.Dark"/>
@@ -171,17 +174,7 @@
                   android:configChanges="orientation|screenSize|keyboardHidden"/>
 
 		<activity android:name=".activities.PMSendActivity"
-				  android:configChanges="orientation|screenSize|keyboardHidden"/>
-
-        <activity android:name=".activities.PostSubmitActivity"
-				  android:configChanges="orientation|screenSize|keyboardHidden"
-				  android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
-            </intent-filter>
-        </activity>
+			      android:configChanges="orientation|screenSize|keyboardHidden" />
 
         <activity android:name=".activities.BugReportActivity"
                   android:configChanges="orientation|screenSize|keyboardHidden"
