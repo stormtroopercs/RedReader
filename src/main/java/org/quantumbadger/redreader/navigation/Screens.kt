@@ -66,6 +66,18 @@ data object SubredditSearch : NavKey
 @Serializable
 data class CommentReply(val postId: String, val commentId: String? = null) : NavKey
 
+/**
+ * Comment / self-post edit form. [idAndType] is the Reddit id-and-type string
+ * (e.g. `t3_...` for a self post, `t1_...` for a comment); [initialText] is
+ * the current markdown. [isSelfPost] selects the title + success toast.
+ */
+@Serializable
+data class CommentEdit(
+    val idAndType: String,
+    val initialText: String = "",
+    val isSelfPost: Boolean = false
+) : NavKey
+
 @Serializable
 data object RedditTerms : NavKey
 

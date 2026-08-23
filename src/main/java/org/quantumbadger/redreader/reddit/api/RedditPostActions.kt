@@ -35,7 +35,6 @@ import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.activities.BugReportActivity
-import org.quantumbadger.redreader.activities.CommentEditActivity
 import org.quantumbadger.redreader.activities.MainActivityCompose
 import org.quantumbadger.redreader.activities.WebViewActivity
 import org.quantumbadger.redreader.cache.CacheManager
@@ -358,13 +357,20 @@ object RedditPostActions {
 			Action.MARK_READ -> post.markAsRead(activity, true)
 			Action.MARK_UNREAD -> post.markAsRead(activity, false)
 			Action.EDIT -> {
-				val editIntent = Intent(activity, CommentEditActivity::class.java)
-				editIntent.putExtra("commentIdAndType", post.src.idAndType)
+				val editIntent = Intent(activity, MainActivityCompose::class.java)
 				editIntent.putExtra(
-					"commentText",
+					MainActivityCompose.EXTRA_DEEP_LINK,
+					MainActivityCompose.DEEP_LINK_COMMENT_EDIT
+				)
+				editIntent.putExtra(
+					MainActivityCompose.EXTRA_COMMENT_EDIT_ID_AND_TYPE,
+					post.src.idAndType.toString()
+				)
+				editIntent.putExtra(
+					MainActivityCompose.EXTRA_COMMENT_EDIT_TEXT,
 					StringEscapeUtils.unescapeHtml4(post.src.rawSelfTextMarkdown)
 				)
-				editIntent.putExtra("isSelfPost", true)
+				editIntent.putExtra(MainActivityCompose.EXTRA_COMMENT_EDIT_SELF_POST, true)
 				activity.startActivity(editIntent)
 			}
 

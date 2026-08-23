@@ -30,6 +30,7 @@ import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.navigation.Album
 import org.quantumbadger.redreader.navigation.AppNavGraph
 import org.quantumbadger.redreader.navigation.Changelog
+import org.quantumbadger.redreader.navigation.CommentEdit
 import org.quantumbadger.redreader.navigation.CommentList
 import org.quantumbadger.redreader.navigation.CommentReply
 import org.quantumbadger.redreader.navigation.Inbox
@@ -194,6 +195,18 @@ class MainActivityCompose : ComposeBaseActivity() {
                     navigationState.navigateTo(Main, PostSubmit(subreddit, shareUrl))
                 }
             }
+            DEEP_LINK_COMMENT_EDIT -> {
+                val idAndType = intent?.getStringExtra(EXTRA_COMMENT_EDIT_ID_AND_TYPE)
+                if (idAndType != null) {
+                    val text = intent?.getStringExtra(EXTRA_COMMENT_EDIT_TEXT) ?: ""
+                    val isSelfPost = intent?.getBooleanExtra(EXTRA_COMMENT_EDIT_SELF_POST, false)
+                        ?: false
+                    navigationState.navigateTo(
+                        Main,
+                        CommentEdit(idAndType, text, isSelfPost)
+                    )
+                }
+            }
         }
     }
 
@@ -296,5 +309,20 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: the post submission form (Main top level + PostSubmit child). */
         const val DEEP_LINK_POST_SUBMIT = "post_submit"
+
+        /** Deep-link route: the comment / post edit form (Main top level + CommentEdit child). */
+        const val DEEP_LINK_COMMENT_EDIT = "comment_edit"
+
+        /** Intent extra carrying the id-and-type for the comment-edit deep link. */
+        const val EXTRA_COMMENT_EDIT_ID_AND_TYPE =
+            "org.quantumbadger.redreader.extra.COMMENT_EDIT_ID_AND_TYPE"
+
+        /** Intent extra carrying the current markdown for the comment-edit deep link. */
+        const val EXTRA_COMMENT_EDIT_TEXT =
+            "org.quantumbadger.redreader.extra.COMMENT_EDIT_TEXT"
+
+        /** Intent extra: true when the thing being edited is a self post. */
+        const val EXTRA_COMMENT_EDIT_SELF_POST =
+            "org.quantumbadger.redreader.extra.COMMENT_EDIT_SELF_POST"
     }
 }

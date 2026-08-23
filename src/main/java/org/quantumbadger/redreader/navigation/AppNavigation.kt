@@ -184,6 +184,19 @@ fun AppNavGraph(navigationState: NavigationState) {
                 )
             }
 
+            // Child: Comment / post edit
+            entry<CommentEdit> { key ->
+                org.quantumbadger.redreader.compose.ui.CommentEditScreen(
+                    idAndType = org.quantumbadger.redreader.reddit.kthings.RedditIdAndType(
+                        key.idAndType
+                    ),
+                    initialText = key.initialText,
+                    isSelfPost = key.isSelfPost,
+                    onDone = { navigator.goBack() },
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
+
             // Child: Reddit Terms
             entry<RedditTerms> {
                 org.quantumbadger.redreader.compose.ui.RedditTermsScreen(
