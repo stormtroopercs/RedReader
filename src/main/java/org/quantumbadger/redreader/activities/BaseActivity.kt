@@ -224,7 +224,7 @@ abstract class BaseActivity : AppCompatActivity(),
 
     private fun closeIfNecessary() {
         if (closingAll) {
-            if (this is MainActivity) {
+            if (this is MainActivityCompose) {
                 closingAll = false
             } else {
                 finish()

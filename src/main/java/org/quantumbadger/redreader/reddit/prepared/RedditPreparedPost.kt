@@ -54,7 +54,6 @@ import org.quantumbadger.redreader.image.ThumbnailScaler
 import org.quantumbadger.redreader.reddit.api.RedditPostActions
 import org.quantumbadger.redreader.reddit.api.RedditPostActions.onActionMenuItemSelected
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
-import org.quantumbadger.redreader.views.RedditPostView
 import java.io.IOException
 import java.util.EnumSet
 import java.util.UUID
@@ -70,7 +69,7 @@ class RedditPreparedPost(
     showThumbnails: Boolean,
     allowHighResThumbnails: Boolean,
     private val mShowInlinePreviews: Boolean
-) : RedditChangeDataManager.Listener {
+) {
     private val mChangeDataManager: RedditChangeDataManager
 
     val isArchived: Boolean
@@ -87,8 +86,6 @@ class RedditPreparedPost(
     private var usageId = -1
 
     var lastChange: TimestampUTC?
-
-    private var mBoundView: RedditPostView?=null
 
     // TODO too many parameters
     init {
@@ -847,28 +844,6 @@ class RedditPreparedPost(
 
     val isRead: Boolean
         get() = mChangeDataManager.isRead(src.idAndType)
-
-    fun bind(boundView: RedditPostView?) {
-        mBoundView = boundView
-        mChangeDataManager.addListener(src.idAndType, this)
-    }
-
-    fun unbind(boundView: RedditPostView?) {
-        if (mBoundView == boundView) {
-            mBoundView = null
-            mChangeDataManager.removeListener(src.idAndType, this)
-        }
-    }
-
-    override fun onRedditDataChange(thingIdAndType: RedditIdAndType?) {
-        if (mBoundView != null) {
-            val context = mBoundView!!.getContext()
-
-            if (context != null) {
-                mBoundView!!.updateAppearance()
-            }
-        }
-    }
 
     // TODO handle download failure - show red "X" or something
     interface ThumbnailLoadedCallback {

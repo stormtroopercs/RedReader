@@ -36,9 +36,7 @@ import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.activities.BugReportActivity
 import org.quantumbadger.redreader.activities.CommentEditActivity
-import org.quantumbadger.redreader.activities.MainActivity
 import org.quantumbadger.redreader.activities.MainActivityCompose
-import org.quantumbadger.redreader.activities.PostListingActivity
 import org.quantumbadger.redreader.activities.WebViewActivity
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.common.AndroidCommon
@@ -65,7 +63,7 @@ import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
 import org.quantumbadger.redreader.reddit.url.SubredditPostListURL
 import org.quantumbadger.redreader.reddit.url.UserProfileURL
 import org.quantumbadger.redreader.views.AccessibilityActionManager
-import org.quantumbadger.redreader.views.RedditPostView.PostSelectionListener
+import org.quantumbadger.redreader.PostSelectionListener
 import org.quantumbadger.redreader.views.bezelmenu.SideToolbarOverlay
 import org.quantumbadger.redreader.views.bezelmenu.VerticalToolbar
 
@@ -552,7 +550,7 @@ object RedditPostActions {
 
 			Action.LINK -> (activity as PostSelectionListener).onPostSelected(post)
 			Action.COMMENTS_SWITCH -> {
-				if (activity !is MainActivity) {
+				if (activity !is MainActivityCompose) {
 					activity.finish()
 				}
 				(activity as PostSelectionListener).onPostCommentsSelected(
@@ -561,7 +559,7 @@ object RedditPostActions {
 			}
 
 			Action.LINK_SWITCH -> {
-				if (activity !is MainActivity) {
+				if (activity !is MainActivityCompose) {
 					activity.finish()
 				}
 				(activity as PostSelectionListener).onPostSelected(post)

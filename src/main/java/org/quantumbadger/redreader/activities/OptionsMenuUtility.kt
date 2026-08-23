@@ -661,21 +661,19 @@ object OptionsMenuUtility {
             }
 
             Option.CLOSE_ALL -> {
-                if (activity !is MainActivity) {
-                    val closeAll = menu.add(
-                        Menu.NONE,
-                        AppbarItemsPref.CLOSE_ALL.ordinal,
-                        Menu.NONE,
-                        string.options_close_all
-                    )
-                        .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener { item: MenuItem? ->
-                            activity.closeAllExceptMain()
-                            true
-                        })
+                val closeAll = menu.add(
+                    Menu.NONE,
+                    AppbarItemsPref.CLOSE_ALL.ordinal,
+                    Menu.NONE,
+                    string.options_close_all
+                )
+                    .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener { item: MenuItem? ->
+                        activity.closeAllExceptMain()
+                        true
+                    })
 
-                    closeAll.setShowAsAction(showAsAction)
-                    closeAll.setIcon(R.drawable.ic_action_cross_dark)
-                }
+                closeAll.setShowAsAction(showAsAction)
+                closeAll.setIcon(R.drawable.ic_action_cross_dark)
             }
 
             Option.THEMES -> {

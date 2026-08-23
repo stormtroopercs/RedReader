@@ -76,9 +76,6 @@ import org.junit.Assume.assumeTrue
 class BackNavigationUITest {
 
     private companion object {
-        private const val TEST_SUBREDDIT_URL
-            = "https://reddit.com/r/redreader_public_test"
-
         private const val PREF_BACK_AGAIN = "pref_behaviour_back_again"
         private const val PREF_TWOPANE = "pref_appearance_twopane"
         private const val PREF_POST_TAP_ACTION = "pref_behaviour_post_tap_action"
@@ -165,17 +162,6 @@ class BackNavigationUITest {
     private fun settlePreferences() {
         SystemClock.sleep(300)
         waitForIdle()
-    }
-
-    private fun intentFor(
-        context: Context,
-        activity: Class<out android.app.Activity>,
-        url: String
-    ): Intent {
-
-        val intent = Intent(context, activity)
-        intent.data = Uri.parse(url)
-        return intent
     }
 
     /**
@@ -268,22 +254,6 @@ class BackNavigationUITest {
         return scenario.state
     }
 
-    /**
-     * Dispatches a back press straight through the activity's
-     * [androidx.activity.OnBackPressedDispatcher], which is where the double-press guard
-     * lives.
-     *
-     * Espresso's `pressBack()` takes the better part of a second to
-     * complete, so it cannot be used to produce two presses inside the 300ms
-     * guard window. The end-to-end tests in this class do use real input; this
-     * helper exists only for the tests that need presses in quick succession.
-     */
-    private fun dispatchBack(scenario: ActivityScenario<*>) {
-        scenario.onActivity { activity ->
-            (activity as BaseActivity).onBackPressedDispatcher.onBackPressed()
-        }
-    }
-
     // ---------------------------------------------------------------------
     // Premise: predictive back really is active for this app on this device
     // ---------------------------------------------------------------------
@@ -337,214 +307,6 @@ class BackNavigationUITest {
                         .unregisterOnBackInvokedCallback(callbackRef.get()!!)
                 }
             }
-        }
-    }
-
-    // ---------------------------------------------------------------------
-    // PostListingActivity: "press back again to exit"
-    // ---------------------------------------------------------------------
-
-    @Test
-    fun postListing_backAgainDisabled_doesNotIntercept() {
-
-        setBackAgain(false)
-
-        ActivityScenario.launch<PostListingActivity>(
-            intentFor(mContext, PostListingActivity::class.java, TEST_SUBREDDIT_URL)
-        ).use { scenario ->
-
-            waitForIdle()
-
-            // Nothing to intercept, so the system should own the back gesture
-            // (and therefore animate it).
-            assertIntercepts(
-                "PostListingActivity should not intercept back when the "
-                    + "'back again' pref is disabled",
-                false,
-                scenario
-            )
-
-            pressBackUnconditionally()
-            waitForIdle()
-
-            assertEquals(
-                "A single back press should exit",
-                Lifecycle.State.DESTROYED,
-                awaitDestroyed(scenario)
-            )
-        }
-    }
-
-    @Test
-    fun postListing_backAgainEnabled_requiresTwoPresses() {
-
-        setBackAgain(true)
-
-        ActivityScenario.launch<PostListingActivity>(
-            intentFor(mContext, PostListingActivity::class.java, TEST_SUBREDDIT_URL)
-        ).use { scenario ->
-
-            waitForIdle()
-
-            assertIntercepts(
-                "PostListingActivity must intercept back to show the "
-                    + "'press back again' toast",
-                true,
-                scenario
-            )
-
-            pressBackUnconditionally()
-            waitForIdle()
-
-            assertEquals(
-                "The first back press should be consumed by the "
-                    + "'press back again' prompt",
-                Lifecycle.State.RESUMED,
-                scenario.state
-            )
-
-            pressBackAfterGuardWindow()
-            waitForIdle()
-
-            assertEquals(
-                "The second back press should exit",
-                Lifecycle.State.DESTROYED,
-                awaitDestroyed(scenario)
-            )
-        }
-    }
-
-    // ---------------------------------------------------------------------
-    // The 300ms double-press guard, which only applies where the OS is not
-    // providing predictive back animations
-    // ---------------------------------------------------------------------
-
-    /**
-     * Below API 36 the guard swallows a second back press arriving within
-     * 300ms of the first.
-     */
-    @Test
-    fun postListing_rapidDoubleBack_isGuardedBelowApi36() {
-
-        assumeTrue(
-            "The double-press guard only applies where predictive back is "
-                + "not in use",
-            Build.VERSION.SDK_INT < 36
-        )
-
-        setBackAgain(true)
-
-        ActivityScenario.launch<PostListingActivity>(
-            intentFor(mContext, PostListingActivity::class.java, TEST_SUBREDDIT_URL)
-        ).use { scenario ->
-
-            waitForIdle()
-
-            dispatchBack(scenario)
-            waitForIdle()
-
-            assertEquals(
-                "The first back press should show the prompt",
-                Lifecycle.State.RESUMED,
-                scenario.state
-            )
-
-            // Immediately again, inside the 300ms guard window
-            dispatchBack(scenario)
-            waitForIdle()
-
-            assertEquals(
-                "A back press within 300ms should be swallowed by the guard",
-                Lifecycle.State.RESUMED,
-                scenario.state
-            )
-
-            // Once the guard window has passed, back should be honoured again
-            SystemClock.sleep(500)
-
-            dispatchBack(scenario)
-            waitForIdle()
-
-            assertEquals(
-                "Back after the guard window should exit",
-                Lifecycle.State.DESTROYED,
-                awaitDestroyed(scenario)
-            )
-        }
-    }
-
-    /**
-     * On API 36 the guard is deliberately skipped, as the predictive back
-     * animation already protects against accidental presses.
-     */
-    @Test
-    fun postListing_rapidDoubleBack_isNotGuardedOnApi36() {
-
-        assumeTrue(
-            "The double-press guard is skipped where predictive back is in use",
-            Build.VERSION.SDK_INT >= 36
-        )
-
-        setBackAgain(true)
-
-        ActivityScenario.launch<PostListingActivity>(
-            intentFor(mContext, PostListingActivity::class.java, TEST_SUBREDDIT_URL)
-        ).use { scenario ->
-
-            waitForIdle()
-
-            dispatchBack(scenario)
-            waitForIdle()
-
-            assertEquals(
-                "The first back press should show the prompt",
-                Lifecycle.State.RESUMED,
-                scenario.state
-            )
-
-            // Immediately again: this must NOT be swallowed
-            dispatchBack(scenario)
-            waitForIdle()
-
-            assertEquals(
-                "A rapid second back press should exit on Android 16",
-                Lifecycle.State.DESTROYED,
-                awaitDestroyed(scenario)
-            )
-        }
-    }
-
-    /**
-     * The prompt expires after 5 seconds, after which back should prompt again
-     * rather than exiting.
-     */
-    @Test
-    fun postListing_backAgainEnabled_promptIsNotConsumedByRapidPresses() {
-
-        setBackAgain(true)
-
-        ActivityScenario.launch<PostListingActivity>(
-            intentFor(mContext, PostListingActivity::class.java, TEST_SUBREDDIT_URL)
-        ).use { scenario ->
-
-            waitForIdle()
-
-            pressBackUnconditionally()
-            waitForIdle()
-
-            assertEquals(Lifecycle.State.RESUMED, scenario.state)
-
-            // Let the 5 second window expire
-            SystemClock.sleep(5500)
-
-            pressBackUnconditionally()
-            waitForIdle()
-
-            assertEquals(
-                "Back after the prompt expired should re-prompt, not exit",
-                Lifecycle.State.RESUMED,
-                scenario.state
-            )
         }
     }
 

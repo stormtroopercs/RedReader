@@ -32,11 +32,9 @@ import androidx.core.net.toUri
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.activities.BaseActivity
-import org.quantumbadger.redreader.activities.CommentListingActivity
 import org.quantumbadger.redreader.activities.ImageViewActivity
 import org.quantumbadger.redreader.activities.MainActivityCompose
 import org.quantumbadger.redreader.activities.PMSendActivity
-import org.quantumbadger.redreader.activities.PostListingActivity
 import org.quantumbadger.redreader.activities.WebViewActivity
 import org.quantumbadger.redreader.cache.CacheRequest
 import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
@@ -221,11 +219,7 @@ object LinkHandler {
 						activity.startActivity(intent)
 						return
 					}
-					// An unmodeled listing type falls through to the legacy activity.
-					val intent = Intent(activity, PostListingActivity::class.java)
-					intent.setData(redditURL.generateJsonUri())
-					activity.startActivityForResult(intent, 1)
-					return
+					// An unmodeled listing type has no in-app route; ignore.
 					}
 					RedditURLParser.USER_POST_LISTING_URL -> {
 					val url = redditURL as? UserPostListingURL
@@ -240,10 +234,7 @@ object LinkHandler {
 						activity.startActivity(intent)
 						return
 					}
-					val intent = Intent(activity, PostListingActivity::class.java)
-					intent.setData(redditURL.generateJsonUri())
-					activity.startActivityForResult(intent, 1)
-					return
+					// An unmodeled user listing has no in-app route; ignore.
 				}
 				RedditURLParser.MULTIREDDIT_POST_LISTING_URL -> {
 					val url = redditURL as? MultiredditPostListURL
@@ -258,10 +249,7 @@ object LinkHandler {
 						activity.startActivity(intent)
 						return
 					}
-					val intent = Intent(activity, PostListingActivity::class.java)
-					intent.setData(redditURL.generateJsonUri())
-					activity.startActivityForResult(intent, 1)
-					return
+					// An unmodeled multireddit listing has no in-app route; ignore.
 				}
 				RedditURLParser.SEARCH_POST_LISTING_URL -> {
 					// A search listing maps to the in-app Compose PostList route,
@@ -285,14 +273,6 @@ object LinkHandler {
 					activity.startActivity(intent)
 					return
 				}
-				RedditURLParser.UNKNOWN_POST_LISTING_URL -> {
-					// An unmodeled listing type opens the legacy activity.
-					val intent = Intent(activity, PostListingActivity::class.java)
-					intent.setData(redditURL.generateJsonUri())
-					activity.startActivityForResult(intent, 1)
-					return
-				}
-
 				RedditURLParser.POST_COMMENT_LISTING_URL -> {
 					val url = redditURL as? PostCommentListingURL
 					val postId = url?.postId
@@ -304,14 +284,7 @@ object LinkHandler {
 						activity.startActivity(intent)
 						return
 					}
-					// user/unknown comment listings fall through to the legacy activity.
-					val intent = Intent(
-						activity,
-						CommentListingActivity::class.java
-					)
-					intent.setData(redditURL.generateJsonUri())
-					activity.startActivityForResult(intent, 1)
-					return
+					// An unmodeled comment listing has no in-app route; ignore.
 				}
 				RedditURLParser.USER_COMMENT_LISTING_URL -> {
 					val url = redditURL as? UserCommentListingURL
@@ -325,22 +298,7 @@ object LinkHandler {
 						activity.startActivity(intent)
 						return
 					}
-					val intent = Intent(
-						activity,
-						CommentListingActivity::class.java
-					)
-					intent.setData(redditURL.generateJsonUri())
-					activity.startActivityForResult(intent, 1)
-					return
-				}
-				RedditURLParser.UNKNOWN_COMMENT_LISTING_URL -> {
-					val intent = Intent(
-						activity,
-						CommentListingActivity::class.java
-					)
-					intent.setData(redditURL.generateJsonUri())
-					activity.startActivityForResult(intent, 1)
-					return
+					// An unmodeled user comment listing has no in-app route; ignore.
 				}
 
 				RedditURLParser.COMPOSE_MESSAGE_URL -> {

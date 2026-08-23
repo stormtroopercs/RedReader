@@ -61,7 +61,7 @@ import org.quantumbadger.redreader.reddit.kthings.RedditPost
 import org.quantumbadger.redreader.reddit.prepared.RedditParsedPost
 import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost
 import org.quantumbadger.redreader.reddit.url.RedditURLParser
-import org.quantumbadger.redreader.views.RedditPostView.PostSelectionListener
+import org.quantumbadger.redreader.PostSelectionListener
 import org.quantumbadger.redreader.views.bezelmenu.BezelSwipeOverlay
 import org.quantumbadger.redreader.views.bezelmenu.BezelSwipeOverlay.BezelSwipeListener
 import org.quantumbadger.redreader.views.bezelmenu.SideToolbarOverlay

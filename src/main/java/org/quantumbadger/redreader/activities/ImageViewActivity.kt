@@ -108,7 +108,7 @@ import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost
 import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
 import org.quantumbadger.redreader.views.GIFView
 import org.quantumbadger.redreader.views.HorizontalSwipeProgressOverlay
-import org.quantumbadger.redreader.views.RedditPostView.PostSelectionListener
+import org.quantumbadger.redreader.PostSelectionListener
 import org.quantumbadger.redreader.views.bezelmenu.BezelSwipeOverlay
 import org.quantumbadger.redreader.views.bezelmenu.BezelSwipeOverlay.BezelSwipeListener
 import org.quantumbadger.redreader.views.bezelmenu.SideToolbarOverlay

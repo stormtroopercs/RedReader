@@ -47,7 +47,6 @@ import org.quantumbadger.redreader.io.WritableHashSet
 import org.quantumbadger.redreader.reddit.PostCommentSort
 import org.quantumbadger.redreader.reddit.PostSort
 import org.quantumbadger.redreader.reddit.UserCommentSort
-import org.quantumbadger.redreader.reddit.api.RedditAPICommentAction.RedditCommentAction
 import org.quantumbadger.redreader.reddit.api.RedditPostActions
 import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
@@ -1380,7 +1379,7 @@ object PrefsUtility {
     }
 
     //Show Visited Posts? True hides them.
-    // See strings.xml, prefs_behaviour.xml, PostListingFragment.java
+    // See strings.xml, prefs_behaviour.xml
     fun pref_behaviour_hide_read_posts(): Boolean {
         return getBoolean(
             string.pref_behaviour_hide_read_posts_key,
@@ -1830,26 +1829,6 @@ object PrefsUtility {
         )
     }
 
-    fun pref_menus_comment_context_items(): EnumSet<RedditCommentAction> {
-        val strings = getStringSet(
-            string.pref_menus_comment_context_items_key,
-            R.array.pref_menus_comment_context_items_return
-        )
-
-        val result = EnumSet.noneOf<RedditCommentAction>(
-            RedditCommentAction::class.java
-        )
-
-        for (s in strings!!) {
-            result.add(
-                RedditCommentAction.valueOf(
-                    StringUtils.asciiUppercase(s)
-                )
-            )
-        }
-
-        return result
-    }
 
     /**//////////////////////////// */ // pref_pinned_subreddits
     /**//////////////////////////// */
