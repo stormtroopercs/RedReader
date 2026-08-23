@@ -155,11 +155,8 @@ fun AppNavGraph(navigationState: NavigationState) {
                 org.quantumbadger.redreader.compose.ui.PostSubmitScreen(
                     subreddit = key.subreddit,
                     onNavigateBack = { navigator.goBack() },
-                    onSubmit = {
-                        // TODO: wire up post submission
-                    },
-                    onNavigateToSubredditPicker = {
-                        navigator.navigate(SubredditSearch)
+                    onSubmitted = {
+                        navigator.goBack()
                     }
                 )
             }

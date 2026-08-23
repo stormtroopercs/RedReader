@@ -136,8 +136,7 @@ fun AdaptiveAppNavigation() {
                 org.quantumbadger.redreader.compose.ui.PostSubmitScreen(
                     subreddit = key.subreddit,
                     onNavigateBack = { navigator.goBack() },
-                    onSubmit = { /* TODO */ },
-                    onNavigateToSubredditPicker = { /* TODO */ }
+                    onSubmitted = { navigator.goBack() }
                 )
             }
         }

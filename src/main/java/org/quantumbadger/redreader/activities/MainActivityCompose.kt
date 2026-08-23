@@ -38,6 +38,7 @@ import org.quantumbadger.redreader.navigation.Main
 import org.quantumbadger.redreader.navigation.NavigationState
 import org.quantumbadger.redreader.navigation.Navigator
 import org.quantumbadger.redreader.navigation.PostList
+import org.quantumbadger.redreader.navigation.PostSubmit
 import org.quantumbadger.redreader.navigation.RedditTerms
 import org.quantumbadger.redreader.navigation.Settings
 import org.quantumbadger.redreader.navigation.SubredditSearch
@@ -168,6 +169,12 @@ class MainActivityCompose : ComposeBaseActivity() {
                     navigationState.navigateTo(Main, UserProfile(username))
                 }
             }
+            DEEP_LINK_POST_SUBMIT -> {
+                val subreddit = intent?.getStringExtra(EXTRA_POST_SUBMIT_SUBREDDIT)
+                if (subreddit != null) {
+                    navigationState.navigateTo(Main, PostSubmit(subreddit))
+                }
+            }
         }
     }
 
@@ -259,5 +266,12 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: a user profile (Main top level + UserProfile child). */
         const val DEEP_LINK_USER_PROFILE = "user_profile"
+
+        /** Intent extra carrying the subreddit for the post-submit deep link. */
+        const val EXTRA_POST_SUBMIT_SUBREDDIT =
+            "org.quantumbadger.redreader.extra.POST_SUBMIT_SUBREDDIT"
+
+        /** Deep-link route: the post submission form (Main top level + PostSubmit child). */
+        const val DEEP_LINK_POST_SUBMIT = "post_submit"
     }
 }
