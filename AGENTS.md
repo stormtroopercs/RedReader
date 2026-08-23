@@ -16,7 +16,7 @@ Work proceeds incrementally per legacy surface: port to Compose → re-point its
 | Compose BOM | 2026.08.00 |
 | Navigation | Navigation 3 (1.1.6) |
 | compileSdk / targetSdk / minSdk | 37 / 37 / 23 |
-| Hilt / Room / OkHttp | 2.60.1 / 2.8.0 / 5.3.0 |
+| Hilt / Room / OkHttp | 2.60.1 / 2.8.4 / 5.5.0 |
 
 ## Architecture
 Single Gradle module; all source under `src/` (no `include()` in `settings.gradle.kts`). `core/`, `feature/`, `libs/` at the repo root are **not part of the build**.
