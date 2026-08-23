@@ -1,7 +1,7 @@
 # RedReader — Project Context
 
 ## Overview
-Open-source Reddit client for Android. 100% Kotlin repo (468 .kt files, 0 .java — 442 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`). The legacy listing stack (`PostListingActivity`/`CommentListingActivity`/`MoreCommentsListingActivity` and their fragments/controllers/views/managers) has been retired, and everything it orphaned has been pruned in follow-up sweeps (the session-list dialog + adapter + `SessionChangeListener`, `CommentPropertiesDialog`, `PostListingHeader`, `SwipableItemView`, `CommentSubThreadView`, `LoadingView`, `GroupedRecyclerViewItemLoadingSpinner`, the second-generation view classes `GroupedRecyclerViewItemView`/`SubredditItemViewHolder`/`VH3TextIcon`/`RRDHMAnimation`/`SwipeHistory`/`LiveDHM`, and the 36 layouts/colors/drawables/anim + `SubredditToolbar`/`IndentView` that only the deleted views inflated). The in-app Compose `PostList`/`CommentList`/`UserProfile` screens are the only listing paths.
+Open-source Reddit client for Android. 100% Kotlin repo (469 .kt files, 0 .java — 443 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`). The legacy listing stack (`PostListingActivity`/`CommentListingActivity`/`MoreCommentsListingActivity` and their fragments/controllers/views/managers) has been retired, and everything it orphaned has been pruned in follow-up sweeps (the session-list dialog + adapter + `SessionChangeListener`, `CommentPropertiesDialog`, `PostListingHeader`, `SwipableItemView`, `CommentSubThreadView`, `LoadingView`, `GroupedRecyclerViewItemLoadingSpinner`, the second-generation view classes `GroupedRecyclerViewItemView`/`SubredditItemViewHolder`/`VH3TextIcon`/`RRDHMAnimation`/`SwipeHistory`/`LiveDHM`, and the 36 layouts/colors/drawables/anim + `SubredditToolbar`/`IndentView` that only the deleted views inflated). The in-app Compose `PostList`/`CommentList`/`UserProfile` screens are the only listing paths, and direct still-image URLs open the in-app Compose `ImageScreen` (zoomable viewer, a child route on `Main`) instead of the legacy `ImageViewActivity` (which remains for animated GIFs, video, and album/multi-image URLs).
 
 ## Branch
 **`java-to-kotlin-conversion`** — main development branch.
@@ -31,7 +31,7 @@ Single Gradle module. `settings.gradle.kts` defines `rootProject.name = "RedRead
 All production code is under `src/main/java/org/quantumbadger/redreader/`:
 - `activities/` — Entry points (`MainActivityCompose` is the launcher)
 - `navigation/` — Navigation 3 setup, screen composables, and all 6 ViewModels
-- `compose/ui/` — Reusable Compose components and screens (23 files)
+- `compose/ui/` — Reusable Compose components and screens (24 files)
 - `di/` — Hilt modules (Application, Database)
 - `database/` — Room DB (`entities/` + `dao/`: Post, Comment, Subreddit, UserSession)
 - `repository/` — Repository layer (4 repositories)
@@ -40,7 +40,7 @@ All production code is under `src/main/java/org/quantumbadger/redreader/`:
 Migrated from Navigation 2 (NavController/NavHost) to Navigation 3.
 
 ### Key Files
-- `navigation/Screens.kt` — `@Serializable NavKey` definitions (16 routes: Main, Settings, PostList, CommentList, UserProfile, Inbox, PostSubmit, SubredditSearch, CommentReply, RedditTerms, Changelog, BugReport, WebViewRoute, HtmlView, OAuthLogin, Album)
+- `navigation/Screens.kt` — `@Serializable NavKey` definitions (17 routes: Main, Settings, PostList, CommentList, UserProfile, Inbox, PostSubmit, SubredditSearch, CommentReply, RedditTerms, Changelog, BugReport, WebViewRoute, HtmlView, OAuthLogin, Album, Image)
 - `navigation/NavigationState.kt` — `rememberNavigationState()` + `NavigationState` class (per-top-level back stacks)
 - `navigation/Navigator.kt` — `Navigator` class (navigate/goBack actions)
 - `navigation/AppNavigation.kt` — `AppNavGraph(navigationState: NavigationState)` — entryProvider + NavDisplay with entryDecorators
