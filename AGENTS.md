@@ -1,7 +1,7 @@
 # RedReader — Project Context
 
 ## Overview
-Open-source Reddit client for Android. 100% Kotlin repo (485 .kt files, 0 .java — 459 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`). The legacy listing stack (`PostListingActivity`/`CommentListingActivity`/`MoreCommentsListingActivity` and their fragments/controllers/views/managers) has been retired; the in-app Compose `PostList`/`CommentList`/`UserProfile` screens are the only listing paths.
+Open-source Reddit client for Android. 100% Kotlin repo (476 .kt files, 0 .java — 450 in `src/main`, 19 in `src/test`, 7 in `src/androidTest`). The legacy listing stack (`PostListingActivity`/`CommentListingActivity`/`MoreCommentsListingActivity` and their fragments/controllers/views/managers) has been retired, and the listing-stack components orphaned by that retirement (the session-list dialog + adapter + `SessionChangeListener`, `CommentPropertiesDialog`, `PostListingHeader`, `SwipableItemView`, `CommentSubThreadView`, `LoadingView`, `GroupedRecyclerViewItemLoadingSpinner`) are pruned with it; the in-app Compose `PostList`/`CommentList`/`UserProfile` screens are the only listing paths.
 
 ## Branch
 **`java-to-kotlin-conversion`** — main development branch.
