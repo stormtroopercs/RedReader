@@ -40,6 +40,7 @@ import org.quantumbadger.redreader.navigation.NavigationState
 import org.quantumbadger.redreader.navigation.Navigator
 import org.quantumbadger.redreader.navigation.PostList
 import org.quantumbadger.redreader.navigation.PostSubmit
+import org.quantumbadger.redreader.navigation.PMSend
 import org.quantumbadger.redreader.navigation.RedditTerms
 import org.quantumbadger.redreader.navigation.Settings
 import org.quantumbadger.redreader.navigation.SubredditSearch
@@ -209,6 +210,16 @@ class MainActivityCompose : ComposeBaseActivity() {
                     )
                 }
             }
+            DEEP_LINK_PM_SEND -> {
+                navigationState.navigateTo(
+                    Main,
+                    PMSend(
+                        intent?.getStringExtra(EXTRA_PM_SEND_RECIPIENT),
+                        intent?.getStringExtra(EXTRA_PM_SEND_SUBJECT),
+                        intent?.getStringExtra(EXTRA_PM_SEND_TEXT)
+                    )
+                )
+            }
         }
     }
 
@@ -330,5 +341,20 @@ class MainActivityCompose : ComposeBaseActivity() {
         /** Intent extra: true when the thing being edited is a self post. */
         const val EXTRA_COMMENT_EDIT_SELF_POST =
             "org.quantumbadger.redreader.extra.COMMENT_EDIT_SELF_POST"
+
+        /** Deep-link route: the PM composer (Main top level + PMSend child). */
+        const val DEEP_LINK_PM_SEND = "pm_send"
+
+        /** Intent extra carrying the recipient for the PM-send deep link. */
+        const val EXTRA_PM_SEND_RECIPIENT =
+            "org.quantumbadger.redreader.extra.PM_SEND_RECIPIENT"
+
+        /** Intent extra carrying the subject for the PM-send deep link. */
+        const val EXTRA_PM_SEND_SUBJECT =
+            "org.quantumbadger.redreader.extra.PM_SEND_SUBJECT"
+
+        /** Intent extra carrying the message body for the PM-send deep link. */
+        const val EXTRA_PM_SEND_TEXT =
+            "org.quantumbadger.redreader.extra.PM_SEND_TEXT"
     }
 }

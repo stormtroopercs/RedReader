@@ -30,7 +30,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.quantumbadger.redreader.activities.HtmlViewActivity
-import org.quantumbadger.redreader.activities.PMSendActivity
+import org.quantumbadger.redreader.activities.WebViewActivity
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.compose.prefs.ComposePrefsSingleton
 import org.quantumbadger.redreader.common.General
@@ -160,11 +160,12 @@ class EdgeToEdgeInsetsTest {
     @Test
     fun testSystemBarScrimsAppliedOnInsetDispatch() {
 
-        // PMSendActivity still uses the legacy ViewsBaseActivity scrim path
-        // (the Compose activities — e.g. MainActivityCompose — handle their
-        // insets via the Compose composition instead)
-        val controller: ActivityController<PMSendActivity> =
-            Robolectric.buildActivity(PMSendActivity::class.java).setup()
+        // WebViewActivity is the last legacy ViewsBaseActivity subclass and
+        // still uses its scrim path (the Compose activities — e.g.
+        // MainActivityCompose — handle their insets via the Compose
+        // composition instead)
+        val controller: ActivityController<WebViewActivity> =
+            Robolectric.buildActivity(WebViewActivity::class.java).setup()
 
         val activity = controller.get()
 

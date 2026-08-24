@@ -33,7 +33,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.activities.MainActivityCompose
-import org.quantumbadger.redreader.activities.PMSendActivity
 import org.quantumbadger.redreader.activities.WebViewActivity
 import org.quantumbadger.redreader.cache.CacheRequest
 import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
@@ -355,23 +354,23 @@ object LinkHandler {
 				}
 
 				RedditURLParser.COMPOSE_MESSAGE_URL -> {
-					val intent = Intent(
-						activity,
-						PMSendActivity::class.java
-					)
+					// A cm: URL opens the Compose PM composer (any prefilled parts are
+					// carried as deep-link extras).
+					val intent = Intent(activity, MainActivityCompose::class.java)
+					intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_PM_SEND)
 					val cmUrl = redditURL.asComposeMessageURL()
 
 					if (cmUrl.recipient != null) {
-						intent.putExtra(PMSendActivity.EXTRA_RECIPIENT, cmUrl.recipient)
+						intent.putExtra(MainActivityCompose.EXTRA_PM_SEND_RECIPIENT, cmUrl.recipient)
 					}
 					if (cmUrl.subject != null) {
-						intent.putExtra(PMSendActivity.EXTRA_SUBJECT, cmUrl.subject)
+						intent.putExtra(MainActivityCompose.EXTRA_PM_SEND_SUBJECT, cmUrl.subject)
 					}
 					if (cmUrl.message != null) {
-						intent.putExtra(PMSendActivity.EXTRA_TEXT, cmUrl.message)
+						intent.putExtra(MainActivityCompose.EXTRA_PM_SEND_TEXT, cmUrl.message)
 					}
 
-					activity.startActivityForResult(intent, 1)
+					activity.startActivity(intent)
 					return
 				}
 

@@ -119,7 +119,10 @@ fun AdaptiveAppNavigation() {
                     username = key.username,
                     onNavigateBack = { navigator.goBack() },
                     onNavigateToPosts = { /* TODO */ },
-                    onNavigateToComments = { /* TODO */ }
+                    onNavigateToComments = { /* TODO */ },
+                    onSendMessage = {
+                        navigator.navigate(PMSend(recipient = key.username))
+                    }
                 )
             }
 

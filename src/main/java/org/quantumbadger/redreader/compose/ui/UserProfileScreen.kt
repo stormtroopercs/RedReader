@@ -47,7 +47,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.activities.OAuthLoginActivity
-import org.quantumbadger.redreader.activities.PMSendActivity
 import org.quantumbadger.redreader.compose.net.NetRequestStatus
 import org.quantumbadger.redreader.compose.net.fetchImage
 import org.quantumbadger.redreader.common.RRError
@@ -70,6 +69,7 @@ fun UserProfileScreen(
     onNavigateBack: () -> Unit,
     onNavigateToPosts: () -> Unit,
     onNavigateToComments: () -> Unit,
+    onSendMessage: () -> Unit,
     viewModel: UserProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -158,16 +158,7 @@ fun UserProfileScreen(
                     onMoreInfo = { moreInfoUser = it },
                     onNavigateToPosts = onNavigateToPosts,
                     onNavigateToComments = onNavigateToComments,
-                    onSendMessage = {
-                        // Mirror the legacy dialog: open the PM composer for the
-                        // profiled user (signed in only).
-                        if (context is AppCompatActivity) {
-                            context.startActivity(
-                                Intent(context, PMSendActivity::class.java)
-                                    .putExtra(PMSendActivity.EXTRA_RECIPIENT, uiState.username)
-                            )
-                        }
-                    },
+                    onSendMessage = onSendMessage,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)

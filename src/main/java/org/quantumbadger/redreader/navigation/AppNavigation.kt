@@ -136,6 +136,9 @@ fun AppNavGraph(navigationState: NavigationState) {
                     },
                     onNavigateToComments = {
                         navigator.navigate(CommentList("u/${key.username}/comments"))
+                    },
+                    onSendMessage = {
+                        navigator.navigate(PMSend(recipient = key.username))
                     }
                 )
             }
@@ -192,6 +195,17 @@ fun AppNavGraph(navigationState: NavigationState) {
                     ),
                     initialText = key.initialText,
                     isSelfPost = key.isSelfPost,
+                    onDone = { navigator.goBack() },
+                    onNavigateBack = { navigator.goBack() }
+                )
+            }
+
+            // Child: PM composer
+            entry<PMSend> { key ->
+                org.quantumbadger.redreader.compose.ui.PMSendScreen(
+                    initialRecipient = key.recipient,
+                    initialSubject = key.subject,
+                    initialText = key.text,
                     onDone = { navigator.goBack() },
                     onNavigateBack = { navigator.goBack() }
                 )

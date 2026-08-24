@@ -78,6 +78,14 @@ data class CommentEdit(
     val isSelfPost: Boolean = false
 ) : NavKey
 
+/** PM composer (recipient / subject / message; optional `cm:`-URL prefill). */
+@Serializable
+data class PMSend(
+    val recipient: String? = null,
+    val subject: String? = null,
+    val text: String? = null
+) : NavKey
+
 @Serializable
 data object RedditTerms : NavKey
 
