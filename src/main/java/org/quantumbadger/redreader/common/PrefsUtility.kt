@@ -643,6 +643,55 @@ object PrefsUtility {
             .apply()
     }
 
+    // ── Font scale panel setters (32nd) ──
+    fun pref_appearance_fontscale_global_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_fontscale_global_key), value)
+            .apply()
+    }
+
+    fun pref_appearance_fontscale_posts_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_fontscale_posts_key), value)
+            .apply()
+    }
+
+    fun pref_appearance_fontscale_post_subtitles_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_fontscale_post_subtitles_key), value)
+            .apply()
+    }
+
+    fun pref_appearance_fontscale_post_header_titles_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_fontscale_post_header_titles_key), value)
+            .apply()
+    }
+
+    fun pref_appearance_fontscale_post_header_subtitles_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_fontscale_post_header_subtitles_key), value)
+            .apply()
+    }
+
+    fun pref_appearance_fontscale_comment_headers_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_fontscale_comment_headers_key), value)
+            .apply()
+    }
+
+    fun pref_appearance_fontscale_bodytext_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_fontscale_bodytext_key), value)
+            .apply()
+    }
+
+    fun pref_appearance_fontscale_linkbuttons_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_fontscale_linkbuttons_key), value)
+            .apply()
+    }
+
     fun pref_appearance_highlight_own_username_set(enabled: Boolean) {
         setBoolean(string.pref_appearance_highlight_own_username_key, enabled)
     }

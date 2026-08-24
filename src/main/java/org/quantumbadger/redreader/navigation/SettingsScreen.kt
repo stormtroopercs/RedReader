@@ -1653,6 +1653,70 @@ private fun getSettingsCategories(
             )
         ),
 
+        // ─── Font scale (32nd) ───
+        SettingsCategory(
+            id = "fonts",
+            title = "Font Scale",
+            items = listOf(
+                SettingsItem.ChoiceSetting(
+                    key = "fontscale_global",
+                    label = "Global",
+                    options = fontScaleGlobalOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_appearance_fontscale_global_key, "1") },
+                    set = { PrefsUtility.pref_appearance_fontscale_global_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "fontscale_posts",
+                    label = "Post titles",
+                    options = fontScaleSectionOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_appearance_fontscale_posts_key, "-1") },
+                    set = { PrefsUtility.pref_appearance_fontscale_posts_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "fontscale_post_subtitles",
+                    label = "Post subtitles",
+                    options = fontScaleSectionOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_appearance_fontscale_post_subtitles_key, "-1") },
+                    set = { PrefsUtility.pref_appearance_fontscale_post_subtitles_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "fontscale_post_header_titles",
+                    label = "Opened post titles",
+                    options = fontScaleSectionOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_appearance_fontscale_post_header_titles_key, "-1") },
+                    set = { PrefsUtility.pref_appearance_fontscale_post_header_titles_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "fontscale_post_header_subtitles",
+                    label = "Opened post subtitles",
+                    options = fontScaleSectionOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_appearance_fontscale_post_header_subtitles_key, "-1") },
+                    set = { PrefsUtility.pref_appearance_fontscale_post_header_subtitles_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "fontscale_comment_headers",
+                    label = "Comment/Inbox headers",
+                    options = fontScaleSectionOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_appearance_fontscale_comment_headers_key, "-1") },
+                    set = { PrefsUtility.pref_appearance_fontscale_comment_headers_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "fontscale_bodytext",
+                    label = "Body text",
+                    options = fontScaleSectionOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_appearance_fontscale_bodytext_key, "-1") },
+                    set = { PrefsUtility.pref_appearance_fontscale_bodytext_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "fontscale_linkbuttons",
+                    label = "Link buttons",
+                    options = fontScaleSectionOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_appearance_fontscale_linkbuttons_key, "-1") },
+                    set = { PrefsUtility.pref_appearance_fontscale_linkbuttons_set(it) }
+                )
+            )
+        ),
+
         // ─── About ───
         SettingsCategory(
             id = "about",
@@ -1955,6 +2019,19 @@ private val yesNoOrWifiOptions = listOf(
     "Only on Wi-Fi" to "wifionly",
     "Never" to "never"
 )
+
+// Font scale options (32nd): the 23 steps 0.7x → 8.0x ("1" = Normal); the
+// per-section pickers prepend "Use global font scale" (-1).
+private val fontScaleGlobalOptions = listOf(
+    "0.7x" to "0.7", "0.8x" to "0.8", "0.9x" to "0.9", "Normal" to "1",
+    "1.05x" to "1.05", "1.1x" to "1.1", "1.2x" to "1.2", "1.3x" to "1.3",
+    "1.4x" to "1.4", "1.5x" to "1.5", "1.6x" to "1.6", "1.7x" to "1.7",
+    "1.8x" to "1.8", "1.9x" to "1.9", "2.0x" to "2.0", "2.5x" to "2.5",
+    "3.0x" to "3.0", "3.5x" to "3.5", "4.0x" to "4.0", "5.0x" to "5.0",
+    "6.0x" to "6.0", "7.0x" to "7.0", "8.0x" to "8.0"
+)
+
+private val fontScaleSectionOptions = listOf("Use global font scale" to "-1") + fontScaleGlobalOptions
 
 /**
  * Cache storage location chooser (31st): mirrors the legacy
