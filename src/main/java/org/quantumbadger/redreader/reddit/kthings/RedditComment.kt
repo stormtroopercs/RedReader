@@ -39,6 +39,7 @@ data class RedditComment(
 
 	val author: UrlEncodedString?=null,
 	val subreddit: UrlEncodedString?=null,
+	val permalink: UrlEncodedString?=null,
 	val author_flair_text: UrlEncodedString?=null,
 	val author_flair_richtext: List<MaybeParseError<FlairEmoteData>>?= null,
 	val archived: Boolean = false,

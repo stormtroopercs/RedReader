@@ -38,42 +38,51 @@ import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.quantumbadger.redreader.compose.theme.LocalComposeTheme
 import org.quantumbadger.redreader.compose.theme.StyledText
 import org.quantumbadger.redreader.compose.ui.RRErrorView
+import org.quantumbadger.redreader.common.LinkHandler
 import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.fragments.ReportDialog
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 import java.util.concurrent.TimeUnit
 
 /**
@@ -88,9 +97,38 @@ fun RealCommentListScreen(
     val viewModel: CommentListViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val listTitle by viewModel.title.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(postId) {
         viewModel.fetchComments(postId)
+    }
+
+    // Surface the result of the last comment action (vote) as a Snackbar,
+    // then clear it so a repeat action re-triggers it.
+    val actionResult by viewModel.actionResult.collectAsStateWithLifecycle()
+    LaunchedEffect(actionResult) {
+        actionResult?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearActionResult()
+        }
+    }
+
+    // A comment action: upvote / downvote go to the ViewModel (which hits the
+    // Reddit API); copy link copies the comment URL to the clipboard; report
+    // opens the report dialog.
+    fun onCommentAction(comment: CommentItem, action: CommentAction) {
+        val activity = context as? AppCompatActivity
+        when (action) {
+            CommentAction.REPORT -> activity?.let {
+                ReportDialog.show(it, RedditIdAndType(comment.fullName), comment.subreddit ?: "", isComment = true)
+            }
+            CommentAction.COPY_LINK -> comment.permalink?.let { perm ->
+                clipboard.setText(AnnotatedString("https://www.reddit.com$perm"))
+            }
+            else -> activity?.let { viewModel.performAction(it, comment, action) }
+        }
     }
 
     Scaffold(
@@ -120,7 +158,8 @@ fun RealCommentListScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         when (val state = uiState) {
             is CommentListUiState.Loading -> {
@@ -140,6 +179,7 @@ fun RealCommentListScreen(
                     postAuthor = state.postAuthor,
                     comments = state.comments,
                     moreCommentsAvailable = state.moreCommentsAvailable,
+                    onCommentAction = ::onCommentAction,
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -180,6 +220,7 @@ private fun CommentListContent(
     postAuthor: String?,
     comments: List<CommentItem>,
     moreCommentsAvailable: Boolean,
+    onCommentAction: (CommentItem, CommentAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val theme = LocalComposeTheme.current.postCard
@@ -218,7 +259,8 @@ private fun CommentListContent(
             items(comments, key = { it.id }) { comment ->
                 CommentCard(
                     comment = comment,
-                    theme = theme
+                    theme = theme,
+                    onCommentAction = onCommentAction
                 )
             }
         }
@@ -281,8 +323,10 @@ private fun PostHeaderCard(
 @Composable
 private fun CommentCard(
     comment: CommentItem,
-    theme: org.quantumbadger.redreader.compose.theme.ComposeThemePostCard
+    theme: org.quantumbadger.redreader.compose.theme.ComposeThemePostCard,
+    onCommentAction: (CommentItem, CommentAction) -> Unit
 ) {
+    var moreMenuExpanded by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -298,7 +342,9 @@ private fun CommentCard(
                 imageVector = Icons.Default.ArrowUpward,
                 contentDescription = "Upvote",
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable(onClick = { onCommentAction(comment, CommentAction.UPVOTE) })
             )
 
             Text(
@@ -311,7 +357,9 @@ private fun CommentCard(
                 imageVector = Icons.Default.ArrowDownward,
                 contentDescription = "Downvote",
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable(onClick = { onCommentAction(comment, CommentAction.DOWNVOTE) })
             )
         }
 
@@ -392,7 +440,7 @@ private fun CommentCard(
                 Spacer(Modifier.width(16.dp))
 
                 TextButton(
-                    onClick = {},
+                    onClick = { onCommentAction(comment, CommentAction.REPORT) },
                     content = {
                         Icon(
                             imageVector = Icons.Default.Flag,
@@ -406,18 +454,32 @@ private fun CommentCard(
 
                 Spacer(Modifier.width(16.dp))
 
-                TextButton(
-                    onClick = {},
-                    content = {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
+                Box {
+                    TextButton(
+                        onClick = { moreMenuExpanded = true },
+                        content = {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text("More", style = MaterialTheme.typography.labelSmall)
+                        }
+                    )
+                    DropdownMenu(
+                        expanded = moreMenuExpanded,
+                        onDismissRequest = { moreMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Copy link") },
+                            onClick = {
+                                moreMenuExpanded = false
+                                onCommentAction(comment, CommentAction.COPY_LINK)
+                            }
                         )
-                        Spacer(Modifier.width(4.dp))
-                        Text("More", style = MaterialTheme.typography.labelSmall)
                     }
-                )
+                }
             }
         }
     }

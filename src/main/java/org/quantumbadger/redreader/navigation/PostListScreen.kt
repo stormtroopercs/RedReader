@@ -17,6 +17,7 @@
 
 package org.quantumbadger.redreader.navigation
 
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -72,6 +73,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -84,7 +86,9 @@ import org.quantumbadger.redreader.compose.net.fetchImage
 import org.quantumbadger.redreader.compose.theme.ComposeThemePostCard
 import org.quantumbadger.redreader.compose.theme.LocalComposeTheme
 import org.quantumbadger.redreader.compose.ui.RRErrorView
+import org.quantumbadger.redreader.common.LinkHandler
 import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.fragments.ReportDialog
 import org.quantumbadger.redreader.reddit.PostSort
 
 /**
@@ -114,6 +118,38 @@ fun RealPostListScreen(
 
     var sortByMenuExpanded by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
+    // Surface the result of the last post action (vote / save / hide) as a
+    // Snackbar, then clear it so a repeat action re-triggers it.
+    val actionResult by viewModel.actionResult.collectAsStateWithLifecycle()
+    LaunchedEffect(actionResult) {
+        actionResult?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearActionResult()
+        }
+    }
+
+    // A post action: votes / save / hide / unhide go to the ViewModel (which
+    // hits the Reddit API); report opens the report dialog; share hands the
+    // permalink to the OS share sheet.
+    fun onPostAction(post: PostItem, action: PostAction) {
+        val activity = context as? AppCompatActivity ?: return
+        when (action) {
+            PostAction.REPORT -> ReportDialog.show(
+                activity,
+                org.quantumbadger.redreader.reddit.kthings.RedditIdAndType(post.id),
+                post.subreddit,
+                isComment = false
+            )
+            PostAction.SHARE -> LinkHandler.shareText(
+                activity,
+                post.title,
+                "https://www.reddit.com${post.permalink}"
+            )
+            else -> viewModel.performAction(activity, post, action)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -215,7 +251,8 @@ fun RealPostListScreen(
                         },
                         onAuthorClick = { author ->
                             onNavigateToUserProfile(author)
-                        }
+                        },
+                        onPostAction = ::onPostAction
                     )
                 }
 
@@ -255,7 +292,8 @@ private fun PostListContent(
     posts: List<PostItem>,
     theme: ComposeThemePostCard,
     onPostClick: (PostItem) -> Unit,
-    onAuthorClick: (String) -> Unit
+    onAuthorClick: (String) -> Unit,
+    onPostAction: (PostItem, PostAction) -> Unit
 ) {
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
 
@@ -285,7 +323,8 @@ private fun PostListContent(
                     post = post,
                     theme = theme,
                     onClick = { onPostClick(post) },
-                    onAuthorClick = onAuthorClick
+                    onAuthorClick = onAuthorClick,
+                    onPostAction = onPostAction
                 )
             }
         }
@@ -300,7 +339,8 @@ private fun PostItemCard(
     post: PostItem,
     theme: ComposeThemePostCard,
     onClick: () -> Unit,
-    onAuthorClick: (String) -> Unit
+    onAuthorClick: (String) -> Unit,
+    onPostAction: (PostItem, PostAction) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -336,7 +376,9 @@ private fun PostItemCard(
                     imageVector = Icons.Filled.KeyboardArrowUp,
                     contentDescription = "Upvote",
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable(onClick = { onPostAction(post, PostAction.UPVOTE) })
                 )
 
                 Text(
@@ -349,7 +391,9 @@ private fun PostItemCard(
                     imageVector = Icons.Filled.KeyboardArrowDown,
                     contentDescription = "Downvote",
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable(onClick = { onPostAction(post, PostAction.DOWNVOTE) })
                 )
             }
 
@@ -443,15 +487,27 @@ private fun PostItemCard(
                 ) {
                     DropdownMenuItem(
                         text = { Text("Share") },
-                        onClick = { /* TODO: share post */ expanded = false }
+                        onClick = {
+                            expanded = false
+                            onPostAction(post, PostAction.SHARE)
+                        }
                     )
                     DropdownMenuItem(
-                        text = { Text("Save") },
-                        onClick = { /* TODO: save post */ expanded = false }
+                        text = { Text(if (post.saved) "Unsave" else "Save") },
+                        onClick = {
+                            expanded = false
+                            onPostAction(
+                                post,
+                                if (post.saved) PostAction.UNSAVE else PostAction.SAVE
+                            )
+                        }
                     )
                     DropdownMenuItem(
                         text = { Text("Report") },
-                        onClick = { /* TODO: report post */ expanded = false }
+                        onClick = {
+                            expanded = false
+                            onPostAction(post, PostAction.REPORT)
+                        }
                     )
                 }
             }

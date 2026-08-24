@@ -19,6 +19,7 @@ package org.quantumbadger.redreader.navigation
 
 import android.content.Context
 import android.net.Uri
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,6 +36,8 @@ import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest
 import org.quantumbadger.redreader.cache.CacheRequestCallbacks
 import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategyIfNotCached
+import org.quantumbadger.redreader.common.AndroidCommon
+import org.quantumbadger.redreader.common.BugReporter
 import org.quantumbadger.redreader.common.Constants
 import org.quantumbadger.redreader.common.GenericFactory
 import org.quantumbadger.redreader.common.Priority
@@ -44,7 +47,10 @@ import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.common.datastream.SeekableInputStream
 import org.quantumbadger.redreader.common.time.TimestampUTC
 import org.quantumbadger.redreader.reddit.PostSort
+import org.quantumbadger.redreader.reddit.RedditAPI
+import org.quantumbadger.redreader.reddit.APIResponseHandler.ActionResponseHandler
 import org.quantumbadger.redreader.reddit.kthings.JsonUtils.decodeRedditThingFromStream
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 import org.quantumbadger.redreader.reddit.kthings.RedditThing
 import org.quantumbadger.redreader.reddit.url.PostListingURL
 import org.quantumbadger.redreader.reddit.url.RedditURLParser
@@ -76,8 +82,21 @@ data class PostItem(
     val authorFlairText: String?,
     val thumbnail: String?,
     val selftext: String?,
-    val createdUtc: Long
+    val createdUtc: Long,
+    val saved: Boolean = false,
+    val hidden: Boolean = false
 )
+
+/**
+ * A post action the user can invoke from the list. Maps onto the legacy
+ * [RedditAPI] endpoints: the vote actions hit `api/vote` (dir +1/0/-1),
+ * [SAVE]/[UNSAVE] hit `api/save` / `api/unsave`. [HIDE] and [UNHIDE] are
+ * `api/hide` / `api/unhide`; [REPORT] opens the report flow (a dialog, not an
+ * endpoint call here) and [SHARE] hands the permalink to the OS share sheet.
+ */
+enum class PostAction {
+    UPVOTE, DOWNVOTE, SAVE, UNSAVE, HIDE, UNHIDE, REPORT, SHARE
+}
 
 @HiltViewModel
 class PostListViewModel @Inject constructor(
@@ -141,6 +160,101 @@ class PostListViewModel @Inject constructor(
         _sortBy.value = sort
         PrefsUtility.pref_behaviour_postsort_set(sort)
         refresh()
+    }
+
+    /** A transient result for the last post action (success/failure text) to
+     *  surface as a Snackbar. Null when nothing to show. */
+    private val _actionResult = MutableStateFlow<String?>(null)
+    val actionResult: StateFlow<String?> = _actionResult.asStateFlow()
+
+    /**
+     * Invoke [action] on [post] against the Reddit API, exactly as the legacy
+     * `RedditPostActions` menu did: the vote actions hit `api/vote` (dir
+     * +1/0/−1), `SAVE`/`UNSAVE` hit `api/save` / `api/unsave`, `HIDE`/`UNHIDE`
+     * hit `api/hide` / `api/unhide`. The default account is used (the same the
+     * listing fetches with) and the hosting [activity] is needed only to build
+     * the [ActionResponseHandler] (it carries the error/dialog routing).
+     *
+     * `REPORT` and `SHARE` are not endpoint calls here — the screen opens the
+     * report dialog / share sheet itself — so they are not handled by this
+     * method.
+     */
+    fun performAction(activity: AppCompatActivity, post: PostItem, action: PostAction) {
+        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        if (account == null) {
+            _actionResult.value = "Not signed in"
+            return
+        }
+
+        val idAndType = RedditIdAndType(post.id)
+        val apiAction = when (action) {
+            PostAction.UPVOTE -> RedditAPI.ACTION_UPVOTE
+            PostAction.DOWNVOTE -> RedditAPI.ACTION_DOWNVOTE
+            PostAction.SAVE -> RedditAPI.ACTION_SAVE
+            PostAction.UNSAVE -> RedditAPI.ACTION_UNSAVE
+            PostAction.HIDE -> RedditAPI.ACTION_HIDE
+            PostAction.UNHIDE -> RedditAPI.ACTION_UNHIDE
+            else -> return
+        }
+
+        val handler = object : ActionResponseHandler(activity) {
+            override fun onSuccess() {
+                AndroidCommon.runOnUiThread {
+                    _posts.value = _posts.value.map { if (it.id == post.id) applyPostAction(it, action) else it }
+                    _actionResult.value = resultMessageFor(action)
+                }
+            }
+
+            override fun onFailure(error: RRError) {
+                AndroidCommon.runOnUiThread {
+                    _actionResult.value = error.message ?: "Action failed"
+                }
+            }
+
+            override fun onCallbackException(t: Throwable) {
+                BugReporter.handleGlobalError(activity, t)
+            }
+        }
+
+        RedditAPI.action(
+            CacheManager.getInstance(context),
+            handler,
+            account,
+            idAndType,
+            apiAction,
+            activity
+        )
+    }
+
+    /** Clear a shown action-result message (called after the Snackbar). */
+    fun clearActionResult() {
+        _actionResult.value = null
+    }
+
+    /** Re-derive a post's display score / saved / hidden flags locally after a
+     *  successful action, so the list reflects the change without a refetch. */
+    private fun applyPostAction(post: PostItem, action: PostAction): PostItem {
+        return when (action) {
+            PostAction.UPVOTE -> post.copy(score = post.score + 1)
+            PostAction.DOWNVOTE -> post.copy(score = post.score - 1)
+            PostAction.SAVE -> post.copy(saved = true)
+            PostAction.UNSAVE -> post.copy(saved = false)
+            PostAction.HIDE -> post.copy(hidden = true)
+            PostAction.UNHIDE -> post.copy(hidden = false)
+            else -> post
+        }
+    }
+
+    private fun resultMessageFor(action: PostAction): String {
+        return when (action) {
+            PostAction.UPVOTE -> "Upvoted"
+            PostAction.DOWNVOTE -> "Downvoted"
+            PostAction.SAVE -> "Saved"
+            PostAction.UNSAVE -> "Removed from saved"
+            PostAction.HIDE -> "Hidden"
+            PostAction.UNHIDE -> "Unhidden"
+            else -> ""
+        }
     }
 
     private fun fetchList(listPath: String, searchQuery: String?) {
@@ -275,6 +389,8 @@ private fun RedditThing.Post.toPostItem(): PostItem {
         authorFlairText = p.author_flair_text?.decoded,
         thumbnail = p.thumbnail?.decoded,
         selftext = p.selftext?.decoded,
-        createdUtc = p.created_utc.value.toUtcSecs()
+        createdUtc = p.created_utc.value.toUtcSecs(),
+        saved = p.saved,
+        hidden = p.hidden
     )
 }

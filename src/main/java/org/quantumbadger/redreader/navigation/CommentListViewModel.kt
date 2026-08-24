@@ -18,6 +18,7 @@
 package org.quantumbadger.redreader.navigation
 
 import android.content.Context
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.common.BugReporter
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest
 import org.quantumbadger.redreader.cache.CacheRequestCallbacks
@@ -39,9 +41,12 @@ import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.common.AndroidCommon
 import org.quantumbadger.redreader.common.datastream.SeekableInputStream
 import org.quantumbadger.redreader.jsonwrap.JsonValue
+import org.quantumbadger.redreader.reddit.RedditAPI
+import org.quantumbadger.redreader.reddit.APIResponseHandler.ActionResponseHandler
 import org.quantumbadger.redreader.reddit.kthings.JsonUtils
 import org.quantumbadger.redreader.reddit.kthings.MaybeParseError
 import org.quantumbadger.redreader.reddit.kthings.RedditFieldReplies
+import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 import org.quantumbadger.redreader.reddit.kthings.RedditThing
 import org.quantumbadger.redreader.reddit.kthings.RedditThingResponse
 import org.quantumbadger.redreader.reddit.url.CommentListingURL
@@ -82,8 +87,29 @@ data class CommentItem(
     val isTopLevel: Boolean,
     val collapsed: Boolean,
     val collapsedReason: String?,
-    val replyDepth: Int = 0
+    val replyDepth: Int = 0,
+    /** The full `t1_…` name — needed for vote / report (RedditAPI expects the
+     *  full id, not the bare one in [id]). */
+    val fullName: String = "",
+    /** The comment's subreddit (for the report flow). */
+    val subreddit: String? = null,
+    /** The comment's permalink (a `UrlEncodedString` path), used to build a
+     *  shareable URL. */
+    val permalink: String? = null
 )
+
+/**
+ * A comment action the user can invoke from the list. Maps onto the legacy
+ * [RedditAPI] endpoints: the vote actions hit `api/vote` (dir +1/0/-1).
+ * [COPY_LINK] and [REPORT] are handled by the screen (clipboard / report
+ * dialog), not by an endpoint call here.
+ */
+enum class CommentAction {
+	UPVOTE,
+	DOWNVOTE,
+	COPY_LINK,
+	REPORT
+}
 
 @HiltViewModel
 class CommentListViewModel @Inject constructor(
@@ -115,6 +141,66 @@ class CommentListViewModel @Inject constructor(
 
     fun refresh() {
         fetchComments(_postId.value)
+    }
+
+    /** A transient result for the last comment action (success/failure text)
+     *  to surface as a Snackbar. Null when nothing to show. */
+    private val _actionResult = MutableStateFlow<String?>(null)
+    val actionResult: StateFlow<String?> = _actionResult.asStateFlow()
+
+    /**
+     * Vote on [comment] against the Reddit API, as the legacy
+     * `RedditCommentActions` menu did: `api/vote` with dir +1 (up) / −1
+     * (down). The default account is used and the hosting [activity] builds
+     * the [ActionResponseHandler]. [COPY_LINK] and [REPORT] are not endpoint
+     * calls (handled by the screen), so they are not processed here.
+     */
+    fun performAction(activity: AppCompatActivity, comment: CommentItem, action: CommentAction) {
+        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        if (account == null) {
+            _actionResult.value = "Not signed in"
+            return
+        }
+
+        val apiAction = when (action) {
+            CommentAction.UPVOTE -> RedditAPI.ACTION_UPVOTE
+            CommentAction.DOWNVOTE -> RedditAPI.ACTION_DOWNVOTE
+            else -> return
+        }
+
+        val idAndType = RedditIdAndType(comment.fullName)
+
+        val handler = object : ActionResponseHandler(activity) {
+            override fun onSuccess() {
+                AndroidCommon.runOnUiThread {
+                    _actionResult.value = if (action == CommentAction.UPVOTE) "Upvoted" else "Downvoted"
+                }
+            }
+
+            override fun onFailure(error: RRError) {
+                AndroidCommon.runOnUiThread {
+                    _actionResult.value = error.message ?: "Action failed"
+                }
+            }
+
+            override fun onCallbackException(t: Throwable) {
+                BugReporter.handleGlobalError(activity, t)
+            }
+        }
+
+        RedditAPI.action(
+            CacheManager.getInstance(context),
+            handler,
+            account,
+            idAndType,
+            apiAction,
+            activity
+        )
+    }
+
+    /** Clear a shown action-result message (called after the Snackbar). */
+    fun clearActionResult() {
+        _actionResult.value = null
     }
 
     private fun fetchList(listingPath: String) {
@@ -309,7 +395,10 @@ class CommentListViewModel @Inject constructor(
                         isTopLevel = depth == 0,
                         collapsed = false,
                         collapsedReason = comment.collapsed_reason_code,
-                        replyDepth = depth
+                        replyDepth = depth,
+                        fullName = comment.name.toString(),
+                        subreddit = comment.subreddit?.decoded,
+                        permalink = comment.permalink?.decoded
                     )
                 )
 
