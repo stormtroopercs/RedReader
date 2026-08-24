@@ -270,6 +270,122 @@ object PrefsUtility {
         setBoolean(string.pref_network_tor_key, enabled)
     }
 
+    fun pref_behaviour_skiptofrontpage_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_skiptofrontpage_key, enabled)
+    }
+
+    fun pref_behaviour_useinternalbrowser_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_useinternalbrowser_key, enabled)
+    }
+
+    fun pref_behaviour_usecustomtabs_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_usecustomtabs_key, enabled)
+    }
+
+    fun pref_behaviour_screen_orientation_set(orientation: ScreenOrientation) {
+        setEnumString(string.pref_behaviour_screenorientation_key, orientation)
+    }
+
+    fun pref_behaviour_enable_swipe_refresh_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_enable_swipe_refresh_key, enabled)
+    }
+
+    fun pref_behaviour_save_location_set(location: SaveLocation) {
+        setEnumString(string.pref_behaviour_save_location_key, location)
+    }
+
+    fun pref_behaviour_block_screenshots_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_block_screenshots_key, enabled)
+    }
+
+    fun pref_behaviour_keep_screen_awake_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_keep_screen_awake_key, enabled)
+    }
+
+    fun pref_behaviour_user_postsort_set(sort: PostSort) {
+        setEnumString(string.pref_behaviour_user_postsort_key, sort)
+    }
+
+    fun pref_behaviour_multi_postsort_set(sort: PostSort) {
+        setEnumString(string.pref_behaviour_multi_postsort_key, sort)
+    }
+
+    fun pref_behaviour_user_commentsort_set(sort: UserCommentSort) {
+        setEnumString(string.pref_behaviour_user_commentsort_key, sort)
+    }
+
+    fun pref_behaviour_pinned_subredditsort_set(sort: PinnedSubredditSort) {
+        setEnumString(string.pref_behaviour_pinned_subredditsort_key, sort)
+    }
+
+    fun pref_behaviour_blocked_subredditsort_set(sort: BlockedSubredditSort) {
+        setEnumString(string.pref_behaviour_blocked_subredditsort_key, sort)
+    }
+
+    fun pref_behaviour_self_post_tap_actions_set(action: SelfpostAction) {
+        setEnumString(string.pref_behaviour_self_post_tap_actions_key, action)
+    }
+
+    fun pref_behaviour_fling_comment_left_set(action: CommentFlingAction) {
+        setEnumString(string.pref_behaviour_fling_comment_left_key, action)
+    }
+
+    fun pref_behaviour_fling_comment_right_set(action: CommentFlingAction) {
+        setEnumString(string.pref_behaviour_fling_comment_right_key, action)
+    }
+
+    fun pref_behaviour_nsfw_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_nsfw_key, enabled)
+    }
+
+    fun pref_behaviour_hide_read_posts_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_hide_read_posts_key, enabled)
+    }
+
+    fun pref_behaviour_mark_posts_as_read_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_mark_posts_as_read_key, enabled)
+    }
+
+    fun pref_behaviour_post_count_set(count: PostCount) {
+        setEnumString(string.pref_behaviour_postcount_key, count)
+    }
+
+    fun pref_behaviour_comment_min_set(value: String?) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_behaviour_comment_min_key), value).apply()
+    }
+
+    fun pref_behaviour_collapse_sticky_comments_set(value: BehaviourCollapseStickyComments) {
+        setEnumString(string.pref_behaviour_collapse_sticky_comments_key, value)
+    }
+
+    fun pref_behaviour_sharing_domain_set(domain: SharingDomain) {
+        setEnumString(string.pref_behaviour_sharing_domain_key, domain)
+    }
+
+    fun pref_behaviour_share_permalink_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_share_permalink_key, enabled)
+    }
+
+    fun pref_behaviour_sharing_include_desc_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_sharing_include_desc_key, enabled)
+    }
+
+    fun pref_behaviour_sharing_share_text_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_sharing_share_text_key, enabled)
+    }
+
+    fun pref_behaviour_sharing_share_dialog_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_sharing_share_dialog_key, enabled)
+    }
+
+    fun pref_behaviour_bezel_toolbar_swipezone_set(dp: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_behaviour_bezel_toolbar_swipezone_key), dp).apply()
+    }
+
+    fun pref_behaviour_postlist_back_again_set(enabled: Boolean) {
+        setBoolean(string.pref_behaviour_postlist_back_again_key, enabled)
+    }
+
     @Suppress("unused")
     private fun getLong(
         id: Int,

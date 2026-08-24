@@ -67,10 +67,21 @@ import org.quantumbadger.redreader.common.NeverAlwaysOrWifiOnly
 import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.PrefsUtility.AlbumViewMode
 import org.quantumbadger.redreader.common.PrefsUtility.AppearanceStatusBarMode
+import org.quantumbadger.redreader.common.PrefsUtility.BehaviourCollapseStickyComments
+import org.quantumbadger.redreader.common.PrefsUtility.BlockedSubredditSort
 import org.quantumbadger.redreader.common.PrefsUtility.CommentAction
+import org.quantumbadger.redreader.common.PrefsUtility.CommentFlingAction
+import org.quantumbadger.redreader.common.PrefsUtility.PostCount
 import org.quantumbadger.redreader.common.PrefsUtility.PostFlingAction
 import org.quantumbadger.redreader.common.PrefsUtility.PostTapAction
+import org.quantumbadger.redreader.common.PrefsUtility.PinnedSubredditSort
+import org.quantumbadger.redreader.common.PrefsUtility.SaveLocation
+import org.quantumbadger.redreader.common.PrefsUtility.ScreenOrientation
+import org.quantumbadger.redreader.common.PrefsUtility.SelfpostAction
+import org.quantumbadger.redreader.common.PrefsUtility.SharingDomain
 import org.quantumbadger.redreader.reddit.PostCommentSort
+import org.quantumbadger.redreader.reddit.PostSort
+import org.quantumbadger.redreader.reddit.UserCommentSort
 import org.quantumbadger.redreader.settings.types.AppearanceTheme
 
 /**
@@ -752,10 +763,140 @@ private fun getSettingsCategories(
             )
         ),
 
-        // ─── Behaviour ───
+        // ─── Behaviour (general) ───
         SettingsCategory(
             id = "behaviour",
             title = "Behaviour",
+            items = listOf(
+                SettingsItem.BooleanSetting(
+                    key = "skiptofrontpage",
+                    label = "Skip to front page",
+                    get = { PrefsUtility.pref_behaviour_skiptofrontpage() },
+                    set = PrefsUtility::pref_behaviour_skiptofrontpage_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "useinternalbrowser",
+                    label = "Use internal browser",
+                    get = { PrefsUtility.pref_behaviour_useinternalbrowser() },
+                    set = PrefsUtility::pref_behaviour_useinternalbrowser_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "usecustomtabs",
+                    label = "Use Android Custom Tabs",
+                    description = "Use an installed browser with Custom Tabs integration, rather than the system WebView",
+                    get = { PrefsUtility.pref_behaviour_usecustomtabs() },
+                    set = PrefsUtility::pref_behaviour_usecustomtabs_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "notifications",
+                    label = "Notifications",
+                    get = { PrefsUtility.pref_behaviour_notifications() },
+                    set = PrefsUtility::set_pref_behaviour_notifications
+                ),
+                SettingsItem.EnumSetting(
+                    key = "screenorientation",
+                    label = "Screen orientation",
+                    entries = ScreenOrientation.entries,
+                    get = { PrefsUtility.pref_behaviour_screen_orientation() },
+                    set = PrefsUtility::pref_behaviour_screen_orientation_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "enable_swipe_refresh",
+                    label = "Swipe down to refresh",
+                    get = { PrefsUtility.pref_behaviour_enable_swipe_refresh() },
+                    set = PrefsUtility::pref_behaviour_enable_swipe_refresh_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "save_location",
+                    label = "Save destination",
+                    entries = SaveLocation.entries,
+                    get = { PrefsUtility.pref_behaviour_save_location() },
+                    set = PrefsUtility::pref_behaviour_save_location_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "block_screenshots",
+                    label = "Block screenshots",
+                    description = "Prevent screenshots and hide app content in the recents menu",
+                    get = { PrefsUtility.behaviour_block_screenshots() },
+                    set = PrefsUtility::pref_behaviour_block_screenshots_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "keep_screen_awake",
+                    label = "Keep screen awake",
+                    description = "Keep the screen awake while RedReader is in the foreground",
+                    get = { PrefsUtility.pref_behaviour_keep_screen_awake() },
+                    set = PrefsUtility::pref_behaviour_keep_screen_awake_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "postlist_back_again",
+                    label = "Press back twice to exit post list",
+                    get = { PrefsUtility.pref_behaviour_back_again() },
+                    set = PrefsUtility::pref_behaviour_postlist_back_again_set
+                )
+            )
+        ),
+
+        // ─── Sorting ───
+        SettingsCategory(
+            id = "sorting",
+            title = "Sorting",
+            items = listOf(
+                SettingsItem.EnumSetting(
+                    key = "postsort",
+                    label = "Posts (default)",
+                    entries = PostSort.entries,
+                    get = { PrefsUtility.pref_behaviour_postsort() },
+                    set = PrefsUtility::pref_behaviour_postsort_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "user_postsort",
+                    label = "User posts (default)",
+                    entries = PostSort.entries,
+                    get = { PrefsUtility.pref_behaviour_user_postsort() },
+                    set = PrefsUtility::pref_behaviour_user_postsort_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "multi_postsort",
+                    label = "Multireddit posts (default)",
+                    entries = PostSort.entries,
+                    get = { PrefsUtility.pref_behaviour_multi_postsort() },
+                    set = PrefsUtility::pref_behaviour_multi_postsort_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "commentsort",
+                    label = "Comments (default)",
+                    entries = PostCommentSort.entries,
+                    get = { PrefsUtility.pref_behaviour_commentsort() },
+                    set = PrefsUtility::pref_behaviour_commentsort_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "user_commentsort",
+                    label = "User comments (default)",
+                    entries = UserCommentSort.entries,
+                    get = { PrefsUtility.pref_behaviour_user_commentsort() },
+                    set = PrefsUtility::pref_behaviour_user_commentsort_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "pinned_subredditsort",
+                    label = "Pinned subreddits",
+                    entries = PinnedSubredditSort.entries,
+                    get = { PrefsUtility.pref_behaviour_pinned_subredditsort() },
+                    set = PrefsUtility::pref_behaviour_pinned_subredditsort_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "blocked_subredditsort",
+                    label = "Blocked subreddits",
+                    entries = BlockedSubredditSort.entries,
+                    get = { PrefsUtility.pref_behaviour_blocked_subredditsort() },
+                    set = PrefsUtility::pref_behaviour_blocked_subredditsort_set
+                )
+            )
+        ),
+
+        // ─── Post actions ───
+        SettingsCategory(
+            id = "post_actions",
+            title = "Post actions",
             items = listOf(
                 SettingsItem.EnumSetting(
                     key = "post_tap_action",
@@ -766,8 +907,15 @@ private fun getSettingsCategories(
                     set = PrefsUtility::pref_behaviour_post_tap_action_set
                 ),
                 SettingsItem.EnumSetting(
+                    key = "self_post_tap_actions",
+                    label = "Post text tap",
+                    entries = SelfpostAction.entries,
+                    get = { PrefsUtility.pref_behaviour_self_post_tap_actions() },
+                    set = PrefsUtility::pref_behaviour_self_post_tap_actions_set
+                ),
+                SettingsItem.EnumSetting(
                     key = "fling_post_left",
-                    label = "Fling post left",
+                    label = "Fling left",
                     description = "Action when swiping a post to the left",
                     entries = PostFlingAction.entries,
                     get = { PrefsUtility.pref_behaviour_fling_post_left() },
@@ -775,15 +923,23 @@ private fun getSettingsCategories(
                 ),
                 SettingsItem.EnumSetting(
                     key = "fling_post_right",
-                    label = "Fling post right",
+                    label = "Fling right",
                     description = "Action when swiping a post to the right",
                     entries = PostFlingAction.entries,
                     get = { PrefsUtility.pref_behaviour_fling_post_right() },
                     set = PrefsUtility::pref_behaviour_fling_post_right_set
-                ),
+                )
+            )
+        ),
+
+        // ─── Comment actions ───
+        SettingsCategory(
+            id = "comment_actions",
+            title = "Comment actions",
+            items = listOf(
                 SettingsItem.EnumSetting(
                     key = "comment_tap",
-                    label = "Comment tap action",
+                    label = "Press",
                     description = "What happens when you tap a comment",
                     entries = CommentAction.entries,
                     get = { PrefsUtility.pref_behaviour_actions_comment_tap() },
@@ -791,26 +947,149 @@ private fun getSettingsCategories(
                 ),
                 SettingsItem.EnumSetting(
                     key = "comment_longclick",
-                    label = "Comment long-press action",
+                    label = "Long press",
                     description = "What happens when you long-press a comment",
                     entries = CommentAction.entries,
                     get = { PrefsUtility.pref_behaviour_actions_comment_longclick() },
                     set = PrefsUtility::pref_behaviour_actions_comment_longclick_set
                 ),
                 SettingsItem.EnumSetting(
-                    key = "commentsort",
-                    label = "Comment sort",
-                    description = "Default comment sorting",
-                    entries = PostCommentSort.entries,
-                    get = { PrefsUtility.pref_behaviour_commentsort() },
-                    set = PrefsUtility::pref_behaviour_commentsort_set
+                    key = "fling_comment_left",
+                    label = "Fling left",
+                    description = "Action when swiping a comment to the left",
+                    entries = CommentFlingAction.entries,
+                    get = { PrefsUtility.pref_behaviour_fling_comment_left() },
+                    set = PrefsUtility::pref_behaviour_fling_comment_left_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "fling_comment_right",
+                    label = "Fling right",
+                    description = "Action when swiping a comment to the right",
+                    entries = CommentFlingAction.entries,
+                    get = { PrefsUtility.pref_behaviour_fling_comment_right() },
+                    set = PrefsUtility::pref_behaviour_fling_comment_right_set
+                )
+            )
+        ),
+
+        // ─── Posts ───
+        SettingsCategory(
+            id = "posts",
+            title = "Posts",
+            items = listOf(
+                SettingsItem.BooleanSetting(
+                    key = "nsfw",
+                    label = "Show NSFW content",
+                    get = { PrefsUtility.pref_behaviour_nsfw() },
+                    set = PrefsUtility::pref_behaviour_nsfw_set
                 ),
                 SettingsItem.BooleanSetting(
-                    key = "notifications",
-                    label = "Enable notifications",
-                    description = "Show notifications for new activity",
-                    get = { PrefsUtility.pref_behaviour_notifications() },
-                    set = PrefsUtility::set_pref_behaviour_notifications
+                    key = "hide_read_posts",
+                    label = "Hide read posts",
+                    get = { PrefsUtility.pref_behaviour_hide_read_posts() },
+                    set = PrefsUtility::pref_behaviour_hide_read_posts_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "mark_posts_as_read",
+                    label = "Mark posts as read",
+                    get = { PrefsUtility.pref_behaviour_mark_posts_as_read() },
+                    set = PrefsUtility::pref_behaviour_mark_posts_as_read_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "postcount",
+                    label = "Restrict post count",
+                    entries = PostCount.entries,
+                    get = { PrefsUtility.pref_behaviour_post_count() },
+                    set = PrefsUtility::pref_behaviour_post_count_set
+                )
+            )
+        ),
+
+        // ─── Comments ───
+        SettingsCategory(
+            id = "comments",
+            title = "Comments",
+            items = listOf(
+                SettingsItem.StringSetting(
+                    key = "comment_min",
+                    label = "Minimum comment score",
+                    description = "Hide comments with a score below this (blank = no limit)",
+                    placeholder = "-4",
+                    get = { PrefsUtility.pref_behaviour_comment_min()?.toString() },
+                    set = PrefsUtility::pref_behaviour_comment_min_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "collapse_sticky_comments",
+                    label = "Collapse sticky comments",
+                    entries = BehaviourCollapseStickyComments.entries,
+                    get = { PrefsUtility.behaviour_collapse_sticky_comments() },
+                    set = PrefsUtility::pref_behaviour_collapse_sticky_comments_set
+                )
+            )
+        ),
+
+        // ─── Sharing ───
+        SettingsCategory(
+            id = "sharing",
+            title = "Sharing",
+            items = listOf(
+                SettingsItem.EnumSetting(
+                    key = "sharing_domain",
+                    label = "Share as domain",
+                    entries = SharingDomain.entries,
+                    get = { PrefsUtility.pref_behaviour_sharing_domain() },
+                    set = PrefsUtility::pref_behaviour_sharing_domain_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "share_permalink",
+                    label = "Share as permalink",
+                    get = { PrefsUtility.pref_behaviour_share_permalink() },
+                    set = PrefsUtility::pref_behaviour_share_permalink_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "sharing_include_desc",
+                    label = "Include title/description when sharing",
+                    get = { PrefsUtility.pref_behaviour_sharing_include_desc() },
+                    set = PrefsUtility::pref_behaviour_sharing_include_desc_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "sharing_share_text",
+                    label = "Include text when sharing comment",
+                    get = { PrefsUtility.pref_behaviour_sharing_share_text() },
+                    set = PrefsUtility::pref_behaviour_sharing_share_text_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "sharing_share_dialog",
+                    label = "Use built-in share dialog",
+                    get = { PrefsUtility.pref_behaviour_sharing_dialog() },
+                    set = PrefsUtility::pref_behaviour_sharing_share_dialog_set
+                )
+            )
+        ),
+
+        // ─── Post side-toolbar ───
+        SettingsCategory(
+            id = "side_toolbar",
+            title = "Post side-toolbar",
+            items = listOf(
+                SettingsItem.ChoiceSetting(
+                    key = "bezel_toolbar_swipezone",
+                    label = "Side-toolbar swipe zone size",
+                    description = "How far from the edge to swipe to reveal the post side-toolbar",
+                    options = listOf(
+                        "0 dp" to "0",
+                        "10 dp" to "10",
+                        "20 dp" to "20",
+                        "30 dp" to "30",
+                        "40 dp" to "40"
+                    ),
+                    get = {
+                        PrefsUtility.getString(
+                            org.quantumbadger.redreader.R.string.pref_behaviour_bezel_toolbar_swipezone_key,
+                            "10"
+                        )
+                    },
+                    set = PrefsUtility::pref_behaviour_bezel_toolbar_swipezone_set
                 )
             )
         ),
