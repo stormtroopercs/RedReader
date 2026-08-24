@@ -692,6 +692,31 @@ object PrefsUtility {
             .apply()
     }
 
+    // ── Accessibility panel setters (33rd) ──
+    fun pref_accessibility_separate_body_text_lines_set(value: Boolean) {
+        sharedPrefs!!.edit()
+            .putBoolean(getPrefKey(string.pref_accessibility_separate_body_text_lines_key), value)
+            .apply()
+    }
+
+    fun pref_accessibility_say_comment_indent_level_set(value: Boolean) {
+        sharedPrefs!!.edit()
+            .putBoolean(getPrefKey(string.pref_accessibility_say_comment_indent_level_key), value)
+            .apply()
+    }
+
+    fun pref_accessibility_concise_mode_set(value: Boolean) {
+        sharedPrefs!!.edit()
+            .putBoolean(getPrefKey(string.pref_accessibility_concise_mode_key), value)
+            .apply()
+    }
+
+    fun pref_accessibility_min_comment_height_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_accessibility_min_comment_height_key), value)
+            .apply()
+    }
+
     fun pref_appearance_highlight_own_username_set(enabled: Boolean) {
         setBoolean(string.pref_appearance_highlight_own_username_key, enabled)
     }

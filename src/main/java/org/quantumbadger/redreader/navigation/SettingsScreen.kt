@@ -89,6 +89,11 @@ import org.quantumbadger.redreader.reddit.UserCommentSort
 import org.quantumbadger.redreader.common.Constants
 import org.quantumbadger.redreader.common.FileUtils
 import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.common.PrefsBackup
+import org.quantumbadger.redreader.common.RRError
+import org.quantumbadger.redreader.common.time.TimestampUTC
+import org.quantumbadger.redreader.receivers.NewMessageChecker
+import androidx.activity.compose.rememberLauncherForActivityResult
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
 import org.quantumbadger.redreader.common.time.TimeDuration
@@ -109,9 +114,76 @@ fun SettingsScreen(
     onNavigateToChangelog: () -> Unit
 ) {
     val context = LocalContext.current
+    val activity = context as? androidx.appcompat.app.AppCompatActivity
     var showAppbar by remember { mutableStateOf(false) }
     var showCacheLocation by remember { mutableStateOf(false) }
     var showCacheClear by remember { mutableStateOf(false) }
+
+    // Backup / restore preference files (33rd) via the Activity Result API,
+    // mirroring the legacy SettingsFragment ACTION_CREATE_DOCUMENT /
+    // ACTION_OPEN_DOCUMENT handlers.
+    val backupLauncher = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument(
+            "application/vnd.redreader.prefsbackup"
+        )
+    ) { uri ->
+        if (uri == null || activity == null) return@rememberLauncherForActivityResult
+        try {
+            PrefsBackup.backup(
+                activity,
+                object : PrefsBackup.BackupDestination {
+                    override fun openOutputStream() =
+                        activity.contentResolver.openOutputStream(uri)!!
+                },
+                Runnable {
+                    General.quickToast(
+                        context,
+                        org.quantumbadger.redreader.R.string.backup_preferences_success
+                    )
+                }
+            )
+        } catch (e: java.io.IOException) {
+            General.showResultDialog(
+                activity,
+                RRError(
+                    activity.getString(org.quantumbadger.redreader.R.string.error_unexpected_storage_title),
+                    activity.getString(org.quantumbadger.redreader.R.string.error_unexpected_storage_message),
+                    true,
+                    e
+                )
+            )
+        }
+    }
+    val restoreLauncher = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null || activity == null) return@rememberLauncherForActivityResult
+        try {
+            PrefsBackup.restore(
+                activity,
+                object : PrefsBackup.BackupSource {
+                    override fun openInputStream() =
+                        activity.contentResolver.openInputStream(uri)!!
+                },
+                Runnable {
+                    General.quickToast(
+                        context,
+                        org.quantumbadger.redreader.R.string.restore_preferences_success
+                    )
+                }
+            )
+        } catch (e: java.io.IOException) {
+            General.showResultDialog(
+                activity,
+                RRError(
+                    activity.getString(org.quantumbadger.redreader.R.string.error_unexpected_storage_title),
+                    activity.getString(org.quantumbadger.redreader.R.string.error_unexpected_storage_message),
+                    true,
+                    e
+                )
+            )
+        }
+    }
     if (showCacheLocation) {
         CacheLocationDialog(context = context, onDismiss = { showCacheLocation = false })
     }
@@ -157,7 +229,22 @@ fun SettingsScreen(
                 onNavigateToChangelog = onNavigateToChangelog,
                 onOpenAppbar = { showAppbar = true },
                 onOpenCacheLocation = { showCacheLocation = true },
-                onOpenCacheClear = { showCacheClear = true }
+                onOpenCacheClear = { showCacheClear = true },
+                onBackupPreferences = {
+                    runCatching {
+                        backupLauncher.launch(
+                            TimestampUTC.now().formatFilenameSafe() + ".rr_prefs_backup"
+                        )
+                    }
+                },
+                onRestorePreferences = { restoreLauncher.launch(arrayOf("*/*")) },
+                onTestNotification = {
+                    NewMessageChecker.createNotification(
+                        "Test notification title",
+                        "Test notification message",
+                        context
+                    )
+                }
             )
         }
     }
@@ -172,7 +259,10 @@ private fun SettingsContent(
     onNavigateToChangelog: () -> Unit,
     onOpenAppbar: () -> Unit = {},
     onOpenCacheLocation: () -> Unit = {},
-    onOpenCacheClear: () -> Unit = {}
+    onOpenCacheClear: () -> Unit = {},
+    onBackupPreferences: () -> Unit = {},
+    onRestorePreferences: () -> Unit = {},
+    onTestNotification: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val settings = getSettingsCategories(
@@ -180,7 +270,10 @@ private fun SettingsContent(
         onNavigateToChangelog,
         onOpenAppbar,
         onOpenCacheLocation,
-        onOpenCacheClear
+        onOpenCacheClear,
+        onBackupPreferences,
+        onRestorePreferences,
+        onTestNotification
     )
 
     LazyColumn(
@@ -675,7 +768,10 @@ private fun getSettingsCategories(
     onNavigateToChangelog: () -> Unit,
     onOpenAppbar: () -> Unit = {},
     onOpenCacheLocation: () -> Unit = {},
-    onOpenCacheClear: () -> Unit = {}
+    onOpenCacheClear: () -> Unit = {},
+    onBackupPreferences: () -> Unit = {},
+    onRestorePreferences: () -> Unit = {},
+    onTestNotification: () -> Unit = {}
 ): List<SettingsCategory> {
     return listOf(
         // ─── Appearance (general) ───
@@ -1984,6 +2080,76 @@ private fun getSettingsCategories(
                     set = { PrefsUtility.pref_menus_comment_context_items_set(it) }
                 )
             )
+        ),
+
+        // ─── Accessibility (33rd) ───
+        SettingsCategory(
+            id = "accessibility",
+            title = "Accessibility",
+            items = listOf(
+                SettingsItem.BooleanSetting(
+                    key = "accessibility_separate_body_text_lines",
+                    label = "Separate body text lines",
+                    description = "In comment and post body text, make each line individually focusable, rather than reading the whole comment at once",
+                    get = { PrefsUtility.pref_accessibility_separate_body_text_lines() },
+                    set = { PrefsUtility.pref_accessibility_separate_body_text_lines_set(it) }
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "accessibility_say_comment_indent_level",
+                    label = "Announce comment indent",
+                    description = "Announce relative level (indent) of comments within a thread",
+                    get = { PrefsUtility.pref_accessibility_say_comment_indent_level() },
+                    set = { PrefsUtility.pref_accessibility_say_comment_indent_level_set(it) }
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "accessibility_concise_mode",
+                    label = "Use concise language when possible",
+                    description = "Make accessibility labels less verbose to make navigation more efficient for experienced Redditors",
+                    get = { PrefsUtility.pref_accessibility_concise_mode() },
+                    set = { PrefsUtility.pref_accessibility_concise_mode_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "accessibility_min_comment_height",
+                    label = "Minimum comment height",
+                    options = minCommentHeightOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_accessibility_min_comment_height_key, "0") },
+                    set = { PrefsUtility.pref_accessibility_min_comment_height_set(it) }
+                )
+            )
+        ),
+
+        // ─── Backup / restore (33rd) ───
+        SettingsCategory(
+            id = "backup",
+            title = "Backup / restore",
+            items = listOf(
+                SettingsItem.PreferenceItem(
+                    key = "backup_preferences",
+                    label = "Backup preferences",
+                    description = "Save all preferences to a file",
+                    onClick = onBackupPreferences
+                ),
+                SettingsItem.PreferenceItem(
+                    key = "restore_preferences",
+                    label = "Restore preferences",
+                    description = "Load preferences from a backup file",
+                    onClick = onRestorePreferences
+                )
+            )
+        ),
+
+        // ─── Developer (33rd) ───
+        SettingsCategory(
+            id = "developer",
+            title = "Developer",
+            items = listOf(
+                SettingsItem.PreferenceItem(
+                    key = "developer_test_notification",
+                    label = "Test notification",
+                    description = "Show a test notification",
+                    onClick = onTestNotification
+                )
+            )
         )
     )
 }
@@ -2032,6 +2198,12 @@ private val fontScaleGlobalOptions = listOf(
 )
 
 private val fontScaleSectionOptions = listOf("Use global font scale" to "-1") + fontScaleGlobalOptions
+
+// Minimum comment height (33rd): 0 = None, then 30–55 dp.
+private val minCommentHeightOptions = listOf(
+    "None" to "0", "30 dp" to "30", "35 dp" to "35", "40 dp" to "40",
+    "45 dp" to "45", "50 dp" to "50", "55 dp" to "55"
+)
 
 /**
  * Cache storage location chooser (31st): mirrors the legacy
