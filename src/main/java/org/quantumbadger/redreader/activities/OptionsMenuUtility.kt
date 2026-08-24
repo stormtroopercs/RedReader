@@ -41,7 +41,6 @@ import org.quantumbadger.redreader.reddit.PostCommentSort
 import org.quantumbadger.redreader.reddit.PostSort
 import org.quantumbadger.redreader.reddit.UserCommentSort
 import org.quantumbadger.redreader.reddit.api.SubredditSubscriptionState
-import org.quantumbadger.redreader.settings.SettingsActivity
 import org.quantumbadger.redreader.settings.types.AppearanceTheme
 import java.util.Collections
 import org.quantumbadger.redreader.common.General
@@ -647,7 +646,11 @@ object OptionsMenuUtility {
                     .setOnMenuItemClickListener(MenuItem.OnMenuItemClickListener { item: MenuItem? ->
                         val intent = Intent(
                             activity,
-                            SettingsActivity::class.java
+                            MainActivityCompose::class.java
+                        )
+                        intent.putExtra(
+                            MainActivityCompose.EXTRA_DEEP_LINK,
+                            MainActivityCompose.DEEP_LINK_SETTINGS
                         )
                         activity.startActivityForResult(
                             intent,

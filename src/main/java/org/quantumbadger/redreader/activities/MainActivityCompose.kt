@@ -127,9 +127,10 @@ class MainActivityCompose : ComposeBaseActivity() {
 
     /**
      * Handle a cold-start deep-link extra. Currently the inbox, changelog,
-     * subreddit search and album are wired: a notification tap opens the Compose
-     * inbox (Main + Inbox), the legacy settings' changelog link opens the
-     * Compose changelog (Settings + Changelog, so back returns to settings),
+     * settings root, subreddit search and album are wired: a notification tap
+     * opens the Compose inbox (Main + Inbox), the legacy settings' changelog
+     * link opens the Compose changelog (Settings + Changelog, so back returns
+     * to settings), legacy hosts request the Compose settings root (Settings),
      * the legacy main-menu search item opens the Compose subreddit search
      * (Main + SubredditSearch), and a tapped album/gallery link opens the
      * Compose album (Main + Album(url), with the URL in [EXTRA_ALBUM_URL]).
@@ -139,6 +140,7 @@ class MainActivityCompose : ComposeBaseActivity() {
         when (route) {
             DEEP_LINK_INBOX -> navigationState.navigateTo(Main, Inbox)
             DEEP_LINK_CHANGELOG -> navigationState.navigateTo(Settings, Changelog)
+            DEEP_LINK_SETTINGS -> navigationState.navigateTo(Settings)
             DEEP_LINK_SEARCH -> navigationState.navigateTo(Main, SubredditSearch)
             DEEP_LINK_ALBUM -> {
                 val albumUrl = intent?.getStringExtra(EXTRA_ALBUM_URL)
@@ -239,6 +241,10 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: the changelog (Settings top level + Changelog child). */
         const val DEEP_LINK_CHANGELOG = "changelog"
+
+        /** Deep-link route: the settings root (Settings top level; used by legacy
+         *  hosts that start the activity with an explicit settings request). */
+        const val DEEP_LINK_SETTINGS = "settings"
 
         /** Deep-link route: subreddit search (Main top level + SubredditSearch child). */
         const val DEEP_LINK_SEARCH = "search"

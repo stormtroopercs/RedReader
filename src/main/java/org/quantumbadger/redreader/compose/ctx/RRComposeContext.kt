@@ -44,7 +44,6 @@ import org.quantumbadger.redreader.compose.theme.RRComposeContextTheme
 import org.quantumbadger.redreader.fragments.AccountListDialog
 import org.quantumbadger.redreader.fragments.ErrorPropertiesDialog
 import org.quantumbadger.redreader.image.AlbumInfo
-import org.quantumbadger.redreader.settings.SettingsActivity
 
 /**
  * @param controlsStatusBar Whether to set the status bar appearance to match
@@ -82,7 +81,15 @@ fun RRComposeContext(
 		LocalLauncher provides {
 			when (it) {
 				Dest.Settings -> {
-					activity.startActivity(Intent(activity, SettingsActivity::class.java))
+					// Legacy hosts (e.g. the image viewer) can't switch the
+					// Compose stack themselves: hand the settings deep link to
+					// MainActivityCompose, which owns the Navigation 3 state.
+					val intent = Intent(activity, MainActivityCompose::class.java)
+					intent.putExtra(
+						MainActivityCompose.EXTRA_DEEP_LINK,
+						MainActivityCompose.DEEP_LINK_SETTINGS
+					)
+					activity.startActivity(intent)
 				}
 
 				is Dest.Link -> {

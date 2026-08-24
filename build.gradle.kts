@@ -108,7 +108,6 @@ dependencies {
 	implementation(libs.androidx.constraintlayout)
 	implementation(libs.androidx.core)
 	implementation(libs.androidx.fragment)
-	implementation(libs.androidx.preference)
 	implementation(libs.androidx.recyclerview)
 	implementation(libs.androidx.swiperefreshlayout)
 	implementation(libs.androidx.window)

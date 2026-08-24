@@ -95,9 +95,6 @@
 
         </activity>
 
-        <activity android:name=".settings.SettingsActivity"
-                  android:configChanges="orientation|screenSize|keyboardHidden" />
-
         <activity android:name=".activities.LinkDispatchActivity"
 				  android:exported="true">
 
