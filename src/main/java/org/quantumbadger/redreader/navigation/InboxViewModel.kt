@@ -59,8 +59,7 @@ class InboxViewModel @Inject constructor(
         object Loading : InboxUiState()
         data class Success(
             val unreadCount: Int,
-            val messages: List<InboxItem>,
-            val hasMore: Boolean
+            val messages: List<InboxItem>
         ) : InboxUiState()
         data class Error(val message: String) : InboxUiState()
     }
@@ -133,8 +132,7 @@ class InboxViewModel @Inject constructor(
 
                             _state.value = InboxUiState.Success(
                                 unreadCount = items.count { !it.isRead },
-                                messages = items,
-                                hasMore = false
+                                messages = items
                             )
                         } catch (e: Exception) {
                             _state.value = InboxUiState.Error(e.message ?: e.toString())
@@ -172,8 +170,7 @@ class InboxViewModel @Inject constructor(
                 val updated = state.messages.map { if (it.id == messageId) it.copy(isRead = true) else it }
                 InboxUiState.Success(
                     unreadCount = updated.count { !it.isRead },
-                    messages = updated,
-                    hasMore = state.hasMore
+                    messages = updated
                 )
             } else {
                 state
@@ -189,24 +186,10 @@ class InboxViewModel @Inject constructor(
             if (state is InboxUiState.Success) {
                 InboxUiState.Success(
                     unreadCount = 0,
-                    messages = state.messages.map { it.copy(isRead = true) },
-                    hasMore = state.hasMore
+                    messages = state.messages.map { it.copy(isRead = true) }
                 )
             } else {
                 state
-            }
-        }
-    }
-
-    /**
-     * Send a message to a user.
-     */
-    fun sendMessage(recipient: String, subject: String, body: String) {
-        viewModelScope.launch {
-            try {
-                // TODO: Implement message sending via CacheRequest
-            } catch (e: Exception) {
-                _state.value = InboxUiState.Error("Failed to send message: ${e.message}")
             }
         }
     }

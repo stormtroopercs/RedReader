@@ -174,6 +174,17 @@ fun AppNavGraph(navigationState: NavigationState) {
                         // "new message" button opened the PM composer, not a
                         // comment reply).
                         navigator.navigate(PMSend())
+                    },
+                    onReplyToMessage = { message ->
+                        // Replying to an inbox message opens the PM composer
+                        // prefilled with the message's author + "Re: <subject>"
+                        // (the legacy inbox's reply action).
+                        navigator.navigate(
+                            PMSend(
+                                recipient = message.sender,
+                                subject = "Re: ${message.subject ?: ""}"
+                            )
+                        )
                     }
                 )
             }

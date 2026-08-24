@@ -137,7 +137,17 @@ fun AdaptiveAppNavigation() {
             entry<Inbox> {
                 org.quantumbadger.redreader.compose.ui.InboxScreen(
                     onNavigateBack = { navigator.goBack() },
-                    onSendMessage = { /* TODO */ }
+                    onSendMessage = {
+                        navigator.navigate(PMSend())
+                    },
+                    onReplyToMessage = { message ->
+                        navigator.navigate(
+                            PMSend(
+                                recipient = message.sender,
+                                subject = "Re: ${message.subject ?: ""}"
+                            )
+                        )
+                    }
                 )
             }
 

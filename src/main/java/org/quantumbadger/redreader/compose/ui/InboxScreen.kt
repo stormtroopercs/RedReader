@@ -49,6 +49,7 @@ import org.quantumbadger.redreader.navigation.InboxViewModel
 fun InboxScreen(
     onNavigateBack: () -> Unit,
     onSendMessage: () -> Unit,
+    onReplyToMessage: (InboxViewModel.InboxItem) -> Unit,
     viewModel: InboxViewModel = hiltViewModel(),
     onMarkAllRead: () -> Unit = { viewModel.markAllAsRead() }
 ) {
@@ -101,7 +102,7 @@ fun InboxScreen(
                 InboxContent(
                     uiState = uiState,
                     onMarkAsRead = { viewModel.markAsRead(it.id) },
-                    onSendMessage = { viewModel.sendMessage(it.recipient ?: "", "Re: ${it.subject ?: ""}", "") },
+                    onReplyToMessage = onReplyToMessage,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -138,7 +139,7 @@ fun InboxScreen(
 private fun InboxContent(
     uiState: InboxViewModel.InboxUiState.Success,
     onMarkAsRead: (InboxViewModel.InboxItem) -> Unit,
-    onSendMessage: (InboxViewModel.InboxItem) -> Unit,
+    onReplyToMessage: (InboxViewModel.InboxItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -173,14 +174,8 @@ private fun InboxContent(
                 InboxMessageCard(
                     message = message,
                     onClick = { onMarkAsRead(message) },
-                    onReply = { onSendMessage(message) }
+                    onReply = { onReplyToMessage(message) }
                 )
-            }
-        }
-
-        if (uiState.hasMore) {
-            item {
-                LoadMoreButton()
             }
         }
     }
@@ -350,17 +345,5 @@ private fun formatTimestamp(timestamp: Long): String {
         diff < 86_400_000 -> "${diff / 3_600_000}h ago"
         diff < 604_800_000 -> "${diff / 86_400_000}d ago"
         else -> "${diff / (604_800_000 * 4)} weeks ago"
-    }
-}
-
-@Composable
-private fun LoadMoreButton() {
-    Button(
-        onClick = { /* TODO: Implement load more */ },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp)
-    ) {
-        Text("Load More")
     }
 }
