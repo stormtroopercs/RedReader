@@ -600,6 +600,49 @@ object PrefsUtility {
         sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_search_key), value).apply()
     }
 
+    // ── Cache panel setters (31st) ──
+    fun pref_cache_rerequest_postlist_age_set(hours: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_cache_rerequest_postlist_age_key), hours)
+            .apply()
+    }
+
+    fun pref_cache_precache_images_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_cache_precache_images_list_key), value)
+            .apply()
+    }
+
+    fun pref_cache_precache_comments_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_cache_precache_comments_list_key), value)
+            .apply()
+    }
+
+    fun pref_cache_maxage_listing_set(hours: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_cache_maxage_listing_key), hours)
+            .apply()
+    }
+
+    fun pref_cache_maxage_thumb_set(hours: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_cache_maxage_thumb_key), hours)
+            .apply()
+    }
+
+    fun pref_cache_maxage_image_set(hours: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_cache_maxage_image_key), hours)
+            .apply()
+    }
+
+    fun pref_cache_maxage_entry_set(hours: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_cache_maxage_entry_key), hours)
+            .apply()
+    }
+
     fun pref_appearance_highlight_own_username_set(enabled: Boolean) {
         setBoolean(string.pref_appearance_highlight_own_username_key, enabled)
     }

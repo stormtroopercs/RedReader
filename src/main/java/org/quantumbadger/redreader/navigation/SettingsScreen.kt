@@ -86,8 +86,17 @@ import org.quantumbadger.redreader.common.PrefsUtility.SharingDomain
 import org.quantumbadger.redreader.reddit.PostCommentSort
 import org.quantumbadger.redreader.reddit.PostSort
 import org.quantumbadger.redreader.reddit.UserCommentSort
+import org.quantumbadger.redreader.common.Constants
+import org.quantumbadger.redreader.common.FileUtils
+import org.quantumbadger.redreader.common.General
+import org.quantumbadger.redreader.cache.CacheManager
+import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
+import org.quantumbadger.redreader.common.time.TimeDuration
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.settings.types.AppearanceTheme
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Settings screen composable — real data from PrefsUtility.
@@ -99,6 +108,16 @@ fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToChangelog: () -> Unit
 ) {
+    val context = LocalContext.current
+    var showAppbar by remember { mutableStateOf(false) }
+    var showCacheLocation by remember { mutableStateOf(false) }
+    var showCacheClear by remember { mutableStateOf(false) }
+    if (showCacheLocation) {
+        CacheLocationDialog(context = context, onDismiss = { showCacheLocation = false })
+    }
+    if (showCacheClear) {
+        CacheClearDialog(context = context, onDismiss = { showCacheClear = false })
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -127,7 +146,6 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-        var showAppbar by remember { mutableStateOf(false) }
         if (showAppbar) {
             AppbarScreen(
                 modifier = Modifier.padding(paddingValues),
@@ -137,7 +155,9 @@ fun SettingsScreen(
             SettingsContent(
                 modifier = Modifier.padding(paddingValues),
                 onNavigateToChangelog = onNavigateToChangelog,
-                onOpenAppbar = { showAppbar = true }
+                onOpenAppbar = { showAppbar = true },
+                onOpenCacheLocation = { showCacheLocation = true },
+                onOpenCacheClear = { showCacheClear = true }
             )
         }
     }
@@ -150,10 +170,18 @@ fun SettingsScreen(
 private fun SettingsContent(
     modifier: Modifier = Modifier,
     onNavigateToChangelog: () -> Unit,
-    onOpenAppbar: () -> Unit = {}
+    onOpenAppbar: () -> Unit = {},
+    onOpenCacheLocation: () -> Unit = {},
+    onOpenCacheClear: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val settings = getSettingsCategories(context, onNavigateToChangelog, onOpenAppbar)
+    val settings = getSettingsCategories(
+        context,
+        onNavigateToChangelog,
+        onOpenAppbar,
+        onOpenCacheLocation,
+        onOpenCacheClear
+    )
 
     LazyColumn(
         modifier = modifier.fillMaxSize()
@@ -645,7 +673,9 @@ sealed class SettingsItem {
 private fun getSettingsCategories(
     context: Context,
     onNavigateToChangelog: () -> Unit,
-    onOpenAppbar: () -> Unit = {}
+    onOpenAppbar: () -> Unit = {},
+    onOpenCacheLocation: () -> Unit = {},
+    onOpenCacheClear: () -> Unit = {}
 ): List<SettingsCategory> {
     return listOf(
         // ─── Appearance (general) ───
@@ -1554,16 +1584,71 @@ private fun getSettingsCategories(
             )
         ),
 
-        // ─── Cache ───
+        // ─── Cache (31st) ───
         SettingsCategory(
             id = "cache",
             title = "Cache",
             items = listOf(
                 SettingsItem.PreferenceItem(
                     key = "cache_location",
-                    label = "Cache location",
-                    description = "Choose storage location for cached data",
-                    onClick = { /* TODO: show storage chooser */ }
+                    label = "Cache storage location",
+                    description = PrefsUtility.pref_cache_location(context) ?: "",
+                    onClick = onOpenCacheLocation
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "cache_rerequest_postlist_age",
+                    label = "Refresh posts if cache older than",
+                    options = cacheRerequestAgeOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_cache_rerequest_postlist_age_key, "1") },
+                    set = { PrefsUtility.pref_cache_rerequest_postlist_age_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "cache_precache_images",
+                    label = "Precache images",
+                    options = yesNoOrWifiOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_cache_precache_images_list_key, "wifionly") },
+                    set = { PrefsUtility.pref_cache_precache_images_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "cache_precache_comments",
+                    label = "Precache comments",
+                    options = yesNoOrWifiOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_cache_precache_comments_list_key, "always") },
+                    set = { PrefsUtility.pref_cache_precache_comments_set(it) }
+                ),
+                SettingsItem.PreferenceItem(
+                    key = "cache_clear",
+                    label = "Clear cache",
+                    description = "Delete cached listings, thumbnails, images and flags",
+                    onClick = onOpenCacheClear
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "cache_maxage_listing",
+                    label = "Delete cached listings after",
+                    options = cacheMaxageOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_cache_maxage_listing_key, "168") },
+                    set = { PrefsUtility.pref_cache_maxage_listing_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "cache_maxage_thumb",
+                    label = "Delete cached thumbnails after",
+                    options = cacheMaxageOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_cache_maxage_thumb_key, "168") },
+                    set = { PrefsUtility.pref_cache_maxage_thumb_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "cache_maxage_image",
+                    label = "Delete cached images after",
+                    options = cacheMaxageOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_cache_maxage_image_key, "24") },
+                    set = { PrefsUtility.pref_cache_maxage_image_set(it) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "cache_maxage_entry",
+                    label = "Delete cached flags (read, upvoted, etc.) after",
+                    options = cacheMaxageOptions,
+                    get = { PrefsUtility.getString(org.quantumbadger.redreader.R.string.pref_cache_maxage_entry_key, "168") },
+                    set = { PrefsUtility.pref_cache_maxage_entry_set(it) }
                 )
             )
         ),
@@ -1836,6 +1921,178 @@ private fun getSettingsCategories(
                 )
             )
         )
+    )
+}
+
+/**
+ * Shared option lists for the cache panel (31st).
+ */
+private val cacheRerequestAgeOptions = listOf(
+    "Every time" to "0",
+    "1 hour" to "1",
+    "2 hours" to "2",
+    "3 hours" to "3",
+    "6 hours" to "6",
+    "1 day" to "24",
+    "3 days" to "72",
+    "1 week" to "168"
+)
+
+private val cacheMaxageOptions = listOf(
+    "1 hour" to "1",
+    "2 hours" to "2",
+    "3 hours" to "3",
+    "6 hours" to "6",
+    "1 day" to "24",
+    "3 days" to "72",
+    "1 week" to "168",
+    "1 month" to "730",
+    "3 months" to "2191"
+)
+
+private val yesNoOrWifiOptions = listOf(
+    "Always" to "always",
+    "Only on Wi-Fi" to "wifionly",
+    "Never" to "never"
+)
+
+/**
+ * Cache storage location chooser (31st): mirrors the legacy
+ * SettingsFragment.showChooseStorageLocationDialog — lists the existing,
+ * readable+writeable cache dirs with their free space, and writes the choice
+ * to the cache-location pref.
+ */
+@Composable
+private fun CacheLocationDialog(context: Context, onDismiss: () -> Unit) {
+    val currentStorage = remember { PrefsUtility.pref_cache_location(context) }
+    val choices = remember {
+        CacheManager.getCacheDirs(context)
+            .filter { it != null && it.exists() && it.canRead() && it.canWrite() }
+            .map { dir ->
+                var display = dir.getAbsolutePath()
+                if (!display.endsWith("/")) display += "/"
+                val postfix = BuildConfig.APPLICATION_ID + "/cache/"
+                if (display.endsWith("Android/data/" + postfix)) {
+                    display = display.substring(0, display.length - postfix.length - 14)
+                } else if (display.endsWith(postfix)) {
+                    display = display.substring(0, display.length - postfix.length - 1)
+                }
+                val free = General.addUnits(FileUtils.getFreeSpaceAvailable(dir.getAbsolutePath()))
+                dir.getAbsolutePath() to "$display [$free]"
+            }
+    }
+    var selected by remember { mutableStateOf(choices.indexOfFirst { it.first == currentStorage }.coerceAtLeast(0)) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Cache storage location") },
+        text = {
+            Column {
+                choices.forEachIndexed { i, (path, label) ->
+                    Row(
+                        modifier = Modifier
+                            .clickable { selected = i }
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(label, style = MaterialTheme.typography.bodySmall)
+                        if (i == selected) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (choices.isNotEmpty()) {
+                        PrefsUtility.pref_cache_location(context, choices[selected].first)
+                    }
+                    onDismiss()
+                }
+            ) { Text("OK") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
+}
+
+/**
+ * Clear-cache dialog (31st): mirrors the legacy SettingsFragment
+ * showCacheClearDialog — checkboxes for listings / thumbnails / images /
+ * flags (with a per-category data-usage size), pruning on confirm.
+ */
+@Composable
+private fun CacheClearDialog(context: Context, onDismiss: () -> Unit) {
+    val cacheManager = remember { CacheManager.getInstance(context) }
+    val options = remember {
+        val fileTypesForCategory = mapOf(
+            "Listings" to intArrayOf(
+                Constants.FileType.POST_LIST,
+                Constants.FileType.COMMENT_LIST,
+                Constants.FileType.SUBREDDIT_LIST,
+                Constants.FileType.SUBREDDIT_ABOUT,
+                Constants.FileType.USER_ABOUT,
+                Constants.FileType.INBOX_LIST
+            ),
+            "Thumbnails" to intArrayOf(Constants.FileType.THUMBNAIL),
+            "Images" to intArrayOf(
+                Constants.FileType.IMAGE,
+                Constants.FileType.IMAGE_INFO,
+                Constants.FileType.CAPTCHA,
+                Constants.FileType.INLINE_IMAGE_PREVIEW
+            ),
+            "Flags" to IntArray(0)
+        )
+        val usages = cacheManager.cacheDataUsages
+        fileTypesForCategory.map { (label, types) ->
+            if (types.isEmpty()) label
+            else "$label (${General.addUnits(types.sumOf { usages[it] ?: 0L })})"
+        }
+    }
+    var selections by remember { mutableStateOf(booleanArrayOf(true, true, true, true)) }
+    val scope = rememberCoroutineScope()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Clear cache") },
+        text = {
+            Column {
+                options.forEachIndexed { i, label ->
+                    Row(
+                        modifier = Modifier
+                            .clickable { selections[i] = !selections[i] }
+                            .fillMaxWidth()
+                    ) {
+                        Checkbox(checked = selections[i], onCheckedChange = { selections[i] = it })
+                        Text(label)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val clearListings = selections[0]
+                    val clearThumbs = selections[1]
+                    val clearImages = selections[2]
+                    val clearFlags = selections[3]
+                    scope.launch(Dispatchers.IO) {
+                        cacheManager.pruneCache(clearListings, clearThumbs, clearImages)
+                        if (clearFlags) {
+                            RedditChangeDataManager.pruneAllUsersWhereOlderThan(TimeDuration.ms(0))
+                        }
+                    }
+                    onDismiss()
+                }
+            ) { Text("Clear") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
     )
 }
 
