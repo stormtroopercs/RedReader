@@ -127,10 +127,19 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-        SettingsContent(
-            modifier = Modifier.padding(paddingValues),
-            onNavigateToChangelog = onNavigateToChangelog
-        )
+        var showAppbar by remember { mutableStateOf(false) }
+        if (showAppbar) {
+            AppbarScreen(
+                modifier = Modifier.padding(paddingValues),
+                onBack = { showAppbar = false }
+            )
+        } else {
+            SettingsContent(
+                modifier = Modifier.padding(paddingValues),
+                onNavigateToChangelog = onNavigateToChangelog,
+                onOpenAppbar = { showAppbar = true }
+            )
+        }
     }
 }
 
@@ -140,10 +149,11 @@ fun SettingsScreen(
 @Composable
 private fun SettingsContent(
     modifier: Modifier = Modifier,
-    onNavigateToChangelog: () -> Unit
+    onNavigateToChangelog: () -> Unit,
+    onOpenAppbar: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val settings = getSettingsCategories(context, onNavigateToChangelog)
+    val settings = getSettingsCategories(context, onNavigateToChangelog, onOpenAppbar)
 
     LazyColumn(
         modifier = modifier.fillMaxSize()
@@ -634,7 +644,8 @@ sealed class SettingsItem {
 
 private fun getSettingsCategories(
     context: Context,
-    onNavigateToChangelog: () -> Unit
+    onNavigateToChangelog: () -> Unit,
+    onOpenAppbar: () -> Unit = {}
 ): List<SettingsCategory> {
     return listOf(
         // ─── Appearance (general) ───
@@ -1596,6 +1607,292 @@ private fun getSettingsCategories(
                     }
                 )
             )
+        ),
+
+        // ─── Menus (30th) ───
+        SettingsCategory(
+            id = "menus",
+            title = "Menus",
+            items = listOf(
+                SettingsItem.PreferenceItem(
+                    key = "action_bar_items",
+                    label = "Action bar items",
+                    description = "Which buttons appear in the app bar",
+                    onClick = onOpenAppbar
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "quick_account_switcher",
+                    label = "Use quick account switching",
+                    get = { PrefsUtility.pref_menus_quick_account_switcher() },
+                    set = { PrefsUtility.pref_menus_quick_account_switcher_set(it) }
+                ),
+                SettingsItem.MultiSelectSetting(
+                    key = "link_context_items",
+                    label = "Link action menu items",
+                    options = listOf(
+                        "View in External Browser" to "external",
+                        "Save Media" to "save_image",
+                        "Share" to "share",
+                        "Share Media" to "share_image",
+                        "Copy Link" to "copy_url"
+                    ),
+                    get = {
+                        PrefsUtility.getStringSet(
+                            org.quantumbadger.redreader.R.string.pref_menus_link_context_items_key,
+                            org.quantumbadger.redreader.R.array.pref_menus_link_context_items_default
+                        )
+                    },
+                    set = { PrefsUtility.pref_menus_link_context_items_set(it) }
+                ),
+                SettingsItem.MultiSelectSetting(
+                    key = "subreddit_context_items",
+                    label = "Subreddit action menu items",
+                    options = listOf(
+                        "View in External Browser" to "external",
+                        "Share" to "share",
+                        "Copy Link" to "copy_url",
+                        "Pin Subreddit to Main Menu" to "pin",
+                        "Subscribe" to "subscribe",
+                        "Block Subreddit" to "block"
+                    ),
+                    get = {
+                        PrefsUtility.getStringSet(
+                            org.quantumbadger.redreader.R.string.pref_menus_subreddit_context_items_key,
+                            org.quantumbadger.redreader.R.array.pref_menus_subreddit_context_items_default
+                        )
+                    },
+                    set = { PrefsUtility.pref_menus_subreddit_context_items_set(it) }
+                ),
+                SettingsItem.MultiSelectSetting(
+                    key = "mainmenu_shortcutitems",
+                    label = "Shortcuts",
+                    description = "Shortcuts shown in the main menu",
+                    options = listOf(
+                        "Front Page" to "frontpage",
+                        "Popular Subreddits" to "popular",
+                        "All Posts" to "all",
+                        "Find Location" to "subreddit_search",
+                        "Custom Location" to "custom"
+                    ),
+                    get = {
+                        PrefsUtility.getStringSet(
+                            org.quantumbadger.redreader.R.string.pref_menus_mainmenu_shortcutitems_key,
+                            org.quantumbadger.redreader.R.array.pref_menus_mainmenu_shortcutitems_items_default
+                        )
+                    },
+                    set = { PrefsUtility.pref_menus_mainmenu_shortcutitems_set(it) }
+                ),
+                SettingsItem.MultiSelectSetting(
+                    key = "mainmenu_useritems",
+                    label = "User items",
+                    description = "User items shown in the main menu",
+                    options = listOf(
+                        "My Profile" to "profile",
+                        "Inbox" to "inbox",
+                        "Sent Messages" to "sent_messages",
+                        "Submitted Posts" to "submitted",
+                        "Submitted Comments" to "submitted_comments",
+                        "Saved Posts" to "saved",
+                        "Hidden Posts" to "hidden",
+                        "Upvoted Posts" to "upvoted",
+                        "Downvoted Posts" to "downvoted",
+                        "Modmail" to "modmail"
+                    ),
+                    get = {
+                        PrefsUtility.getStringSet(
+                            org.quantumbadger.redreader.R.string.pref_menus_mainmenu_useritems_key,
+                            org.quantumbadger.redreader.R.array.pref_menus_mainmenu_useritems_items_default
+                        )
+                    },
+                    set = { PrefsUtility.pref_menus_mainmenu_useritems_set(it) }
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "hide_username_main_menu",
+                    label = "Hide username",
+                    get = { PrefsUtility.pref_appearance_hide_username_main_menu() },
+                    set = { PrefsUtility.pref_appearance_hide_username_main_menu_set(it) }
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "show_blocked_subreddits_main_menu",
+                    label = "Show blocked subreddits",
+                    get = { PrefsUtility.pref_appearance_show_blocked_subreddits_main_menu() },
+                    set = { PrefsUtility.pref_appearance_show_blocked_subreddits_main_menu_set(it) }
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "show_multireddit_main_menu",
+                    label = "Show multireddits",
+                    get = { PrefsUtility.pref_show_multireddit_main_menu() },
+                    set = { PrefsUtility.pref_show_multireddit_main_menu_set(it) }
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "show_subscribed_subreddits_main_menu",
+                    label = "Show subscribed subreddits",
+                    get = { PrefsUtility.pref_show_subscribed_subreddits_main_menu() },
+                    set = { PrefsUtility.pref_show_subscribed_subreddits_main_menu_set(it) }
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "mainmenu_dev_announcements",
+                    label = "Show announcements from developer",
+                    get = { PrefsUtility.pref_menus_mainmenu_dev_announcements() },
+                    set = { PrefsUtility.pref_menus_mainmenu_dev_announcements_set(it) }
+                ),
+                SettingsItem.MultiSelectSetting(
+                    key = "post_context_items",
+                    label = "Post action menu items",
+                    description = "Actions available from a post's context menu",
+                    options = listOf(
+                        "Upvote" to "upvote",
+                        "Downvote" to "downvote",
+                        "View Comments" to "comments",
+                        "Go to Crosspost Origin" to "crosspost_origin",
+                        "Save" to "save",
+                        "Hide" to "hide",
+                        "Delete" to "delete",
+                        "Report" to "report",
+                        "Reply" to "reply",
+                        "View in External Browser" to "external",
+                        "Links in Text" to "selftext_links",
+                        "Save Media" to "save_image",
+                        "Go to Subreddit" to "goto_subreddit",
+                        "Pin Subreddit to Main Menu" to "pin",
+                        "Subscribe to Subreddit" to "subscribe",
+                        "Block Subreddit" to "block",
+                        "Share Link" to "share",
+                        "Share Comments" to "share_comments",
+                        "Share Media" to "share_image",
+                        "Copy Link" to "copy",
+                        "Copy Self-Text" to "copy_selftext",
+                        "User Profile" to "user_profile",
+                        "Properties" to "properties",
+                        "Edit" to "edit",
+                        "Mark as Read" to "mark_read"
+                    ),
+                    get = {
+                        PrefsUtility.getStringSet(
+                            org.quantumbadger.redreader.R.string.pref_menus_post_context_items_key,
+                            org.quantumbadger.redreader.R.array.pref_menus_post_context_items_default
+                        )
+                    },
+                    set = { PrefsUtility.pref_menus_post_context_items_set(it) }
+                ),
+                SettingsItem.MultiSelectSetting(
+                    key = "post_toolbar_items",
+                    label = "Post side-toolbar items",
+                    description = "Actions available from a post's side toolbar",
+                    options = listOf(
+                        "Open Action Menu" to "action_menu",
+                        "Switch To Comments" to "comments_switch",
+                        "Switch To Link" to "link_switch",
+                        "Upvote" to "upvote",
+                        "Downvote" to "downvote",
+                        "Save" to "save",
+                        "Hide" to "hide",
+                        "Reply" to "reply",
+                        "View in External Browser" to "external",
+                        "Save Media" to "save_image",
+                        "Share Link" to "share",
+                        "Copy Link" to "copy",
+                        "User Profile" to "user_profile",
+                        "Properties" to "properties"
+                    ),
+                    get = {
+                        PrefsUtility.getStringSet(
+                            org.quantumbadger.redreader.R.string.pref_menus_post_toolbar_items_key,
+                            org.quantumbadger.redreader.R.array.pref_menus_post_toolbar_items_return
+                        )
+                    },
+                    set = { PrefsUtility.pref_menus_post_toolbar_items_set(it) }
+                ),
+                SettingsItem.MultiSelectSetting(
+                    key = "comment_context_items",
+                    label = "Comment action menu items",
+                    description = "Actions available from a comment's context menu",
+                    options = listOf(
+                        "Upvote" to "upvote",
+                        "Downvote" to "downvote",
+                        "Save" to "save",
+                        "Report" to "report",
+                        "Reply" to "reply",
+                        "Edit" to "edit",
+                        "Delete" to "delete",
+                        "View in External Browser" to "external",
+                        "Context" to "context",
+                        "Go to Comment" to "go_to_comment",
+                        "Links in Comment" to "comment_links",
+                        "Toggle Collapse" to "collapse",
+                        "Share" to "share",
+                        "Copy Text" to "copy_text",
+                        "Copy Link" to "copy_url",
+                        "User Profile" to "user_profile",
+                        "Properties" to "properties"
+                    ),
+                    get = {
+                        PrefsUtility.getStringSet(
+                            org.quantumbadger.redreader.R.string.pref_menus_comment_context_items_key,
+                            org.quantumbadger.redreader.R.array.pref_menus_comment_context_items_return
+                        )
+                    },
+                    set = { PrefsUtility.pref_menus_comment_context_items_set(it) }
+                )
+            )
         )
     )
+}
+
+/**
+ * Appbar-screen sub-screen (30th): the 14 "Action bar items" settings, each a
+ * ChoiceSetting over the shared show-as-action values (mirrors the legacy
+ * prefs_menus_appbar_screen.xml ListPreferences).
+ */
+@Composable
+private fun AppbarScreen(modifier: Modifier, onBack: () -> Unit) {
+    val appbarOptions = listOf(
+        "Always show button" to "2",
+        "Show button if room" to "1",
+        "Only show in three-dot menu" to "0",
+        "Do not show" to "-1"
+    )
+
+    fun choice(key: String, label: String, keyRes: Int, default: String, setter: (String) -> Unit): SettingsItem.ChoiceSetting =
+        SettingsItem.ChoiceSetting(
+            key = key,
+            label = label,
+            options = appbarOptions,
+            get = { PrefsUtility.getString(keyRes, default) },
+            set = { setter(it) }
+        )
+
+    val appbarItems = listOf(
+        choice("appbar_sort", "Sort", org.quantumbadger.redreader.R.string.pref_menus_appbar_sort_key, "2") { PrefsUtility.pref_menus_appbar_sort_set(it) },
+        choice("appbar_refresh", "Refresh", org.quantumbadger.redreader.R.string.pref_menus_appbar_refresh_key, "2") { PrefsUtility.pref_menus_appbar_refresh_set(it) },
+        choice("appbar_past", "Past Versions", org.quantumbadger.redreader.R.string.pref_menus_appbar_past_key, "0") { PrefsUtility.pref_menus_appbar_past_set(it) },
+        choice("appbar_submit_post", "Submit Post", org.quantumbadger.redreader.R.string.pref_menus_appbar_submit_post_key, "0") { PrefsUtility.pref_menus_appbar_submit_post_set(it) },
+        choice("appbar_pin", "Pin to Main Menu", org.quantumbadger.redreader.R.string.pref_menus_appbar_pin_key, "0") { PrefsUtility.pref_menus_appbar_pin_set(it) },
+        choice("appbar_subscribe", "Subscribe", org.quantumbadger.redreader.R.string.pref_menus_appbar_subscribe_key, "0") { PrefsUtility.pref_menus_appbar_subscribe_set(it) },
+        choice("appbar_block", "Block Subreddit", org.quantumbadger.redreader.R.string.pref_menus_appbar_block_key, "0") { PrefsUtility.pref_menus_appbar_block_set(it) },
+        choice("appbar_sidebar", "View Sidebar", org.quantumbadger.redreader.R.string.pref_menus_appbar_sidebar_key, "0") { PrefsUtility.pref_menus_appbar_sidebar_set(it) },
+        choice("appbar_accounts", "Accounts", org.quantumbadger.redreader.R.string.pref_menus_appbar_accounts_key, "0") { PrefsUtility.pref_menus_appbar_accounts_set(it) },
+        choice("appbar_theme", "Themes", org.quantumbadger.redreader.R.string.pref_menus_appbar_theme_key, "0") { PrefsUtility.pref_menus_appbar_theme_set(it) },
+        choice("appbar_settings", "Settings", org.quantumbadger.redreader.R.string.pref_menus_appbar_settings_key, "0") { PrefsUtility.pref_menus_appbar_settings_set(it) },
+        choice("appbar_close_all", "Close All", org.quantumbadger.redreader.R.string.pref_menus_appbar_close_all_key, "-1") { PrefsUtility.pref_menus_appbar_close_all_set(it) },
+        choice("appbar_reply", "Reply", org.quantumbadger.redreader.R.string.pref_menus_appbar_reply_key, "0") { PrefsUtility.pref_menus_appbar_reply_set(it) },
+        choice("appbar_search", "Search", org.quantumbadger.redreader.R.string.pref_menus_appbar_search_key, "0") { PrefsUtility.pref_menus_appbar_search_set(it) }
+    )
+
+    LazyColumn(modifier = modifier.fillMaxSize()) {
+        item(key = "header_appbar") {
+            Text(
+                text = "Action bar items",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+        items(appbarItems) { item ->
+            ChoiceSettingItem(item)
+        }
+    }
 }

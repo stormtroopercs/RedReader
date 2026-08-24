@@ -483,6 +483,123 @@ object PrefsUtility {
         setBoolean(string.pref_appearance_hide_headertoolbar_commentlist_key, enabled)
     }
 
+    // ── Menus panel setters (30th) ──
+    private fun setStringSet(id: Int, values: Set<String>) {
+        sharedPrefs!!.edit()
+            .putStringSet(getPrefKey(id), values.toMutableSet())
+            .apply()
+    }
+
+    fun pref_menus_quick_account_switcher_set(enabled: Boolean) {
+        setBoolean(string.pref_menus_quick_account_switcher_key, enabled)
+    }
+
+    fun pref_appearance_hide_username_main_menu_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_hide_username_main_menu_key, enabled)
+    }
+
+    fun pref_appearance_show_blocked_subreddits_main_menu_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_show_blocked_subreddits_main_menu_key, enabled)
+    }
+
+    fun pref_show_multireddit_main_menu_set(enabled: Boolean) {
+        setBoolean(string.pref_menus_show_multireddit_main_menu_key, enabled)
+    }
+
+    fun pref_show_subscribed_subreddits_main_menu_set(enabled: Boolean) {
+        setBoolean(string.pref_menus_show_subscribed_subreddits_main_menu_key, enabled)
+    }
+
+    fun pref_menus_mainmenu_dev_announcements_set(enabled: Boolean) {
+        setBoolean(string.pref_menus_mainmenu_dev_announcements_key, enabled)
+    }
+
+    fun pref_menus_link_context_items_set(items: Set<String>) {
+        setStringSet(string.pref_menus_link_context_items_key, items)
+    }
+
+    fun pref_menus_subreddit_context_items_set(items: Set<String>) {
+        setStringSet(string.pref_menus_subreddit_context_items_key, items)
+    }
+
+    fun pref_menus_mainmenu_shortcutitems_set(items: Set<String>) {
+        setStringSet(string.pref_menus_mainmenu_shortcutitems_key, items)
+    }
+
+    fun pref_menus_mainmenu_useritems_set(items: Set<String>) {
+        setStringSet(string.pref_menus_mainmenu_useritems_key, items)
+    }
+
+    fun pref_menus_post_context_items_set(items: Set<String>) {
+        setStringSet(string.pref_menus_post_context_items_key, items)
+    }
+
+    fun pref_menus_post_toolbar_items_set(items: Set<String>) {
+        setStringSet(string.pref_menus_post_toolbar_items_key, items)
+    }
+
+    fun pref_menus_comment_context_items_set(items: Set<String>) {
+        setStringSet(string.pref_menus_comment_context_items_key, items)
+    }
+
+    // ── Appbar-screen panel setters (30th) ── each pref stores an Int string:
+    // -1 = never, 0 = overflow-only, 1 = if room, 2 = always
+    fun pref_menus_appbar_sort_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_sort_key), value).apply()
+    }
+
+    fun pref_menus_appbar_refresh_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_refresh_key), value).apply()
+    }
+
+    fun pref_menus_appbar_past_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_past_key), value).apply()
+    }
+
+    fun pref_menus_appbar_submit_post_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_submit_post_key), value).apply()
+    }
+
+    fun pref_menus_appbar_pin_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_pin_key), value).apply()
+    }
+
+    fun pref_menus_appbar_subscribe_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_subscribe_key), value).apply()
+    }
+
+    fun pref_menus_appbar_block_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_block_key), value).apply()
+    }
+
+    fun pref_menus_appbar_sidebar_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_sidebar_key), value).apply()
+    }
+
+    fun pref_menus_appbar_accounts_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_accounts_key), value).apply()
+    }
+
+    fun pref_menus_appbar_theme_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_theme_key), value).apply()
+    }
+
+    fun pref_menus_appbar_settings_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_settings_key), value).apply()
+    }
+
+    fun pref_menus_appbar_close_all_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_close_all_key), value).apply()
+    }
+
+    fun pref_menus_appbar_reply_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_reply_key), value).apply()
+    }
+
+    fun pref_menus_appbar_search_set(value: String) {
+        sharedPrefs!!.edit().putString(getPrefKey(string.pref_menus_appbar_search_key), value).apply()
+    }
+
     fun pref_appearance_highlight_own_username_set(enabled: Boolean) {
         setBoolean(string.pref_appearance_highlight_own_username_key, enabled)
     }
