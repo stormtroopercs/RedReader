@@ -86,14 +86,22 @@ import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 import java.util.concurrent.TimeUnit
 
 /**
- * Comment list content with real data from CommentListViewModel.
+ * Comment list content with real data from [CommentListViewModel].
+ *
+ * Vote arrows dispatch to the ViewModel (Reddit `api/vote`), the report button
+ * opens the report dialog, and the More menu offers **Copy link** (comment
+ * permalink → clipboard). A comment's **Reply** button calls [onReply] with
+ * that comment (its full `t1_…` id is the reply's parent); the post header
+ * card (real post listings only) calls [onReplyToPost] (the post's full
+ * `t3_…` id).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RealCommentListScreen(
     postId: String,
     onNavigateBack: () -> Unit,
-    onReply: (CommentItem) -> Unit
+    onReply: (CommentItem) -> Unit,
+    onReplyToPost: () -> Unit
 ) {
     val viewModel: CommentListViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -182,6 +190,7 @@ fun RealCommentListScreen(
                     moreCommentsAvailable = state.moreCommentsAvailable,
                     onCommentAction = ::onCommentAction,
                     onReply = onReply,
+                    onReplyToPost = onReplyToPost,
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -224,6 +233,7 @@ private fun CommentListContent(
     moreCommentsAvailable: Boolean,
     onCommentAction: (CommentItem, CommentAction) -> Unit,
     onReply: (CommentItem) -> Unit,
+    onReplyToPost: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val theme = LocalComposeTheme.current.postCard
@@ -239,7 +249,8 @@ private fun CommentListContent(
                 PostHeaderCard(
                     title = title,
                     author = postAuthor,
-                    theme = theme
+                    theme = theme,
+                    onReplyToPost = onReplyToPost
                 )
             }
         }
@@ -278,13 +289,14 @@ private fun CommentListContent(
 private fun PostHeaderCard(
     title: String,
     author: String?,
-    theme: org.quantumbadger.redreader.compose.theme.ComposeThemePostCard
+    theme: org.quantumbadger.redreader.compose.theme.ComposeThemePostCard,
+    onReplyToPost: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(theme.backgroundColor)
-            .clickable(onClick = {})
+            .clickable(onClick = onReplyToPost)
             .padding(horizontal = 12.dp, vertical = 12.dp)
     ) {
         Text(

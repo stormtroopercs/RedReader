@@ -139,6 +139,11 @@ fun AppNavGraph(navigationState: NavigationState) {
                         // The comment's full `t1_…` id is the reply's parent
                         // thing id.
                         navigator.navigate(CommentReply(comment.fullName))
+                    },
+                    onReplyToPost = {
+                        // The post's full `t3_…` id is the reply's parent
+                        // thing id.
+                        navigator.navigate(CommentReply(key.postId))
                     }
                 )
             }

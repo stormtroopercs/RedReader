@@ -113,6 +113,9 @@ fun AdaptiveAppNavigation() {
                     onNavigateBack = { navigator.goBack() },
                     onReply = { comment ->
                         navigator.navigate(CommentReply(comment.fullName))
+                    },
+                    onReplyToPost = {
+                        navigator.navigate(CommentReply(key.postId))
                     }
                 )
             }
