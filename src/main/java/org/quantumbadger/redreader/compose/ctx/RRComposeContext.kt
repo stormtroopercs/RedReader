@@ -27,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.core.net.toUri
 import org.quantumbadger.redreader.account.RedditAccountChangeListener
 import org.quantumbadger.redreader.account.RedditAccountId
 import org.quantumbadger.redreader.account.RedditAccountManager
@@ -137,6 +138,10 @@ fun RRComposeContext(
 					)
 				}
 
+				is Dest.WebBrowser -> {
+					LinkHandler.openWebBrowser(activity, it.url.toUri(), false)
+				}
+
 				is Dest.ErrorPropertiesDialog -> {
 					ErrorPropertiesDialog.newInstance(it.error)
 						.show(activity.supportFragmentManager, null)
@@ -205,6 +210,10 @@ sealed interface Dest {
 
 	data class ShareLink(
 		val url: UriString
+	) : Dest
+
+	data class WebBrowser(
+		val url: String
 	) : Dest
 
 	data object RedditTerms : Dest

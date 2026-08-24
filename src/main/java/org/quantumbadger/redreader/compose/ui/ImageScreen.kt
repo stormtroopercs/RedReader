@@ -18,6 +18,7 @@
 package org.quantumbadger.redreader.compose.ui
 
 import android.graphics.Movie
+import androidx.compose.material3.Button
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -52,6 +53,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
@@ -62,13 +64,19 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import org.quantumbadger.redreader.R
+import org.quantumbadger.redreader.activities.BaseActivity
+import org.quantumbadger.redreader.common.LinkHandler
+import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.compose.ctx.Dest
+import org.quantumbadger.redreader.compose.ctx.LocalLauncher
 import org.quantumbadger.redreader.compose.net.NetRequestStatus
 import org.quantumbadger.redreader.compose.net.fetchAlbum
 import org.quantumbadger.redreader.compose.net.fetchGif
 import org.quantumbadger.redreader.compose.net.fetchImage
+import org.quantumbadger.redreader.compose.net.fetchImageInfo
 import org.quantumbadger.redreader.compose.net.fetchVideoStream
 import org.quantumbadger.redreader.compose.theme.LocalComposeTheme
-import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.fragments.ImageInfoDialog
 import org.quantumbadger.redreader.image.AlbumInfo
 import org.quantumbadger.redreader.image.ImageInfo
 import org.quantumbadger.redreader.views.GIFView
@@ -80,27 +88,25 @@ import kotlin.math.max
 /**
  * In-app Compose full-screen image viewer.
  *
- * Three modes:
- *  - Single still: [albumUrl] null, [isGif] false, [isVideo] false — loads
- *    via [fetchImage] (the same cache-backed loader [NetImage] uses, scaled
- *    to a 2048 px longest axis) and renders with [ZoomableImage].
- *  - Single GIF: [albumUrl] null, [isGif] true — loads as an Android [Movie]
- *    via [fetchGif] (the same `readRemainingAsBytes` +
- *    `GIFView.prepareMovie` path the legacy `ImageViewActivity` uses) and
- *    renders with the legacy [GIFView] via [ZoomableGif].
- *  - Single video: [albumUrl] null, [isVideo] true — streams via
- *    [fetchVideoStream] and plays in the legacy [ExoPlayerWrapperView]
- *    ([VideoImage]).
- *  - Album: [albumUrl] non-null — resolves via [fetchAlbum] and shows a
- *    horizontal [HorizontalPager] over the album's images (swipe between
- *    them), each page a still, GIF, or video per its [ImageInfo.mediaType];
- *    the tapped image opens at [albumIndex].
+ * Standalone media (37th): the viewer self-resolves. Direct still-image /
+ * `.gif` / video file URLs load straight via [fetchImage] / [fetchGif] /
+ * [fetchVideoStream]; page-URL hosts (imgur / gfycat / redgifs / streamable /
+ * v.redd.it / deviantart / imgflip / makeameme / giphy) resolve via
+ * [fetchImageInfo] (the same `LinkHandler.getImageInfo` host resolution the
+ * legacy `ImageViewActivity` used) and then render exactly the same way —
+ * still via [ZoomableImage], GIF via [ZoomableGif], video via [VideoImage].
+ * Resolved media also exposes the media toolbar: save, share media / share
+ * link, and an image-info dialog when the host returned title / caption /
+ * dimensions. A host that only offers an embedded web player (e.g. RedGifs)
+ * or a failed resolution shows an error with a "view in browser" button.
  *
- * All still/GIF pages share the same two-finger pinch-zoom, pan-while-zoomed,
- * and double-tap-to-zoom gestures, and the same slim back bar. The legacy
- * `ImageViewActivity` remains the destination for API-resolved GIF hosts
- * (gfycat / redgifs / giphy) and albums containing non-direct (page-URL)
- * images that need host resolution.
+ * Album: [albumUrl] non-null — resolves via [fetchAlbum] and shows a
+ * horizontal [HorizontalPager] over the album's images (swipe between
+ * them), each page a still, GIF, or video per its [ImageInfo.mediaType];
+ * the tapped image opens at [albumIndex].
+ *
+ * The legacy `ImageViewActivity` remains the destination for in-album
+ * images whose entries need host resolution (38th).
  */
 @Composable
 fun ImageScreen(
@@ -113,11 +119,42 @@ fun ImageScreen(
     maxCanvasDimension: Int = 2048
 ) {
     val theme = LocalComposeTheme.current
+    val launch = LocalLauncher.current
 
-    val barTitle = if (albumUrl != null) {
-        stringResource(R.string.image_gallery)
-    } else {
-        url.value.substringAfterLast('/').takeIf { it.isNotBlank() } ?: "Image"
+    val standalone = albumUrl == null
+
+    // Standalone links that are not direct media files need host resolution
+    // (imgur / gfycat / redgifs / streamable / v.redd.it / deviantart / ...).
+    // Resolve them here — the same host resolution the legacy ImageViewActivity
+    // performed — and render the result with the same still / GIF / video
+    // components (37th).
+    val needsResolution = standalone &&
+        !LinkHandler.isDirectStillImage(url) &&
+        !LinkHandler.isDirectGifFile(url) &&
+        !LinkHandler.isDirectVideoFile(url)
+    // Composed conditionally so the resolver's LaunchedEffect is created /
+    // disposed exactly when a standalone link needs host resolution.
+    val resolved: NetRequestStatus<ImageInfo>? =
+        if (needsResolution) fetchImageInfo(url).value else null
+
+    val info: ImageInfo? = when (val r = resolved) {
+        null -> null
+        is NetRequestStatus.Success -> r.result
+        else -> null
+    }
+
+    val mediaUrl = info?.original?.url ?: url
+    val effectiveIsGif = info?.let {
+        it.mediaType == ImageInfo.MediaType.GIF || it.isAnimated == true
+    } ?: isGif
+    val effectiveIsVideo = info?.let {
+        it.mediaType == ImageInfo.MediaType.VIDEO
+    } ?: isVideo
+
+    val barTitle = when {
+        !standalone -> stringResource(R.string.image_gallery)
+        info?.title?.isNotBlank() == true -> info.title!!
+        else -> mediaUrl.value.substringAfterLast('/').takeIf { it.isNotBlank() } ?: "Image"
     }
 
     Column(
@@ -125,7 +162,9 @@ fun ImageScreen(
             .fillMaxSize()
             .background(theme.postCard.listBackgroundColor)
     ) {
-        // Slim top bar with a back affordance (mirrors AlbumScreen's bar).
+        // Slim top bar: back, title, and (standalone) the media-action toolbar
+        // (save / share / image info) — the Compose equivalent of the legacy
+        // ImageViewActivity floating toolbar.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -146,14 +185,57 @@ fun ImageScreen(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            if (standalone && (info != null || !needsResolution)) {
+                MediaToolbar(
+                    mediaUrl = mediaUrl,
+                    shareLinkUrl = url,
+                    info = info,
+                    theme = theme,
+                    launch = launch
+                )
+            }
         }
 
-        if (albumUrl != null) {
+        if (!standalone) {
             AlbumPager(
-                albumUrl = albumUrl,
+                albumUrl = albumUrl!!,
                 startIndex = albumIndex,
                 theme = theme
             )
+        } else if (needsResolution) {
+            when (val r = resolved) {
+                null -> MediaSpinner(theme)
+                is NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> MediaSpinner(theme)
+                is NetRequestStatus.Failed -> {
+                    ResolutionFailure(
+                        error = r.error,
+                        browserUrl = url.value,
+                        launch = launch
+                    )
+                }
+                is NetRequestStatus.Success -> {
+                    val result = r.result
+                    if (result.mediaType == null && result.urlEmbeddedPlayer == null) {
+                        // A host that resolved to no playable media (e.g. a
+                        // RedGifs page with only an embedded web player).
+                        ResolutionFailure(
+                            error = null,
+                            browserUrl = result.urlEmbeddedPlayer?.value
+                                ?: result.original.url.value,
+                            launch = launch
+                        )
+                    } else {
+                        MediaImage(
+                            url = result.original.url,
+                            isGif = result.mediaType == ImageInfo.MediaType.GIF
+                                || result.isAnimated == true,
+                            isVideo = result.mediaType == ImageInfo.MediaType.VIDEO,
+                            maxCanvasDimension = maxCanvasDimension,
+                            theme = theme
+                        )
+                    }
+                }
+            }
         } else {
             MediaImage(
                 url = url,
@@ -162,6 +244,94 @@ fun ImageScreen(
                 maxCanvasDimension = maxCanvasDimension,
                 theme = theme
             )
+        }
+    }
+}
+
+/**
+ * Media-action toolbar for standalone media: save the media, a share menu
+ * (share the media file / share the source link), and — when the host
+ * resolution returned title / caption / dimensions — an image-info dialog.
+ * Mirrors the legacy `ImageViewActivity` floating toolbar via the same
+ * `FileUtils` / `LinkHandler` helpers the legacy menu used.
+ */
+@Composable
+private fun MediaToolbar(
+    mediaUrl: UriString,
+    shareLinkUrl: UriString,
+    info: ImageInfo?,
+    theme: org.quantumbadger.redreader.compose.theme.ComposeTheme,
+    launch: (Dest) -> Unit
+) {
+    val context = LocalContext.current
+
+    RRIconButton(
+        onClick = { launch(Dest.SaveMedia(mediaUrl)) },
+        icon = R.drawable.download,
+        contentDescription = R.string.action_save_image,
+        tint = theme.album.toolbarIconColor
+    )
+
+    RRDropdownMenuIconButton(
+        icon = R.drawable.ic_action_share_dark,
+        contentDescription = R.string.action_share
+    ) {
+        Item(
+            icon = R.drawable.ic_action_image_dark,
+            text = R.string.action_share_image,
+            onClick = { launch(Dest.ShareMedia(mediaUrl)) }
+        )
+        Item(
+            icon = R.drawable.ic_action_link_dark,
+            text = R.string.action_share_link,
+            onClick = { launch(Dest.ShareLink(shareLinkUrl)) }
+        )
+    }
+
+    if (info != null) {
+        RRIconButton(
+            onClick = {
+                (context as? BaseActivity)?.supportFragmentManager?.let { fm ->
+                    ImageInfoDialog.newInstance(info).show(fm, null)
+                }
+            },
+            icon = R.drawable.ic_action_info_dark,
+            contentDescription = R.string.props_image_title,
+            tint = theme.album.toolbarIconColor
+        )
+    }
+}
+
+/**
+ * Shown when a standalone host link cannot be displayed in-app: a failed
+ * [fetchImageInfo] resolution ([error] non-null) or a host that resolved to
+ * no playable media, only an embedded web page. Both offer "view in browser"
+ * via [Dest.WebBrowser].
+ */
+@Composable
+private fun ResolutionFailure(
+    error: org.quantumbadger.redreader.common.RRError?,
+    browserUrl: String,
+    launch: (Dest) -> Unit
+) {
+    val theme = LocalComposeTheme.current
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (error != null) {
+            RRErrorView(error = error)
+        }
+        Spacer(Modifier.height(12.dp))
+        Button(
+            onClick = { launch(Dest.WebBrowser(browserUrl)) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        ) {
+            Text(stringResource(R.string.action_external))
         }
     }
 }

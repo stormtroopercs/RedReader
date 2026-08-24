@@ -64,6 +64,8 @@ import org.quantumbadger.redreader.compose.ctx.GlobalNetworkRetry
 import org.quantumbadger.redreader.compose.ctx.LocalRedditUser
 import org.quantumbadger.redreader.image.AlbumInfo
 import org.quantumbadger.redreader.image.GetAlbumInfoListener
+import org.quantumbadger.redreader.image.GetImageInfoListener
+import org.quantumbadger.redreader.image.ImageInfo
 import org.quantumbadger.redreader.image.ImageSize
 import org.quantumbadger.redreader.jsonwrap.JsonValue
 import org.quantumbadger.redreader.reddit.api.SubredditReportFlow
@@ -169,6 +171,72 @@ fun fetchAlbum(
 					)
 				}
 
+			}
+		)
+	}
+
+	return state
+}
+
+/**
+ * Resolves an image / GIF / video link to its [ImageInfo] for the in-app Compose
+ * image viewer (37th). Wraps `LinkHandler.getImageInfo` — the same host
+ * resolution the legacy `ImageViewActivity` uses (imgur / gfycat / redgifs /
+ * streamable / v.redd.it / deviantart host APIs, then the pure
+ * `resolveImagePatternUrl` rewrite, then "not an image") — into Compose state so
+ * the `ImageScreen` can self-resolve standalone links.
+ */
+@Composable
+fun fetchImageInfo(
+	uri: UriString,
+): State<NetRequestStatus<ImageInfo>> {
+	val state = remember { mutableStateOf<NetRequestStatus<ImageInfo>>(NetRequestStatus.Connecting) }
+
+	// Prevent conflicting updates to state
+	val currentRequest = remember { mutableIntStateOf(0) }
+
+	val context = LocalContext.current.applicationContext
+
+	LaunchedEffect(uri) {
+
+		state.value = NetRequestStatus.Connecting
+
+		val thisRequest = ++currentRequest.intValue
+
+		LinkHandler.getImageInfo(
+			context,
+			uri,
+			Priority(Constants.Priority.IMAGE_VIEW),
+			object : GetImageInfoListener {
+				override fun onFailure(error: RRError) {
+					AndroidCommon.runOnUiThread {
+						if (thisRequest == currentRequest.intValue) {
+							state.value = NetRequestStatus.Failed(error)
+						}
+					}
+				}
+
+				override fun onSuccess(info: ImageInfo) {
+					AndroidCommon.runOnUiThread {
+						if (thisRequest == currentRequest.intValue) {
+							state.value = NetRequestStatus.Success(info)
+						}
+					}
+				}
+
+				override fun onNotAnImage() {
+					AndroidCommon.runOnUiThread {
+						if (thisRequest == currentRequest.intValue) {
+							state.value = NetRequestStatus.Failed(
+								RRError(
+									context.getString(R.string.imageview_image_info_failed),
+									url = uri,
+									reportable = false
+								)
+							)
+						}
+					}
+				}
 			}
 		)
 	}
