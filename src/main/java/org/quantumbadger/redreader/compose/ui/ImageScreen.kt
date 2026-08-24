@@ -103,10 +103,10 @@ import kotlin.math.max
  * Album: [albumUrl] non-null — resolves via [fetchAlbum] and shows a
  * horizontal [HorizontalPager] over the album's images (swipe between
  * them), each page a still, GIF, or video per its [ImageInfo.mediaType];
- * the tapped image opens at [albumIndex].
- *
- * The legacy `ImageViewActivity` remains the destination for in-album
- * images whose entries need host resolution (38th).
+ * the tapped image opens at [albumIndex]. Album entries whose URLs are
+ * page/API URLs needing host resolution (38th) are resolved per page via
+ * [fetchImageInfo] (the same [ResolvedAlbumImage] mechanism the standalone
+ * path uses).
  */
 @Composable
 fun ImageScreen(
@@ -492,12 +492,8 @@ private fun AlbumPager(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize()
                     ) { page ->
-                        val image = it.result.images[page]
-                        MediaImage(
-                            url = image.original.url,
-                            isGif = image.mediaType == ImageInfo.MediaType.GIF
-                                || image.isAnimated == true,
-                            isVideo = image.mediaType == ImageInfo.MediaType.VIDEO,
+                        ResolvedAlbumImage(
+                            image = it.result.images[page],
                             maxCanvasDimension = 2048,
                             theme = theme
                         )
@@ -515,6 +511,74 @@ private fun AlbumPager(
                             color = theme.album.toolbarIconColor
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * One page of an album. If the entry's `original` URL is a direct media file
+ * (still / `.gif` / video), it renders straight through [MediaImage]; if it
+ * is a page/API URL that needs host resolution (an imgur / gfycat /
+ * redgifs / streamable / v.redd.it / deviantart image inside an album —
+ * the last `ImageViewActivity` gap, 38th), it resolves via [fetchImageInfo]
+ * and renders the result the same way. A host that resolves to no playable
+ * media shows a small inline error for that page only.
+ */
+@Composable
+private fun ResolvedAlbumImage(
+    image: ImageInfo,
+    maxCanvasDimension: Int,
+    theme: org.quantumbadger.redreader.compose.theme.ComposeTheme
+) {
+    val isDirect = LinkHandler.isDirectStillImage(image.original.url) ||
+        LinkHandler.isDirectGifFile(image.original.url) ||
+        LinkHandler.isDirectVideoFile(image.original.url)
+
+    if (isDirect) {
+        MediaImage(
+            url = image.original.url,
+            isGif = image.mediaType == ImageInfo.MediaType.GIF
+                || image.isAnimated == true,
+            isVideo = image.mediaType == ImageInfo.MediaType.VIDEO,
+            maxCanvasDimension = maxCanvasDimension,
+            theme = theme
+        )
+    } else {
+        val resolved = fetchImageInfo(image.original.url).value
+        when (val r = resolved) {
+            null, is NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+                MediaSpinner(theme)
+            }
+
+            is NetRequestStatus.Failed -> {
+                RRErrorView(error = r.error)
+            }
+
+            is NetRequestStatus.Success -> {
+                val result = r.result
+                if (result.mediaType == null && result.urlEmbeddedPlayer == null) {
+                    // A host that resolved to no playable media (e.g. an
+                    // embedded web player) — show a note for this page.
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.error_inline_preview_failed_message),
+                            color = theme.album.toolbarIconColor
+                        )
+                    }
+                } else {
+                    MediaImage(
+                        url = result.original.url,
+                        isGif = result.mediaType == ImageInfo.MediaType.GIF
+                            || result.isAnimated == true,
+                        isVideo = result.mediaType == ImageInfo.MediaType.VIDEO,
+                        maxCanvasDimension = maxCanvasDimension,
+                        theme = theme
+                    )
                 }
             }
         }

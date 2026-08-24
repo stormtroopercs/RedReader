@@ -22,9 +22,9 @@ import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost
  * Implemented by the host Activity that displays a post, so that tapping a post
  * (or its "comments" control) routes to the matching in-app listing. Relocated
  * to a top-level interface when the legacy listing stack was retired (it was
- * previously nested inside `views.RedditPostView`). The live `ImageViewActivity`
- * and `WebViewFragment` implement it; `RedditPostActions` casts the host Activity
- * to it to dispatch post-selected / post-comments-selected.
+ * previously nested inside `views.RedditPostView`). `WebViewFragment`
+ * implements it; `RedditPostActions` casts the host Activity to it to
+ * dispatch post-selected / post-comments-selected.
  */
 interface PostSelectionListener {
     fun onPostSelected(post: RedditPreparedPost)

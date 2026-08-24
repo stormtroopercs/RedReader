@@ -197,12 +197,7 @@ class PostListViewModel @Inject constructor(
 
                 val callbacks = object : CacheRequestCallbacks {
                     override fun onFailure(error: RRError) {
-                        _state.value = PostListUiState.Error(
-                            RRError(
-                                title = "Failed to load posts",
-                                message = error.message ?: error.toString()
-                            )
-                        )
+                        _state.value = PostListUiState.Error(error)
                     }
 
                     override fun onDataStreamComplete(

@@ -32,7 +32,6 @@ import androidx.core.net.toUri
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.activities.BaseActivity
-import org.quantumbadger.redreader.activities.ImageViewActivity
 import org.quantumbadger.redreader.activities.MainActivityCompose
 import org.quantumbadger.redreader.activities.PMSendActivity
 import org.quantumbadger.redreader.activities.WebViewActivity
@@ -116,17 +115,14 @@ object LinkHandler {
 		val normalUrlString = UriString(normalUrl.toString())
 
 		if (!forceNoImage && isProbablyAnImage(normalUrlString)) {
-			// An in-album image whose album is directly fetchable opens the
-			// in-app Compose image viewer's album pager (swipe between images,
-			// stills / GIFs / direct video files); a standalone direct
-			// still-image, .gif, or video file URL opens the single-media
-			// viewer. Both are child routes on Main, so system back returns
-			// to the previous screen. Albums whose images are page/API URLs
-			// that need host resolution, and API-resolved GIF / video hosts
-			// (gfycat / redgifs / giphy / streamable / v.redd.it), keep the
-			// legacy ImageViewActivity.
+			// An in-album image opens the in-app Compose image viewer's album
+			// pager (swipe between images — stills / GIFs / direct video
+			// files, plus per-page host resolution for page/API-URL entries);
+			// a standalone direct still-image, .gif, or video file URL opens
+			// the single-media viewer. Both are child routes on Main, so
+			// system back returns to the previous screen.
 			val inAlbum = albumInfo != null && albumImageIndex != null
-			if (inAlbum && isAlbumDirectlyFetchable(albumInfo)) {
+			if (inAlbum) {
 				val intent = Intent(activity, MainActivityCompose::class.java).apply {
 					putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_IMAGE)
 					putExtra(MainActivityCompose.EXTRA_IMAGE_URL, normalUrlString.value)
@@ -152,8 +148,8 @@ object LinkHandler {
 			// any network call (imgflip / makeameme / giphy / i.reddituploads — the
 			// pure part of getImageInfo) opens the in-app Compose viewer too (36th).
 			// Hosts that need a live host API (imgur / gfycat / redgifs / streamable /
-			// v.redd.it / deviantart) resolve to null here and keep the legacy
-			// ImageViewActivity.
+			// v.redd.it / deviantart) resolve to null here and fall through to the
+			// last-resort web browser below.
 			if (!inAlbum) {
 				val resolved = resolveImagePatternUrl(normalUrlString)
 				if (resolved != null) {
@@ -171,15 +167,17 @@ object LinkHandler {
 				}
 			}
 
-			val intent = Intent(activity, ImageViewActivity::class.java)
-			intent.setData(normalUrl)
-			intent.putExtra("post", post)
-
-			if (albumInfo != null && albumImageIndex != null) {
-				intent.putExtra("albumUrl", albumInfo.url)
-				intent.putExtra("albumImageIndex", albumImageIndex)
+			// Last resort: a standalone image-host URL the pure
+			// resolveImagePatternUrl path couldn't resolve (imgur / gfycat /
+			// redgifs / streamable / v.redd.it / deviantart — hosts needing a
+			// live host API) opens the Compose viewer, which resolves it
+			// itself via fetchImageInfo (the same host API the legacy
+			// ImageViewActivity used, 37th) and offers a "view in browser"
+			// fallback when the host has no playable media (38th).
+			val intent = Intent(activity, MainActivityCompose::class.java).apply {
+				putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_IMAGE)
+				putExtra(MainActivityCompose.EXTRA_IMAGE_URL, normalUrlString.value)
 			}
-
 			activity.startActivity(intent)
 			return
 		}
@@ -828,7 +826,8 @@ object LinkHandler {
 	 * redgifs / giphy), video hosts (streamable / v.redd.it), album URLs, and
 	 * page URLs that need host resolution (imgflip / makeameme now resolve
 	 * purely via [resolveImagePatternUrl] into the Compose viewer; deviantart
-	 * needs its API and keeps the legacy [ImageViewActivity]). Matches
+	 * needs its API and opens the Compose viewer, which resolves it via
+	 * [fetchImageInfo]). Matches
 	 * i.redd.it direct uploads or any URL ending in a still-image extension.
 	 */
 	@JvmStatic
@@ -855,7 +854,8 @@ object LinkHandler {
 	 * the in-app Compose image viewer's GIF path (fetched raw via [fetchGif]
 	 * and decoded with [GIFView.prepareMovie]). Hosts that resolve GIFs via
 	 * their APIs (gfycat / redgifs / giphy — see [getImageUrlPatternMatch])
-	 * do not match this and keep the legacy [ImageViewActivity].
+	 * do not match this; the Compose viewer resolves them via
+	 * [fetchImageInfo].
 	 */
 	@JvmStatic
 	fun isDirectGifFile(url: UriString?): Boolean {
@@ -870,7 +870,8 @@ object LinkHandler {
 	 * suitable for the in-app Compose image viewer's video path (streamed
 	 * raw via [fetchVideoStream] into the legacy `ExoPlayerWrapperView`).
 	 * Page URLs (v.redd.it, streamable, gfycat hosts) that need host-API
-	 * resolution don't match and keep the legacy [ImageViewActivity].
+	 * resolution don't match this; the Compose viewer resolves them via
+	 * [fetchImageInfo].
 	 */
 	@JvmStatic
 	fun isDirectVideoFile(url: UriString?): Boolean {
@@ -884,34 +885,6 @@ object LinkHandler {
 			}
 		}
 		return false
-	}
-
-	/**
-	 * Whether every image in [album] can be shown by the in-app Compose image
-	 * viewer's album pager — i.e. each image's `original` URL is a direct
-	 * file the viewer can load as-is: a still ([isDirectStillImage]), a GIF
-	 * ([isDirectGifFile]), or a direct video file ([isDirectVideoFile],
-	 * played in the legacy `ExoPlayerWrapperView`). Albums whose images are
-	 * page/API URLs that need resolution keep the legacy
-	 * [ImageViewActivity] (which resolves them via the host APIs).
-	 */
-	@JvmStatic
-	fun isAlbumDirectlyFetchable(album: AlbumInfo?): Boolean {
-		if (album == null || album.images.isEmpty()) {
-			return false
-		}
-		for (image in album.images) {
-			val url = image.original.url
-			val isVideo = image.mediaType == ImageInfo.MediaType.VIDEO
-			if (isVideo) {
-				if (!isDirectVideoFile(url)) {
-					return false
-				}
-			} else if (!isDirectStillImage(url) && !isDirectGifFile(url)) {
-				return false
-			}
-		}
-		return true
 	}
 
 	private val STILL_IMAGE_EXTENSIONS = arrayOf(".jpg", ".jpeg", ".png", ".webp")
@@ -1223,7 +1196,8 @@ object LinkHandler {
 	 * pure (no-[context]) part of [getImageInfo] and backs the in-app Compose
 	 * image viewer's "resolvable host" path (36th) — hosts that need a live API
 	 * call (imgur / gfycat / redgifs / streamable / v.redd.it / deviantart) return
-	 * null here and keep the legacy `ImageViewActivity`.
+	 * null here and open the Compose viewer, which resolves them via
+	 * [fetchImageInfo].
 	 */
 	@JvmStatic
 	fun resolveImagePatternUrl(url: UriString): ImageInfo? = getImageUrlPatternMatch(url)
