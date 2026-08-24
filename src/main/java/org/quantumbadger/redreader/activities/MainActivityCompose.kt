@@ -29,6 +29,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.navigation.Album
 import org.quantumbadger.redreader.navigation.AppNavGraph
+import org.quantumbadger.redreader.navigation.BugReport
 import org.quantumbadger.redreader.navigation.Changelog
 import org.quantumbadger.redreader.navigation.CommentEdit
 import org.quantumbadger.redreader.navigation.CommentList
@@ -220,6 +221,7 @@ class MainActivityCompose : ComposeBaseActivity() {
                     )
                 )
             }
+            DEEP_LINK_BUG_REPORT -> navigationState.navigateTo(Settings, BugReport)
         }
     }
 
@@ -344,6 +346,12 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: the PM composer (Main top level + PMSend child). */
         const val DEEP_LINK_PM_SEND = "pm_send"
+
+        /** Deep-link route: the bug-report screen (Settings top level + BugReport
+         *  child). Used by [org.quantumbadger.redreader.common.BugReporter.handleGlobalError]
+         *  to surface a collected global error in the Compose bug-report screen —
+         *  the in-app replacement for the retired BugReportActivity's own launch. */
+        const val DEEP_LINK_BUG_REPORT = "bug_report"
 
         /** Intent extra carrying the recipient for the PM-send deep link. */
         const val EXTRA_PM_SEND_RECIPIENT =

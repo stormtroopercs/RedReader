@@ -24,8 +24,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.quantumbadger.redreader.R.string
 import org.quantumbadger.redreader.activities.BaseActivity
-import org.quantumbadger.redreader.activities.BugReportActivity
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.appendException
+import org.quantumbadger.redreader.common.BugReporter
+import org.quantumbadger.redreader.common.BugReporter.appendException
 import org.quantumbadger.redreader.common.RRError
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -38,7 +38,7 @@ class ErrorPropertiesDialog private constructor(private val mError: RRError) : P
             builder.setPositiveButton(
                 string.button_error_send_report,
                 DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
-                    BugReportActivity.sendBugReport(
+                    BugReporter.sendBugReport(
                         mContext!!,
                         mError
                     )

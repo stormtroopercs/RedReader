@@ -20,7 +20,7 @@ import android.content.Context
 import androidx.annotation.IntDef
 import androidx.appcompat.app.AppCompatActivity
 import org.quantumbadger.redreader.account.RedditAccount
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.BugReporter.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest
 import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType

@@ -32,7 +32,7 @@ import androidx.annotation.RequiresApi
 import org.quantumbadger.redreader.R.string
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.BugReporter.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheCompressionType
 import org.quantumbadger.redreader.cache.CacheContentProvider
 import org.quantumbadger.redreader.cache.CacheManager

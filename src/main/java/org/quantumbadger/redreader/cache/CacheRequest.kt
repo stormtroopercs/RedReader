@@ -19,8 +19,8 @@ package org.quantumbadger.redreader.cache
 import android.content.Context
 import android.util.Log
 import org.quantumbadger.redreader.account.RedditAccount
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.addGlobalError
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.BugReporter.addGlobalError
+import org.quantumbadger.redreader.common.BugReporter.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheManager.ReadableCacheFile
 import org.quantumbadger.redreader.cache.downloadstrategy.DownloadStrategy
 import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure

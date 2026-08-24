@@ -96,7 +96,8 @@ fun AppNavGraph(navigationState: NavigationState) {
             entry<Settings> {
                 SettingsScreen(
                     onNavigateBack = { navigator.goBack() },
-                    onNavigateToChangelog = { navigator.navigate(Changelog) }
+                    onNavigateToChangelog = { navigator.navigate(Changelog) },
+                    onNavigateToBugReport = { navigator.navigate(BugReport) }
                 )
             }
 

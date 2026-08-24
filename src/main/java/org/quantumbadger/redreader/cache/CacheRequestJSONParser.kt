@@ -17,7 +17,7 @@
 package org.quantumbadger.redreader.cache
 
 import android.content.Context
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.BugReporter.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
 import org.quantumbadger.redreader.common.CachedThreadPool
 import org.quantumbadger.redreader.common.FunctionOneArgWithReturn

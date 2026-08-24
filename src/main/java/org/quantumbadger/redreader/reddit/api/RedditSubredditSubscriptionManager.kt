@@ -26,7 +26,7 @@ import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
 import org.quantumbadger.redreader.R.string
 import org.quantumbadger.redreader.account.RedditAccount
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.BugReporter.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.common.FunctionOneArgNoReturn
 import org.quantumbadger.redreader.common.General.quickToast

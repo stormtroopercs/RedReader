@@ -24,7 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.os.BundleCompat
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.account.RedditAccountManager
-import org.quantumbadger.redreader.activities.BugReportActivity
+import org.quantumbadger.redreader.common.BugReporter
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.common.AndroidCommon
 import org.quantumbadger.redreader.common.General
@@ -109,7 +109,7 @@ class ReportDialog : ComposeDialogFragment() {
 			CacheManager.getInstance(activity),
 			object : APIResponseHandler.ActionResponseHandler(activity) {
 				override fun onCallbackException(t: Throwable) {
-					BugReportActivity.handleGlobalError(activity, t)
+					BugReporter.handleGlobalError(activity, t)
 				}
 
 				override fun onFailure(error: RRError) {

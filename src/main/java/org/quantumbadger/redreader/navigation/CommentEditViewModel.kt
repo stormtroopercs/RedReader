@@ -24,7 +24,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.quantumbadger.redreader.activities.BugReportActivity
+import org.quantumbadger.redreader.common.BugReporter
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.common.RRError
@@ -95,7 +95,7 @@ class CommentEditViewModel @Inject constructor(
             }
 
             override fun onCallbackException(t: Throwable) {
-                BugReportActivity.handleGlobalError(activity, t)
+                BugReporter.handleGlobalError(activity, t)
             }
         }
 

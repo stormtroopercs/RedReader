@@ -29,7 +29,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import org.quantumbadger.redreader.RedReader.Companion.CacheManagerEntryPoint
 import org.quantumbadger.redreader.account.RedditAccount
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.BugReporter.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
 import org.quantumbadger.redreader.common.FileUtils
 import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure

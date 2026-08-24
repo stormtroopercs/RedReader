@@ -17,8 +17,8 @@
 package org.quantumbadger.redreader.reddit
 
 import androidx.appcompat.app.AppCompatActivity
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.addGlobalError
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.BugReporter.addGlobalError
+import org.quantumbadger.redreader.common.BugReporter.handleGlobalError
 import org.quantumbadger.redreader.common.General
 import org.quantumbadger.redreader.common.Optional
 import org.quantumbadger.redreader.common.RRError

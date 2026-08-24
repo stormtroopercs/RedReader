@@ -27,8 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.getErrors
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.sendBugReport
+import org.quantumbadger.redreader.common.BugReporter.getErrors
+import org.quantumbadger.redreader.common.BugReporter.sendBugReport
 import org.quantumbadger.redreader.common.RRError
 
 /**

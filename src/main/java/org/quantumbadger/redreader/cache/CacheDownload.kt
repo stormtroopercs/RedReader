@@ -17,7 +17,7 @@
 package org.quantumbadger.redreader.cache
 
 import android.util.Log
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.BugReporter.handleGlobalError
 import org.quantumbadger.redreader.cache.CacheManager.WritableCacheFile
 import org.quantumbadger.redreader.cache.CacheRequest.DownloadQueueType
 import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType

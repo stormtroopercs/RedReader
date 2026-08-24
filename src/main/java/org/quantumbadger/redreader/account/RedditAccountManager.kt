@@ -21,7 +21,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.BugReporter.handleGlobalError
 import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.common.UpdateNotifier
 import org.quantumbadger.redreader.reddit.api.RedditOAuth.RefreshToken

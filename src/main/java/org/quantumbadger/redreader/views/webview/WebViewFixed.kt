@@ -26,7 +26,7 @@ import android.webkit.WebView
 import info.guardianproject.netcipher.webkit.WebkitProxy
 import org.quantumbadger.redreader.R.string
 import org.quantumbadger.redreader.RedReader
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.BugReporter.handleGlobalError
 import org.quantumbadger.redreader.common.AndroidCommon
 import org.quantumbadger.redreader.common.TorCommon
 

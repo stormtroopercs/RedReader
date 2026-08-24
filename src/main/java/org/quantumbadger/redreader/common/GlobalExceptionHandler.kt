@@ -20,7 +20,7 @@ import android.content.Context
 import android.util.Log
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.activities.BaseActivity
-import org.quantumbadger.redreader.activities.BugReportActivity
+import org.quantumbadger.redreader.common.BugReporter
 import org.quantumbadger.redreader.common.AndroidCommon.runOnUiThread
 import org.quantumbadger.redreader.common.General.checkThisIsUIThread
 import org.quantumbadger.redreader.common.General.readWholeStreamAsUTF8
@@ -99,7 +99,7 @@ class GlobalExceptionHandler private constructor(context: Context) :
 						R.string.dialog_yes,
 						R.string.dialog_no,
 						{
-							BugReportActivity.sendBugReport(
+							BugReporter.sendBugReport(
 								activity, RRError(
 									"Previous crash",
 									null,

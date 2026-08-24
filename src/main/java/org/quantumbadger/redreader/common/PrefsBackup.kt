@@ -28,7 +28,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
-import org.quantumbadger.redreader.activities.BugReportActivity
+import org.quantumbadger.redreader.common.BugReporter
 import org.quantumbadger.redreader.common.time.TimestampUTC
 import org.quantumbadger.redreader.receivers.NewMessageChecker
 import org.quantumbadger.redreader.receivers.announcements.AnnouncementDownloader
@@ -94,10 +94,10 @@ object PrefsBackup {
                 SerializeUtils.serialize(dos, map)
                 dos.flush()
             } catch (e: SerializeUtils.UnhandledTypeException) {
-                BugReportActivity.handleGlobalError(activity, e)
+                BugReporter.handleGlobalError(activity, e)
                 return@Runnable
             } catch (e: IOException) {
-                BugReportActivity.handleGlobalError(activity, e)
+                BugReporter.handleGlobalError(activity, e)
                 return@Runnable
             }
 

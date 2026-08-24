@@ -111,7 +111,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToChangelog: () -> Unit
+    onNavigateToChangelog: () -> Unit,
+    onNavigateToBugReport: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val activity = context as? androidx.appcompat.app.AppCompatActivity
@@ -227,6 +228,7 @@ fun SettingsScreen(
             SettingsContent(
                 modifier = Modifier.padding(paddingValues),
                 onNavigateToChangelog = onNavigateToChangelog,
+                onNavigateToBugReport = onNavigateToBugReport,
                 onOpenAppbar = { showAppbar = true },
                 onOpenCacheLocation = { showCacheLocation = true },
                 onOpenCacheClear = { showCacheClear = true },
@@ -257,6 +259,7 @@ fun SettingsScreen(
 private fun SettingsContent(
     modifier: Modifier = Modifier,
     onNavigateToChangelog: () -> Unit,
+    onNavigateToBugReport: () -> Unit = {},
     onOpenAppbar: () -> Unit = {},
     onOpenCacheLocation: () -> Unit = {},
     onOpenCacheClear: () -> Unit = {},
@@ -268,6 +271,7 @@ private fun SettingsContent(
     val settings = getSettingsCategories(
         context,
         onNavigateToChangelog,
+        onNavigateToBugReport,
         onOpenAppbar,
         onOpenCacheLocation,
         onOpenCacheClear,
@@ -766,6 +770,7 @@ sealed class SettingsItem {
 private fun getSettingsCategories(
     context: Context,
     onNavigateToChangelog: () -> Unit,
+    onNavigateToBugReport: () -> Unit = {},
     onOpenAppbar: () -> Unit = {},
     onOpenCacheLocation: () -> Unit = {},
     onOpenCacheClear: () -> Unit = {},
@@ -1829,6 +1834,12 @@ private fun getSettingsCategories(
                     label = "Changelog",
                     description = "View what's new",
                     onClick = onNavigateToChangelog
+                ),
+                SettingsItem.PreferenceItem(
+                    key = "bug_report",
+                    label = "Report a bug",
+                    description = "Send an error report",
+                    onClick = onNavigateToBugReport
                 ),
                 SettingsItem.PreferenceItem(
                     key = "license",

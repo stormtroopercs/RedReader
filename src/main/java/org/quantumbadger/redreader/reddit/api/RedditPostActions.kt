@@ -34,7 +34,7 @@ import org.apache.commons.text.StringEscapeUtils
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.activities.BaseActivity
-import org.quantumbadger.redreader.activities.BugReportActivity
+import org.quantumbadger.redreader.common.BugReporter
 import org.quantumbadger.redreader.activities.MainActivityCompose
 import org.quantumbadger.redreader.activities.WebViewActivity
 import org.quantumbadger.redreader.cache.CacheManager
@@ -527,7 +527,7 @@ object RedditPostActions {
 						Toast.LENGTH_LONG
 					).show()
 				} catch (e: Exception) {
-					BugReportActivity.handleGlobalError(
+					BugReporter.handleGlobalError(
 						activity,
 						RuntimeException(
 							"Got exception for subreddit: " + post.src.subreddit,
@@ -1116,7 +1116,7 @@ object RedditPostActions {
 		RedditAPI.action(CacheManager.getInstance(activity),
 			object : ActionResponseHandler(activity) {
 				override fun onCallbackException(t: Throwable) {
-					BugReportActivity.handleGlobalError(context, t)
+					BugReporter.handleGlobalError(context, t)
 				}
 
 				override fun onFailure(

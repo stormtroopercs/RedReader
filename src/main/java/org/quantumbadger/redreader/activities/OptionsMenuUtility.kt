@@ -30,7 +30,7 @@ import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.R.string
 import org.quantumbadger.redreader.account.RedditAccount
 import org.quantumbadger.redreader.account.RedditAccountManager
-import org.quantumbadger.redreader.activities.BugReportActivity.Companion.handleGlobalError
+import org.quantumbadger.redreader.common.BugReporter.handleGlobalError
 import org.quantumbadger.redreader.common.General.dpToPixels
 import org.quantumbadger.redreader.common.General.getSharedPrefs
 import org.quantumbadger.redreader.common.PrefsUtility
