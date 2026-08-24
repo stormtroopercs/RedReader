@@ -92,7 +92,8 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun RealCommentListScreen(
     postId: String,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onReply: (CommentItem) -> Unit
 ) {
     val viewModel: CommentListViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -180,6 +181,7 @@ fun RealCommentListScreen(
                     comments = state.comments,
                     moreCommentsAvailable = state.moreCommentsAvailable,
                     onCommentAction = ::onCommentAction,
+                    onReply = onReply,
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -221,6 +223,7 @@ private fun CommentListContent(
     comments: List<CommentItem>,
     moreCommentsAvailable: Boolean,
     onCommentAction: (CommentItem, CommentAction) -> Unit,
+    onReply: (CommentItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val theme = LocalComposeTheme.current.postCard
@@ -260,7 +263,8 @@ private fun CommentListContent(
                 CommentCard(
                     comment = comment,
                     theme = theme,
-                    onCommentAction = onCommentAction
+                    onCommentAction = onCommentAction,
+                    onReply = onReply
                 )
             }
         }
@@ -324,7 +328,8 @@ private fun PostHeaderCard(
 private fun CommentCard(
     comment: CommentItem,
     theme: org.quantumbadger.redreader.compose.theme.ComposeThemePostCard,
-    onCommentAction: (CommentItem, CommentAction) -> Unit
+    onCommentAction: (CommentItem, CommentAction) -> Unit,
+    onReply: (CommentItem) -> Unit
 ) {
     var moreMenuExpanded by remember { mutableStateOf(false) }
     Row(
@@ -422,7 +427,7 @@ private fun CommentCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(
-                    onClick = {},
+                    onClick = { onReply(comment) },
                     content = {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.Message,

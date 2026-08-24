@@ -223,8 +223,10 @@ class MainActivityCompose : ComposeBaseActivity() {
             DEEP_LINK_COMMENT_REPLY -> {
                 val idAndType = intent?.getStringExtra(EXTRA_COMMENT_REPLY_ID_AND_TYPE)
                 if (idAndType != null) {
-                    val (postId, commentId) = parseCommentReplyIds(idAndType)
-                    navigationState.navigateTo(Main, CommentReply(postId, commentId))
+                    // The raw id-and-type *is* the reply's parent thing id:
+                    // "t3_…" for a post, "t1_…" for a comment (both are the
+                    // full id RedditAPI.comment posts against).
+                    navigationState.navigateTo(Main, CommentReply(idAndType))
                 }
             }
             DEEP_LINK_TERMS -> {
@@ -313,23 +315,6 @@ class MainActivityCompose : ComposeBaseActivity() {
             LinkHandler.onLinkClicked(this, UriString.from(data), true, null, null, 0, true)
             finish()
         }
-    }
-
-    /**
-     * Split a Reddit id-and-type string into the [CommentReply] route's
-     * (postId, commentId) parameters. "t3_<id>" (a post) yields that post id
-     * with a null comment id; "t1_<postId>_<commentId>" (a comment) yields
-     * "t3_<postId>" as the post id and the comment id, since Reddit comment
-     * ids nest under the post id.
-     */
-    private fun parseCommentReplyIds(idAndType: String): Pair<String, String?> {
-        if (idAndType.startsWith("t1_")) {
-            val commentId = idAndType.removePrefix("t1_")
-            val underscore = commentId.lastIndexOf('_')
-            val postId = if (underscore > 0) "t3_" + commentId.substring(0, underscore) else ""
-            return postId to commentId
-        }
-        return idAndType to null
     }
 
     companion object {

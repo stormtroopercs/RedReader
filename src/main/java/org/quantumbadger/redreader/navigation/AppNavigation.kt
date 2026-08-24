@@ -134,7 +134,12 @@ fun AppNavGraph(navigationState: NavigationState) {
             entry<CommentList> { key ->
                 RealCommentListScreen(
                     postId = key.postId,
-                    onNavigateBack = { navigator.goBack() }
+                    onNavigateBack = { navigator.goBack() },
+                    onReply = { comment ->
+                        // The comment's full `t1_…` id is the reply's parent
+                        // thing id.
+                        navigator.navigate(CommentReply(comment.fullName))
+                    }
                 )
             }
 
@@ -160,7 +165,10 @@ fun AppNavGraph(navigationState: NavigationState) {
                 org.quantumbadger.redreader.compose.ui.InboxScreen(
                     onNavigateBack = { navigator.goBack() },
                     onSendMessage = {
-                        navigator.navigate(CommentReply(postId = "", commentId = null))
+                        // "New message" → the PM composer (the legacy inbox
+                        // "new message" button opened the PM composer, not a
+                        // comment reply).
+                        navigator.navigate(PMSend())
                     }
                 )
             }
@@ -190,12 +198,9 @@ fun AppNavGraph(navigationState: NavigationState) {
             // Child: Comment reply
             entry<CommentReply> { key ->
                 org.quantumbadger.redreader.compose.ui.CommentReplyScreen(
-                    postId = key.postId,
-                    commentId = key.commentId,
-                    onNavigateBack = { navigator.goBack() },
-                    onSubmit = { body ->
-                        // TODO: wire up comment reply submission
-                    }
+                    parentThingId = key.parentThingId,
+                    onDone = { navigator.goBack() },
+                    onNavigateBack = { navigator.goBack() }
                 )
             }
 

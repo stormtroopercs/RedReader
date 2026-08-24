@@ -110,7 +110,10 @@ fun AdaptiveAppNavigation() {
             entry<CommentList> { key ->
                 RealCommentListScreen(
                     postId = key.postId,
-                    onNavigateBack = { navigator.goBack() }
+                    onNavigateBack = { navigator.goBack() },
+                    onReply = { comment ->
+                        navigator.navigate(CommentReply(comment.fullName))
+                    }
                 )
             }
 

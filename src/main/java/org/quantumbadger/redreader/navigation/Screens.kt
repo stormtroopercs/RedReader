@@ -34,7 +34,7 @@ import kotlinx.serialization.Serializable
  *   - Inbox
  *   - PostSubmit(subreddit)
  *   - SubredditSearch
- *   - CommentReply(postId, commentId?)
+ *   - CommentReply(parentThingId)
  *   - Album(url)
  *   - Image(url)
  */
@@ -64,7 +64,7 @@ data class PostSubmit(val subreddit: String, val shareUrl: String? = null) : Nav
 data object SubredditSearch : NavKey
 
 @Serializable
-data class CommentReply(val postId: String, val commentId: String? = null) : NavKey
+data class CommentReply(val parentThingId: String) : NavKey
 
 /**
  * Comment / self-post edit form. [idAndType] is the Reddit id-and-type string
