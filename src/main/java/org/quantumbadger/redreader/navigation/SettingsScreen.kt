@@ -38,6 +38,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -66,11 +67,14 @@ import org.quantumbadger.redreader.BuildConfig
 import org.quantumbadger.redreader.common.NeverAlwaysOrWifiOnly
 import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.PrefsUtility.AlbumViewMode
+import org.quantumbadger.redreader.common.PrefsUtility.AppearanceNavbarColour
 import org.quantumbadger.redreader.common.PrefsUtility.AppearanceStatusBarMode
+import org.quantumbadger.redreader.common.PrefsUtility.AppearanceTwopane
 import org.quantumbadger.redreader.common.PrefsUtility.BehaviourCollapseStickyComments
 import org.quantumbadger.redreader.common.PrefsUtility.BlockedSubredditSort
 import org.quantumbadger.redreader.common.PrefsUtility.CommentAction
 import org.quantumbadger.redreader.common.PrefsUtility.CommentFlingAction
+import org.quantumbadger.redreader.common.PrefsUtility.CommentAgeMode
 import org.quantumbadger.redreader.common.PrefsUtility.PostCount
 import org.quantumbadger.redreader.common.PrefsUtility.PostFlingAction
 import org.quantumbadger.redreader.common.PrefsUtility.PostTapAction
@@ -82,6 +86,7 @@ import org.quantumbadger.redreader.common.PrefsUtility.SharingDomain
 import org.quantumbadger.redreader.reddit.PostCommentSort
 import org.quantumbadger.redreader.reddit.PostSort
 import org.quantumbadger.redreader.reddit.UserCommentSort
+import org.quantumbadger.redreader.common.StringUtils
 import org.quantumbadger.redreader.settings.types.AppearanceTheme
 
 /**
@@ -155,6 +160,7 @@ private fun SettingsContent(
                     is SettingsItem.PreferenceItem -> PreferenceItem(item)
                     is SettingsItem.StringSetting -> StringSettingItem(item)
                     is SettingsItem.ChoiceSetting -> ChoiceSettingItem(item)
+                    is SettingsItem.MultiSelectSetting -> MultiSelectSettingItem(item)
                 }
             }
         }
@@ -356,6 +362,101 @@ private fun ChoiceSettingItem(item: SettingsItem.ChoiceSetting) {
 }
 
 /**
+ * Multi-select setting (checkbox dialog, mirrors the legacy
+ * MultiSelectListPreference). The row shows the number of selected options;
+ * the dialog lets the user toggle each one, writing the set on each change.
+ */
+@Composable
+private fun MultiSelectSettingItem(item: SettingsItem.MultiSelectSetting) {
+    var showDialog by remember { mutableStateOf(false) }
+    var selected by remember(item.key) {
+        mutableStateOf(item.get())
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = { showDialog = true })
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = item.label,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+
+            item.description.takeIf { it.isNotBlank() }?.let { desc ->
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = desc,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Text(
+            text = if (selected.isEmpty()) "None" else "${selected.size} selected",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(Modifier.width(8.dp))
+        Icon(
+            imageVector = Icons.Default.ArrowForward,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(item.label) },
+            text = {
+                Column {
+                    item.options.forEach { (label, value) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    val next = selected.toMutableSet()
+                                    if (!next.add(value)) next.remove(value)
+                                    selected = next
+                                    item.set(next)
+                                }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = value in selected,
+                                onCheckedChange = {
+                                    val next = selected.toMutableSet()
+                                    if (!next.add(value)) next.remove(value)
+                                    selected = next
+                                    item.set(next)
+                                }
+                            )
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) { Text("Done") }
+            }
+        )
+    }
+}
+
+/**
  * Simple preference item that navigates or opens a dialog.
  */
 @Composable
@@ -511,6 +612,20 @@ sealed class SettingsItem {
             return value ?: options.firstOrNull()?.second
         }
     }
+
+    /**
+     * A multi-select group of labelled options (mirrors the legacy
+     * MultiSelectListPreference): each option's stored value is an enum name,
+     * the set of selected values is persisted as a string set.
+     */
+    data class MultiSelectSetting(
+        override val key: String,
+        val label: String,
+        val description: String = "",
+        val options: List<Pair<String, String>>,
+        val get: () -> Set<String>,
+        val set: (Set<String>) -> Unit
+    ) : SettingsItem()
 }
 
 // ============================================================================
@@ -522,24 +637,23 @@ private fun getSettingsCategories(
     onNavigateToChangelog: () -> Unit
 ): List<SettingsCategory> {
     return listOf(
-        // ─── Appearance ───
+        // ─── Appearance (general) ───
         SettingsCategory(
             id = "appearance",
             title = "Appearance",
             items = listOf(
                 SettingsItem.BooleanSetting(
-                    key = "linkbuttons",
-                    label = "Show link buttons",
-                    description = "Show buttons for common actions on posts",
-                    get = { PrefsUtility.pref_appearance_linkbuttons() },
-                    set = PrefsUtility::pref_appearance_linkbuttons_set
+                    key = "left_handed",
+                    label = "Left-handed mode",
+                    get = { PrefsUtility.pref_appearance_left_handed() },
+                    set = PrefsUtility::pref_appearance_left_handed_set
                 ),
-                SettingsItem.BooleanSetting(
-                    key = "hide_comments_from_blocked_users",
-                    label = "Hide comments from blocked users",
-                    description = "Hide comments made by users you have blocked",
-                    get = { PrefsUtility.pref_appearance_hide_comments_from_blocked_users() },
-                    set = PrefsUtility::pref_appearance_hide_comments_from_blocked_users_set
+                SettingsItem.EnumSetting(
+                    key = "twopane",
+                    label = "Tablet mode (two pane)",
+                    entries = AppearanceTwopane.entries,
+                    get = { PrefsUtility.appearance_twopane() },
+                    set = PrefsUtility::pref_appearance_twopane_set
                 ),
                 SettingsItem.EnumSetting(
                     key = "theme",
@@ -548,6 +662,68 @@ private fun getSettingsCategories(
                     entries = AppearanceTheme.entries,
                     get = { PrefsUtility.appearance_theme() },
                     set = PrefsUtility::appearance_theme_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "navbar_colour",
+                    label = "Navigation bar colour",
+                    entries = AppearanceNavbarColour.entries,
+                    get = { PrefsUtility.appearance_navbar_colour() },
+                    set = PrefsUtility::pref_appearance_navbar_colour_set
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "langforce",
+                    label = "Language",
+                    options = listOf(
+                        "Automatic" to "auto",
+                        "English" to "en",
+                        "Dansk" to "da",
+                        "Deutsch" to "de",
+                        "Français" to "fr",
+                        "عربي" to "ar",
+                        "Español" to "es",
+                        "Česky" to "cs",
+                        "Italiano" to "it",
+                        "Nederlands" to "nl",
+                        "Português" to "pt",
+                        "Romanian" to "ro",
+                        "Magyar" to "hu",
+                        "Esperanto" to "eo",
+                        "Polski" to "pl",
+                        "Bahasa Indonesia" to "in",
+                        "Suomi" to "fi",
+                        "မြန်မာဘာသာ" to "my",
+                        "Norsk bokmål" to "nb-rNO",
+                        "ру́сский язы́к" to "ru",
+                        "українська мова" to "uk",
+                        "汉语" to "zh-rCN",
+                        "漢語" to "zh-rTW",
+                        "Euskara" to "eu",
+                        "ελληνικά" to "el",
+                        "हिन्दी" to "hi",
+                        "日本語" to "ja",
+                        "lietuvių kalba" to "lt",
+                        "svenska" to "sv",
+                        "मराठी" to "mr",
+                        "Bahasa Melayu" to "ms",
+                        "Türkçe" to "tr",
+                        "Català" to "ca",
+                        "فارسی" to "fa",
+                        "한국어" to "ko",
+                        "Latviešu" to "lv",
+                        "Norsk nynorsk" to "nn",
+                        "ଓଡ଼ିଆ" to "or",
+                        "ਪੰਜਾਬੀ" to "pa",
+                        "Português (Brasil)" to "pt-rBR",
+                        "српски" to "sr",
+                        "ไทย" to "th"
+                    ),
+                    get = {
+                        PrefsUtility.getString(
+                            org.quantumbadger.redreader.R.string.pref_appearance_langforce_key,
+                            "auto"
+                        )
+                    },
+                    set = PrefsUtility::pref_appearance_langforce_set
                 ),
                 SettingsItem.EnumSetting(
                     key = "statusbar",
@@ -570,6 +746,256 @@ private fun getSettingsCategories(
                     description = "Show the toolbar at the bottom of the screen",
                     get = { PrefsUtility.pref_appearance_bottom_toolbar() },
                     set = PrefsUtility::pref_appearance_bottom_toolbar_set
+                )
+            )
+        ),
+
+        // ─── Post appearance ───
+        SettingsCategory(
+            id = "post_appearance",
+            title = "Post appearance",
+            items = listOf(
+                SettingsItem.MultiSelectSetting(
+                    key = "post_subtitle_items",
+                    label = "Post subtitle entries",
+                    options = listOf(
+                        "Author" to "author",
+                        "Flair" to "flair",
+                        "Score" to "score",
+                        "Percent upvoted" to "upvote_ratio",
+                        "Comments" to "comments",
+                        "Age" to "age",
+                        "Reddit Gold" to "gold",
+                        "Subreddit" to "subreddit",
+                        "Domain" to "domain",
+                        "Sticky tag" to "sticky",
+                        "Spoiler tag" to "spoiler",
+                        "NSFW tag" to "nsfw",
+                        "Crosspost tag" to "crosspost"
+                    ),
+                    get = {
+                        PrefsUtility.appearance_post_subtitle_items()
+                            .map { StringUtils.asciiLowercase(it.name) }
+                            .toSet()
+                    },
+                    set = PrefsUtility::pref_appearance_post_subtitle_items_set
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "post_age_units",
+                    label = "Post age precision",
+                    options = listOf(
+                        "One unit (x hours)" to "1",
+                        "Two units (x hours, x mins)" to "2",
+                        "Three units (x hours, x mins, x secs)" to "3"
+                    ),
+                    get = {
+                        PrefsUtility.getString(
+                            org.quantumbadger.redreader.R.string.pref_appearance_post_age_units_key,
+                            "2"
+                        )
+                    },
+                    set = PrefsUtility::pref_appearance_post_age_units_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "post_subtitle_items_use_different_settings",
+                    label = "Use different settings for opened posts",
+                    get = {
+                        PrefsUtility.appearance_post_subtitle_items_use_different_settings()
+                    },
+                    set = PrefsUtility::pref_appearance_post_subtitle_items_use_different_settings_set
+                ),
+                SettingsItem.MultiSelectSetting(
+                    key = "post_header_subtitle_items",
+                    label = "Opened post subtitle entries",
+                    description = "Used when 'Use different settings for opened posts' is on",
+                    options = listOf(
+                        "Author" to "author",
+                        "Flair" to "flair",
+                        "Score" to "score",
+                        "Percent upvoted" to "upvote_ratio",
+                        "Comments" to "comments",
+                        "Age" to "age",
+                        "Reddit Gold" to "gold",
+                        "Subreddit" to "subreddit",
+                        "Domain" to "domain",
+                        "Sticky tag" to "sticky",
+                        "Spoiler tag" to "spoiler",
+                        "NSFW tag" to "nsfw",
+                        "Crosspost tag" to "crosspost"
+                    ),
+                    get = {
+                        PrefsUtility.appearance_post_header_subtitle_items()
+                            .map { StringUtils.asciiLowercase(it.name) }
+                            .toSet()
+                    },
+                    set = PrefsUtility::pref_appearance_post_header_subtitle_items_set
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "post_header_age_units",
+                    label = "Opened post age precision",
+                    description = "Used when 'Use different settings for opened posts' is on",
+                    options = listOf(
+                        "One unit (x hours)" to "1",
+                        "Two units (x hours, x mins)" to "2",
+                        "Three units (x hours, x mins, x secs)" to "3"
+                    ),
+                    get = {
+                        PrefsUtility.getString(
+                            org.quantumbadger.redreader.R.string.pref_appearance_post_header_age_units_key,
+                            "2"
+                        )
+                    },
+                    set = PrefsUtility::pref_appearance_post_header_age_units_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "post_show_comments_button",
+                    label = "Show comment count button",
+                    get = { PrefsUtility.appearance_post_show_comments_button() },
+                    set = PrefsUtility::pref_appearance_post_show_comments_button_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "post_hide_subreddit_header",
+                    label = "Hide subreddit header",
+                    get = { PrefsUtility.pref_appearance_post_hide_subreddit_header() },
+                    set = PrefsUtility::pref_appearance_post_hide_subreddit_header_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "hide_headertoolbar_postlist",
+                    label = "Hide toolbar in post lists",
+                    get = { PrefsUtility.pref_appearance_hide_headertoolbar_postlist() },
+                    set = PrefsUtility::pref_appearance_hide_headertoolbar_postlist_set
+                )
+            )
+        ),
+
+        // ─── Comment appearance ───
+        SettingsCategory(
+            id = "comment_appearance",
+            title = "Comment appearance",
+            items = listOf(
+                SettingsItem.BooleanSetting(
+                    key = "comments_show_floating_toolbar",
+                    label = "Show floating comment toolbar",
+                    get = { PrefsUtility.pref_appearance_comments_show_floating_toolbar() },
+                    set = PrefsUtility::pref_appearance_comments_show_floating_toolbar_set
+                ),
+                SettingsItem.MultiSelectSetting(
+                    key = "comment_header_items",
+                    label = "Comment header entries",
+                    options = listOf(
+                        "Author" to "author",
+                        "Flair" to "flair",
+                        "Score" to "score",
+                        "Controversial indicator (†)" to "controversiality",
+                        "Age" to "age",
+                        "Reddit Gold" to "gold",
+                        "Subreddit" to "subreddit"
+                    ),
+                    get = {
+                        PrefsUtility.appearance_comment_header_items()
+                            .map { StringUtils.asciiLowercase(it.name) }
+                            .toSet()
+                    },
+                    set = PrefsUtility::pref_appearance_comment_header_items_set
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "comment_age_units",
+                    label = "Comment age precision",
+                    options = listOf(
+                        "One unit (x hours)" to "1",
+                        "Two units (x hours, x mins)" to "2",
+                        "Three units (x hours, x mins, x secs)" to "3"
+                    ),
+                    get = {
+                        PrefsUtility.getString(
+                            org.quantumbadger.redreader.R.string.pref_appearance_comment_age_units_key,
+                            "2"
+                        )
+                    },
+                    set = PrefsUtility::pref_appearance_comment_age_units_set
+                ),
+                SettingsItem.EnumSetting(
+                    key = "comment_age_mode",
+                    label = "Comment age mode",
+                    entries = CommentAgeMode.entries,
+                    get = { PrefsUtility.appearance_comment_age_mode() },
+                    set = PrefsUtility::pref_appearance_comment_age_mode_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "linkbuttons",
+                    label = "Show link buttons",
+                    description = "Show buttons for common actions on posts",
+                    get = { PrefsUtility.pref_appearance_linkbuttons() },
+                    set = PrefsUtility::pref_appearance_linkbuttons_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "link_text_clickable",
+                    label = "Clickable link text",
+                    get = { PrefsUtility.pref_appearance_link_text_clickable() },
+                    set = PrefsUtility::pref_appearance_link_text_clickable_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "indentlines",
+                    label = "Show indentation lines",
+                    get = { PrefsUtility.pref_appearance_indentlines() },
+                    set = PrefsUtility::pref_appearance_indentlines_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "hide_headertoolbar_commentlist",
+                    label = "Hide toolbar in comment lists",
+                    get = { PrefsUtility.pref_appearance_hide_headertoolbar_commentlist() },
+                    set = PrefsUtility::pref_appearance_hide_headertoolbar_commentlist_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "hide_comments_from_blocked_users",
+                    label = "Hide comments from blocked users",
+                    description = "Hide comments made by users you have blocked",
+                    get = { PrefsUtility.pref_appearance_hide_comments_from_blocked_users() },
+                    set = PrefsUtility::pref_appearance_hide_comments_from_blocked_users_set
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "highlight_own_username",
+                    label = "Highlight own username",
+                    get = { PrefsUtility.pref_appearance_highlight_own_username() },
+                    set = PrefsUtility::pref_appearance_highlight_own_username_set
+                )
+            )
+        ),
+
+        // ─── User appearance ───
+        SettingsCategory(
+            id = "user_appearance",
+            title = "Users",
+            items = listOf(
+                SettingsItem.BooleanSetting(
+                    key = "user_show_avatars",
+                    label = "Show user avatars",
+                    get = { PrefsUtility.appearance_user_show_avatars() },
+                    set = PrefsUtility::pref_appearance_user_show_avatars_set
+                )
+            )
+        ),
+
+        // ─── Inbox appearance ───
+        SettingsCategory(
+            id = "inbox_appearance",
+            title = "Inbox",
+            items = listOf(
+                SettingsItem.ChoiceSetting(
+                    key = "inbox_age_units",
+                    label = "Inbox entry age precision",
+                    options = listOf(
+                        "One unit (x hours)" to "1",
+                        "Two units (x hours, x mins)" to "2",
+                        "Three units (x hours, x mins, x secs)" to "3"
+                    ),
+                    get = {
+                        PrefsUtility.getString(
+                            org.quantumbadger.redreader.R.string.pref_appearance_inbox_age_units_key,
+                            "2"
+                        )
+                    },
+                    set = PrefsUtility::pref_appearance_inbox_age_units_set
                 )
             )
         ),

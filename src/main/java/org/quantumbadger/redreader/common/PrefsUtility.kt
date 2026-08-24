@@ -386,6 +386,111 @@ object PrefsUtility {
         setBoolean(string.pref_behaviour_postlist_back_again_key, enabled)
     }
 
+    fun pref_appearance_left_handed_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_left_handed_key, enabled)
+    }
+
+    fun pref_appearance_twopane_set(value: AppearanceTwopane) {
+        setEnumString(string.pref_appearance_twopane_key, value)
+    }
+
+    fun pref_appearance_navbar_colour_set(value: AppearanceNavbarColour) {
+        setEnumString(string.pref_appearance_navbar_color_key, value)
+    }
+
+    fun pref_appearance_langforce_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_langforce_key), value)
+            .apply()
+        setAppLocales(languagePrefToLocales(value))
+    }
+
+    fun pref_appearance_post_age_units_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_post_age_units_key), value)
+            .apply()
+    }
+
+    fun pref_appearance_post_header_age_units_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_post_header_age_units_key), value)
+            .apply()
+    }
+
+    fun pref_appearance_comment_age_units_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_comment_age_units_key), value)
+            .apply()
+    }
+
+    fun pref_appearance_inbox_age_units_set(value: String) {
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_appearance_inbox_age_units_key), value)
+            .apply()
+    }
+
+    fun pref_appearance_comment_age_mode_set(value: CommentAgeMode) {
+        setEnumString(string.pref_appearance_comment_age_mode_key, value)
+    }
+
+    fun pref_appearance_post_subtitle_items_set(items: Set<String>) {
+        sharedPrefs!!.edit()
+            .putStringSet(getPrefKey(string.pref_appearance_post_subtitle_items_key), items.toMutableSet())
+            .apply()
+    }
+
+    fun pref_appearance_post_subtitle_items_use_different_settings_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_post_subtitle_items_use_different_settings_key, enabled)
+    }
+
+    fun pref_appearance_post_header_subtitle_items_set(items: Set<String>) {
+        sharedPrefs!!.edit()
+            .putStringSet(getPrefKey(string.pref_appearance_post_header_subtitle_items_key), items.toMutableSet())
+            .apply()
+    }
+
+    fun pref_appearance_post_show_comments_button_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_post_show_comments_button_key, enabled)
+    }
+
+    fun pref_appearance_post_hide_subreddit_header_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_post_hide_subreddit_header_key, enabled)
+    }
+
+    fun pref_appearance_hide_headertoolbar_postlist_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_hide_headertoolbar_postlist_key, enabled)
+    }
+
+    fun pref_appearance_comments_show_floating_toolbar_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_comments_show_floating_toolbar_key, enabled)
+    }
+
+    fun pref_appearance_comment_header_items_set(items: Set<String>) {
+        sharedPrefs!!.edit()
+            .putStringSet(getPrefKey(string.pref_appearance_comment_header_items_key), items.toMutableSet())
+            .apply()
+    }
+
+    fun pref_appearance_link_text_clickable_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_link_text_clickable_key, enabled)
+    }
+
+    fun pref_appearance_indentlines_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_indentlines_key, enabled)
+    }
+
+    fun pref_appearance_hide_headertoolbar_commentlist_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_hide_headertoolbar_commentlist_key, enabled)
+    }
+
+    fun pref_appearance_highlight_own_username_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_highlight_own_username_key, enabled)
+    }
+
+    fun pref_appearance_user_show_avatars_set(enabled: Boolean) {
+        setBoolean(string.pref_appearance_user_show_avatars_key, enabled)
+    }
+
     @Suppress("unused")
     private fun getLong(
         id: Int,
