@@ -16,33 +16,18 @@
  */
 package org.quantumbadger.redreader.reddit
 
-import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatActivity
-import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.activities.OptionsMenuUtility
-import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuCommentsListener
 import org.quantumbadger.redreader.common.StringUtils
 
 enum class PostCommentSort(
-    val key: String,
-    @field:StringRes @param:StringRes override val menuTitle: Int,
-    @field:StringRes @param:StringRes val suggestedTitle: Int
-) : OptionsMenuUtility.Sort {
-    BEST("confidence", string.sort_comments_best, string.sort_comments_best_suggested),
-    HOT("hot", string.sort_comments_hot, string.sort_comments_hot_suggested),
-    NEW("new", string.sort_comments_new, string.sort_comments_new_suggested),
-    OLD("old", string.sort_comments_old, string.sort_comments_old_suggested),
-    TOP("top", string.sort_comments_top, string.sort_comments_top_suggested),
-    CONTROVERSIAL(
-        "controversial",
-        string.sort_comments_controversial,
-        string.sort_comments_controversial_suggested
-    ),
-    QA("qa", string.sort_comments_qa, string.sort_comments_qa_suggested);
-
-    override fun onSortSelected(activity: AppCompatActivity) {
-        (activity as OptionsMenuCommentsListener).onSortSelected(this)
-    }
+    val key: String
+) {
+    BEST("confidence"),
+    HOT("hot"),
+    NEW("new"),
+    OLD("old"),
+    TOP("top"),
+    CONTROVERSIAL("controversial"),
+    QA("qa");
 
     companion object {
         fun lookup(name: String): PostCommentSort? {

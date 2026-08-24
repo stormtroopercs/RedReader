@@ -62,7 +62,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.quantumbadger.redreader.activities.LinkDispatchActivity
 import org.quantumbadger.redreader.BuildConfig
 import org.quantumbadger.redreader.common.NeverAlwaysOrWifiOnly
 import org.quantumbadger.redreader.common.PrefsUtility

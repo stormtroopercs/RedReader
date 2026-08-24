@@ -29,6 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.AndroidEntryPoint
 import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
+import org.quantumbadger.redreader.common.LinkHandler
+import org.quantumbadger.redreader.common.RunnableOnce
+import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.navigation.Album
 import org.quantumbadger.redreader.navigation.AppNavGraph
 import org.quantumbadger.redreader.navigation.BugReport
@@ -51,6 +54,8 @@ import org.quantumbadger.redreader.navigation.Settings
 import org.quantumbadger.redreader.navigation.SubredditSearch
 import org.quantumbadger.redreader.navigation.TOP_LEVEL_ROUTES
 import org.quantumbadger.redreader.navigation.UserProfile
+import org.quantumbadger.redreader.navigation.WebViewRoute
+import org.quantumbadger.redreader.reddit.api.RedditOAuth
 
 /**
  * Compose-based MainActivity using Navigation 3.
@@ -99,6 +104,19 @@ class MainActivityCompose : ComposeBaseActivity() {
                         PostSubmit("", sharedText)
                     )
                 }
+            }
+
+            // ACTION_VIEW deep link: external reddit.com / redd.it / redreader://
+            // links previously routed through the retired LinkDispatchActivity.
+            // This launcher activity is now the direct handler: a redreader://
+            // URI completes an OAuth login, everything else opens the link in-app
+            // (LinkHandler starts the working Compose screen); then this instance
+            // finishes, mirroring the standalone LinkDispatchActivity.
+            if (intent != null
+                && android.content.Intent.ACTION_VIEW.equals(intent.action, true)
+                && intent.data != null
+            ) {
+                handleExternalViewIntent(intent)
             }
         }
 
@@ -268,6 +286,32 @@ class MainActivityCompose : ComposeBaseActivity() {
                     navigationState.navigateTo(Main, HtmlView(html, title ?: ""))
                 }
             }
+            DEEP_LINK_WEBVIEW -> {
+                val url = intent?.getStringExtra(EXTRA_WEBVIEW_URL)
+                if (url != null) {
+                    navigationState.navigateTo(Main, WebViewRoute(url))
+                }
+            }
+        }
+    }
+
+    /**
+     * Handle an ACTION_VIEW intent carrying a deep-link URI. This is the logic
+     * the retired LinkDispatchActivity owned, now run from this launcher
+     * activity's onCreate (the app's external reddit.com / redd.it / redreader://
+     * intent-filters resolve here). A redreader:// URI completes an OAuth login
+     * and finishes once done; any other browsable URI is dispatched through
+     * [LinkHandler.onLinkClicked] — which opens the link by starting the working
+     * Compose screen — after which this trampoline instance finishes (exactly
+     * what the standalone LinkDispatchActivity did).
+     */
+    private fun handleExternalViewIntent(intent: android.content.Intent) {
+        val data = intent.data ?: return
+        if ("redreader".equals(data.scheme, ignoreCase = true)) {
+            RedditOAuth.completeLogin(this, data, RunnableOnce(Runnable { finish() }))
+        } else {
+            LinkHandler.onLinkClicked(this, UriString.from(data), true, null, null, 0, true)
+            finish()
         }
     }
 
@@ -402,6 +446,14 @@ class MainActivityCompose : ComposeBaseActivity() {
         /** Deep-link route: the HTML viewer (Main top level + HtmlView child).
          *  The in-app replacement for the retired HtmlViewActivity's own launch. */
         const val DEEP_LINK_HTML_VIEW = "html_view"
+
+        /** Deep-link route: the in-app browser (Main top level + WebView child).
+         *  The in-app replacement for the retired WebViewActivity's launch —
+         *  LinkHandler's internal-browser fallback now targets this. */
+        const val DEEP_LINK_WEBVIEW = "webview"
+
+        /** Intent extra carrying the URL for the webview deep link. */
+        const val EXTRA_WEBVIEW_URL = "org.quantumbadger.redreader.extra.WEBVIEW_URL"
 
         /** Intent extra carrying the HTML body for the html_view deep link. */
         const val EXTRA_HTML_VIEW_HTML =

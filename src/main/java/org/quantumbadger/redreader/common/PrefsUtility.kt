@@ -24,15 +24,11 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
 import android.util.Log
-import android.view.MenuItem
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.activities.OptionsMenuUtility
-import org.quantumbadger.redreader.activities.OptionsMenuUtility.AppbarItemsPref
-import org.quantumbadger.redreader.adapters.MainMenuListingManager.SubredditAction
 import org.quantumbadger.redreader.common.ConfigProviders.ConfigProvider
 import org.quantumbadger.redreader.common.ConfigProviders.register
 import org.quantumbadger.redreader.common.General.getSharedPrefs
@@ -41,13 +37,10 @@ import org.quantumbadger.redreader.common.General.initAppConfig
 import org.quantumbadger.redreader.common.General.quickToast
 import org.quantumbadger.redreader.common.time.TimeDuration
 import org.quantumbadger.redreader.common.time.TimeDuration.Companion.hours
-import org.quantumbadger.redreader.fragments.MainMenuFragment.MainMenuShortcutItems
-import org.quantumbadger.redreader.fragments.MainMenuFragment.MainMenuUserItems
 import org.quantumbadger.redreader.io.WritableHashSet
 import org.quantumbadger.redreader.reddit.PostCommentSort
 import org.quantumbadger.redreader.reddit.PostSort
 import org.quantumbadger.redreader.reddit.UserCommentSort
-import org.quantumbadger.redreader.reddit.api.RedditPostActions
 import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 import org.quantumbadger.redreader.settings.types.AppearanceTheme
@@ -2142,38 +2135,6 @@ object PrefsUtility {
 
     /**//////////////////////////// */ // pref_menus
     /**//////////////////////////// */
-    fun pref_menus_post_context_items(): EnumSet<RedditPostActions.Action> {
-        val strings = getStringSet(
-            string.pref_menus_post_context_items_key,
-            R.array.pref_menus_post_context_items_default
-        )
-
-        val result = EnumSet.noneOf<RedditPostActions.Action>(
-            RedditPostActions.Action::class.java
-        )
-        for (s in strings!!) {
-            result.add(RedditPostActions.Action.valueOf(StringUtils.asciiUppercase(s)))
-        }
-
-        return result
-    }
-
-    fun pref_menus_post_toolbar_items(): EnumSet<RedditPostActions.Action> {
-        val strings = getStringSet(
-            string.pref_menus_post_toolbar_items_key,
-            R.array.pref_menus_post_toolbar_items_return
-        )
-
-        val result = EnumSet.noneOf<RedditPostActions.Action>(
-            RedditPostActions.Action::class.java
-        )
-        for (s in strings!!) {
-            result.add(RedditPostActions.Action.valueOf(StringUtils.asciiUppercase(s)))
-        }
-
-        return result
-    }
-
     fun pref_menus_link_context_items(): EnumSet<LinkHandler.LinkAction> {
         val strings = getStringSet(
             string.pref_menus_link_context_items_key,
@@ -2186,163 +2147,6 @@ object PrefsUtility {
         }
 
         return result
-    }
-
-    fun pref_menus_subreddit_context_items(): EnumSet<SubredditAction> {
-        val strings = getStringSet(
-            string.pref_menus_subreddit_context_items_key,
-            R.array.pref_menus_subreddit_context_items_return
-        )
-
-        val result = EnumSet.noneOf<SubredditAction>(
-            SubredditAction::class.java
-        )
-        for (s in strings!!) {
-            result.add(
-                SubredditAction.valueOf(
-                    StringUtils.asciiUppercase(
-                        s
-                    )
-                )
-            )
-        }
-
-        return result
-    }
-
-    fun pref_menus_mainmenu_useritems(): EnumSet<MainMenuUserItems> {
-        val strings = getStringSet(
-            string.pref_menus_mainmenu_useritems_key,
-            R.array.pref_menus_mainmenu_useritems_items_default
-        )
-
-        val result = EnumSet.noneOf<MainMenuUserItems>(
-            MainMenuUserItems::class.java
-        )
-        for (s in strings!!) {
-            result.add(MainMenuUserItems.valueOf(StringUtils.asciiUppercase(s)))
-        }
-
-        return result
-    }
-
-    fun pref_menus_mainmenu_shortcutitems(): EnumSet<MainMenuShortcutItems> {
-        val strings = getStringSet(
-            string.pref_menus_mainmenu_shortcutitems_key,
-            R.array.pref_menus_mainmenu_shortcutitems_items_default
-        )
-
-        val result = EnumSet.noneOf<MainMenuShortcutItems>(
-            MainMenuShortcutItems::class.java
-        )
-        for (s in strings!!) {
-            try {
-                result.add(
-                    MainMenuShortcutItems.valueOf(
-                        StringUtils.asciiUppercase(s)
-                    )
-                )
-            } catch (e: Exception) {
-                Log.e("PrefsUtility", "Ignoring unknown constant " + s, e)
-            }
-        }
-
-        return result
-    }
-
-    fun pref_menus_appbar_items(): EnumMap<AppbarItemsPref, Int> {
-        val appbarItemsInfo: Array<AppbarItemInfo> = arrayOf(
-            AppbarItemInfo(
-                AppbarItemsPref.SORT,
-                string.pref_menus_appbar_sort_key,
-                MenuItem.SHOW_AS_ACTION_ALWAYS
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.REFRESH,
-                string.pref_menus_appbar_refresh_key,
-                MenuItem.SHOW_AS_ACTION_ALWAYS
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.PAST,
-                string.pref_menus_appbar_past_key,
-                MenuItem.SHOW_AS_ACTION_NEVER
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.SUBMIT_POST,
-                string.pref_menus_appbar_submit_post_key,
-                MenuItem.SHOW_AS_ACTION_NEVER
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.PIN,
-                string.pref_menus_appbar_pin_key,
-                MenuItem.SHOW_AS_ACTION_NEVER
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.SUBSCRIBE,
-                string.pref_menus_appbar_subscribe_key,
-                MenuItem.SHOW_AS_ACTION_NEVER
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.BLOCK,
-                string.pref_menus_appbar_block_key,
-                MenuItem.SHOW_AS_ACTION_NEVER
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.SIDEBAR,
-                string.pref_menus_appbar_sidebar_key,
-                MenuItem.SHOW_AS_ACTION_NEVER
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.ACCOUNTS,
-                string.pref_menus_appbar_accounts_key,
-                MenuItem.SHOW_AS_ACTION_NEVER
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.THEME,
-                string.pref_menus_appbar_theme_key,
-                MenuItem.SHOW_AS_ACTION_NEVER
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.SETTINGS,
-                string.pref_menus_appbar_settings_key,
-                MenuItem.SHOW_AS_ACTION_NEVER
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.CLOSE_ALL,
-                string.pref_menus_appbar_close_all_key,
-                OptionsMenuUtility.DO_NOT_SHOW
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.REPLY,
-                string.pref_menus_appbar_reply_key,
-                MenuItem.SHOW_AS_ACTION_NEVER
-            ),
-            AppbarItemInfo(
-                AppbarItemsPref.SEARCH,
-                string.pref_menus_appbar_search_key,
-                MenuItem.SHOW_AS_ACTION_NEVER
-            )
-        )
-
-
-        val appbarItemsPrefs = EnumMap<AppbarItemsPref, Int>(AppbarItemsPref::class.java)
-
-        for (item in appbarItemsInfo) {
-            try {
-                appbarItemsPrefs.put(
-                    item.itemPref, PrefsUtility.getString(
-                        item.stringRes,
-                        item.defaultValue.toString()
-                    )!!.toInt()
-                )
-            } catch (e: NumberFormatException) {
-                appbarItemsPrefs.put(item.itemPref, item.defaultValue)
-            } catch (e: NullPointerException) {
-                appbarItemsPrefs.put(item.itemPref, item.defaultValue)
-            }
-        }
-
-        return appbarItemsPrefs
     }
 
     fun pref_menus_quick_account_switcher(): Boolean {
@@ -2755,12 +2559,6 @@ object PrefsUtility {
     enum class SaveLocation {
         PROMPT_EVERY_TIME, SYSTEM_DEFAULT
     }
-
-    private class AppbarItemInfo(
-        val itemPref: AppbarItemsPref,
-        val stringRes: Int,
-        val defaultValue: Int
-    )
 
     enum class BehaviourCollapseStickyComments {
         ALWAYS, ONLY_BOTS, NEVER

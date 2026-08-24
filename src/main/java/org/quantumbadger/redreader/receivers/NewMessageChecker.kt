@@ -53,7 +53,6 @@ import org.quantumbadger.redreader.common.datastream.SeekableInputStream
 import org.quantumbadger.redreader.common.time.TimestampUTC
 import org.quantumbadger.redreader.http.FailedRequestBody
 import org.quantumbadger.redreader.receivers.announcements.AnnouncementDownloader
-import org.quantumbadger.redreader.reddit.api.RedditPostActions.ActionDescriptionPair.Companion.from
 import org.quantumbadger.redreader.reddit.kthings.JsonUtils.decodeRedditThingFromStream
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType
 import org.quantumbadger.redreader.reddit.kthings.RedditThing

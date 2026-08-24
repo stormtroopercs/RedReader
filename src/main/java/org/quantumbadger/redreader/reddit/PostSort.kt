@@ -17,58 +17,50 @@
 package org.quantumbadger.redreader.reddit
 
 import android.net.Uri
-import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatActivity
-import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.activities.OptionsMenuUtility
-import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuPostsListener
 import org.quantumbadger.redreader.common.StringUtils
 
-enum class PostSort(@field:StringRes @param:StringRes override val menuTitle: Int) :
-    OptionsMenuUtility.Sort {
-    HOT(string.sort_posts_hot),
-    NEW(string.sort_posts_new),
-    RISING(string.sort_posts_rising),
-    TOP_HOUR(string.sort_posts_top_hour),
-    TOP_DAY(string.sort_posts_top_today),
-    TOP_WEEK(string.sort_posts_top_week),
-    TOP_MONTH(string.sort_posts_top_month),
-    TOP_YEAR(string.sort_posts_top_year),
-    TOP_ALL(string.sort_posts_top_all),
-    CONTROVERSIAL_HOUR(string.sort_posts_controversial_hour),
-    CONTROVERSIAL_DAY(string.sort_posts_controversial_today),
-    CONTROVERSIAL_WEEK(string.sort_posts_controversial_week),
-    CONTROVERSIAL_MONTH(string.sort_posts_controversial_month),
-    CONTROVERSIAL_YEAR(string.sort_posts_controversial_year),
-    CONTROVERSIAL_ALL(string.sort_posts_controversial_all),
-    BEST(string.sort_posts_best),
-
+enum class PostSort {
+    HOT,
+    NEW,
+    RISING,
+    TOP_HOUR,
+    TOP_DAY,
+    TOP_WEEK,
+    TOP_MONTH,
+    TOP_YEAR,
+    TOP_ALL,
+    CONTROVERSIAL_HOUR,
+    CONTROVERSIAL_DAY,
+    CONTROVERSIAL_WEEK,
+    CONTROVERSIAL_MONTH,
+    CONTROVERSIAL_YEAR,
+    CONTROVERSIAL_ALL,
+    BEST,
     // Sorts related to Search Listings
-    RELEVANCE_HOUR(string.sort_posts_relevance_hour),
-    RELEVANCE_DAY(string.sort_posts_relevance_today),
-    RELEVANCE_WEEK(string.sort_posts_relevance_week),
-    RELEVANCE_MONTH(string.sort_posts_relevance_month),
-    RELEVANCE_YEAR(string.sort_posts_relevance_year),
-    RELEVANCE_ALL(string.sort_posts_relevance_all),
-    NEW_HOUR(string.sort_posts_new_hour),
-    NEW_DAY(string.sort_posts_new_today),
-    NEW_WEEK(string.sort_posts_new_week),
-    NEW_MONTH(string.sort_posts_new_month),
-    NEW_YEAR(string.sort_posts_new_year),
-    NEW_ALL(string.sort_posts_new_all),
-    COMMENTS_HOUR(string.sort_posts_comments_hour),
-    COMMENTS_DAY(string.sort_posts_comments_today),
-    COMMENTS_WEEK(string.sort_posts_comments_week),
-    COMMENTS_MONTH(string.sort_posts_comments_month),
-    COMMENTS_YEAR(string.sort_posts_comments_year),
-    COMMENTS_ALL(string.sort_posts_comments_all),
-    HOT_HOUR(string.sort_posts_hot_hour),
-    HOT_DAY(string.sort_posts_hot_today),
-    HOT_WEEK(string.sort_posts_hot_week),
-    HOT_MONTH(string.sort_posts_hot_month),
-    HOT_YEAR(string.sort_posts_hot_year),
-    HOT_ALL(string.sort_posts_hot_all);
-
+    RELEVANCE_HOUR,
+    RELEVANCE_DAY,
+    RELEVANCE_WEEK,
+    RELEVANCE_MONTH,
+    RELEVANCE_YEAR,
+    RELEVANCE_ALL,
+    NEW_HOUR,
+    NEW_DAY,
+    NEW_WEEK,
+    NEW_MONTH,
+    NEW_YEAR,
+    NEW_ALL,
+    COMMENTS_HOUR,
+    COMMENTS_DAY,
+    COMMENTS_WEEK,
+    COMMENTS_MONTH,
+    COMMENTS_YEAR,
+    COMMENTS_ALL,
+    HOT_HOUR,
+    HOT_DAY,
+    HOT_WEEK,
+    HOT_MONTH,
+    HOT_YEAR,
+    HOT_ALL;
     fun addToUserPostListingUri(builder: Uri.Builder) {
         when (this) {
             PostSort.HOT, PostSort.NEW -> builder.appendQueryParameter(
@@ -110,9 +102,6 @@ enum class PostSort(@field:StringRes @param:StringRes override val menuTitle: In
         }
     }
 
-    override fun onSortSelected(activity: AppCompatActivity) {
-        (activity as OptionsMenuPostsListener).onSortSelected(this)
-    }
 
     companion object {
         fun valueOfOrNull(string: String): PostSort? {

@@ -17,30 +17,23 @@
 package org.quantumbadger.redreader.reddit
 
 import android.net.Uri
-import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatActivity
-import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.activities.OptionsMenuUtility
-import org.quantumbadger.redreader.activities.OptionsMenuUtility.OptionsMenuCommentsListener
 import org.quantumbadger.redreader.common.StringUtils
 
-enum class UserCommentSort(@field:StringRes @param:StringRes override val menuTitle: Int) :
-    OptionsMenuUtility.Sort {
-    NEW(string.sort_comments_new),
-    HOT(string.sort_comments_hot),
-    CONTROVERSIAL_HOUR(string.sort_posts_controversial_hour),
-    CONTROVERSIAL_DAY(string.sort_posts_controversial_today),
-    CONTROVERSIAL_WEEK(string.sort_posts_controversial_week),
-    CONTROVERSIAL_MONTH(string.sort_posts_controversial_month),
-    CONTROVERSIAL_YEAR(string.sort_posts_controversial_year),
-    CONTROVERSIAL_ALL(string.sort_posts_controversial_all),
-    TOP_HOUR(string.sort_posts_top_hour),
-    TOP_DAY(string.sort_posts_top_today),
-    TOP_WEEK(string.sort_posts_top_week),
-    TOP_MONTH(string.sort_posts_top_month),
-    TOP_YEAR(string.sort_posts_top_year),
-    TOP_ALL(string.sort_posts_top_all);
-
+enum class UserCommentSort {
+    NEW,
+    HOT,
+    CONTROVERSIAL_HOUR,
+    CONTROVERSIAL_DAY,
+    CONTROVERSIAL_WEEK,
+    CONTROVERSIAL_MONTH,
+    CONTROVERSIAL_YEAR,
+    CONTROVERSIAL_ALL,
+    TOP_HOUR,
+    TOP_DAY,
+    TOP_WEEK,
+    TOP_MONTH,
+    TOP_YEAR,
+    TOP_ALL;
     fun addToUserCommentListingUri(builder: Uri.Builder) {
         when (this) {
             UserCommentSort.HOT, UserCommentSort.NEW -> builder.appendQueryParameter(
@@ -59,9 +52,6 @@ enum class UserCommentSort(@field:StringRes @param:StringRes override val menuTi
         }
     }
 
-    override fun onSortSelected(activity: AppCompatActivity) {
-        (activity as OptionsMenuCommentsListener).onSortSelected(this)
-    }
 
     companion object {
         fun parse(sort: String?, t: String?): UserCommentSort? {

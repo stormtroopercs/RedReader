@@ -33,7 +33,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.activities.MainActivityCompose
-import org.quantumbadger.redreader.activities.WebViewActivity
 import org.quantumbadger.redreader.cache.CacheRequest
 import org.quantumbadger.redreader.common.General.getGeneralErrorForFailure
 import org.quantumbadger.redreader.common.General.isSensitiveDebugLoggingEnabled
@@ -621,10 +620,14 @@ object LinkHandler {
 		post: RedditPost?
 	) {
 		if (url != null) {
-			val intent = Intent()
-			intent.setClass(activity, WebViewActivity::class.java)
-			intent.putExtra("url", url)
-			intent.putExtra("post", post)
+			// The in-app browser now lives on the Compose WebViewRoute (Main top
+			// level + WebView child). The retired WebViewActivity was a thin
+			// Compose wrapper over this same WebViewScreen, so routing straight
+			// to MainActivityCompose preserves the previous behaviour (and keeps
+			// the browser on the main back stack instead of a separate task).
+			val intent = Intent(activity, MainActivityCompose::class.java)
+			intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_WEBVIEW)
+			intent.putExtra(MainActivityCompose.EXTRA_WEBVIEW_URL, url.value)
 			activity.startActivity(intent)
 		}
 	}

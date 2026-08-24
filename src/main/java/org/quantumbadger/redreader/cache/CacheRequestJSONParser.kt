@@ -31,7 +31,6 @@ import org.quantumbadger.redreader.common.datastream.SeekableInputStream
 import org.quantumbadger.redreader.common.time.TimestampUTC
 import org.quantumbadger.redreader.http.FailedRequestBody
 import org.quantumbadger.redreader.jsonwrap.JsonValue
-import org.quantumbadger.redreader.reddit.api.RedditPostActions.ActionDescriptionPair.Companion.from
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean

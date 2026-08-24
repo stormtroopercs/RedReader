@@ -93,10 +93,17 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
 
-        </activity>
-
-        <activity android:name=".activities.LinkDispatchActivity"
-				  android:exported="true">
+        
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="redd.it" />
+                <data android:host="v.redd.it" />
+                <data android:host="reddit.app.link" />
+            </intent-filter>
 
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
@@ -104,58 +111,42 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
-				<data android:host="redd.it" />
-				<data android:host="v.redd.it" />
-				<data android:host="reddit.app.link" />
+                <data android:host="*.reddit.com" />
+                <data android:host="reddit.com" />
+                <data android:pathPrefix="/r/" />
+                <data android:pathPrefix="/u/" />
+                <data android:pathPrefix="/user/" />
+                <data android:pathPrefix="/comments/" />
+                <data android:pathPrefix="/message/compose/" />
+                <data android:pathPrefix="/video/" />
+                <data android:pathPrefix="/gallery/" />
             </intent-filter>
 
-			<intent-filter android:autoVerify="false">
-				<action android:name="android.intent.action.VIEW" />
-				<category android:name="android.intent.category.DEFAULT" />
-				<category android:name="android.intent.category.BROWSABLE" />
-				<data android:scheme="http" />
-				<data android:scheme="https" />
-				<data android:host="*.reddit.com" />
-				<data android:host="reddit.com" />
-				<data android:pathPrefix="/r/" />
-				<data android:pathPrefix="/u/" />
-				<data android:pathPrefix="/user/" />
-				<data android:pathPrefix="/comments/" />
-				<data android:pathPrefix="/message/compose/" />
-				<data android:pathPrefix="/video/" />
-				<data android:pathPrefix="/gallery/" />
-			</intent-filter>
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="google.com" />
+                <data android:host="*.google.com" />
+                <data android:pathPrefix="/amp/s/amp.reddit.com" />
+            </intent-filter>
 
-			<intent-filter android:autoVerify="false">
-				<action android:name="android.intent.action.VIEW" />
-				<category android:name="android.intent.category.DEFAULT" />
-				<category android:name="android.intent.category.BROWSABLE" />
-				<data android:scheme="http" />
-				<data android:scheme="https" />
-				<data android:host="google.com" />
-				<data android:host="*.google.com" />
-				<data android:pathPrefix="/amp/s/amp.reddit.com" />
-			</intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="reddit" />
+            </intent-filter>
 
-			<intent-filter>
-				<action android:name="android.intent.action.VIEW" />
-				<category android:name="android.intent.category.DEFAULT" />
-				<category android:name="android.intent.category.BROWSABLE" />
-				<data android:scheme="reddit" />
-			</intent-filter>
-
-			<intent-filter>
-				<action android:name="android.intent.action.VIEW" />
-				<category android:name="android.intent.category.DEFAULT" />
-				<category android:name="android.intent.category.BROWSABLE" />
-				<data android:scheme="redreader" />
-			</intent-filter>
-
-        </activity>
-
-        <activity android:name=".activities.WebViewActivity"
-                  android:configChanges="orientation|screenSize|keyboardHidden"
-                  android:theme="@style/RR.Dark"/>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="redreader" />
+            </intent-filter>
+</activity>
 
         <activity android:name=".activities.OAuthLoginActivity"
                   android:configChanges="orientation|screenSize|keyboardHidden"/>

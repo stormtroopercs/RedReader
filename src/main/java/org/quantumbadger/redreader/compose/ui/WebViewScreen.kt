@@ -42,9 +42,8 @@ import androidx.lifecycle.LifecycleEventObserver
 
 /**
  * Compose WebView Screen — wraps Android WebView in Compose via AndroidView.
- * Basic URL viewer with back navigation support.
- * For complex WebView features (bezel menus, video fullscreen, redirect loops),
- * the legacy WebViewActivity/WebViewFragment should still be used.
+ * Basic URL viewer with back navigation support. This is the app's in-app
+ * browser (the retired WebViewActivity was a thin wrapper over it).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
