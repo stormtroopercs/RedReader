@@ -29,7 +29,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.quantumbadger.redreader.activities.HtmlViewActivity
+import org.quantumbadger.redreader.activities.OAuthLoginActivity
 import org.quantumbadger.redreader.activities.WebViewActivity
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.compose.prefs.ComposePrefsSingleton
@@ -130,11 +130,10 @@ class EdgeToEdgeInsetsTest {
             .putString("pref_appearance_navbar_color", "white")
             .apply()
 
-        val intent = Intent(app, HtmlViewActivity::class.java)
-        intent.putExtra("html", "<p>test</p>")
-        intent.putExtra("title", "test")
-
-        val activity = Robolectric.buildActivity(HtmlViewActivity::class.java, intent)
+        // OAuthLoginActivity is the lightest remaining ComposeBaseActivity host
+        // (HtmlViewActivity was retired in the 41st increment); the window's
+        // system-bar appearance is what's under test, not the composed screen.
+        val activity = Robolectric.buildActivity(OAuthLoginActivity::class.java)
             .setup()
             .get()
 

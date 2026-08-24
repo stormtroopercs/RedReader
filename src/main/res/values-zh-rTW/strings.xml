@@ -322,7 +322,6 @@
     <string name="mainmenu_submitted">送出的貼文</string>
     <string name="mainmenu_downvoted">踩過的貼文</string>
     <string name="mainmenu_modmail">管理員訊息</string>
-    <string name="sidebar_activity_title">側列</string>
     <string name="header_subscriber_count">%s個訂閱者</string>
     <string name="header_subscriber_count_unknown">不知有多少訂閱者</string>
     <string name="invalid_subreddit_name">版塊名稱無效</string>

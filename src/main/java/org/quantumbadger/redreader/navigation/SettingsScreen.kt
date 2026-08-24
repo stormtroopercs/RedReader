@@ -62,7 +62,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import org.quantumbadger.redreader.activities.HtmlViewActivity
+import org.quantumbadger.redreader.activities.LinkDispatchActivity
 import org.quantumbadger.redreader.BuildConfig
 import org.quantumbadger.redreader.common.NeverAlwaysOrWifiOnly
 import org.quantumbadger.redreader.common.PrefsUtility
@@ -112,7 +112,8 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToChangelog: () -> Unit,
-    onNavigateToBugReport: () -> Unit = {}
+    onNavigateToBugReport: () -> Unit = {},
+    onNavigateToLicense: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val activity = context as? androidx.appcompat.app.AppCompatActivity
@@ -229,6 +230,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(paddingValues),
                 onNavigateToChangelog = onNavigateToChangelog,
                 onNavigateToBugReport = onNavigateToBugReport,
+                onNavigateToLicense = onNavigateToLicense,
                 onOpenAppbar = { showAppbar = true },
                 onOpenCacheLocation = { showCacheLocation = true },
                 onOpenCacheClear = { showCacheClear = true },
@@ -260,6 +262,7 @@ private fun SettingsContent(
     modifier: Modifier = Modifier,
     onNavigateToChangelog: () -> Unit,
     onNavigateToBugReport: () -> Unit = {},
+    onNavigateToLicense: () -> Unit = {},
     onOpenAppbar: () -> Unit = {},
     onOpenCacheLocation: () -> Unit = {},
     onOpenCacheClear: () -> Unit = {},
@@ -272,6 +275,7 @@ private fun SettingsContent(
         context,
         onNavigateToChangelog,
         onNavigateToBugReport,
+        onNavigateToLicense,
         onOpenAppbar,
         onOpenCacheLocation,
         onOpenCacheClear,
@@ -771,6 +775,7 @@ private fun getSettingsCategories(
     context: Context,
     onNavigateToChangelog: () -> Unit,
     onNavigateToBugReport: () -> Unit = {},
+    onNavigateToLicense: () -> Unit = {},
     onOpenAppbar: () -> Unit = {},
     onOpenCacheLocation: () -> Unit = {},
     onOpenCacheClear: () -> Unit = {},
@@ -1845,7 +1850,7 @@ private fun getSettingsCategories(
                     key = "license",
                     label = "License",
                     description = "View open-source license",
-                    onClick = { HtmlViewActivity.showAsset(context, "license.html") }
+                    onClick = onNavigateToLicense
                 ),
                 SettingsItem.PreferenceItem(
                     key = "github",

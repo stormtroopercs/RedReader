@@ -365,7 +365,6 @@
     <string name="mainmenu_submitted">Inskickade inlägg</string>
     <string name="mainmenu_downvoted">Nedröstade inlägg</string>
     <string name="mainmenu_modmail">Modmejl</string>
-    <string name="sidebar_activity_title">Sidorad</string>
     <!-- 2014-04-20 -->
     <string name="header_subscriber_count">%s prenumeranter</string>
     <string name="header_subscriber_count_unknown">Okänt antal prenumeranter</string>

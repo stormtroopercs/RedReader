@@ -364,7 +364,6 @@
     <string name="mainmenu_submitted">Eingereichte Beiträge</string>
     <string name="mainmenu_downvoted">Abgewertete Beiträge</string>
     <string name="mainmenu_modmail">Mod-Nachrichten</string>
-    <string name="sidebar_activity_title">Seitenleiste</string>
     <!-- 2014-04-20 -->
     <string name="header_subscriber_count">%s Abonnenten</string>
     <string name="header_subscriber_count_unknown">Unbekannte Abonnentenanzahl</string>

@@ -361,7 +361,6 @@
     <string name="mainmenu_submitted">Opublikowane posty</string>
     <string name="mainmenu_downvoted">Posty głosowane przeciw</string>
     <string name="mainmenu_modmail">Skrzynka odbiorcza modetatora</string>
-    <string name="sidebar_activity_title">Panel boczny</string>
     <!-- 2014-04-20 -->
     <string name="header_subscriber_count">%s abonentów</string>
     <string name="header_subscriber_count_unknown">Nieznana liczba subskrybentów</string>

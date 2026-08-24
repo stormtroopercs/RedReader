@@ -158,7 +158,6 @@
     <string name="action_copy_link">リンクをコピー</string>
     <string name="options_sort_posts">投稿並べ替え</string>
     <string name="sort_posts_hot">ホット</string>
-    <string name="sidebar_activity_title">サイドバー</string>
     <string name="sort_comments_qa">Q&amp;A</string>
     <string name="pref_behaviour_gallery_swipe_length_title">ギャラリーのスワイプの長さ</string>
     <string name="pref_behaviour_imageview_mode_title">画像ビューア</string>

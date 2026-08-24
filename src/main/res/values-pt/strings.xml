@@ -279,7 +279,6 @@
     <string name="sort_comments_best">Melhores</string>
     <string name="sort_blocked_subreddit_name">Por Nome</string>
     <string name="sort_blocked_subreddit_date">Por Data de Adição</string>
-    <string name="sidebar_activity_title">Barra Lateral</string>
     <string name="session_active">Ativo</string>
     <string name="send_replies_to_inbox">Enviar respostas para caixa de entrada</string>
     <string name="selected_link_is_not_image">O link selecionado não é uma imagem.</string>

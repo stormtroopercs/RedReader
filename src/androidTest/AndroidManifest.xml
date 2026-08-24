@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- The test APK's merged manifest inherits this ContentProvider from the
+         app's transitive library manifests, but the androidx.startup classes
+         are packaged only into the app under test, not into the test APK.
+         Disabling the node makes ActivityThread.installContentProviders skip
+         it (it checks `info.enabled` before instantiating), so the missing
+         class is never loaded and the test process doesn't crash at startup.
+         The startup tracing initializer it would drive is not needed in the
+         test process. -->
+    <application>
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:exported="false"
+            android:enabled="false" />
+    </application>
+</manifest>

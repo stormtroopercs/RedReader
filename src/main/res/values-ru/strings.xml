@@ -324,7 +324,6 @@
     <string name="pref_menus_mainmenu_useritems_title">Элементы пользователя</string>
     <string name="mainmenu_submitted">Опубликованное</string>
     <string name="mainmenu_downvoted">Не понравившиеся публикации</string>
-    <string name="sidebar_activity_title">Боковая панель</string>
     <string name="header_subscriber_count">%s подписчиков</string>
     <string name="header_subscriber_count_unknown">Количество подписчиков неизвестно</string>
     <string name="invalid_subreddit_name">Недопустимое имя сабреддита</string>

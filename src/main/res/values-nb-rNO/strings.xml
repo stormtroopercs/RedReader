@@ -322,7 +322,6 @@
     <string name="mainmenu_submitted">Innsendte innlegg</string>
     <string name="mainmenu_downvoted">Nedstemte innlegg</string>
     <string name="mainmenu_modmail">Mod-e-post</string>
-    <string name="sidebar_activity_title">Sidefelt</string>
     <string name="header_subscriber_count">%s abonnenter</string>
     <string name="header_subscriber_count_unknown">Ukjent antall abonnenter</string>
     <string name="invalid_subreddit_name">Ugyldig subreddit-navn</string>

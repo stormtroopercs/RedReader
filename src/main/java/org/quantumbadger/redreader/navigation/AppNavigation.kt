@@ -31,8 +31,10 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.account.RedditAccountChangeListener
 import org.quantumbadger.redreader.account.RedditAccountManager
+import org.quantumbadger.redreader.common.AssetHelper
 import org.quantumbadger.redreader.common.RunnableOnce
 import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.reddit.api.RedditOAuth
@@ -94,10 +96,19 @@ fun AppNavGraph(navigationState: NavigationState) {
 
             // Top-level: Settings screen
             entry<Settings> {
+                val context = LocalContext.current
                 SettingsScreen(
                     onNavigateBack = { navigator.goBack() },
                     onNavigateToChangelog = { navigator.navigate(Changelog) },
-                    onNavigateToBugReport = { navigator.navigate(BugReport) }
+                    onNavigateToBugReport = { navigator.navigate(BugReport) },
+                    onNavigateToLicense = runLabel@{
+                        // Read the license asset and open the Compose HtmlView
+                        // route (replaces the legacy HtmlViewActivity.showAsset
+                        // launch, retired in the 41st increment).
+                        val html = AssetHelper.loadAssetAsString(context, "license.html")
+                            ?: return@runLabel
+                        navigator.navigate(HtmlView(html, context.getString(R.string.title_license)))
+                    }
                 )
             }
 
@@ -244,10 +255,20 @@ fun AppNavGraph(navigationState: NavigationState) {
 
             // Child: HTML View
             entry<HtmlView> { key ->
+                // Register the live WebView with HtmlViewBackHandler so the
+                // activity's system-back override can walk the document's own
+                // history before popping this screen (legacy HtmlViewActivity
+                // behaviour, preserved after its retirement).
+                androidx.compose.runtime.DisposableEffect(Unit) {
+                    onDispose {
+                        HtmlViewBackHandler.clear()
+                    }
+                }
                 org.quantumbadger.redreader.compose.ui.HtmlViewScreen(
                     html = key.html,
                     title = key.title,
-                    onNavigateBack = { navigator.goBack() }
+                    onNavigateBack = { navigator.goBack() },
+                    onWebViewCreated = { HtmlViewBackHandler.register(it) }
                 )
             }
 

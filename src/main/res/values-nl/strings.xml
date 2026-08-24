@@ -362,7 +362,6 @@
     <string name="mainmenu_submitted">Geplaatste posts</string>
     <string name="mainmenu_downvoted">Gedownvote posts</string>
     <string name="mainmenu_modmail">Modmail</string>
-    <string name="sidebar_activity_title">Zijbalk</string>
     <!-- 2014-04-20 -->
     <string name="header_subscriber_count">%s lezers</string>
     <string name="header_subscriber_count_unknown">Onbekend lezersaantal</string>

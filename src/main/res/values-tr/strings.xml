@@ -245,7 +245,6 @@
     <string name="options_subscribing">Abone olunuyor…</string>
     <string name="mainmenu_submitted">Gönderilen Yazılar</string>
     <string name="mainmenu_downvoted">Olumsuz Oylanan Gönderiler</string>
-    <string name="sidebar_activity_title">Kenar Çubuğu</string>
     <string name="header_subscriber_count">%s abone</string>
     <string name="web_view_clear_cache_success_toast">Önbellek, geçmiş, çerezler ve form verileri temizlendi.</string>
     <string name="gold">Altın</string>

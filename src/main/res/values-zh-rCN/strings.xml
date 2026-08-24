@@ -335,7 +335,6 @@
     <string name="pref_menus_mainmenu_useritems_title">用户项目</string>
     <string name="mainmenu_submitted">发表的帖子</string>
     <string name="mainmenu_modmail">管理员信息</string>
-    <string name="sidebar_activity_title">侧栏</string>
     <string name="header_subscriber_count">%s个订阅者</string>
     <string name="header_subscriber_count_unknown">未知的订阅者数目</string>
     <string name="invalid_subreddit_name">子版名称无效</string>

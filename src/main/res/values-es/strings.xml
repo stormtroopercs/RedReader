@@ -361,7 +361,6 @@
     <string name="mainmenu_submitted">Publicaciones enviadas</string>
     <string name="mainmenu_downvoted">Publicaciones votadas negativamente</string>
     <string name="mainmenu_modmail">Correo para mods</string>
-    <string name="sidebar_activity_title">Barra lateral</string>
     <!-- 2014-04-20 -->
     <string name="header_subscriber_count">%s suscriptores</string>
     <string name="header_subscriber_count_unknown">Número de suscriptores desconocido</string>

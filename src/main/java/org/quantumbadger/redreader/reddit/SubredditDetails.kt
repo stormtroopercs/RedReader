@@ -16,17 +16,11 @@
  */
 package org.quantumbadger.redreader.reddit
 
-import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
-import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.activities.HtmlViewActivity
 import org.quantumbadger.redreader.common.HasUniqueId
-import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException
 import org.quantumbadger.redreader.reddit.things.RedditSubreddit
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
-import java.util.Locale
 
 class SubredditDetails : HasUniqueId {
     val id: SubredditCanonicalId
@@ -52,31 +46,6 @@ class SubredditDetails : HasUniqueId {
     }
 
     override val uniqueId: String get() = id.toString()
-
-    fun hasSidebar(): Boolean {
-        return publicDescriptionHtmlEscaped != null && !publicDescriptionHtmlEscaped.isEmpty()
-    }
-
-    fun showSidebarActivity(context: AppCompatActivity) {
-        val intent = Intent(context, HtmlViewActivity::class.java)
-
-        intent.putExtra(
-            "html", RedditSubreddit.Companion.getSidebarHtmlStatic(
-                PrefsUtility.isNightMode,
-                publicDescriptionHtmlEscaped!!
-            )
-        )
-
-        intent.putExtra(
-            "title", String.format(
-                Locale.US, "%s: %s",
-                context.getString(string.sidebar_activity_title),
-                url
-            )
-        )
-
-        context.startActivityForResult(intent, 1)
-    }
 
     companion object {
         fun newWithRuntimeException(

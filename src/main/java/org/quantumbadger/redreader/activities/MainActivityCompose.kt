@@ -21,8 +21,10 @@ import android.os.Bundle
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,6 +36,8 @@ import org.quantumbadger.redreader.navigation.Changelog
 import org.quantumbadger.redreader.navigation.CommentEdit
 import org.quantumbadger.redreader.navigation.CommentList
 import org.quantumbadger.redreader.navigation.CommentReply
+import org.quantumbadger.redreader.navigation.HtmlView
+import org.quantumbadger.redreader.navigation.HtmlViewBackHandler
 import org.quantumbadger.redreader.navigation.Inbox
 import org.quantumbadger.redreader.navigation.Image
 import org.quantumbadger.redreader.navigation.Main
@@ -98,7 +102,34 @@ class MainActivityCompose : ComposeBaseActivity() {
             }
         }
 
+        // Keep the platform back-callback's enabled state in sync with the
+        // on-screen HtmlView route's WebView: when its document history
+        // appears/vanishes (register/unregister/goBack), re-evaluate whether
+        // the back key must be intercepted. Without this the callback would
+        // be disabled while a child route or WebView history is on screen on
+        // API 36+ (predictive back), and the OS would finish the activity
+        // instead of popping the screen.
+        HtmlViewBackHandler.onBackChanged = { invalidateBackPressedCallback() }
+
+        // Deep-link handling above may already have moved the navigation past
+        // the root before BaseActivity ran its initial callback evaluation, so
+        // re-evaluate once with the up-to-date state (the WebView itself only
+        // registers once its screen composes, below).
+        invalidateBackPressedCallback()
+
         setContentCompose {
+            // Keep the platform back-callback's enabled state in sync with the
+            // Navigation 3 back stack while the composition is alive: pushes,
+            // pops and top-level switches change canGoBack() through
+            // composition, no code path re-evaluates the callback. Without
+            // this, on API 36+ (predictive back) the callback would be left
+            // disabled while a child screen is on screen, and the OS would
+            // finish the activity instead of popping the screen.
+            LaunchedEffect(Unit) {
+                snapshotFlow {
+                    navigationState.topLevelRoute to navigationState.activeBackStack.size
+                }.collect { invalidateBackPressedCallback() }
+            }
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.background
@@ -116,6 +147,12 @@ class MainActivityCompose : ComposeBaseActivity() {
      * BaseActivity) is the registered handler for the system back button.
      */
     override fun baseActivityOnBackPressed(): Boolean {
+        // While the on-screen HtmlView route has a live WebView with
+        // document history, walk that history first (legacy HtmlViewActivity
+        // behaviour) before touching the Navigation 3 back stack.
+        if (HtmlViewBackHandler.goBack()) {
+            return true
+        }
         if (navigationState.canGoBack()) {
             navigator.goBack()
             return true
@@ -124,7 +161,9 @@ class MainActivityCompose : ComposeBaseActivity() {
     }
 
     override fun baseActivityMustInterceptBack(): Boolean {
-        return navigationState.canGoBack()
+        // Keep the callback enabled while the WebView still has history to
+        // walk, so the predictive-back path (API 36+) stays consistent too.
+        return HtmlViewBackHandler.canGoBack || navigationState.canGoBack()
     }
 
     /**
@@ -222,6 +261,13 @@ class MainActivityCompose : ComposeBaseActivity() {
                 )
             }
             DEEP_LINK_BUG_REPORT -> navigationState.navigateTo(Settings, BugReport)
+            DEEP_LINK_HTML_VIEW -> {
+                val html = intent?.getStringExtra(EXTRA_HTML_VIEW_HTML)
+                val title = intent?.getStringExtra(EXTRA_HTML_VIEW_TITLE)
+                if (html != null) {
+                    navigationState.navigateTo(Main, HtmlView(html, title ?: ""))
+                }
+            }
         }
     }
 
@@ -352,6 +398,18 @@ class MainActivityCompose : ComposeBaseActivity() {
          *  to surface a collected global error in the Compose bug-report screen —
          *  the in-app replacement for the retired BugReportActivity's own launch. */
         const val DEEP_LINK_BUG_REPORT = "bug_report"
+
+        /** Deep-link route: the HTML viewer (Main top level + HtmlView child).
+         *  The in-app replacement for the retired HtmlViewActivity's own launch. */
+        const val DEEP_LINK_HTML_VIEW = "html_view"
+
+        /** Intent extra carrying the HTML body for the html_view deep link. */
+        const val EXTRA_HTML_VIEW_HTML =
+            "org.quantumbadger.redreader.extra.HTML_VIEW_HTML"
+
+        /** Intent extra carrying the title for the html_view deep link. */
+        const val EXTRA_HTML_VIEW_TITLE =
+            "org.quantumbadger.redreader.extra.HTML_VIEW_TITLE"
 
         /** Intent extra carrying the recipient for the PM-send deep link. */
         const val EXTRA_PM_SEND_RECIPIENT =

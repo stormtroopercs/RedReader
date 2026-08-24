@@ -659,7 +659,6 @@
     <string name="imageview_decode_failed">Nepavyko iššifruoti vaizdo. Bandoma naudoti interneto naršyklę.</string>
     <string name="karma_comment">Komentarų Karma</string>
     <string name="karma_link">Nuorodų Karma</string>
-    <string name="sidebar_activity_title">Šoninė juosta</string>
     <string name="mainmenu_downvoted">Neigiamai įvertinti įrašai</string>
     <string name="mainmenu_submitted">Pateikti įrašai</string>
     <string name="pref_menus_mainmenu_useritems_title">Naudotojo elementai</string>

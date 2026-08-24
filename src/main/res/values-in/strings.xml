@@ -363,7 +363,6 @@
     <string name="mainmenu_submitted">Pos Terkirim</string>
     <string name="mainmenu_downvoted">Pos Didownvote</string>
     <string name="mainmenu_modmail">Surat Mod</string>
-    <string name="sidebar_activity_title">Bilah Samping</string>
     <!-- 2014-04-20 -->
     <string name="header_subscriber_count">%s subscriber</string>
     <string name="header_subscriber_count_unknown">Jumlah subscriber tidak diketahui</string>

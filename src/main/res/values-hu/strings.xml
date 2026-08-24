@@ -401,7 +401,6 @@
     <string name="mainmenu_submitted">Küldött bejegyzések</string>
     <string name="mainmenu_downvoted">Lepontozott bejegyzések</string>
     <string name="mainmenu_modmail">Moderátori üzenet</string>
-    <string name="sidebar_activity_title">Oldalsáv</string>
     <!-- 2014-04-20 -->
 
     <string name="header_subscriber_count">%s feliratkozó</string>

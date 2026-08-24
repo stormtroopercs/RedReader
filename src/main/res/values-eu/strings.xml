@@ -464,7 +464,6 @@
     <string name="pref_menus_mainmenu_useritems_title">Erabiltzailearen elementuak</string>
     <string name="mainmenu_downvoted">Boto negatiboak dituzten argitalpenak</string>
     <string name="mainmenu_modmail">Modposta</string>
-    <string name="sidebar_activity_title">Alboko barra</string>
     <string name="invalid_subreddit_name">Subreddit izen baliogabea</string>
     <string name="imageview_decode_failed">Ezin izan da irudia deskodetu. Web nabigatzailea probatzen.</string>
     <string name="comment_header_specific_thread_title">Iruzkin hari espezifiko bat ikusten ari zara.</string>

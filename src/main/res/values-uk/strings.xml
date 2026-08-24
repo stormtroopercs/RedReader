@@ -321,7 +321,6 @@
     <string name="pref_menus_mainmenu_useritems_title">Користувацькі елементи</string>
     <string name="mainmenu_submitted">Опубліковане</string>
     <string name="mainmenu_downvoted">Дописи з голосом «проти»</string>
-    <string name="sidebar_activity_title">Бокова панель</string>
     <string name="header_subscriber_count">%s підписників</string>
     <string name="header_subscriber_count_unknown">Невідома кількість підписників</string>
     <string name="invalid_subreddit_name">Неприпустима назва сабреддіта</string>

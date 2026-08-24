@@ -16,16 +16,10 @@
  */
 package org.quantumbadger.redreader.reddit.things
 
-import android.content.Intent
 import android.os.Parcel
 import android.os.Parcelable
-import androidx.appcompat.app.AppCompatActivity
-import org.apache.commons.text.StringEscapeUtils
-import org.quantumbadger.redreader.R.string
-import org.quantumbadger.redreader.activities.HtmlViewActivity
 import org.quantumbadger.redreader.common.HasUniqueId
 import org.quantumbadger.redreader.common.ParcelHelper
-import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.common.time.TimestampUTC
 import org.quantumbadger.redreader.common.time.TimestampUTC.Companion.fromUtcMs
@@ -179,30 +173,6 @@ class RedditSubreddit : Parcelable, Comparable<RedditSubreddit>,
         return display_name!!.compareTo(another.display_name!!, ignoreCase = true)
     }
 
-    fun getSidebarHtml(nightMode: Boolean): String {
-        return Companion.getSidebarHtmlStatic(nightMode, description_html!!)
-    }
-
-    fun hasSidebar(): Boolean {
-        return description_html != null && !description_html!!.isEmpty()
-    }
-
-    fun showSidebarActivity(context: AppCompatActivity) {
-        val intent = Intent(context, HtmlViewActivity::class.java)
-
-        intent.putExtra("html", getSidebarHtml(PrefsUtility.isNightMode))
-
-        intent.putExtra(
-            "title", String.format(
-                Locale.US, "%s: %s",
-                context.getString(string.sidebar_activity_title),
-                url
-            )
-        )
-
-        context.startActivityForResult(intent, 1)
-    }
-
     override val uniqueId: String get() = id!!
 
     companion object {
@@ -244,41 +214,8 @@ class RedditSubreddit : Parcelable, Comparable<RedditSubreddit>,
                 }
 
                 override fun newArray(size: Int): Array<RedditSubreddit?> {
-                    return arrayOfNulls<RedditSubreddit>(size)
+                    return arrayOfNulls(size)
                 }
             }
-
-        fun getSidebarHtmlStatic(
-            nightMode: Boolean,
-            htmlEscaped: String
-        ): String {
-            val unescaped = StringEscapeUtils.unescapeHtml4(htmlEscaped)
-
-            val result = StringBuilder(unescaped.length + 512)
-
-            result.append("<html>")
-
-            result.append("<head>")
-            result.append(
-                "<meta name=\"viewport\" content=\"width=device-width, user-scalable=yes\">"
-            )
-
-            if (nightMode) {
-                result.append("<style>")
-                result.append("body {color: white; background-color: black;}")
-                result.append("a {color: #3399FF; background-color: 000033;}")
-                result.append("</style>")
-            }
-
-            result.append("</head>")
-
-            result.append("<body>")
-            result.append(unescaped)
-            result.append("</body>")
-
-            result.append("</html>")
-
-            return result.toString()
-        }
     }
 }

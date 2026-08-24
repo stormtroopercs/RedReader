@@ -54,7 +54,8 @@ class UserProfileScreenTest {
                         username = "testuser",
                         onNavigateBack = { /* no-op */ },
                         onNavigateToPosts = { /* no-op */ },
-                        onNavigateToComments = { /* no-op */ }
+                        onNavigateToComments = { /* no-op */ },
+                        onSendMessage = { /* no-op */ }
                     )
                 }
             }
@@ -73,7 +74,8 @@ class UserProfileScreenTest {
                         username = "testuser",
                         onNavigateBack = { /* no-op */ },
                         onNavigateToPosts = { /* no-op */ },
-                        onNavigateToComments = { /* no-op */ }
+                        onNavigateToComments = { /* no-op */ },
+                        onSendMessage = { /* no-op */ }
                     )
                 }
             }

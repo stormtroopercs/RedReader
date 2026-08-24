@@ -136,7 +136,7 @@ abstract class BaseActivity : AppCompatActivity(),
         return false
     }
 
-    protected fun invalidateBackPressedCallback() {
+    fun invalidateBackPressedCallback() {
         mBackPressedCallback.isEnabled =             !osHandlesBackAnimations() || baseActivityMustInterceptBack()
     }
 

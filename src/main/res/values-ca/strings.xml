@@ -309,7 +309,6 @@
     <string name="mainmenu_submitted">Publicacions Enviades</string>
     <string name="mainmenu_downvoted">Publicacions Votades Negativament</string>
     <string name="mainmenu_modmail">Correu de Moderador</string>
-    <string name="sidebar_activity_title">Barra Lateral</string>
     <string name="header_subscriber_count">%s subscriptors</string>
     <string name="header_subscriber_count_unknown">Nombre de subscriptors desconegut</string>
     <string name="invalid_subreddit_name">Nom de subreddit invàlid</string>

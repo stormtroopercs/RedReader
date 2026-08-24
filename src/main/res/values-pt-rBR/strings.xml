@@ -312,7 +312,6 @@
     <string name="mainmenu_submitted">Postagens Submetidas</string>
     <string name="mainmenu_downvoted">Postagens Negativadas</string>
     <string name="mainmenu_modmail">Mensagens do Moderador</string>
-    <string name="sidebar_activity_title">Barra Lateral</string>
     <string name="gold">Gold</string>
     <string name="pref_appearance_comment_header_items_gold">Reddit Gold</string>
     <string name="karma_link">Karma nos Links</string>

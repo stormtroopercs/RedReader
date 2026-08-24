@@ -361,7 +361,6 @@
     <string name="mainmenu_submitted">Publikigitaj afiŝoj</string>
     <string name="mainmenu_downvoted">Kontraŭ-voĉdonitaj afiŝoj</string>
     <string name="mainmenu_modmail">Retletero al kontrolanto</string>
-    <string name="sidebar_activity_title">Flanka strio</string>
     <!-- 2014-04-20 -->
     <string name="header_subscriber_count">%s abonantoj</string>
     <string name="header_subscriber_count_unknown">Nekonata nombro da abonantoj</string>

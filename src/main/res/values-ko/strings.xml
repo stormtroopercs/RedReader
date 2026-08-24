@@ -293,7 +293,6 @@
     <string name="pref_menus_mainmenu_useritems_title">유저 항목</string>
     <string name="mainmenu_submitted">등록한 게시물</string>
     <string name="mainmenu_downvoted">반대한 게시물</string>
-    <string name="sidebar_activity_title">사이드바</string>
     <string name="mainmenu_modmail">관리자메일</string>
     <string name="header_subscriber_count">%s 구독자</string>
     <string name="header_subscriber_count_unknown">알 수 없는 구독자수</string>

@@ -21,7 +21,6 @@ import android.app.Dialog
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
 import android.view.View
@@ -271,7 +270,7 @@ class BackNavigationUITest {
     @Test
     fun predictiveBackIsEnabledExactlyOnApi36AndAbove() {
 
-        ActivityScenario.launch<HtmlViewActivity>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
+        ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
 
             waitForIdle()
 
@@ -311,26 +310,28 @@ class BackNavigationUITest {
     }
 
     // ---------------------------------------------------------------------
-    // HtmlViewActivity / WebViewActivity: WebView history
+    // HTML view (MainActivityCompose + HtmlView route): WebView history
     // ---------------------------------------------------------------------
 
     private fun htmlIntent(context: Context, html: String): Intent {
-        val intent = Intent(context, HtmlViewActivity::class.java)
-        intent.putExtra("html", html)
-        intent.putExtra("title", "test")
+        val intent = Intent(context, MainActivityCompose::class.java)
+        intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_HTML_VIEW)
+        intent.putExtra(MainActivityCompose.EXTRA_HTML_VIEW_HTML, html)
+        intent.putExtra(MainActivityCompose.EXTRA_HTML_VIEW_TITLE, "test")
         return intent
     }
 
     @Test
     fun htmlView_alwaysInterceptsBack() {
 
-        ActivityScenario.launch<HtmlViewActivity>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
+        ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
 
             waitForIdle()
 
             assertIntercepts(
-                "The WebView activities must always intercept back, so they "
-                    + "can navigate their history",
+                "The host activity must intercept back while the on-screen "
+                    + "HtmlView route is on the stack, so it can navigate the "
+                    + "document history (and the navigation stack)",
                 true,
                 scenario
             )
@@ -346,15 +347,27 @@ class BackNavigationUITest {
     @Test
     fun htmlView_noHistory_backExits() {
 
-        ActivityScenario.launch<HtmlViewActivity>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
+        ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
 
             waitForIdle()
 
+            // The HtmlView route is on the navigation stack (it is a child
+            // screen of the Main top level), so the first back press pops it
+            // (back to the Main root) and the second exits.
             pressBackUnconditionally()
             waitForIdle()
 
             assertEquals(
-                "Back with no WebView history should exit",
+                "Back from the HtmlView route should pop it, not exit",
+                Lifecycle.State.RESUMED,
+                scenario.state
+            )
+
+            pressBackAfterGuardWindow()
+            waitForIdle()
+
+            assertEquals(
+                "Back at the Main root should exit",
                 Lifecycle.State.DESTROYED,
                 awaitDestroyed(scenario)
             )
@@ -364,7 +377,7 @@ class BackNavigationUITest {
     @Test
     fun htmlView_withHistory_backNavigatesHistoryThenExits() {
 
-        ActivityScenario.launch<HtmlViewActivity>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
+        ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
 
             waitForIdle()
 
@@ -412,8 +425,21 @@ class BackNavigationUITest {
             pressBackAfterGuardWindow()
             waitForIdle()
 
+            // The route itself is still on the navigation stack, so the next
+            // press pops it (back to the Main root) rather than exiting — on
+            // every API level, since MainActivityCompose routes system back
+            // through the Navigation 3 stack once the WebView history is gone.
             assertEquals(
-                "Once history is exhausted, back should exit",
+                "Back should pop the HtmlView route, not exit",
+                Lifecycle.State.RESUMED,
+                scenario.state
+            )
+
+            pressBackAfterGuardWindow()
+            waitForIdle()
+
+            assertEquals(
+                "Once history and the route are exhausted, back should exit",
                 Lifecycle.State.DESTROYED,
                 awaitDestroyed(scenario)
             )
@@ -507,7 +533,7 @@ class BackNavigationUITest {
     @Test
     fun progressDialog_backTriggersOnCancelListener() {
 
-        ActivityScenario.launch<HtmlViewActivity>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
+        ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
 
             waitForIdle()
 

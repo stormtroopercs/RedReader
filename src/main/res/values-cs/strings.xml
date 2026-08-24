@@ -360,7 +360,6 @@
     <string name="mainmenu_submitted">Odeslané příspěvky</string>
     <string name="mainmenu_downvoted">Příspěvky s hlasem dolů</string>
     <string name="mainmenu_modmail">Moderátorská pošta</string>
-    <string name="sidebar_activity_title">Postranní lišta</string>
     <!-- 2014-04-20 -->
     <string name="header_subscriber_count">%s přihlášených</string>
     <string name="header_subscriber_count_unknown">Počet přihlášených je neznámý</string>

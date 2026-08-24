@@ -365,7 +365,6 @@
     <string name="mainmenu_submitted">Postări Efectuate</string>
     <string name="mainmenu_downvoted">Postări Downvoted</string>
     <string name="mainmenu_modmail">Modmail</string>
-    <string name="sidebar_activity_title">Sidebar</string>
     <!-- 2014-04-20 -->
     <string name="header_subscriber_count">%s abonați</string>
     <string name="header_subscriber_count_unknown">Număr de abonați necunoscut</string>

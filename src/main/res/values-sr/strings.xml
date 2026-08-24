@@ -306,7 +306,6 @@
     <string name="mainmenu_submitted">Послате објаве</string>
     <string name="mainmenu_downvoted">Долегласане објаве</string>
     <string name="mainmenu_modmail">Мод-пошта</string>
-    <string name="sidebar_activity_title">Бочна површ</string>
     <string name="header_subscriber_count">%s претплатника</string>
     <string name="header_subscriber_count_unknown">Непознат број претплатника</string>
     <string name="invalid_subreddit_name">Неисправан назив подредита</string>
