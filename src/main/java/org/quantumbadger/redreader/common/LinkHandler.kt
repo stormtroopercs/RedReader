@@ -148,6 +148,29 @@ object LinkHandler {
 				return
 			}
 
+			// A standalone page-URL host that resolves to a direct media URL without
+			// any network call (imgflip / makeameme / giphy / i.reddituploads — the
+			// pure part of getImageInfo) opens the in-app Compose viewer too (36th).
+			// Hosts that need a live host API (imgur / gfycat / redgifs / streamable /
+			// v.redd.it / deviantart) resolve to null here and keep the legacy
+			// ImageViewActivity.
+			if (!inAlbum) {
+				val resolved = resolveImagePatternUrl(normalUrlString)
+				if (resolved != null) {
+					val mediaUrl = resolved.original.url
+					val isGif = resolved.mediaType == ImageInfo.MediaType.GIF
+					val isVideo = resolved.mediaType == ImageInfo.MediaType.VIDEO
+					val intent = Intent(activity, MainActivityCompose::class.java).apply {
+						putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_IMAGE)
+						putExtra(MainActivityCompose.EXTRA_IMAGE_URL, mediaUrl.value)
+						putExtra(MainActivityCompose.EXTRA_IMAGE_GIF, isGif)
+						putExtra(MainActivityCompose.EXTRA_IMAGE_VIDEO, isVideo)
+					}
+					activity.startActivity(intent)
+					return
+				}
+			}
+
 			val intent = Intent(activity, ImageViewActivity::class.java)
 			intent.setData(normalUrl)
 			intent.putExtra("post", post)
@@ -803,8 +826,9 @@ object LinkHandler {
 	 * that is a *direct* still-image file URL (the Compose viewer fetches the
 	 * URL as-is via [fetchImage]). It excludes animated GIF hosts (gfycat /
 	 * redgifs / giphy), video hosts (streamable / v.redd.it), album URLs, and
-	 * page URLs that need host-API resolution (imgflip / makeameme /
-	 * deviantart) — those still go to the legacy [ImageViewActivity]. Matches
+	 * page URLs that need host resolution (imgflip / makeameme now resolve
+	 * purely via [resolveImagePatternUrl] into the Compose viewer; deviantart
+	 * needs its API and keeps the legacy [ImageViewActivity]). Matches
 	 * i.redd.it direct uploads or any URL ending in a still-image extension.
 	 */
 	@JvmStatic
@@ -1191,6 +1215,18 @@ object LinkHandler {
 			listener.onNotAnImage()
 		}
 	}
+
+	/**
+	 * Resolves a page-URL still / GIF / video host into a direct media URL without
+	 * any network call, using only the host's documented URL scheme (imgflip,
+	 * makeameme, giphy, i.reddituploads, and direct file extensions). This is the
+	 * pure (no-[context]) part of [getImageInfo] and backs the in-app Compose
+	 * image viewer's "resolvable host" path (36th) — hosts that need a live API
+	 * call (imgur / gfycat / redgifs / streamable / v.redd.it / deviantart) return
+	 * null here and keep the legacy `ImageViewActivity`.
+	 */
+	@JvmStatic
+	fun resolveImagePatternUrl(url: UriString): ImageInfo? = getImageUrlPatternMatch(url)
 
 	private fun getImageUrlPatternMatch(url: UriString): ImageInfo? {
 		val urlLower = StringUtils.asciiLowercase(url.value)
