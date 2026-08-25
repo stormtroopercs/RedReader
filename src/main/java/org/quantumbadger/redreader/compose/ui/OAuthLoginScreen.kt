@@ -22,6 +22,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Message
 import android.util.Log
+import android.view.ViewGroup
 import android.webkit.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,6 +36,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import info.guardianproject.netcipher.webkit.WebkitProxy
+import org.quantumbadger.redreader.BuildConfig
 import org.quantumbadger.redreader.RedReader
 import org.quantumbadger.redreader.common.TorCommon
 import org.quantumbadger.redreader.common.GlobalConfig
@@ -65,7 +67,13 @@ fun OAuthLoginScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> webViewRef?.resumeTimers()
+                // resumeTimers() alone only resumes JS timers — without the
+                // paired WebView.onResume() the WebView stays frozen after
+                // onPause() (no input, no rendering) until the process dies.
+                Lifecycle.Event.ON_RESUME -> {
+                    webViewRef?.onResume()
+                    webViewRef?.resumeTimers()
+                }
                 Lifecycle.Event.ON_PAUSE -> {
                     webViewRef?.pauseTimers()
                     webViewRef?.onPause()
@@ -84,11 +92,17 @@ fun OAuthLoginScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
+        // fillMaxSize is critical: without it the AndroidView holder measures the
+        // WebView with AT_MOST (wrap) constraints, so the WebView only grows to its
+        // initial (near-empty) content height — the page renders in a sliver at the
+        // top of the screen. Forcing an exact full-screen size makes the WebView
+        // fill the screen regardless of content.
         AndroidView(
             factory = { ctx ->
                 createOAuthWebView(ctx, onOAuthComplete, onOAuthError).also { webViewRef = it }
             },
-            update = {}
+            update = {},
+            modifier = Modifier.fillMaxSize()
         )
     }
 }
@@ -99,7 +113,15 @@ private fun createOAuthWebView(
     onOAuthComplete: (String) -> Unit,
     onOAuthError: (String) -> Unit
 ): WebView {
+    // The default WebView constructor uses WRAP_CONTENT layout params, which the
+    // Compose AndroidView measures to the (near-empty) content height — the page
+    // renders only in a sliver at the top of the screen. Force MATCH_PARENT so the
+    // WebView fills the screen.
     val webView = WebView(context)
+    webView.layoutParams = ViewGroup.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT
+    )
 
     val cookieManager = CookieManager.getInstance()
     cookieManager.removeAllCookies(null)
@@ -139,6 +161,12 @@ private fun createOAuthWebView(
     // ReCAPTCHA support
     settings.setSupportMultipleWindows(true)
     settings.javaScriptCanOpenWindowsAutomatically = true
+
+    // Enable WebView (Chrome DevTools) inspection so the OAuth page can be
+    // driven/verified over CDP. Debug builds only — release is untouched.
+    if (BuildConfig.DEBUG) {
+        WebView.setWebContentsDebuggingEnabled(true)
+    }
 
     // Multi-window support for ReCAPTCHA
     val webViewStack = mutableListOf(webView)

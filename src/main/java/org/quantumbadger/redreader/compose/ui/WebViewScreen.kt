@@ -61,7 +61,13 @@ fun WebViewScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> webViewRef?.resumeTimers()
+                // resumeTimers() alone only resumes JS timers — without the
+                // paired WebView.onResume() the WebView stays frozen after
+                // onPause() (no input, no rendering) until the process dies.
+                Lifecycle.Event.ON_RESUME -> {
+                    webViewRef?.onResume()
+                    webViewRef?.resumeTimers()
+                }
                 Lifecycle.Event.ON_PAUSE -> {
                     webViewRef?.pauseTimers()
                     webViewRef?.onPause()
@@ -140,7 +146,13 @@ fun HtmlViewScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
-                Lifecycle.Event.ON_RESUME -> webViewRef?.resumeTimers()
+                // resumeTimers() alone only resumes JS timers — without the
+                // paired WebView.onResume() the WebView stays frozen after
+                // onPause() (no input, no rendering) until the process dies.
+                Lifecycle.Event.ON_RESUME -> {
+                    webViewRef?.onResume()
+                    webViewRef?.resumeTimers()
+                }
                 Lifecycle.Event.ON_PAUSE -> {
                     webViewRef?.pauseTimers()
                     webViewRef?.onPause()
