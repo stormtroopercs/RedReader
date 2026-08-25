@@ -1,6 +1,6 @@
 #!/bin/bash
 cd /opt/data/redreader-project/RedReader
-export JAVA_HOME=/opt/data/redreader-project/jdk-17.0.17+10
+export JAVA_HOME=/opt/data/tools/jdk-17.0.17+10
 ./gradlew compileDebugKotlin --no-daemon > /tmp/compile.log 2>&1
 echo "EXIT=$?"
 echo "TOTAL: $(grep -c '^e:' /tmp/compile.log)"
