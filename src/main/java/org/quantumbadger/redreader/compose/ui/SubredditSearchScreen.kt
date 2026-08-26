@@ -97,7 +97,20 @@ fun SubredditSearchScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("Type to search subreddits")
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                "Type to search subreddits",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                "Search the live subreddit list (results are cached locally)",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
                 is SubredditSearchViewModel.SubredditSearchUiState.Loading -> {
@@ -138,7 +151,7 @@ fun SubredditSearchScreen(
 
 @Composable
 private fun SubredditSearchItem(
-    subreddit: org.quantumbadger.redreader.database.entities.SubredditEntity,
+    subreddit: SubredditSearchViewModel.SubredditItem,
     onClick: () -> Unit
 ) {
     Row(
@@ -148,19 +161,34 @@ private fun SubredditSearchItem(
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "r/${subreddit.name}",
-            style = MaterialTheme.typography.bodyLarge,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-
-        if (subreddit.subscribers != null) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 8.dp)
+        ) {
             Text(
-                text = "${subreddit.subscribers} subscribers",
+                text = "r/${subreddit.name}",
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            subreddit.description?.let { description ->
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        subreddit.subscribersLabel()?.let { label ->
+            Text(
+                text = "${label} subscribers",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 8.dp)
             )
         }
     }

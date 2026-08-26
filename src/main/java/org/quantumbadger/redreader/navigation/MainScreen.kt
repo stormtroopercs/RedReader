@@ -57,7 +57,8 @@ fun MainScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToLogin: () -> Unit = {},
     onNavigateToInbox: () -> Unit = {},
-    onNavigateToProfile: (String) -> Unit = {}
+    onNavigateToProfile: (String) -> Unit = {},
+    onNavigateToSubredditSearch: () -> Unit = {}
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -132,6 +133,13 @@ fun MainScreen(
                 MainListItem(
                     title = "Messages",
                     onClick = { onNavigateToInbox() }
+                )
+            }
+
+            item(key = "search") {
+                MainListItem(
+                    title = "Search subreddits",
+                    onClick = { onNavigateToSubredditSearch() }
                 )
             }
 

@@ -95,6 +95,9 @@ fun AppNavGraph(navigationState: NavigationState) {
                         // The account row opens the signed-in user's own
                         // profile (karma, avatar, sign out).
                         navigator.navigate(UserProfile(it))
+                    },
+                    onNavigateToSubredditSearch = {
+                        navigator.navigate(SubredditSearch)
                     }
                 )
             }
