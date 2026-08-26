@@ -12,9 +12,8 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.\
  ******************************************************************************/
-
 package org.quantumbadger.redreader.di
 
 import android.content.Context
@@ -24,15 +23,14 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import org.quantumbadger.redreader.database.RedReaderDatabase
-import org.quantumbadger.redreader.database.dao.CommentDao
-import org.quantumbadger.redreader.database.dao.PostDao
 import org.quantumbadger.redreader.database.dao.SubredditDao
-import org.quantumbadger.redreader.database.dao.UserSessionDao
 import javax.inject.Singleton
 
 /**
- * Hilt module providing Room database and DAO instances.
- * Provides singleton database and all DAOs for dependency injection.
+ * Hilt bindings for the Room layer. As of the C6 dead-code triage (48th
+ * increment) the only live surface is the `subreddits` table (the subreddit
+ * search's local cache) — the `postDao`/`commentDao`/`userSessionDao`
+ * providers went with their DAOs.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -46,25 +44,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun providePostDao(database: RedReaderDatabase): PostDao {
-        return database.postDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideCommentDao(database: RedReaderDatabase): CommentDao {
-        return database.commentDao()
-    }
-
-    @Provides
-    @Singleton
     fun provideSubredditDao(database: RedReaderDatabase): SubredditDao {
         return database.subredditDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideUserSessionDao(database: RedReaderDatabase): UserSessionDao {
-        return database.userSessionDao()
     }
 }

@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+ * along with RedReader.  If not, see <http://www.gnu.org/licenses/>.\
  ******************************************************************************/
 
 package org.quantumbadger.redreader.database
@@ -21,36 +21,27 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import org.quantumbadger.redreader.database.dao.CommentDao
-import org.quantumbadger.redreader.database.dao.PostDao
 import org.quantumbadger.redreader.database.dao.SubredditDao
-import org.quantumbadger.redreader.database.dao.UserSessionDao
-import org.quantumbadger.redreader.database.entities.CommentEntity
-import org.quantumbadger.redreader.database.entities.PostEntity
 import org.quantumbadger.redreader.database.entities.SubredditEntity
-import org.quantumbadger.redreader.database.entities.UserSessionEntity
 
 /**
  * Room database providing local caching for RedReader.
- * Manages all entities and provides DAOs for data access.
- * Supports offline reading and faster subsequent loads.
+ *
+ * As of the C6 dead-code triage (48th increment) the only live surface is
+ * the `subreddits` table — the live subreddit search seeds it as a local
+ * cache (`SubredditRepository` is the write side). The `posts`/`comments`/
+ * `user_sessions` entities + DAOs and their repositories were dead scaffolding
+ * (added in the original Room "Phase 1.2/3" work, never wired to any live
+ * screen) and were deleted.
  */
 @Database(
-    entities = [
-        PostEntity::class,
-        CommentEntity::class,
-        SubredditEntity::class,
-        UserSessionEntity::class
-    ],
+    entities = [SubredditEntity::class],
     version = 1,
     exportSchema = true
 )
 abstract class RedReaderDatabase : RoomDatabase() {
 
-    abstract fun postDao(): PostDao
-    abstract fun commentDao(): CommentDao
     abstract fun subredditDao(): SubredditDao
-    abstract fun userSessionDao(): UserSessionDao
 
     companion object {
         @Volatile

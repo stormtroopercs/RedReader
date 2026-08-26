@@ -158,6 +158,12 @@ dependencies {
 	androidTestImplementation(libs.androidx.benchmark.macro)
 }
 
+ksp {
+	// Export the Room schema (src/main/res/db/<version>.json) for future
+	// migration tests.
+	arg("room.schemaLocation", "$projectDir/src/main/res/db")
+}
+
 pmd {
 	toolVersion = libs.versions.pmd.get()
 }
