@@ -38,8 +38,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 /**
  * Main screen composable.
@@ -58,9 +61,11 @@ fun MainScreen(
     onNavigateToLogin: () -> Unit = {},
     onNavigateToInbox: () -> Unit = {},
     onNavigateToProfile: (String) -> Unit = {},
-    onNavigateToSubredditSearch: () -> Unit = {}
+    onNavigateToSubredditSearch: () -> Unit = {},
+    viewModel: MainScreenViewModel = hiltViewModel()
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val subscribedState by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -141,6 +146,75 @@ fun MainScreen(
                     title = "Search subreddits",
                     onClick = { onNavigateToSubredditSearch() }
                 )
+            }
+
+            // "Your subreddits" — the signed-in user's subscribed subreddits
+            // (alphabetical, like the legacy main menu's subreddit group).
+            // Idle when signed out or when the account has no subscriptions.
+            when (subscribedState) {
+                is MainScreenViewModel.SubscribedState.Loading -> {
+                    item(key = "subscribed") {
+                        ListItem(
+                            headlineContent = { Text(text = "Your subreddits") },
+                            supportingContent = { Text(text = "Loading…") }
+                        )
+                    }
+                }
+
+                is MainScreenViewModel.SubscribedState.Error -> {
+                    val error = (subscribedState as MainScreenViewModel.SubscribedState.Error)
+                    item(key = "subscribed") {
+                        ListItem(
+                            headlineContent = { Text(text = "Your subreddits") },
+                            supportingContent = { Text(text = error.message) }
+                        )
+                    }
+                }
+
+                is MainScreenViewModel.SubscribedState.Success -> {
+                    val success = subscribedState as MainScreenViewModel.SubscribedState.Success
+                    if (success.subreddits.isNotEmpty()) {
+                        item(key = "subscribed-header") {
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        text = "Your subreddits",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                },
+                                supportingContent = {
+                                    Text(text = "${success.subreddits.size} subscribed")
+                                }
+                            )
+                        }
+                        items(
+                            items = success.subreddits,
+                            key = { "subscribed-" + it.name }
+                        ) { subreddit ->
+                            ListItem(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onNavigateToPostList(subreddit.name) },
+                                headlineContent = { Text(text = "r/${subreddit.name}") },
+                                supportingContent = {
+                                    Text(
+                                        text = subreddit.subscribersLabel()
+                                            ?.let { "$it subscribers" }
+                                            ?: "Subscribed"
+                                    )
+                                },
+                                trailingContent = {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+
+                is MainScreenViewModel.SubscribedState.Idle -> Unit
             }
 
             items(
