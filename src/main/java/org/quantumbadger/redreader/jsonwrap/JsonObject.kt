@@ -185,7 +185,24 @@ class JsonObject(parser: JsonParser) : JsonValue(),
         InvocationTargetException::class
     )
     fun populateObject(o: Any) {
-        val objectFields = o.javaClass.fields
+        // Walk declared fields (Kotlin `var`s are private backing fields, so
+        // `javaClass.fields` — public only — would never match them), up the
+        // class hierarchy. Static fields are skipped (e.g. the `Companion`
+        // field Kotlin adds to every class with a companion object).
+        val objectFields = ArrayList<java.lang.reflect.Field>()
+
+        var clazz: Class<*>? = o.javaClass
+        while (clazz != null && clazz != Any::class.java) {
+            for (field in clazz.declaredFields) {
+                if ((field.modifiers and Modifier.STATIC) != 0) {
+                    continue
+                }
+
+                objectFields.add(field)
+            }
+
+            clazz = clazz.superclass
+        }
 
         try {
             for (objectField in objectFields) {
@@ -214,15 +231,17 @@ class JsonObject(parser: JsonParser) : JsonValue(),
 
                 val fieldType = objectField.type
 
-                if (fieldType == Long::class.java || fieldType == java.lang.Long.TYPE) {
+                // Kotlin nullable (`T?`) fields box to java.lang.T — accept
+                // both the primitive (non-null `T`) and the boxed form.
+                if (fieldType == Long::class.java || fieldType == java.lang.Long.TYPE || fieldType == java.lang.Long::class.java) {
                     objectField[o] = jsonValue.asLong()
-                } else if (fieldType == Double::class.java || fieldType == java.lang.Double.TYPE) {
+                } else if (fieldType == Double::class.java || fieldType == java.lang.Double.TYPE || fieldType == java.lang.Double::class.java) {
                     objectField[o] = jsonValue.asDouble()
-                } else if (fieldType == Int::class.java) {
+                } else if (fieldType == Int::class.java || fieldType == java.lang.Integer::class.java) {
                     objectField[o] =                         if (jsonValue.asLong() == null) null else jsonValue.asLong()!!.toInt()
-                } else if (fieldType == Float::class.java || fieldType == java.lang.Float.TYPE) {
+                } else if (fieldType == Float::class.java || fieldType == java.lang.Float.TYPE || fieldType == java.lang.Float::class.java) {
                     objectField[o] =                         if (jsonValue.asDouble() == null) null else jsonValue.asDouble()!!.toFloat()
-                } else if (fieldType == Boolean::class.java || fieldType == java.lang.Boolean.TYPE) {
+                } else if (fieldType == Boolean::class.java || fieldType == java.lang.Boolean.TYPE || fieldType == java.lang.Boolean::class.java) {
                     objectField[o] = jsonValue.asBoolean()
                 } else if (fieldType == String::class.java) {
                     objectField[o] = jsonValue.asString()

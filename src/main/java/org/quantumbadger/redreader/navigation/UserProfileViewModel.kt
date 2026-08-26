@@ -52,6 +52,7 @@ import org.quantumbadger.redreader.reddit.APIResponseHandler.ActionResponseHandl
 import org.quantumbadger.redreader.reddit.APIResponseHandler.UserResponseHandler
 import org.quantumbadger.redreader.reddit.RedditAPI
 import org.quantumbadger.redreader.reddit.api.RedditOAuth.completeLogin
+import org.quantumbadger.redreader.reddit.things.RedditThing
 import org.quantumbadger.redreader.reddit.things.RedditUser
 
 /**
@@ -140,10 +141,11 @@ class UserProfileViewModel @Inject constructor(
                         fromCache: Boolean
                     ) {
                         try {
-                            // /user/{name}/about.json is a raw user object (no {data: ...}
-                            // envelope), so parse it directly to RedditUser.
-                            val user = result.asObject(RedditUser::class.java)
-                            if (user == null) {
+                            // /user/{name}/about.json is a RedditThing envelope
+                            // ({kind: "t2", data: {...}}) — parse the envelope and
+                            // unwrap the user, the same way RedditAPI.getUser does.
+                            val user = result.asObject(RedditThing::class.java)?.asUser()
+                            if (user == null || user.name == null) {
                                 _state.value = UserProfileUiState.Error("User not found")
                                 return
                             }
@@ -350,6 +352,29 @@ class UserProfileViewModel @Inject constructor(
                 PrefsUtility.pref_appearance_hide_comments_from_blocked_users_set(true)
             } catch (e: Exception) {
                 _state.value = UserProfileUiState.Error("Failed to mute user: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Sign the current account out: remove it from the local account store
+     * ([RedditAccountManager.deleteAccount]). The account manager notifies its
+     * listeners, so the main screen's account row flips back to "Sign in to
+     * Reddit" and the default account falls back to anonymous. No server call
+     * is involved (the refresh token simply stops being used from this
+     * device), mirroring the legacy account dialog's remove-account action.
+     */
+    fun signOut() {
+        viewModelScope.launch {
+            try {
+                val manager = RedditAccountManager.getInstance(context)
+                val account = manager.defaultAccount
+                if (account.isAnonymous) {
+                    return@launch
+                }
+                manager.deleteAccount(account)
+            } catch (e: Exception) {
+                _state.value = UserProfileUiState.Error("Failed to sign out: ${e.message}")
             }
         }
     }

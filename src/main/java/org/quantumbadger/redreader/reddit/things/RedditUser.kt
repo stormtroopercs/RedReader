@@ -43,6 +43,13 @@ class RedditUser : Parcelable, JsonDeserializable {
     var name: String? = null
     var icon_img: String? = null
 
+    // Modern Reddit API: the account picture is `icon` (a base64 data URI,
+    // e.g. `data:image/jpeg;base64,...`), with `icon_size` giving its square
+    // dimension in px. `icon_img` is the legacy field (a plain URL); keep it
+    // as the fallback so old API shapes still resolve.
+    var icon: String? = null
+    var icon_size: Int? = null
+
     var is_employee: Boolean? = null
 
     override fun describeContents(): Int {
@@ -83,6 +90,12 @@ class RedditUser : Parcelable, JsonDeserializable {
         name = `in`.readString()
         icon_img = `in`.readString()
 
+        icon = `in`.readString()
+        icon_size = `in`.readInt()
+        if (icon_size == 0) {
+            icon_size = null
+        }
+
         is_employee = ParcelUtils.readNullableBoolean(`in`)
     }
 
@@ -115,15 +128,21 @@ class RedditUser : Parcelable, JsonDeserializable {
         parcel.writeString(name)
         parcel.writeString(icon_img)
 
+        parcel.writeString(icon)
+        parcel.writeInt(icon_size ?: 0)
+
         ParcelUtils.writeNullableBoolean(parcel, is_employee)
     }
 
     val iconUrl: UriString?
         get() {
-            if (icon_img == null) {
+            // Prefer the modern `icon` (data URI); fall back to the legacy
+            // `icon_img` (plain URL).
+            val raw = icon?.takeIf { it.isNotEmpty() } ?: icon_img
+            if (raw == null || raw.isEmpty()) {
                 return null
             } else {
-                return UriString(StringEscapeUtils.unescapeHtml4(icon_img))
+                return UriString(StringEscapeUtils.unescapeHtml4(raw))
             }
         }
 

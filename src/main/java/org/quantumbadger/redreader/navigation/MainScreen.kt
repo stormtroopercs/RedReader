@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -45,7 +46,8 @@ import androidx.compose.ui.unit.dp
  * Replaces MainMenuFragment with Compose UI.
  *
  * [accountName] is the signed-in Reddit username, or null when not
- * authenticated; the account row offers sign-in in that case.
+ * authenticated. The account row opens the user's own profile when
+ * authenticated (avatar, karma, sign out) and offers sign-in otherwise.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +56,8 @@ fun MainScreen(
     onNavigateToPostList: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToLogin: () -> Unit = {},
-    onNavigateToInbox: () -> Unit = {}
+    onNavigateToInbox: () -> Unit = {},
+    onNavigateToProfile: (String) -> Unit = {}
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
@@ -82,10 +85,19 @@ fun MainScreen(
                 .padding(paddingValues)
         ) {
             item(key = "account") {
+                val signedIn = !accountName.isNullOrBlank()
                 ListItem(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(enabled = accountName.isNullOrBlank(), onClick = onNavigateToLogin),
+                        .clickable(
+                            onClick = {
+                                if (signedIn) {
+                                    onNavigateToProfile(accountName ?: "")
+                                } else {
+                                    onNavigateToLogin()
+                                }
+                            }
+                        ),
                     leadingContent = {
                         Icon(
                             imageVector = Icons.Default.Person,
@@ -95,12 +107,22 @@ fun MainScreen(
                     headlineContent = {
                         Text(
                             text = accountName?.takeIf { it.isNotBlank() }?.let { "u/$it" } ?: "Sign in to Reddit",
-                            fontWeight = if (accountName.isNullOrBlank()) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal
+                            fontWeight = if (signedIn) androidx.compose.ui.text.font.FontWeight.Normal else androidx.compose.ui.text.font.FontWeight.Bold
                         )
                     },
                     supportingContent = {
-                        if (accountName.isNullOrBlank()) {
+                        if (signedIn) {
+                            Text(text = "Profile and sign out")
+                        } else {
                             Text(text = "Login required to view posts")
+                        }
+                    },
+                    trailingContent = {
+                        if (signedIn) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null
+                            )
                         }
                     }
                 )

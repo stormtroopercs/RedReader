@@ -90,6 +90,11 @@ fun AppNavGraph(navigationState: NavigationState) {
                     },
                     onNavigateToInbox = {
                         navigator.navigate(Inbox)
+                    },
+                    onNavigateToProfile = {
+                        // The account row opens the signed-in user's own
+                        // profile (karma, avatar, sign out).
+                        navigator.navigate(UserProfile(it))
                     }
                 )
             }
@@ -150,6 +155,8 @@ fun AppNavGraph(navigationState: NavigationState) {
 
             // Child: User profile
             entry<UserProfile> { key ->
+                // Same entry-scoped instance the screen resolves itself.
+                val userProfileViewModel = androidx.hilt.navigation.compose.hiltViewModel<UserProfileViewModel>()
                 org.quantumbadger.redreader.compose.ui.UserProfileScreen(
                     username = key.username,
                     onNavigateBack = { navigator.goBack() },
@@ -161,6 +168,13 @@ fun AppNavGraph(navigationState: NavigationState) {
                     },
                     onSendMessage = {
                         navigator.navigate(PMSend(recipient = key.username))
+                    },
+                    onSignOut = {
+                        // Remove the account, then land back on the main
+                        // screen root (its account row flips to "Sign in to
+                        // Reddit" through the account change listener).
+                        userProfileViewModel.signOut()
+                        navigationState.navigateTo(Main)
                     }
                 )
             }

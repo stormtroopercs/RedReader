@@ -19,6 +19,7 @@ package org.quantumbadger.redreader.compose.ui
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -38,22 +39,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.scale
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.activities.BaseActivity
 import org.quantumbadger.redreader.activities.OAuthLoginActivity
+import org.quantumbadger.redreader.common.datastream.parseDataUri
 import org.quantumbadger.redreader.compose.net.NetRequestStatus
+import org.quantumbadger.redreader.compose.net.FileRequestResult
 import org.quantumbadger.redreader.compose.net.fetchImage
 import org.quantumbadger.redreader.common.RRError
 import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.navigation.UserProfileViewModel
 import org.quantumbadger.redreader.reddit.api.RedditOAuth
 import org.quantumbadger.redreader.reddit.things.RedditUser
+import kotlin.math.max
+import kotlin.math.roundToInt
 
 /**
  * Compose User Profile Screen.
@@ -70,6 +77,7 @@ fun UserProfileScreen(
     onNavigateToPosts: () -> Unit,
     onNavigateToComments: () -> Unit,
     onSendMessage: () -> Unit,
+    onSignOut: () -> Unit = {},
     viewModel: UserProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -159,6 +167,7 @@ fun UserProfileScreen(
                     onNavigateToPosts = onNavigateToPosts,
                     onNavigateToComments = onNavigateToComments,
                     onSendMessage = onSendMessage,
+                    onSignOut = onSignOut,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
@@ -238,6 +247,7 @@ private fun UserProfileContent(
     onNavigateToPosts: () -> Unit,
     onNavigateToComments: () -> Unit,
     onSendMessage: () -> Unit,
+    onSignOut: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -278,6 +288,13 @@ private fun UserProfileContent(
                     viewModel = viewModel,
                     context = context
                 )
+            }
+        }
+
+        // Sign out (your own profile, signed in)
+        if (uiState.isSelf && uiState.canMessage) {
+            item {
+                SignOutCard(onSignOut = onSignOut)
             }
         }
 
@@ -350,12 +367,20 @@ private fun UserHeader(
 
 @Composable
 private fun UserAvatar(iconUrl: String?) {
+    // Two sources: modern Reddit returns the account picture as a base64
+    // data URI (in `icon`) — decoded in memory, no network; the legacy
+    // `icon_img` is a plain URL and goes through the fetch pipeline.
+    val parsed = remember(iconUrl) {
+        iconUrl?.takeIf { it.isNotEmpty() }?.let { parseDataUri(it) }
+    }
     val uri = remember(iconUrl) {
-        iconUrl?.takeIf { it.isNotEmpty() }?.let { UriString(it) }
+        if (parsed == null) iconUrl?.takeIf { it.isNotEmpty() }?.let { UriString(it) } else null
     }
 
-    val imageState: State<NetRequestStatus<org.quantumbadger.redreader.compose.net.FileRequestResult<ImageBitmap>>>? =
+    val imageState: State<NetRequestStatus<FileRequestResult<ImageBitmap>>>? =
         if (uri != null) fetchImage(uri, scaleToMaxAxis = 256) else null
+
+    val dataUriBitmap: ImageBitmap? = parsed?.let { decodeDataUriImage(it.bytes, 256) }
 
     Box(
         modifier = Modifier
@@ -364,6 +389,15 @@ private fun UserAvatar(iconUrl: String?) {
         contentAlignment = Alignment.Center
     ) {
         when {
+            dataUriBitmap != null -> {
+                Image(
+                    bitmap = dataUriBitmap,
+                    contentDescription = "User avatar",
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                )
+            }
             imageState == null -> AvatarPlaceholder()
             imageState.value is NetRequestStatus.Success -> {
                 val bitmap = (imageState.value as NetRequestStatus.Success).result.data
@@ -377,6 +411,29 @@ private fun UserAvatar(iconUrl: String?) {
             }
             else -> AvatarPlaceholder()
         }
+    }
+}
+
+/**
+ * Decodes a data-URI payload to an [ImageBitmap], downscaled so its longest
+ * axis is at most [maxAxis] px (an avatar is shown at 80dp — the oversized
+ * decode is only a transient memory cost of a few hundred KB).
+ */
+private fun decodeDataUriImage(bytes: ByteArray, maxAxis: Int = 256): ImageBitmap? {
+    return try {
+        val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return null
+        val result = if (max(decoded.width, decoded.height) <= maxAxis) {
+            decoded
+        } else {
+            val scale = maxAxis / max(decoded.width, decoded.height).toFloat()
+            decoded.scale(
+                (decoded.width * scale).roundToInt(),
+                (decoded.height * scale).roundToInt()
+            )
+        }
+        result.asImageBitmap()
+    } catch (e: Exception) {
+        null
     }
 }
 
@@ -702,6 +759,70 @@ private fun ActionRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+@Composable
+private fun SignOutCard(
+    onSignOut: () -> Unit
+) {
+    var confirmSignOut by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Logout,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Sign out",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            Button(
+                onClick = { confirmSignOut = true },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Sign out")
+            }
+        }
+    }
+
+    if (confirmSignOut) {
+        AlertDialog(
+            onDismissRequest = { confirmSignOut = false },
+            title = { Text("Sign out of RedReader?") },
+            text = { Text("Your Reddit account will be removed from this device. You can sign in again at any time.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmSignOut = false
+                        onSignOut()
+                    }
+                ) { Text("Sign out") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmSignOut = false }) {
+                    Text(stringResource(R.string.dialog_cancel))
+                }
+            }
         )
     }
 }
