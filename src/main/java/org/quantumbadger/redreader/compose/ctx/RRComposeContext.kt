@@ -42,7 +42,6 @@ import org.quantumbadger.redreader.compose.prefs.ComposePrefsSingleton
 import org.quantumbadger.redreader.compose.prefs.LocalComposePrefs
 import org.quantumbadger.redreader.compose.prefs.Preference
 import org.quantumbadger.redreader.compose.theme.RRComposeContextTheme
-import org.quantumbadger.redreader.fragments.AccountListDialog
 import org.quantumbadger.redreader.fragments.ErrorPropertiesDialog
 import org.quantumbadger.redreader.image.AlbumInfo
 
@@ -148,7 +147,15 @@ fun RRComposeContext(
 				}
 
 				Dest.AccountsList -> {
-					AccountListDialog.show(activity)
+					// The account list is a Nav3 route (Main + Accounts):
+					// hand it to MainActivityCompose as a deep link, mirroring
+					// how the legacy host reached the AccountListDialog.
+					val intent = Intent(activity, MainActivityCompose::class.java)
+					intent.putExtra(
+						MainActivityCompose.EXTRA_DEEP_LINK,
+						MainActivityCompose.DEEP_LINK_ACCOUNTS
+					)
+					activity.startActivity(intent)
 				}
 
 				Dest.RedditTerms -> {

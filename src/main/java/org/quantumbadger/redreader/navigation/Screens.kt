@@ -104,6 +104,14 @@ data class HtmlView(val html: String, val title: String) : NavKey
 @Serializable
 data object OAuthLogin : NavKey
 
+/**
+ * Account management screen (the active account plus the options to switch,
+ * remove, re-authenticate, or add an account). Replaces the legacy
+ * `AccountListDialog` fragment (retired in the 50th increment).
+ */
+@Serializable
+data object Accounts : NavKey
+
 @Serializable
 data class Album(val url: String) : NavKey
 

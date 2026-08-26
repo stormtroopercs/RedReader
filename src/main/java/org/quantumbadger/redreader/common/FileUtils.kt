@@ -50,7 +50,6 @@ import org.quantumbadger.redreader.common.General.showResultDialog
 import org.quantumbadger.redreader.common.LinkHandler.getImageInfo
 import org.quantumbadger.redreader.common.PrefsUtility.SaveLocation
 import org.quantumbadger.redreader.common.time.TimestampUTC
-import org.quantumbadger.redreader.fragments.AccountListDialog.Companion.show
 import org.quantumbadger.redreader.fragments.ReportDialog.Companion.show
 import org.quantumbadger.redreader.fragments.ShareOrderDialog
 import org.quantumbadger.redreader.http.FailedRequestBody

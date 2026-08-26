@@ -32,6 +32,7 @@ import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.common.LinkHandler
 import org.quantumbadger.redreader.common.RunnableOnce
 import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.navigation.Accounts
 import org.quantumbadger.redreader.navigation.Album
 import org.quantumbadger.redreader.navigation.AppNavGraph
 import org.quantumbadger.redreader.navigation.BugReport
@@ -201,6 +202,7 @@ class MainActivityCompose : ComposeBaseActivity() {
             DEEP_LINK_CHANGELOG -> navigationState.navigateTo(Settings, Changelog)
             DEEP_LINK_SETTINGS -> navigationState.navigateTo(Settings)
             DEEP_LINK_SEARCH -> navigationState.navigateTo(Main, SubredditSearch)
+            DEEP_LINK_ACCOUNTS -> navigationState.navigateTo(Main, Accounts)
             DEEP_LINK_ALBUM -> {
                 val albumUrl = intent?.getStringExtra(EXTRA_ALBUM_URL)
                 if (albumUrl != null) {
@@ -336,6 +338,9 @@ class MainActivityCompose : ComposeBaseActivity() {
 
         /** Deep-link route: subreddit search (Main top level + SubredditSearch child). */
         const val DEEP_LINK_SEARCH = "search"
+
+        /** Deep-link route: the account management screen (Main top level + Accounts child). */
+        const val DEEP_LINK_ACCOUNTS = "accounts"
 
         /** Deep-link route: an album/gallery (Main top level + Album child). */
         const val DEEP_LINK_ALBUM = "album"

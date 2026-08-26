@@ -178,6 +178,12 @@ fun AppNavGraph(navigationState: NavigationState) {
                         // Reddit" through the account change listener).
                         userProfileViewModel.signOut()
                         navigationState.navigateTo(Main)
+                    },
+                    onReLogin = {
+                        // A denied block permission needs a fresh token: push
+                        // the in-app OAuth route (the 50th increment retired
+                        // the legacy OAuthLoginActivity that did this).
+                        navigator.navigate(OAuthLogin)
                     }
                 )
             }
@@ -355,6 +361,14 @@ fun AppNavGraph(navigationState: NavigationState) {
                         Log.e("AppNavigation", "OAuth failed: $error")
                         navigator.goBack()
                     }
+                )
+            }
+
+            // Child: Account management (replaces the legacy AccountListDialog)
+            entry<Accounts> {
+                org.quantumbadger.redreader.compose.ui.AccountListScreen(
+                    onNavigateBack = { navigator.goBack() },
+                    onNavigateToLogin = { navigator.navigate(OAuthLogin) }
                 )
             }
         }

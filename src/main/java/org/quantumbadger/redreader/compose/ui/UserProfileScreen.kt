@@ -18,10 +18,7 @@
 package org.quantumbadger.redreader.compose.ui
 
 import android.content.Context
-import android.content.Intent
 import android.graphics.BitmapFactory
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -45,11 +42,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.scale
-import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import org.quantumbadger.redreader.R
-import org.quantumbadger.redreader.activities.BaseActivity
-import org.quantumbadger.redreader.activities.OAuthLoginActivity
 import org.quantumbadger.redreader.common.datastream.parseDataUri
 import org.quantumbadger.redreader.compose.net.NetRequestStatus
 import org.quantumbadger.redreader.compose.net.FileRequestResult
@@ -57,7 +51,6 @@ import org.quantumbadger.redreader.compose.net.fetchImage
 import org.quantumbadger.redreader.common.RRError
 import org.quantumbadger.redreader.common.UriString
 import org.quantumbadger.redreader.navigation.UserProfileViewModel
-import org.quantumbadger.redreader.reddit.api.RedditOAuth
 import org.quantumbadger.redreader.reddit.things.RedditUser
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -78,6 +71,7 @@ fun UserProfileScreen(
     onNavigateToComments: () -> Unit,
     onSendMessage: () -> Unit,
     onSignOut: () -> Unit = {},
+    onReLogin: () -> Unit = {},
     viewModel: UserProfileViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -94,24 +88,9 @@ fun UserProfileScreen(
         viewModel.loadProfile(username)
     }
 
-    // OAuth re-login (block permission denied): result code 123 carries the
-    // callback URL, mirroring the legacy
-    // UserProfileDialog.launchAndCompleteLogin.
-    val reLoginLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val data = result.data
-        if (data != null && result.resultCode == 123 && data.hasExtra("url")) {
-            val uri = data.getStringExtra("url")?.toUri()
-            if (uri != null && context is BaseActivity) {
-                RedditOAuth.completeLogin(
-                    context,
-                    uri,
-                    org.quantumbadger.redreader.common.RunnableOnce.DO_NOTHING
-                )
-            }
-        }
-    }
+    // OAuth re-login (block permission denied): the host navigates to the
+    // in-app OAuth route (the 50th increment retired the legacy
+    // OAuthLoginActivity + result-code-123 handoff).
 
     // Surface a block/unblock feedback event exactly once, then clear it.
     LaunchedEffect(viewModel.blockFeedback.value) {
@@ -208,9 +187,7 @@ fun UserProfileScreen(
                 TextButton(
                     onClick = {
                         permissionDeniedDialog = false
-                        if (context is BaseActivity) {
-                            reLoginLauncher.launch(Intent(context, OAuthLoginActivity::class.java))
-                        }
+                        onReLogin()
                     }
                 ) { Text(stringResource(R.string.block_permission_denied_relogin)) }
             },

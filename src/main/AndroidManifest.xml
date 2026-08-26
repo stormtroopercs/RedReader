@@ -148,9 +148,6 @@
             </intent-filter>
 </activity>
 
-        <activity android:name=".activities.OAuthLoginActivity"
-                  android:configChanges="orientation|screenSize|keyboardHidden"/>
-
         <receiver android:name=".receivers.NewMessageChecker"/>
 
         <receiver android:name=".receivers.RegularCachePruner"/>

@@ -18,9 +18,7 @@
 package org.quantumbadger.redreader.navigation
 
 import android.content.Context
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -31,8 +29,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.quantumbadger.redreader.activities.BaseActivity
-import org.quantumbadger.redreader.activities.OAuthLoginActivity
 import org.quantumbadger.redreader.account.RedditAccountManager
 import org.quantumbadger.redreader.cache.CacheManager
 import org.quantumbadger.redreader.cache.CacheRequest
@@ -51,7 +47,6 @@ import org.quantumbadger.redreader.jsonwrap.JsonValue
 import org.quantumbadger.redreader.reddit.APIResponseHandler.ActionResponseHandler
 import org.quantumbadger.redreader.reddit.APIResponseHandler.UserResponseHandler
 import org.quantumbadger.redreader.reddit.RedditAPI
-import org.quantumbadger.redreader.reddit.api.RedditOAuth.completeLogin
 import org.quantumbadger.redreader.reddit.things.RedditThing
 import org.quantumbadger.redreader.reddit.things.RedditUser
 
@@ -326,21 +321,6 @@ class UserProfileViewModel @Inject constructor(
             DownloadStrategyAlways.INSTANCE,
             activity
         )
-    }
-
-    /**
-     * Kick off the OAuth re-login flow (used when a block is denied for
-     * missing `block_user` permission). Mirrors the legacy
-     * `UserProfileDialog.launchAndCompleteLogin`.
-     */
-    fun startReLogin(activity: BaseActivity) {
-        val loginIntent = Intent(activity, OAuthLoginActivity::class.java)
-        activity.startActivityForResultWithCallback(loginIntent) { resultCode, data ->
-            if (data != null && resultCode == 123 && data.hasExtra("url")) {
-                val uri = data.getStringExtra("url")!!.toUri()
-                completeLogin(activity, uri, org.quantumbadger.redreader.common.RunnableOnce.DO_NOTHING)
-            }
-        }
     }
 
     /**

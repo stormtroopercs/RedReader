@@ -45,7 +45,6 @@ import org.quantumbadger.redreader.R
 import org.quantumbadger.redreader.cache.CacheRequest.RequestFailureType
 import org.quantumbadger.redreader.common.AndroidCommon.runOnUiThread
 import org.quantumbadger.redreader.common.PrefsUtility.AppearanceTwopane
-import org.quantumbadger.redreader.fragments.AccountListDialog
 import org.quantumbadger.redreader.fragments.ErrorPropertiesDialog
 import org.quantumbadger.redreader.http.FailedRequestBody
 import org.quantumbadger.redreader.reddit.APIResponseHandler.APIFailureType
@@ -751,35 +750,7 @@ object General {
     }
 
     @JvmStatic
-	fun showMustBeLoggedInDialog(activity: AppCompatActivity) {
-        MaterialAlertDialogBuilder(activity)
-            .setTitle(R.string.firstrun_login_title)
-            .setMessage(R.string.must_login_message)
-            .setPositiveButton(
-                R.string.firstrun_login_button_now
-            ) { _: DialogInterface?, _: Int ->
-				AccountListDialog.show(activity)
-            }
-            .setNegativeButton(R.string.firstrun_login_button_later, null)
-            .show()
-    }
-
-	@JvmStatic
-	fun showMustReloginDialog(activity: AppCompatActivity) {
-		MaterialAlertDialogBuilder(activity)
-			.setTitle(R.string.reddit_relogin_error_title)
-			.setMessage(R.string.reddit_relogin_error_message)
-			.setPositiveButton(
-				R.string.options_accounts
-			) { _: DialogInterface?, _: Int ->
-				AccountListDialog.show(activity)
-			}
-			.setNegativeButton(R.string.dialog_close, null)
-			.show()
-	}
-
-    @JvmStatic
-	fun startNewThread(
+fun startNewThread(
         name: String,
         runnable: Runnable
     ) {
