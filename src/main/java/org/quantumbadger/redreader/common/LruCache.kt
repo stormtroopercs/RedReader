@@ -22,6 +22,13 @@ class LruCache<K, V>(
 
     fun size(): Int = synchronized(lock) { linked.size }
 
+    fun clear() {
+        synchronized(lock) {
+            linked.clear()
+            size = 0L
+        }
+    }
+
     fun get(key: K): V? = synchronized(lock) { linked[key] }
 
     fun put(key: K, value: V) {
