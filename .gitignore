@@ -86,3 +86,6 @@ reddit_auth.txt
 
 __pycache__/
 *.pyc
+
+# Hermes local planning (not project source)
+.hermes/

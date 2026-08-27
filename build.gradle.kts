@@ -23,8 +23,8 @@ android {
 		applicationId = "org.quantumbadger.redreader"
 		minSdk = libs.versions.sdk.min.get().toInt()
 		targetSdk = libs.versions.sdk.target.get().toInt()
-		versionCode = 118
-		versionName = "1.26"
+		versionCode = 1
+		versionName = (findProperty("VERSION_NAME") as String?) ?: "0.0.1-alpha"
 
 		vectorDrawables.generatedDensities("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi")
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -34,10 +34,20 @@ android {
 		additionalParameters.add("--no-version-vectors")
 	}
 
+	signingConfigs {
+		create("release") {
+			storeFile = file(System.getenv("KEYSTORE_FILE") ?: "${project.rootDir}/release.keystore")
+			storePassword = System.getenv("KEYSTORE_PASSWORD")
+			keyAlias = System.getenv("KEY_ALIAS")
+			keyPassword = System.getenv("KEY_PASSWORD")
+		}
+	}
+
 	buildTypes {
 		getByName("release") {
 			isMinifyEnabled = true
 			isShrinkResources = false
+			signingConfig = if (System.getenv("KEYSTORE_PASSWORD") != null) signingConfigs.getByName("release") else null
 			proguardFiles(
 				getDefaultProguardFile("proguard-android-optimize.txt"),
 				"proguard-rules.pro"
