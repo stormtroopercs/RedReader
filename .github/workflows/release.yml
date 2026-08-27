@@ -1,26 +1,33 @@
 name: Release
 
-# Builds a SIGNED release APK whenever a Git tag matching v0.0.x(-alpha)
-# is pushed, and publishes it as a GitHub Release.
+# Nightly auto-release.
 #
-# Requires these GitHub Secrets (repo → Settings → Secrets and variables → Actions):
-#   KEYSTORE_FILE      base64 of the release keystore (output of scripts/generate_keystore.sh)
+# Every night (03:17 UTC) this checks whether `dev` has new commits since the
+# last v0.0.* release tag. If it does, it bumps the patch (0.0.N -> 0.0.N+1-alpha),
+# builds a SIGNED release APK, and publishes it as a GitHub Release.
+# If nothing changed on `dev`, it builds nothing and publishes nothing.
+#
+# Also runnable on demand from Actions -> Run workflow, with an optional `version`
+# input to force a specific tag (e.g. v0.0.2 to ship a stable, non-prerelease build).
+#
+# Requires these GitHub Secrets (repo -> Settings -> Secrets and variables -> Actions):
+#   KEYSTORE_FILE      base64 of the release keystore
 #   KEYSTORE_PASSWORD  keystore password
 #   KEY_ALIAS          key alias (e.g. materialreader)
 #   KEY_PASSWORD       key password
 #
-# Trigger a release with:  ./scripts/bump-release.sh  (bumps, commits, tags, pushes)
+# NOTE: GitHub runs scheduled workflows from the REPOSITORY DEFAULT branch. Since this
+# workflow lives on `dev`, set `dev` as the repo's default branch (Settings -> Branches)
+# or the nightly will not fire.
 
 on:
-    push:
-        tags:
-            - 'v0.0.*'
+    schedule:
+        -   cron: '17 3 * * *'      # 03:17 UTC nightly
     workflow_dispatch:
         inputs:
             version:
-                description: 'Version tag to build, e.g. v0.0.2-alpha'
-                required: true
-                default: 'v0.0.1-alpha'
+                description: 'Force a version tag, e.g. v0.0.2 (skips the change check). Leave blank for auto.'
+                required: false
 
 permissions:
     contents: write
@@ -30,58 +37,87 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             -   uses: actions/checkout@v4
+                with:
+                    fetch-depth: 0
+                    ref: dev
+
+            -   name: Determine version / whether to release
+                id: ver
+                run: |
+                    git fetch --tags --force
+                    LATEST="$(git tag --list 'v0.0.*' | sort -V | tail -n1)"
+                    echo "latest release tag: ${LATEST:-none}"
+                    if [ -n "${{ github.event.inputs.version }}" ]; then
+                        TAG="${{ github.event.inputs.version }}"
+                        CHANGED=true
+                    elif [ -z "${LATEST}" ]; then
+                        TAG="v0.0.1-alpha"
+                        CHANGED=true
+                    else
+                        AHEAD="$(git rev-list --count "${LATEST}..dev")"
+                        echo "commits on dev since ${LATEST}: ${AHEAD}"
+                        if [ "${AHEAD}" -gt 0 ]; then
+                            base="${LATEST#v}"; num="${base%%-*}"; patch="${num##*.}"; next=$((patch + 1)); prefix="${num%.*}"
+                            TAG="v${prefix}.${next}-alpha"
+                            CHANGED=true
+                        else
+                            CHANGED=false
+                        fi
+                    fi
+                    echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+                    echo "versionName=${TAG#v}" >> "$GITHUB_OUTPUT"
+                    echo "changed=${CHANGED}" >> "$GITHUB_OUTPUT"
+
+            -   name: No changes — skip release
+                if: steps.ver.outputs.changed != 'true'
+                run: echo "No new commits on dev since the last release (${LATEST}). Nothing to build."
 
             -   name: Set up Java 21
+                if: steps.ver.outputs.changed == 'true'
                 uses: actions/setup-java@v4
                 with:
                     distribution: temurin
                     java-version: 21
 
             -   name: Validate Gradle wrapper
+                if: steps.ver.outputs.changed == 'true'
                 uses: gradle/actions/wrapper-validation@v3
 
             -   name: Set up Gradle
+                if: steps.ver.outputs.changed == 'true'
                 uses: gradle/actions/setup-gradle@v3
 
             -   name: Install NDK
+                if: steps.ver.outputs.changed == 'true'
                 run: |
                     SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
-                    NDK_VERSION="$(yq .versions.ndk gradle/libs.versions.toml)"
+                    NDK_VERSION="$(grep -m1 '^ndk' gradle/libs.versions.toml | sed -E 's/ndk[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/')"
                     echo "Installing NDK ${NDK_VERSION}"
                     echo "y" | "$SDKMANAGER" "ndk;${NDK_VERSION}" --sdk_root="${ANDROID_SDK_ROOT}"
 
             -   name: Decode keystore
+                if: steps.ver.outputs.changed == 'true'
                 run: |
                     echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "${{ github.workspace }}/release.keystore"
 
-            -   name: Set version name from tag
-                id: ver
-                run: |
-                    if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-                        TAG="${{ github.event.inputs.version }}"
-                    else
-                        TAG="${GITHUB_REF_NAME}"
-                    fi
-                    echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-                    # strip leading 'v'
-                    echo "versionName=${TAG#v}" >> "$GITHUB_OUTPUT"
-
             -   name: Build signed release APK
+                if: steps.ver.outputs.changed == 'true'
                 env:
                     KEYSTORE_FILE: ${{ github.workspace }}/release.keystore
                     KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
                     KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
                     KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
                 run: |
-                    ./gradlew assembleRelease \
-                        -PVERSION_NAME="${{ steps.ver.outputs.versionName }}"
+                    ./gradlew assembleRelease -PVERSION_NAME="${{ steps.ver.outputs.versionName }}"
 
             -   name: Rename APK for release
+                if: steps.ver.outputs.changed == 'true'
                 run: |
                     mv build/outputs/apk/release/RedReader-release.apk \
                        "MaterialReader-${{ steps.ver.outputs.versionName }}.apk"
 
             -   name: Publish GitHub Release
+                if: steps.ver.outputs.changed == 'true'
                 uses: softprops/action-gh-release@v2
                 with:
                     tag_name: ${{ steps.ver.outputs.tag }}

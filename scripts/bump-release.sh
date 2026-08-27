@@ -1,55 +1,34 @@
 #!/usr/bin/env bash
 #
-# Bump the MaterialReader version, tag it, and push to trigger the Release
-# workflow. Versioning scheme: v0.0.x-alpha (x increments by 1 each release).
+# Trigger a MaterialReader release on demand. The nightly cron does the same
+# automatically; this is just for running it immediately.
 #
 # Usage:
-#   ./scripts/bump-release.sh            # next patch, keeps -alpha suffix
-#   ./scripts/bump-release.sh --stable   # drop the -alpha suffix (e.g. v0.0.2)
-#   ./scripts/bump-release.sh v0.0.5-alpha  # explicit version
+#   ./scripts/bump-release.sh              # build the next auto version now (only if dev changed)
+#   ./scripts/bump-release.sh v0.0.2       # force a specific version (stable, no -alpha)
+#   ./scripts/bump-release.sh v0.0.3-alpha # force a specific alpha
+#
+# Requires the GitHub CLI (`gh`) authenticated and `dev` pushed. The nightly
+# auto-release still works without this.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-
 REMOTE="${REMOTE:-origin}"
-BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
-explicit="${1:-}"
-stable=0
-[[ "${explicit}" == "--stable" ]] && { stable=1; explicit=""; }
-
-if [[ -n "${explicit}" ]]; then
-    new="${explicit#v}"
-else
-    # derive from the latest matching tag
-    latest="$(git tag --list 'v0.0.*' | sort -V | tail -n1)"
-    if [[ -z "${latest}" ]]; then
-        new="0.0.1-alpha"
-    else
-        base="${latest#v}"
-        num="${base%%-*}"            # 0.0.x
-        patch="${num##*.}"           # x
-        next=$((patch + 1))
-        prefix="${num%.*}"           # 0.0
-        new="${prefix}.${next}-alpha"
-        [[ "${stable}" -eq 1 ]] && new="${prefix}.${next}"
-    fi
-fi
-
-# sanity: must look like 0.0.N or 0.0.N-alpha
-if ! [[ "${new}" =~ ^0\.0\.[0-9]+(-alpha)?$ ]]; then
-    echo "Refusing to tag '${new}' — must match v0.0.N or v0.0.N-alpha" >&2
+if ! command -v gh >/dev/null 2>&1; then
+    echo "gh (GitHub CLI) is required for on-demand releases." >&2
+    echo "Install it, or use Actions -> Run workflow in the GitHub UI." >&2
+    echo "(The nightly auto-release still works without gh.)" >&2
     exit 1
 fi
 
-tag="v${new}"
-
-echo "Current branch: ${BRANCH}"
-echo "Latest tag:     $(git tag --list 'v0.0.*' | sort -V | tail -n1 || echo none)"
-echo "New tag:        ${tag}"
-read -rp "Push ${tag} to ${REMOTE} and trigger the release? [y/N] " confirm
-[[ "${confirm,,}" == "y" ]] || { echo "Aborted."; exit 1; }
-
-git tag -a "${tag}" -m "Release ${tag}"
-git push "${REMOTE}" "${tag}"
-echo "Pushed ${tag} — the Release workflow will build and publish MaterialReader-${new}.apk"
+if [ $# -ge 1 ]; then
+    VER="${1#v}"
+    echo "Dispatching Release workflow with forced version v${VER}..."
+    gh workflow run Release.yml --ref dev -f version="v${VER}"
+else
+    echo "Pushing dev, then dispatching Release workflow (auto version, only if changed)..."
+    git push "${REMOTE}" dev
+    gh workflow run Release.yml --ref dev
+fi
+echo "Done. Watch progress under Actions -> Release."
