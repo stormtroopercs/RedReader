@@ -111,5 +111,3 @@ fun BugReportScreen(
         }
     }
 }
-
-
