@@ -370,16 +370,22 @@ private fun PostItemCard(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.width(40.dp)
+                modifier = Modifier.width(44.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Filled.KeyboardArrowUp,
-                    contentDescription = "Upvote",
-                    tint = MaterialTheme.colorScheme.primary,
+                Box(
                     modifier = Modifier
-                        .size(24.dp)
-                        .clickable(onClick = { onPostAction(post, PostAction.UPVOTE) })
-                )
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable(onClick = { onPostAction(post, PostAction.UPVOTE) }),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.KeyboardArrowUp,
+                        contentDescription = "Upvote",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
 
                 Text(
                     text = formatScore(post.score),
@@ -387,14 +393,20 @@ private fun PostItemCard(
                     fontWeight = FontWeight.Medium
                 )
 
-                Icon(
-                    imageVector = Icons.Filled.KeyboardArrowDown,
-                    contentDescription = "Downvote",
-                    tint = MaterialTheme.colorScheme.primary,
+                Box(
                     modifier = Modifier
-                        .size(24.dp)
-                        .clickable(onClick = { onPostAction(post, PostAction.DOWNVOTE) })
-                )
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable(onClick = { onPostAction(post, PostAction.DOWNVOTE) }),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.KeyboardArrowDown,
+                        contentDescription = "Downvote",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
 
             // Main content
