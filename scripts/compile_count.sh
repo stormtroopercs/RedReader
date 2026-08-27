@@ -2,8 +2,8 @@
 # RedReader compile + error count helper
 # Usage: bash compile_count.sh [logname]
 LOG="${1:-compile}"
-cd /opt/data/RedReader
-export JAVA_HOME=/opt/data/jdk-17.0.17+10
+cd /opt/data/redreader-project/RedReader
+export JAVA_HOME=/opt/data/tools/jdk-17.0.17+10
 ./gradlew compileDebugKotlin --no-daemon > "/tmp/${LOG}.log" 2>&1
 EC=$?
 TOTAL=$(grep -c '^e:' "/tmp/${LOG}.log")
