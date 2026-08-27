@@ -89,3 +89,7 @@ __pycache__/
 
 # Hermes local planning (not project source)
 .hermes/
+
+# Signing keys must never be committed (CI uses the KEYSTORE_FILE GitHub secret)
+*.keystore
+*.jks
