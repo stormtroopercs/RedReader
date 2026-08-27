@@ -255,9 +255,17 @@ fun fetchImage(
 
 	val context = LocalContext.current.applicationContext
 
-	val filter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<ImageBitmap>> = 		remember(uri, user) {
-			{
-				try {
+	val filter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<ImageBitmap>> = 		remember(uri, user, scaleToMaxAxis) {
+		{
+			try {
+				ImageBitmapCache.get(uri.toString(), scaleToMaxAxis)?.let { cached ->
+					NetRequestStatus.Success(
+						FileRequestResult(
+							metadata = it,
+							data = cached
+						)
+					)
+				} ?: run {
 					val result = BitmapFactory.decodeStream(it.streamFactory.create())
 						?: throw RuntimeException("Decoded bitmap was null")
 
@@ -284,23 +292,28 @@ fun fetchImage(
 						scale(newSize.width, newSize.height)
 					}
 
+					val bitmap = scaledResult.asImageBitmap()
+
+					ImageBitmapCache.put(uri.toString(), scaleToMaxAxis, bitmap)
+
 					NetRequestStatus.Success(
 						FileRequestResult(
 							metadata = it,
-							data = scaledResult.asImageBitmap()
-						)
-					)
-				} catch (e: Exception) {
-					NetRequestStatus.Failed(
-						RRError(
-							title = context.getString(R.string.error_image_decode_failed),
-							url = uri,
-							t = e
+							data = bitmap
 						)
 					)
 				}
+			} catch (e: Exception) {
+				NetRequestStatus.Failed(
+					RRError(
+						title = context.getString(R.string.error_image_decode_failed),
+						url = uri,
+						t = e
+					)
+				)
 			}
 		}
+	}
 
 	return fetchFile(
 		uri = uri,
