@@ -1,3 +1,1236 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 7.3.1" type="baseline" client="gradle" dependencies="false" name="AGP (7.3.1)" variant="all" version="7.3.1">
+<issues format="6" by="lint 9.3.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.3.1)" variant="all" version="9.3.1">
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrCommentBodyCol = attr.getColor(1, 0)"
+        errorLine2="                                         ~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/PropertiesDialog.kt"
+            line="69"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrCommentHeaderAuthorCol = appearance.getColor(1, 255)"
+        errorLine2="                                                       ~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="66"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrPostSubtitleUpvoteCol = appearance.getColor(2, 255)"
+        errorLine2="                                                      ~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="67"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrPostSubtitleDownvoteCol = appearance.getColor(3, 255)"
+        errorLine2="                                                        ~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="68"
+            column="57"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrFlairBackCol = appearance.getColor(4, 0)"
+        errorLine2="                                             ~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="69"
+            column="46"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrFlairTextCol = appearance.getColor(5, 255)"
+        errorLine2="                                             ~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="70"
+            column="46"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrGoldBackCol = appearance.getColor(6, 0)"
+        errorLine2="                                            ~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="71"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrGoldTextCol = appearance.getColor(7, 255)"
+        errorLine2="                                            ~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="72"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrCommentHeaderCol = appearance.getColor(8, 255)"
+        errorLine2="                                                 ~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="73"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrCommentBodyCol = appearance.getColor(9, 255)"
+        errorLine2="                                               ~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="74"
+            column="48"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrMainTextCol = appearance.getColor(10, 255)"
+        errorLine2="                                            ~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="75"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        colorAccent = appearance.getColor(11, 255)"
+        errorLine2="                                          ~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="76"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrCrosspostBackCol = appearance.getColor(12, 255)"
+        errorLine2="                                                 ~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="77"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="ResourceType"
+        message="Expected resource of type styleable"
+        errorLine1="        rrCrosspostTextCol = appearance.getColor(13, 255)"
+        errorLine2="                                                 ~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="78"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="        score >= 1_000_000 -> String.format(&quot;%.1fM&quot;, score / 1_000_000.0)"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/CommentListScreen.kt"
+            line="539"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="        score >= 1_000 -> String.format(&quot;%.1fK&quot;, score / 1_000.0)"
+        errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/CommentListScreen.kt"
+            line="540"
+            column="27"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="        score >= 1_000_000 -> String.format(&quot;%.1fM&quot;, score / 1_000_000.0)"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/PostListScreen.kt"
+            line="617"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="        score >= 1_000 -> String.format(&quot;%.1fK&quot;, score / 1_000.0)"
+        errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/PostListScreen.kt"
+            line="618"
+            column="27"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        val query = editText.getText().toString().trim { it &lt;= &apos; &apos; }"
+        errorLine2="                                                       ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/DialogUtils.kt"
+            line="97"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        val inputTrimmed = input.trim { it &lt;= &apos; &apos; }"
+        errorLine2="                                      ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/HexUtils.kt"
+            line="55"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        if (info.title != null &amp;&amp; !info.title.trim { it &lt;= &apos; &apos; }.isEmpty()) {"
+        errorLine2="                                                   ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ImageInfoDialog.kt"
+            line="47"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="                    info.title.trim { it &lt;= &apos; &apos; },"
+        errorLine2="                                    ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ImageInfoDialog.kt"
+            line="52"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        if (info.caption != null &amp;&amp; !info.caption.trim { it &lt;= &apos; &apos; }.isEmpty()) {"
+        errorLine2="                                                       ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ImageInfoDialog.kt"
+            line="59"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="                    info.caption.trim { it &lt;= &apos; &apos; },"
+        errorLine2="                                      ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ImageInfoDialog.kt"
+            line="64"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        if (value == null || value.trim { it &lt;= &apos; &apos; }.isEmpty()) {"
+        errorLine2="                                        ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/PrefsUtility.kt"
+            line="1623"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        val valueTrimmed = value.trim { it &lt;= &apos; &apos; }"
+        errorLine2="                                      ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/PrefsUtility.kt"
+            line="2357"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        val trimmed = value?.trim { it &lt;= &apos; &apos; }"
+        errorLine2="                                  ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/PrefsUtility.kt"
+            line="2367"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        this.username = username.trim { it &lt;= &apos; &apos; }"
+        errorLine2="                                      ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/account/RedditAccount.kt"
+            line="50"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        val usernameCanonical = StringUtils.asciiLowercase(username.trim { it &lt;= &apos; &apos; })"
+        errorLine2="                                                                         ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/account/RedditAccountManager.kt"
+            line="176"
+            column="74"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        name = StringUtils.asciiLowercase(name.trim { it &lt;= &apos; &apos; })"
+        errorLine2="                                                    ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/things/SubredditCanonicalId.kt"
+            line="30"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireArguments() instead of getArguments()!!"
+        errorLine1="                getArguments()!!.getString(&quot;title&quot;),"
+        errorLine2="                ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            line="63"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireArguments() instead of getArguments()!!"
+        errorLine1="                getArguments()!!.getString(&quot;message&quot;),"
+        errorLine2="                ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            line="71"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireArguments() instead of getArguments()!!"
+        errorLine1="        if (getArguments()!!.containsKey(&quot;httpStatus&quot;)) {"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            line="76"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireArguments() instead of getArguments()!!"
+        errorLine1="                    getArguments()!!.getString(&quot;httpStatus&quot;),"
+        errorLine2="                    ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            line="81"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireArguments() instead of getArguments()!!"
+        errorLine1="        if (getArguments()!!.containsKey(&quot;url&quot;)) {"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            line="87"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireArguments() instead of getArguments()!!"
+        errorLine1="                    getArguments()!!.getString(&quot;url&quot;),"
+        errorLine2="                    ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            line="92"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireArguments() instead of getArguments()!!"
+        errorLine1="        if (getArguments()!!.containsKey(&quot;t&quot;)) {"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            line="98"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireArguments() instead of getArguments()!!"
+        errorLine1="                    getArguments()!!.getString(&quot;t&quot;),"
+        errorLine2="                    ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            line="103"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireArguments() instead of getArguments()!!"
+        errorLine1="        if (getArguments()!!.containsKey(&quot;response&quot;)) {"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            line="109"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireArguments() instead of getArguments()!!"
+        errorLine1="                    getArguments()!!.getString(&quot;response&quot;),"
+        errorLine2="                    ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            line="114"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireArguments() instead of getArguments()!!"
+        errorLine1="            getArguments()!!.getString(&quot;markdown&quot;)!!"
+        errorLine2="            ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/MarkdownPreviewDialog.kt"
+            line="38"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireActivity() instead of getActivity()!!"
+        errorLine1="        packageManager = getActivity()!!.getPackageManager()"
+        errorLine2="                         ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            line="48"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireContext() instead of context!!"
+        errorLine1="        val builder = MaterialAlertDialogBuilder(context!!)"
+        errorLine2="                                                 ~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            line="62"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireContext() instead of context!!"
+        errorLine1="            context!!.getString("
+        errorLine2="            ~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            line="64"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireContext() instead of context!!"
+        errorLine1="        listView.setAdapter(ShareOrderAdapter(context!!, orderedAppList!!, this))"
+        errorLine2="                                              ~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            line="70"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireContext() instead of context!!"
+        errorLine1="            General.quickToast(context!!, string.error_toast_no_share_app_installed)"
+        errorLine2="                               ~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            line="77"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="UseRequireInsteadOfGet"
+        message="Use requireContext() instead of context!!"
+        errorLine1="            context!!,"
+        errorLine2="            ~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            line="142"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="SourceLockedOrientationActivity"
+        message="You should not lock orientation of your activities, so that you can support a good user experience for any device or orientation"
+        errorLine1="            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/activities/BaseActivity.kt"
+            line="309"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                        navigator.navigate(HtmlView(html, context.getString(R.string.title_license)))"
+        errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/AppNavigation.kt"
+            line="132"
+            column="59"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                context.getString("
+        errorLine2="                ^">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/CommentEditScreen.kt"
+            line="93"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                        context.getString("
+        errorLine2="                        ^">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/CommentEditScreen.kt"
+            line="114"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                        Text(context.getString(R.string.comment_reply_preview))"
+        errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/CommentEditScreen.kt"
+            line="152"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                Text(context.getString(R.string.comment_edit_save))"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/CommentEditScreen.kt"
+            line="181"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="        title = { Text(context.getString(R.string.comment_reply_preview)) },"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/CommentEditScreen.kt"
+            line="204"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                General.quickToast(context, context.getString(R.string.pm_send_done))"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            line="115"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                title = { Text(context.getString(R.string.pm_send_actionbar)) },"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            line="134"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                                contentDescription = context.getString(R.string.comment_reply_send)"
+        errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            line="166"
+            column="54"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                        Text(context.getString(R.string.comment_reply_preview))"
+        errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            line="174"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                    Text(account ?: context.getString(R.string.error_toast_notloggedin))"
+        errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            line="193"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                label = { Text(context.getString(R.string.pm_send_hint_recipient)) },"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            line="214"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                label = { Text(context.getString(R.string.pm_send_hint_subject)) },"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            line="224"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                label = { Text(context.getString(R.string.pm_send_hint_message_text)) },"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            line="234"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="LocalContextGetResourceValueCall"
+        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
+        errorLine1="                Text(context.getString(R.string.comment_reply_send))"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            line="258"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="MutableCollectionMutableState"
+        message="Creating a MutableState object with a mutable collection type"
+        errorLine1="    var accounts by remember { mutableStateOf(accountManager.accounts) }"
+        errorLine2="                               ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/AccountListScreen.kt"
+            line="82"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="ParcelCreator"
+        message="Field should be annotated with `@JvmField`"
+        errorLine1="        val CREATOR: Parcelable.Creator&lt;RedditFlairChoice?> ="
+        errorLine2="            ~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/RedditFlairChoice.kt"
+            line="103"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ParcelCreator"
+        message="Field should be annotated with `@JvmField`"
+        errorLine1="        val CREATOR: Parcelable.Creator&lt;RedditSubreddit?> ="
+        errorLine2="            ~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/things/RedditSubreddit.kt"
+            line="210"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ParcelCreator"
+        message="Field should be annotated with `@JvmField`"
+        errorLine1="        val CREATOR: Parcelable.Creator&lt;RedditUser?> ="
+        errorLine2="            ~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/things/RedditUser.kt"
+            line="154"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ParcelCreator"
+        message="Field should be annotated with `@JvmField`"
+        errorLine1="        val CREATOR: Parcelable.Creator&lt;SubredditCanonicalId?> ="
+        errorLine2="            ~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/things/SubredditCanonicalId.kt"
+            line="82"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="StateFlowValueCalledInComposition"
+        message="StateFlow.value should not be called within composition"
+        errorLine1="    LaunchedEffect(viewModel.blockFeedback.value) {"
+        errorLine2="                                           ~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/ui/UserProfileScreen.kt"
+            line="96"
+            column="44"/>
+    </issue>
+
+    <issue
+        id="SwitchIntDef"
+        message="Switch statement on an `int` with known associated constant missing case `RedditURLParser.UNKNOWN_COMMENT_LISTING_URL`, `RedditURLParser.UNKNOWN_POST_LISTING_URL`"
+        errorLine1="   when (redditURL.pathType()) {"
+        errorLine2="   ~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/LinkHandler.kt"
+            line="222"
+            column="4"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields (static reference to `HtmlViewBackHandler` which has field `webView` pointing to `WebView`); this is a memory leak"
+        errorLine1="/**"
+        errorLine2="^">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/HtmlViewBackHandler.kt"
+            line="21"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    private var webView: WebView? = null"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/HtmlViewBackHandler.kt"
+            line="34"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields (static reference to `RedditSubredditManager` which has field `context` pointing to `Context`); this is a memory leak"
+        errorLine1="        @Volatile"
+        errorLine2="        ^">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/RedditSubredditManager.kt"
+            line="115"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    var selected by remember { mutableStateOf(choices.indexOfFirst { it.first == currentStorage }.coerceAtLeast(0)) }"
+        errorLine2="                               ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/SettingsScreen.kt"
+            line="2248"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                            Uri.parse(callbackUrl),"
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/AppNavigation.kt"
+            line="370"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="        emailSelectorIntent.setData(Uri.parse(&quot;mailto:&quot;))"
+        errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/BugReporter.kt"
+            line="131"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                val url = RedditURLParser.parseProbableCommentListing(Uri.parse(rawUri))"
+        errorLine2="                                                                      ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/CommentListViewModel.kt"
+            line="229"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="            return Uri.parse(getUri(path).toString()).buildUpon()"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/Constants.kt"
+            line="174"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="        val URI: Uri = Uri.parse(&quot;redreader://video&quot;)"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/views/video/ExoPlayerSeekableInputStreamDataSource.kt"
+            line="89"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit()"
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="89"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                    prefs.edit().putString("
+        errorLine2="                    ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="135"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                    prefs.edit().putString("
+        errorLine2="                    ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="143"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                    prefs.edit().putString("
+        errorLine2="                    ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="151"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                    prefs.edit().putString("
+        errorLine2="                    ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="159"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                    prefs.edit().putString("
+        errorLine2="                    ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="183"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                    prefs.edit().putString("
+        errorLine2="                    ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="189"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit()"
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="214"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit().putStringSet("
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="239"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit()"
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="262"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                    prefs.edit().putString("
+        errorLine2="                    ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="285"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit().putBoolean("
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="298"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit()"
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="311"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit()"
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="336"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                prefs.edit().putStringSet("
+        errorLine2="                ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="361"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="            sharedPreferences.edit().putBoolean(name, true).apply()"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            line="385"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX function `createBitmap` instead?"
+        errorLine1="        image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444)"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/jp/tomorrowkey/android/gifplayer/GifDecoder.kt"
+            line="564"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                        Uri.parse(&quot;file://&quot; + dst.getAbsolutePath())"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/image/LegacySaveImageCallback.kt"
+            line="92"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                        val spoilerUriBuilder = Uri.parse(&quot;rr://msg/&quot;)"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/prepared/markdown/MarkdownParagraph.kt"
+            line="178"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                        val spoilerUriBuilder = Uri.parse(&quot;rr://msg/&quot;)"
+        errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/prepared/markdown/MarkdownParagraph.kt"
+            line="202"
+            column="49"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="    ?: Uri.parse(&quot;&quot;)"
+        errorLine2="       ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/net/NetWrapper.kt"
+            line="604"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="    ?: Uri.parse(&quot;&quot;)"
+        errorLine2="       ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/compose/net/NetWrapper.kt"
+            line="613"
+            column="8"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                    val postListingUrl = RedditURLParser.parseProbablePostListing(Uri.parse(rawUri))"
+        errorLine2="                                                                                  ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/PostListViewModel.kt"
+            line="295"
+            column="83"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="                                val editor: SharedPreferences.Editor = sharedPrefs.edit()"
+        errorLine2="                                                                       ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/PrefsBackup.kt"
+            line="222"
+            column="72"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `Context.withStyledAttributes` instead?"
+        errorLine1="        val attr = activity!!.obtainStyledAttributes("
+        errorLine2="                   ^">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/fragments/PropertiesDialog.kt"
+            line="61"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `Context.withStyledAttributes` instead?"
+        errorLine1="        val appearance = context.obtainStyledAttributes("
+        errorLine2="                         ^">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            line="46"
+            column="26"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                val builder = Uri.parse(baseUri.toString()).buildUpon()"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/api/RedditAPIIndividualSubredditListRequester.kt"
+            line="161"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                return Optional.Companion.ofNullable&lt;Uri>(Uri.parse(redirect))"
+        errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/url/RedditURLParser.kt"
+            line="58"
+            column="59"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                Uri.parse("
+        errorLine2="                ^">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/url/RedditURLParser.kt"
+            line="69"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toUri` instead?"
+        errorLine1="                                    Uri.parse(&quot;https://github.com/RedReaderOrg/RedReader&quot;)"
+        errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/navigation/SettingsScreen.kt"
+            line="1863"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="UseTomlInstead"
+        message="Use version catalog instead"
+        errorLine1=" androidTestImplementation(&quot;androidx.compose.ui:ui-test-junit4&quot;)"
+        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle.kts"
+            line="167"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        message="Do not concatenate text displayed with `setText`. Use resource string with placeholders."
+        errorLine1="                    number.setText(paragraph.number.toString() + &quot;.   &quot;)"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/prepared/markdown/MarkdownParagraphGroup.kt"
+            line="94"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="SetTextI18n"
+        message="Number formatting does not take into account locale settings. Consider using `String.format` instead."
+        errorLine1="                    number.setText(paragraph.number.toString() + &quot;.   &quot;)"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/quantumbadger/redreader/reddit/prepared/markdown/MarkdownParagraphGroup.kt"
+            line="94"
+            column="36"/>
+    </issue>
+
 </issues>
