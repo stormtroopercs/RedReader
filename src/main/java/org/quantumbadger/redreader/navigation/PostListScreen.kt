@@ -320,6 +320,7 @@ private fun PostListContent(
         } else {
             items(posts, key = { it.id }) { post ->
                 PostItemCard(
+                    modifier = Modifier.animateItem(),
                     post = post,
                     theme = theme,
                     onClick = { onPostClick(post) },
@@ -336,6 +337,7 @@ private fun PostListContent(
  */
 @Composable
 private fun PostItemCard(
+    modifier: Modifier = Modifier,
     post: PostItem,
     theme: ComposeThemePostCard,
     onClick: () -> Unit,
@@ -345,7 +347,7 @@ private fun PostItemCard(
     var expanded by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(theme.backgroundColor)
             .clickable(onClick = onClick)

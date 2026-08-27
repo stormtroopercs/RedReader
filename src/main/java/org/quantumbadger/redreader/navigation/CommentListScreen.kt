@@ -273,6 +273,7 @@ private fun CommentListContent(
         } else {
             items(comments, key = { it.id }) { comment ->
                 CommentCard(
+                    modifier = Modifier.animateItem(),
                     comment = comment,
                     theme = theme,
                     onCommentAction = onCommentAction,
@@ -339,6 +340,7 @@ private fun PostHeaderCard(
  */
 @Composable
 private fun CommentCard(
+    modifier: Modifier = Modifier,
     comment: CommentItem,
     theme: org.quantumbadger.redreader.compose.theme.ComposeThemePostCard,
     onCommentAction: (CommentItem, CommentAction) -> Unit,
@@ -346,7 +348,7 @@ private fun CommentCard(
 ) {
     var moreMenuExpanded by remember { mutableStateOf(false) }
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(theme.backgroundColor)
             .padding(horizontal = 12.dp, vertical = 12.dp)
