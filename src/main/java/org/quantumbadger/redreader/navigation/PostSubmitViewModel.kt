@@ -532,18 +532,25 @@ class PostSubmitViewModel @Inject constructor(
             _imgurState.value = state
         }
     }
+}
 
-    private fun normalizeSubreddit(raw: String): String {
-        var name = raw.trim().lowercase()
-        while (name.startsWith("/")) {
-            name = name.substring(1)
-        }
-        while (name.startsWith("r/")) {
-            name = name.substring(2)
-        }
-        while (name.endsWith("/")) {
-            name = name.substring(0, name.length - 1)
-        }
-        return name
+/**
+ * Normalise user-typed subreddit input for the post form: trim whitespace,
+ * lowercase, and strip any leading `/` and `r/` and trailing `/` so that
+ * `R/Kotlin/`, `r/Kotlin` and `Kotlin` all resolve to `kotlin`. Top-level so
+ * it can be unit-tested directly (see `PostSubmitViewModelTest`) without
+ * constructing the Hilt ViewModel.
+ */
+internal fun normalizeSubreddit(raw: String): String {
+    var name = raw.trim().lowercase()
+    while (name.startsWith("/")) {
+        name = name.substring(1)
     }
+    while (name.startsWith("r/")) {
+        name = name.substring(2)
+    }
+    while (name.endsWith("/")) {
+        name = name.substring(0, name.length - 1)
+    }
+    return name
 }

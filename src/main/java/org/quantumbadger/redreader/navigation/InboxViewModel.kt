@@ -199,7 +199,7 @@ class InboxViewModel @Inject constructor(
  * Map a raw inbox listing child (private message, comment reply, or post
  * reply) to the UI-facing [InboxViewModel.InboxItem].
  */
-private fun toInboxItem(thing: RedditThing): InboxViewModel.InboxItem? {
+internal fun toInboxItem(thing: RedditThing): InboxViewModel.InboxItem? {
     return when (thing) {
         is RedditThing.Message -> {
             val m = thing.data

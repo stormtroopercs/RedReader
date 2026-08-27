@@ -32,6 +32,9 @@ import org.quantumbadger.redreader.compose.activity.ComposeBaseActivity
 import org.quantumbadger.redreader.common.LinkHandler
 import org.quantumbadger.redreader.common.RunnableOnce
 import org.quantumbadger.redreader.common.UriString
+import org.quantumbadger.redreader.navigation.DeepLinkDestination
+import org.quantumbadger.redreader.navigation.DeepLinkExtras
+import org.quantumbadger.redreader.navigation.deepLinkDestination
 import org.quantumbadger.redreader.navigation.Accounts
 import org.quantumbadger.redreader.navigation.Album
 import org.quantumbadger.redreader.navigation.AppNavGraph
@@ -197,105 +200,10 @@ class MainActivityCompose : ComposeBaseActivity() {
      * Unknown routes fall back to the default main screen.
      */
     private fun deepLinkRoute(route: String) {
-        when (route) {
-            DEEP_LINK_INBOX -> navigationState.navigateTo(Main, Inbox)
-            DEEP_LINK_CHANGELOG -> navigationState.navigateTo(Settings, Changelog)
-            DEEP_LINK_SETTINGS -> navigationState.navigateTo(Settings)
-            DEEP_LINK_SEARCH -> navigationState.navigateTo(Main, SubredditSearch)
-            DEEP_LINK_ACCOUNTS -> navigationState.navigateTo(Main, Accounts)
-            DEEP_LINK_ALBUM -> {
-                val albumUrl = intent?.getStringExtra(EXTRA_ALBUM_URL)
-                if (albumUrl != null) {
-                    navigationState.navigateTo(Main, Album(albumUrl))
-                }
-            }
-            DEEP_LINK_IMAGE -> {
-                val imageUrl = intent?.getStringExtra(EXTRA_IMAGE_URL)
-                if (imageUrl != null) {
-                    val isGif = intent?.getBooleanExtra(EXTRA_IMAGE_GIF, false) ?: false
-                    val isVideo = intent?.getBooleanExtra(EXTRA_IMAGE_VIDEO, false) ?: false
-                    val albumUrl = intent?.getStringExtra(EXTRA_IMAGE_ALBUM_URL)
-                    val albumIndex = intent?.getIntExtra(EXTRA_IMAGE_ALBUM_INDEX, 0) ?: 0
-                    navigationState.navigateTo(
-                        Main,
-                        Image(imageUrl, isGif, isVideo, albumUrl, albumIndex)
-                    )
-                }
-            }
-            DEEP_LINK_COMMENT_REPLY -> {
-                val idAndType = intent?.getStringExtra(EXTRA_COMMENT_REPLY_ID_AND_TYPE)
-                if (idAndType != null) {
-                    // The raw id-and-type *is* the reply's parent thing id:
-                    // "t3_…" for a post, "t1_…" for a comment (both are the
-                    // full id RedditAPI.comment posts against).
-                    navigationState.navigateTo(Main, CommentReply(idAndType))
-                }
-            }
-            DEEP_LINK_TERMS -> {
-                navigationState.navigateTo(Settings, RedditTerms)
-            }
-            DEEP_LINK_POST_LISTING -> {
-                val subreddit = intent?.getStringExtra(EXTRA_POST_LISTING_SUBREDDIT)
-                if (subreddit != null) {
-                    val searchQuery = intent?.getStringExtra(EXTRA_POST_LISTING_SEARCH_QUERY)
-                    navigationState.navigateTo(Main, PostList(subreddit, searchQuery))
-                }
-            }
-            DEEP_LINK_COMMENT_LISTING -> {
-                val listingPath = intent?.getStringExtra(EXTRA_COMMENT_LISTING_POST_ID)
-                if (listingPath != null) {
-                    navigationState.navigateTo(Main, CommentList(listingPath))
-                }
-            }
-            DEEP_LINK_USER_PROFILE -> {
-                val username = intent?.getStringExtra(EXTRA_USER_PROFILE_USERNAME)
-                if (username != null) {
-                    navigationState.navigateTo(Main, UserProfile(username))
-                }
-            }
-            DEEP_LINK_POST_SUBMIT -> {
-                val subreddit = intent?.getStringExtra(EXTRA_POST_SUBMIT_SUBREDDIT)
-                if (subreddit != null) {
-                    val shareUrl = intent?.getStringExtra(EXTRA_POST_SUBMIT_SHARE_URL)
-                    navigationState.navigateTo(Main, PostSubmit(subreddit, shareUrl))
-                }
-            }
-            DEEP_LINK_COMMENT_EDIT -> {
-                val idAndType = intent?.getStringExtra(EXTRA_COMMENT_EDIT_ID_AND_TYPE)
-                if (idAndType != null) {
-                    val text = intent?.getStringExtra(EXTRA_COMMENT_EDIT_TEXT) ?: ""
-                    val isSelfPost = intent?.getBooleanExtra(EXTRA_COMMENT_EDIT_SELF_POST, false)
-                        ?: false
-                    navigationState.navigateTo(
-                        Main,
-                        CommentEdit(idAndType, text, isSelfPost)
-                    )
-                }
-            }
-            DEEP_LINK_PM_SEND -> {
-                navigationState.navigateTo(
-                    Main,
-                    PMSend(
-                        intent?.getStringExtra(EXTRA_PM_SEND_RECIPIENT),
-                        intent?.getStringExtra(EXTRA_PM_SEND_SUBJECT),
-                        intent?.getStringExtra(EXTRA_PM_SEND_TEXT)
-                    )
-                )
-            }
-            DEEP_LINK_BUG_REPORT -> navigationState.navigateTo(Settings, BugReport)
-            DEEP_LINK_HTML_VIEW -> {
-                val html = intent?.getStringExtra(EXTRA_HTML_VIEW_HTML)
-                val title = intent?.getStringExtra(EXTRA_HTML_VIEW_TITLE)
-                if (html != null) {
-                    navigationState.navigateTo(Main, HtmlView(html, title ?: ""))
-                }
-            }
-            DEEP_LINK_WEBVIEW -> {
-                val url = intent?.getStringExtra(EXTRA_WEBVIEW_URL)
-                if (url != null) {
-                    navigationState.navigateTo(Main, WebViewRoute(url))
-                }
-            }
+        val destination = deepLinkDestination(route, DeepLinkExtras.from(intent)) ?: return
+        when (destination) {
+            is DeepLinkDestination.Root -> navigationState.navigateTo(destination.root)
+            is DeepLinkDestination.Child -> navigationState.navigateTo(destination.root, destination.child)
         }
     }
 
