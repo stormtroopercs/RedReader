@@ -11,13 +11,14 @@ Work proceeds incrementally per legacy surface: port to Compose → re-point its
 ## UI design basis (2026-08-27)
 The app's look and feel now follows one reference, user-directed 2026-08-27: **mimic the
 reference app's UI completely**. The reference is a Material-3 / Material-You social-feed
-client (APK v24.03.26, versionCode 122), decomposed into a design dump at the **project
-root, outside this repo**: `../lemmy-sync/` (relative to this repo root).
-`../lemmy-sync/DESIGN.md` is the distilled, authoritative spec; `../lemmy-sync/extract/`
-holds the per-screen layout trees, resolved themes, dimens, and string inventories.
-Read DESIGN.md before touching any UI.
+client (APK v24.03.26, versionCode 122), decomposed into a design dump in a **sibling
+directory of this repo, at the project root** (not part of this git tree). The distilled,
+authoritative spec + the exact dump path live in **`../wiki/concepts/ui-design-basis.md`**
+(the local project wiki, outside this repo) — read it before touching any UI. That page
+links to the dump's `DESIGN.md` (17 sections) and its per-screen layout trees, resolved
+themes, dimens, and string inventories.
 
-Key points (full detail in `../lemmy-sync/DESIGN.md`):
+Key points (full detail in `../wiki/concepts/ui-design-basis.md`):
 - **Signature: the swipe feed** — full-screen one-post-per-screen pager (Compose
   `VerticalPager`), full-bleed media + gradient scrims, a top row (28dp circular avatar +
   community name + title), a scrollable selftext block, and a bottom action bar of six
@@ -40,14 +41,14 @@ Key points (full detail in `../lemmy-sync/DESIGN.md`):
   keeps its own user theme** (`compose/theme/ComposeTheme.kt`: user accent +
   Light / Dark / Night-LowContrast / UltraBlack + per-surface sub-themes). Mimic the
   structure, layout, and behaviour — not the reference's neutral palette.
-- **Do not replicate** the reference's monetization / ads / IAP / Firebase components
-  (DESIGN.md §11).
+- **Do not replicate** the reference's monetization / ads / IAP / Firebase components.
 
 **Naming rule (user directive):** the reference app's product name never appears in this
 repo's commit messages, source, or docs. In code and commits, refer to the patterns by
 component role (the swipe feed, the community pill, the card list, the fast scroller) and
-to the dump as "the design basis" / `../lemmy-sync/DESIGN.md`. The `lemmy-sync/` directory
-intentionally lives outside the `RedReader/` git tree and is never committed here.
+to the dump as "the design basis" / `../wiki/concepts/ui-design-basis.md`. The design-basis
+dump directory intentionally lives outside the `RedReader/` git tree and is never committed
+here.
 
 ## Tech Stack
 | Component | Version |
