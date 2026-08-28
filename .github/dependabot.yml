@@ -1,10 +1,10 @@
-# Dependabot configuration for RedReader.
+# Dependabot configuration for MaterialReader.
 #
 # Reference:
 #   https://docs.github.com/en/code-security/concepts/supply-chain-security/about-the-dependabot-yml-file
 #   https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference
 #
-# RedReader is an Android project (Gradle Kotlin DSL, single root
+# MaterialReader is an Android project (Gradle Kotlin DSL, single root
 # build.gradle.kts) with GitHub Actions CI, so the two ecosystems to monitor
 # are `gradle` (dependencies in the root manifest) and `github-actions`
 # (action versions in .github/workflows).

@@ -1,0 +1,161 @@
+/*******************************************************************************
+ * This file is part of MaterialReader.
+ *
+ * MaterialReader is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MaterialReader is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
+ ******************************************************************************/
+package com.stormtroopercs.materialreader.io
+
+import com.stormtroopercs.materialreader.common.UnexpectedInternalStateException
+import com.stormtroopercs.materialreader.common.time.TimestampUTC
+import com.stormtroopercs.materialreader.common.time.TimestampUTC.Companion.fromUtcMs
+import com.stormtroopercs.materialreader.io.WritableObject.WritableField
+import com.stormtroopercs.materialreader.io.WritableObject.WritableObjectKey
+import com.stormtroopercs.materialreader.io.WritableObject.WritableObjectTimestamp
+import com.stormtroopercs.materialreader.io.WritableObject.WritableObjectVersion
+
+class WritableHashSet : WritableObject<String>, Iterable<String> {
+    @Transient
+    private var hashSet: HashSet<String>? = null
+
+    @WritableField
+    private var serialised: String? = null
+
+    @WritableObjectKey
+    private val mKey: String
+
+    @WritableObjectTimestamp
+    private val mTimestamp: Long
+
+    constructor(
+        data: HashSet<String>,
+        timestamp: TimestampUTC,
+        key: String
+    ) {
+        this.hashSet = data
+        this.mTimestamp = timestamp.toUtcMs()
+        this.mKey = key
+        serialised = Companion.listToEscapedString(hashSet!!)
+    }
+
+    private constructor(serializedData: String, timestamp: Long, key: String) {
+        this.mTimestamp = timestamp
+        this.mKey = key
+        serialised = serializedData
+    }
+
+    constructor(creationData: WritableObject.CreationData) {
+        this.mTimestamp = creationData.timestamp
+        this.mKey = creationData.key
+    }
+
+    override fun toString(): String {
+        throw UnexpectedInternalStateException(
+            "Using toString() is the wrong way to serialise a WritableHashSet"
+        )
+    }
+
+    fun serializeWithMetadata(): String {
+        val result = ArrayList<String>(3)
+        result.add(serialised!!)
+        result.add(mTimestamp.toString())
+        result.add(mKey)
+        return Companion.listToEscapedString(result)
+    }
+
+    @Synchronized
+    fun toHashset(): HashSet<String> {
+        if (hashSet != null) {
+            return hashSet!!
+        }
+        return (HashSet<String>(Companion.escapedStringToList(serialised)).also { hashSet = it })
+    }
+
+    override val key: String get() = mKey
+
+    override val timestamp: TimestampUTC get() = fromUtcMs(mTimestamp)
+
+    override fun iterator(): MutableIterator<String> {
+        return toHashset().iterator()
+    }
+
+    companion object {
+        @WritableObjectVersion
+        @Suppress("PropertyName")
+        var DB_VERSION: Int = 1
+
+        fun unserializeWithMetadata(raw: String?): WritableHashSet {
+            val data: ArrayList<String> = escapedStringToList(raw)
+            return WritableHashSet(data.get(0), data.get(1).toLong(), data.get(2))
+        }
+
+        fun listToEscapedString(list: MutableCollection<String>): String {
+            if (list.isEmpty()) {
+                return ""
+            }
+
+            val sb = StringBuilder()
+
+            for (str in list) {
+                for (i in 0..<str.length) {
+                    val c = str.get(i)
+
+                    when (c) {
+                        '\\' -> sb.append("\\\\")
+                        ';' -> sb.append("\\;")
+                        else -> sb.append(c)
+                    }
+                }
+
+                sb.append(';')
+            }
+
+            return sb.toString()
+        }
+
+        fun escapedStringToList(str: String?): ArrayList<String> {
+            var str = str
+            val result = ArrayList<String>()
+
+            if (str != null) {
+                // Workaround to improve parsing of lists saved by older versions of the app
+
+                if (!str.isEmpty() && !str.endsWith(";")) {
+                    str += ";"
+                }
+
+                var isEscaped = false
+                val sb = StringBuilder()
+
+                for (i in 0..<str.length) {
+                    val c = str.get(i)
+
+                    if (c == ';' && !isEscaped) {
+                        result.add(sb.toString())
+                        sb.setLength(0)
+                    } else if (c == '\\') {
+                        if (isEscaped) {
+                            sb.append('\\')
+                        }
+                    } else {
+                        sb.append(c)
+                    }
+
+                    isEscaped = c == '\\' && !isEscaped
+                }
+            }
+
+            return result
+        }
+    }
+}

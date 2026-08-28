@@ -236,7 +236,7 @@
     <string name="general_success">성공</string>
     <string name="message_nowloggedin">이제 로그인 되었습니다.</string>
     <string name="message_cannotlogin">로그인할 수 없습니다.</string>
-    <string name="upgrade_v190_login_message">RedReader가 업그레이드되어 이제 Reddit 인증에 OAuth를 사용합니다. 업그레이드 전에 계정에 로그인한 상태였다면 현재 로그아웃된 상태입니다.</string>
+    <string name="upgrade_v190_login_message">MaterialReader가 업그레이드되어 이제 Reddit 인증에 OAuth를 사용합니다. 업그레이드 전에 계정에 로그인한 상태였다면 현재 로그아웃된 상태입니다.</string>
     <string name="error_too_fast_message">레딧에서 제출이 너무 빠르다고 합니다. 몇 분 정도 기다렸다가 다시 시도하세요.</string>
     <string name="error_too_fast_title">너무 빠름</string>
     <string name="sort_blocked_subreddit_name">이름 기준</string>
@@ -345,12 +345,12 @@
     <string name="video_zoom_in">확대</string>
     <string name="video_zoom_out">축소</string>
     <string name="backup_preferences_error_old_android_title">오래된 버전의 운영체제</string>
-    <string name="restore_preferences_error_version_warning_message">선택된 파일은 상위버전의 RedReader에서 만들어졌습니다. 이 파일에서 설정을 복구하면 앱이 불안정해지거나 강제종료될 수 있습니다.</string>
+    <string name="restore_preferences_error_version_warning_message">선택된 파일은 상위버전의 MaterialReader에서 만들어졌습니다. 이 파일에서 설정을 복구하면 앱이 불안정해지거나 강제종료될 수 있습니다.</string>
     <string name="backup_preferences_success">백업 성공</string>
     <string name="restore_preferences_success">복구 성공</string>
     <string name="restore_preferences_error_invalid_file_title">잘못된 파일</string>
     <string name="restore_preferences_error_invalid_file_contents_message">선택된 파일은 올바른 백업파일이 아닙니다.</string>
-    <string name="restore_preferences_error_invalid_file_version_message">선택된 파일은 상위버전의 RedReader에서 만들어졌고, 열 수 없습니다.</string>
+    <string name="restore_preferences_error_invalid_file_version_message">선택된 파일은 상위버전의 MaterialReader에서 만들어졌고, 열 수 없습니다.</string>
     <string name="restore_preferences_error_version_warning_title">경고</string>
     <string name="button_continue_anyway">무시하고 계속</string>
     <string name="button_cancel">취소</string>

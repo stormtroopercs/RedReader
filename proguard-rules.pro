@@ -1,17 +1,17 @@
 -dontobfuscate
 -keepattributes LineNumberTable,SourceFile,RuntimeVisibleAnnotations,AnnotationDefault,InnerClasses,EnclosingMethod
 
--keepclassmembers class * extends org.quantumbadger.redreader.io.WritableObject {
+-keepclassmembers class * extends com.stormtroopercs.materialreader.io.WritableObject {
 	*;
 }
 
--keepclassmembers class * extends org.quantumbadger.redreader.jsonwrap.JsonObject$JsonDeserializable {
+-keepclassmembers class * extends com.stormtroopercs.materialreader.jsonwrap.JsonObject$JsonDeserializable {
 	*;
 }
 
--keepclassmembers class org.quantumbadger.redreader.R { *; }
--keepclassmembers class org.quantumbadger.redreader.R$xml {	*; }
--keepclassmembers class org.quantumbadger.redreader.R$string {	*; }
+-keepclassmembers class com.stormtroopercs.materialreader.R { *; }
+-keepclassmembers class com.stormtroopercs.materialreader.R$xml {	*; }
+-keepclassmembers class com.stormtroopercs.materialreader.R$string {	*; }
 
 -keepclassmembers class com.github.luben.zstd.* {
 	*;

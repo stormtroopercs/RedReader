@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ This file is part of RedReader.
+  ~ This file is part of MaterialReader.
   ~
-  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ MaterialReader is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
-  ~ RedReader is distributed in the hope that it will be useful,
+  ~ MaterialReader is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
   --><!--
     Danish translation. Some english words preserved, since we don't have a proper translation for it, and given the
     userbase a translation would properly just get people confused.
@@ -259,7 +259,7 @@
     <string name="pref_behaviour_view_mode_external_browser">Ekstern browser</string>
     <string name="action_delete">Slet</string>
     <string name="selected_link_is_not_image">Det valgte link er ikke et billede.</string>
-    <string name="upgrade_v190_login_message">RedReader er blevet opgraderet og bruger nu OAuth til reddit login. Hvis du var logget ind som en bruger før denne opgradering, er du nu logget ud.</string>
+    <string name="upgrade_v190_login_message">MaterialReader er blevet opgraderet og bruger nu OAuth til reddit login. Hvis du var logget ind som en bruger før denne opgradering, er du nu logget ud.</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">Intern videoafspiller (foreslået)</string>
     <string name="pref_behaviour_videoview_mode_external_app_vlc">Ekstern App: VLC</string>
     <string name="error_url_required_title">URL påkrævet</string>

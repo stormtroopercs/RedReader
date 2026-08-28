@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ This file is part of RedReader.
+  ~ This file is part of MaterialReader.
   ~
-  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ MaterialReader is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
-  ~ RedReader is distributed in the hope that it will be useful,
+  ~ MaterialReader is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
   --><resources>
     <string name="firstrun_login_title">Hasi saioa</string>
     <string name="firstrun_login_button_now">Hasi saioa orain</string>
@@ -181,7 +181,7 @@
     <string name="pref_behaviour_view_mode_external_browser">Kanpoko nabigatzailea</string>
     <string name="action_delete">Ezabatu</string>
     <string name="selected_link_is_not_image">Hautatutako esteka ez da irudi bat.</string>
-    <string name="upgrade_v190_login_message">RedReader eguneratu egin da, eta orain OAuth erabiltzen du Reddit autentifikatzeko. Kontu batean bazeuden eguneraketa baino lehen, saioa itxi zaizu.</string>
+    <string name="upgrade_v190_login_message">MaterialReader eguneratu egin da, eta orain OAuth erabiltzen du Reddit autentifikatzeko. Kontu batean bazeuden eguneraketa baino lehen, saioa itxi zaizu.</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">Barneko bideo ikustailea (gomendatua)</string>
     <string name="error_url_required_title">URLa beharrezkoa da</string>
     <string name="props_image_title">Irudiaren informazioa</string>
@@ -377,9 +377,9 @@
     <string name="backup_preferences_success">Babeskopia ondo joan da</string>
     <string name="button_cancel">Ezeztatu</string>
     <string name="button_continue_anyway">Jarraitu</string>
-    <string name="restore_preferences_error_version_warning_message">Hautatutako fitxategia RedReader bertsio berriago batean sortua izan da. Fitxategi honetatik hobespenak leheneratzeak hutsegite eta ezegonkortasunak sortu ditzake.</string>
+    <string name="restore_preferences_error_version_warning_message">Hautatutako fitxategia MaterialReader bertsio berriago batean sortua izan da. Fitxategi honetatik hobespenak leheneratzeak hutsegite eta ezegonkortasunak sortu ditzake.</string>
     <string name="restore_preferences_error_version_warning_title">Oharra</string>
-    <string name="restore_preferences_error_invalid_file_version_message">Hautatutako fitxategia RedReader bertsio berriago batek sortua izan da eta ezin da ireki.</string>
+    <string name="restore_preferences_error_invalid_file_version_message">Hautatutako fitxategia MaterialReader bertsio berriago batek sortua izan da eta ezin da ireki.</string>
     <string name="restore_preferences_error_invalid_file_contents_message">Hautatutako fitxategia ez da baliozko hobespen babeskopia fitxategi bat.</string>
     <string name="restore_preferences_error_invalid_file_title">Fitxategi baliogabea</string>
     <string name="sort_posts_controversial_month">Eztabaidagarria: Hilabete honetan</string>

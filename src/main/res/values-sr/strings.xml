@@ -195,7 +195,7 @@
     <string name="pref_behaviour_view_mode_external_browser">Спољни прегледач</string>
     <string name="action_delete">Обриши</string>
     <string name="selected_link_is_not_image">Изабрана веза није слика.</string>
-    <string name="upgrade_v190_login_message">RedReader је ажуриран и сада користи OAuth за Редит потврду идентитета. Ако сте били пријављени на налог пре ажурирања, сада сте одјављени.</string>
+    <string name="upgrade_v190_login_message">MaterialReader је ажуриран и сада користи OAuth за Редит потврду идентитета. Ако сте били пријављени на налог пре ажурирања, сада сте одјављени.</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">Унутрашњи видео прегледач (препоручено)</string>
     <string name="pref_behaviour_videoview_mode_external_app_vlc">Спољни програм: VLC</string>
     <string name="error_url_required_title">Адреса је обавезна</string>
@@ -347,9 +347,9 @@
     <string name="video_zoom_out">Умањи</string>
     <string name="restore_preferences_error_invalid_file_title">Неисправна датотека</string>
     <string name="restore_preferences_error_invalid_file_contents_message">Изабрана датотека није исправна резервна копија подешавања.</string>
-    <string name="restore_preferences_error_invalid_file_version_message">Изабрана датотека је направљена новијом верзијом RedReader-а и не може се отворити.</string>
+    <string name="restore_preferences_error_invalid_file_version_message">Изабрана датотека је направљена новијом верзијом MaterialReader-а и не може се отворити.</string>
     <string name="restore_preferences_error_version_warning_title">Упозорење</string>
-    <string name="restore_preferences_error_version_warning_message">Изабрана датотека је направљена новијом верзијом RedReader-а. Враћање подешавања из ове датотеке може довести до рушења и нестабилности.</string>
+    <string name="restore_preferences_error_version_warning_message">Изабрана датотека је направљена новијом верзијом MaterialReader-а. Враћање подешавања из ове датотеке може довести до рушења и нестабилности.</string>
     <string name="button_continue_anyway">Ипак настави</string>
     <string name="button_cancel">Откажи</string>
     <string name="backup_preferences_success">Резервна копија је успешно направљена</string>

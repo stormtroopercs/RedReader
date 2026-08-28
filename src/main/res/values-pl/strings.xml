@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ This file is part of RedReader.
+  ~ This file is part of MaterialReader.
   ~
-  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ MaterialReader is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
-  ~ RedReader is distributed in the hope that it will be useful,
+  ~ MaterialReader is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
   --><resources>
     <!-- First Run Dialog -->
     <string name="firstrun_login_title">Zaloguj się</string>
@@ -274,7 +274,7 @@
     <string name="selected_link_is_not_image">Wybrany odsyłacz nie jest obrazem.</string>
     <!-- 2015-10-03 -->
     <!-- 2015-10-04 -->
-    <string name="upgrade_v190_login_message">RedReader został zaktualizowany i używa teraz OAuth do uwierzytelniania Reddita. Jeżeli byłeś zalogowany na konto przed aktualizacją, jesteś teraz wylogowany.</string>
+    <string name="upgrade_v190_login_message">MaterialReader został zaktualizowany i używa teraz OAuth do uwierzytelniania Reddita. Jeżeli byłeś zalogowany na konto przed aktualizacją, jesteś teraz wylogowany.</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">Wewnętrzny VideoView (zalecane)</string>
     <string name="pref_behaviour_videoview_mode_external_app_vlc">Zewnętrzna aplikacja: VLC</string>
     <!-- 2015-10-05 -->
@@ -413,8 +413,8 @@
     <string name="error_content_blocker_message">Bieżąca sieć wydaje się blokować to żądanie za pomocą DNS. Rozważ użycie VPN, lub włączenie DNS over HTTPS w ustawieniach sieci Android.</string>
     <string name="error_content_blocker_title">Wykryto blokadę treści</string>
     <string name="error_no_file_manager_message">W systemie operacyjnym na tym urządzeniu brakuje menedżera plików zgodnego z Android Storage Access Framework. Jeśli menedżer plików jest obecny, może być wyłączony.</string>
-    <string name="restore_preferences_error_version_warning_message">Wybrany plik został utworzony przez nowszą wersję RedReadera. Przywrócenie preferencji z tego pliku może prowadzić do awarii i niestabilności.</string>
-    <string name="restore_preferences_error_invalid_file_version_message">Wybrany plik został utworzony przez nowszą wersję RedReadera i nie może zostać otwarty.</string>
+    <string name="restore_preferences_error_version_warning_message">Wybrany plik został utworzony przez nowszą wersję MaterialReadera. Przywrócenie preferencji z tego pliku może prowadzić do awarii i niestabilności.</string>
+    <string name="restore_preferences_error_invalid_file_version_message">Wybrany plik został utworzony przez nowszą wersję MaterialReadera i nie może zostać otwarty.</string>
     <string name="restore_preferences_error_invalid_file_contents_message">Wybrany plik nie jest prawidłowym plikiem preferencji kopii zapasowej.</string>
     <string name="imageview_image_info_failed">Nie można pobrać metadanych obrazu. Spróbuję w przeglądarce.</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Filmy Reddit</string>

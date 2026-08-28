@@ -1,0 +1,34 @@
+/*******************************************************************************
+ * This file is part of MaterialReader.
+ *
+ * MaterialReader is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * MaterialReader is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
+ ******************************************************************************/
+package com.stormtroopercs.materialreader.views.video
+
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
+import com.stormtroopercs.materialreader.common.GenericFactory
+import com.stormtroopercs.materialreader.common.datastream.SeekableInputStream
+import java.io.IOException
+
+@OptIn(UnstableApi::class)
+class ExoPlayerSeekableInputStreamDataSourceFactory(
+    private val mIsNetwork: Boolean,
+    private val mStreamFactory: GenericFactory<SeekableInputStream, IOException>
+) : DataSource.Factory {
+    override fun createDataSource(): DataSource {
+        return ExoPlayerSeekableInputStreamDataSource(mIsNetwork, mStreamFactory)
+    }
+}

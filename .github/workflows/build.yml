@@ -43,8 +43,8 @@ jobs:
             -   name: Upload artifact to GitHub
                 uses: actions/upload-artifact@v4
                 with:
-                    name: RedReader-debug.apk
-                    path: build/outputs/apk/debug/RedReader-debug.apk
+                    name: MaterialReader-debug.apk
+                    path: build/outputs/apk/debug/MaterialReader-debug.apk
 
             -   name: Run PMD
                 run: ./gradlew pmd

@@ -138,7 +138,7 @@ jobs:
             -   name: Rename APK for release
                 if: steps.ver.outputs.changed == 'true'
                 run: |
-                    mv build/outputs/apk/release/RedReader-release.apk \
+                    mv build/outputs/apk/release/MaterialReader-release.apk \
                        "MaterialReader-${{ steps.ver.outputs.versionName }}.apk"
 
             -   name: Publish GitHub Release

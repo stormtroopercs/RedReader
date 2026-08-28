@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ This file is part of RedReader.
+  ~ This file is part of MaterialReader.
   ~
-  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ MaterialReader is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
-  ~ RedReader is distributed in the hope that it will be useful,
+  ~ MaterialReader is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
   --><resources>
     <string name="accounts_anon">Anônimo</string>
     <string name="accounts_active">Ativo</string>
@@ -149,7 +149,7 @@
     <string name="userprofile_moderator">É moderador</string>
     <string name="userprofile_isgold">Reddit Gold</string>
     <string name="userprofile_isfriend">É Amigo</string>
-    <string name="upgrade_v190_login_message">RedReader atualizou, e agora usa oAuth para a autenticação com o reddit. Se você tiver feito login em uma conta antes da atualização, você será desconectado.</string>
+    <string name="upgrade_v190_login_message">MaterialReader atualizou, e agora usa oAuth para a autenticação com o reddit. Se você tiver feito login em uma conta antes da atualização, você será desconectado.</string>
     <string name="unblock_done">Subreddit desbloqueado. Visitas futuras ao /r/all irão incluir este subreddit.</string>
     <string name="theme_name_red">Vermelho</string>
     <string name="theme_name_ultrablack">Ultra Preto</string>
@@ -367,9 +367,9 @@
     <string name="video_zoom_out">Diminuir</string>
     <string name="restore_preferences_error_invalid_file_title">Ficheiro inválido</string>
     <string name="restore_preferences_error_invalid_file_contents_message">O ficheiro selecionado não é um ficheiro de preferências de backup válido.</string>
-    <string name="restore_preferences_error_invalid_file_version_message">O ficheiro selecionado foi criado por uma versão mais nova do RedReader e não pode ser aberto.</string>
+    <string name="restore_preferences_error_invalid_file_version_message">O ficheiro selecionado foi criado por uma versão mais nova do MaterialReader e não pode ser aberto.</string>
     <string name="restore_preferences_error_version_warning_title">Aviso</string>
-    <string name="restore_preferences_error_version_warning_message">O ficheiro selecionado foi criado por uma versão mais nova do RedReader. Restaurar as preferências por este ficheiro pode causar falhas e instabilidade.</string>
+    <string name="restore_preferences_error_version_warning_message">O ficheiro selecionado foi criado por uma versão mais nova do MaterialReader. Restaurar as preferências por este ficheiro pode causar falhas e instabilidade.</string>
     <string name="button_continue_anyway">Continuar mesmo assim</string>
     <string name="button_cancel">Cancelar</string>
     <string name="backup_preferences_success">Backup concluído</string>

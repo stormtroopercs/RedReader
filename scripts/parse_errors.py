@@ -11,7 +11,7 @@ for line in log.splitlines():
     if not m:
         continue
     f, ln, col, msg = m.groups()
-    short = f.split("org/quantumbadger/redreader/")[-1] if "org/quantumbadger/redreader/" in f else f
+    short = f.split("com/stormtroopercs/materialreader/")[-1] if "com/stormtroopercs/materialreader/" in f else f
     per_file[short] += 1
     file_errors[short].append((int(ln), msg))
 
