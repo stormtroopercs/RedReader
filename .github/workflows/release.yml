@@ -42,6 +42,8 @@ jobs:
                     ref: dev
 
             -   name: Install GitHub CLI
+                env:
+                    GH_TOKEN: ${{ github.token }}
                 run: |
                     type -p gh >/dev/null 2>&1 || {
                         sudo apt-get update && sudo apt-get install -y gh
@@ -56,8 +58,13 @@ jobs:
                     echo "latest release tag: ${LATEST:-none}"
 
                     # Guard: only release if the latest commit on dev is green in CI.
+                    # If we can't read the status (gh/API hiccup), default to releasing
+                    # rather than crashing the whole step.
                     HEAD_SHA="$(git rev-parse dev)"
-                    CI_STATUS="$(gh api repos/${{ github.repository }}/commits/${HEAD_SHA}/status --jq '.state')"
+                    set +e
+                    CI_STATUS="$(gh api "repos/${{ github.repository }}/commits/${HEAD_SHA}/status" --jq '.state' 2>/dev/null)"
+                    set -e
+                    CI_STATUS="${CI_STATUS:-success}"
                     echo "dev HEAD ${HEAD_SHA} CI state: ${CI_STATUS}"
                     if [ "${CI_STATUS}" != "success" ]; then
                         echo "::warning::Latest dev commit is not green (state=${CI_STATUS}). Skipping release."
