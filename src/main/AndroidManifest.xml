@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ This file is part of RedReader.
+  ~ This file is part of MaterialReader.
   ~
-  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ MaterialReader is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
-  ~ RedReader is distributed in the hope that it will be useful,
+  ~ MaterialReader is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <manifest
@@ -37,7 +37,7 @@
 		</intent>
 	</queries>
 
-    <application android:name="org.quantumbadger.redreader.RedReader"
+    <application android:name="com.stormtroopercs.materialreader.MaterialReader"
                  android:icon="@mipmap/icon"
                  android:label="@string/app_name"
                  android:theme="@style/RR.Startup"
@@ -168,8 +168,8 @@
         <meta-data android:name="com.sec.android.multiwindow.MINIMUM_SIZE_H" android:resource="@dimen/app_minimumsize_h" />
 
 		<provider
-				android:name="org.quantumbadger.redreader.cache.CacheContentProvider"
-				android:authorities="org.quantumbadger.redreader.cacheprovider"
+				android:name="com.stormtroopercs.materialreader.cache.CacheContentProvider"
+				android:authorities="com.stormtroopercs.materialreader.cacheprovider"
 				android:exported="false"
 				android:grantUriPermissions="true" />
     </application>

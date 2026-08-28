@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ This file is part of RedReader.
+  ~ This file is part of MaterialReader.
   ~
-  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ MaterialReader is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
-  ~ RedReader is distributed in the hope that it will be useful,
+  ~ MaterialReader is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
   --><resources>
     <!-- First Run Dialog -->
     <string name="firstrun_login_title">Logga in</string>
@@ -279,7 +279,7 @@
     <string name="selected_link_is_not_image">Den valda länken är inte en bild.</string>
     <!-- 2015-10-03 -->
     <!-- 2015-10-04 -->
-    <string name="upgrade_v190_login_message">RedReader har uppgraderats, och använder nu OAuth för Reddit-autentisering. Om du var inloggad på ett konto innan uppgraderingen så har du nu loggats ut.</string>
+    <string name="upgrade_v190_login_message">MaterialReader har uppgraderats, och använder nu OAuth för Reddit-autentisering. Om du var inloggad på ett konto innan uppgraderingen så har du nu loggats ut.</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">Intern VideoView (rekommenderas)</string>
     <string name="pref_behaviour_videoview_mode_external_app_vlc">Extern app: VLC</string>
     <!-- 2015-10-05 -->
@@ -385,8 +385,8 @@
     <string name="restore_preferences_error_invalid_file_title">Ogiltig fil</string>
     <string name="restore_preferences_error_invalid_file_contents_message">Den valda filen är inte en giltig säkerhetskopia.</string>
     <string name="restore_preferences_error_version_warning_title">Varning</string>
-    <string name="restore_preferences_error_invalid_file_version_message">Den valda filen skapades med en nyare version av RedReader och kan inte öppnas.</string>
-    <string name="restore_preferences_error_version_warning_message">Den valda filen skapades med en nyare version av RedReader. Återställning av inställningar från denna fil kan leda till krascher och instabilitet.</string>
+    <string name="restore_preferences_error_invalid_file_version_message">Den valda filen skapades med en nyare version av MaterialReader och kan inte öppnas.</string>
+    <string name="restore_preferences_error_version_warning_message">Den valda filen skapades med en nyare version av MaterialReader. Återställning av inställningar från denna fil kan leda till krascher och instabilitet.</string>
     <string name="backup_preferences_success">Säkerhetskopieringen lyckades</string>
     <string name="restore_preferences_success">Återställningen lyckades</string>
     <string name="image_gallery">Galleri</string>

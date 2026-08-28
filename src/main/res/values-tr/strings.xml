@@ -217,7 +217,7 @@
     <string name="error_upload_fail_imgur_title">Yükleme başarısız</string>
     <string name="pref_behaviour_view_mode_internal_browser">Dahili tarayıcı</string>
     <string name="selected_link_is_not_image">Seçilen bağlantı bir resim değil.</string>
-    <string name="upgrade_v190_login_message">RedReader yükseltildi ve artık Reddit kimlik doğrulaması için OAuth kullanıyor. Yükseltmeden önce bir hesapta oturum açtıysanız, artık oturumu kapatmış durumdasınız.</string>
+    <string name="upgrade_v190_login_message">MaterialReader yükseltildi ve artık Reddit kimlik doğrulaması için OAuth kullanıyor. Yükseltmeden önce bir hesapta oturum açtıysanız, artık oturumu kapatmış durumdasınız.</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">Dahili VideoView (önerilir)</string>
     <string name="error_url_required_message">Bir URL belirtmelisiniz.</string>
     <string name="block_subreddit">Subreddit\'i Engelle</string>
@@ -370,8 +370,8 @@
     <string name="pref_accessibility_min_comment_height_none">Hiçbiri</string>
     <string name="mainmenu_sent_messages">Gönderilen Mesajlar</string>
     <string name="restore_preferences_error_invalid_file_contents_message">Seçilen dosya, geçerli bir tercih yedekleme dosyası değil.</string>
-    <string name="restore_preferences_error_invalid_file_version_message">Seçilen dosya RedReader\'ın daha yeni bir sürümü tarafından oluşturuldu ve açılamıyor.</string>
-    <string name="restore_preferences_error_version_warning_message">Seçilen dosya RedReader\'ın daha yeni bir sürümü tarafından oluşturuldu. Tercihlerin bu dosyadan geri yüklenmesi çökmelere ve kararsızlığa yol açabilir.</string>
+    <string name="restore_preferences_error_invalid_file_version_message">Seçilen dosya MaterialReader\'ın daha yeni bir sürümü tarafından oluşturuldu ve açılamıyor.</string>
+    <string name="restore_preferences_error_version_warning_message">Seçilen dosya MaterialReader\'ın daha yeni bir sürümü tarafından oluşturuldu. Tercihlerin bu dosyadan geri yüklenmesi çökmelere ve kararsızlığa yol açabilir.</string>
     <string name="button_continue_anyway">Her halükarda devam et</string>
     <string name="error_imgur_400_title">Imgur hatası</string>
     <string name="error_content_blocker_title">İçerik engelleyici algılandı</string>

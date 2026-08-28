@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ This file is part of RedReader.
+  ~ This file is part of MaterialReader.
   ~
-  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ MaterialReader is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
-  ~ RedReader is distributed in the hope that it will be useful,
+  ~ MaterialReader is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
   --><resources>
     <string name="firstrun_login_title">Войти</string>
     <string name="firstrun_login_button_now">Войти</string>
@@ -214,7 +214,7 @@
     <string name="pref_behaviour_view_mode_external_browser">Внешний браузер</string>
     <string name="action_delete">Удалить</string>
     <string name="selected_link_is_not_image">Выбранная ссылка не является изображением.</string>
-    <string name="upgrade_v190_login_message">RedReader обновился и теперь использует OAuth для входа на reddit. Вам придется снова войти в учетную запись, если вы входили до этого обновления.</string>
+    <string name="upgrade_v190_login_message">MaterialReader обновился и теперь использует OAuth для входа на reddit. Вам придется снова войти в учетную запись, если вы входили до этого обновления.</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">Встроенный VideoView (рекомендуется)</string>
     <string name="pref_behaviour_videoview_mode_external_app_vlc">Внешнее приложение: VLC</string>
     <string name="error_url_required_title">Необходим URL</string>

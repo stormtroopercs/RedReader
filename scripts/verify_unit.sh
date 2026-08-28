@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /opt/data/redreader-project/RedReader
+cd /opt/data/redreader-project/MaterialReader
 export JAVA_HOME=/opt/data/tools/jdk-17.0.17+10
 ./gradlew compileDebugKotlin --no-daemon > /tmp/compile.log 2>&1
 echo "EXIT=$?"
@@ -11,4 +11,4 @@ for f in $(git diff --name-only); do
 done
 echo '(none above = unit clean)'
 echo '=== top 10 files overall ==='
-grep '^e:' /tmp/compile.log | sed 's|.*org/quantumbadger/redreader/||; s|\.kt:.*||' | sort | uniq -c | sort -rn | head -10
+grep '^e:' /tmp/compile.log | sed 's|.*com/stormtroopercs/materialreader/||; s|\.kt:.*||' | sort | uniq -c | sort -rn | head -10

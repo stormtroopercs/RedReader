@@ -195,7 +195,7 @@
     <string name="pref_behaviour_view_mode_external_browser">Navegador extern</string>
     <string name="action_delete">Esborrar</string>
     <string name="selected_link_is_not_image">L\'enllaç seleccionat no és una imatge.</string>
-    <string name="upgrade_v190_login_message">El RedReader s\'ha actualitzat, i ara fa servir OAuth per l\'autenticació amb Reddit. Si havies iniciat sessió abans de l\'actualització, s\'ha tancat la teva sessió.</string>
+    <string name="upgrade_v190_login_message">El MaterialReader s\'ha actualitzat, i ara fa servir OAuth per l\'autenticació amb Reddit. Si havies iniciat sessió abans de l\'actualització, s\'ha tancat la teva sessió.</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">VideoView Intern (recomanat)</string>
     <string name="pref_behaviour_videoview_mode_external_app_vlc">Aplicació Externa: VLC</string>
     <string name="error_url_required_title">Es requereix un URL</string>
@@ -347,9 +347,9 @@
     <string name="video_zoom_out">Allunya</string>
     <string name="restore_preferences_error_invalid_file_title">Fitxer invàlid</string>
     <string name="restore_preferences_error_invalid_file_contents_message">El fitxer seleccionat no és una còpia de seguretat de preferències vàlida.</string>
-    <string name="restore_preferences_error_invalid_file_version_message">El fitxer seleccionat prové d\'una versió de RedReader més recent a la instal·lada i no es pot obrir.</string>
+    <string name="restore_preferences_error_invalid_file_version_message">El fitxer seleccionat prové d\'una versió de MaterialReader més recent a la instal·lada i no es pot obrir.</string>
     <string name="restore_preferences_error_version_warning_title">Advertència</string>
-    <string name="restore_preferences_error_version_warning_message">El fitxer seleccionat prové d\'una versió de RedReader més recent a la instal·lada. Importar-lo podria causar que l\'aplicació deixés de funcionar correctament.</string>
+    <string name="restore_preferences_error_version_warning_message">El fitxer seleccionat prové d\'una versió de MaterialReader més recent a la instal·lada. Importar-lo podria causar que l\'aplicació deixés de funcionar correctament.</string>
     <string name="button_continue_anyway">Continuar amb l\'operació</string>
     <string name="button_cancel">Cancel·la</string>
     <string name="backup_preferences_success">Còpia realitzada amb èxit</string>

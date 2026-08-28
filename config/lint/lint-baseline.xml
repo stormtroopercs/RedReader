@@ -7,7 +7,7 @@
         errorLine1="        rrCommentBodyCol = attr.getColor(1, 0)"
         errorLine2="                                         ~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/PropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/PropertiesDialog.kt"
             line="69"
             column="42"/>
     </issue>
@@ -18,7 +18,7 @@
         errorLine1="        rrCommentHeaderAuthorCol = appearance.getColor(1, 255)"
         errorLine2="                                                       ~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="66"
             column="56"/>
     </issue>
@@ -29,7 +29,7 @@
         errorLine1="        rrPostSubtitleUpvoteCol = appearance.getColor(2, 255)"
         errorLine2="                                                      ~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="67"
             column="55"/>
     </issue>
@@ -40,7 +40,7 @@
         errorLine1="        rrPostSubtitleDownvoteCol = appearance.getColor(3, 255)"
         errorLine2="                                                        ~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="68"
             column="57"/>
     </issue>
@@ -51,7 +51,7 @@
         errorLine1="        rrFlairBackCol = appearance.getColor(4, 0)"
         errorLine2="                                             ~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="69"
             column="46"/>
     </issue>
@@ -62,7 +62,7 @@
         errorLine1="        rrFlairTextCol = appearance.getColor(5, 255)"
         errorLine2="                                             ~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="70"
             column="46"/>
     </issue>
@@ -73,7 +73,7 @@
         errorLine1="        rrGoldBackCol = appearance.getColor(6, 0)"
         errorLine2="                                            ~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="71"
             column="45"/>
     </issue>
@@ -84,7 +84,7 @@
         errorLine1="        rrGoldTextCol = appearance.getColor(7, 255)"
         errorLine2="                                            ~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="72"
             column="45"/>
     </issue>
@@ -95,7 +95,7 @@
         errorLine1="        rrCommentHeaderCol = appearance.getColor(8, 255)"
         errorLine2="                                                 ~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="73"
             column="50"/>
     </issue>
@@ -106,7 +106,7 @@
         errorLine1="        rrCommentBodyCol = appearance.getColor(9, 255)"
         errorLine2="                                               ~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="74"
             column="48"/>
     </issue>
@@ -117,7 +117,7 @@
         errorLine1="        rrMainTextCol = appearance.getColor(10, 255)"
         errorLine2="                                            ~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="75"
             column="45"/>
     </issue>
@@ -128,7 +128,7 @@
         errorLine1="        colorAccent = appearance.getColor(11, 255)"
         errorLine2="                                          ~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="76"
             column="43"/>
     </issue>
@@ -139,7 +139,7 @@
         errorLine1="        rrCrosspostBackCol = appearance.getColor(12, 255)"
         errorLine2="                                                 ~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="77"
             column="50"/>
     </issue>
@@ -150,7 +150,7 @@
         errorLine1="        rrCrosspostTextCol = appearance.getColor(13, 255)"
         errorLine2="                                                 ~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="78"
             column="50"/>
     </issue>
@@ -161,7 +161,7 @@
         errorLine1="        score >= 1_000_000 -> String.format(&quot;%.1fM&quot;, score / 1_000_000.0)"
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/CommentListScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/CommentListScreen.kt"
             line="539"
             column="31"/>
     </issue>
@@ -172,7 +172,7 @@
         errorLine1="        score >= 1_000 -> String.format(&quot;%.1fK&quot;, score / 1_000.0)"
         errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/CommentListScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/CommentListScreen.kt"
             line="540"
             column="27"/>
     </issue>
@@ -183,7 +183,7 @@
         errorLine1="        score >= 1_000_000 -> String.format(&quot;%.1fM&quot;, score / 1_000_000.0)"
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/PostListScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/PostListScreen.kt"
             line="617"
             column="31"/>
     </issue>
@@ -194,7 +194,7 @@
         errorLine1="        score >= 1_000 -> String.format(&quot;%.1fK&quot;, score / 1_000.0)"
         errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/PostListScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/PostListScreen.kt"
             line="618"
             column="27"/>
     </issue>
@@ -205,7 +205,7 @@
         errorLine1="        val query = editText.getText().toString().trim { it &lt;= &apos; &apos; }"
         errorLine2="                                                       ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/DialogUtils.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/DialogUtils.kt"
             line="97"
             column="56"/>
     </issue>
@@ -216,7 +216,7 @@
         errorLine1="        val inputTrimmed = input.trim { it &lt;= &apos; &apos; }"
         errorLine2="                                      ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/HexUtils.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/HexUtils.kt"
             line="55"
             column="39"/>
     </issue>
@@ -227,7 +227,7 @@
         errorLine1="        if (info.title != null &amp;&amp; !info.title.trim { it &lt;= &apos; &apos; }.isEmpty()) {"
         errorLine2="                                                   ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ImageInfoDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ImageInfoDialog.kt"
             line="47"
             column="52"/>
     </issue>
@@ -238,7 +238,7 @@
         errorLine1="                    info.title.trim { it &lt;= &apos; &apos; },"
         errorLine2="                                    ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ImageInfoDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ImageInfoDialog.kt"
             line="52"
             column="37"/>
     </issue>
@@ -249,7 +249,7 @@
         errorLine1="        if (info.caption != null &amp;&amp; !info.caption.trim { it &lt;= &apos; &apos; }.isEmpty()) {"
         errorLine2="                                                       ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ImageInfoDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ImageInfoDialog.kt"
             line="59"
             column="56"/>
     </issue>
@@ -260,7 +260,7 @@
         errorLine1="                    info.caption.trim { it &lt;= &apos; &apos; },"
         errorLine2="                                      ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ImageInfoDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ImageInfoDialog.kt"
             line="64"
             column="39"/>
     </issue>
@@ -271,8 +271,8 @@
         errorLine1="        if (value == null || value.trim { it &lt;= &apos; &apos; }.isEmpty()) {"
         errorLine2="                                        ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/PrefsUtility.kt"
-            line="1623"
+            file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
+            line="1625"
             column="41"/>
     </issue>
 
@@ -282,8 +282,8 @@
         errorLine1="        val valueTrimmed = value.trim { it &lt;= &apos; &apos; }"
         errorLine2="                                      ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/PrefsUtility.kt"
-            line="2357"
+            file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
+            line="2359"
             column="39"/>
     </issue>
 
@@ -293,8 +293,52 @@
         errorLine1="        val trimmed = value?.trim { it &lt;= &apos; &apos; }"
         errorLine2="                                  ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/PrefsUtility.kt"
-            line="2367"
+            file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
+            line="2369"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        val valueTrimmed = value.trim { it &lt;= &apos; &apos; }"
+        errorLine2="                                      ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
+            line="2383"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        val trimmed = value?.trim { it &lt;= &apos; &apos; }"
+        errorLine2="                                  ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
+            line="2393"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        val valueTrimmed = value.trim { it &lt;= &apos; &apos; }"
+        errorLine2="                                      ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
+            line="2406"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="TrimLambda"
+        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
+        errorLine1="        val trimmed = value?.trim { it &lt;= &apos; &apos; }"
+        errorLine2="                                  ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
+            line="2416"
             column="35"/>
     </issue>
 
@@ -304,7 +348,7 @@
         errorLine1="        this.username = username.trim { it &lt;= &apos; &apos; }"
         errorLine2="                                      ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/account/RedditAccount.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/account/RedditAccount.kt"
             line="50"
             column="39"/>
     </issue>
@@ -315,7 +359,7 @@
         errorLine1="        val usernameCanonical = StringUtils.asciiLowercase(username.trim { it &lt;= &apos; &apos; })"
         errorLine2="                                                                         ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/account/RedditAccountManager.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/account/RedditAccountManager.kt"
             line="176"
             column="74"/>
     </issue>
@@ -326,7 +370,7 @@
         errorLine1="        name = StringUtils.asciiLowercase(name.trim { it &lt;= &apos; &apos; })"
         errorLine2="                                                    ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/things/SubredditCanonicalId.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/things/SubredditCanonicalId.kt"
             line="30"
             column="53"/>
     </issue>
@@ -337,7 +381,7 @@
         errorLine1="                getArguments()!!.getString(&quot;title&quot;),"
         errorLine2="                ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ErrorPropertiesDialog.kt"
             line="63"
             column="17"/>
     </issue>
@@ -348,7 +392,7 @@
         errorLine1="                getArguments()!!.getString(&quot;message&quot;),"
         errorLine2="                ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ErrorPropertiesDialog.kt"
             line="71"
             column="17"/>
     </issue>
@@ -359,7 +403,7 @@
         errorLine1="        if (getArguments()!!.containsKey(&quot;httpStatus&quot;)) {"
         errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ErrorPropertiesDialog.kt"
             line="76"
             column="13"/>
     </issue>
@@ -370,7 +414,7 @@
         errorLine1="                    getArguments()!!.getString(&quot;httpStatus&quot;),"
         errorLine2="                    ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ErrorPropertiesDialog.kt"
             line="81"
             column="21"/>
     </issue>
@@ -381,7 +425,7 @@
         errorLine1="        if (getArguments()!!.containsKey(&quot;url&quot;)) {"
         errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ErrorPropertiesDialog.kt"
             line="87"
             column="13"/>
     </issue>
@@ -392,7 +436,7 @@
         errorLine1="                    getArguments()!!.getString(&quot;url&quot;),"
         errorLine2="                    ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ErrorPropertiesDialog.kt"
             line="92"
             column="21"/>
     </issue>
@@ -403,7 +447,7 @@
         errorLine1="        if (getArguments()!!.containsKey(&quot;t&quot;)) {"
         errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ErrorPropertiesDialog.kt"
             line="98"
             column="13"/>
     </issue>
@@ -414,7 +458,7 @@
         errorLine1="                    getArguments()!!.getString(&quot;t&quot;),"
         errorLine2="                    ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ErrorPropertiesDialog.kt"
             line="103"
             column="21"/>
     </issue>
@@ -425,7 +469,7 @@
         errorLine1="        if (getArguments()!!.containsKey(&quot;response&quot;)) {"
         errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ErrorPropertiesDialog.kt"
             line="109"
             column="13"/>
     </issue>
@@ -436,7 +480,7 @@
         errorLine1="                    getArguments()!!.getString(&quot;response&quot;),"
         errorLine2="                    ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ErrorPropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ErrorPropertiesDialog.kt"
             line="114"
             column="21"/>
     </issue>
@@ -447,7 +491,7 @@
         errorLine1="            getArguments()!!.getString(&quot;markdown&quot;)!!"
         errorLine2="            ~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/MarkdownPreviewDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/MarkdownPreviewDialog.kt"
             line="38"
             column="13"/>
     </issue>
@@ -458,7 +502,7 @@
         errorLine1="        packageManager = getActivity()!!.getPackageManager()"
         errorLine2="                         ~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ShareOrderDialog.kt"
             line="48"
             column="26"/>
     </issue>
@@ -469,7 +513,7 @@
         errorLine1="        val builder = MaterialAlertDialogBuilder(context!!)"
         errorLine2="                                                 ~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ShareOrderDialog.kt"
             line="62"
             column="50"/>
     </issue>
@@ -480,7 +524,7 @@
         errorLine1="            context!!.getString("
         errorLine2="            ~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ShareOrderDialog.kt"
             line="64"
             column="13"/>
     </issue>
@@ -491,7 +535,7 @@
         errorLine1="        listView.setAdapter(ShareOrderAdapter(context!!, orderedAppList!!, this))"
         errorLine2="                                              ~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ShareOrderDialog.kt"
             line="70"
             column="47"/>
     </issue>
@@ -502,7 +546,7 @@
         errorLine1="            General.quickToast(context!!, string.error_toast_no_share_app_installed)"
         errorLine2="                               ~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ShareOrderDialog.kt"
             line="77"
             column="32"/>
     </issue>
@@ -513,7 +557,7 @@
         errorLine1="            context!!,"
         errorLine2="            ~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/ShareOrderDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/ShareOrderDialog.kt"
             line="142"
             column="13"/>
     </issue>
@@ -524,7 +568,7 @@
         errorLine1="            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/activities/BaseActivity.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/activities/BaseActivity.kt"
             line="309"
             column="13"/>
     </issue>
@@ -535,7 +579,7 @@
         errorLine1="                        navigator.navigate(HtmlView(html, context.getString(R.string.title_license)))"
         errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/AppNavigation.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/AppNavigation.kt"
             line="132"
             column="59"/>
     </issue>
@@ -546,7 +590,7 @@
         errorLine1="                context.getString("
         errorLine2="                ^">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/CommentEditScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/CommentEditScreen.kt"
             line="93"
             column="17"/>
     </issue>
@@ -557,7 +601,7 @@
         errorLine1="                        context.getString("
         errorLine2="                        ^">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/CommentEditScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/CommentEditScreen.kt"
             line="114"
             column="25"/>
     </issue>
@@ -568,7 +612,7 @@
         errorLine1="                        Text(context.getString(R.string.comment_reply_preview))"
         errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/CommentEditScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/CommentEditScreen.kt"
             line="152"
             column="30"/>
     </issue>
@@ -579,7 +623,7 @@
         errorLine1="                Text(context.getString(R.string.comment_edit_save))"
         errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/CommentEditScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/CommentEditScreen.kt"
             line="181"
             column="22"/>
     </issue>
@@ -590,7 +634,7 @@
         errorLine1="        title = { Text(context.getString(R.string.comment_reply_preview)) },"
         errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/CommentEditScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/CommentEditScreen.kt"
             line="204"
             column="24"/>
     </issue>
@@ -601,7 +645,7 @@
         errorLine1="                General.quickToast(context, context.getString(R.string.pm_send_done))"
         errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/PMSendScreen.kt"
             line="115"
             column="45"/>
     </issue>
@@ -612,7 +656,7 @@
         errorLine1="                title = { Text(context.getString(R.string.pm_send_actionbar)) },"
         errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/PMSendScreen.kt"
             line="134"
             column="32"/>
     </issue>
@@ -623,7 +667,7 @@
         errorLine1="                                contentDescription = context.getString(R.string.comment_reply_send)"
         errorLine2="                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/PMSendScreen.kt"
             line="166"
             column="54"/>
     </issue>
@@ -634,7 +678,7 @@
         errorLine1="                        Text(context.getString(R.string.comment_reply_preview))"
         errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/PMSendScreen.kt"
             line="174"
             column="30"/>
     </issue>
@@ -645,7 +689,7 @@
         errorLine1="                    Text(account ?: context.getString(R.string.error_toast_notloggedin))"
         errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/PMSendScreen.kt"
             line="193"
             column="37"/>
     </issue>
@@ -656,7 +700,7 @@
         errorLine1="                label = { Text(context.getString(R.string.pm_send_hint_recipient)) },"
         errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/PMSendScreen.kt"
             line="214"
             column="32"/>
     </issue>
@@ -667,7 +711,7 @@
         errorLine1="                label = { Text(context.getString(R.string.pm_send_hint_subject)) },"
         errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/PMSendScreen.kt"
             line="224"
             column="32"/>
     </issue>
@@ -678,7 +722,7 @@
         errorLine1="                label = { Text(context.getString(R.string.pm_send_hint_message_text)) },"
         errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/PMSendScreen.kt"
             line="234"
             column="32"/>
     </issue>
@@ -689,7 +733,7 @@
         errorLine1="                Text(context.getString(R.string.comment_reply_send))"
         errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/PMSendScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/PMSendScreen.kt"
             line="258"
             column="22"/>
     </issue>
@@ -700,7 +744,7 @@
         errorLine1="    var accounts by remember { mutableStateOf(accountManager.accounts) }"
         errorLine2="                               ~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/AccountListScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/AccountListScreen.kt"
             line="82"
             column="32"/>
     </issue>
@@ -711,7 +755,7 @@
         errorLine1="        val CREATOR: Parcelable.Creator&lt;RedditFlairChoice?> ="
         errorLine2="            ~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/RedditFlairChoice.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/RedditFlairChoice.kt"
             line="103"
             column="13"/>
     </issue>
@@ -722,7 +766,7 @@
         errorLine1="        val CREATOR: Parcelable.Creator&lt;RedditSubreddit?> ="
         errorLine2="            ~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/things/RedditSubreddit.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/things/RedditSubreddit.kt"
             line="210"
             column="13"/>
     </issue>
@@ -733,7 +777,7 @@
         errorLine1="        val CREATOR: Parcelable.Creator&lt;RedditUser?> ="
         errorLine2="            ~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/things/RedditUser.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/things/RedditUser.kt"
             line="154"
             column="13"/>
     </issue>
@@ -744,7 +788,7 @@
         errorLine1="        val CREATOR: Parcelable.Creator&lt;SubredditCanonicalId?> ="
         errorLine2="            ~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/things/SubredditCanonicalId.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/things/SubredditCanonicalId.kt"
             line="82"
             column="13"/>
     </issue>
@@ -755,7 +799,7 @@
         errorLine1="    LaunchedEffect(viewModel.blockFeedback.value) {"
         errorLine2="                                           ~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/ui/UserProfileScreen.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/UserProfileScreen.kt"
             line="96"
             column="44"/>
     </issue>
@@ -766,7 +810,7 @@
         errorLine1="   when (redditURL.pathType()) {"
         errorLine2="   ~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/LinkHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/LinkHandler.kt"
             line="222"
             column="4"/>
     </issue>
@@ -777,7 +821,7 @@
         errorLine1="/**"
         errorLine2="^">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/HtmlViewBackHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/HtmlViewBackHandler.kt"
             line="21"
             column="1"/>
     </issue>
@@ -788,7 +832,7 @@
         errorLine1="    private var webView: WebView? = null"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/HtmlViewBackHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/HtmlViewBackHandler.kt"
             line="34"
             column="5"/>
     </issue>
@@ -799,7 +843,7 @@
         errorLine1="        @Volatile"
         errorLine2="        ^">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/RedditSubredditManager.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/RedditSubredditManager.kt"
             line="115"
             column="9"/>
     </issue>
@@ -810,8 +854,8 @@
         errorLine1="    var selected by remember { mutableStateOf(choices.indexOfFirst { it.first == currentStorage }.coerceAtLeast(0)) }"
         errorLine2="                               ~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/SettingsScreen.kt"
-            line="2248"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/SettingsScreen.kt"
+            line="2272"
             column="32"/>
     </issue>
 
@@ -821,7 +865,7 @@
         errorLine1="                            Uri.parse(callbackUrl),"
         errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/AppNavigation.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/AppNavigation.kt"
             line="370"
             column="29"/>
     </issue>
@@ -832,7 +876,7 @@
         errorLine1="        emailSelectorIntent.setData(Uri.parse(&quot;mailto:&quot;))"
         errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/BugReporter.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/BugReporter.kt"
             line="131"
             column="37"/>
     </issue>
@@ -843,7 +887,7 @@
         errorLine1="                val url = RedditURLParser.parseProbableCommentListing(Uri.parse(rawUri))"
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/CommentListViewModel.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/CommentListViewModel.kt"
             line="229"
             column="71"/>
     </issue>
@@ -854,8 +898,8 @@
         errorLine1="            return Uri.parse(getUri(path).toString()).buildUpon()"
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/Constants.kt"
-            line="174"
+            file="src/main/java/com/stormtroopercs/materialreader/common/Constants.kt"
+            line="184"
             column="20"/>
     </issue>
 
@@ -865,7 +909,7 @@
         errorLine1="        val URI: Uri = Uri.parse(&quot;redreader://video&quot;)"
         errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/views/video/ExoPlayerSeekableInputStreamDataSource.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/views/video/ExoPlayerSeekableInputStreamDataSource.kt"
             line="89"
             column="24"/>
     </issue>
@@ -876,7 +920,7 @@
         errorLine1="                prefs.edit()"
         errorLine2="                ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="89"
             column="17"/>
     </issue>
@@ -887,7 +931,7 @@
         errorLine1="                    prefs.edit().putString("
         errorLine2="                    ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="135"
             column="21"/>
     </issue>
@@ -898,7 +942,7 @@
         errorLine1="                    prefs.edit().putString("
         errorLine2="                    ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="143"
             column="21"/>
     </issue>
@@ -909,7 +953,7 @@
         errorLine1="                    prefs.edit().putString("
         errorLine2="                    ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="151"
             column="21"/>
     </issue>
@@ -920,7 +964,7 @@
         errorLine1="                    prefs.edit().putString("
         errorLine2="                    ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="159"
             column="21"/>
     </issue>
@@ -931,7 +975,7 @@
         errorLine1="                    prefs.edit().putString("
         errorLine2="                    ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="183"
             column="21"/>
     </issue>
@@ -942,7 +986,7 @@
         errorLine1="                    prefs.edit().putString("
         errorLine2="                    ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="189"
             column="21"/>
     </issue>
@@ -953,7 +997,7 @@
         errorLine1="                prefs.edit()"
         errorLine2="                ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="214"
             column="17"/>
     </issue>
@@ -964,7 +1008,7 @@
         errorLine1="                prefs.edit().putStringSet("
         errorLine2="                ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="239"
             column="17"/>
     </issue>
@@ -975,7 +1019,7 @@
         errorLine1="                prefs.edit()"
         errorLine2="                ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="262"
             column="17"/>
     </issue>
@@ -986,7 +1030,7 @@
         errorLine1="                    prefs.edit().putString("
         errorLine2="                    ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="285"
             column="21"/>
     </issue>
@@ -997,7 +1041,7 @@
         errorLine1="                prefs.edit().putBoolean("
         errorLine2="                ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="298"
             column="17"/>
     </issue>
@@ -1008,7 +1052,7 @@
         errorLine1="                prefs.edit()"
         errorLine2="                ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="311"
             column="17"/>
     </issue>
@@ -1019,7 +1063,7 @@
         errorLine1="                prefs.edit()"
         errorLine2="                ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="336"
             column="17"/>
     </issue>
@@ -1030,7 +1074,7 @@
         errorLine1="                prefs.edit().putStringSet("
         errorLine2="                ~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="361"
             column="17"/>
     </issue>
@@ -1041,7 +1085,7 @@
         errorLine1="            sharedPreferences.edit().putBoolean(name, true).apply()"
         errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/FeatureFlagHandler.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/FeatureFlagHandler.kt"
             line="385"
             column="13"/>
     </issue>
@@ -1063,7 +1107,7 @@
         errorLine1="                        Uri.parse(&quot;file://&quot; + dst.getAbsolutePath())"
         errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/image/LegacySaveImageCallback.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/image/LegacySaveImageCallback.kt"
             line="92"
             column="25"/>
     </issue>
@@ -1074,7 +1118,7 @@
         errorLine1="                        val spoilerUriBuilder = Uri.parse(&quot;rr://msg/&quot;)"
         errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/prepared/markdown/MarkdownParagraph.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/prepared/markdown/MarkdownParagraph.kt"
             line="178"
             column="49"/>
     </issue>
@@ -1085,7 +1129,7 @@
         errorLine1="                        val spoilerUriBuilder = Uri.parse(&quot;rr://msg/&quot;)"
         errorLine2="                                                ~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/prepared/markdown/MarkdownParagraph.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/prepared/markdown/MarkdownParagraph.kt"
             line="202"
             column="49"/>
     </issue>
@@ -1096,7 +1140,7 @@
         errorLine1="    ?: Uri.parse(&quot;&quot;)"
         errorLine2="       ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/net/NetWrapper.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/net/NetWrapper.kt"
             line="604"
             column="8"/>
     </issue>
@@ -1107,7 +1151,7 @@
         errorLine1="    ?: Uri.parse(&quot;&quot;)"
         errorLine2="       ~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/compose/net/NetWrapper.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/compose/net/NetWrapper.kt"
             line="613"
             column="8"/>
     </issue>
@@ -1118,7 +1162,7 @@
         errorLine1="                    val postListingUrl = RedditURLParser.parseProbablePostListing(Uri.parse(rawUri))"
         errorLine2="                                                                                  ~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/PostListViewModel.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/PostListViewModel.kt"
             line="295"
             column="83"/>
     </issue>
@@ -1129,7 +1173,7 @@
         errorLine1="                                val editor: SharedPreferences.Editor = sharedPrefs.edit()"
         errorLine2="                                                                       ~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/PrefsBackup.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/PrefsBackup.kt"
             line="222"
             column="72"/>
     </issue>
@@ -1140,7 +1184,7 @@
         errorLine1="        val attr = activity!!.obtainStyledAttributes("
         errorLine2="                   ^">
         <location
-            file="src/main/java/org/quantumbadger/redreader/fragments/PropertiesDialog.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/fragments/PropertiesDialog.kt"
             line="61"
             column="20"/>
     </issue>
@@ -1151,7 +1195,7 @@
         errorLine1="        val appearance = context.obtainStyledAttributes("
         errorLine2="                         ^">
         <location
-            file="src/main/java/org/quantumbadger/redreader/common/RRThemeAttributes.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/common/RRThemeAttributes.kt"
             line="46"
             column="26"/>
     </issue>
@@ -1162,7 +1206,7 @@
         errorLine1="                val builder = Uri.parse(baseUri.toString()).buildUpon()"
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/api/RedditAPIIndividualSubredditListRequester.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/api/RedditAPIIndividualSubredditListRequester.kt"
             line="161"
             column="31"/>
     </issue>
@@ -1173,7 +1217,7 @@
         errorLine1="                return Optional.Companion.ofNullable&lt;Uri>(Uri.parse(redirect))"
         errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/url/RedditURLParser.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/url/RedditURLParser.kt"
             line="58"
             column="59"/>
     </issue>
@@ -1184,7 +1228,7 @@
         errorLine1="                Uri.parse("
         errorLine2="                ^">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/url/RedditURLParser.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/url/RedditURLParser.kt"
             line="69"
             column="17"/>
     </issue>
@@ -1192,11 +1236,11 @@
     <issue
         id="UseKtx"
         message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="                                    Uri.parse(&quot;https://github.com/RedReaderOrg/RedReader&quot;)"
-        errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="                                    Uri.parse(&quot;https://github.com/MaterialReaderOrg/MaterialReader&quot;)"
+        errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/navigation/SettingsScreen.kt"
-            line="1863"
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/SettingsScreen.kt"
+            line="1887"
             column="37"/>
     </issue>
 
@@ -1217,7 +1261,7 @@
         errorLine1="                    number.setText(paragraph.number.toString() + &quot;.   &quot;)"
         errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/prepared/markdown/MarkdownParagraphGroup.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/prepared/markdown/MarkdownParagraphGroup.kt"
             line="94"
             column="36"/>
     </issue>
@@ -1228,7 +1272,7 @@
         errorLine1="                    number.setText(paragraph.number.toString() + &quot;.   &quot;)"
         errorLine2="                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/org/quantumbadger/redreader/reddit/prepared/markdown/MarkdownParagraphGroup.kt"
+            file="src/main/java/com/stormtroopercs/materialreader/reddit/prepared/markdown/MarkdownParagraphGroup.kt"
             line="94"
             column="36"/>
     </issue>

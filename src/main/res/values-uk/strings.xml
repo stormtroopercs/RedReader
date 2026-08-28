@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ This file is part of RedReader.
+  ~ This file is part of MaterialReader.
   ~
-  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ MaterialReader is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
-  ~ RedReader is distributed in the hope that it will be useful,
+  ~ MaterialReader is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
   --><resources>
     <string name="firstrun_login_title">Увійти</string>
     <string name="firstrun_login_button_now">Увійти</string>
@@ -210,7 +210,7 @@
     <string name="pref_behaviour_view_mode_external_browser">Сторонній переглядач</string>
     <string name="action_delete">Видалити</string>
     <string name="selected_link_is_not_image">Вибране посилання не є зображенням.</string>
-    <string name="upgrade_v190_login_message">RedReader оновився і тепер використовує OAuth для входу на Reddit. Вам доведеться повторно увійти до облікового запису, якщо ви входили до оновлення.</string>
+    <string name="upgrade_v190_login_message">MaterialReader оновився і тепер використовує OAuth для входу на Reddit. Вам доведеться повторно увійти до облікового запису, якщо ви входили до оновлення.</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">Вбудований VideoView (рекомендовано)</string>
     <string name="pref_behaviour_videoview_mode_external_app_vlc">Зовнішній застосунок: VLC</string>
     <string name="error_url_required_title">Вимагається URL-адреса</string>
@@ -309,9 +309,9 @@
     <string name="backup_preferences_success">Резервне копіювання виконано успішно</string>
     <string name="button_cancel">Скасувати</string>
     <string name="button_continue_anyway">Все одно продовжити</string>
-    <string name="restore_preferences_error_version_warning_message">Вибраний файл створено новішою версією RedReader. Відновлення налаштувань із цього файлу може призвести до збоїв та нестабільності.</string>
+    <string name="restore_preferences_error_version_warning_message">Вибраний файл створено новішою версією MaterialReader. Відновлення налаштувань із цього файлу може призвести до збоїв та нестабільності.</string>
     <string name="restore_preferences_error_version_warning_title">Попередження</string>
-    <string name="restore_preferences_error_invalid_file_version_message">Вибраний файл створено новішою версією RedReader і не може бути відкритий.</string>
+    <string name="restore_preferences_error_invalid_file_version_message">Вибраний файл створено новішою версією MaterialReader і не може бути відкритий.</string>
     <string name="restore_preferences_error_invalid_file_contents_message">Вибраний файл є не припустимим файлом резервної копії налаштувань.</string>
     <string name="restore_preferences_error_invalid_file_title">Недійсний файл</string>
     <string name="video_zoom_out">Зменшити масштаб</string>

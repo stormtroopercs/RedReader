@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ This file is part of RedReader.
+  ~ This file is part of MaterialReader.
   ~
-  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ MaterialReader is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
-  ~ RedReader is distributed in the hope that it will be useful,
+  ~ MaterialReader is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <resources xmlns:tools="http://schemas.android.com/tools">
@@ -467,7 +467,7 @@
 
     <!-- 2015-10-04 -->
 
-    <string name="upgrade_v190_login_message">RedReader has upgraded, and now uses OAuth for Reddit authentication. If you were signed in to an account before the upgrade, you are now logged out.</string>
+    <string name="upgrade_v190_login_message">MaterialReader has upgraded, and now uses OAuth for Reddit authentication. If you were signed in to an account before the upgrade, you are now logged out.</string>
     <string name="pref_behaviour_videoview_mode_key" translatable="false">pref_behaviour_videoview_mode</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">Internal VideoView (recommended)</string>
     <string name="pref_behaviour_videoview_mode_external_app_vlc">External App: VLC</string>
@@ -1008,10 +1008,10 @@
 
 	<string name="restore_preferences_error_invalid_file_title">Invalid file</string>
 	<string name="restore_preferences_error_invalid_file_contents_message">The selected file is not a valid preference backup file.</string>
-	<string name="restore_preferences_error_invalid_file_version_message">The selected file was created by a newer version of RedReader and cannot be opened.</string>
+	<string name="restore_preferences_error_invalid_file_version_message">The selected file was created by a newer version of MaterialReader and cannot be opened.</string>
 
 	<string name="restore_preferences_error_version_warning_title">Warning</string>
-	<string name="restore_preferences_error_version_warning_message">The selected file was created by a newer version of RedReader. Restoring the preferences from this file may lead to crashes and instability.</string>
+	<string name="restore_preferences_error_version_warning_message">The selected file was created by a newer version of MaterialReader. Restoring the preferences from this file may lead to crashes and instability.</string>
 	
 	<string name="button_continue_anyway">Continue anyway</string>
 	<string name="button_cancel">Cancel</string>
@@ -1077,7 +1077,7 @@
 
 	<!-- 2022-01-09 -->
 	<string name="error_title_report_previous_crash">Report previous crash</string>
-	<string name="error_message_report_previous_crash">RedReader crashed the last time it was run. Would you like to report this?</string>
+	<string name="error_message_report_previous_crash">MaterialReader crashed the last time it was run. Would you like to report this?</string>
 
 	<!-- 2021-01-21 -->
 
@@ -1131,7 +1131,7 @@
 	<string name="userprofile_avatar">Avatar</string>
 
 	<!-- 2023-06-18 -->
-	<string name="reddit_login_browser_popup_line_2_internal_browser_only">When the login is complete, you should be redirected back to RedReader.</string>
+	<string name="reddit_login_browser_popup_line_2_internal_browser_only">When the login is complete, you should be redirected back to MaterialReader.</string>
 
 	<string name="reddit_terms_error_title">Reddit user agreement not accepted</string>
 	<string name="reddit_terms_error_message">If you wish to access content through the Reddit API, please accept their user agreement.</string>
@@ -1211,7 +1211,7 @@
 	<string name="userprofile_button_unblock">Unblock</string>
 
 	<!-- 2024-01-25 -->
-	<string name="block_permission_denied_message">A new login is required to enable RedReader to handle the blocking of users. Please do a re-login and try again.</string>
+	<string name="block_permission_denied_message">A new login is required to enable MaterialReader to handle the blocking of users. Please do a re-login and try again.</string>
 	<string name="block_permission_denied_title">Missing permission to block</string>
 	<string name="block_permission_denied_relogin">Re-login</string>
 

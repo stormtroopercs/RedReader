@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ This file is part of RedReader.
+  ~ This file is part of MaterialReader.
   ~
-  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ MaterialReader is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
-  ~ RedReader is distributed in the hope that it will be useful,
+  ~ MaterialReader is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
   --><resources>
     <string name="firstrun_login_title">Prisijungti</string>
     <string name="firstrun_login_button_now">Prisijungti dabar</string>
@@ -251,7 +251,7 @@
     <string name="video_zoom_in">Pritraukti</string>
     <string name="video_zoom_out">Atitolinti</string>
     <string name="restore_preferences_error_invalid_file_title">Netinkamas failas</string>
-    <string name="restore_preferences_error_invalid_file_version_message">Pasirinktas failas buvo sukurtas naujesne RedReader versija ir jo negalima atidaryti.</string>
+    <string name="restore_preferences_error_invalid_file_version_message">Pasirinktas failas buvo sukurtas naujesne MaterialReader versija ir jo negalima atidaryti.</string>
     <string name="restore_preferences_error_version_warning_title">Perspėjimas</string>
     <string name="button_continue_anyway">Vis tiek tęsti</string>
     <string name="button_cancel">Atšaukti</string>
@@ -267,7 +267,7 @@
     <string name="error_http_429_title">Per daug užklausų</string>
     <string name="error_http_429_message">Serveris atmetė užklausą dėl greičio apribojimo. Prašome po akimirkos pabandyti dar kartą.</string>
     <string name="error_imgur_400_message">Imgur atmeta šį vaizdą, galbūt dėl greičio apribojimo. Prašome naudoti kitą vaizdų talpyklą arba bandyti vėliau.</string>
-    <string name="restore_preferences_error_version_warning_message">Pasirinktas failas buvo sukurtas naujesnėje RedReader versijoje. Atkuriant nuostatas iš šio failo gali įvykti klaida ir nestabilumas.</string>
+    <string name="restore_preferences_error_version_warning_message">Pasirinktas failas buvo sukurtas naujesnėje MaterialReader versijoje. Atkuriant nuostatas iš šio failo gali įvykti klaida ir nestabilumas.</string>
     <string name="error_content_blocker_message">Atrodo, kad dabartinis tinklas blokuoja šią užklausą naudodamas DNS. Apsvarstykite galimybę naudoti VPN arba Android tinklo nustatymuose įjunkite DNS per HTTPS.</string>
     <string name="error_no_file_manager_message">Šio prietaiso operacinėje sistemoje nėra failų tvarkyklės, suderinamos su Android Storage Access Framework. Jei failų tvarkyklė yra, ji gali būti išjungta.</string>
     <string name="pref_appearance_post_subtitle_items_domain">Domenas</string>
@@ -355,7 +355,7 @@
     <string name="error_url_required_title">Būtinas URL</string>
     <string name="pref_behaviour_videoview_mode_external_app_vlc">Išorinė programa: VLC</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">Vidinis VideoView (rekomenduojama)</string>
-    <string name="upgrade_v190_login_message">RedReader atnaujinta ir dabar Reddit autentifikavimui naudoja OAuth. Jei prieš atnaujinimą buvote prisijungę prie paskyros, dabar esate iš jos atjungti.</string>
+    <string name="upgrade_v190_login_message">MaterialReader atnaujinta ir dabar Reddit autentifikavimui naudoja OAuth. Jei prieš atnaujinimą buvote prisijungę prie paskyros, dabar esate iš jos atjungti.</string>
     <string name="selected_link_is_not_image">Pasirinkta nuoroda nėra paveikslėlis.</string>
     <string name="action_delete">Ištrinti</string>
     <string name="pref_behaviour_view_mode_external_browser">Išorinė naršyklė</string>

@@ -17,10 +17,10 @@ plugins {
 android {
 	compileSdk = libs.versions.sdk.compile.get().toInt()
 	ndkVersion = libs.versions.ndk.get()
-	namespace = "org.quantumbadger.redreader"
+	namespace = "com.stormtroopercs.materialreader"
 
 	defaultConfig {
-		applicationId = "org.quantumbadger.redreader"
+		applicationId = "com.stormtroopercs.materialreader"
 		minSdk = libs.versions.sdk.min.get().toInt()
 		targetSdk = libs.versions.sdk.target.get().toInt()
 		versionCode = 1
@@ -183,7 +183,7 @@ tasks.register("pmd", Pmd::class) {
 	dependsOn.add("assembleDebug")
 	ruleSetFiles = files("${project.rootDir}/config/pmd/rules.xml")
 	ruleSets = emptyList()
-	source("src/main/java/org/quantumbadger")
+	source("src/main/java/com/stormtroopercs/materialreader")
 	include("**/*.java")
 	isConsoleOutput = true
 }
@@ -223,7 +223,7 @@ spotless {
 }
 
 tasks.register("Checkstyle", Checkstyle::class) {
-	source("src/main/java/org/quantumbadger")
+	source("src/main/java/com/stormtroopercs/materialreader")
 	ignoreFailures = false
 	isShowViolations = true
 	include("**/*.java", "**/*.kt")

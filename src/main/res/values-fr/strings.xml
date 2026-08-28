@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ This file is part of RedReader.
+  ~ This file is part of MaterialReader.
   ~
-  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ MaterialReader is free software: you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
   ~ the Free Software Foundation, either version 3 of the License, or
   ~ (at your option) any later version.
   ~
-  ~ RedReader is distributed in the hope that it will be useful,
+  ~ MaterialReader is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   ~ GNU General Public License for more details.
   ~
   ~ You should have received a copy of the GNU General Public License
-  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
   --><resources>
     <!-- First Run Dialog -->
     <string name="firstrun_login_title">Se connecter</string>
@@ -371,7 +371,7 @@
     <string name="time_month">mois</string>
     <string name="time_min">min</string>
     <string name="time_ms">ms</string>
-    <string name="upgrade_v190_login_message">RedReader a été mis à niveau et utilise maintenant OAuth pour l\'authentification Reddit. Si vous étiez connecté à un compte avant la mise à niveau, vous êtes maintenant déconnecté.</string>
+    <string name="upgrade_v190_login_message">MaterialReader a été mis à niveau et utilise maintenant OAuth pour l\'authentification Reddit. Si vous étiez connecté à un compte avant la mise à niveau, vous êtes maintenant déconnecté.</string>
     <string name="time_hour">heure</string>
     <string name="pref_behaviour_view_mode_internal_browser">Navigateur interne</string>
     <string name="selected_link_is_not_image">Le lien sélectionné n\'est pas une image.</string>
@@ -502,8 +502,8 @@
     <string name="video_pause">Pause</string>
     <string name="video_zoom_out">Dézoomer</string>
     <string name="video_play">Lancer</string>
-    <string name="restore_preferences_error_version_warning_message">Le fichier sélectionné a été créé par une version plus récente de RedReader. La restauration des préférences à partir de ce fichier peut entraîner des pannes et une instabilité.</string>
-    <string name="restore_preferences_error_invalid_file_version_message">Le fichier sélectionné a été créé par une version plus récente de RedReader et ne peut pas être ouvert.</string>
+    <string name="restore_preferences_error_version_warning_message">Le fichier sélectionné a été créé par une version plus récente de MaterialReader. La restauration des préférences à partir de ce fichier peut entraîner des pannes et une instabilité.</string>
+    <string name="restore_preferences_error_invalid_file_version_message">Le fichier sélectionné a été créé par une version plus récente de MaterialReader et ne peut pas être ouvert.</string>
     <string name="error_tor_connection_message">Impossible de se connecter à Tor. Veuillez vous assurer que l\'application Orbot est en cours d\'exécution, ou désactivez Tor dans les paramètres du réseau.</string>
     <string name="error_content_blocker_message">Le réseau actuel semble bloquer cette requête en utilisant le DNS. Pensez à utiliser un VPN ou à activer le DNS sur HTTPS dans les paramètres réseau d\'Android.</string>
     <string name="error_post_flair_required_title">Flair requis</string>
