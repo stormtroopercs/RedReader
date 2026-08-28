@@ -36,6 +36,7 @@ import com.stormtroopercs.materialreader.common.GlobalExceptionHandler
 import com.stormtroopercs.materialreader.common.PrefsUtility
 import com.stormtroopercs.materialreader.compose.prefs.ComposePrefsSingleton
 import com.stormtroopercs.materialreader.io.RedditChangeDataIO
+import com.stormtroopercs.materialreader.reddit.api.RedditOAuth
 import com.stormtroopercs.materialreader.reddit.prepared.RedditChangeDataManager
 import javax.inject.Inject
 
@@ -94,6 +95,11 @@ class MaterialReader : Application() {
         PrefsUtility.applyLanguageSetting()
         ComposePrefsSingleton.init(this)
         Fonts.onAppCreate(assets)
+
+        // Initialise the Reddit OAuth client ID. RedditOAuth.init() reads the built-in
+        // client ID (falls back to RedReader's public ID when no local reddit_auth.txt
+        // is present) so the app can authenticate out of the box.
+        RedditOAuth.init(this)
 
         // Note: Network initialization moved to Hilt modules
         // OkHttpClient and HTTPBackend are now provided via NetworkModule
