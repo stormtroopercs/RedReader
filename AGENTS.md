@@ -8,6 +8,47 @@ Work proceeds incrementally per legacy surface: port to Compose → re-point its
 ## Branch
 **`dev`** — main development branch (renamed from `java-to-kotlin-conversion`).
 
+## UI design basis (2026-08-27)
+The app's look and feel now follows one reference, user-directed 2026-08-27: **mimic the
+reference app's UI completely**. The reference is a Material-3 / Material-You social-feed
+client (APK v24.03.26, versionCode 122), decomposed into a design dump at the **project
+root, outside this repo**: `../lemmy-sync/` (relative to this repo root).
+`../lemmy-sync/DESIGN.md` is the distilled, authoritative spec; `../lemmy-sync/extract/`
+holds the per-screen layout trees, resolved themes, dimens, and string inventories.
+Read DESIGN.md before touching any UI.
+
+Key points (full detail in `../lemmy-sync/DESIGN.md`):
+- **Signature: the swipe feed** — full-screen one-post-per-screen pager (Compose
+  `VerticalPager`), full-bleed media + gradient scrims, a top row (28dp circular avatar +
+  community name + title), a scrollable selftext block, and a bottom action bar of six
+  equal-weight, 56dp, ripple icon buttons (upvote / downvote / save / comment / download /
+  more).
+- **Post cards** — multiple display modes (Cards / Smaller / Compact / Simple / List /
+  thumbnail-left / thumbnail-right / horizontal); card media 220dp, card margin 8dp,
+  title → description → body ordering.
+- **App shell** — left navigation drawer built from a reusable row component (32dp
+  circular avatar/icon + title + optional subtitle) with a header (avatar + name + subtitle)
+  and a search field; a collapsing top toolbar that reduces to a **community pill** (32dp
+  avatar + community name + chevron + subscriber count).
+- **Comments** — row = 16dp avatar + author/time + NEW/hidden badges, body, 48dp
+  equal-weight action bar; a **comment-navigation chip row** pinned at the bottom (Images /
+  Links / Me / New comments / OP / Threads / Videos).
+- **Details** — vertical fast scroller (8dp track, 32dp thumb) on long lists; subtle 1dp
+  dividers; 16dp/8dp list paddings; fast-out-extra-slow-in screen transitions; ripples on
+  every tappable element; 750ms animated splash; shared-element zoom into the image viewer.
+- **Theming** — the reference is neutral M3 with Material-You dynamic color. **RedReader
+  keeps its own user theme** (`compose/theme/ComposeTheme.kt`: user accent +
+  Light / Dark / Night-LowContrast / UltraBlack + per-surface sub-themes). Mimic the
+  structure, layout, and behaviour — not the reference's neutral palette.
+- **Do not replicate** the reference's monetization / ads / IAP / Firebase components
+  (DESIGN.md §11).
+
+**Naming rule (user directive):** the reference app's product name never appears in this
+repo's commit messages, source, or docs. In code and commits, refer to the patterns by
+component role (the swipe feed, the community pill, the card list, the fast scroller) and
+to the dump as "the design basis" / `../lemmy-sync/DESIGN.md`. The `lemmy-sync/` directory
+intentionally lives outside the `RedReader/` git tree and is never committed here.
+
 ## Tech Stack
 | Component | Version |
 |---|---|
