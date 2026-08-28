@@ -90,6 +90,12 @@ object RedditOAuth {
 
     private val cachedAppId = CachedStringHash { appId ?: "null" }
 
+    // Built-in Reddit client ID (RedReader's public ID, also shipped by Continuum). Used as the
+    // default when no local reddit_auth.txt override and no user-supplied override are present,
+    // so the published APK can authenticate out of the box. Users may override via the API-keys
+    // settings screen or a local reddit_auth.txt.
+    private const val BUILT_IN_CLIENT_ID = "yH0aTnJEt6qUgGn835B4vg"
+
     fun init(context: Context) {
         try {
             val fileContents = context.assets.open("reddit_auth.txt").use {
@@ -109,7 +115,12 @@ object RedditOAuth {
             GlobalConfig.appId = id
 
         } catch (e: Exception) {
-            Log.i(TAG, "Got exception during init", e)
+            // No local reddit_auth.txt (normal for published builds): fall back to the
+            // built-in client ID so login still works out of the box.
+            Log.i(TAG, "No local reddit_auth.txt; using built-in client ID", e)
+            if (GlobalConfig.appId == null) {
+                GlobalConfig.appId = BUILT_IN_CLIENT_ID
+            }
         }
     }
 

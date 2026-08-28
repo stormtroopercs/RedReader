@@ -19,7 +19,6 @@ package com.stormtroopercs.materialreader.common
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
-import com.stormtroopercs.materialreader.MaterialReader
 import com.stormtroopercs.materialreader.common.collections.CollectionStream
 import com.stormtroopercs.materialreader.common.collections.MapStreamRethrowExceptions
 import com.stormtroopercs.materialreader.common.PrefsUtility
@@ -35,20 +34,19 @@ object Constants {
         }
     }
 
-    // Built-in default User-Agent. Kept on the legacy MaterialReader package so it stays
-    // compatible with the registered Reddit client ID. Users may override this via the
-    // "API keys" settings screen (pref_user_agent_override) — same model as Continuum.
-    const val DEFAULT_USER_AGENT = "com.stormtroopercs.materialreader/"
+    // Built-in default User-Agent. Hardcoded to the legacy RedReader package so it stays
+    // compatible with the registered (built-in) Reddit client ID. The app package was renamed
+    // to com.stormtroopercs.materialreader, but the shared client ID expects this UA — same
+    // model as Continuum, which ships RedReader's UA as its built-in default. Users may
+    // override this via the "API keys" settings screen (pref_user_agent_override).
+    const val DEFAULT_USER_AGENT = "org.quantumbadger.redreader/"
 
     fun ua(context: Context): String {
         val override = PrefsUtility.pref_user_agent_override()
         if (!override.isNullOrEmpty()) {
             return override
         }
-        val canonicalName = MaterialReader::class.java.getCanonicalName()
-        return canonicalName.substring(0, canonicalName.lastIndexOf('.')) + "/" + version(
-            context
-        )
+        return DEFAULT_USER_AGENT + version(context)
     }
 
     const val OA_CS: String = "client_secret"

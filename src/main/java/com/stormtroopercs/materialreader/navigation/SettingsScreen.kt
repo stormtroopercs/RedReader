@@ -1683,7 +1683,7 @@ private fun getSettingsCategories(
                     key = "user_agent_override",
                     label = "User-Agent override",
                     description = "Override the User-Agent header sent to Reddit. Leave blank to use the built-in default.",
-                    placeholder = "e.g. com.stormtroopercs.materialreader/1.25.2",
+                    placeholder = "e.g. org.quantumbadger.redreader/1.26",
                     get = { PrefsUtility.pref_user_agent_override() },
                     set = PrefsUtility::pref_user_agent_override_set
                 ),
