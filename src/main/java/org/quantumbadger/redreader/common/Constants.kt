@@ -22,6 +22,7 @@ import android.net.Uri
 import org.quantumbadger.redreader.RedReader
 import org.quantumbadger.redreader.common.collections.CollectionStream
 import org.quantumbadger.redreader.common.collections.MapStreamRethrowExceptions
+import org.quantumbadger.redreader.common.PrefsUtility
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 
 object Constants {
@@ -34,7 +35,16 @@ object Constants {
         }
     }
 
+    // Built-in default User-Agent. Kept on the legacy RedReader package so it stays
+    // compatible with the registered Reddit client ID. Users may override this via the
+    // "API keys" settings screen (pref_user_agent_override) — same model as Continuum.
+    const val DEFAULT_USER_AGENT = "org.quantumbadger.redreader/"
+
     fun ua(context: Context): String {
+        val override = PrefsUtility.pref_user_agent_override()
+        if (!override.isNullOrEmpty()) {
+            return override
+        }
         val canonicalName = RedReader::class.java.getCanonicalName()
         return canonicalName.substring(0, canonicalName.lastIndexOf('.')) + "/" + version(
             context

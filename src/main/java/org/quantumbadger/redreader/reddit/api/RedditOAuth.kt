@@ -59,8 +59,13 @@ import java.util.concurrent.atomic.AtomicReference
 object RedditOAuth {
     private val TAG = "RedditOAuth"
     @Suppress("PropertyName")
-    private val REDIRECT_URI_NEW = "redreader://rr_oauth_redir"
-    @Suppress("PropertyName")
+    private val REDIRECT_URI_DEFAULT = "redreader://rr_oauth_redir"
+
+    // Built-in defaults, overridable from the "API keys" settings screen (Continuum-style).
+    private val resolvedRedirectUri: String
+        get() = PrefsUtility.pref_redirect_uri_override() ?: REDIRECT_URI_DEFAULT
+    private val userAgent: String
+        get() = PrefsUtility.pref_user_agent_override() ?: Constants.DEFAULT_USER_AGENT
     private val ALL_SCOPES = ("identity edit flair history "
             + "modconfig modflair modlog modposts modwiki mysubreddits "
             + "privatemessages read report save submit subscribe vote "
@@ -74,7 +79,7 @@ object RedditOAuth {
             uri.appendQueryParameter("response_type", "code")
             uri.appendQueryParameter("duration", "permanent")
             uri.appendQueryParameter("state", "Texas")
-            uri.appendQueryParameter("redirect_uri", REDIRECT_URI_NEW)
+            uri.appendQueryParameter("redirect_uri", resolvedRedirectUri)
             uri.appendQueryParameter("client_id", appId)
             uri.appendQueryParameter("scope", ALL_SCOPES)
             return uri.build()
@@ -290,7 +295,7 @@ object RedditOAuth {
         val postFields = ArrayList<PostField>(3)
         postFields.add(PostField("grant_type", "authorization_code"))
         postFields.add(PostField("code", code))
-        postFields.add(PostField("redirect_uri", REDIRECT_URI_NEW))
+        postFields.add(PostField("redirect_uri", resolvedRedirectUri))
         return try {
             val request = HTTPBackend.backend.prepareRequest(
                 context,

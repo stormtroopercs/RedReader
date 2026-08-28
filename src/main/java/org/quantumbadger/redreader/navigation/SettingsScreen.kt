@@ -1666,6 +1666,38 @@ private fun getSettingsCategories(
             )
         ),
 
+        // ─── API keys ───
+        SettingsCategory(
+            id = "api_keys",
+            title = "API keys",
+            items = listOf(
+                SettingsItem.StringSetting(
+                    key = "reddit_client_id_override",
+                    label = "Reddit client ID override",
+                    description = "Override the built-in Reddit OAuth client ID. Leave blank to use the compiled-in default (works out of the box).",
+                    placeholder = "Your Reddit OAuth client ID",
+                    get = { PrefsUtility.pref_reddit_client_id_override() },
+                    set = PrefsUtility::pref_reddit_client_id_override_set
+                ),
+                SettingsItem.StringSetting(
+                    key = "user_agent_override",
+                    label = "User-Agent override",
+                    description = "Override the User-Agent header sent to Reddit. Leave blank to use the built-in default.",
+                    placeholder = "e.g. org.quantumbadger.redreader/1.25.2",
+                    get = { PrefsUtility.pref_user_agent_override() },
+                    set = PrefsUtility::pref_user_agent_override_set
+                ),
+                SettingsItem.StringSetting(
+                    key = "redirect_uri_override",
+                    label = "OAuth redirect URI override",
+                    description = "Override the OAuth redirect URI. Leave blank to use the built-in default (redreader://rr_oauth_redir).",
+                    placeholder = "redreader://rr_oauth_redir",
+                    get = { PrefsUtility.pref_redirect_uri_override() },
+                    set = PrefsUtility::pref_redirect_uri_override_set
+                )
+            )
+        ),
+
         // ─── Network ───
         SettingsCategory(
             id = "network",
@@ -1677,14 +1709,6 @@ private fun getSettingsCategories(
                     description = "Route traffic through the Tor network",
                     get = { PrefsUtility.network_tor() },
                     set = PrefsUtility::network_tor_set
-                ),
-                SettingsItem.StringSetting(
-                    key = "reddit_client_id_override",
-                    label = "Reddit client ID override",
-                    description = "Override the compiled-in Reddit OAuth client ID (self-compiled builds)",
-                    placeholder = "Your Reddit OAuth client ID",
-                    get = { PrefsUtility.pref_reddit_client_id_override() },
-                    set = PrefsUtility::pref_reddit_client_id_override_set
                 )
             )
         ),

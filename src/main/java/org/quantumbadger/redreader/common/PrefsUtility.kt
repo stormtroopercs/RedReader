@@ -792,6 +792,8 @@ object PrefsUtility {
         )
                 || key == REDDIT_USER_AGREEMENT_PREF
                 || key == context.getString(string.pref_reddit_client_id_override_key)
+                || key == context.getString(string.pref_user_agent_override_key)
+                || key == context.getString(string.pref_redirect_uri_override_key)
     }
 
     fun isRestartRequired(context: Context, key: String?): Boolean {
@@ -2368,6 +2370,52 @@ object PrefsUtility {
         // putString with a null value removes the entry (framework semantics)
         sharedPrefs!!.edit()
             .putString(getPrefKey(string.pref_reddit_client_id_override_key), trimmed)
+            .apply()
+    }
+
+    fun pref_user_agent_override(): String? {
+        val value = getString(string.pref_user_agent_override_key, null)
+
+        if (value == null) {
+            return null
+        }
+
+        val valueTrimmed = value.trim { it <= ' ' }
+
+        if (valueTrimmed.isEmpty()) {
+            return null
+        }
+
+        return valueTrimmed
+    }
+
+    fun pref_user_agent_override_set(value: String?) {
+        val trimmed = value?.trim { it <= ' ' }
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_user_agent_override_key), trimmed)
+            .apply()
+    }
+
+    fun pref_redirect_uri_override(): String? {
+        val value = getString(string.pref_redirect_uri_override_key, null)
+
+        if (value == null) {
+            return null
+        }
+
+        val valueTrimmed = value.trim { it <= ' ' }
+
+        if (valueTrimmed.isEmpty()) {
+            return null
+        }
+
+        return valueTrimmed
+    }
+
+    fun pref_redirect_uri_override_set(value: String?) {
+        val trimmed = value?.trim { it <= ' ' }
+        sharedPrefs!!.edit()
+            .putString(getPrefKey(string.pref_redirect_uri_override_key), trimmed)
             .apply()
     }
 
