@@ -14,4 +14,4 @@ dependencyResolutionManagement {
 	}
 }
 
-rootProject.name = "RedReader"
+rootProject.name = "MaterialReader"
