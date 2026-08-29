@@ -23,30 +23,35 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Message
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -66,35 +71,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.stormtroopercs.materialreader.account.RedditAccountManager
 import com.stormtroopercs.materialreader.compose.theme.LocalComposeTheme
-import com.stormtroopercs.materialreader.compose.theme.StyledText
 import com.stormtroopercs.materialreader.compose.ui.RRErrorView
-import com.stormtroopercs.materialreader.common.LinkHandler
-import com.stormtroopercs.materialreader.common.time.TimestampUTC
+import com.stormtroopercs.materialreader.common.PrefsUtility
 import com.stormtroopercs.materialreader.fragments.ReportDialog
 import com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType
-import java.util.concurrent.TimeUnit
 
 /**
  * Comment list content with real data from [CommentListViewModel].
  *
- * Vote arrows dispatch to the ViewModel (Reddit `api/vote`), the report button
- * opens the report dialog, and the More menu offers **Copy link** (comment
- * permalink → clipboard). A comment's **Reply** button calls [onReply] with
- * that comment (its full `t1_…` id is the reply's parent); the post header
- * card (real post listings only) calls [onReplyToPost] (the post's full
- * `t3_…` id).
+ * Phase 7 (FINAL-DESIGN 7.x): each comment is a full-width, cardless
+ * [CommentRow] (7.1) — a 16dp circular avatar, an author line
+ * (`u/name • N points • age`, + `(edited)` when edited), a wrapped body, and
+ * nesting by leading indent only (~16dp per level, no guide lines). Collapsed
+ * threads render as a tappable `View more (N)` row that expands on tap (7.2).
+ * A bottom comment-nav `FilterChip` row (7.4) and a Compose FAB that opens the
+ * reply editor (7.5) round the screen out. Vote / save / report dispatch to
+ * the ViewModel (Reddit `api/vote` / `api/save`); Copy link copies the comment
+ * permalink; Reply navigates to the reply editor with the comment's full
+ * `t1_…` id as the parent.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,6 +112,7 @@ fun RealCommentListScreen(
     val viewModel: CommentListViewModel = hiltViewModel()
     val uiState by viewModel.state.collectAsStateWithLifecycle()
     val listTitle by viewModel.title.collectAsStateWithLifecycle()
+    val expanding by viewModel.expanding.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -115,7 +121,7 @@ fun RealCommentListScreen(
         viewModel.fetchComments(postId)
     }
 
-    // Surface the result of the last comment action (vote) as a Snackbar,
+    // Surface the result of the last comment action (vote/save) as a Snackbar,
     // then clear it so a repeat action re-triggers it.
     val actionResult by viewModel.actionResult.collectAsStateWithLifecycle()
     LaunchedEffect(actionResult) {
@@ -125,9 +131,9 @@ fun RealCommentListScreen(
         }
     }
 
-    // A comment action: upvote / downvote go to the ViewModel (which hits the
-    // Reddit API); copy link copies the comment URL to the clipboard; report
-    // opens the report dialog.
+    // A comment action: upvote / downvote / save go to the ViewModel (which
+    // hits the Reddit API); copy link copies the comment URL to the clipboard;
+    // report opens the report dialog.
     fun onCommentAction(comment: CommentItem, action: CommentAction) {
         val activity = context as? AppCompatActivity
         when (action) {
@@ -140,6 +146,19 @@ fun RealCommentListScreen(
             else -> activity?.let { viewModel.performAction(it, comment, action) }
         }
     }
+
+    // The signed-in username — drives the "Me" nav chip (7.4).
+    val me = remember {
+        RedditAccountManager.getInstance(context).defaultAccount?.username
+    }
+
+    // Comment-nav chip selection (7.4). "Me" filters to the account's own
+    // comments; "New comments" sorts most-recent-first. The media chips
+    // (Images / Links / Videos) are selectable toggles — their filtering needs
+    // per-comment media metadata not yet parsed, so they select but do not
+    // (yet) change the list.
+    var selectedChip by remember { mutableStateOf("All") }
+    val chips = listOf("Images", "Links", "Me", "New comments", "OP", "Threads", "Videos")
 
     Scaffold(
         topBar = {
@@ -169,6 +188,32 @@ fun RealCommentListScreen(
                 }
             )
         },
+        floatingActionButton = {
+            // Compose FAB (7.5): reply to the post.
+            ExtendedFloatingActionButton(
+                onClick = onReplyToPost,
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("Reply") }
+            )
+        },
+        bottomBar = {
+            // Comment-nav chip row (7.4).
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                chips.forEach { chip ->
+                    FilterChip(
+                        selected = selectedChip == chip,
+                        onClick = { selectedChip = if (selectedChip == chip) "All" else chip },
+                        label = { Text(chip, style = MaterialTheme.typography.labelSmall) }
+                    )
+                }
+            }
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         when (val state = uiState) {
@@ -179,17 +224,34 @@ fun RealCommentListScreen(
                         .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    if (expanding) {
+                        Text(
+                            text = "Loading comments…",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else {
+                        CircularProgressIndicator()
+                    }
                 }
             }
 
             is CommentListUiState.Success -> {
+                // Apply the nav-chip filters (7.4).
+                var shown = state.comments
+                if (selectedChip == "Me") {
+                    me?.let { u -> shown = shown.filter { it.author == u } }
+                }
+                if (selectedChip == "New comments") {
+                    shown = shown.sortedByDescending { it.createdUtcTimestamp }
+                }
+
                 CommentListContent(
                     postTitle = state.postTitle,
                     postAuthor = state.postAuthor,
-                    comments = state.comments,
-                    moreCommentsAvailable = state.moreCommentsAvailable,
+                    comments = shown,
+                    expanding = expanding,
                     onCommentAction = ::onCommentAction,
+                    onExpandMore = { viewModel.expandMore(it) },
                     onReply = onReply,
                     onReplyToPost = onReplyToPost,
                     modifier = Modifier.padding(paddingValues)
@@ -231,32 +293,32 @@ private fun CommentListContent(
     postTitle: String?,
     postAuthor: String?,
     comments: List<CommentItem>,
-    moreCommentsAvailable: Boolean,
+    expanding: Boolean,
     onCommentAction: (CommentItem, CommentAction) -> Unit,
+    onExpandMore: (CommentItem) -> Unit,
     onReply: (CommentItem) -> Unit,
     onReplyToPost: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val theme = LocalComposeTheme.current.postCard
     val listState = rememberLazyListState()
+    val showAvatars = remember { PrefsUtility.appearance_user_show_avatars() }
 
     LazyColumn(
         state = listState,
         modifier = modifier
     ) {
-        // Optional: show post header
         postTitle?.takeIf { it.isNotBlank() }?.let { title ->
             item {
                 PostHeaderCard(
                     title = title,
                     author = postAuthor,
-                    theme = theme,
                     onReplyToPost = onReplyToPost
                 )
             }
         }
 
-        if (comments.isEmpty()) {
+        if (comments.isEmpty() && !expanding) {
             item {
                 Box(
                     modifier = Modifier
@@ -272,13 +334,21 @@ private fun CommentListContent(
             }
         } else {
             items(comments, key = { it.id }) { comment ->
-                CommentCard(
-                    modifier = Modifier.animateItem(),
-                    comment = comment,
-                    theme = theme,
-                    onCommentAction = onCommentAction,
-                    onReply = onReply
-                )
+                if (comment.collapsedReason == "MORE") {
+                    ViewMoreRow(
+                        count = comment.replyCount,
+                        depth = comment.replyDepth,
+                        expanding = expanding,
+                        onClick = { onExpandMore(comment) }
+                    )
+                } else {
+                    CommentRow(
+                        comment = comment,
+                        showAvatars = showAvatars,
+                        onCommentAction = onCommentAction,
+                        onReply = onReply
+                    )
+                }
             }
         }
     }
@@ -291,15 +361,13 @@ private fun CommentListContent(
 private fun PostHeaderCard(
     title: String,
     author: String?,
-    theme: com.stormtroopercs.materialreader.compose.theme.ComposeThemePostCard,
     onReplyToPost: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(theme.backgroundColor)
             .clickable(onClick = onReplyToPost)
-            .padding(horizontal = 12.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Text(
             text = title,
@@ -318,129 +386,80 @@ private fun PostHeaderCard(
             )
         }
     }
-
-    // Divider
-    androidx.compose.foundation.Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp),
-        onDraw = {
-            drawLine(
-                color = theme.iconColor.copy(alpha = 0.1f),
-                start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                end = androidx.compose.ui.geometry.Offset(size.width, 0f),
-                strokeWidth = 1.dp.toPx()
-            )
-        }
-    )
 }
 
 /**
- * Single comment card with voting, author, body, and replies.
+ * A single comment (FINAL-DESIGN 7.1): full-width, cardless. A 16dp circular
+ * avatar (optional), an author line (`u/name • N points • age`, + `(edited)`),
+ * a wrapped body, and a compact action row. Nesting is a leading indent of
+ * ~16dp per level — no vertical guide lines.
  */
 @Composable
-private fun CommentCard(
-    modifier: Modifier = Modifier,
+private fun CommentRow(
     comment: CommentItem,
-    theme: com.stormtroopercs.materialreader.compose.theme.ComposeThemePostCard,
+    showAvatars: Boolean,
     onCommentAction: (CommentItem, CommentAction) -> Unit,
     onReply: (CommentItem) -> Unit
 ) {
     var moreMenuExpanded by remember { mutableStateOf(false) }
+    // Cap the indent so very deep threads stay readable.
+    val indentLevels = minOf(comment.replyDepth, 8)
+
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .background(theme.backgroundColor)
-            .padding(horizontal = 12.dp, vertical = 12.dp)
+            .padding(start = (indentLevels * 16).dp, end = 16.dp, top = 10.dp, bottom = 10.dp)
     ) {
-        // Left side: vote buttons
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-            modifier = Modifier.width(44.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .clickable(onClick = { onCommentAction(comment, CommentAction.UPVOTE) }),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowUpward,
-                    contentDescription = "Upvote",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-
-            Text(
-                text = formatScore(comment.score),
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Medium
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .clickable(onClick = { onCommentAction(comment, CommentAction.DOWNVOTE) }),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowDownward,
-                    contentDescription = "Downvote",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+        // 16dp circular avatar (7.1) — an initial avatar coloured by the
+        // username hash; shown only when the setting is on.
+        if (showAvatars) {
+            CommentAvatar(name = comment.author, show = comment.author != null)
+            Spacer(Modifier.width(10.dp))
         }
 
-        // Main content
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 10.dp)
-        ) {
-            // Author and metadata
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        Column(modifier = Modifier.weight(1f)) {
+            // Author line.
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = if (comment.author != null) "u/${comment.author}" else "[deleted]",
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
                 )
-
-                // Flair
                 comment.authorFlairText?.takeIf { it.isNotBlank() }?.let { flair ->
                     Spacer(Modifier.width(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                MaterialTheme.shapes.small
-                            )
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = flair,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
+                    Text(
+                        text = flair,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
-
-                // Timestamp
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = "${formatScore(comment.score)} points",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
                 Spacer(Modifier.width(6.dp))
                 Text(
                     text = formatTimeAgo(comment.createdUtcTimestamp),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
                 )
+                if (comment.edited) {
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "(edited)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
             }
 
-            // Body
+            // Body.
             Spacer(Modifier.height(6.dp))
             Text(
                 text = comment.body,
@@ -449,61 +468,66 @@ private fun CommentCard(
                 overflow = TextOverflow.Visible
             )
 
-            // Actions row
-            Spacer(Modifier.height(8.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(
-                    onClick = { onReply(comment) },
-                    content = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.Message,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = if (comment.replyCount > 0) "${comment.replyCount} replies" else "Reply",
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
+            // Compact action row.
+            Spacer(Modifier.height(6.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ActionIcon(
+                    icon = Icons.Default.ArrowUpward,
+                    label = "Upvote",
+                    onClick = { onCommentAction(comment, CommentAction.UPVOTE) }
                 )
-
-                Spacer(Modifier.width(16.dp))
-
-                TextButton(
-                    onClick = { onCommentAction(comment, CommentAction.REPORT) },
-                    content = {
-                        Icon(
-                            imageVector = Icons.Default.Flag,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text("Report", style = MaterialTheme.typography.labelSmall)
-                    }
+                Text(
+                    text = formatScore(comment.score),
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(horizontal = 4.dp)
                 )
-
-                Spacer(Modifier.width(16.dp))
-
+                ActionIcon(
+                    icon = Icons.Default.ArrowDownward,
+                    label = "Downvote",
+                    onClick = { onCommentAction(comment, CommentAction.DOWNVOTE) }
+                )
+                if (comment.replyCount > 0) {
+                    Spacer(Modifier.width(12.dp))
+                    ActionIcon(
+                        icon = Icons.AutoMirrored.Default.Message,
+                        label = "${comment.replyCount} replies",
+                        onClick = { onReply(comment) }
+                    )
+                } else {
+                    Spacer(Modifier.width(12.dp))
+                    ActionIcon(
+                        icon = Icons.AutoMirrored.Default.Message,
+                        label = "Reply",
+                        onClick = { onReply(comment) }
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                ActionIcon(
+                    icon = Icons.Default.Flag,
+                    label = "Report",
+                    onClick = { onCommentAction(comment, CommentAction.REPORT) }
+                )
                 Box {
-                    TextButton(
-                        onClick = { moreMenuExpanded = true },
-                        content = {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Text("More", style = MaterialTheme.typography.labelSmall)
-                        }
+                    ActionIcon(
+                        icon = Icons.Default.MoreVert,
+                        label = "More",
+                        onClick = { moreMenuExpanded = true }
                     )
                     DropdownMenu(
                         expanded = moreMenuExpanded,
                         onDismissRequest = { moreMenuExpanded = false }
                     ) {
+                        val saveLabel = if (comment.saved) "Unsave" else "Save"
+                        DropdownMenuItem(
+                            text = { Text(saveLabel) },
+                            onClick = {
+                                moreMenuExpanded = false
+                                onCommentAction(
+                                    comment,
+                                    if (comment.saved) CommentAction.UNSAVE else CommentAction.SAVE
+                                )
+                            }
+                        )
                         DropdownMenuItem(
                             text = { Text("Copy link") },
                             onClick = {
@@ -516,22 +540,105 @@ private fun CommentCard(
             }
         }
     }
+}
 
-    // Divider
-    androidx.compose.foundation.Canvas(
+/**
+ * A 16dp circular comment avatar (7.1): a single coloured initial derived
+ * from the username. [show] is false for deleted/anonymous comments (no
+ * avatar slot is drawn by the caller in that case).
+ */
+@Composable
+private fun CommentAvatar(name: String?, show: Boolean) {
+    if (!show || name == null) return
+    val hue = (name.hashCode() and 0x7fffffff) % 360
+    val color = Color(0.45f, 0.45f, 0.55f).let {
+        // A muted, distinguishable fill keyed on the username.
+        Color(
+            red = 0.35f + 0.25f * kotlin.math.cos(Math.toRadians(hue.toDouble())).toFloat(),
+            green = 0.35f + 0.25f * kotlin.math.cos(Math.toRadians((hue + 120).toDouble())).toFloat(),
+            blue = 0.45f + 0.25f * kotlin.math.cos(Math.toRadians((hue + 240).toDouble())).toFloat()
+        )
+    }
+    Box(
+        modifier = Modifier
+            .size(16.dp)
+            .clip(CircleShape)
+            .background(color),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = name.first().uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
+        )
+    }
+}
+
+/**
+ * A compact icon+label comment action (part of the 7.1 action row).
+ */
+@Composable
+private fun ActionIcon(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
+    TextButton(
+        onClick = onClick,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            horizontal = 4.dp, vertical = 0.dp
+        )
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+    }
+}
+
+/**
+ * A collapsed-thread continuation row (7.2): `View more (N)`, full-width and
+ * tappable, in place of the hidden children. Expands on tap.
+ */
+@Composable
+private fun ViewMoreRow(
+    count: Int,
+    depth: Int,
+    expanding: Boolean,
+    onClick: () -> Unit
+) {
+    val indentLevels = minOf(depth, 8)
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(1.dp)
-            .padding(start = 60.dp),
-        onDraw = {
-            drawLine(
-                color = theme.iconColor.copy(alpha = 0.1f),
-                start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                end = androidx.compose.ui.geometry.Offset(size.width, 0f),
-                strokeWidth = 1.dp.toPx()
+            .padding(start = (indentLevels * 16).dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+            .clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (expanding) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp),
+                strokeWidth = 2.dp
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = "Loading…",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            Text(
+                text = "View more ($count)",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium
             )
         }
-    )
+    }
 }
 
 private fun formatScore(score: Int): String {
