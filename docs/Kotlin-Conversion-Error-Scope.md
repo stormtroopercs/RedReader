@@ -9,7 +9,7 @@
 > **Last error count:** **1,101** (`compileDebugKotlin`)
 > **Doc updated:** 2026-08-16
 > **Toolchain:** Kotlin 2.4.10, AGP 9.3.1, compileSdk/targetSdk 36, JDK 17
-> (`JAVA_HOME=/opt/data/jdk-17.0.17+10`)
+> (`JAVA_HOME=/home/storm/.hermes/tools/jdk-17.0.17+10`)
 
 ---
 
@@ -285,11 +285,11 @@ log-driven transforms + analyzers pinned to this migration's error families) wer
 ## 9. Reproduction
 
 ```bash
-cd /opt/data/redreader-project/RedReader
-export JAVA_HOME=/opt/data/tools/jdk-17.0.17+10
+cd /home/storm/.hermes/redreader-project/RedReader
+export JAVA_HOME=/home/storm/.hermes/tools/jdk-17.0.17+10
 ./gradlew compileDebugKotlin --no-daemon > /tmp/compile.log 2>&1
 grep -c '^e:' /tmp/compile.log
-grep '^e:' /tmp/compile.log | sed 's|file:///opt/data/redreader-project/RedReader/src/main/java/org/quantumbadger/redreader/||; s|\.kt:.*||' | sort | uniq -c | sort -rn   # per-file
+grep '^e:' /tmp/compile.log | sed 's|file:///home/storm/.hermes/redreader-project/RedReader/src/main/java/org/quantumbadger/redreader/||; s|\.kt:.*||' | sort | uniq -c | sort -rn   # per-file
 ```
 
 Original-Java semantics reference: `git show 2479dfa0^:<path>`.

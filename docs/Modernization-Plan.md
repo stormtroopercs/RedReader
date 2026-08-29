@@ -110,4 +110,4 @@
 |
 |## Reference Project
 |
-|[Now in Android](https://github.com/android/nowinandroid) — Google's official reference app for modern Android development. Cloned locally at `/opt/data/nowinandroid`.
+|[Now in Android](https://github.com/android/nowinandroid) — Google's official reference app for modern Android development. Cloned locally at `/home/storm/.hermes/redreader-project/nowinandroid`.

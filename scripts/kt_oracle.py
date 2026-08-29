@@ -1,6 +1,6 @@
 import subprocess, os, tempfile, sys
 
-JAVA = '/opt/data/tools/jdk-17.0.17+10/bin/java'
+JAVA = '/home/storm/.hermes/tools/jdk-17.0.17+10/bin/java'
 CP = open('/tmp/kc_cp.txt').read() if os.path.exists('/tmp/kc_cp.txt') else None
 
 def kc(code, name='t'):
