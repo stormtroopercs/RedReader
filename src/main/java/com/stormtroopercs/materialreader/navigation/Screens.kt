@@ -67,6 +67,15 @@ data class PostSubmit(val subreddit: String, val shareUrl: String? = null) : Nav
 @Serializable
 data object SubredditSearch : NavKey
 
+/**
+ * Community detail screen (FINAL-DESIGN Phase 6.3): the scrolling
+ * community header + the Active / About / Favorite / Mods tab chips +
+ * the standard [PostCard] feed. [subreddit] is the bare community name
+ * (e.g. `programming`); the screen derives the `r/<name>` listing path.
+ */
+@Serializable
+data class Community(val subreddit: String) : NavKey
+
 @Serializable
 data class CommentReply(val parentThingId: String) : NavKey
 

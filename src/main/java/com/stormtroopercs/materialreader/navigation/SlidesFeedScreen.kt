@@ -129,6 +129,8 @@ fun RealSlidesFeedScreen(
 	onNavigateToSaved: () -> Unit = {},
 	/** Open an arbitrary listing path (More actions → custom slot). */
 	onOpenListing: (String) -> Unit = {},
+	/** Open the feed's community detail (the community pill tap, Phase 6.3). */
+	onOpenCommunity: (String) -> Unit = {},
 	/** Open Settings (More actions → Settings). */
 	onNavigateToSettings: () -> Unit = {},
 	/** Re-enter this feed as the list view (Change View → a list mode). */
@@ -266,17 +268,17 @@ fun RealSlidesFeedScreen(
 						modifier = Modifier.fillMaxWidth(),
 					) {
 						SlidesToolbar(
-											title = listTitle.ifEmpty { "r/$subreddit" },
-											community = community,
-											onSortMenuToggle = { sortDialogOpen = true },
-											onMoreActionsToggle = { moreActionsOpen = true },
-											onBack = onNavigateBack,
-											onSearch = onNavigateToSubredditSearch,
-											onCommunityTap = onNavigateToSubredditSearch,
-											onRefresh = { viewModel.refresh() },
-											onSubmit = onNavigateToPostSubmit,
-											onDismiss = { toolbarVisible.value = false },
-										)
+								title = listTitle.ifEmpty { "r/$subreddit" },
+								community = community,
+								onSortMenuToggle = { sortDialogOpen = true },
+								onMoreActionsToggle = { moreActionsOpen = true },
+								onBack = onNavigateBack,
+								onSearch = onNavigateToSubredditSearch,
+								onCommunityTap = { onOpenCommunity(subreddit) },
+								onRefresh = { viewModel.refresh() },
+								onSubmit = onNavigateToPostSubmit,
+								onDismiss = { toolbarVisible.value = false },
+						)
 					}
 				}
 			}

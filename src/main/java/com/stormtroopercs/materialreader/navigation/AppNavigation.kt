@@ -135,6 +135,12 @@ fun AppNavGraph(navigationState: NavigationState) {
                     onNavigateToSubreddit = { subreddit ->
                         navigator.navigate(PostList(subreddit))
                     },
+                    onNavigateToCommunity = { name ->
+                        navigator.navigate(Community(name))
+                    },
+                    onNavigateToSearch = {
+                        navigator.navigate(SubredditSearch)
+                    },
                 )
             }
 
@@ -204,6 +210,16 @@ fun AppNavGraph(navigationState: NavigationState) {
                         },
                         onOpenListing = { path ->
                             navigator.navigate(PostList(path))
+                        },
+                        // The community pill opens the community detail
+                        // (Phase 6.3); non-community feeds fall back to the
+                        // community search.
+                        onOpenCommunity = { communityPath ->
+                            if (isCommunityFeedPath(communityPath)) {
+                                navigator.navigate(Community(communityPath.removePrefix("r/")))
+                            } else {
+                                navigator.navigate(SubredditSearch)
+                            }
                         },
                         onNavigateToSettings = {
                             navigator.navigate(Settings)
@@ -354,6 +370,49 @@ fun AppNavGraph(navigationState: NavigationState) {
                     onSubredditSelected = { subreddit ->
                         navigator.navigate(PostList(subreddit))
                     }
+                )
+            }
+
+            // Child: Community detail (FINAL-DESIGN Phase 6.3). The screen
+            // resolves its own Hilt ViewModels (scoped to this entry); the
+            // tab is route-local state so switching tabs does not re-navigate.
+            entry<Community> { key ->
+                var tab by remember { mutableStateOf(CommunityTab.ACTIVE) }
+                CommunityDetailScreen(
+                    tab = tab,
+                    tabTitle = "r/${key.subreddit}",
+                    onTabSelected = { tab = it },
+                    onBack = { navigator.goBack() },
+                    onNavigateToCommentList = { postId ->
+                        navigator.navigate(CommentList(postId))
+                    },
+                    onNavigateToUserProfile = { username ->
+                        navigator.navigate(UserProfile(username))
+                    },
+                    onNavigateToPostSubmit = {
+                        navigator.navigate(PostSubmit(key.subreddit))
+                    },
+                    onNavigateToSubredditSearch = {
+                        navigator.navigate(SubredditSearch)
+                    },
+                    onNavigateToProfile = {
+                        val username = RedditAccountManager.getInstance(context).defaultAccount.username
+                        navigator.navigate(UserProfile(username))
+                    },
+                    onNavigateToRandomPost = { postId ->
+                        navigator.navigate(CommentList(postId))
+                    },
+                    onNavigateToSaved = {
+                        val username = RedditAccountManager.getInstance(context).defaultAccount.username
+                        navigator.navigate(PostList("u/$username/saved"))
+                    },
+                    onOpenListing = { path ->
+                        navigator.navigate(PostList(path))
+                    },
+                    onNavigateToSettings = {
+                        navigator.navigate(Settings)
+                    },
+                    onOpenLicense = openLicense,
                 )
             }
 
