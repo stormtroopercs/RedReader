@@ -48,6 +48,10 @@ import com.stormtroopercs.materialreader.common.datastream.SeekableInputStream
 import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import com.stormtroopercs.materialreader.reddit.PostSort
 import com.stormtroopercs.materialreader.reddit.RedditAPI
+import com.stormtroopercs.materialreader.reddit.api.RedditAPIIndividualSubredditDataRequester
+import com.stormtroopercs.materialreader.reddit.things.RedditSubreddit
+import com.stormtroopercs.materialreader.reddit.things.SubredditCanonicalId
+import com.stormtroopercs.materialreader.io.RequestResponseHandler
 import com.stormtroopercs.materialreader.reddit.APIResponseHandler.ActionResponseHandler
 import com.stormtroopercs.materialreader.reddit.kthings.JsonUtils.decodeRedditThingFromStream
 import com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType
@@ -61,6 +65,18 @@ sealed class PostListUiState {
     data class Success(val posts: List<PostItem>) : PostListUiState()
     data class Error(val error: RRError) : PostListUiState()
 }
+
+/**
+ * About-data for the community the listing belongs to (the swipe feed's
+ * collapsing toolbar shows it as the community pill: name + subscriber
+ * count). Null for non-community listings (frontpage / user / multireddit /
+ * search) and while not yet fetched.
+ */
+data class CommunityInfo(
+    val name: String,
+    val subscribers: Int?,
+    val headerImage: String?
+)
 
 data class PostItem(
     val id: String,
@@ -115,6 +131,9 @@ class PostListViewModel @Inject constructor(
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
 
+    private val _community = MutableStateFlow<CommunityInfo?>(null)
+    val community: StateFlow<CommunityInfo?> = _community.asStateFlow()
+
     private var currentListPath: String = ""
     private var currentSearchQuery: String? = null
 
@@ -147,12 +166,14 @@ class PostListViewModel @Inject constructor(
         resolveTitle(listPath, searchQuery)
         _state.value = PostListUiState.Loading(_state.value !is PostListUiState.Success)
         fetchList(listPath, searchQuery)
+        fetchCommunity(listPath, searchQuery)
     }
 
     fun refresh() {
         if (currentListPath.isEmpty() && currentSearchQuery == null) return
         _state.value = PostListUiState.Loading(false)
         fetchList(currentListPath, currentSearchQuery)
+        fetchCommunity(currentListPath, currentSearchQuery)
     }
 
     fun setSortBy(sort: PostSort) {
@@ -363,6 +384,54 @@ class PostListViewModel @Inject constructor(
                     RRError(title = "Error", message = e.message, t = e)
                 )
             }
+        }
+    }
+
+    /**
+     * Fetch the about-data (subscribers, header image) of the community this
+     * listing belongs to — for the swipe feed's collapsing community pill.
+     * Only bare `r/<name>` subreddit listings have one; every other listing
+     * shape (frontpage, user, multireddit, search) clears the state. The
+     * request is best-effort: a failure leaves the pill showing the name
+     * without a count.
+     */
+    private fun fetchCommunity(listPath: String, searchQuery: String?) {
+        if (searchQuery != null || listPath.isBlank() ||
+            listPath == "frontpage" || listPath == "popular" || listPath == "all" ||
+            listPath.startsWith("u/") || listPath.startsWith("m/")
+        ) {
+            _community.value = null
+            return
+        }
+
+        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        if (account == null) return
+
+        // Seed the pill immediately with the new name so switching feeds
+        // never shows the previous community's name while about-data loads.
+        _community.value = CommunityInfo(name = listPath, subscribers = null, headerImage = null)
+
+        try {
+            val requester = RedditAPIIndividualSubredditDataRequester(context, account)
+            requester.performRequest(
+                SubredditCanonicalId(listPath),
+                null,
+                object : RequestResponseHandler<RedditSubreddit, RRError> {
+                    override fun onRequestFailed(failureReason: RRError) {
+                        // Best-effort: keep whatever the pill already shows.
+                    }
+
+                    override fun onRequestSuccess(result: RedditSubreddit, timeCached: TimestampUTC?) {
+                        _community.value = CommunityInfo(
+                            name = result.display_name ?: listPath,
+                            subscribers = result.subscribers,
+                            headerImage = result.header_img
+                        )
+                    }
+                }
+            )
+        } catch (e: Exception) {
+            // Best-effort — never break the listing for the pill.
         }
     }
 }

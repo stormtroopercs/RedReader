@@ -146,22 +146,51 @@ fun AppNavGraph(navigationState: NavigationState) {
                 )
             }
 
-            // Child: Post list
+            // Child: Post list. Community (r/<name>) listings render the
+            // signature swipe feed (FINAL-DESIGN Phase 3); user, multireddit,
+            // frontpage/popular/all and search listings keep the list view for
+            // now (they get the Change-View / view-mode treatment in Phase 4).
             entry<PostList> { key ->
-                RealPostListScreen(
-                    subreddit = key.subreddit,
-                    searchQuery = key.searchQuery,
-                    onNavigateBack = { navigator.goBack() },
-                    onNavigateToCommentList = { postId ->
-                        navigator.navigate(CommentList(postId))
-                    },
-                    onNavigateToUserProfile = { username ->
-                        navigator.navigate(UserProfile(username))
-                    },
-                    onNavigateToPostSubmit = {
-                        navigator.navigate(PostSubmit(key.subreddit))
-                    }
-                )
+                val isCommunityFeed = key.searchQuery == null &&
+                    key.subreddit.isNotBlank() &&
+                    key.subreddit != "frontpage" &&
+                    key.subreddit != "popular" &&
+                    key.subreddit != "all" &&
+                    !key.subreddit.startsWith("u/") &&
+                    !key.subreddit.startsWith("m/")
+                if (isCommunityFeed) {
+                    RealSlidesFeedScreen(
+                        subreddit = key.subreddit,
+                        onNavigateBack = { navigator.goBack() },
+                        onNavigateToCommentList = { postId ->
+                            navigator.navigate(CommentList(postId))
+                        },
+                        onNavigateToUserProfile = { username ->
+                            navigator.navigate(UserProfile(username))
+                        },
+                        onNavigateToPostSubmit = {
+                            navigator.navigate(PostSubmit(key.subreddit))
+                        },
+                        onNavigateToSubredditSearch = {
+                            navigator.navigate(SubredditSearch)
+                        },
+                    )
+                } else {
+                    RealPostListScreen(
+                        subreddit = key.subreddit,
+                        searchQuery = key.searchQuery,
+                        onNavigateBack = { navigator.goBack() },
+                        onNavigateToCommentList = { postId ->
+                            navigator.navigate(CommentList(postId))
+                        },
+                        onNavigateToUserProfile = { username ->
+                            navigator.navigate(UserProfile(username))
+                        },
+                        onNavigateToPostSubmit = {
+                            navigator.navigate(PostSubmit(key.subreddit))
+                        }
+                    )
+                }
             }
 
             // Child: Comment list

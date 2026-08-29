@@ -88,6 +88,18 @@ class NavigationState(
     }
 
     /**
+     * Pop the active top-level route's back stack back to its root, keeping
+     * the root entry. Used by the bottom nav: tapping the current tab returns
+     * to that tab's root.
+     */
+    fun popToRoot() {
+        val stack = backStacks[topLevelRoute] ?: return
+        while (stack.size > 1) {
+            stack.removeAt(stack.size - 1)
+        }
+    }
+
+    /**
      * Land directly on [child] under the [root] top-level route: switch to
      * [root] (resetting its back stack to the base) and push [child]. Used for
      * cold-start deep links (e.g. tapping a notification) where the app should
