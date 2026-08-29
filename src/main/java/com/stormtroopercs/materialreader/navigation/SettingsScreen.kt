@@ -117,6 +117,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val activity = context as? androidx.appcompat.app.AppCompatActivity
     var showAppbar by remember { mutableStateOf(false) }
+    var showThemeColors by remember { mutableStateOf(false) }
     var showCacheLocation by remember { mutableStateOf(false) }
     var showCacheClear by remember { mutableStateOf(false) }
 
@@ -219,7 +220,12 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-        if (showAppbar) {
+        if (showThemeColors) {
+            com.stormtroopercs.materialreader.compose.ui.ThemeColorPanel(
+                modifier = Modifier.padding(paddingValues),
+                onBack = { showThemeColors = false }
+            )
+        } else if (showAppbar) {
             AppbarScreen(
                 modifier = Modifier.padding(paddingValues),
                 onBack = { showAppbar = false }
@@ -231,6 +237,7 @@ fun SettingsScreen(
                 onNavigateToBugReport = onNavigateToBugReport,
                 onNavigateToLicense = onNavigateToLicense,
                 onOpenAppbar = { showAppbar = true },
+                onOpenThemeColors = { showThemeColors = true },
                 onOpenCacheLocation = { showCacheLocation = true },
                 onOpenCacheClear = { showCacheClear = true },
                 onBackupPreferences = {
@@ -263,6 +270,7 @@ private fun SettingsContent(
     onNavigateToBugReport: () -> Unit = {},
     onNavigateToLicense: () -> Unit = {},
     onOpenAppbar: () -> Unit = {},
+    onOpenThemeColors: () -> Unit = {},
     onOpenCacheLocation: () -> Unit = {},
     onOpenCacheClear: () -> Unit = {},
     onBackupPreferences: () -> Unit = {},
@@ -276,6 +284,7 @@ private fun SettingsContent(
         onNavigateToBugReport,
         onNavigateToLicense,
         onOpenAppbar,
+        onOpenThemeColors,
         onOpenCacheLocation,
         onOpenCacheClear,
         onBackupPreferences,
@@ -776,6 +785,7 @@ private fun getSettingsCategories(
     onNavigateToBugReport: () -> Unit = {},
     onNavigateToLicense: () -> Unit = {},
     onOpenAppbar: () -> Unit = {},
+    onOpenThemeColors: () -> Unit = {},
     onOpenCacheLocation: () -> Unit = {},
     onOpenCacheClear: () -> Unit = {},
     onBackupPreferences: () -> Unit = {},
@@ -808,6 +818,12 @@ private fun getSettingsCategories(
                     entries = AppearanceTheme.entries,
                     get = { PrefsUtility.appearance_theme() },
                     set = PrefsUtility::appearance_theme_set
+                ),
+                SettingsItem.PreferenceItem(
+                    key = "theme_colours",
+                    label = "Theme colours",
+                    description = "Dynamic / manual accent, live preview, vote colours",
+                    onClick = onOpenThemeColors
                 ),
                 SettingsItem.EnumSetting(
                     key = "navbar_colour",

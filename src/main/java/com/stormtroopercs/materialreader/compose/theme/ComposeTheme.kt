@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -133,6 +134,7 @@ fun RRComposeContextTheme(
 	val theme = ComposeThemeImpl(prefs)
 
 	val view = LocalView.current
+	val context = LocalContext.current
 	if (controlsStatusBar && !view.isInEditMode) {
 		SideEffect {
 			val window = (view.context as Activity).window
@@ -142,18 +144,12 @@ fun RRComposeContextTheme(
 		}
 	}
 
-	MaterialTheme(
-		colorScheme = when (themePref.lightness) {
-			ThemeLightness.Light -> lightColorScheme(
-				primary = themePref.colorPrimary,
-				secondary = themePref.colorPrimaryDark,
-			)
+	// Accent colours: Material You dynamic (automatic) or the user's manual
+	// pick — see ThemeColors.kt. RedReader's own lightness is preserved.
+	val colorScheme = resolveThemeColorScheme(prefs, themePref.lightness, context)
 
-			ThemeLightness.Dark -> darkColorScheme(
-				primary = themePref.colorPrimary,
-				secondary = themePref.colorPrimaryDark,
-			)
-		}
+	MaterialTheme(
+		colorScheme = colorScheme
 	) {
 		CompositionLocalProvider(LocalComposeTheme provides theme) {
 			content()

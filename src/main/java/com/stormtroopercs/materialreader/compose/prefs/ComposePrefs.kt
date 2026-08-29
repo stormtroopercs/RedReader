@@ -29,6 +29,7 @@ import com.stormtroopercs.materialreader.common.General
 import com.stormtroopercs.materialreader.settings.types.AlbumViewMode
 import com.stormtroopercs.materialreader.settings.types.AppearanceTheme
 import com.stormtroopercs.materialreader.settings.types.SettingSerializer
+import com.stormtroopercs.materialreader.settings.types.ThemeColorMode
 
 @Stable
 interface Preference<T> {
@@ -37,6 +38,14 @@ interface Preference<T> {
 
 interface ComposePrefs {
 	val appearanceTheme: Preference<AppearanceTheme>
+
+	/** Accent colours: dynamic (Material You) vs hand-picked (manual). */
+	val themeColorMode: Preference<ThemeColorMode>
+	/** Manual accent (primary) colour as `#RRGGBB` hex, used in manual mode. */
+	val themeColorManual: Preference<String>
+	/** Accessibility overrides: custom upvote / downvote colours (`#RRGGBB`), or null = theme default. */
+	val themeUpvoteColor: Preference<String?>
+	val themeDownvoteColor: Preference<String?>
 
 	val appearanceFontScaleGlobal: Float
 	val appearanceFontScaleBodyText: Float
@@ -162,6 +171,65 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 			}
 	}
 
+	/**
+	 * A nullable string pref. `null` is stored as the empty string so the key
+	 * round-trips a "not set" value (used for the optional upvote/downvote
+	 * colour overrides).
+	 */
+	private inner class NullableStringPref(
+		private val key: String,
+		private val default: String?
+	) : Preference<String?> {
+
+		private val mutableState = mutableStateOf(loadPref())
+
+		init {
+			changeObservers[key] = {
+				mutableState.value = loadPref()
+			}
+		}
+
+		private fun loadPref(): String? {
+			val stored = sharedPrefs.getString(key, null)
+			return when (stored) {
+				null -> default
+				"" -> null
+				else -> stored
+			}
+		}
+
+		override var value: String?
+			get() = mutableState.value
+			set(value) {
+				sharedPrefs.edit().putString(key, value ?: "").apply()
+				mutableState.value = value
+			}
+	}
+
+	/** A non-null string pref (used for the manual accent colour hex). */
+	private inner class StringPref(
+		private val key: String,
+		private val default: String
+	) : Preference<String> {
+
+		private val mutableState = mutableStateOf(loadPref())
+
+		init {
+			changeObservers[key] = {
+				mutableState.value = loadPref()
+			}
+		}
+
+		private fun loadPref() = sharedPrefs.getString(key, default) ?: default
+
+		override var value: String
+			get() = mutableState.value
+			set(value) {
+				sharedPrefs.edit().putString(key, value).apply()
+				mutableState.value = value
+			}
+	}
+
 	private inner class EnumPref<T>(
 		private val key: String,
 		private val default: T,
@@ -212,6 +280,27 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 		R.string.pref_appearance_theme_key,
 		AppearanceTheme.RED,
 		AppearanceTheme.settingSerializer
+	)
+
+	override val themeColorMode: Preference<ThemeColorMode> = EnumPref(
+		"theme_color_mode",
+		ThemeColorMode.AUTOMATIC,
+		ThemeColorMode.settingSerializer
+	)
+
+	override val themeColorManual: Preference<String> = StringPref(
+		"theme_color_manual",
+		"#6750A4"
+	)
+
+	override val themeUpvoteColor: Preference<String?> = NullableStringPref(
+		"theme_upvote_color",
+		null
+	)
+
+	override val themeDownvoteColor: Preference<String?> = NullableStringPref(
+		"theme_downvote_color",
+		null
 	)
 
 	override val albumViewMode: Preference<AlbumViewMode> = EnumPref(
