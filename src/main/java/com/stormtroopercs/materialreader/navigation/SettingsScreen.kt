@@ -98,6 +98,7 @@ import com.stormtroopercs.materialreader.reddit.prepared.RedditChangeDataManager
 import com.stormtroopercs.materialreader.common.time.TimeDuration
 import com.stormtroopercs.materialreader.common.StringUtils
 import com.stormtroopercs.materialreader.settings.types.AppearanceTheme
+import com.stormtroopercs.materialreader.settings.types.PostSwipeAction
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -1040,6 +1041,43 @@ private fun getSettingsCategories(
                     label = "Hide toolbar in post lists",
                     get = { PrefsUtility.pref_appearance_hide_headertoolbar_postlist() },
                     set = PrefsUtility::pref_appearance_hide_headertoolbar_postlist_set
+                )
+            )
+        ),
+
+        // ─── Post options (card swipe gestures) ───
+        SettingsCategory(
+            id = "post_options",
+            title = "Post options",
+            items = listOf(
+                SettingsItem.ChoiceSetting(
+                    key = "post_swipe_action_1",
+                    label = "Swipe right action",
+                    description = "Horizontal swipe to the right on a post card",
+                    options = swipeActionOptions(),
+                    get = { FeedPreferences.swipeAction1().stringValue },
+                    set = { FeedPreferences.setSwipeAction1(postSwipeAction(it)) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "post_swipe_action_2",
+                    label = "Swipe left action",
+                    options = swipeActionOptions(),
+                    get = { FeedPreferences.swipeAction2().stringValue },
+                    set = { FeedPreferences.setSwipeAction2(postSwipeAction(it)) }
+                ),
+                SettingsItem.ChoiceSetting(
+                    key = "post_swipe_action_3",
+                    label = "Swipe far left action",
+                    options = swipeActionOptions(),
+                    get = { FeedPreferences.swipeAction3().stringValue },
+                    set = { FeedPreferences.setSwipeAction3(postSwipeAction(it)) }
+                ),
+                SettingsItem.BooleanSetting(
+                    key = "post_swipe_vibrate",
+                    label = "Force vibrate",
+                    description = "Haptic feedback when a swipe action commits",
+                    get = { FeedPreferences.swipeVibrate() },
+                    set = FeedPreferences::setSwipeVibrate
                 )
             )
         ),
@@ -2471,3 +2509,17 @@ private fun AppbarScreen(modifier: Modifier, onBack: () -> Unit) {
         }
     }
 }
+
+/** The reference's post swipe-action slots (FINAL-DESIGN Phase 4.3):
+ *  upvote / downvote / hide / save / open comments / none. */
+private fun swipeActionOptions(): List<Pair<String, String>> = listOf(
+    "Upvote" to "upvote",
+    "Downvote" to "downvote",
+    "Hide" to "hide",
+    "Save" to "save",
+    "Open comments" to "comments",
+    "None" to "none",
+)
+
+private fun postSwipeAction(value: String): PostSwipeAction =
+    PostSwipeAction.entries.firstOrNull { it.stringValue == value } ?: PostSwipeAction.NONE

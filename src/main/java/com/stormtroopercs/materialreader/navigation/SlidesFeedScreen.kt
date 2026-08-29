@@ -126,9 +126,12 @@ fun RealSlidesFeedScreen(
 	val uiState by viewModel.state.collectAsStateWithLifecycle()
 	val listTitle by viewModel.title.collectAsStateWithLifecycle()
 	val community by viewModel.community.collectAsStateWithLifecycle()
-	val currentSort by viewModel.sortBy.collectAsStateWithLifecycle()
+	val sortOption by viewModel.sortOption.collectAsStateWithLifecycle()
 	val context = LocalContext.current
 	val snackbarHostState = remember { SnackbarHostState() }
+
+	var sortDialogOpen by remember { mutableStateOf(false) }
+	val toolbarVisible = remember { mutableStateOf(false) }
 
 	LaunchedEffect(subreddit, searchQuery) {
 		viewModel.fetchPosts(subreddit, searchQuery)
@@ -159,8 +162,6 @@ fun RealSlidesFeedScreen(
 			else -> viewModel.performAction(activity, post, action)
 		}
 	}
-
-	var sortByMenuExpanded by remember { mutableStateOf(false) }
 
 	Box(modifier = Modifier.fillMaxSize()) {
 		when (val state = uiState) {
@@ -250,10 +251,7 @@ fun RealSlidesFeedScreen(
 						SlidesToolbar(
 							title = listTitle.ifEmpty { "r/$subreddit" },
 							community = community,
-							currentSort = currentSort,
-							sortByMenuExpanded = sortByMenuExpanded,
-							onSortMenuToggle = { sortByMenuExpanded = !sortByMenuExpanded },
-							onSortSelected = { viewModel.setSortBy(it) },
+							onSortMenuToggle = { sortDialogOpen = true },
 							onBack = onNavigateBack,
 							onSearch = onNavigateToSubredditSearch,
 							onCommunityTap = onNavigateToSubredditSearch,
@@ -266,11 +264,24 @@ fun RealSlidesFeedScreen(
 			}
 		}
 
+		// The reference's 9-option sort dialog (Active = the listing default),
+		// opened from the collapsing toolbar's Sort icon.
+		if (sortDialogOpen) {
+			SortOptionsDialog(
+				currentId = sortOption.id,
+				onDismiss = { sortDialogOpen = false },
+				onSelected = { option ->
+					viewModel.setSortOption(option)
+					sortDialogOpen = false
+				},
+			)
+		}
+
 		SnackbarHost(
 			snackbarHostState,
 			modifier = Modifier.align(Alignment.BottomCenter),
 		)
-	}
+		}
 }
 
 /**
@@ -282,10 +293,7 @@ fun RealSlidesFeedScreen(
 private fun SlidesToolbar(
 	title: String,
 	community: CommunityInfo?,
-	currentSort: PostSort,
-	sortByMenuExpanded: Boolean,
 	onSortMenuToggle: () -> Unit,
-	onSortSelected: (PostSort) -> Unit,
 	onBack: () -> Unit,
 	onSearch: () -> Unit,
 	onCommunityTap: () -> Unit,
@@ -318,36 +326,10 @@ private fun SlidesToolbar(
 			IconButton(onClick = onSearch) {
 				Icon(Icons.Filled.Search, contentDescription = "Search")
 			}
-			Box {
-				IconButton(onClick = onSortMenuToggle) {
-					Icon(Icons.Filled.Sort, contentDescription = "Sort")
-				}
-				DropdownMenu(
-					expanded = sortByMenuExpanded,
-					onDismissRequest = { onSortMenuToggle() },
-				) {
-					val sortOptions = listOf(
-						PostSort.HOT to "Hot",
-						PostSort.NEW to "New",
-						PostSort.RISING to "Rising",
-						PostSort.TOP_ALL to "Top (All time)",
-						PostSort.BEST to "Best",
-					)
-					sortOptions.forEach { (sort, label) ->
-						DropdownMenuItem(
-							text = {
-								Text(
-									text = label,
-									fontWeight = if (sort == currentSort) FontWeight.Bold else FontWeight.Normal,
-								)
-							},
-							onClick = {
-								onSortSelected(sort)
-								onSortMenuToggle()
-							},
-						)
-					}
-				}
+			// The reference's Sort opens the 9-option dialog (Phase 4.5), not a
+			// menu.
+			IconButton(onClick = onSortMenuToggle) {
+				Icon(Icons.Filled.Sort, contentDescription = "Sort")
 			}
 			IconButton(onClick = onRefresh) {
 				Icon(Icons.Filled.Refresh, contentDescription = "Refresh")

@@ -18,49 +18,35 @@
 package com.stormtroopercs.materialreader.navigation
 
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -69,587 +55,248 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.stormtroopercs.materialreader.R
-import com.stormtroopercs.materialreader.compose.net.NetRequestStatus
-import com.stormtroopercs.materialreader.compose.net.fetchImage
-import com.stormtroopercs.materialreader.compose.theme.ComposeThemePostCard
-import com.stormtroopercs.materialreader.compose.theme.LocalComposeTheme
 import com.stormtroopercs.materialreader.compose.ui.RRErrorView
 import com.stormtroopercs.materialreader.common.LinkHandler
-import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.fragments.ReportDialog
-import com.stormtroopercs.materialreader.reddit.PostSort
+import com.stormtroopercs.materialreader.settings.types.PostViewMode
 
 /**
- * Post list screen composable.
- * Displays posts from a subreddit with real data from PostListViewModel.
- * Uses Material 3 components and the existing Compose theme system.
+ * Post list screen composable (FINAL-DESIGN Phase 4): the reference's list
+ * feed — a top bar with Search / Sort / View / Submit actions, the feed
+ * filter chips (Active-sort / Communities / Instances), and the post cards
+ * in the user's chosen card mode (persisted per feed). The sort is the
+ * reference's 9-option dialog; the card mode is the Change-View bottom
+ * sheet (picking Slides re-enters this feed as the swipe feed). Swipe-to-
+ * action gestures on the cards are on by default.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RealPostListScreen(
-    subreddit: String,
-    searchQuery: String? = null,
-    onNavigateBack: () -> Unit,
-    onNavigateToCommentList: (String) -> Unit,
-    onNavigateToUserProfile: (String) -> Unit,
-    onNavigateToPostSubmit: () -> Unit
+	subreddit: String,
+	searchQuery: String? = null,
+	onNavigateBack: () -> Unit,
+	onNavigateToCommentList: (String) -> Unit,
+	onNavigateToUserProfile: (String) -> Unit,
+	onNavigateToPostSubmit: () -> Unit,
+	onNavigateToSubredditSearch: () -> Unit,
+	/** Switch this feed to the swipe feed (Change View → Slides). */
+	onNavigateToSlides: () -> Unit = {},
 ) {
-    val viewModel: PostListViewModel = hiltViewModel()
-    val uiState by viewModel.state.collectAsStateWithLifecycle()
-    val currentSort by viewModel.sortBy.collectAsStateWithLifecycle()
-    val listTitle by viewModel.title.collectAsStateWithLifecycle()
+	val viewModel: PostListViewModel = hiltViewModel()
+	val uiState by viewModel.state.collectAsStateWithLifecycle()
+	val sortOption by viewModel.sortOption.collectAsStateWithLifecycle()
+	val listTitle by viewModel.title.collectAsStateWithLifecycle()
 
-    LaunchedEffect(subreddit, searchQuery) {
-        viewModel.fetchPosts(subreddit, searchQuery)
-    }
-    val theme = LocalComposeTheme.current.postCard
+	LaunchedEffect(subreddit, searchQuery) {
+		viewModel.fetchPosts(subreddit, searchQuery)
+	}
 
-    var sortByMenuExpanded by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
+	var sortDialogOpen by remember { mutableStateOf(false) }
+	var changeViewOpen by remember { mutableStateOf(false) }
+	val snackbarHostState = remember { SnackbarHostState() }
+	val context = LocalContext.current
 
-    // Surface the result of the last post action (vote / save / hide) as a
-    // Snackbar, then clear it so a repeat action re-triggers it.
-    val actionResult by viewModel.actionResult.collectAsStateWithLifecycle()
-    LaunchedEffect(actionResult) {
-        actionResult?.let { msg ->
-            snackbarHostState.showSnackbar(msg)
-            viewModel.clearActionResult()
-        }
-    }
+	// Surface the result of the last post action (vote / save / hide) as a
+	// Snackbar, then clear it so a repeat action re-triggers it.
+	val actionResult by viewModel.actionResult.collectAsStateWithLifecycle()
+	LaunchedEffect(actionResult) {
+		actionResult?.let { msg ->
+			snackbarHostState.showSnackbar(msg)
+			viewModel.clearActionResult()
+		}
+	}
 
-    // A post action: votes / save / hide / unhide go to the ViewModel (which
-    // hits the Reddit API); report opens the report dialog; share hands the
-    // permalink to the OS share sheet.
-    fun onPostAction(post: PostItem, action: PostAction) {
-        val activity = context as? AppCompatActivity ?: return
-        when (action) {
-            PostAction.REPORT -> ReportDialog.show(
-                activity,
-                com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType(post.id),
-                post.subreddit,
-                isComment = false
-            )
-            PostAction.SHARE -> LinkHandler.shareText(
-                activity,
-                post.title,
-                "https://www.reddit.com${post.permalink}"
-            )
-            else -> viewModel.performAction(activity, post, action)
-        }
-    }
+	// A post action: votes / save / hide / unhide go to the ViewModel (which
+	// hits the Reddit API); report opens the report dialog; share hands the
+	// permalink to the OS share sheet.
+	fun onPostAction(post: PostItem, action: PostAction) {
+		val activity = context as? AppCompatActivity ?: return
+		when (action) {
+			PostAction.REPORT -> ReportDialog.show(
+				activity,
+				com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType(post.id),
+				post.subreddit,
+				isComment = false
+			)
+			PostAction.SHARE -> LinkHandler.shareText(
+				activity,
+				post.title,
+				"https://www.reddit.com${post.permalink}"
+			)
+			else -> viewModel.performAction(activity, post, action)
+		}
+	}
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                scrollBehavior = null,
-                title = {
-                    Text(
-                        text = listTitle.ifEmpty { "r/$subreddit" },
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = viewModel::refresh) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Refresh"
-                        )
-                    }
-                    IconButton(onClick = { sortByMenuExpanded = true }) {
-                        Icon(
-                            imageVector = Icons.Filled.Sort,
-                            contentDescription = "Sort"
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = sortByMenuExpanded,
-                        onDismissRequest = { sortByMenuExpanded = false }
-                    ) {
-                        val sortOptions = listOf(
-                            PostSort.HOT to "Hot",
-                            PostSort.NEW to "New",
-                            PostSort.RISING to "Rising",
-                            PostSort.TOP_ALL to "Top (All time)",
-                            PostSort.BEST to "Best"
-                        )
-                        sortOptions.forEach { (sort, label) ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = label,
-                                        fontWeight =
-                                            if (sort == currentSort)
-                                                FontWeight.Bold
-                                            else
-                                                FontWeight.Normal
-                                    )
-                                },
-                                onClick = {
-                                    viewModel.setSortBy(sort)
-                                    sortByMenuExpanded = false
-                                }
-                            )
-                        }
-                    }
-                    IconButton(onClick = onNavigateToPostSubmit) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Submit"
-                        )
-                    }
-                }
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            when (val state = uiState) {
-                is PostListUiState.Loading -> {
-                    if (state.isInitialLoad) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    }
-                }
+	// The card mode for this feed (persisted per feed, Phase 4.7).
+	val viewMode = FeedPreferences.viewModeFor(feedIdFor(subreddit, searchQuery))
 
-                is PostListUiState.Success -> {
-                    PostListContent(
-                        posts = state.posts,
-                        theme = theme,
-                        onPostClick = { post ->
-                            onNavigateToCommentList(post.id)
-                        },
-                        onAuthorClick = { author ->
-                            onNavigateToUserProfile(author)
-                        },
-                        onPostAction = ::onPostAction
-                    )
-                }
+	Scaffold(
+		topBar = {
+			CenterAlignedTopAppBar(
+				scrollBehavior = null,
+				title = {
+					Text(
+						text = listTitle.ifEmpty { "r/$subreddit" },
+						fontWeight = FontWeight.SemiBold
+					)
+				},
+				navigationIcon = {
+					IconButton(onClick = onNavigateBack) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+							contentDescription = "Back"
+						)
+					}
+				},
+			actions = {
+				IconButton(onClick = onNavigateToSubredditSearch) {
+						Icon(Icons.Filled.Search, contentDescription = "Search")
+					}
+					IconButton(onClick = { sortDialogOpen = true }) {
+						Icon(Icons.Filled.Sort, contentDescription = "Sort")
+					}
+					IconButton(onClick = { changeViewOpen = true }) {
+						Icon(Icons.Filled.ViewAgenda, contentDescription = "Change view")
+					}
+					IconButton(onClick = viewModel::refresh) {
+						Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
+					}
+					IconButton(onClick = onNavigateToPostSubmit) {
+						Icon(Icons.Filled.Add, contentDescription = "Submit")
+					}
+				}
+			)
+		},
+		snackbarHost = { SnackbarHost(snackbarHostState) }
+	) { paddingValues ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(paddingValues)
+		) {
+			// The reference's feed filter chips: the Active sort chip (opens
+			// the 9-option dialog) + Communities / Instances (their
+			// directories; the single-instance app opens the community
+			// search for both).
+			FeedFilterChips(
+				sortLabel = sortOption.label,
+				onSortTap = { sortDialogOpen = true },
+				onCommunitiesTap = onNavigateToSubredditSearch,
+				onInstancesTap = onNavigateToSubredditSearch,
+			)
 
-                is PostListUiState.Error -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            RRErrorView(error = state.error)
-                            FilledTonalButton(
-                                onClick = { viewModel.refresh() },
-                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                            ) {
-                                Icon(Icons.Filled.Refresh, contentDescription = null)
-                                Spacer(Modifier.width(8.dp))
-                                Text("Retry")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+			when (val state = uiState) {
+				is PostListUiState.Loading -> {
+					if (state.isInitialLoad) {
+						Box(
+							modifier = Modifier
+								.fillMaxSize()
+								.padding(32.dp),
+							contentAlignment = Alignment.Center
+						) {
+							CircularProgressIndicator()
+						}
+					}
+				}
+
+				is PostListUiState.Success -> {
+					if (state.posts.isEmpty()) {
+						Box(
+							modifier = Modifier
+								.fillMaxSize()
+								.padding(32.dp),
+							contentAlignment = Alignment.Center
+						) {
+							Text(
+								text = "No posts found",
+								style = MaterialTheme.typography.bodyLarge
+							)
+						}
+					} else {
+						LazyColumn(
+							modifier = Modifier.fillMaxSize(),
+							content = {
+								items(state.posts, key = { it.id }) { post ->
+									PostCard(
+										post = post,
+										mode = viewMode,
+										modifier = Modifier.animateItem(),
+										onOpenThread = { onNavigateToCommentList(post.id) },
+										onAuthorClick = onNavigateToUserProfile,
+										onPostAction = ::onPostAction,
+										swipeEnabled = true,
+										onSwipeUpvote = { onPostAction(post, PostAction.UPVOTE) },
+										onSwipeDownvote = { onPostAction(post, PostAction.DOWNVOTE) },
+										onSwipeHide = { onPostAction(post, if (post.hidden) PostAction.UNHIDE else PostAction.HIDE) },
+									)
+								}
+							}
+						)
+					}
+				}
+
+				is PostListUiState.Error -> {
+					Box(
+						modifier = Modifier
+							.fillMaxSize()
+							.padding(16.dp),
+						contentAlignment = Alignment.Center
+					) {
+						Column(
+							horizontalAlignment = Alignment.CenterHorizontally,
+							verticalArrangement = Arrangement.spacedBy(16.dp)
+						) {
+							RRErrorView(error = state.error)
+							FilledTonalButton(
+								onClick = { viewModel.refresh() },
+								modifier = Modifier.align(Alignment.CenterHorizontally)
+							) {
+								Icon(Icons.Filled.Refresh, contentDescription = null)
+								Spacer(Modifier.width(8.dp))
+								Text("Retry")
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// The reference's 9-option sort dialog (Active = the listing default).
+	if (sortDialogOpen) {
+		SortOptionsDialog(
+			currentId = sortOption.id,
+			onDismiss = { sortDialogOpen = false },
+			onSelected = { option ->
+				viewModel.setSortOption(option)
+				sortDialogOpen = false
+			},
+		)
+	}
+
+	// The Change-View bottom sheet: the card modes + Slides (which
+	// re-enters this feed as the swipe feed).
+	if (changeViewOpen) {
+		ChangeViewSheet(
+			current = viewMode,
+			onDismiss = { changeViewOpen = false },
+			onSelect = { mode ->
+				FeedPreferences.setViewModeFor(feedIdFor(subreddit, searchQuery), mode)
+				changeViewOpen = false
+				if (mode == PostViewMode.SLIDES) {
+					onNavigateToSlides()
+				}
+			},
+		)
+	}
 }
 
-/**
- * Actual list of posts.
- */
-@Composable
-private fun PostListContent(
-    posts: List<PostItem>,
-    theme: ComposeThemePostCard,
-    onPostClick: (PostItem) -> Unit,
-    onAuthorClick: (String) -> Unit,
-    onPostAction: (PostItem, PostAction) -> Unit
-) {
-    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
-
-    LazyColumn(
-        state = listState,
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (posts.isEmpty()) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No posts found",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-            }
-        } else {
-            items(posts, key = { it.id }) { post ->
-                PostItemCard(
-                    modifier = Modifier.animateItem(),
-                    post = post,
-                    theme = theme,
-                    onClick = { onPostClick(post) },
-                    onAuthorClick = onAuthorClick,
-                    onPostAction = onPostAction
-                )
-            }
-        }
-    }
-}
-
-/**
- * A single post card with title, author, score, thumbnail, and metadata.
- */
-@Composable
-private fun PostItemCard(
-    modifier: Modifier = Modifier,
-    post: PostItem,
-    theme: ComposeThemePostCard,
-    onClick: () -> Unit,
-    onAuthorClick: (String) -> Unit,
-    onPostAction: (PostItem, PostAction) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(theme.backgroundColor)
-            .clickable(onClick = onClick)
-    ) {
-        // Thumbnail/media preview
-        post.thumbnail?.let { thumbnail ->
-            ThumbnailPreview(
-                uri = thumbnail,
-                theme = theme,
-                isVideo = post.isVideo,
-                isGallery = false
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            // Left side: vote buttons
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.width(44.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .clickable(onClick = { onPostAction(post, PostAction.UPVOTE) }),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.KeyboardArrowUp,
-                        contentDescription = "Upvote",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                Text(
-                    text = formatScore(post.score),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Medium
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .clickable(onClick = { onPostAction(post, PostAction.DOWNVOTE) }),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.KeyboardArrowDown,
-                        contentDescription = "Downvote",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-
-            // Main content
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 8.dp)
-            ) {
-                // Title
-                Text(
-                    text = post.title ?: "Untitled",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 5,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(Modifier.height(4.dp))
-
-                // Meta: author, comment count, time, flair
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    post.author?.takeIf { it.isNotBlank() }?.let { author ->
-                        Text(
-                            text = author,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.clickable { onAuthorClick(author) }
-                        )
-                    }
-
-                    Text(
-                        text = "  ·  ${post.numComments} comments",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Text(
-                        text = "  ·  ${formatTimeAgo(post.createdUtc)}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Flair
-                    post.linkFlairText?.takeIf { it.isNotBlank() }?.let { flair ->
-                        Spacer(Modifier.width(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    MaterialTheme.colorScheme.primaryContainer,
-                                    MaterialTheme.shapes.small
-                                )
-                                .padding(horizontal = 8.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = flair,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                }
-
-                // Selftext preview
-                post.selftext?.takeIf { it.isNotBlank() }?.let { selftext ->
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        text = selftext.take(200) + if (selftext.length > 200) "..." else "",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            // More menu
-            Box {
-                IconButton(onClick = { expanded = true }) {
-                    Icon(
-                        imageVector = Icons.Filled.MoreVert,
-                        contentDescription = "More options"
-                    )
-                }
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Share") },
-                        onClick = {
-                            expanded = false
-                            onPostAction(post, PostAction.SHARE)
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(if (post.saved) "Unsave" else "Save") },
-                        onClick = {
-                            expanded = false
-                            onPostAction(
-                                post,
-                                if (post.saved) PostAction.UNSAVE else PostAction.SAVE
-                            )
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Report") },
-                        onClick = {
-                            expanded = false
-                            onPostAction(post, PostAction.REPORT)
-                        }
-                    )
-                }
-            }
-        }
-
-        // Bottom divider
-        if (post.linkFlairText != null || post.isCrosspost) {
-            PostDivider(theme = theme)
-        }
-    }
-}
-
-/**
- * Media/thumbnail preview. When [size] is null, renders a full-width 16:9
- * preview; otherwise a fixed-size (e.g. avatar) preview clipped to [shape].
- */
-@Composable
-private fun ThumbnailPreview(
-    uri: String,
-    theme: ComposeThemePostCard,
-    modifier: Modifier = Modifier,
-    isVideo: Boolean = false,
-    isGallery: Boolean = false,
-    size: androidx.compose.ui.unit.Dp? = null,
-    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(8.dp),
-    contentScale: ContentScale = ContentScale.Crop
-) {
-    val backgroundModifier = if (size != null) {
-        modifier.size(size).clip(shape)
-    } else {
-        modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(shape)
-    }
-
-    Box(
-        modifier = backgroundModifier
-            .background(theme.previewImageBackgroundColor),
-        contentAlignment = Alignment.Center
-    ) {
-        val data by fetchImage(
-            UriString(uri),
-            scaleToMaxAxis = 640
-        )
-
-        when (val it = data) {
-            is NetRequestStatus.Connecting -> {
-                CircularProgressIndicator(modifier = Modifier.padding(24.dp))
-            }
-
-            is NetRequestStatus.Downloading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.padding(24.dp),
-                    progress = { it.fractionComplete }
-                )
-            }
-
-            is NetRequestStatus.Failed -> {
-                // Empty box for failed images
-            }
-
-            is NetRequestStatus.Success -> {
-                Image(
-                    bitmap = it.result.data,
-                    contentDescription = null,
-                    contentScale = contentScale,
-                    modifier = Modifier
-                        .fillMaxSize()
-                )
-
-                if (isVideo) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.3f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.icon_play),
-                            contentDescription = "Play video",
-                            tint = Color.White,
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
-                }
-            }
-        }
-        // isGallery reserved for a future gallery badge
-        if (isGallery) { /* no-op */ }
-    }
-}
-
-private fun formatScore(score: Int): String {
-    return when {
-        score >= 1_000_000 -> String.format("%.1fM", score / 1_000_000.0)
-        score >= 1_000 -> String.format("%.1fK", score / 1_000.0)
-        else -> score.toString()
-    }
-}
-
-private fun formatTimeAgo(timestampSeconds: Long): String {
-    val now = System.currentTimeMillis() / 1000
-    val diff = now - timestampSeconds
-
-    return when {
-        diff < 60 -> "$diff seconds ago"
-        diff < 3600 -> "${diff / 60} minutes ago"
-        diff < 86400 -> "${diff / 3600} hours ago"
-        diff < 604800 -> "${diff / 86400} days ago"
-        else -> {
-            val date = java.util.Date(timestampSeconds * 1000)
-            java.text.SimpleDateFormat("MMM d, yyyy", java.util.Locale.getDefault())
-                .format(date)
-        }
-    }
-}
-
-@Composable
-private fun PostDivider(theme: ComposeThemePostCard) {
-    Canvas(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp),
-        onDraw = {
-            drawLine(
-                color = theme.iconColor.copy(alpha = 0.1f),
-                start = Offset(0f, 0f),
-                end = Offset(size.width, 0f),
-                strokeWidth = 1.dp.toPx()
-            )
-        }
-    )
+/** The per-feed preference key: the listing path (search listings get a `search:` prefix). */
+internal fun feedIdFor(subreddit: String, searchQuery: String?): String {
+	return if (searchQuery != null) "search:$subreddit:$searchQuery" else subreddit.ifBlank { "frontpage" }
 }

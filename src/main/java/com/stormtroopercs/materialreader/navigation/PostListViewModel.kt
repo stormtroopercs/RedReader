@@ -56,9 +56,12 @@ import com.stormtroopercs.materialreader.reddit.APIResponseHandler.ActionRespons
 import com.stormtroopercs.materialreader.reddit.kthings.JsonUtils.decodeRedditThingFromStream
 import com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType
 import com.stormtroopercs.materialreader.reddit.kthings.RedditThing
+import com.stormtroopercs.materialreader.reddit.url.MultiredditPostListURL
 import com.stormtroopercs.materialreader.reddit.url.PostListingURL
 import com.stormtroopercs.materialreader.reddit.url.RedditURLParser
 import com.stormtroopercs.materialreader.reddit.url.SearchPostListURL
+import com.stormtroopercs.materialreader.reddit.url.SubredditPostListURL
+import com.stormtroopercs.materialreader.reddit.url.UserPostListingURL
 
 sealed class PostListUiState {
     data class Loading(val isInitialLoad: Boolean) : PostListUiState()
@@ -125,8 +128,8 @@ class PostListViewModel @Inject constructor(
     private val _posts = MutableStateFlow<List<PostItem>>(emptyList())
     val posts: StateFlow<List<PostItem>> = _posts.asStateFlow()
 
-    private val _sortBy = MutableStateFlow(PrefsUtility.pref_behaviour_postsort())
-    val sortBy: StateFlow<PostSort> = _sortBy.asStateFlow()
+    private val _sortOption = MutableStateFlow(FeedSortOption.forId("active"))
+    val sortOption: StateFlow<FeedSortOption> = _sortOption.asStateFlow()
 
     private val _title = MutableStateFlow("")
     val title: StateFlow<String> = _title.asStateFlow()
@@ -164,6 +167,9 @@ class PostListViewModel @Inject constructor(
         currentListPath = listPath
         currentSearchQuery = searchQuery
         resolveTitle(listPath, searchQuery)
+        // The feed's persisted sort (FINAL-DESIGN Phase 4.7) — loaded per
+        // feed so each listing keeps its own order.
+        _sortOption.value = FeedSortOption.forId(FeedPreferences.sortOptionIdFor(feedIdFor(listPath, searchQuery)))
         _state.value = PostListUiState.Loading(_state.value !is PostListUiState.Success)
         fetchList(listPath, searchQuery)
         fetchCommunity(listPath, searchQuery)
@@ -176,10 +182,18 @@ class PostListViewModel @Inject constructor(
         fetchCommunity(currentListPath, currentSearchQuery)
     }
 
-    fun setSortBy(sort: PostSort) {
-        if (sort == _sortBy.value) return
-        _sortBy.value = sort
-        PrefsUtility.pref_behaviour_postsort_set(sort)
+    /**
+     * The feed's sort (FINAL-DESIGN Phase 4.5): the reference's 9-option
+     * dialog, persisted per feed. Changing it refetches the listing with
+     * the option's sort (and re-orders "Old" locally).
+     */
+    fun setSortOption(option: FeedSortOption) {
+        if (option.id == _sortOption.value.id) return
+        _sortOption.value = option
+        FeedPreferences.setSortOptionFor(
+            feedIdFor(currentListPath, currentSearchQuery),
+            option.id,
+        )
         refresh()
     }
 
@@ -289,6 +303,12 @@ class PostListViewModel @Inject constructor(
                     return@launch
                 }
 
+                // The feed's current sort (FINAL-DESIGN Phase 4.5): the
+                // option's urlSort builds the listing URL (null = the
+                // listing's own default order).
+                val sortOption = _sortOption.value
+                val sort = sortOption.urlSort
+
                 val jsonUri: Uri
                 if (searchQuery != null) {
                     // A search listing: build a SearchPostListURL from the location
@@ -296,6 +316,7 @@ class PostListViewModel @Inject constructor(
                     // u/<user>/m/<name>, or null for a global search) + the query.
                     val location = listPath.ifEmpty { null }
                     val searchUrl = SearchPostListURL.build(location, searchQuery)
+                        .sort(sort)
                     val uri = searchUrl.generateJsonUri()
                     if (uri == null) {
                         _state.value = PostListUiState.Error(
@@ -309,11 +330,14 @@ class PostListViewModel @Inject constructor(
                         listPath.isBlank() || listPath == "frontpage" -> "https://www.reddit.com/"
                         listPath == "popular" -> "https://www.reddit.com/r/popular/"
                         listPath == "all" -> "https://www.reddit.com/r/all/"
+                        // A user multireddit (u/<user>/m/<name>): /me/ form.
+                        listPath.startsWith("u/") && listPath.contains("/m/") -> "https://www.reddit.com/me/$listPath/"
                         listPath.startsWith("u/") -> "https://www.reddit.com/$listPath/"
                         listPath.startsWith("m/") -> "https://www.reddit.com/me/$listPath/"
                         else -> "https://www.reddit.com/r/$listPath/"
                     }
                     val postListingUrl = RedditURLParser.parseProbablePostListing(Uri.parse(rawUri))
+                        .applySort(sort)
                     if (postListingUrl !is PostListingURL) {
                         _state.value = PostListUiState.Error(
                             RRError(title = "Invalid listing", message = "Invalid post listing URL")
@@ -352,6 +376,12 @@ class PostListViewModel @Inject constructor(
                             val posts = listing.children
                                 .mapNotNull { it.ok() as? RedditThing.Post }
                                 .map { it.toPostItem() }
+                                // The "Old" option: the Reddit API has no
+                                // oldest-first sort, so the listing is
+                                // fetched newest-first (a strict
+                                // created-utc order) and presented
+                                // oldest-first.
+                                .let { if (sortOption.reverse) it.reversed() else it }
 
                             _posts.value = posts
                             _state.value = PostListUiState.Success(posts)
@@ -462,4 +492,19 @@ private fun RedditThing.Post.toPostItem(): PostItem {
         saved = p.saved,
         hidden = p.hidden
     )
+}
+
+/**
+ * Re-derive a parsed listing URL with the feed's sort (FINAL-DESIGN Phase
+ * 4.5). Each listing URL type has its own `sort(...)` builder; an unknown
+ * type (e.g. an unparseable URL) is returned unchanged.
+ */
+private fun RedditURLParser.RedditURL.applySort(sort: PostSort?): RedditURLParser.RedditURL {
+    if (sort == null) return this
+    return when (this) {
+        is SubredditPostListURL -> sort(sort)
+        is UserPostListingURL -> sort(sort)
+        is MultiredditPostListURL -> sort(sort)
+        else -> this
+    }
 }

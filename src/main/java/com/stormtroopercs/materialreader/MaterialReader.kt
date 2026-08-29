@@ -36,6 +36,7 @@ import com.stormtroopercs.materialreader.common.GlobalExceptionHandler
 import com.stormtroopercs.materialreader.common.PrefsUtility
 import com.stormtroopercs.materialreader.compose.prefs.ComposePrefsSingleton
 import com.stormtroopercs.materialreader.io.RedditChangeDataIO
+import com.stormtroopercs.materialreader.navigation.FeedPreferences
 import com.stormtroopercs.materialreader.reddit.api.RedditOAuth
 import com.stormtroopercs.materialreader.reddit.prepared.RedditChangeDataManager
 import javax.inject.Inject
@@ -94,6 +95,7 @@ class MaterialReader : Application() {
         PrefsUtility.init(this)
         PrefsUtility.applyLanguageSetting()
         ComposePrefsSingleton.init(this)
+        FeedPreferences.init(this)
         Fonts.onAppCreate(assets)
 
         // Initialise the Reddit OAuth client ID. RedditOAuth.init() reads the built-in

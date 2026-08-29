@@ -41,6 +41,7 @@ import com.stormtroopercs.materialreader.common.AssetHelper
 import com.stormtroopercs.materialreader.common.RunnableOnce
 import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.reddit.api.RedditOAuth
+import com.stormtroopercs.materialreader.settings.types.PostViewMode
 
 /**
  * App-wide navigation using Navigation 3.
@@ -146,21 +147,29 @@ fun AppNavGraph(navigationState: NavigationState) {
                 )
             }
 
-            // Child: Post list. Community (r/<name>) listings render the
-            // signature swipe feed (FINAL-DESIGN Phase 3); user, multireddit,
-            // frontpage/popular/all and search listings keep the list view for
-            // now (they get the Change-View / view-mode treatment in Phase 4).
+            // Child: Post list. The feed's persisted view mode decides the
+            // surface (FINAL-DESIGN Phase 4.7): Slides → the signature swipe
+            // feed (the default for community feeds, and any feed the user
+            // has explicitly set to slides); every other mode → the list
+            // view in that card mode.
             entry<PostList> { key ->
-                val isCommunityFeed = key.searchQuery == null &&
-                    key.subreddit.isNotBlank() &&
-                    key.subreddit != "frontpage" &&
-                    key.subreddit != "popular" &&
-                    key.subreddit != "all" &&
-                    !key.subreddit.startsWith("u/") &&
-                    !key.subreddit.startsWith("m/")
-                if (isCommunityFeed) {
+                val feedId = feedIdFor(key.subreddit, key.searchQuery)
+                // No explicit selection: community feeds open in the
+                // signature swipe feed (the Phase 3 default); everything
+                // else opens in the list view.
+                val viewMode = if (FeedPreferences.hasViewModeFor(feedId)) {
+                    FeedPreferences.viewModeFor(feedId)
+                } else {
+                    if (key.searchQuery == null && isCommunityFeedPath(key.subreddit)) {
+                        PostViewMode.SLIDES
+                    } else {
+                        PostViewMode.CARDS
+                    }
+                }
+                if (viewMode == PostViewMode.SLIDES) {
                     RealSlidesFeedScreen(
                         subreddit = key.subreddit,
+                        searchQuery = key.searchQuery,
                         onNavigateBack = { navigator.goBack() },
                         onNavigateToCommentList = { postId ->
                             navigator.navigate(CommentList(postId))
@@ -188,7 +197,17 @@ fun AppNavGraph(navigationState: NavigationState) {
                         },
                         onNavigateToPostSubmit = {
                             navigator.navigate(PostSubmit(key.subreddit))
-                        }
+                        },
+                        onNavigateToSubredditSearch = {
+                            navigator.navigate(SubredditSearch)
+                        },
+                        onNavigateToSlides = {
+                            // Persist the selection, then re-enter this feed:
+                            // the new entry's composition reads the persisted
+                            // mode and renders the swipe feed.
+                            FeedPreferences.setViewModeFor(feedId, PostViewMode.SLIDES)
+                            navigator.navigate(PostList(key.subreddit, key.searchQuery))
+                        },
                     )
                 }
             }
@@ -430,3 +449,16 @@ fun AppNavGraph(navigationState: NavigationState) {
     )
     }
 }
+
+/**
+ * True when [subreddit] is a community feed (r/<name>) — the feeds that
+ * open in the signature swipe feed by default.
+ */
+private fun isCommunityFeedPath(subreddit: String): Boolean =
+    subreddit.isNotBlank() &&
+        !subreddit.startsWith("u/") &&
+        !subreddit.startsWith("m/") &&
+        !subreddit.startsWith("s/") &&
+        subreddit != "frontpage" &&
+        subreddit != "popular" &&
+        subreddit != "all"
