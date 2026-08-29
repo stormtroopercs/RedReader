@@ -58,6 +58,22 @@ import com.stormtroopercs.materialreader.reddit.api.RedditOAuth
 fun AppNavGraph(navigationState: NavigationState) {
     val navigator = Navigator(navigationState)
 
+    val context = LocalContext.current
+    val accountManager = remember { RedditAccountManager.getInstance(context) }
+    val accountName = remember {
+        mutableStateOf(accountManager.defaultAccount.username)
+    }
+    DisposableEffect(accountManager) {
+        val listener = RedditAccountChangeListener {
+            accountName.value = accountManager.defaultAccount.username
+        }
+        accountManager.addUpdateListener(listener)
+        onDispose { accountManager.removeUpdateListener(listener) }
+    }
+
+    AppShell(
+        navigationState = navigationState,
+    ) {
     NavDisplay(
         backStack = navigationState.activeBackStack,
         onBack = { navigator.goBack() },
@@ -79,18 +95,6 @@ fun AppNavGraph(navigationState: NavigationState) {
         entryProvider = entryProvider {
             // Top-level: Main screen
             entry<Main> {
-                val context = LocalContext.current
-                val accountManager = remember { RedditAccountManager.getInstance(context) }
-                val accountName = remember {
-                    mutableStateOf(accountManager.defaultAccount.username)
-                }
-                DisposableEffect(accountManager) {
-                    val listener = RedditAccountChangeListener {
-                        accountName.value = accountManager.defaultAccount.username
-                    }
-                    accountManager.addUpdateListener(listener)
-                    onDispose { accountManager.removeUpdateListener(listener) }
-                }
                 MainScreen(
                     accountName = accountName.value,
                     onNavigateToPostList = { subreddit ->
@@ -116,9 +120,17 @@ fun AppNavGraph(navigationState: NavigationState) {
                 )
             }
 
+            // Top-level: Explore tab (the reference's 2nd bottom-nav destination).
+            entry<Explore> {
+                ExploreScreen(
+                    onNavigateToSubreddit = { subreddit ->
+                        navigator.navigate(PostList(subreddit))
+                    },
+                )
+            }
+
             // Top-level: Settings screen
             entry<Settings> {
-                val context = LocalContext.current
                 SettingsScreen(
                     onNavigateBack = { navigator.goBack() },
                     onNavigateToChangelog = { navigator.navigate(Changelog) },
@@ -387,4 +399,5 @@ fun AppNavGraph(navigationState: NavigationState) {
             }
         }
     )
+    }
 }

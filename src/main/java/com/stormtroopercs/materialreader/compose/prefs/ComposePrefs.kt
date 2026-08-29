@@ -28,6 +28,7 @@ import com.stormtroopercs.materialreader.R
 import com.stormtroopercs.materialreader.common.General
 import com.stormtroopercs.materialreader.settings.types.AlbumViewMode
 import com.stormtroopercs.materialreader.settings.types.AppearanceTheme
+import com.stormtroopercs.materialreader.settings.types.NavigationType
 import com.stormtroopercs.materialreader.settings.types.SettingSerializer
 import com.stormtroopercs.materialreader.settings.types.ThemeColorMode
 
@@ -46,6 +47,9 @@ interface ComposePrefs {
 	/** Accessibility overrides: custom upvote / downvote colours (`#RRGGBB`), or null = theme default. */
 	val themeUpvoteColor: Preference<String?>
 	val themeDownvoteColor: Preference<String?>
+
+	/** Primary navigation style: bottom bar, drawer, or both. */
+	val navigationType: Preference<NavigationType>
 
 	val appearanceFontScaleGlobal: Float
 	val appearanceFontScaleBodyText: Float
@@ -286,6 +290,12 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 		"theme_color_mode",
 		ThemeColorMode.AUTOMATIC,
 		ThemeColorMode.settingSerializer
+	)
+
+	override val navigationType: Preference<NavigationType> = EnumPref(
+		"navigation_type",
+		NavigationType.BOTTOM,
+		NavigationType.settingSerializer
 	)
 
 	override val themeColorManual: Preference<String> = StringPref(

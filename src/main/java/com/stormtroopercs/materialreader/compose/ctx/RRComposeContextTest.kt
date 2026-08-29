@@ -25,12 +25,19 @@ import com.stormtroopercs.materialreader.compose.prefs.Preference
 import com.stormtroopercs.materialreader.compose.theme.RRComposeContextTheme
 import com.stormtroopercs.materialreader.settings.types.AlbumViewMode
 import com.stormtroopercs.materialreader.settings.types.AppearanceTheme
+import com.stormtroopercs.materialreader.settings.types.NavigationType
+import com.stormtroopercs.materialreader.settings.types.ThemeColorMode
 
 @Composable
 fun RRComposeContextTest(content: @Composable () -> Unit) {
 
 	val prefValues = object : ComposePrefs {
 		override val appearanceTheme: Preference<AppearanceTheme> = testPref(AppearanceTheme.RED)
+		override val themeColorMode: Preference<ThemeColorMode> = testPref(ThemeColorMode.AUTOMATIC)
+		override val themeColorManual: Preference<String> = testPref("#6750A4")
+		override val themeUpvoteColor: Preference<String?> = testPref(null)
+		override val themeDownvoteColor: Preference<String?> = testPref(null)
+		override val navigationType: Preference<NavigationType> = testPref(NavigationType.BOTTOM)
 		override val appearanceFontScaleGlobal = 1f
 		override val appearanceFontScaleBodyText = 1f
 		override val appearanceFontScalePosts = 1f

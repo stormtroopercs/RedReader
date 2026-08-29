@@ -44,6 +44,10 @@ data object Main : NavKey
 @Serializable
 data object Settings : NavKey
 
+/** Top-level Explore tab (the reference's 2nd bottom-nav destination). */
+@Serializable
+data object Explore : NavKey
+
 @Serializable
 data class PostList(val subreddit: String, val searchQuery: String? = null) : NavKey
 
@@ -126,4 +130,4 @@ data class Image(
 ) : NavKey
 
 /** All top-level routes (displayed in navigation bar/rail/drawer). */
-val TOP_LEVEL_ROUTES = setOf<NavKey>(Main, Settings)
+val TOP_LEVEL_ROUTES = setOf<NavKey>(Main, Explore, Settings)

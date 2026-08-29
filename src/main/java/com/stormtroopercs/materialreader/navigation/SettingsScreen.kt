@@ -826,6 +826,20 @@ private fun getSettingsCategories(
                     onClick = onOpenThemeColors
                 ),
                 SettingsItem.EnumSetting(
+                    key = "navigation_type",
+                    label = "Navigation style",
+                    description = "Bottom bar, drawer, or both",
+                    entries = com.stormtroopercs.materialreader.settings.types.NavigationType.entries,
+                    get = {
+                        com.stormtroopercs.materialreader.compose.prefs.ComposePrefsSingleton.instance
+                            .navigationType.value
+                    },
+                    set = { value ->
+                        com.stormtroopercs.materialreader.compose.prefs.ComposePrefsSingleton.instance
+                            .navigationType.value = value
+                    }
+                ),
+                SettingsItem.EnumSetting(
                     key = "navbar_colour",
                     label = "Navigation bar colour",
                     entries = AppearanceNavbarColour.entries,
