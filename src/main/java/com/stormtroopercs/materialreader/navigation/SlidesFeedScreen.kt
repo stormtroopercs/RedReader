@@ -121,6 +121,20 @@ fun RealSlidesFeedScreen(
 	onNavigateToUserProfile: (String) -> Unit,
 	onNavigateToPostSubmit: () -> Unit,
 	onNavigateToSubredditSearch: () -> Unit,
+	/** Open the default account's own profile (More actions → Profile). */
+	onNavigateToProfile: () -> Unit = {},
+	/** Jump straight to a (random) post's thread (More actions → Random). */
+	onNavigateToRandomPost: (String) -> Unit = {},
+	/** Open the account's saved list (More actions → Saved). */
+	onNavigateToSaved: () -> Unit = {},
+	/** Open an arbitrary listing path (More actions → custom slot). */
+	onOpenListing: (String) -> Unit = {},
+	/** Open Settings (More actions → Settings). */
+	onNavigateToSettings: () -> Unit = {},
+	/** Re-enter this feed as the list view (Change View → a list mode). */
+	onNavigateToList: () -> Unit = {},
+	/** Open the license view (More actions → About → License). */
+	onOpenLicense: () -> Unit = {},
 ) {
 	val viewModel: PostListViewModel = hiltViewModel()
 	val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -131,6 +145,9 @@ fun RealSlidesFeedScreen(
 	val snackbarHostState = remember { SnackbarHostState() }
 
 	var sortDialogOpen by remember { mutableStateOf(false) }
+	var moreActionsOpen by remember { mutableStateOf(false) }
+	var changeViewOpen by remember { mutableStateOf(false) }
+	var aboutOpen by remember { mutableStateOf(false) }
 	val toolbarVisible = remember { mutableStateOf(false) }
 
 	LaunchedEffect(subreddit, searchQuery) {
@@ -249,16 +266,17 @@ fun RealSlidesFeedScreen(
 						modifier = Modifier.fillMaxWidth(),
 					) {
 						SlidesToolbar(
-							title = listTitle.ifEmpty { "r/$subreddit" },
-							community = community,
-							onSortMenuToggle = { sortDialogOpen = true },
-							onBack = onNavigateBack,
-							onSearch = onNavigateToSubredditSearch,
-							onCommunityTap = onNavigateToSubredditSearch,
-							onRefresh = { viewModel.refresh() },
-							onSubmit = onNavigateToPostSubmit,
-							onDismiss = { toolbarVisible.value = false },
-						)
+											title = listTitle.ifEmpty { "r/$subreddit" },
+											community = community,
+											onSortMenuToggle = { sortDialogOpen = true },
+											onMoreActionsToggle = { moreActionsOpen = true },
+											onBack = onNavigateBack,
+											onSearch = onNavigateToSubredditSearch,
+											onCommunityTap = onNavigateToSubredditSearch,
+											onRefresh = { viewModel.refresh() },
+											onSubmit = onNavigateToPostSubmit,
+											onDismiss = { toolbarVisible.value = false },
+										)
 					}
 				}
 			}
@@ -274,6 +292,87 @@ fun RealSlidesFeedScreen(
 					viewModel.setSortOption(option)
 					sortDialogOpen = false
 				},
+			)
+		}
+
+		// The "More actions" grid (FINAL-DESIGN Phase 5).
+		if (moreActionsOpen) {
+			MoreActionsSheet(
+				posts = (uiState as? PostListUiState.Success)?.posts ?: emptyList(),
+				onDismiss = { moreActionsOpen = false },
+				onNavigateToSearch = {
+					moreActionsOpen = false
+					onNavigateToSubredditSearch()
+				},
+				onNavigateToProfile = {
+					moreActionsOpen = false
+					onNavigateToProfile()
+				},
+				onHideReadToggled = {
+					// The pref just flipped; refetch so the slides reflect it.
+					viewModel.refresh()
+				},
+				onOpenAbout = {
+					moreActionsOpen = false
+					aboutOpen = true
+				},
+				onNavigateToSubmit = {
+					moreActionsOpen = false
+					onNavigateToPostSubmit()
+				},
+				onNavigateToRandomPost = { postId ->
+					moreActionsOpen = false
+					onNavigateToRandomPost(postId)
+				},
+				onNavigateToSettings = {
+					moreActionsOpen = false
+					onNavigateToSettings()
+				},
+				onOpenChangeView = {
+					moreActionsOpen = false
+					changeViewOpen = true
+				},
+				onNavigateToSaved = {
+					moreActionsOpen = false
+					onNavigateToSaved()
+				},
+				onRefresh = {
+					moreActionsOpen = false
+					viewModel.refresh()
+				},
+				onOpenListing = { path ->
+					moreActionsOpen = false
+					onOpenListing(path)
+				},
+				onOpenLicense = { aboutOpen = false; onOpenLicense() },
+			)
+		}
+
+		// Change View (from the grid): the card modes; picking a list mode
+		// re-enters this feed as the list view.
+		if (changeViewOpen) {
+			ChangeViewSheet(
+				current = com.stormtroopercs.materialreader.settings.types.PostViewMode.SLIDES,
+				onDismiss = { changeViewOpen = false },
+				onSelect = { mode ->
+					FeedPreferences.setViewModeFor(
+						feedIdFor(subreddit, searchQuery),
+						mode,
+					)
+					changeViewOpen = false
+					if (mode != com.stormtroopercs.materialreader.settings.types.PostViewMode.SLIDES) {
+						// Leave the swipe feed for the list view.
+						onNavigateToList()
+					}
+				},
+			)
+		}
+
+		// The About dialog (More actions → About).
+		if (aboutOpen) {
+			AboutDialog(
+				onDismiss = { aboutOpen = false },
+				onOpenLicense = onOpenLicense,
 			)
 		}
 
@@ -294,6 +393,7 @@ private fun SlidesToolbar(
 	title: String,
 	community: CommunityInfo?,
 	onSortMenuToggle: () -> Unit,
+	onMoreActionsToggle: () -> Unit,
 	onBack: () -> Unit,
 	onSearch: () -> Unit,
 	onCommunityTap: () -> Unit,
@@ -336,6 +436,10 @@ private fun SlidesToolbar(
 			}
 			IconButton(onClick = onSubmit) {
 				Icon(Icons.Filled.AddComment, contentDescription = "Submit")
+			}
+			// The reference's power-user surface (FINAL-DESIGN Phase 5).
+			IconButton(onClick = onMoreActionsToggle) {
+				Icon(Icons.Filled.MoreVert, contentDescription = "More actions")
 			}
 		}
 	}

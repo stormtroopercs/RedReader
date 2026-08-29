@@ -64,6 +64,14 @@ fun AppNavGraph(navigationState: NavigationState) {
     val accountName = remember {
         mutableStateOf(accountManager.defaultAccount.username)
     }
+
+    // Opens the license in the HtmlView route (the shared "License" handler
+    // the More-actions grid's About dialog uses).
+    val openLicense: () -> Unit = {
+        AssetHelper.loadAssetAsString(context, "license.html")?.let { html ->
+            navigator.navigate(HtmlView(html, context.getString(R.string.title_license)))
+        }
+    }
     DisposableEffect(accountManager) {
         val listener = RedditAccountChangeListener {
             accountName.value = accountManager.defaultAccount.username
@@ -183,6 +191,29 @@ fun AppNavGraph(navigationState: NavigationState) {
                         onNavigateToSubredditSearch = {
                             navigator.navigate(SubredditSearch)
                         },
+                        onNavigateToProfile = {
+                            val username = RedditAccountManager.getInstance(context).defaultAccount.username
+                            navigator.navigate(UserProfile(username))
+                        },
+                        onNavigateToRandomPost = { postId ->
+                            navigator.navigate(CommentList(postId))
+                        },
+                        onNavigateToSaved = {
+                            val username = RedditAccountManager.getInstance(context).defaultAccount.username
+                            navigator.navigate(PostList("u/$username/saved"))
+                        },
+                        onOpenListing = { path ->
+                            navigator.navigate(PostList(path))
+                        },
+                        onNavigateToSettings = {
+                            navigator.navigate(Settings)
+                        },
+                        onNavigateToList = {
+                            // Re-enter this feed; the new entry's composition
+                            // reads the persisted (now list) view mode.
+                            navigator.navigate(PostList(key.subreddit, key.searchQuery))
+                        },
+                        onOpenLicense = openLicense,
                     )
                 } else {
                     RealPostListScreen(
@@ -208,6 +239,24 @@ fun AppNavGraph(navigationState: NavigationState) {
                             FeedPreferences.setViewModeFor(feedId, PostViewMode.SLIDES)
                             navigator.navigate(PostList(key.subreddit, key.searchQuery))
                         },
+                        onNavigateToProfile = {
+                            val username = RedditAccountManager.getInstance(context).defaultAccount.username
+                            navigator.navigate(UserProfile(username))
+                        },
+                        onNavigateToRandomPost = { postId ->
+                            navigator.navigate(CommentList(postId))
+                        },
+                        onNavigateToSaved = {
+                            val username = RedditAccountManager.getInstance(context).defaultAccount.username
+                            navigator.navigate(PostList("u/$username/saved"))
+                        },
+                        onOpenListing = { path ->
+                            navigator.navigate(PostList(path))
+                        },
+                        onNavigateToSettings = {
+                            navigator.navigate(Settings)
+                        },
+                        onOpenLicense = openLicense,
                     )
                 }
             }

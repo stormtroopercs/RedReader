@@ -46,6 +46,12 @@ object FeedPreferences {
 	private const val KEY_SWIPE_3 = "post_swipe_action_3"
 	private const val KEY_SWIPE_VIBRATE = "post_swipe_vibrate"
 
+	// ── "More actions" grid (FINAL-DESIGN Phase 5) ──
+	private const val KEY_ACTION_ORDER = "more_actions_order"
+	private const val KEY_HIDDEN_ACTIONS = "more_actions_hidden"
+	private const val KEY_CUSTOM_TARGET = "more_actions_custom_target"
+	private const val KEY_LAST_LIGHT_THEME = "last_light_theme"
+
 	/** The host context, resolved lazily (set by [init] from the Application). */
 	private var contextRef: Context? = null
 
@@ -129,6 +135,77 @@ object FeedPreferences {
 	 */
 	internal fun parseViewModes(): Map<String, String> {
 		return parseMapping(KEY_VIEW_MODES)
+	}
+
+	// ── "More actions" grid (FINAL-DESIGN Phase 5) ──
+
+	/**
+	 * The user's "More actions" grid: a 4-column sheet of quick actions
+	 * (FINAL-DESIGN Phase 5, audit §2.4). The reference ships 12 defaults in
+	 * a fixed order; the user can long-press-drag to reorder (persisted as
+	 * the ordered action-id list) and show/hide individual actions (persisted
+	 * as the hidden set). [actionOrder] returns the visible order;
+	 * [hiddenActions] the ids to omit.
+	 */
+	/** All known action ids, in the reference's default grid order. */
+	fun defaultActionOrder(): List<String> = listOf(
+		"search", "profile", "hide_read", "about",
+		"submit", "random", "dark_mode", "settings",
+		"change_view", "saved", "refresh", "custom",
+	)
+
+	/** The persisted grid order (defaults to [defaultActionOrder], ignoring any ids that no longer exist). */
+	fun actionOrder(): List<String> {
+		val raw = prefs.getString(KEY_ACTION_ORDER, null) ?: return defaultActionOrder()
+		val saved = raw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+		val known = defaultActionOrder().toSet()
+		val ordered = saved.filter { it in known }.toMutableList()
+		// Re-append any default that the saved list dropped (a newer action),
+		// so nothing is permanently lost to a stale order.
+		defaultActionOrder().filter { it !in ordered }.forEach { ordered.add(it) }
+		return ordered
+	}
+
+	fun setActionOrder(order: List<String>) {
+		prefs.edit().putString(KEY_ACTION_ORDER, order.joinToString(",")).apply()
+	}
+
+	/** The set of action ids the user has hidden from the grid. */
+	fun hiddenActions(): Set<String> {
+		val raw = prefs.getString(KEY_HIDDEN_ACTIONS, null) ?: return emptySet()
+		return raw.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+	}
+
+	fun setHiddenActions(hidden: Set<String>) {
+		prefs.edit().putString(KEY_HIDDEN_ACTIONS, hidden.joinToString(",")).apply()
+	}
+
+	/**
+	 * What the "custom" grid slot targets — the reference has one free slot
+	 * the user can point at any other listing. Persisted as a list path
+	 * (e.g. `u/<user>/submitted`, `r/all`, `m/<name>`); blank = the slot
+	 * shows the default (frontpage) behaviour.
+	 */
+	fun customTarget(): String = prefs.getString(KEY_CUSTOM_TARGET, "") ?: ""
+
+	fun setCustomTarget(target: String) {
+		prefs.edit().putString(KEY_CUSTOM_TARGET, target).apply()
+	}
+
+	// ── Dark-mode quick toggle (FINAL-DESIGN Phase 5, "Dark mode" action) ──
+
+	/**
+	 * The light [AppearanceTheme] to restore when the user toggles back out
+	 * of a dark theme. Remembered the first time the toggle is used, so
+	 * "Dark mode" is a reversible light↔dark switch rather than always
+	 * landing on one fixed light theme. (Post read-state itself is the
+	 * account-scoped [RedditChangeDataManager]; this only stores the theme
+	 * the grid toggle came from.)
+	 */
+	fun lastLightTheme(): String? = prefs.getString(KEY_LAST_LIGHT_THEME, null)
+
+	fun setLastLightTheme(themeValue: String) {
+		prefs.edit().putString(KEY_LAST_LIGHT_THEME, themeValue).apply()
 	}
 
 	// ── Init / test plumbing ──

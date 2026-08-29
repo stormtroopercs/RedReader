@@ -32,6 +32,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
@@ -86,6 +87,18 @@ fun RealPostListScreen(
 	onNavigateToSubredditSearch: () -> Unit,
 	/** Switch this feed to the swipe feed (Change View → Slides). */
 	onNavigateToSlides: () -> Unit = {},
+	/** Open the default account's own profile (More actions → Profile). */
+	onNavigateToProfile: () -> Unit = {},
+	/** Jump straight to a (random) post's thread (More actions → Random). */
+	onNavigateToRandomPost: (String) -> Unit = {},
+	/** Open the account's saved list (More actions → Saved). */
+	onNavigateToSaved: () -> Unit = {},
+	/** Open an arbitrary listing path (More actions → custom slot). */
+	onOpenListing: (String) -> Unit = {},
+	/** Open Settings (More actions → Settings). */
+	onNavigateToSettings: () -> Unit = {},
+	/** Open the license view (More actions → About → License). */
+	onOpenLicense: () -> Unit = {},
 ) {
 	val viewModel: PostListViewModel = hiltViewModel()
 	val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -98,6 +111,8 @@ fun RealPostListScreen(
 
 	var sortDialogOpen by remember { mutableStateOf(false) }
 	var changeViewOpen by remember { mutableStateOf(false) }
+	var moreActionsOpen by remember { mutableStateOf(false) }
+	var aboutOpen by remember { mutableStateOf(false) }
 	val snackbarHostState = remember { SnackbarHostState() }
 	val context = LocalContext.current
 
@@ -169,7 +184,13 @@ fun RealPostListScreen(
 					IconButton(onClick = onNavigateToPostSubmit) {
 						Icon(Icons.Filled.Add, contentDescription = "Submit")
 					}
-				}
+					// The reference's power-user surface (FINAL-DESIGN
+					// Phase 5): the "More actions" grid, opened from the
+					// top bar's More icon.
+					IconButton(onClick = { moreActionsOpen = true }) {
+						Icon(Icons.Filled.MoreVert, contentDescription = "More actions")
+					}
+					}
 			)
 		},
 		snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -292,6 +313,67 @@ fun RealPostListScreen(
 					onNavigateToSlides()
 				}
 			},
+		)
+	}
+
+	// The "More actions" grid (FINAL-DESIGN Phase 5).
+	if (moreActionsOpen) {
+		MoreActionsSheet(
+			posts = (uiState as? PostListUiState.Success)?.posts ?: emptyList(),
+			onDismiss = { moreActionsOpen = false },
+			onNavigateToSearch = {
+				moreActionsOpen = false
+				onNavigateToSubredditSearch()
+			},
+			onNavigateToProfile = {
+				moreActionsOpen = false
+				onNavigateToProfile()
+			},
+			onHideReadToggled = {
+				// The pref just flipped; refetch so the list reflects it.
+				viewModel.refresh()
+			},
+			onOpenAbout = {
+				moreActionsOpen = false
+				aboutOpen = true
+			},
+			onNavigateToSubmit = {
+				moreActionsOpen = false
+				onNavigateToPostSubmit()
+			},
+			onNavigateToRandomPost = { postId ->
+				moreActionsOpen = false
+				onNavigateToRandomPost(postId)
+			},
+			onNavigateToSettings = {
+				moreActionsOpen = false
+				onNavigateToSettings()
+			},
+			onOpenChangeView = {
+				moreActionsOpen = false
+				changeViewOpen = true
+			},
+			onNavigateToSaved = {
+				moreActionsOpen = false
+				onNavigateToSaved()
+			},
+			onRefresh = {
+				moreActionsOpen = false
+				viewModel.refresh()
+			},
+			onOpenListing = { path ->
+				moreActionsOpen = false
+				onOpenListing(path)
+			},
+			onOpenLicense = { aboutOpen = false; onOpenLicense() },
+		)
+	}
+
+	// The About dialog (More actions → About).
+	if (aboutOpen) {
+		AboutDialog(
+			onDismiss = { aboutOpen = false },
+			onOpenLicense = onOpenLicense,
 		)
 	}
 }

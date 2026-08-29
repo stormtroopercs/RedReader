@@ -382,6 +382,10 @@ class PostListViewModel @Inject constructor(
                                 // created-utc order) and presented
                                 // oldest-first.
                                 .let { if (sortOption.reverse) it.reversed() else it }
+                                // "Hide read posts" (the grid's "Hide read"
+                                // action toggles this): drop posts the
+                                // account's change data marks as read.
+                                .let { filterReadPosts(it, account) }
 
                             _posts.value = posts
                             _state.value = PostListUiState.Success(posts)
@@ -462,6 +466,25 @@ class PostListViewModel @Inject constructor(
             )
         } catch (e: Exception) {
             // Best-effort — never break the listing for the pill.
+        }
+    }
+
+    /**
+     * Drop posts the default account's change data marks as read (the
+     * "Hide read posts" setting — the More-actions grid's "Hide read"
+     * action toggles it). A lookup failure never hides a post: on any
+     * exception the full list is returned.
+     */
+    private fun filterReadPosts(
+        posts: List<PostItem>,
+        account: com.stormtroopercs.materialreader.account.RedditAccount,
+    ): List<PostItem> {
+        if (!PrefsUtility.pref_behaviour_hide_read_posts()) return posts
+        return try {
+            val changeData = com.stormtroopercs.materialreader.reddit.prepared.RedditChangeDataManager.getInstance(account)
+            posts.filterNot { changeData.isRead(RedditIdAndType("t3_${it.id}")) }
+        } catch (e: Exception) {
+            posts
         }
     }
 }
