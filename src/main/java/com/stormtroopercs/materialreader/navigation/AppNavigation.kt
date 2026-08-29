@@ -25,6 +25,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +46,18 @@ import com.stormtroopercs.materialreader.common.RunnableOnce
 import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.reddit.api.RedditOAuth
 import com.stormtroopercs.materialreader.settings.types.PostViewMode
+
+/**
+ * The shared screen-transition timing (FINAL-DESIGN 8.5): a 300ms slide on the
+ * reference's **fast-out-extra-slow-in** curve (`cubicBezier(0.1, 0, 0.2, 1)`) —
+ * quick launch, long, gentle settle. Applied to every push/pop transition in the
+ * [NavDisplay] below.
+ */
+val navSlideSpec: FiniteAnimationSpec<IntOffset> =
+    tween(
+        durationMillis = 300,
+        easing = CubicBezierEasing(0.1f, 0f, 0.2f, 1f)
+    )
 
 /**
  * App-wide navigation using Navigation 3.
@@ -91,15 +107,17 @@ fun AppNavGraph(navigationState: NavigationState) {
             rememberViewModelStoreNavEntryDecorator()
         ),
         transitionSpec = {
-            // Push: the new screen slides in from the right over the previous one.
-            slideInHorizontally(initialOffsetX = { it }) togetherWith
-                slideOutHorizontally(targetOffsetX = { -it })
+            // Push: the new screen slides in from the right over the previous
+            // one, with the reference's fast-out-extra-slow-in easing (8.5).
+            slideInHorizontally(initialOffsetX = { it }, animationSpec = navSlideSpec) togetherWith
+                slideOutHorizontally(targetOffsetX = { -it }, animationSpec = navSlideSpec)
         },
         popTransitionSpec = {
-            // Pop (system back, up arrow, in-app "back" nav): the leaving screen
-            // slides out to the left and the underlying one slides back in.
-            slideInHorizontally(initialOffsetX = { -it }) togetherWith
-                slideOutHorizontally(targetOffsetX = { it })
+            // Pop (system back, up arrow, in-app "back" nav): the leaving
+            // screen slides out to the left and the underlying one slides back
+            // in — same easing.
+            slideInHorizontally(initialOffsetX = { -it }, animationSpec = navSlideSpec) togetherWith
+                slideOutHorizontally(targetOffsetX = { it }, animationSpec = navSlideSpec)
         },
         entryProvider = entryProvider {
             // Top-level: Main screen

@@ -167,6 +167,15 @@ object PrefsUtility {
         setBoolean(string.pref_behaviour_video_playback_controls_key, enabled)
     }
 
+    fun pref_onboarding_complete_set(completed: Boolean) {
+        setBoolean(string.pref_onboarding_complete_key, completed)
+    }
+
+    fun pref_onboarding_complete(): Boolean {
+        return getBoolean(string.pref_onboarding_complete_key, false)
+    }
+
+
     fun pref_behaviour_video_frame_step_set(enabled: Boolean) {
         setBoolean(string.pref_behaviour_video_frame_step_key, enabled)
     }

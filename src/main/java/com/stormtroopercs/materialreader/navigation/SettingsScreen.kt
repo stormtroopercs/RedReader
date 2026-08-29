@@ -37,6 +37,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -121,6 +124,7 @@ fun SettingsScreen(
     var showThemeColors by remember { mutableStateOf(false) }
     var showCacheLocation by remember { mutableStateOf(false) }
     var showCacheClear by remember { mutableStateOf(false) }
+    var showResetRequested by remember { mutableStateOf(false) }
 
     // Backup / restore preference files (33rd) via the Activity Result API,
     // mirroring the legacy SettingsFragment ACTION_CREATE_DOCUMENT /
@@ -193,6 +197,16 @@ fun SettingsScreen(
     if (showCacheClear) {
         CacheClearDialog(context = context, onDismiss = { showCacheClear = false })
     }
+    if (showResetRequested) {
+        ResetSettingsDialog(
+            onDismiss = { showResetRequested = false },
+            onReset = {
+                showResetRequested = false
+                resetAppearanceAndBehaviourDefaults()
+                General.quickToast(context, "Appearance & behaviour reset to defaults")
+            }
+        )
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -211,10 +225,11 @@ fun SettingsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* no-op */ }) {
+                    // The 8.2 per-page Reset affordance (confirm-protected).
+                    IconButton(onClick = { showResetRequested = true }) {
                         Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings"
+                            imageVector = Icons.Filled.Refresh,
+                            contentDescription = "Reset settings"
                         )
                     }
                 }
@@ -279,7 +294,9 @@ private fun SettingsContent(
     onTestNotification: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val settings = getSettingsCategories(
+    // The 8.2 search field: filters the whole inventory as the user types.
+    var searchQuery by remember { mutableStateOf("") }
+    val allSettings = getSettingsCategories(
         context,
         onNavigateToChangelog,
         onNavigateToBugReport,
@@ -292,27 +309,129 @@ private fun SettingsContent(
         onRestorePreferences,
         onTestNotification
     )
-
-    LazyColumn(
-        modifier = modifier.fillMaxSize()
-    ) {
-        settings.forEach { category ->
-            item(key = "header_${category.id}") {
-                SettingsCategoryHeader(title = category.title)
+    // Keep only categories that still have at least one matching row; when
+    // the query is empty, the full inventory shows.
+    val query = searchQuery.trim()
+    val settings = if (query.isEmpty()) {
+        allSettings
+    } else {
+        allSettings.mapNotNull { category ->
+            val matched = category.items.filter { item ->
+                item.searchText().contains(query, ignoreCase = true)
             }
+            if (matched.isEmpty()) null
+            else category.copy(items = matched)
+        }
+    }
 
-            items(category.items) { item ->
-                when (item) {
-                    is SettingsItem.BooleanSetting -> BooleanSettingItem(item)
-                    is SettingsItem.EnumSetting<*> -> EnumSettingItem(item)
-                    is SettingsItem.PreferenceItem -> PreferenceItem(item)
-                    is SettingsItem.StringSetting -> StringSettingItem(item)
-                    is SettingsItem.ChoiceSetting -> ChoiceSettingItem(item)
-                    is SettingsItem.MultiSelectSetting -> MultiSelectSettingItem(item)
+    Column(modifier = modifier.fillMaxSize()) {
+        // Search field (8.2) — the reference's top-of-settings search that
+        // filters the grouped list live.
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Search settings") },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = null
+                )
+            },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { searchQuery = "" }) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Clear"
+                        )
+                    }
+                }
+            },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+
+        if (query.isNotEmpty() && settings.isEmpty()) {
+            // No matches: a quiet empty state.
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No settings match “$query”",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                settings.forEach { category ->
+                    item(key = "header_${category.id}") {
+                        SettingsCategoryHeader(title = category.title)
+                    }
+
+                    items(category.items) { item ->
+                        when (item) {
+                            is SettingsItem.BooleanSetting -> BooleanSettingItem(item)
+                            is SettingsItem.EnumSetting<*> -> EnumSettingItem(item)
+                            is SettingsItem.PreferenceItem -> PreferenceItem(item)
+                            is SettingsItem.StringSetting -> StringSettingItem(item)
+                            is SettingsItem.ChoiceSetting -> ChoiceSettingItem(item)
+                            is SettingsItem.MultiSelectSetting -> MultiSelectSettingItem(item)
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * The per-page "Reset" affordance's confirm dialog (8.2). It resets a
+ * curated, safe set of appearance/behaviour preferences to their documented
+ * defaults — it deliberately does NOT touch account data, the Reddit OAuth
+ * client id, or anything the user must re-enter.
+ */
+@Composable
+private fun ResetSettingsDialog(
+    onDismiss: () -> Unit,
+    onReset: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Reset settings") },
+        text = {
+            Text(
+                "Reset appearance and behaviour settings to their defaults. " +
+                    "Your account and Reddit sign-in are not affected."
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onReset) { Text("Reset") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+/**
+ * Reset the safe, well-known appearance/behaviour prefs to their defaults.
+ * Kept deliberately conservative (no account / OAuth / client-id data).
+ */
+private fun resetAppearanceAndBehaviourDefaults() {
+    PrefsUtility.pref_appearance_left_handed_set(false)
+    PrefsUtility.pref_appearance_twopane_set(
+        PrefsUtility.AppearanceTwopane.entries.first()
+    )
+    PrefsUtility.appearance_theme_set(
+        com.stormtroopercs.materialreader.settings.types.AppearanceTheme.entries.first()
+    )
+    PrefsUtility.pref_appearance_navbar_colour_set(
+        PrefsUtility.AppearanceNavbarColour.entries.first()
+    )
 }
 
 /**
@@ -702,19 +821,28 @@ data class SettingsCategory(
 
 sealed class SettingsItem {
     abstract val key: String
+    abstract val label: String
+    abstract val description: String
+
+    /**
+     * The text the 8.2 settings search matches against (label, description,
+     * and the key). Subclasses may override to add option text.
+     */
+    open fun searchText(): String =
+        listOf(label, description, key).joinToString(" ") { it }
 
     data class BooleanSetting(
         override val key: String,
-        val label: String,
-        val description: String = "",
+        override val label: String,
+        override val description: String = "",
         val get: () -> Boolean,
         val set: (Boolean) -> Unit
     ) : SettingsItem()
 
     data class EnumSetting<T : Enum<T>>(
         override val key: String,
-        val label: String,
-        val description: String = "",
+        override val label: String,
+        override val description: String = "",
         val entries: List<T>,
         val get: () -> T,
         private val set: (T) -> Unit
@@ -729,15 +857,15 @@ sealed class SettingsItem {
 
     data class PreferenceItem(
         override val key: String,
-        val label: String,
-        val description: String = "",
+        override val label: String,
+        override val description: String = "",
         val onClick: () -> Unit
     ) : SettingsItem()
 
     data class StringSetting(
         override val key: String,
-        val label: String,
-        val description: String = "",
+        override val label: String,
+        override val description: String = "",
         val placeholder: String = "",
         val get: () -> String?,
         val set: (String?) -> Unit
@@ -749,8 +877,8 @@ sealed class SettingsItem {
      */
     data class ChoiceSetting(
         override val key: String,
-        val label: String,
-        val description: String = "",
+        override val label: String,
+        override val description: String = "",
         val options: List<Pair<String, String>>,
         val get: () -> String?,
         val set: (String) -> Unit
@@ -768,8 +896,8 @@ sealed class SettingsItem {
      */
     data class MultiSelectSetting(
         override val key: String,
-        val label: String,
-        val description: String = "",
+        override val label: String,
+        override val description: String = "",
         val options: List<Pair<String, String>>,
         val get: () -> Set<String>,
         val set: (Set<String>) -> Unit

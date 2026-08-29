@@ -25,6 +25,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import dagger.hilt.android.AndroidEntryPoint
@@ -38,6 +41,8 @@ import com.stormtroopercs.materialreader.navigation.deepLinkDestination
 import com.stormtroopercs.materialreader.navigation.Accounts
 import com.stormtroopercs.materialreader.navigation.Album
 import com.stormtroopercs.materialreader.navigation.AppNavGraph
+import com.stormtroopercs.materialreader.navigation.OnboardingScreen
+import com.stormtroopercs.materialreader.common.PrefsUtility
 import com.stormtroopercs.materialreader.navigation.BugReport
 import com.stormtroopercs.materialreader.navigation.Changelog
 import com.stormtroopercs.materialreader.navigation.CommentEdit
@@ -152,11 +157,26 @@ class MainActivityCompose : ComposeBaseActivity() {
                     navigationState.topLevelRoute to navigationState.activeBackStack.size
                 }.collect { invalidateBackPressedCallback() }
             }
+            // The multi-step first-run onboarding (8.4): shown until the user
+            // finishes or skips; the flag persists so it never re-appears.
+            var onboardingDone by rememberSaveable {
+                mutableStateOf(PrefsUtility.pref_onboarding_complete())
+            }
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.background
             ) {
-                AppNavGraph(navigationState)
+                if (onboardingDone) {
+                    AppNavGraph(navigationState)
+                } else {
+                    OnboardingScreen(
+                        onFinish = { onboardingDone = true },
+                        onSkip = {
+                            PrefsUtility.pref_onboarding_complete_set(true)
+                            onboardingDone = true
+                        }
+                    )
+                }
             }
         }
     }

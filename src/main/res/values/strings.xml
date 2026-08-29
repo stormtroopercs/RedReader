@@ -689,6 +689,7 @@
 
 	<string name="pref_menus_show_popular_main_menu_key" translatable="false">pref_menus_show_popular_main_menu</string>
 	<string name="pref_behaviour_video_playback_controls_key" translatable="false">pref_behaviour_video_playback_controls</string>
+	<string name="pref_onboarding_complete_key" translatable="false">pref_onboarding_complete</string>
 
 	<!-- 2017-06-05 -->
 	<string name="error_no_suitable_apps_available">No suitable apps available.</string>
