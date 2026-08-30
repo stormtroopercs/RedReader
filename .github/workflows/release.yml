@@ -1,28 +1,39 @@
 name: Release
 
-# Nightly auto-release.
+# Auto-release.
 #
-# Every night (03:17 UTC) this checks whether `dev` has new commits since the
-# last v0.0.* release tag. If it does, it bumps the patch (0.0.N -> 0.0.N+1-alpha),
-# builds a SIGNED release APK, and publishes it as a GitHub Release.
-# If nothing changed on `dev`, it builds nothing and publishes nothing.
+# PRIMARY trigger: `workflow_run` — as soon as the `CI` workflow finishes
+# successfully on `dev`, this builds and publishes a release. That is the
+# "CI built successfully -> release is updated" path.
 #
-# Also runnable on demand from Actions -> Run workflow, with an optional `version`
-# input to force a specific tag (e.g. v0.0.2 to ship a stable, non-prerelease build).
+# Why not rely on the cron: GitHub's `schedule` trigger is unreliable — runs
+# are routinely delayed by hours and are known to be skipped on forked repos.
+# This repo is a fork, and in practice every release since v0.0.1 was produced
+# by a manual workflow_dispatch click, never by the cron. So the cron is kept
+# only as a fallback (03:17 UTC nightly), and `workflow_dispatch` remains for
+# forcing a specific tag (e.g. v0.0.2 to ship a stable, non-prerelease build).
 #
-# Requires these GitHub Secrets (repo -> Settings -> Secrets and variables -> Actions):
+# Behaviour: checks whether the commit being released has new commits since the
+# last v0.0.* release tag. If it does, it bumps the patch (0.0.N ->
+# 0.0.N+1-alpha), builds a SIGNED release APK, and publishes it as a GitHub
+# Release. If nothing changed (or CI is not green), it publishes nothing.
+#
+# Requires these GitHub Secrets (repo -> Settings -> Secrets and variables ->
+# Actions):
 #   KEYSTORE_FILE      base64 of the release keystore
 #   KEYSTORE_PASSWORD  keystore password
 #   KEY_ALIAS          key alias (e.g. materialreader)
 #   KEY_PASSWORD       key password
 #
-# NOTE: GitHub runs scheduled workflows from the REPOSITORY DEFAULT branch. Since this
-# workflow lives on `dev`, set `dev` as the repo's default branch (Settings -> Branches)
-# or the nightly will not fire.
+# NOTE: scheduled workflows run from the REPOSITORY DEFAULT branch. `dev` is
+# this repo's default branch.
 
 on:
     schedule:
-        -   cron: '17 3 * * *'      # 03:17 UTC nightly
+        -   cron: '17 3 * * *'      # 03:17 UTC nightly (fallback only)
+    workflow_run:
+        workflows: ['build.yml']
+        types: ['completed']
     workflow_dispatch:
         inputs:
             version:
@@ -31,6 +42,7 @@ on:
 
 permissions:
     contents: write
+    checks: read
 
 jobs:
     release:
@@ -39,7 +51,9 @@ jobs:
             -   uses: actions/checkout@v7
                 with:
                     fetch-depth: 0
-                    ref: dev
+                    # workflow_run: the exact SHA the CI run just validated;
+                    # schedule/dispatch: current dev HEAD.
+                    ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'dev' }}
 
             -   name: Install GitHub CLI
                 env:
@@ -56,18 +70,50 @@ jobs:
                     git fetch --tags --force
                     LATEST="$(git tag --list 'v0.0.*' | sort -V | tail -n1)"
                     echo "latest release tag: ${LATEST:-none}"
+                    echo "latest=${LATEST}" >> "$GITHUB_OUTPUT"
 
-                    # Guard: only release if the latest commit on dev is green in CI.
-                    # If we can't read the status (gh/API hiccup), default to releasing
-                    # rather than crashing the whole step.
-                    HEAD_SHA="$(git rev-parse dev)"
+                    # Which commit to release.
+                    if [ "${{ github.event_name }}" = "workflow_run" ]; then
+                        if [ "${{ github.event.workflow_run.head_branch }}" != "dev" ]; then
+                            echo "CI completed on '${{ github.event.workflow_run.head_branch }}' (not dev) — no release."
+                            echo "changed=false" >> "$GITHUB_OUTPUT"
+                            exit 0
+                        fi
+                        if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+                            echo "CI run ended '${{ github.event.workflow_run.conclusion }}' — no release."
+                            echo "changed=false" >> "$GITHUB_OUTPUT"
+                            exit 0
+                        fi
+                        TARGET_SHA="${{ github.event.workflow_run.head_sha }}"
+                    else
+                        TARGET_SHA="$(git rev-parse dev)"
+                    fi
+                    echo "releasing commit: ${TARGET_SHA}"
+
+                    # Guard: only release a commit that CI has verified green.
+                    # The CI job reports through the modern check-runs API (a
+                    # check-run named "ci"); the legacy combined-status endpoint
+                    # (/commits/<sha>/status) reports "pending" with zero
+                    # statuses for these SHAs, so it is NOT used.
+                    # If the API call itself fails, fall back to releasing
+                    # (same as before) rather than crashing the step.
                     set +e
-                    CI_STATUS="$(gh api "repos/${{ github.repository }}/commits/${HEAD_SHA}/status" --jq '.state' 2>/dev/null)"
+                    CI_CONCL="$(gh api "repos/${{ github.repository }}/commits/${TARGET_SHA}/check-runs" --jq '.check_runs[] | select(.name == "ci") | .conclusion' 2>/dev/null | head -n1)"
+                    API_OK=$?
                     set -e
-                    CI_STATUS="${CI_STATUS:-success}"
-                    echo "dev HEAD ${HEAD_SHA} CI state: ${CI_STATUS}"
-                    if [ "${CI_STATUS}" != "success" ]; then
-                        echo "::warning::Latest dev commit is not green (state=${CI_STATUS}). Skipping release."
+                    if [ ${API_OK} -ne 0 ] || [ -z "${CI_CONCL}" ]; then
+                        if [ "${{ github.event_name }}" = "workflow_run" ]; then
+                            echo "Could not re-read the CI check-run, but this run was triggered by a successful CI — proceeding."
+                        else
+                            echo "::warning::No CI check-run found for ${TARGET_SHA} — cannot verify green, skipping (the next green CI run will retry)."
+                            echo "changed=false" >> "$GITHUB_OUTPUT"
+                            exit 0
+                        fi
+                        CI_CONCL="success"
+                    fi
+                    echo "CI conclusion for ${TARGET_SHA}: ${CI_CONCL}"
+                    if [ "${CI_CONCL}" != "success" ]; then
+                        echo "::warning::Target commit is not green (conclusion=${CI_CONCL}). Skipping release."
                         echo "changed=false" >> "$GITHUB_OUTPUT"
                         exit 0
                     fi
@@ -79,7 +125,7 @@ jobs:
                         TAG="v0.0.1-alpha"
                         CHANGED=true
                     else
-                        AHEAD="$(git rev-list --count "${LATEST}..dev")"
+                        AHEAD="$(git rev-list --count "${LATEST}..${TARGET_SHA}")"
                         echo "commits on dev since ${LATEST}: ${AHEAD}"
                         if [ "${AHEAD}" -gt 0 ]; then
                             base="${LATEST#v}"; num="${base%%-*}"; patch="${num##*.}"; next=$((patch + 1)); prefix="${num%.*}"
@@ -95,7 +141,7 @@ jobs:
 
             -   name: No changes — skip release
                 if: steps.ver.outputs.changed != 'true'
-                run: echo "No new commits on dev since the last release (${LATEST}). Nothing to build."
+                run: echo "No new commits on dev since the last release (${{ steps.ver.outputs.latest }}). Nothing to build."
 
             -   name: Set up Java 21
                 if: steps.ver.outputs.changed == 'true'
