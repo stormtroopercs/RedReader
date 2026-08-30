@@ -54,8 +54,18 @@ fun InboxScreen(
     onMarkAllRead: () -> Unit = { viewModel.markAllAsRead() }
 ) {
     val state by viewModel.state.collectAsState()
+    val markError by viewModel.markError.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(markError) {
+        markError?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearMarkError()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {

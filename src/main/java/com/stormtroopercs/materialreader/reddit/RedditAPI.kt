@@ -353,6 +353,87 @@ object RedditAPI {
         )
     }
 
+    /**
+     * ViewModel-friendly variant of [markAllAsRead]: fires the same
+     * `/api/read_all_messages` POST but reports success/failure through plain
+     * callbacks instead of an [ActionResponseHandler], so it can be invoked
+     * from a `@HiltViewModel` that holds no `AppCompatActivity` reference.
+     */
+    fun markAllAsRead(
+        cm: CacheManager,
+        user: RedditAccount,
+        context: Context,
+        onSuccess: () -> Unit = {},
+        onFailure: (RRError) -> Unit = {}
+    ) {
+        val postFields = LinkedList<PostField>()
+
+        cm.makeRequest(
+            createPostRequestUnprocessedResponse(
+                Reddit.getUri("/api/read_all_messages"),
+                user,
+                postFields,
+                context,
+                object : CacheRequestCallbacks {
+                    override fun onFailure(error: RRError) {
+                        onFailure(error)
+                    }
+
+                    override fun onDataStreamComplete(
+                        stream: GenericFactory<SeekableInputStream, IOException>,
+                        timestamp: TimestampUTC,
+                        session: UUID,
+                        fromCache: Boolean,
+                        mimetype: String?
+                    ) {
+                        onSuccess()
+                    }
+                }
+            )
+        )
+    }
+
+    /**
+     * ViewModel-friendly variant of the per-message mark-as-read: fires the
+     * same `/api/read_message` POST (thing id as `id`) with plain
+     * success/failure callbacks so it can be invoked from a `@HiltViewModel`.
+     */
+    fun markRead(
+        cm: CacheManager,
+        user: RedditAccount,
+        context: Context,
+        id: String,
+        onSuccess: () -> Unit = {},
+        onFailure: (RRError) -> Unit = {}
+    ) {
+        val postFields = LinkedList<PostField>()
+        postFields.add(PostField("id", id))
+
+        cm.makeRequest(
+            createPostRequestUnprocessedResponse(
+                Reddit.getUri("/api/read_message"),
+                user,
+                postFields,
+                context,
+                object : CacheRequestCallbacks {
+                    override fun onFailure(error: RRError) {
+                        onFailure(error)
+                    }
+
+                    override fun onDataStreamComplete(
+                        stream: GenericFactory<SeekableInputStream, IOException>,
+                        timestamp: TimestampUTC,
+                        session: UUID,
+                        fromCache: Boolean,
+                        mimetype: String?
+                    ) {
+                        onSuccess()
+                    }
+                }
+            )
+        )
+    }
+
     fun editComment(
         cm: CacheManager,
         responseHandler: ActionResponseHandler,

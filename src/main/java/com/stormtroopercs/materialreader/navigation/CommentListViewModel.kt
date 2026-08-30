@@ -25,8 +25,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -305,17 +305,16 @@ class CommentListViewModel @Inject constructor(
      * and parsed, returning the flattened [CommentItem]s at [baseDepth]. On a
      * network/parse failure returns an empty list (the row simply stays
      * collapsed) and surfaces the error as a snackbar. Backed by a CacheRequest
-     * bridged into coroutines via [suspendCancellableCoroutine].
+     * bridged into coroutines via a [CompletableDeferred] (its [await] is
+     * cancellable, so an expand that is superseded is dropped).
      */
     private suspend fun fetchExpandedChildren(
         childId: String,
         postId: String,
         baseDepth: Int,
         account: RedditAccount
-    ): List<CommentItem> = suspendCancellableCoroutine<List<CommentItem>> { cont ->
-        // CacheRequest has no cancellation hook; the request completes harmlessly
-        // and its result is ignored once cont is inactive.
-        cont.invokeOnCancellation { }
+    ): List<CommentItem> {
+        val deferred = CompletableDeferred<List<CommentItem>>()
         val url = PostCommentListingURL(null, postId, childId, null, 10, null, false)
         val uri = UriString(url.generateJsonUri().toString())
         val cacheRequest = CacheRequest(
@@ -329,7 +328,7 @@ class CommentListViewModel @Inject constructor(
             context,
             object : CacheRequestCallbacks {
                 override fun onFailure(error: RRError) {
-                    if (cont.isActive) cont.resume(emptyList())
+                    if (deferred.isActive) deferred.complete(emptyList())
                 }
 
                 override fun onDataStreamComplete(
@@ -345,7 +344,7 @@ class CommentListViewModel @Inject constructor(
                         }
                         val fetched = mutableListOf<CommentItem>()
                         parseExpandedResponse(thingResponse, baseDepth, postId, fetched)
-                        if (cont.isActive) cont.resume(fetched)
+                        if (deferred.isActive) deferred.complete(fetched)
                     } catch (e: Exception) {
                         val error = General.getGeneralErrorForFailure(
                             context,
@@ -358,12 +357,13 @@ class CommentListViewModel @Inject constructor(
                         AndroidCommon.runOnUiThread {
                             _actionResult.value = error.message ?: "Failed to load comments"
                         }
-                        if (cont.isActive) cont.resume(emptyList())
+                        if (deferred.isActive) deferred.complete(emptyList())
                     }
                 }
             }
         )
         cacheManager.makeRequest(cacheRequest)
+        return deferred.await()
     }
 
     /**

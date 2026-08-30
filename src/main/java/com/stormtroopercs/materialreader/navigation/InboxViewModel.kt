@@ -42,6 +42,8 @@ import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.common.datastream.SeekableInputStream
 import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import com.stormtroopercs.materialreader.common.Constants.Reddit
+import com.stormtroopercs.materialreader.reddit.APIResponseHandler.ActionResponseHandler
+import com.stormtroopercs.materialreader.reddit.RedditAPI
 import com.stormtroopercs.materialreader.reddit.kthings.JsonUtils.decodeRedditThingFromStream
 import com.stormtroopercs.materialreader.reddit.kthings.RedditThing
 import javax.inject.Inject
@@ -167,6 +169,7 @@ class InboxViewModel @Inject constructor(
      * either, it re-fetched the inbox.
      */
     fun markAsRead(messageId: String) {
+        val prior = (_state.value as? InboxUiState.Success)?.messages ?: return
         _state.update { state ->
             if (state is InboxUiState.Success) {
                 val updated = state.messages.map { if (it.id == messageId) it.copy(isRead = true) else it }
@@ -178,12 +181,32 @@ class InboxViewModel @Inject constructor(
                 state
             }
         }
+        viewModelScope.launch {
+            val account = accountManager.getDefaultAccount() ?: return@launch
+            RedditAPI.markRead(
+                cacheManager,
+                account,
+                context,
+                id = messageId,
+                onFailure = { error ->
+                    _state.value = InboxUiState.Success(
+                        unreadCount = prior.count { !it.isRead },
+                        messages = prior
+                    )
+                    _markError.value = error.message ?: "Failed to mark as read"
+                }
+            )
+        }
     }
 
     /**
-     * Mark all messages as read (local state update).
+     * Mark all messages as read. Applies an optimistic local update, then
+     * fires the real server call (`RedditAPI.markAllAsRead` →
+     * `/api/read_all_messages`) so the read state persists on the next inbox
+     * fetch; on failure the local state is rolled back to its prior value.
      */
     fun markAllAsRead() {
+        val prior = (_state.value as? InboxUiState.Success)?.messages ?: return
         _state.update { state ->
             if (state is InboxUiState.Success) {
                 InboxUiState.Success(
@@ -194,6 +217,30 @@ class InboxViewModel @Inject constructor(
                 state
             }
         }
+        viewModelScope.launch {
+            val account = accountManager.getDefaultAccount() ?: return@launch
+            RedditAPI.markAllAsRead(
+                cacheManager,
+                account,
+                context,
+                onFailure = { error ->
+                    _state.value = InboxUiState.Success(
+                        unreadCount = prior.count { !it.isRead },
+                        messages = prior
+                    )
+                    _markError.value = error.message ?: "Failed to mark all as read"
+                }
+            )
+        }
+    }
+
+    /** Transient error surfaced when a mark-as-read server call fails (rolled back). */
+    private val _markError = MutableStateFlow<String?>(null)
+    val markError: StateFlow<String?> = _markError.asStateFlow()
+
+    /** Clear a shown mark-as-read error (called after the Snackbar). */
+    fun clearMarkError() {
+        _markError.value = null
     }
 }
 
