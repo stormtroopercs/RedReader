@@ -60,6 +60,7 @@ import com.stormtroopercs.materialreader.navigation.Navigator
 import com.stormtroopercs.materialreader.navigation.PostList
 import com.stormtroopercs.materialreader.navigation.PostSubmit
 import com.stormtroopercs.materialreader.navigation.PMSend
+import com.stormtroopercs.materialreader.navigation.SettingsInScreenBackHandler
 import com.stormtroopercs.materialreader.navigation.RedditTerms
 import com.stormtroopercs.materialreader.navigation.Settings
 import com.stormtroopercs.materialreader.navigation.SubredditSearch
@@ -161,6 +162,11 @@ class MainActivityCompose : ComposeBaseActivity() {
         // API 36+ (predictive back), and the OS would finish the activity
         // instead of popping the screen.
         HtmlViewBackHandler.onBackChanged = { invalidateBackPressedCallback() }
+        // Same for the Settings in-screen sub-states (category folders,
+        // Theme colours, Appbar): re-evaluate the back-callback enabled state
+        // whenever one is opened/closed so API 36+ predictive back stays
+        // consistent with the legacy callback path.
+        SettingsInScreenBackHandler.onBackChanged = { invalidateBackPressedCallback() }
 
         // Deep-link handling above may already have moved the navigation past
         // the root before BaseActivity ran its initial callback evaluation, so
@@ -231,6 +237,13 @@ class MainActivityCompose : ComposeBaseActivity() {
         if (HtmlViewBackHandler.goBack()) {
             return true
         }
+        // While a Settings in-screen sub-state (category folder, Theme
+        // colours or Appbar) is open, close it first so a single back press
+        // doesn't skip the folder list and pop the whole Settings route
+        // (bug report 2026-08-30 settings IA).
+        if (SettingsInScreenBackHandler.goBack()) {
+            return true
+        }
         if (navigationState.canGoBack()) {
             navigator.goBack()
             return true
@@ -241,7 +254,9 @@ class MainActivityCompose : ComposeBaseActivity() {
     override fun baseActivityMustInterceptBack(): Boolean {
         // Keep the callback enabled while the WebView still has history to
         // walk, so the predictive-back path (API 36+) stays consistent too.
-        return HtmlViewBackHandler.canGoBack || navigationState.canGoBack()
+        return HtmlViewBackHandler.canGoBack
+            || SettingsInScreenBackHandler.canGoBack
+            || navigationState.canGoBack()
     }
 
     /**

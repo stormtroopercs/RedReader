@@ -55,10 +55,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -128,6 +131,44 @@ fun SettingsScreen(
     // The open settings category (bug report 2026-08-30: "place categories
     // into separate menus (folders)"). Null = the root folder list.
     var openCategory by remember { mutableStateOf<String?>(null) }
+
+    // System back must close the topmost in-screen sub-state before leaving
+    // settings (the activity's back handler otherwise pops the whole Settings
+    // route in one press). Theme colours and Appbar are in-screen panels that
+    // can stack on top of an open category, so they take back precedence.
+    //
+    // Published through SettingsInScreenBackHandler (the HtmlViewBackHandler
+    // pattern): at these androidx versions BackHandler resolves its
+    // dispatcher from the Compose hosts' no-op NavigationEventDispatcherOwner
+    // and silently never fires, so the composable cannot consume system back
+    // directly — the activity consults the handler instead.
+    DisposableEffect(Unit) {
+        SettingsInScreenBackHandler.onClosed = { sub ->
+            when (sub) {
+                SettingsInScreenBackHandler.SubState.THEME_COLOURS -> showThemeColors = false
+                SettingsInScreenBackHandler.SubState.APPBAR -> showAppbar = false
+                SettingsInScreenBackHandler.SubState.CATEGORY -> openCategory = null
+            }
+        }
+        SettingsInScreenBackHandler.clear()
+        onDispose {
+            SettingsInScreenBackHandler.clear()
+            SettingsInScreenBackHandler.onClosed = null
+        }
+    }
+    LaunchedEffect(Unit) {
+        snapshotFlow {
+            (showThemeColors to showAppbar) to openCategory
+        }.collect { (panels, category) ->
+            val top = when {
+                panels.first -> SettingsInScreenBackHandler.SubState.THEME_COLOURS
+                panels.second -> SettingsInScreenBackHandler.SubState.APPBAR
+                category != null -> SettingsInScreenBackHandler.SubState.CATEGORY
+                else -> null
+            }
+            SettingsInScreenBackHandler.setTopState(top)
+        }
+    }
 
     // Backup / restore preference files (33rd) via the Activity Result API,
     // mirroring the legacy SettingsFragment ACTION_CREATE_DOCUMENT /
