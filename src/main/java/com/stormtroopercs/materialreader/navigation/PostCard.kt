@@ -66,6 +66,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.stormtroopercs.materialreader.common.LinkHandler
+import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.compose.theme.LocalComposeTheme
 import com.stormtroopercs.materialreader.compose.ui.PostThumbnailPreview
 import com.stormtroopercs.materialreader.settings.types.PostSwipeAction
@@ -253,11 +255,16 @@ fun Modifier.postSwipeToAction(
  * A single post in the list feed, in one of the reference's card modes
  * (FINAL-DESIGN Phase 4.1, DESIGN §4.3). Media (220dp, 8dp margin, rounded)
  * above the title → meta → body ordering; the corrected [StatsAndIconsRow]
- * underneath. The whole card is tappable (opens the thread).
+ * underneath. The whole card is tappable (opens the thread); the media
+ * region is tappable **too** and wins its own tap — opening the post's
+ * media in the full-screen viewer ([onMediaClick]).
  *
  * @param post the post to render.
  * @param mode the card mode (see [PostViewMode]).
  * @param onOpenThread opens the post's comment thread.
+ * @param onMediaClick opens the post's media in the full-screen viewer
+ *   (a tap on the media region; null/blank media or a non-media post makes
+ *   it a no-op).
  * @param onAuthorClick opens the author's profile.
  * @param onPostAction a list action (vote / save / hide / share / report).
  * @param swipeEnabled whether the horizontal swipe-to-action gesture is on.
@@ -270,6 +277,7 @@ fun PostCard(
 	mode: PostViewMode,
 	modifier: Modifier = Modifier,
 	onOpenThread: () -> Unit,
+	onMediaClick: () -> Unit = {},
 	onAuthorClick: (String) -> Unit,
 	onPostAction: (PostItem, PostAction) -> Unit,
 	swipeEnabled: Boolean = false,
@@ -334,12 +342,16 @@ fun PostCard(
 						)
 					}
 					if (mediaSize > 0.dp && media != null) {
-						PostThumbnailPreview(
-							uri = media,
-							isVideo = post.isVideo,
-							size = 96.dp,
-							modifier = Modifier.padding(if (mode == PostViewMode.THUMB_LEFT) 8.dp else 0.dp),
-						)
+						Box(
+							modifier = Modifier.clickable(onClick = onMediaClick),
+						) {
+							PostThumbnailPreview(
+								uri = media,
+								isVideo = post.isVideo,
+								size = 96.dp,
+								modifier = Modifier.padding(if (mode == PostViewMode.THUMB_LEFT) 8.dp else 0.dp),
+							)
+						}
 					}
 					if (mode == PostViewMode.THUMB_LEFT) {
 						PostCardTextColumn(
@@ -359,15 +371,21 @@ fun PostCard(
 			}
 			else -> {
 				if (mediaSize > 0.dp && media != null) {
-					PostThumbnailPreview(
-						uri = media,
-						isVideo = post.isVideo,
-						size = mediaSize,
+					Box(
 						modifier = Modifier
 							.fillMaxWidth()
-							.padding(8.dp)
-							.clip(RoundedCornerShape(8.dp)),
-					)
+							.clickable(onClick = onMediaClick),
+					) {
+						PostThumbnailPreview(
+							uri = media,
+							isVideo = post.isVideo,
+							size = mediaSize,
+							modifier = Modifier
+								.fillMaxWidth()
+								.padding(8.dp)
+								.clip(RoundedCornerShape(8.dp)),
+						)
+					}
 				}
 				PostCardTextColumn(
 					post = post,

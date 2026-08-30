@@ -133,6 +133,8 @@ fun CommunityDetailScreen(
 	onOpenListing: (String) -> Unit = {},
 	onNavigateToSettings: () -> Unit = {},
 	onOpenLicense: () -> Unit = {},
+	/** Open a post's media in the full-screen viewer (media tap). */
+	onOpenMedia: (PostItem) -> Unit = {},
 ) {
 	val name = tabTitle.removePrefix("r/")
 	val communityVm: CommunityViewModel = hiltViewModel()
@@ -303,6 +305,7 @@ fun CommunityDetailScreen(
 							posts = posts,
 							viewMode = viewMode,
 							onOpenThread = onNavigateToCommentList,
+							onOpenMedia = onOpenMedia,
 							onAuthorClick = onNavigateToUserProfile,
 							onPostAction = ::onPostAction,
 						)
@@ -493,6 +496,7 @@ private fun CommunityActiveFeed(
 	posts: List<PostItem>,
 	viewMode: PostViewMode,
 	onOpenThread: (String) -> Unit,
+	onOpenMedia: (PostItem) -> Unit,
 	onAuthorClick: (String) -> Unit,
 	onPostAction: (PostItem, PostAction) -> Unit,
 ) {
@@ -527,6 +531,7 @@ private fun CommunityActiveFeed(
 						post = post,
 						mode = viewMode,
 						onOpenThread = { onOpenThread(post.id) },
+						onMediaClick = { onOpenMedia(post) },
 						onAuthorClick = onAuthorClick,
 						onPostAction = { p, a -> onPostAction(p, a) },
 						swipeEnabled = true,

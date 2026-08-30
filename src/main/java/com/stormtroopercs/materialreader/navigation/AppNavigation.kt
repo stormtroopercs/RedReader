@@ -43,6 +43,7 @@ import com.stormtroopercs.materialreader.R
 import com.stormtroopercs.materialreader.account.RedditAccountChangeListener
 import com.stormtroopercs.materialreader.account.RedditAccountManager
 import com.stormtroopercs.materialreader.common.AssetHelper
+import com.stormtroopercs.materialreader.common.LinkHandler
 import com.stormtroopercs.materialreader.common.RunnableOnce
 import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.reddit.api.RedditOAuth
@@ -90,6 +91,31 @@ fun AppNavGraph(navigationState: NavigationState) {
     val openLicense: () -> Unit = {
         AssetHelper.loadAssetAsString(context, "license.html")?.let { html ->
             navigator.navigate(HtmlView(html, licenseTitle))
+        }
+    }
+
+    // Opens a post's media in the full-screen viewer. Albums (imgur /a or
+    // gallery, reddit /gallery) open the swiping Album route; everything else
+    // (direct still / GIF / video file, or a page-URL host that needs live
+    // resolution) opens the standalone Image route — ImageScreen self-resolves
+    // page URLs via fetchImageInfo and renders still / GIF / video. Posts
+    // with no resolvable media (self posts) are a no-op.
+    val openMedia: (PostItem) -> Unit = { post ->
+        val url = post.url?.takeIf { it.isNotBlank() && !it.startsWith("reddit.com") }
+        if (url != null) {
+            if (LinkHandler.imgurAlbumPattern.matcher(url).find()
+                || LinkHandler.redditGalleryPattern.matcher(url).find()
+            ) {
+                navigator.navigate(Album(url))
+            } else {
+                navigator.navigate(
+                    Image(
+                        url = url,
+                        isGif = LinkHandler.isDirectGifFile(UriString(url)),
+                        isVideo = post.isVideo || LinkHandler.isDirectVideoFile(UriString(url)),
+                    )
+                )
+            }
         }
     }
     DisposableEffect(accountManager) {
@@ -252,6 +278,7 @@ fun AppNavGraph(navigationState: NavigationState) {
                             navigator.navigate(PostList(key.subreddit, key.searchQuery))
                         },
                         onOpenLicense = openLicense,
+                        onOpenMedia = openMedia,
                     )
                 } else {
                     RealPostListScreen(
@@ -295,6 +322,7 @@ fun AppNavGraph(navigationState: NavigationState) {
                             navigator.navigate(Settings)
                         },
                         onOpenLicense = openLicense,
+                        onOpenMedia = openMedia,
                     )
                 }
             }
@@ -435,6 +463,7 @@ fun AppNavGraph(navigationState: NavigationState) {
                         navigator.navigate(Settings)
                     },
                     onOpenLicense = openLicense,
+                    onOpenMedia = openMedia,
                 )
             }
 

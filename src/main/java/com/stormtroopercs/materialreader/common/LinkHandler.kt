@@ -681,7 +681,7 @@ object LinkHandler {
 
 	@JvmField
 	val imgurAlbumPattern: Pattern = Pattern.compile(".*[^A-Za-z]imgur\\.com/(a|gallery)/([\\w\\-]+).*")
-	private val redditGalleryPattern: Pattern = Pattern.compile(".*[^A-Za-z]reddit\\.com/gallery/(\\w+).*")
+	val redditGalleryPattern: Pattern = Pattern.compile(".*[^A-Za-z]reddit\\.com/gallery/(\\w+).*")
 	private val qkmePattern1: Pattern = Pattern.compile(".*[^A-Za-z]qkme\\.me/(\\w+).*")
 	private val qkmePattern2: Pattern = Pattern.compile(".*[^A-Za-z]quickmeme\\.com/meme/(\\w+).*")
 	private val lvmePattern: Pattern = Pattern.compile(".*[^A-Za-z]livememe\\.com/(\\w+).*")

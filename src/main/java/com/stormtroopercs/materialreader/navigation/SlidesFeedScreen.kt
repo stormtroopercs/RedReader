@@ -137,6 +137,8 @@ fun RealSlidesFeedScreen(
 	onNavigateToList: () -> Unit = {},
 	/** Open the license view (More actions → About → License). */
 	onOpenLicense: () -> Unit = {},
+	/** Open a post's media in the full-screen viewer (media tap). */
+	onOpenMedia: (PostItem) -> Unit = {},
 ) {
 	val viewModel: PostListViewModel = hiltViewModel()
 	val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -256,6 +258,7 @@ fun RealSlidesFeedScreen(
 							onPostClick = { onNavigateToCommentList(posts[page].id) },
 							onAuthorClick = onNavigateToUserProfile,
 							onPostAction = ::onPostAction,
+							onMediaClick = { onOpenMedia(posts[page]) },
 						)
 					}
 
@@ -519,6 +522,7 @@ private fun SlidePost(
 	onPostClick: () -> Unit,
 	onAuthorClick: (String) -> Unit,
 	onPostAction: (PostItem, PostAction) -> Unit,
+	onMediaClick: () -> Unit = {},
 ) {
 	var moreExpanded by remember { mutableStateOf(false) }
 
@@ -528,6 +532,7 @@ private fun SlidePost(
 			post = post,
 			modifier = Modifier.fillMaxSize(),
 			onReveal = { /* NSFW reveal toggled in SlideMedia */ },
+			onMediaClick = onMediaClick,
 		)
 
 		// Bottom gradient scrim for legibility.
@@ -691,13 +696,17 @@ private fun SlideMedia(
 	post: PostItem,
 	modifier: Modifier = Modifier,
 	onReveal: () -> Unit,
+	onMediaClick: () -> Unit = {},
 ) {
 	val revealed = remember { mutableStateOf(!(post.isOver18 || post.isSpoiler)) }
 	val mediaUrl = post.url?.takeIf { it.isNotBlank() && !it.startsWith("reddit.com") }
 		?: post.thumbnail
 		?.takeIf { it.isNotBlank() && it != "default" }
 
-	Box(modifier = modifier) {
+	Box(
+		modifier = modifier
+			.then(if (mediaUrl != null) Modifier.clickable(onClick = onMediaClick) else Modifier)
+	) {
 		if (post.isVideo) {
 			// Video placeholder (inline Media3 is a follow-up).
 			Box(

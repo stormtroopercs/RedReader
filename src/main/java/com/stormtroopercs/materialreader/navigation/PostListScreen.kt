@@ -99,6 +99,8 @@ fun RealPostListScreen(
 	onNavigateToSettings: () -> Unit = {},
 	/** Open the license view (More actions → About → License). */
 	onOpenLicense: () -> Unit = {},
+	/** Open a post's media in the full-screen viewer (media tap). */
+	onOpenMedia: (PostItem) -> Unit = {},
 ) {
 	val viewModel: PostListViewModel = hiltViewModel()
 	val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -248,6 +250,7 @@ fun RealPostListScreen(
 										mode = viewMode,
 										modifier = Modifier.animateItem(),
 										onOpenThread = { onNavigateToCommentList(post.id) },
+										onMediaClick = { onOpenMedia(post) },
 										onAuthorClick = onNavigateToUserProfile,
 										onPostAction = ::onPostAction,
 										swipeEnabled = true,
