@@ -164,15 +164,20 @@ class PostListViewModel @Inject constructor(
     }
 
     fun fetchPosts(listPath: String, searchQuery: String? = null) {
-        currentListPath = listPath
+        // A community name may arrive bare (`Palworld`) or `r/`-prefixed
+        // (`r/Palworld`, `/r/Palworld` — the custom-slot dialog suggests
+        // `r/...` paths and external deep links carry `r/`); both must map
+        // to the same `r/<name>` listing (issue #21: the prefixed form
+        // produced `r/r/<name>` 404s).
+        currentListPath = normalizeListingPath(listPath)
         currentSearchQuery = searchQuery
-        resolveTitle(listPath, searchQuery)
+        resolveTitle(currentListPath, searchQuery)
         // The feed's persisted sort (FINAL-DESIGN Phase 4.7) — loaded per
         // feed so each listing keeps its own order.
-        _sortOption.value = FeedSortOption.forId(FeedPreferences.sortOptionIdFor(feedIdFor(listPath, searchQuery)))
+        _sortOption.value = FeedSortOption.forId(FeedPreferences.sortOptionIdFor(feedIdFor(currentListPath, searchQuery)))
         _state.value = PostListUiState.Loading(_state.value !is PostListUiState.Success)
-        fetchList(listPath, searchQuery)
-        fetchCommunity(listPath, searchQuery)
+        fetchList(currentListPath, searchQuery)
+        fetchCommunity(currentListPath, searchQuery)
     }
 
     fun refresh() {
@@ -515,6 +520,38 @@ private fun RedditThing.Post.toPostItem(): PostItem {
         saved = p.saved,
         hidden = p.hidden
     )
+}
+
+/**
+ * Normalise a feed path (a [PostList] route's `subreddit` field) for
+ * listing construction. A community name may arrive bare (`Palworld`) or
+ * `r/`-prefixed (`r/Palworld`, `/r/Palworld`, even a doubled `r/r/…`); all
+ * forms map to the bare lowercase community name, which `fetchList` then
+ * renders as the single `r/<name>` listing. Everything that is already a
+ * full path or a default feed id passes through untouched (user listings
+ * `u/…` keep their case-sensitive usernames; `m/…`/`me/…` multireddits,
+ * `s/…` search, and `frontpage`/`popular`/`all` are not community names).
+ * Issue #21: `r/`-prefixed paths produced
+ * `https://www.reddit.com/r/r/<name>/` 404s.
+ */
+internal fun normalizeListingPath(path: String): String {
+    val trimmed = path.trim()
+    if (trimmed.isEmpty()) {
+        return ""
+    }
+    if (trimmed == "frontpage" || trimmed == "popular" || trimmed == "all") {
+        return trimmed
+    }
+    if (trimmed.startsWith("u/") || trimmed.startsWith("m/") ||
+        trimmed.startsWith("me/") || trimmed.startsWith("s/")
+    ) {
+        return trimmed
+    }
+    var name = trimmed.removePrefix("/")
+    while (name.startsWith("r/")) {
+        name = name.substring(2)
+    }
+    return name.lowercase(java.util.Locale.US)
 }
 
 /**

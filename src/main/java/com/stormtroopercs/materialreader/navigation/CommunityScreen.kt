@@ -152,11 +152,13 @@ fun CommunityDetailScreen(
 
 	LaunchedEffect(name) {
 		communityVm.load(name)
-		// Feed the shared post list with the community's listing path so the
-		// Active tab renders the standard feed (sort / view mode / swipe all
-		// work exactly as in the list feed).
+		// Feed the shared post list with the community's bare name (the
+		// PostList route's contract) so the Active tab renders the standard
+		// feed (sort / view mode / swipe all work exactly as in the list
+		// feed). `name` is already the bare community name (the `r/` title
+		// prefix was stripped above); `fetchPosts` normalises defensively.
 		if (name.isNotBlank()) {
-			postVm.fetchPosts("r/$name")
+			postVm.fetchPosts(name)
 		}
 	}
 	LaunchedEffect(actionResult) {
