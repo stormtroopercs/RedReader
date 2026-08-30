@@ -32,7 +32,9 @@ on:
     schedule:
         -   cron: '17 3 * * *'      # 03:17 UTC nightly (fallback only)
     workflow_run:
-        workflows: ['build.yml']
+        # Matches the *name* of the completing workflow (build.yml is named
+        # "CI"), not the file name — this is why 'build.yml' never fired.
+        workflows: ['CI']
         types: ['completed']
     workflow_dispatch:
         inputs:
