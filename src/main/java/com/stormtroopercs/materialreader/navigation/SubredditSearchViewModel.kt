@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.CompletableDeferred
 import com.stormtroopercs.materialreader.account.RedditAccountManager
 import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.cache.CacheRequest
@@ -141,74 +141,77 @@ class SubredditSearchViewModel @Inject constructor(
      * suspend function; cancellation (from [mapLatest] on a newer query)
      * leaves the stale result un-collected.
      */
-    private suspend fun doSearch(query: String): SubredditSearchUiState =
-        suspendCancellableCoroutine { cont ->
-            cont.invokeOnCancellation { }
-            val account = accountManager.getDefaultAccount()
-            val uriBuilder = Constants.Reddit.getUriBuilder("/subreddits/search.json")
-                .appendQueryParameter("q", query)
-                .appendQueryParameter("limit", "100")
-            val jsonUri = UriString(uriBuilder.build().toString())
+    private suspend fun doSearch(query: String): SubredditSearchUiState {
+        // Bridge the callback-based CacheRequest into coroutines. The deferred's
+        // await() is cancellable, so a newer query arriving via mapLatest cancels
+        // this search and the stale result is dropped.
+        val deferred = CompletableDeferred<SubredditSearchUiState>()
+        val account = accountManager.getDefaultAccount()
+        val uriBuilder = Constants.Reddit.getUriBuilder("/subreddits/search.json")
+            .appendQueryParameter("q", query)
+            .appendQueryParameter("limit", "100")
+        val jsonUri = UriString(uriBuilder.build().toString())
 
-            val callbacks = object : CacheRequestCallbacks {
-                override fun onDataStreamComplete(
-                    streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<SeekableInputStream, IOException>,
-                    timestamp: TimestampUTC,
-                    session: UUID,
-                    fromCache: Boolean,
-                    mimetype: String?
-                ) {
-                    if (!cont.isActive) return
-                    try {
-                        val result = streamFactory.create().use { input ->
-                            JsonValue.parse(input)
-                        }
-                        val children = result.getArrayAtPath("data", "children").get()
-                        val items = children.mapNotNull { child ->
-                            toSubredditItem(child)
-                        }
-                        if (items.isEmpty()) {
-                            cont.resume(
-                                SubredditSearchUiState.Error(
-                                    "No subreddits found for \"$query\""
-                                )
-                            )
-                            return
-                        }
-                        seedLocalCache(items)
-                        cont.resume(SubredditSearchUiState.Success(items, query))
-                    } catch (e: Exception) {
-                        cont.resume(
-                            SubredditSearchUiState.Error(e.message ?: e.toString())
-                        )
+        val callbacks = object : CacheRequestCallbacks {
+            override fun onDataStreamComplete(
+                streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<SeekableInputStream, IOException>,
+                timestamp: TimestampUTC,
+                session: UUID,
+                fromCache: Boolean,
+                mimetype: String?
+            ) {
+                if (!deferred.isActive) return
+                try {
+                    val result = streamFactory.create().use { input ->
+                        JsonValue.parse(input)
                     }
-                }
-
-                override fun onFailure(error: RRError) {
-                    if (!cont.isActive) return
-                    cont.resume(
-                        SubredditSearchUiState.Error(
-                            error.message ?: "Subreddit search failed"
+                    val children = result.getArrayAtPath("data", "children").get()
+                    val items = children.mapNotNull { child ->
+                        toSubredditItem(child)
+                    }
+                    if (items.isEmpty()) {
+                        deferred.complete(
+                            SubredditSearchUiState.Error(
+                                "No subreddits found for \"$query\""
+                            )
                         )
+                        return
+                    }
+                    seedLocalCache(items)
+                    deferred.complete(SubredditSearchUiState.Success(items, query))
+                } catch (e: Exception) {
+                    deferred.complete(
+                        SubredditSearchUiState.Error(e.message ?: e.toString())
                     )
                 }
             }
 
-            val request = CacheRequest(
-                jsonUri,
-                account,
-                null,
-                Priority(Constants.Priority.API_SUBREDDIT_SEARCH),
-                DownloadStrategyIfTimestampOutsideBounds(
-                    TimestampBound.Companion.notOlderThan(minutes(1))
-                ),
-                Constants.FileType.SUBREDDIT_LIST,
-                CacheRequest.DownloadQueueType.REDDIT_API,
-                context,
-                callbacks
-            )
-            cacheManager.makeRequest(request)
+            override fun onFailure(error: RRError) {
+                if (!deferred.isActive) return
+                deferred.complete(
+                    SubredditSearchUiState.Error(
+                        error.message ?: "Subreddit search failed"
+                    )
+                )
+            }
         }
+
+        val request = CacheRequest(
+            jsonUri,
+            account,
+            null,
+            Priority(Constants.Priority.API_SUBREDDIT_SEARCH),
+            DownloadStrategyIfTimestampOutsideBounds(
+                TimestampBound.Companion.notOlderThan(minutes(1))
+            ),
+            Constants.FileType.SUBREDDIT_LIST,
+            CacheRequest.DownloadQueueType.REDDIT_API,
+            context,
+            callbacks
+        )
+        cacheManager.makeRequest(request)
+        return deferred.await()
+    }
 
     /**
      * Upsert the search results into the Room `subreddits` table so the
