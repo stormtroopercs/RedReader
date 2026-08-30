@@ -3,8 +3,8 @@ name: Release
 # Auto-release.
 #
 # PRIMARY trigger: `workflow_run` — as soon as the `CI` workflow finishes
-# successfully on `dev`, this builds and publishes a release. That is the
-# "CI built successfully -> release is updated" path.
+# successfully on `main` (the default branch), this builds and publishes a
+# release. That is the "CI built successfully -> release is updated" path.
 #
 # Why not rely on the cron: GitHub's `schedule` trigger is unreliable — runs
 # are routinely delayed by hours and are known to be skipped on forked repos.
@@ -25,8 +25,8 @@ name: Release
 #   KEY_ALIAS          key alias (e.g. materialreader)
 #   KEY_PASSWORD       key password
 #
-# NOTE: scheduled workflows run from the REPOSITORY DEFAULT branch. `dev` is
-# this repo's default branch.
+# NOTE: scheduled workflows run from the REPOSITORY DEFAULT branch. `main`
+# is this repo's default branch.
 
 on:
     schedule:
@@ -54,8 +54,8 @@ jobs:
                 with:
                     fetch-depth: 0
                     # workflow_run: the exact SHA the CI run just validated;
-                    # schedule/dispatch: current dev HEAD.
-                    ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'dev' }}
+                    # schedule/dispatch: current main HEAD.
+                    ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'main' }}
 
             -   name: Install GitHub CLI
                 env:
@@ -76,8 +76,8 @@ jobs:
 
                     # Which commit to release.
                     if [ "${{ github.event_name }}" = "workflow_run" ]; then
-                        if [ "${{ github.event.workflow_run.head_branch }}" != "dev" ]; then
-                            echo "CI completed on '${{ github.event.workflow_run.head_branch }}' (not dev) — no release."
+                        if [ "${{ github.event.workflow_run.head_branch }}" != "main" ]; then
+                            echo "CI completed on '${{ github.event.workflow_run.head_branch }}' (not main) — no release."
                             echo "changed=false" >> "$GITHUB_OUTPUT"
                             exit 0
                         fi
@@ -88,7 +88,7 @@ jobs:
                         fi
                         TARGET_SHA="${{ github.event.workflow_run.head_sha }}"
                     else
-                        TARGET_SHA="$(git rev-parse dev)"
+                        TARGET_SHA="$(git rev-parse main)"
                     fi
                     echo "releasing commit: ${TARGET_SHA}"
 
@@ -128,7 +128,7 @@ jobs:
                         CHANGED=true
                     else
                         AHEAD="$(git rev-list --count "${LATEST}..${TARGET_SHA}")"
-                        echo "commits on dev since ${LATEST}: ${AHEAD}"
+                        echo "commits on main since ${LATEST}: ${AHEAD}"
                         if [ "${AHEAD}" -gt 0 ]; then
                             base="${LATEST#v}"; num="${base%%-*}"; patch="${num##*.}"; next=$((patch + 1)); prefix="${num%.*}"
                             TAG="v${prefix}.${next}-alpha"
@@ -143,7 +143,7 @@ jobs:
 
             -   name: No changes — skip release
                 if: steps.ver.outputs.changed != 'true'
-                run: echo "No new commits on dev since the last release (${{ steps.ver.outputs.latest }}). Nothing to build."
+                run: echo "No new commits on main since the last release (${{ steps.ver.outputs.latest }}). Nothing to build."
 
             -   name: Set up Java 21
                 if: steps.ver.outputs.changed == 'true'
