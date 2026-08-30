@@ -76,11 +76,23 @@ android {
 		lintConfig = file("config/lint/lint.xml")
 	}
 
-	packaging {
-		resources.excludes.add("META-INF/*")
-	}
+		packaging {
+			resources.excludes.add("META-INF/*")
+		}
 
-	testOptions {
+		// Per-ABI split APKs: emit arm64-v8a + armeabi-v7a builds so releases
+		// ship smaller, device-appropriate APKs (materialreader-arm64-v8a-*.apk /
+		// materialreader-armeabi-v7a-*.apk). Universal APK disabled.
+		splits {
+			abi {
+				isEnable = true
+				reset()
+				include("arm64-v8a", "armeabi-v7a")
+				isUniversalApk = false
+			}
+		}
+
+		testOptions {
 		animationsDisabled = true
 		unitTests {
 			isIncludeAndroidResources = true
