@@ -372,7 +372,7 @@ class PostListViewModel @Inject constructor(
                         mimetype: String?
                     ) {
                         try {
-                            val thing = decodeRedditThingFromStream(streamFactory.create())
+                            val thing = streamFactory.create().use { decodeRedditThingFromStream(it) }
                             val listing = (thing as? RedditThing.Listing)?.data
                                 ?: throw RuntimeException(
                                     "Expected listing, got " + thing.javaClass.name

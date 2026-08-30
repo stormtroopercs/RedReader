@@ -17,53 +17,11 @@
 
 package com.stormtroopercs.materialreader.navigation
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
-import androidx.compose.runtime.saveable.Saver
-import androidx.navigation3.runtime.serialization.NavKeySerializer
-import kotlinx.serialization.json.Json
-
-private val navKeySaver = Saver<NavKey, String>(
-    save = { key -> Json.encodeToString(NavKeySerializer(), key) },
-    restore = { json -> Json.decodeFromString(NavKeySerializer(), json) }
-)
-
-/**
- * Create a navigation state that persists config changes and process death.
- *
- * @param startRoute - the start route. The user will exit the app through this route.
- * @param topLevelRoutes - all top-level routes (displayed in navigation bar/rail/drawer).
- */
-@Composable
-fun rememberNavigationState(
-    startRoute: NavKey,
-    topLevelRoutes: Set<NavKey>
-): NavigationState {
-    val topLevelRoute = rememberSaveable(stateSaver = navKeySaver) {
-        mutableStateOf(startRoute)
-    }
-
-    // Maintain a back stack for each top-level route
-    val backStacks = topLevelRoutes.associateWith { key ->
-        remember { mutableStateListOf(key) }
-    }
-
-    return remember(startRoute, topLevelRoutes) {
-        NavigationState(
-            startRoute = startRoute,
-            topLevelRoute = topLevelRoute,
-            backStacks = backStacks
-        )
-    }
-}
 
 /**
  * State holder for navigation state.

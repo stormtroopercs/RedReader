@@ -307,8 +307,9 @@ class CommentListViewModel @Inject constructor(
                         mimetype: String?
                     ) {
                         try {
-                            val stream = streamFactory.create()
-                            val thingResponse = JsonUtils.decodeRedditThingResponseFromStream(stream!!)
+                            val thingResponse = streamFactory.create().use { stream ->
+                                JsonUtils.decodeRedditThingResponseFromStream(stream)
+                            }
                             val fetched = mutableListOf<CommentItem>()
                             parseExpandedResponse(thingResponse, baseDepth, postId, fetched)
                             AndroidCommon.runOnUiThread {
@@ -447,8 +448,9 @@ class CommentListViewModel @Inject constructor(
                             mimetype: String?
                         ) {
                             try {
-                                val stream = streamFactory.create()
-                                val thingResponse = JsonUtils.decodeRedditThingResponseFromStream(stream!!)
+                                val thingResponse = streamFactory.create().use { stream ->
+                                    JsonUtils.decodeRedditThingResponseFromStream(stream)
+                                }
 
                                 val (postTitle, postAuthor, comments) = parseThingResponse(thingResponse)
 
