@@ -23,10 +23,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.stormtroopercs.materialreader.account.RedditAccount
 import com.stormtroopercs.materialreader.account.RedditAccountManager
 import com.stormtroopercs.materialreader.common.BugReporter
 import com.stormtroopercs.materialreader.cache.CacheManager
@@ -139,7 +143,9 @@ enum class CommentAction {
 
 @HiltViewModel
 class CommentListViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     @Suppress("PropertyName")
@@ -182,7 +188,7 @@ class CommentListViewModel @Inject constructor(
      * calls (handled by the screen), so they are not processed here.
      */
     fun performAction(activity: AppCompatActivity, comment: CommentItem, action: CommentAction) {
-        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        val account = accountManager.getDefaultAccount()
         if (account == null) {
             _actionResult.value = "Not signed in"
             return
@@ -239,7 +245,7 @@ class CommentListViewModel @Inject constructor(
         }
 
         RedditAPI.action(
-            CacheManager.getInstance(context),
+            cacheManager,
             handler,
             account,
             idAndType,
@@ -262,87 +268,102 @@ class CommentListViewModel @Inject constructor(
      * fetch each child's subtree (`/comments/<post>/comment/<child>.json`) and
      * splice the loaded comments into the list in place of the row.
      */
+    /**
+     * Expand a collapsed-continuation row (a `more_N` row, FINAL-DESIGN 7.2):
+     * fetch each child's subtree (`/comments/<post>/comment/<child>.json`) and
+     * splice the loaded comments into the list in place of the row. All child
+     * fetches run concurrently via structured concurrency (`async`/`awaitAll`),
+     * so the whole expansion cancels cleanly with the ViewModel scope and no
+     * manual `pending` counter is needed.
+     */
     fun expandMore(more: CommentItem) {
-        if (more.moreChildren == null || more.postId == null) return
+        val children = more.moreChildren ?: return
+        val postId = more.postId ?: return
         if (_expanding.value) return
         _expanding.value = true
-        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
-        if (account == null) {
-            _expanding.value = false
-            _actionResult.value = "Not signed in"
-            return
+        viewModelScope.launch {
+            val account = accountManager.getDefaultAccount()
+            if (account == null) {
+                _expanding.value = false
+                _actionResult.value = "Not signed in"
+                return@launch
+            }
+            val baseDepth = more.replyDepth + 1
+            val fetched = children.map { childId ->
+                async { fetchExpandedChildren(childId, postId, baseDepth, account) }
+            }.awaitAll().flatten()
+
+            AndroidCommon.runOnUiThread {
+                if (fetched.isNotEmpty()) insertChildren(more.id, fetched)
+                _expanding.value = false
+            }
         }
-        val cacheManager = CacheManager.getInstance(context)
-        val children = more.moreChildren!!
-        val postId = more.postId!!
-        val baseDepth = more.replyDepth + 1
-        var pending = children.size
-        if (pending == 0) {
-            _expanding.value = false
-            return
-        }
+    }
 
-        for (childId in children) {
-            val url = PostCommentListingURL(null, postId, childId, null, 10, null, false)
-            val uri = UriString(url.generateJsonUri().toString())
-            val cacheRequest = CacheRequest(
-                uri,
-                account,
-                null,
-                Priority(Constants.Priority.API_COMMENT_LIST),
-                DownloadStrategyIfNotCached.INSTANCE,
-                Constants.FileType.COMMENT_LIST,
-                CacheRequest.DownloadQueueType.REDDIT_API,
-                context,
-                object : CacheRequestCallbacks {
-                    override fun onFailure(error: RRError) {
-                        onExpandOneDone()
-                    }
+    /**
+     * Suspend until the comment-listing for [childId] under [postId] is fetched
+     * and parsed, returning the flattened [CommentItem]s at [baseDepth]. On a
+     * network/parse failure returns an empty list (the row simply stays
+     * collapsed) and surfaces the error as a snackbar. Backed by a CacheRequest
+     * bridged into coroutines via [suspendCancellableCoroutine].
+     */
+    private suspend fun fetchExpandedChildren(
+        childId: String,
+        postId: String,
+        baseDepth: Int,
+        account: RedditAccount
+    ): List<CommentItem> = suspendCancellableCoroutine<List<CommentItem>> { cont ->
+        // CacheRequest has no cancellation hook; the request completes harmlessly
+        // and its result is ignored once cont is inactive.
+        cont.invokeOnCancellation { }
+        val url = PostCommentListingURL(null, postId, childId, null, 10, null, false)
+        val uri = UriString(url.generateJsonUri().toString())
+        val cacheRequest = CacheRequest(
+            uri,
+            account,
+            null,
+            Priority(Constants.Priority.API_COMMENT_LIST),
+            DownloadStrategyIfNotCached.INSTANCE,
+            Constants.FileType.COMMENT_LIST,
+            CacheRequest.DownloadQueueType.REDDIT_API,
+            context,
+            object : CacheRequestCallbacks {
+                override fun onFailure(error: RRError) {
+                    if (cont.isActive) cont.resume(emptyList())
+                }
 
-                    override fun onDataStreamComplete(
-                        streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<SeekableInputStream, IOException>,
-                        timestamp: TimestampUTC,
-                        session: java.util.UUID,
-                        fromCache: Boolean,
-                        mimetype: String?
-                    ) {
-                        try {
-                            val thingResponse = streamFactory.create().use { stream ->
-                                JsonUtils.decodeRedditThingResponseFromStream(stream)
-                            }
-                            val fetched = mutableListOf<CommentItem>()
-                            parseExpandedResponse(thingResponse, baseDepth, postId, fetched)
-                            AndroidCommon.runOnUiThread {
-                                insertChildren(more.id, fetched)
-                            }
-                        } catch (e: Exception) {
-                            val error = General.getGeneralErrorForFailure(
-                                context,
-                                CacheRequest.RequestFailureType.PARSE,
-                                e,
-                                null,
-                                uri,
-                                com.stormtroopercs.materialreader.common.Optional.empty()
-                            )
-                            AndroidCommon.runOnUiThread {
-                                _actionResult.value = error.message ?: "Failed to load comments"
-                            }
+                override fun onDataStreamComplete(
+                    streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<SeekableInputStream, IOException>,
+                    timestamp: TimestampUTC,
+                    session: java.util.UUID,
+                    fromCache: Boolean,
+                    mimetype: String?
+                ) {
+                    try {
+                        val thingResponse = streamFactory.create().use { stream ->
+                            JsonUtils.decodeRedditThingResponseFromStream(stream)
                         }
-                        onExpandOneDone()
-                    }
-
-                    private fun onExpandOneDone() {
-                        pending--
-                        if (pending == 0) {
-                            AndroidCommon.runOnUiThread {
-                                _expanding.value = false
-                            }
+                        val fetched = mutableListOf<CommentItem>()
+                        parseExpandedResponse(thingResponse, baseDepth, postId, fetched)
+                        if (cont.isActive) cont.resume(fetched)
+                    } catch (e: Exception) {
+                        val error = General.getGeneralErrorForFailure(
+                            context,
+                            CacheRequest.RequestFailureType.PARSE,
+                            e,
+                            null,
+                            uri,
+                            com.stormtroopercs.materialreader.common.Optional.empty()
+                        )
+                        AndroidCommon.runOnUiThread {
+                            _actionResult.value = error.message ?: "Failed to load comments"
                         }
+                        if (cont.isActive) cont.resume(emptyList())
                     }
                 }
-            )
-            cacheManager.makeRequest(cacheRequest)
-        }
+            }
+        )
+        cacheManager.makeRequest(cacheRequest)
     }
 
     /**
@@ -395,8 +416,7 @@ class CommentListViewModel @Inject constructor(
             _state.value = CommentListUiState.Loading
 
             try {
-                val cacheManager = CacheManager.getInstance(context)
-                val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+                val account = accountManager.getDefaultAccount()
                 if (account == null) {
                     AndroidCommon.runOnUiThread {
                         _state.value = CommentListUiState.Error(
