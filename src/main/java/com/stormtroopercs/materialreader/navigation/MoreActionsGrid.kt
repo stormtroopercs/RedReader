@@ -70,6 +70,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -588,7 +589,7 @@ fun AboutDialog(
 	}
 	AlertDialog(
 		onDismissRequest = onDismiss,
-		title = { Text(context.getString(R.string.app_name)) },
+		title = { Text(stringResource(R.string.app_name)) },
 		text = {
 			Text(
 				"Version ${info?.versionName ?: "?"}\n\n" +

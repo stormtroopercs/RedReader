@@ -2,6 +2,17 @@
 <issues format="6" by="lint 9.3.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.3.1)" variant="all" version="9.3.1">
 
     <issue
+        id="EmptySuperCall"
+        message="No need to call `super.onCleared`; the super method is defined to be empty"
+        errorLine1="        super.onCleared()"
+        errorLine2="              ~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/CommunityViewModel.kt"
+            line="157"
+            column="15"/>
+    </issue>
+
+    <issue
         id="ResourceType"
         message="Expected resource of type styleable"
         errorLine1="        rrCommentBodyCol = attr.getColor(1, 0)"
@@ -162,7 +173,7 @@
         errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/navigation/CommentListScreen.kt"
-            line="539"
+            line="646"
             column="31"/>
     </issue>
 
@@ -173,30 +184,52 @@
         errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/navigation/CommentListScreen.kt"
-            line="540"
+            line="647"
             column="27"/>
     </issue>
 
     <issue
         id="DefaultLocale"
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
-        errorLine1="        score >= 1_000_000 -> String.format(&quot;%.1fM&quot;, score / 1_000_000.0)"
-        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="  value >= 1_000_000 -> String.format(&quot;%.1fM&quot;, value / 1_000_000.0)"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/stormtroopercs/materialreader/navigation/PostListScreen.kt"
-            line="617"
-            column="31"/>
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/PostCard.kt"
+            line="461"
+            column="25"/>
     </issue>
 
     <issue
         id="DefaultLocale"
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
-        errorLine1="        score >= 1_000 -> String.format(&quot;%.1fK&quot;, score / 1_000.0)"
-        errorLine2="                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        errorLine1="  value >= 1_000 -> String.format(&quot;%.1fK&quot;, value / 1_000.0)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="src/main/java/com/stormtroopercs/materialreader/navigation/PostListScreen.kt"
-            line="618"
-            column="27"/>
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/PostCard.kt"
+            line="462"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="  value >= 1_000_000 -> String.format(&quot;%.1fM&quot;, value / 1_000_000.0)"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/SlidesFeedScreen.kt"
+            line="776"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        errorLine1="  value >= 1_000 -> String.format(&quot;%.1fK&quot;, value / 1_000.0)"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/SlidesFeedScreen.kt"
+            line="777"
+            column="21"/>
     </issue>
 
     <issue
@@ -272,7 +305,7 @@
         errorLine2="                                        ~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
-            line="1625"
+            line="1634"
             column="41"/>
     </issue>
 
@@ -283,7 +316,7 @@
         errorLine2="                                      ~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
-            line="2359"
+            line="2368"
             column="39"/>
     </issue>
 
@@ -294,7 +327,7 @@
         errorLine2="                                  ~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
-            line="2369"
+            line="2378"
             column="35"/>
     </issue>
 
@@ -305,7 +338,7 @@
         errorLine2="                                      ~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
-            line="2383"
+            line="2392"
             column="39"/>
     </issue>
 
@@ -316,7 +349,7 @@
         errorLine2="                                  ~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
-            line="2393"
+            line="2402"
             column="35"/>
     </issue>
 
@@ -327,7 +360,7 @@
         errorLine2="                                      ~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
-            line="2406"
+            line="2415"
             column="39"/>
     </issue>
 
@@ -338,7 +371,7 @@
         errorLine2="                                  ~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/common/PrefsUtility.kt"
-            line="2416"
+            line="2425"
             column="35"/>
     </issue>
 
@@ -576,17 +609,6 @@
     <issue
         id="LocalContextGetResourceValueCall"
         message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
-        errorLine1="                        navigator.navigate(HtmlView(html, context.getString(R.string.title_license)))"
-        errorLine2="                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/com/stormtroopercs/materialreader/navigation/AppNavigation.kt"
-            line="132"
-            column="59"/>
-    </issue>
-
-    <issue
-        id="LocalContextGetResourceValueCall"
-        message="Querying resource values using LocalContext.current is not configuration-aware and may return stale values if the Configuration changes"
         errorLine1="                context.getString("
         errorLine2="                ^">
         <location
@@ -739,6 +761,28 @@
     </issue>
 
     <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1=" modifier: Modifier = Modifier,"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/AppShell.kt"
+            line="58"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1=" modifier: Modifier = Modifier,"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/PostThumbnailPreview.kt"
+            line="56"
+            column="2"/>
+    </issue>
+
+    <issue
         id="MutableCollectionMutableState"
         message="Creating a MutableState object with a mutable collection type"
         errorLine1="    var accounts by remember { mutableStateOf(accountManager.accounts) }"
@@ -817,6 +861,28 @@
 
     <issue
         id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields (static reference to `FeedPreferences` which has field `contextRef` pointing to `Context`); this is a memory leak"
+        errorLine1="/**"
+        errorLine2="^">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/FeedPreferences.kt"
+            line="25"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1=" /** The host context, resolved lazily (set by [init] from the Application). */"
+        errorLine2=" ^">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/FeedPreferences.kt"
+            line="55"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
         message="Do not place Android context classes in static fields (static reference to `HtmlViewBackHandler` which has field `webView` pointing to `WebView`); this is a memory leak"
         errorLine1="/**"
         errorLine2="^">
@@ -851,11 +917,55 @@
     <issue
         id="AutoboxingStateCreation"
         message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    var step by rememberSaveable { mutableStateOf(0) }"
+        errorLine2="                                   ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/navigation/OnboardingScreen.kt"
+            line="85"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1=" var r by remember { mutableStateOf((initial.red * 255).roundToInt()) }"
+        errorLine2="                     ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/SelectColorDialog.kt"
+            line="70"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1=" var g by remember { mutableStateOf((initial.green * 255).roundToInt()) }"
+        errorLine2="                     ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/SelectColorDialog.kt"
+            line="71"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1=" var b by remember { mutableStateOf((initial.blue * 255).roundToInt()) }"
+        errorLine2="                     ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/compose/ui/SelectColorDialog.kt"
+            line="72"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
         errorLine1="    var selected by remember { mutableStateOf(choices.indexOfFirst { it.first == currentStorage }.coerceAtLeast(0)) }"
         errorLine2="                               ~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/navigation/SettingsScreen.kt"
-            line="2272"
+            line="2468"
             column="32"/>
     </issue>
 
@@ -866,7 +976,7 @@
         errorLine2="                            ~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/navigation/AppNavigation.kt"
-            line="370"
+            line="560"
             column="29"/>
     </issue>
 
@@ -888,7 +998,7 @@
         errorLine2="                                                                      ~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/navigation/CommentListViewModel.kt"
-            line="229"
+            line="415"
             column="71"/>
     </issue>
 
@@ -899,7 +1009,7 @@
         errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/common/Constants.kt"
-            line="184"
+            line="182"
             column="20"/>
     </issue>
 
@@ -1163,7 +1273,7 @@
         errorLine2="                                                                                  ~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/navigation/PostListViewModel.kt"
-            line="295"
+            line="339"
             column="83"/>
     </issue>
 
@@ -1240,8 +1350,30 @@
         errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/com/stormtroopercs/materialreader/navigation/SettingsScreen.kt"
-            line="1887"
+            line="2083"
             column="37"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toColorInt` instead?"
+        errorLine1="   6 -> Color(android.graphics.Color.parseColor(&quot;#&quot; + s))"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/compose/theme/ThemeColors.kt"
+            line="49"
+            column="15"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `String.toColorInt` instead?"
+        errorLine1="   8 -> Color(android.graphics.Color.parseColor(&quot;#&quot; + s))"
+        errorLine2="              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/stormtroopercs/materialreader/compose/theme/ThemeColors.kt"
+            line="50"
+            column="15"/>
     </issue>
 
     <issue

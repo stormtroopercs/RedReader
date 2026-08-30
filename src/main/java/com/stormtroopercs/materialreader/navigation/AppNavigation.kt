@@ -34,6 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -76,6 +77,9 @@ fun AppNavGraph(navigationState: NavigationState) {
     val navigator = Navigator(navigationState)
 
     val context = LocalContext.current
+    // The license title, resolved configuration-aware (stringResource) rather
+    // than via LocalContext.current (which Lint flags as configuration-unaware).
+    val licenseTitle = stringResource(R.string.title_license)
     val accountManager = remember { RedditAccountManager.getInstance(context) }
     val accountName = remember {
         mutableStateOf(accountManager.defaultAccount.username)
@@ -85,7 +89,7 @@ fun AppNavGraph(navigationState: NavigationState) {
     // the More-actions grid's About dialog uses).
     val openLicense: () -> Unit = {
         AssetHelper.loadAssetAsString(context, "license.html")?.let { html ->
-            navigator.navigate(HtmlView(html, context.getString(R.string.title_license)))
+            navigator.navigate(HtmlView(html, licenseTitle))
         }
     }
     DisposableEffect(accountManager) {
@@ -174,7 +178,7 @@ fun AppNavGraph(navigationState: NavigationState) {
                         // launch, retired in the 41st increment).
                         val html = AssetHelper.loadAssetAsString(context, "license.html")
                             ?: return@runLabel
-                        navigator.navigate(HtmlView(html, context.getString(R.string.title_license)))
+                        navigator.navigate(HtmlView(html, licenseTitle))
                     }
                 )
             }
