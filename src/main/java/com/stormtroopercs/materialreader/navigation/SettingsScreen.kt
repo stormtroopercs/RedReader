@@ -125,6 +125,9 @@ fun SettingsScreen(
     var showCacheLocation by remember { mutableStateOf(false) }
     var showCacheClear by remember { mutableStateOf(false) }
     var showResetRequested by remember { mutableStateOf(false) }
+    // The open settings category (bug report 2026-08-30: "place categories
+    // into separate menus (folders)"). Null = the root folder list.
+    var openCategory by remember { mutableStateOf<String?>(null) }
 
     // Backup / restore preference files (33rd) via the Activity Result API,
     // mirroring the legacy SettingsFragment ACTION_CREATE_DOCUMENT /
@@ -208,34 +211,63 @@ fun SettingsScreen(
         )
     }
     Scaffold(
+        // The category sub-screen (and the Theme colors panel) carry their
+        // own top bars, so the "Settings" top bar only shows at the root.
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Settings",
-                        fontWeight = FontWeight.SemiBold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Back"
+            if (openCategory == null && !showThemeColors && !showAppbar) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "Settings",
+                            fontWeight = FontWeight.SemiBold
                         )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    },
+                    actions = {
+                        // The 8.2 per-page Reset affordance (confirm-protected).
+                        IconButton(onClick = { showResetRequested = true }) {
+                            Icon(
+                                imageVector = Icons.Filled.Refresh,
+                                contentDescription = "Reset settings"
+                            )
+                        }
                     }
-                },
-                actions = {
-                    // The 8.2 per-page Reset affordance (confirm-protected).
-                    IconButton(onClick = { showResetRequested = true }) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Reset settings"
-                        )
-                    }
-                }
-            )
+                )
+            }
         }
     ) { paddingValues ->
+        val allSettings = getSettingsCategories(
+            context,
+            onNavigateToChangelog,
+            onNavigateToBugReport,
+            onNavigateToLicense,
+            onOpenAppbar = { showAppbar = true },
+            onOpenThemeColors = { showThemeColors = true },
+            onOpenCacheLocation = { showCacheLocation = true },
+            onOpenCacheClear = { showCacheClear = true },
+            onBackupPreferences = {
+                runCatching {
+                    backupLauncher.launch(
+                        TimestampUTC.now().formatFilenameSafe() + ".rr_prefs_backup"
+                    )
+                }
+            },
+            onRestorePreferences = { restoreLauncher.launch(arrayOf("*/*")) },
+            onTestNotification = {
+                NewMessageChecker.createNotification(
+                    "Test notification title",
+                    "Test notification message",
+                    context
+                )
+            }
+        )
         if (showThemeColors) {
             com.stormtroopercs.materialreader.compose.ui.ThemeColorPanel(
                 modifier = Modifier.padding(paddingValues),
@@ -246,83 +278,40 @@ fun SettingsScreen(
                 modifier = Modifier.padding(paddingValues),
                 onBack = { showAppbar = false }
             )
+        } else if (openCategory != null) {
+            allSettings.firstOrNull { it.id == openCategory }?.let { category ->
+                CategoryScreen(
+                    modifier = Modifier.padding(paddingValues),
+                    category = category,
+                    onBack = { openCategory = null }
+                )
+            }
         } else {
             SettingsContent(
                 modifier = Modifier.padding(paddingValues),
-                onNavigateToChangelog = onNavigateToChangelog,
-                onNavigateToBugReport = onNavigateToBugReport,
-                onNavigateToLicense = onNavigateToLicense,
-                onOpenAppbar = { showAppbar = true },
-                onOpenThemeColors = { showThemeColors = true },
-                onOpenCacheLocation = { showCacheLocation = true },
-                onOpenCacheClear = { showCacheClear = true },
-                onBackupPreferences = {
-                    runCatching {
-                        backupLauncher.launch(
-                            TimestampUTC.now().formatFilenameSafe() + ".rr_prefs_backup"
-                        )
-                    }
-                },
-                onRestorePreferences = { restoreLauncher.launch(arrayOf("*/*")) },
-                onTestNotification = {
-                    NewMessageChecker.createNotification(
-                        "Test notification title",
-                        "Test notification message",
-                        context
-                    )
-                }
+                categories = allSettings,
+                onOpenCategory = { openCategory = it }
             )
         }
     }
 }
 
 /**
- * Settings content with grouped preferences.
+ * Settings root content (bug report 2026-08-30: "place categories into
+ * separate menus (folders)"). Empty query -> a folder list (one row per
+ * category: title + item count + arrow) that opens [CategoryScreen].
+ * Non-empty query -> the 8.2 flat filtered inventory (verified on-device,
+ * behaviour unchanged): every matching row across all categories.
  */
 @Composable
 private fun SettingsContent(
     modifier: Modifier = Modifier,
-    onNavigateToChangelog: () -> Unit,
-    onNavigateToBugReport: () -> Unit = {},
-    onNavigateToLicense: () -> Unit = {},
-    onOpenAppbar: () -> Unit = {},
-    onOpenThemeColors: () -> Unit = {},
-    onOpenCacheLocation: () -> Unit = {},
-    onOpenCacheClear: () -> Unit = {},
-    onBackupPreferences: () -> Unit = {},
-    onRestorePreferences: () -> Unit = {},
-    onTestNotification: () -> Unit = {}
+    categories: List<SettingsCategory>,
+    onOpenCategory: (String) -> Unit
 ) {
-    val context = LocalContext.current
     // The 8.2 search field: filters the whole inventory as the user types.
     var searchQuery by remember { mutableStateOf("") }
-    val allSettings = getSettingsCategories(
-        context,
-        onNavigateToChangelog,
-        onNavigateToBugReport,
-        onNavigateToLicense,
-        onOpenAppbar,
-        onOpenThemeColors,
-        onOpenCacheLocation,
-        onOpenCacheClear,
-        onBackupPreferences,
-        onRestorePreferences,
-        onTestNotification
-    )
-    // Keep only categories that still have at least one matching row; when
-    // the query is empty, the full inventory shows.
     val query = searchQuery.trim()
-    val settings = if (query.isEmpty()) {
-        allSettings
-    } else {
-        allSettings.mapNotNull { category ->
-            val matched = category.items.filter { item ->
-                item.searchText().contains(query, ignoreCase = true)
-            }
-            if (matched.isEmpty()) null
-            else category.copy(items = matched)
-        }
-    }
 
     Column(modifier = modifier.fillMaxSize()) {
         // Search field (8.2) — the reference's top-of-settings search that
@@ -353,35 +342,136 @@ private fun SettingsContent(
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         )
 
-        if (query.isNotEmpty() && settings.isEmpty()) {
-            // No matches: a quiet empty state.
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "No settings match “$query”",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+        if (query.isEmpty()) {
+            // Root: the category folder list.
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(categories, key = { it.id }) { category ->
+                    CategoryRow(category, onClick = { onOpenCategory(category.id) })
+                }
             }
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                settings.forEach { category ->
-                    item(key = "header_${category.id}") {
-                        SettingsCategoryHeader(title = category.title)
-                    }
+            // Search: the flat filtered inventory (8.2 behaviour preserved).
+            val settings = categories.mapNotNull { category ->
+                val matched = category.items.filter { item ->
+                    item.searchText().contains(query, ignoreCase = true)
+                }
+                if (matched.isEmpty()) null
+                else category.copy(items = matched)
+            }
+            if (settings.isEmpty()) {
+                // No matches: a quiet empty state.
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No settings match “$query”",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    settings.forEach { category ->
+                        item(key = "header_${category.id}") {
+                            SettingsCategoryHeader(title = category.title)
+                        }
 
-                    items(category.items) { item ->
-                        when (item) {
-                            is SettingsItem.BooleanSetting -> BooleanSettingItem(item)
-                            is SettingsItem.EnumSetting<*> -> EnumSettingItem(item)
-                            is SettingsItem.PreferenceItem -> PreferenceItem(item)
-                            is SettingsItem.StringSetting -> StringSettingItem(item)
-                            is SettingsItem.ChoiceSetting -> ChoiceSettingItem(item)
-                            is SettingsItem.MultiSelectSetting -> MultiSelectSettingItem(item)
+                        items(category.items) { item ->
+                            when (item) {
+                                is SettingsItem.BooleanSetting -> BooleanSettingItem(item)
+                                is SettingsItem.EnumSetting<*> -> EnumSettingItem(item)
+                                is SettingsItem.PreferenceItem -> PreferenceItem(item)
+                                is SettingsItem.StringSetting -> StringSettingItem(item)
+                                is SettingsItem.ChoiceSetting -> ChoiceSettingItem(item)
+                                is SettingsItem.MultiSelectSetting -> MultiSelectSettingItem(item)
+                            }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * One row of the settings root: a category "folder" (title + item count +
+ * arrow) that opens the category's own screen.
+ */
+@Composable
+private fun CategoryRow(
+    category: SettingsCategory,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = category.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = "${category.items.size} setting${if (category.items.size == 1) "" else "s"}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Icon(
+            imageVector = Icons.Default.ArrowForward,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+/**
+ * A single settings category's screen (bug report 2026-08-30): its own
+ * top bar (category title + back to the folder list) and the category's
+ * rows, rendered with the same setting-row composables as the flat search
+ * view. Reuses the screen's sub-screen pattern (Appbar/Theme colors).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CategoryScreen(
+    modifier: Modifier = Modifier,
+    category: SettingsCategory,
+    onBack: () -> Unit
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        TopAppBar(
+            title = {
+                Text(
+                    text = category.title,
+                    fontWeight = FontWeight.SemiBold
+                )
+            },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+            }
+        )
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(category.items) { item ->
+                when (item) {
+                    is SettingsItem.BooleanSetting -> BooleanSettingItem(item)
+                    is SettingsItem.EnumSetting<*> -> EnumSettingItem(item)
+                    is SettingsItem.PreferenceItem -> PreferenceItem(item)
+                    is SettingsItem.StringSetting -> StringSettingItem(item)
+                    is SettingsItem.ChoiceSetting -> ChoiceSettingItem(item)
+                    is SettingsItem.MultiSelectSetting -> MultiSelectSettingItem(item)
                 }
             }
         }
