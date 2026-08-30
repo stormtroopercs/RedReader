@@ -496,6 +496,32 @@ private fun BooleanSettingItem(item: SettingsItem.BooleanSetting) {
 }
 
 /**
+ * Human-readable display name for a setting value whose only textual form
+ * is an enum constant name (bug report 2026-08-30: "clean up the names of
+ * the values" - rows showed raw constants like `WIFI_ONLY`). `WIFI_ONLY` ->
+ * "Wifi Only". A small acronym map fixes the all-caps words a naive
+ * title-case would mangle. Pure + `internal` so it is unit-testable without
+ * a Compose runtime.
+ */
+internal fun displaySettingValue(raw: String): String {
+    if (raw.isEmpty()) return ""
+    val acronymFix = mapOf(
+        "WIFI" to "WiFi",
+        "NSFW" to "NSFW",
+        "ALWAYS" to "Always",
+        "NEVER" to "Never",
+        "AUTO" to "Auto",
+        "MANUAL" to "Manual",
+        "HIDE" to "Hide",
+        "SHOW" to "Show",
+        "ONLY" to "Only",
+    )
+    return raw.split("_").joinToString(" ") { word ->
+        acronymFix[word] ?: word.lowercase().replaceFirstChar { c -> c.uppercase() }
+    }
+}
+
+/**
  * Enum setting with dropdown selection.
  */
 @Composable
@@ -532,7 +558,7 @@ private fun EnumSettingItem(item: SettingsItem.EnumSetting<*>) {
         }
 
         Text(
-            text = selected.name,
+            text = displaySettingValue(selected.name),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary
         )
@@ -550,7 +576,7 @@ private fun EnumSettingItem(item: SettingsItem.EnumSetting<*>) {
         ) {
             item.entries.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option.name) },
+                    text = { Text(displaySettingValue(option.name)) },
                     onClick = {
                         selected = option
                         item.applyOption(option)
