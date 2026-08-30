@@ -119,7 +119,9 @@ enum class PostAction {
 
 @HiltViewModel
 class PostListViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<PostListUiState>(PostListUiState.Loading(true))
@@ -220,7 +222,7 @@ class PostListViewModel @Inject constructor(
      * method.
      */
     fun performAction(activity: AppCompatActivity, post: PostItem, action: PostAction) {
-        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        val account = accountManager.getDefaultAccount()
         if (account == null) {
             _actionResult.value = "Not signed in"
             return
@@ -257,7 +259,7 @@ class PostListViewModel @Inject constructor(
         }
 
         RedditAPI.action(
-            CacheManager.getInstance(context),
+            cacheManager,
             handler,
             account,
             idAndType,
@@ -300,7 +302,7 @@ class PostListViewModel @Inject constructor(
     private fun fetchList(listPath: String, searchQuery: String?) {
         viewModelScope.launch {
             try {
-                val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+                val account = accountManager.getDefaultAccount()
                 if (account == null) {
                     _state.value = PostListUiState.Error(
                         RRError(title = "Not signed in", message = "Sign in to view post listings")
@@ -417,7 +419,7 @@ class PostListViewModel @Inject constructor(
                     context,
                     callbacks
                 )
-                CacheManager.getInstance(context).makeRequest(request)
+                cacheManager.makeRequest(request)
             } catch (e: Exception) {
                 _state.value = PostListUiState.Error(
                     RRError(title = "Error", message = e.message, t = e)
@@ -443,7 +445,7 @@ class PostListViewModel @Inject constructor(
             return
         }
 
-        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        val account = accountManager.getDefaultAccount()
         if (account == null) return
 
         // Seed the pill immediately with the new name so switching feeds

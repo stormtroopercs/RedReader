@@ -58,7 +58,9 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class MainScreenViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     sealed class SubscribedState {
@@ -103,7 +105,7 @@ class MainScreenViewModel @Inject constructor(
      * when signed out.
      */
     fun loadSubscribed() {
-        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        val account = accountManager.getDefaultAccount()
         if (account.username.isBlank()) {
             _state.value = SubscribedState.Idle
             return
@@ -160,7 +162,7 @@ class MainScreenViewModel @Inject constructor(
                     context,
                     callbacks
                 )
-                CacheManager.getInstance(context).makeRequest(request)
+                cacheManager.makeRequest(request)
             } catch (e: Exception) {
                 _state.value = SubscribedState.Error("Failed to load subreddits: ${e.message}")
             }

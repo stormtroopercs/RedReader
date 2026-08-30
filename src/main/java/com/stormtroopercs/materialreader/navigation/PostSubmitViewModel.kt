@@ -82,6 +82,8 @@ import javax.inject.Inject
 @HiltViewModel
 class PostSubmitViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     sealed class PostType {
@@ -134,7 +136,7 @@ class PostSubmitViewModel @Inject constructor(
 
     /** The account this form submits under (default account; null if signed out). */
     fun account(): RedditAccount? =
-        RedditAccountManager.getInstance(context).getDefaultAccount()
+        accountManager.getDefaultAccount()
 
     /** Subreddits the account has posted to, most-recent first (offline history). */
     fun subredditSuggestions(): List<SubredditCanonicalId> {
@@ -244,7 +246,7 @@ class PostSubmitViewModel @Inject constructor(
                 })
         )
 
-        CacheManager.getInstance(context).makeRequest(cacheRequest)
+        cacheManager.makeRequest(cacheRequest)
     }
 
     /**
@@ -349,7 +351,7 @@ class PostSubmitViewModel @Inject constructor(
                         })
                 )
 
-                CacheManager.getInstance(context).makeRequest(cacheRequest)
+                cacheManager.makeRequest(cacheRequest)
             } catch (e: Exception) {
                 postImgur(ImgurState.Error(e.message ?: "Could not read the image"))
             }
@@ -474,7 +476,7 @@ class PostSubmitViewModel @Inject constructor(
                 })
         )
 
-        CacheManager.getInstance(context).makeRequest(cacheRequest)
+        cacheManager.makeRequest(cacheRequest)
     }
 
     /**

@@ -62,7 +62,9 @@ import com.stormtroopercs.materialreader.reddit.things.RedditUser
  */
 @HiltViewModel
 class UserProfileViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     sealed class UserProfileUiState {
@@ -125,7 +127,7 @@ class UserProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = UserProfileUiState.Loading
             try {
-                val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+                val account = accountManager.getDefaultAccount()
                     ?: RedditAccountManager.getAnon()
 
                 val listener = object : CacheRequestJSONParser.Listener {
@@ -144,7 +146,7 @@ class UserProfileViewModel @Inject constructor(
                                 _state.value = UserProfileUiState.Error("User not found")
                                 return
                             }
-                            val default = RedditAccountManager.getInstance(context).getDefaultAccount()
+                            val default = accountManager.getDefaultAccount()
                             val isAnonymous = default.isAnonymous
                             val isSelf = user.name != null && !default.isAnonymous &&
                                 StringUtils.asciiLowercase(user.name!!) ==
@@ -205,7 +207,7 @@ class UserProfileViewModel @Inject constructor(
                     context,
                     CacheRequestJSONParser(context, listener)
                 )
-                CacheManager.getInstance(context).makeRequest(request)
+                cacheManager.makeRequest(request)
             } catch (e: Exception) {
                 _state.value = UserProfileUiState.Error(
                     "Failed to load profile: ${e.message}"
@@ -224,8 +226,8 @@ class UserProfileViewModel @Inject constructor(
      * thread and the API needs a non-application context for the request).
      */
     fun blockUser(activity: AppCompatActivity, username: String) {
-        val cm = CacheManager.getInstance(activity)
-        val currentUser = RedditAccountManager.getInstance(activity).defaultAccount
+        val cm = cacheManager
+        val currentUser = accountManager.defaultAccount
 
         RedditAPI.blockUser(
             cm,
@@ -264,8 +266,8 @@ class UserProfileViewModel @Inject constructor(
      * dialog's two-step unblock.
      */
     fun unblockUser(activity: AppCompatActivity, username: String) {
-        val cm = CacheManager.getInstance(activity)
-        val currentUser = RedditAccountManager.getInstance(activity).defaultAccount
+        val cm = cacheManager
+        val currentUser = accountManager.defaultAccount
 
         RedditAPI.getUser(
             cm,
@@ -347,7 +349,7 @@ class UserProfileViewModel @Inject constructor(
     fun signOut() {
         viewModelScope.launch {
             try {
-                val manager = RedditAccountManager.getInstance(context)
+                val manager = accountManager
                 val account = manager.defaultAccount
                 if (account.isAnonymous) {
                     return@launch

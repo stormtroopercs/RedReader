@@ -72,6 +72,8 @@ object PMSendDraft {
 @HiltViewModel
 class PMViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     sealed class PMUiState {
@@ -86,7 +88,7 @@ class PMViewModel @Inject constructor(
 
     /** Non-anonymous account usernames, in account order (the legacy spinner list). */
     val accounts: List<String> =
-        RedditAccountManager.getInstance(context).accounts
+        accountManager.accounts
             .filter { !it.isAnonymous }
             .map { it.username }
 
@@ -104,7 +106,7 @@ class PMViewModel @Inject constructor(
         body: String,
     ) {
         val account: RedditAccount? =
-            RedditAccountManager.getInstance(context).accounts.firstOrNull {
+            accountManager.accounts.firstOrNull {
                 !it.isAnonymous && it.username.equals(accountUsername, ignoreCase = true)
             }
         if (account == null) return
@@ -126,7 +128,7 @@ class PMViewModel @Inject constructor(
         }
 
         RedditAPI.compose(
-            CacheManager.getInstance(context),
+            cacheManager,
             handler,
             account,
             recipient,

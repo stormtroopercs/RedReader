@@ -52,7 +52,9 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class InboxViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     sealed class InboxUiState {
@@ -101,7 +103,7 @@ class InboxViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = InboxUiState.Loading
             try {
-                val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+                val account = accountManager.getDefaultAccount()
                 val signedIn = account.username.isNotBlank()
                 if (!signedIn) {
                     _state.value = InboxUiState.Error("Sign in to view your inbox")
@@ -151,7 +153,7 @@ class InboxViewModel @Inject constructor(
                     context,
                     callbacks
                 )
-                CacheManager.getInstance(context).makeRequest(request)
+                cacheManager.makeRequest(request)
             } catch (e: Exception) {
                 _state.value = InboxUiState.Error("Failed to load inbox: ${e.message}")
             }

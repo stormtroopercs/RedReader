@@ -51,6 +51,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CommentReplyViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     sealed class ReplyUiState {
@@ -80,7 +82,7 @@ class CommentReplyViewModel @Inject constructor(
      */
     fun submit(activity: AppCompatActivity, markdown: String) {
         val thingId = parentThingId ?: return
-        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        val account = accountManager.getDefaultAccount()
         if (account == null) {
             _state.value = ReplyUiState.Error("Not signed in")
             return
@@ -127,7 +129,7 @@ class CommentReplyViewModel @Inject constructor(
         }
 
         RedditAPI.comment(
-            CacheManager.getInstance(context),
+            cacheManager,
             submitHandler,
             inboxHandler,
             account,

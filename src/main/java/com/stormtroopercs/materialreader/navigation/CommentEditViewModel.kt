@@ -47,6 +47,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CommentEditViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     sealed class EditUiState {
@@ -99,9 +101,9 @@ class CommentEditViewModel @Inject constructor(
             }
         }
 
-        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        val account = accountManager.getDefaultAccount()
         RedditAPI.editComment(
-            CacheManager.getInstance(context),
+            cacheManager,
             handler,
             account,
             idAndType,

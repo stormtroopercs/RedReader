@@ -83,7 +83,9 @@ enum class CommunityDirectoryTab {
  */
 @HiltViewModel
 class CommunityDirectoryViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     private val _rows = MutableStateFlow<List<SubredditSearchViewModel.SubredditItem>>(emptyList())
@@ -105,7 +107,7 @@ class CommunityDirectoryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+                val account = accountManager.getDefaultAccount()
                 val uriBuilder = Constants.Reddit.getUriBuilder(tab.path)
                     .appendQueryParameter("limit", "100")
                 val jsonUri = UriString(uriBuilder.build().toString())
@@ -156,7 +158,7 @@ class CommunityDirectoryViewModel @Inject constructor(
                     context,
                     callbacks
                 )
-                CacheManager.getInstance(context).makeRequest(request)
+                cacheManager.makeRequest(request)
             } catch (e: Exception) {
                 if (seq == requestSeq.get()) {
                     _error.value = "Failed to load communities: ${e.message}"

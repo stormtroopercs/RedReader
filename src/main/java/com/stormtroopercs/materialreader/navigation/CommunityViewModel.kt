@@ -74,7 +74,9 @@ data class CommunityModerator(val name: String, val iconUrl: String? = null)
  */
 @HiltViewModel
 class CommunityViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     data class About(
@@ -191,7 +193,7 @@ class CommunityViewModel @Inject constructor(
     // ── Header + About data ──────────────────────────────────────────────
 
     private fun loadAbout(name: String) {
-        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        val account = accountManager.getDefaultAccount()
         if (account == null) {
             _aboutTab.value = TabContent.Error("Not signed in")
             return
@@ -252,7 +254,7 @@ class CommunityViewModel @Inject constructor(
     // ── Favorite tab ─────────────────────────────────────────────────────
 
     private fun loadFavorite(name: String) {
-        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        val account = accountManager.getDefaultAccount()
         if (account == null) {
             _favorite.value = FavoriteContent.NotSignedIn
             return
@@ -298,7 +300,7 @@ class CommunityViewModel @Inject constructor(
     // ── Mods tab ─────────────────────────────────────────────────────────
 
     private fun loadMods(name: String) {
-        val account = RedditAccountManager.getInstance(context).getDefaultAccount()
+        val account = accountManager.getDefaultAccount()
         if (account == null) {
             _mods.value = ModsContent.Error("Not signed in")
             return
@@ -347,7 +349,7 @@ class CommunityViewModel @Inject constructor(
             context,
             callbacks,
         )
-        CacheManager.getInstance(context).makeRequest(request)
+        cacheManager.makeRequest(request)
     }
 
     companion object {
