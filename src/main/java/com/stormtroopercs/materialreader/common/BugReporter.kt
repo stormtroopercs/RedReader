@@ -121,7 +121,7 @@ object BugReporter {
         intent.putExtra(
             Intent.EXTRA_EMAIL,
             arrayOf<String>(
-                "bugreports" + 64.toChar() + "redreader" + '.' + "org"
+                "bugreports.commune" + 64.toChar() + "gmail" + '.' + "com"
             )
         )
         intent.putExtra(Intent.EXTRA_SUBJECT, "Bug Report")
