@@ -132,7 +132,14 @@ fun OnboardingScreen(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         )
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+                        // fillMaxSize so the Box fills the 128dp card and the
+                        // icon truly centers in it - without it the Box wraps
+                        // to the icon's 64dp and the icon rendered top-left in
+                        // the card on every step (bug report 2026-08-30).
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
                                 imageVector = data.icon,
                                 contentDescription = null,
