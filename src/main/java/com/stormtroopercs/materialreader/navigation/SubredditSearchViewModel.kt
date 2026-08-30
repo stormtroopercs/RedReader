@@ -24,11 +24,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.IOException
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import com.stormtroopercs.materialreader.account.RedditAccountManager
 import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.cache.CacheRequest
@@ -67,7 +69,9 @@ import javax.inject.Inject
 @HiltViewModel
 class SubredditSearchViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val subredditRepository: SubredditRepository
+    private val subredditRepository: SubredditRepository,
+    private val accountManager: RedditAccountManager,
+    private val cacheManager: CacheManager
 ) : ViewModel() {
 
     sealed class SubredditSearchUiState {
@@ -102,95 +106,109 @@ class SubredditSearchViewModel @Inject constructor(
     val state: StateFlow<SubredditSearchUiState> = _state.asStateFlow()
 
     /**
-     * In-flight request counter: a response is only applied if it is still
-     * the latest request (fast typing otherwise lets an older query's
-     * response clobber a newer one — the classic race).
+     * Query input flow. Each new non-blank value triggers a search via
+     * [searchQueryFlow]; [mapLatest] cancels the previous in-flight search when
+     * a newer query arrives, so an older response can never clobber a newer
+     * one (replaces the old AtomicInteger race-guard).
      */
-    private val requestSeq = AtomicInteger(0)
+    private val searchQuery = MutableStateFlow("")
+
+    init {
+        viewModelScope.launch {
+            searchQuery
+                .filter { it.isNotBlank() }
+                .mapLatest { query -> doSearch(query) }
+                .collect { _state.value = it }
+        }
+    }
 
     /**
-     * Search for subreddits matching the query (live API).
+     * Search for subreddits matching the query (live API). Pushes the query
+     * into [searchQuery]; the collected flow performs the request.
      */
     fun searchSubreddits(query: String) {
         if (query.isBlank()) {
-            requestSeq.incrementAndGet() // invalidate any in-flight request
             _state.value = SubredditSearchUiState.Idle
-            return
+        } else {
+            _state.value = SubredditSearchUiState.Loading
         }
+        searchQuery.value = query
+    }
 
-        _state.value = SubredditSearchUiState.Loading
-        val seq = requestSeq.incrementAndGet()
+    /**
+     * Run one subreddit search for [query] and return its terminal
+     * [SubredditSearchUiState]. Backed by a CacheRequest bridged into a
+     * suspend function; cancellation (from [mapLatest] on a newer query)
+     * leaves the stale result un-collected.
+     */
+    private suspend fun doSearch(query: String): SubredditSearchUiState =
+        suspendCancellableCoroutine { cont ->
+            cont.invokeOnCancellation { }
+            val account = accountManager.getDefaultAccount()
+            val uriBuilder = Constants.Reddit.getUriBuilder("/subreddits/search.json")
+                .appendQueryParameter("q", query)
+                .appendQueryParameter("limit", "100")
+            val jsonUri = UriString(uriBuilder.build().toString())
 
-        viewModelScope.launch {
-            try {
-                val account = RedditAccountManager.getInstance(context).getDefaultAccount()
-                val uriBuilder = Constants.Reddit.getUriBuilder("/subreddits/search.json")
-                    .appendQueryParameter("q", query)
-                    .appendQueryParameter("limit", "100")
-                val jsonUri = UriString(uriBuilder.build().toString())
-
-                val callbacks = object : CacheRequestCallbacks {
-                    override fun onDataStreamComplete(
-                        streamFactory: GenericFactory<SeekableInputStream, IOException>,
-                        timestamp: TimestampUTC,
-                        session: UUID,
-                        fromCache: Boolean,
-                        mimetype: String?
-                    ) {
-                        if (seq != requestSeq.get()) return // stale response
-                        try {
-                            val result = streamFactory.create().use { input ->
-                                JsonValue.parse(input)
-                            }
-                            val children = result.getArrayAtPath("data", "children").get()
-                            val items = children.mapNotNull { child ->
-                                toSubredditItem(child)
-                            }
-                            if (items.isEmpty()) {
-                                _state.value = SubredditSearchUiState.Error(
+            val callbacks = object : CacheRequestCallbacks {
+                override fun onDataStreamComplete(
+                    streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<SeekableInputStream, IOException>,
+                    timestamp: TimestampUTC,
+                    session: UUID,
+                    fromCache: Boolean,
+                    mimetype: String?
+                ) {
+                    if (!cont.isActive) return
+                    try {
+                        val result = streamFactory.create().use { input ->
+                            JsonValue.parse(input)
+                        }
+                        val children = result.getArrayAtPath("data", "children").get()
+                        val items = children.mapNotNull { child ->
+                            toSubredditItem(child)
+                        }
+                        if (items.isEmpty()) {
+                            cont.resume(
+                                SubredditSearchUiState.Error(
                                     "No subreddits found for \"$query\""
                                 )
-                                return
-                            }
-                            _state.value = SubredditSearchUiState.Success(items, query)
-                            seedLocalCache(items)
-                        } catch (e: Exception) {
-                            _state.value = SubredditSearchUiState.Error(
-                                e.message ?: e.toString()
                             )
+                            return
                         }
-                    }
-
-                    override fun onFailure(error: RRError) {
-                        if (seq != requestSeq.get()) return // stale response
-                        _state.value = SubredditSearchUiState.Error(
-                            error.message ?: "Subreddit search failed"
+                        seedLocalCache(items)
+                        cont.resume(SubredditSearchUiState.Success(items, query))
+                    } catch (e: Exception) {
+                        cont.resume(
+                            SubredditSearchUiState.Error(e.message ?: e.toString())
                         )
                     }
                 }
 
-                val request = CacheRequest(
-                    jsonUri,
-                    account,
-                    null,
-                    Priority(Constants.Priority.API_SUBREDDIT_SEARCH),
-                    DownloadStrategyIfTimestampOutsideBounds(
-                        TimestampBound.Companion.notOlderThan(minutes(1))
-                    ),
-                    Constants.FileType.SUBREDDIT_LIST,
-                    CacheRequest.DownloadQueueType.REDDIT_API,
-                    context,
-                    callbacks
-                )
-                CacheManager.getInstance(context).makeRequest(request)
-            } catch (e: Exception) {
-                if (seq != requestSeq.get()) return@launch
-                _state.value = SubredditSearchUiState.Error(
-                    "Failed to search subreddits: ${e.message}"
-                )
+                override fun onFailure(error: RRError) {
+                    if (!cont.isActive) return
+                    cont.resume(
+                        SubredditSearchUiState.Error(
+                            error.message ?: "Subreddit search failed"
+                        )
+                    )
+                }
             }
+
+            val request = CacheRequest(
+                jsonUri,
+                account,
+                null,
+                Priority(Constants.Priority.API_SUBREDDIT_SEARCH),
+                DownloadStrategyIfTimestampOutsideBounds(
+                    TimestampBound.Companion.notOlderThan(minutes(1))
+                ),
+                Constants.FileType.SUBREDDIT_LIST,
+                CacheRequest.DownloadQueueType.REDDIT_API,
+                context,
+                callbacks
+            )
+            cacheManager.makeRequest(request)
         }
-    }
 
     /**
      * Upsert the search results into the Room `subreddits` table so the
@@ -225,6 +243,7 @@ class SubredditSearchViewModel @Inject constructor(
      * Clear the current search state.
      */
     fun clearSearch() {
+        searchQuery.value = ""
         _state.value = SubredditSearchUiState.Idle
     }
 
