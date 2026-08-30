@@ -16,7 +16,6 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.reddit.api
 
-import android.app.ProgressDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.net.Uri
@@ -25,6 +24,7 @@ import android.util.Base64
 import android.util.Log
 import android.view.KeyEvent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentDialog
 import androidx.core.net.toUri
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import okhttp3.internal.closeQuietly
@@ -789,15 +789,23 @@ object RedditOAuth {
         uri: Uri,
         onDone: RunnableOnce
     ) {
-        val progressDialog = ProgressDialog(activity)
-        progressDialog.setTitle(R.string.accounts_loggingin)
-        progressDialog.setMessage(
-            activity.applicationContext.getString(
-                R.string.accounts_loggingin_msg
+        val progressBar = android.widget.ProgressBar(activity).apply {
+            isIndeterminate = true
+            layoutParams = android.view.ViewGroup.LayoutParams(
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
             )
-        )
-        progressDialog.isIndeterminate = true
-        progressDialog.setCancelable(true)
+        }
+        val progressDialog = MaterialAlertDialogBuilder(activity)
+            .setTitle(R.string.accounts_loggingin)
+            .setMessage(
+                activity.applicationContext.getString(
+                    R.string.accounts_loggingin_msg
+                )
+            )
+            .setView(progressBar)
+            .setCancelable(true)
+            .create()
         progressDialog.setCanceledOnTouchOutside(false)
         val cancelled = AtomicBoolean(false)
         progressDialog.setOnCancelListener {

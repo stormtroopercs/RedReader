@@ -30,6 +30,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.serialization.NavKeySerializer
+import kotlinx.serialization.json.Json
 import dagger.hilt.android.AndroidEntryPoint
 import com.stormtroopercs.materialreader.compose.activity.ComposeBaseActivity
 import com.stormtroopercs.materialreader.common.LinkHandler
@@ -90,6 +92,28 @@ class MainActivityCompose : ComposeBaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Restore the per-top-level back stacks (and the active tab) saved on a
+        // prior process death, so navigation survives being killed in the
+        // background. Guarded so a corrupt entry can never crash launch.
+        if (savedInstanceState != null) {
+            for (route in TOP_LEVEL_ROUTES) {
+                val key = Json.encodeToString<NavKey>(NavKeySerializer(), route)
+                savedInstanceState.getStringArrayList("navstack.$key")?.let { restored ->
+                    val keys = restored.mapNotNull {
+                        runCatching { Json.decodeFromString<NavKey>(NavKeySerializer(), it) }.getOrNull()
+                    }
+                    navigationState.backStacks[route]?.apply {
+                        clear()
+                        addAll(keys)
+                    }
+                }
+            }
+            savedInstanceState.getString("navtop")?.let { top ->
+                runCatching { Json.decodeFromString<NavKey>(NavKeySerializer(), top) }.getOrNull()
+                    ?.let { navigationState.switchTopLevel(it) }
+            }
+        }
 
         // Cold-start deep link: e.g. the new-message notification opens the app
         // directly on the Compose inbox (Main top level + Inbox child).
@@ -188,6 +212,18 @@ class MainActivityCompose : ComposeBaseActivity() {
      * every API level, since the legacy OnBackPressedCallback (see
      * BaseActivity) is the registered handler for the system back button.
      */
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        for ((route, list) in navigationState.backStacks) {
+            val key = Json.encodeToString<NavKey>(NavKeySerializer(), route)
+            outState.putStringArrayList(
+                "navstack.$key",
+                ArrayList(list.map { Json.encodeToString<NavKey>(NavKeySerializer(), it) })
+            )
+        }
+        outState.putString("navtop", Json.encodeToString<NavKey>(NavKeySerializer(), navigationState.topLevelRoute))
+    }
+
     override fun baseActivityOnBackPressed(): Boolean {
         // While the on-screen HtmlView route has a live WebView with
         // document history, walk that history first (legacy HtmlViewActivity
