@@ -136,7 +136,7 @@ class MultiredditPostListURL private constructor(
 
             builder.encodedPath("/user/")
             builder.appendPath(username)
-            builder.appendPath("/m/")
+            builder.appendPath("m")
             builder.appendPath(name)
 
             return RedditURLParser.parse(builder.build())
