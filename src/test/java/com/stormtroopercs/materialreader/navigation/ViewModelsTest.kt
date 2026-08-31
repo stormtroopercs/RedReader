@@ -17,8 +17,6 @@
 
 package com.stormtroopercs.materialreader.navigation
 
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.SavedStateHandle
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -34,28 +32,28 @@ import org.robolectric.annotation.Config
 @Config(sdk = [30])
 class ViewModelsTest {
 
-    private lateinit var settingsViewModel: SettingsViewModel
-    private lateinit var postListViewModel: PostListViewModel
-    private lateinit var commentListViewModel: CommentListViewModel
-    private lateinit var userProfileViewModel: UserProfileViewModel
-    private lateinit var inboxViewModel: InboxViewModel
-    private lateinit var subredditSearchViewModel: SubredditSearchViewModel
+	private lateinit var settingsViewModel: SettingsViewModel
+	private lateinit var postListViewModel: PostListViewModel
+	private lateinit var commentListViewModel: CommentListViewModel
+	private lateinit var userProfileViewModel: UserProfileViewModel
+	private lateinit var inboxViewModel: InboxViewModel
+	private lateinit var subredditSearchViewModel: SubredditSearchViewModel
 
-    @Before
-    fun setUp() {
-        // Note: In a real test suite, we would properly initialize ViewModels
-        // with mocked dependencies. For now, these are placeholder tests
-        // showing the test structure.
-    }
+	@Before
+	fun setUp() {
+		// Note: In a real test suite, we would properly initialize ViewModels
+		// with mocked dependencies. For now, these are placeholder tests
+		// showing the test structure.
+	}
 
-    @Test
-    fun viewModelsExist() {
-        // Placeholder test to verify test infrastructure works
-        assertTrue("Test infrastructure is working", true)
-    }
+	@Test
+	fun viewModelsExist() {
+		// Placeholder test to verify test infrastructure works
+		assertTrue("Test infrastructure is working", true)
+	}
 
-    // Note: Full ViewModel tests would require:
-    // 1. Mocking dependencies (Context, Repository, etc.)
-    // 2. Using ViewModelProvider with a custom factory
-    // 3. Testing StateFlow emissions and ViewModel behavior
+	// Note: Full ViewModel tests would require:
+	// 1. Mocking dependencies (Context, Repository, etc.)
+	// 2. Using ViewModelProvider with a custom factory
+	// 3. Testing StateFlow emissions and ViewModel behavior
 }

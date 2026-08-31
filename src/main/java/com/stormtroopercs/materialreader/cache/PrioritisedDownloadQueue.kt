@@ -21,72 +21,72 @@ import com.stormtroopercs.materialreader.cache.CacheRequest.DownloadQueueType
 import com.stormtroopercs.materialreader.common.PrioritisedCachedThreadPool
 
 internal class PrioritisedDownloadQueue(context: Context?) {
-    private val redditDownloadsQueued = HashSet<CacheDownload>()
+	private val redditDownloadsQueued = HashSet<CacheDownload>()
 
-    private val mDownloadThreadPool = PrioritisedCachedThreadPool(5, "Download")
+	private val mDownloadThreadPool = PrioritisedCachedThreadPool(5, "Download")
 
-    init {
-        RedditQueueProcessor().start()
-    }
+	init {
+		RedditQueueProcessor().start()
+	}
 
-    @Synchronized
-    fun add(request: CacheRequest, manager: CacheManager) {
-        val download = CacheDownload(request, manager)
+	@Synchronized
+	fun add(request: CacheRequest, manager: CacheManager) {
+		val download = CacheDownload(request, manager)
 
-        if (request.queueType == DownloadQueueType.REDDIT_API) {
-            redditDownloadsQueued.add(download)
-            (this as Object).notifyAll()
-        } else if (request.queueType == DownloadQueueType.IMMEDIATE
-            || request.queueType == DownloadQueueType.IMGUR_API
-        ) {
-            CacheDownloadThread(download, true, "Cache Download Thread: Immediate")
-        } else {
-            mDownloadThreadPool.add(download)
-        }
-    }
+		if (request.queueType == DownloadQueueType.REDDIT_API) {
+			redditDownloadsQueued.add(download)
+			(this as Object).notifyAll()
+		} else if (request.queueType == DownloadQueueType.IMMEDIATE ||
+			request.queueType == DownloadQueueType.IMGUR_API
+		) {
+			CacheDownloadThread(download, true, "Cache Download Thread: Immediate")
+		} else {
+			mDownloadThreadPool.add(download)
+		}
+	}
 
-    @get:Synchronized
-    private val nextRedditInQueue: CacheDownload
-        get() {
-            while (redditDownloadsQueued.isEmpty()) {
-                try {
-                    (this as Object).wait()
-                } catch (e: InterruptedException) {
-                    throw RuntimeException(e)
-                }
-            }
+	@get:Synchronized
+	private val nextRedditInQueue: CacheDownload
+		get() {
+			while (redditDownloadsQueued.isEmpty()) {
+				try {
+					(this as Object).wait()
+				} catch (e: InterruptedException) {
+					throw RuntimeException(e)
+				}
+			}
 
-            var next: CacheDownload?=null
+			var next: CacheDownload? = null
 
-            for (entry in redditDownloadsQueued) {
-                if (next == null || entry.priority.isHigherPriorityThan(next.priority)) {
-                    next = entry
-                }
-            }
+			for (entry in redditDownloadsQueued) {
+				if (next == null || entry.priority.isHigherPriorityThan(next.priority)) {
+					next = entry
+				}
+			}
 
-            redditDownloadsQueued.remove(next)
+			redditDownloadsQueued.remove(next)
 
-            return next!!
-        }
+			return next!!
+		}
 
-    private inner class RedditQueueProcessor : Thread("Reddit Queue Processor") {
-        override fun run() {
-            while (true) {
-                synchronized(this) {
-                    val download: CacheDownload = this@PrioritisedDownloadQueue.nextRedditInQueue
-                    CacheDownloadThread(
-                        download,
-                        true,
-                        "Cache Download Thread: Reddit"
-                    )
-                }
+	private inner class RedditQueueProcessor : Thread("Reddit Queue Processor") {
+		override fun run() {
+			while (true) {
+				synchronized(this) {
+					val download: CacheDownload = this@PrioritisedDownloadQueue.nextRedditInQueue
+					CacheDownloadThread(
+						download,
+						true,
+						"Cache Download Thread: Reddit",
+					)
+				}
 
-                try {
-                    sleep(1200) // Delay imposed by reddit API restrictions.
-                } catch (e: InterruptedException) {
-                    throw RuntimeException(e)
-                }
-            }
-        }
-    }
+				try {
+					sleep(1200) // Delay imposed by reddit API restrictions.
+				} catch (e: InterruptedException) {
+					throw RuntimeException(e)
+				}
+			}
+		}
+	}
 }

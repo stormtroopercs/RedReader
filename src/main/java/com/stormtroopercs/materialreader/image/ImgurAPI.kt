@@ -35,117 +35,120 @@ import com.stormtroopercs.materialreader.http.FailedRequestBody
 import com.stormtroopercs.materialreader.image.ImageInfo.Companion.parseImgur
 import com.stormtroopercs.materialreader.jsonwrap.JsonValue
 import java.util.UUID
-import com.stormtroopercs.materialreader.common.General
 
 object ImgurAPI {
-    fun getAlbumInfo(
-        context: Context,
-        albumUrl: UriString,
-        albumId: String?,
-        priority: Priority,
-        listener: GetAlbumInfoListener
-    ) {
-        val apiUrl = UriString("https://api.imgur.com/2/album/" + albumId + ".json")
+	fun getAlbumInfo(
+		context: Context,
+		albumUrl: UriString,
+		albumId: String?,
+		priority: Priority,
+		listener: GetAlbumInfoListener,
+	) {
+		val apiUrl = UriString("https://api.imgur.com/2/album/" + albumId + ".json")
 
-        CacheManager.Companion.getInstance(context).makeRequest(
-            CacheRequest(
-                apiUrl,
-                RedditAccountManager.Companion.getAnon(),
-                null,
-                priority,
-                DownloadStrategyIfNotCached.Companion.INSTANCE,
-                Constants.FileType.IMAGE_INFO,
-                DownloadQueueType.IMMEDIATE,
-                context,
-                CacheRequestJSONParser(
-                    context,
-                    object : CacheRequestJSONParser.Listener {
-                        override fun onJsonParsed(
-                            result: JsonValue,
-                            timestamp: TimestampUTC,
-                            session: UUID,
-                            fromCache: Boolean
-                        ) {
-                            try {
-                                val outer = result.asObject()!!.getObject("album")
-                                listener.onSuccess(AlbumInfo.parseImgur(albumUrl, outer!!))
-                            } catch (t: Throwable) {
-                                listener.onFailure(
-                                    getGeneralErrorForFailure(
-                                        context,
-                                        RequestFailureType.PARSE,
-                                        t,
-                                        null,
-                                        apiUrl,
-                                        Optional.Companion.of<FailedRequestBody>(
-                                            FailedRequestBody(
-                                                result
-                                            )
-                                        )
-                                    )
-                                )
-                            }
-                        }
+		CacheManager.Companion.getInstance(context).makeRequest(
+			CacheRequest(
+				apiUrl,
+				RedditAccountManager.Companion.getAnon(),
+				null,
+				priority,
+				DownloadStrategyIfNotCached.Companion.INSTANCE,
+				Constants.FileType.IMAGE_INFO,
+				DownloadQueueType.IMMEDIATE,
+				context,
+				CacheRequestJSONParser(
+					context,
+					object : CacheRequestJSONParser.Listener {
+						override fun onJsonParsed(
+							result: JsonValue,
+							timestamp: TimestampUTC,
+							session: UUID,
+							fromCache: Boolean,
+						) {
+							try {
+								val outer = result.asObject()!!.getObject("album")
+								listener.onSuccess(AlbumInfo.parseImgur(albumUrl, outer!!))
+							} catch (t: Throwable) {
+								listener.onFailure(
+									getGeneralErrorForFailure(
+										context,
+										RequestFailureType.PARSE,
+										t,
+										null,
+										apiUrl,
+										Optional.Companion.of<FailedRequestBody>(
+											FailedRequestBody(
+												result,
+											),
+										),
+									),
+								)
+							}
+						}
 
-                        override fun onFailure(error: RRError) {
-                            listener.onFailure(error)
-                        }
-                    })
-            )
-        )
-    }
+						override fun onFailure(error: RRError) {
+							listener.onFailure(error)
+						}
+					},
+				),
+			),
+		)
+	}
 
-    fun getImageInfo(
-        context: Context,
-        imageId: String?,
-        priority: Priority,
-        listener: GetImageInfoListener
-    ) {
-        val apiUrl = UriString("https://api.imgur.com/2/image/" + imageId + ".json")
+	fun getImageInfo(
+		context: Context,
+		imageId: String?,
+		priority: Priority,
+		listener: GetImageInfoListener,
+	) {
+		val apiUrl = UriString("https://api.imgur.com/2/image/" + imageId + ".json")
 
-        CacheManager.Companion.getInstance(context).makeRequest(
-            CacheRequest(
-                apiUrl,
-                RedditAccountManager.Companion.getAnon(),
-                null,
-                priority,
-                DownloadStrategyIfNotCached.Companion.INSTANCE,
-                Constants.FileType.IMAGE_INFO,
-                DownloadQueueType.IMMEDIATE,
-                context,
-                CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
-                    override fun onJsonParsed(
-                        result: JsonValue,
-                        timestamp: TimestampUTC,
-                        session: UUID,
-                        fromCache: Boolean
-                    ) {
-                        try {
-                            val outer = result.asObject()!!.getObject("image")
-                            listener.onSuccess(parseImgur(outer))
-                        } catch (t: Throwable) {
-                            listener.onFailure(
-                                getGeneralErrorForFailure(
-                                    context,
-                                    RequestFailureType.PARSE,
-                                    t,
-                                    null,
-                                    apiUrl,
-                                    Optional.Companion.of<FailedRequestBody>(
-                                        FailedRequestBody(
-                                            result
-                                        )
-                                    )
-                                )
-                            )
-                        }
-                    }
+		CacheManager.Companion.getInstance(context).makeRequest(
+			CacheRequest(
+				apiUrl,
+				RedditAccountManager.Companion.getAnon(),
+				null,
+				priority,
+				DownloadStrategyIfNotCached.Companion.INSTANCE,
+				Constants.FileType.IMAGE_INFO,
+				DownloadQueueType.IMMEDIATE,
+				context,
+				CacheRequestJSONParser(
+					context,
+					object : CacheRequestJSONParser.Listener {
+						override fun onJsonParsed(
+							result: JsonValue,
+							timestamp: TimestampUTC,
+							session: UUID,
+							fromCache: Boolean,
+						) {
+							try {
+								val outer = result.asObject()!!.getObject("image")
+								listener.onSuccess(parseImgur(outer))
+							} catch (t: Throwable) {
+								listener.onFailure(
+									getGeneralErrorForFailure(
+										context,
+										RequestFailureType.PARSE,
+										t,
+										null,
+										apiUrl,
+										Optional.Companion.of<FailedRequestBody>(
+											FailedRequestBody(
+												result,
+											),
+										),
+									),
+								)
+							}
+						}
 
-                    override fun onFailure(error: RRError) {
-                        listener.onFailure(error)
-                    }
-                })
-            )
-        )
-    }
+						override fun onFailure(error: RRError) {
+							listener.onFailure(error)
+						}
+					},
+				),
+			),
+		)
+	}
 }

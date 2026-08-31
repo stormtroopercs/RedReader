@@ -19,20 +19,16 @@ package com.stormtroopercs.materialreader.common.collections
 import java.util.Arrays
 
 class CollectionStream<Type>(iterable: Iterable<Type>) : Stream<Type>() {
-    private val mIterator: Iterator<Type>
+	private val mIterator: Iterator<Type>
 
-    init {
-        mIterator = iterable.iterator()
-    }
+	init {
+		mIterator = iterable.iterator()
+	}
 
-    @SafeVarargs
-    constructor(vararg array: Type) : this(Arrays.asList<Type>(*array))
+	@SafeVarargs
+	constructor(vararg array: Type) : this(Arrays.asList<Type>(*array))
 
-    override fun hasNext(): Boolean {
-        return mIterator.hasNext()
-    }
+	override fun hasNext(): Boolean = mIterator.hasNext()
 
-    override fun take(): Type {
-        return mIterator.next()
-    }
+	override fun take(): Type = mIterator.next()
 }

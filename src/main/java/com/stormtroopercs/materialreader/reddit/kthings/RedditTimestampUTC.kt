@@ -19,6 +19,7 @@ package com.stormtroopercs.materialreader.reddit.kthings
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import kotlinx.parcelize.Parceler
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.WriteWith
@@ -29,19 +30,18 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import com.stormtroopercs.materialreader.common.time.TimestampUTC
 
 @Serializable(with = RedditTimestampUTCSerializer::class)
 @Parcelize
 data class RedditTimestampUTC(
-	val value: @WriteWith<TimestampUTCParceler> TimestampUTC
+	val value: @WriteWith<TimestampUTCParceler> TimestampUTC,
 ) : Parcelable
 
 object RedditTimestampUTCSerializer : KSerializer<RedditTimestampUTC> {
 	override val descriptor: SerialDescriptor
 		get() = PrimitiveSerialDescriptor("RedditTimestampUTC", PrimitiveKind.DOUBLE)
 
-	override fun deserialize(decoder: Decoder) = 		RedditTimestampUTC(value = TimestampUTC.fromUtcSecs((decoder.decodeDouble().toLong())))
+	override fun deserialize(decoder: Decoder) = RedditTimestampUTC(value = TimestampUTC.fromUtcSecs((decoder.decodeDouble().toLong())))
 
 	override fun serialize(encoder: Encoder, value: RedditTimestampUTC) {
 		encoder.encodeDouble(value.value.toUtcSecs().toDouble())
@@ -54,5 +54,4 @@ object TimestampUTCParceler : Parceler<TimestampUTC> {
 	override fun TimestampUTC.write(parcel: Parcel, flags: Int) {
 		parcel.writeLong(toUtcMs())
 	}
-
 }

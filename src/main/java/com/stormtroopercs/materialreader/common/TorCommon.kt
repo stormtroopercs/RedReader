@@ -22,22 +22,22 @@ import com.stormtroopercs.materialreader.http.HTTPBackend.Companion.backend
 import java.util.concurrent.atomic.AtomicBoolean
 
 object TorCommon {
-    private val sIsTorEnabled = AtomicBoolean(false)
+	private val sIsTorEnabled = AtomicBoolean(false)
 
-    fun updateTorStatus() {
-        checkThisIsUIThread()
+	fun updateTorStatus() {
+		checkThisIsUIThread()
 
-        val torEnabled = PrefsUtility.network_tor()
-        val torChanged = (torEnabled != isTorEnabled)
+		val torEnabled = PrefsUtility.network_tor()
+		val torChanged = (torEnabled != isTorEnabled)
 
-        sIsTorEnabled.set(torEnabled)
+		sIsTorEnabled.set(torEnabled)
 
-        if (torChanged) {
-            backend.recreateHttpBackend()
-            CacheDownload.Companion.resetUserCredentialsOnNextRequest()
-        }
-    }
+		if (torChanged) {
+			backend.recreateHttpBackend()
+			CacheDownload.Companion.resetUserCredentialsOnNextRequest()
+		}
+	}
 
-    val isTorEnabled: Boolean
-        get() = sIsTorEnabled.get()
+	val isTorEnabled: Boolean
+		get() = sIsTorEnabled.get()
 }

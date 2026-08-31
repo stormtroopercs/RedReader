@@ -24,20 +24,20 @@ import com.stormtroopercs.materialreader.http.FailedRequestBody
 
 @Immutable
 data class RRError @JvmOverloads constructor(
-	@JvmField val title: String?=null,
-	@JvmField val message: String?=null,
+	@JvmField val title: String? = null,
+	@JvmField val message: String? = null,
 	@JvmField val reportable: Boolean = true,
-	@JvmField val t: Throwable?=null,
-	@JvmField val httpStatus: Int?=null,
-	@JvmField val url: UriString?=null,
-	@JvmField val debuggingContext: String?=null,
-	@JvmField val responseString: String?=null,
-	@JvmField val resolution: Resolution?=null
+	@JvmField val t: Throwable? = null,
+	@JvmField val httpStatus: Int? = null,
+	@JvmField val url: UriString? = null,
+	@JvmField val debuggingContext: String? = null,
+	@JvmField val responseString: String? = null,
+	@JvmField val resolution: Resolution? = null,
 ) {
 	enum class Resolution(@StringRes val buttonText: Int) {
 		ACCEPT_REDDIT_TERMS(buttonText = R.string.reddit_terms_error_resolution_button),
 		ACCOUNTS_LIST(buttonText = R.string.options_accounts),
-		RETRY(buttonText = R.string.error_resolution_button_retry)
+		RETRY(buttonText = R.string.error_resolution_button_retry),
 	}
 
 	override fun toString() = "$title: $message (http: $httpStatus, thrown: $t)"
@@ -45,15 +45,15 @@ data class RRError @JvmOverloads constructor(
 	companion object {
 		@JvmStatic
 		fun createLegacy(
-			title: String?=null,
-			message: String?=null,
+			title: String? = null,
+			message: String? = null,
 			reportable: Boolean = true,
-			t: Throwable?=null,
-			httpStatus: Int?=null,
-			url: UriString?=null,
-			debuggingContext: String?=null,
+			t: Throwable? = null,
+			httpStatus: Int? = null,
+			url: UriString? = null,
+			debuggingContext: String? = null,
 			response: Optional<FailedRequestBody> = Optional.empty(),
-			resolution: Resolution?=null
+			resolution: Resolution? = null,
 		) = RRError(
 			title = title,
 			message = message,
@@ -63,19 +63,19 @@ data class RRError @JvmOverloads constructor(
 			url = url,
 			debuggingContext = debuggingContext,
 			responseString = response.map(FailedRequestBody::toString).orElseNull(),
-			resolution = resolution
+			resolution = resolution,
 		)
 
 		fun create(
-			title: String?=null,
-			message: String?=null,
+			title: String? = null,
+			message: String? = null,
 			reportable: Boolean = true,
-			t: Throwable?=null,
-			httpStatus: Int?=null,
-			url: UriString?=null,
-			debuggingContext: String?=null,
-			response: FailedRequestBody?=null,
-			resolution: Resolution?=null
+			t: Throwable? = null,
+			httpStatus: Int? = null,
+			url: UriString? = null,
+			debuggingContext: String? = null,
+			response: FailedRequestBody? = null,
+			resolution: Resolution? = null,
 		) = RRError(
 			title = title,
 			message = message,
@@ -85,7 +85,7 @@ data class RRError @JvmOverloads constructor(
 			url = url,
 			debuggingContext = debuggingContext,
 			responseString = response?.toString(),
-			resolution = resolution
+			resolution = resolution,
 		)
 	}
 }

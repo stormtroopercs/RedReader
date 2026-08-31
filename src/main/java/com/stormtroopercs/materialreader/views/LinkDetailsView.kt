@@ -32,84 +32,87 @@ import android.widget.TextView
 import com.stormtroopercs.materialreader.R
 import com.stormtroopercs.materialreader.common.General.dpToPixels
 import com.stormtroopercs.materialreader.common.PrefsUtility
-import com.stormtroopercs.materialreader.common.General
 
-class LinkDetailsView @SuppressLint("ClickableViewAccessibility") constructor(
-    context: Context,
-    title: String,
-    subtitle: String?
+class LinkDetailsView
+@SuppressLint("ClickableViewAccessibility")
+constructor(
+	context: Context,
+	title: String,
+	subtitle: String?,
 ) : FrameLayout(context) {
-    init {
-        setClickable(true)
+	init {
+		setClickable(true)
 
-        val layout = LinearLayout(context)
-        layout.setOrientation(LinearLayout.HORIZONTAL)
-        addView(layout)
-        val marginPx = dpToPixels(context, 10f)
+		val layout = LinearLayout(context)
+		layout.setOrientation(LinearLayout.HORIZONTAL)
+		addView(layout)
+		val marginPx = dpToPixels(context, 10f)
 
-        layout.setGravity(Gravity.CENTER_VERTICAL)
+		layout.setGravity(Gravity.CENTER_VERTICAL)
 
-        val appearance = context.obtainStyledAttributes(intArrayOf(R.attr.rrIconLink))
-        val icon = ImageView(context)
-        icon.setImageDrawable(appearance.getDrawable(0))
-        appearance.recycle()
-        layout.addView(icon)
-        (icon.getLayoutParams() as LinearLayout.LayoutParams).setMargins(
-            marginPx,
-            marginPx,
-            marginPx,
-            marginPx
-        )
+		val appearance = context.obtainStyledAttributes(intArrayOf(R.attr.rrIconLink))
+		val icon = ImageView(context)
+		icon.setImageDrawable(appearance.getDrawable(0))
+		appearance.recycle()
+		layout.addView(icon)
+		(icon.getLayoutParams() as LinearLayout.LayoutParams).setMargins(
+			marginPx,
+			marginPx,
+			marginPx,
+			marginPx,
+		)
 
-        val textLayout = LinearLayout(context)
-        textLayout.setOrientation(LinearLayout.VERTICAL)
-        layout.addView(textLayout)
-        (textLayout.getLayoutParams() as LinearLayout.LayoutParams).setMargins(
-            0,
-            marginPx,
-            marginPx,
-            marginPx
-        )
+		val textLayout = LinearLayout(context)
+		textLayout.setOrientation(LinearLayout.VERTICAL)
+		layout.addView(textLayout)
+		(textLayout.getLayoutParams() as LinearLayout.LayoutParams).setMargins(
+			0,
+			marginPx,
+			marginPx,
+			marginPx,
+		)
 
-        val linkFontScale = PrefsUtility.appearance_fontscale_linkbuttons()
+		val linkFontScale = PrefsUtility.appearance_fontscale_linkbuttons()
 
-        run {
-            val titleView = TextView(context)
-            titleView.setText(title)
-            titleView.setTextSize(15f * linkFontScale)
-            textLayout.addView(titleView)
-        }
+		run {
+			val titleView = TextView(context)
+			titleView.setText(title)
+			titleView.setTextSize(15f * linkFontScale)
+			textLayout.addView(titleView)
+		}
 
-        if (subtitle != null && title != subtitle) {
-            val subtitleView = TextView(context)
-            subtitleView.setText(subtitle)
-            subtitleView.setTextSize(11f * linkFontScale)
-            textLayout.addView(subtitleView)
-        }
+		if (subtitle != null && title != subtitle) {
+			val subtitleView = TextView(context)
+			subtitleView.setText(subtitle)
+			subtitleView.setTextSize(11f * linkFontScale)
+			textLayout.addView(subtitleView)
+		}
 
-        val borderPx = dpToPixels(context, 2f).toFloat()
+		val borderPx = dpToPixels(context, 2f).toFloat()
 
-        val borderShape = RectShape()
-        val border = ShapeDrawable(borderShape)
-        border.getPaint().setColor(Color.argb(128, 128, 128, 128))
-        border.getPaint().setStrokeWidth(borderPx)
-        border.getPaint().setStyle(Paint.Style.STROKE)
+		val borderShape = RectShape()
+		val border = ShapeDrawable(borderShape)
+		border.getPaint().setColor(Color.argb(128, 128, 128, 128))
+		border.getPaint().setStrokeWidth(borderPx)
+		border.getPaint().setStyle(Paint.Style.STROKE)
 
-        setBackground(border)
+		setBackground(border)
 
-        setOnTouchListener(OnTouchListener { v: View?, event: MotionEvent? ->
-            when (event!!.getActionMasked()) {
-                MotionEvent.ACTION_DOWN -> {
-                    layout.setBackgroundColor(Color.argb(50, 128, 128, 128))
-                    invalidate()
-                }
+		setOnTouchListener(
+			OnTouchListener { v: View?, event: MotionEvent? ->
+				when (event!!.getActionMasked()) {
+					MotionEvent.ACTION_DOWN -> {
+						layout.setBackgroundColor(Color.argb(50, 128, 128, 128))
+						invalidate()
+					}
 
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    layout.setBackgroundColor(Color.TRANSPARENT)
-                    invalidate()
-                }
-            }
-            false
-        })
-    }
+					MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+						layout.setBackgroundColor(Color.TRANSPARENT)
+						invalidate()
+					}
+				}
+				false
+			},
+		)
+	}
 }

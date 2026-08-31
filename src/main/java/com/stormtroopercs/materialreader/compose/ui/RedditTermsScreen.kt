@@ -17,6 +17,7 @@
 
 package com.stormtroopercs.materialreader.compose.ui
 
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -24,9 +25,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.stormtroopercs.materialreader.common.LinkHandler.onLinkClicked
 import com.stormtroopercs.materialreader.common.PrefsUtility
@@ -39,81 +38,81 @@ import com.stormtroopercs.materialreader.common.UriString
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RedditTermsScreen(
-    launchMainOnClose: Boolean = false,
-    onDone: () -> Unit
+	launchMainOnClose: Boolean = false,
+	onDone: () -> Unit,
 ) {
-    val context = LocalContext.current
+	val context = LocalContext.current
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Reddit User Agreement") },
-                navigationIcon = {
-                    IconButton(onClick = onDone) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Done"
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Before continuing, please review Reddit's User Agreement.",
-                style = MaterialTheme.typography.bodyLarge
-            )
+	Scaffold(
+		topBar = {
+			TopAppBar(
+				title = { Text("Reddit User Agreement") },
+				navigationIcon = {
+					IconButton(onClick = onDone) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Default.ArrowBack,
+							contentDescription = "Done",
+						)
+					}
+				},
+			)
+		},
+	) { paddingValues ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(paddingValues)
+				.padding(24.dp),
+			horizontalAlignment = Alignment.CenterHorizontally,
+			verticalArrangement = Arrangement.Center,
+		) {
+			Text(
+				text = "Before continuing, please review Reddit's User Agreement.",
+				style = MaterialTheme.typography.bodyLarge,
+			)
 
-            Spacer(modifier = Modifier.height(32.dp))
+			Spacer(modifier = Modifier.height(32.dp))
 
-            Button(
-                onClick = {
-                    (context as? AppCompatActivity)?.let { host ->
-                        onLinkClicked(
-                            host,
-                            UriString("https://www.redditinc.com/policies/user-agreement-april-18-2023")
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("View User Agreement")
-            }
+			Button(
+				onClick = {
+					(context as? AppCompatActivity)?.let { host ->
+						onLinkClicked(
+							host,
+							UriString("https://www.redditinc.com/policies/user-agreement-april-18-2023"),
+						)
+					}
+				},
+				modifier = Modifier.fillMaxWidth(),
+			) {
+				Text("View User Agreement")
+			}
 
-            Spacer(modifier = Modifier.height(16.dp))
+			Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = {
-                    PrefsUtility.acceptRedditUserAgreement()
-                    onDone()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Text("Accept & Continue")
-            }
+			Button(
+				onClick = {
+					PrefsUtility.acceptRedditUserAgreement()
+					onDone()
+				},
+				modifier = Modifier.fillMaxWidth(),
+				colors = ButtonDefaults.buttonColors(
+					containerColor = MaterialTheme.colorScheme.primaryContainer,
+				),
+			) {
+				Text("Accept & Continue")
+			}
 
-            Spacer(modifier = Modifier.height(8.dp))
+			Spacer(modifier = Modifier.height(8.dp))
 
-            TextButton(
-                onClick = {
-                    PrefsUtility.declineRedditUserAgreement()
-                    onDone()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Decline")
-            }
-        }
-    }
+			TextButton(
+				onClick = {
+					PrefsUtility.declineRedditUserAgreement()
+					onDone()
+				},
+				modifier = Modifier.fillMaxWidth(),
+			) {
+				Text("Decline")
+			}
+		}
+	}
 }

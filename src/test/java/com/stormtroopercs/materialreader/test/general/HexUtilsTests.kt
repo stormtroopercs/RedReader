@@ -16,51 +16,49 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.general
 
+import com.stormtroopercs.materialreader.common.HexUtils
 import org.junit.Assert
 import org.junit.Test
-import com.stormtroopercs.materialreader.common.HexUtils
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 
 class HexUtilsTests {
 
-    @Test
-    fun hexTestChars() {
+	@Test
+	fun hexTestChars() {
+		for (i in 0 until 16) {
+			Assert.assertEquals(i, HexUtils.fromHex(String.format(Locale.US, "%X", i)[0]))
+		}
 
-        for (i in 0 until 16) {
-            Assert.assertEquals(i, HexUtils.fromHex(String.format(Locale.US, "%X", i)[0]))
-        }
+		for (i in 0 until 16) {
+			Assert.assertEquals(i, HexUtils.fromHex(String.format(Locale.US, "%x", i)[0]))
+		}
+	}
 
-        for (i in 0 until 16) {
-            Assert.assertEquals(i, HexUtils.fromHex(String.format(Locale.US, "%x", i)[0]))
-        }
-    }
+	@Test
+	fun hexTest1() {
+		val msg = "Hello World".toByteArray(StandardCharsets.UTF_8)
 
-    @Test
-    fun hexTest1() {
+		val hexMsg = HexUtils.toHex(msg)
 
-        val msg = "Hello World".toByteArray(StandardCharsets.UTF_8)
+		Assert.assertEquals("48656C6C6F20576F726C64", hexMsg)
 
-        val hexMsg = HexUtils.toHex(msg)
+		Assert.assertArrayEquals(msg, HexUtils.fromHex(hexMsg))
+		Assert.assertArrayEquals(msg, HexUtils.fromHex(hexMsg.lowercase()))
+	}
 
-        Assert.assertEquals("48656C6C6F20576F726C64", hexMsg)
+	@Test
+	fun hexTest2() {
+		Assert.assertThrows(IOException::class.java) {
+			HexUtils.fromHex("123")
+		}
+	}
 
-        Assert.assertArrayEquals(msg, HexUtils.fromHex(hexMsg))
-        Assert.assertArrayEquals(msg, HexUtils.fromHex(hexMsg.lowercase()))
-    }
-
-    @Test
-    fun hexTest2() {
-        Assert.assertThrows(IOException::class.java) {
-            HexUtils.fromHex("123")
-        }
-    }
-
-    @Test
-    fun hexTest3() {
-        Assert.assertThrows(IOException::class.java) {
-            HexUtils.fromHex("48656C6C6F20576F726CR4")
-        }
-    }
+	@Test
+	fun hexTest3() {
+		Assert.assertThrows(IOException::class.java) {
+			HexUtils.fromHex("48656C6C6F20576F726CR4")
+		}
+	}
 }

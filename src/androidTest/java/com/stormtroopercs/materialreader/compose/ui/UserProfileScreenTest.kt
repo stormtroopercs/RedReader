@@ -42,61 +42,61 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class UserProfileScreenTest {
 
-    @get:Rule
-    val composeTestRule = createAndroidComposeRule(HiltTestHostActivity::class.java)
+	@get:Rule
+	val composeTestRule = createAndroidComposeRule(HiltTestHostActivity::class.java)
 
-    @Test
-    fun userProfileScreen_displaysUsername() {
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    UserProfileScreen(
-                        username = "testuser",
-                        onNavigateBack = { /* no-op */ },
-                        onNavigateToPosts = { /* no-op */ },
-                        onNavigateToComments = { /* no-op */ },
-                        onSendMessage = { /* no-op */ }
-                    )
-                }
-            }
-        }
+	@Test
+	fun userProfileScreen_displaysUsername() {
+		composeTestRule.setContent {
+			MaterialTheme {
+				Surface(modifier = Modifier.fillMaxSize()) {
+					UserProfileScreen(
+						username = "testuser",
+						onNavigateBack = { /* no-op */ },
+						onNavigateToPosts = { /* no-op */ },
+						onNavigateToComments = { /* no-op */ },
+						onSendMessage = { /* no-op */ },
+					)
+				}
+			}
+		}
 
-        // Verify username is displayed
-        composeTestRule.onNodeWithText("u/testuser").assertExists()
-    }
+		// Verify username is displayed
+		composeTestRule.onNodeWithText("u/testuser").assertExists()
+	}
 
-    @Test
-    fun userProfileScreen_displaysContentArea() {
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    UserProfileScreen(
-                        username = "testuser",
-                        onNavigateBack = { /* no-op */ },
-                        onNavigateToPosts = { /* no-op */ },
-                        onNavigateToComments = { /* no-op */ },
-                        onSendMessage = { /* no-op */ }
-                    )
-                }
-            }
-        }
+	@Test
+	fun userProfileScreen_displaysContentArea() {
+		composeTestRule.setContent {
+			MaterialTheme {
+				Surface(modifier = Modifier.fillMaxSize()) {
+					UserProfileScreen(
+						username = "testuser",
+						onNavigateBack = { /* no-op */ },
+						onNavigateToPosts = { /* no-op */ },
+						onNavigateToComments = { /* no-op */ },
+						onSendMessage = { /* no-op */ },
+					)
+				}
+			}
+		}
 
-        // The content area is either still loading or has reached a terminal
-        // state. On the test host (anonymous account, no client ID) the profile
-        // fetch fails quickly, so the Loading indicator is a transient frame we
-        // can't reliably catch at idle — accept the loading indicator OR the
-        // error/Retry view. Either proves the screen rendered its body instead
-        // of crashing.
-        val loadingVisible = composeTestRule
-            .onAllNodesWithText("Loading user profile...")
-            .fetchSemanticsNodes().isNotEmpty()
-        val errorVisible = composeTestRule
-            .onAllNodesWithText("Retry")
-            .fetchSemanticsNodes().isNotEmpty()
+		// The content area is either still loading or has reached a terminal
+		// state. On the test host (anonymous account, no client ID) the profile
+		// fetch fails quickly, so the Loading indicator is a transient frame we
+		// can't reliably catch at idle — accept the loading indicator OR the
+		// error/Retry view. Either proves the screen rendered its body instead
+		// of crashing.
+		val loadingVisible = composeTestRule
+			.onAllNodesWithText("Loading user profile...")
+			.fetchSemanticsNodes().isNotEmpty()
+		val errorVisible = composeTestRule
+			.onAllNodesWithText("Retry")
+			.fetchSemanticsNodes().isNotEmpty()
 
-        assertTrue(
-            "Expected the profile screen to show a loading or terminal (error) state",
-            loadingVisible || errorVisible
-        )
-    }
+		assertTrue(
+			"Expected the profile screen to show a loading or terminal (error) state",
+			loadingVisible || errorVisible,
+		)
+	}
 }

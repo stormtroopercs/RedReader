@@ -24,9 +24,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Parcelize
 data class ImageMetadata(
-    val x: Long,
-    val y: Long,
-    val u: UrlEncodedString?=null,
-	val mp4: UrlEncodedString?=null,
-	val gif: UrlEncodedString?=null,
+	val x: Long,
+	val y: Long,
+	val u: UrlEncodedString? = null,
+	val mp4: UrlEncodedString? = null,
+	val gif: UrlEncodedString? = null,
 ) : Parcelable

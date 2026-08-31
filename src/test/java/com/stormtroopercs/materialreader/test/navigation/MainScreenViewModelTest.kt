@@ -17,13 +17,13 @@
 
 package com.stormtroopercs.materialreader.test.navigation
 
+import com.stormtroopercs.materialreader.jsonwrap.JsonValue
+import com.stormtroopercs.materialreader.navigation.MainScreenViewModel
+import com.stormtroopercs.materialreader.navigation.toSubscribedItem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
-import com.stormtroopercs.materialreader.jsonwrap.JsonValue
-import com.stormtroopercs.materialreader.navigation.MainScreenViewModel
-import com.stormtroopercs.materialreader.navigation.toSubscribedItem
 
 /**
  * Unit tests for [toSubscribedItem] — the subscribed-listing decoder used
@@ -33,8 +33,8 @@ import com.stormtroopercs.materialreader.navigation.toSubscribedItem
  */
 class MainScreenViewModelTest {
 
-    /** A representative subset of a /subreddits/mine/subscriber.json child. */
-    private val childJson = """
+	/** A representative subset of a /subreddits/mine/subscriber.json child. */
+	private val childJson = """
         {
           "kind": "t5",
           "data": {
@@ -45,29 +45,29 @@ class MainScreenViewModelTest {
             "url": "/r/Kotlin/"
           }
         }
-    """.trimIndent()
+	""".trimIndent()
 
-    @Test
-    fun `toSubscribedItem maps display_name subscribers and icon_img`() {
-        val child = JsonValue.parse(childJson.toByteArray().inputStream())
-        val item = toSubscribedItem(child)
+	@Test
+	fun `toSubscribedItem maps display_name subscribers and icon_img`() {
+		val child = JsonValue.parse(childJson.toByteArray().inputStream())
+		val item = toSubscribedItem(child)
 
-        assertNotNull(item)
-        assertEquals("Kotlin", item!!.name)
-        assertEquals(107832, item.subscribers)
-        assertEquals("https://styles.redditmedia.com/t5_2qh0i/community-icon.png", item.iconUrl)
-    }
+		assertNotNull(item)
+		assertEquals("Kotlin", item!!.name)
+		assertEquals(107832, item.subscribers)
+		assertEquals("https://styles.redditmedia.com/t5_2qh0i/community-icon.png", item.iconUrl)
+	}
 
-    @Test
-    fun `toSubscribedItem formats subscriber label with K suffix`() {
-        val child = JsonValue.parse(childJson.toByteArray().inputStream())
-        val item = toSubscribedItem(child)!!
-        assertEquals("107.8K", item.subscribersLabel())
-    }
+	@Test
+	fun `toSubscribedItem formats subscriber label with K suffix`() {
+		val child = JsonValue.parse(childJson.toByteArray().inputStream())
+		val item = toSubscribedItem(child)!!
+		assertEquals("107.8K", item.subscribersLabel())
+	}
 
-    @Test
-    fun `toSubscribedItem returns null when display_name is missing`() {
-        val json = """
+	@Test
+	fun `toSubscribedItem returns null when display_name is missing`() {
+		val json = """
             {
               "kind": "t5",
               "data": {
@@ -75,16 +75,16 @@ class MainScreenViewModelTest {
                 "subscribers": 42
               }
             }
-        """.trimIndent()
-        val child = JsonValue.parse(json.toByteArray().inputStream())
-        // No display_name and no /r/<name>/ url → no usable name
-        assertNull(toSubscribedItem(child))
-    }
+		""".trimIndent()
+		val child = JsonValue.parse(json.toByteArray().inputStream())
+		// No display_name and no /r/<name>/ url → no usable name
+		assertNull(toSubscribedItem(child))
+	}
 
-    @Test
-    fun `subscribersLabel handles millions and small counts`() {
-        assertEquals("1.2M", MainScreenViewModel.SubscribedSubreddit("x", 1_234_567, null).subscribersLabel())
-        assertEquals("45", MainScreenViewModel.SubscribedSubreddit("x", 45, null).subscribersLabel())
-        assertNull(MainScreenViewModel.SubscribedSubreddit("x", null, null).subscribersLabel())
-    }
+	@Test
+	fun `subscribersLabel handles millions and small counts`() {
+		assertEquals("1.2M", MainScreenViewModel.SubscribedSubreddit("x", 1_234_567, null).subscribersLabel())
+		assertEquals("45", MainScreenViewModel.SubscribedSubreddit("x", 45, null).subscribersLabel())
+		assertNull(MainScreenViewModel.SubscribedSubreddit("x", null, null).subscribersLabel())
+	}
 }

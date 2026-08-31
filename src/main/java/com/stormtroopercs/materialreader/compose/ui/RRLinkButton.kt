@@ -49,7 +49,7 @@ import com.stormtroopercs.materialreader.compose.theme.combinedClickableWithHapt
 fun RRLinkButton(
 	title: String,
 	link: UriString,
-	theme: ComposeThemeLinkButton
+	theme: ComposeThemeLinkButton,
 ) {
 	val launch = LocalLauncher.current
 
@@ -62,47 +62,48 @@ fun RRLinkButton(
 			.combinedClickableWithHaptics(
 				role = Role.Button,
 				onClick = { launch(Dest.Link(link)) },
-				onLongClick = { launch(Dest.LinkLongClick(link)) }
+				onLongClick = { launch(Dest.LinkLongClick(link)) },
 			)
 			.padding(horizontal = 16.dp, vertical = 12.dp),
 	) {
-
 		val (linkIcon, textBox, arrowIcon) = createRefs()
 
 		Icon(
 			modifier = Modifier
-                .size(20.dp)
-                .constrainAs(linkIcon) {
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    start.linkTo(parent.start)
-                },
+				.size(20.dp)
+				.constrainAs(linkIcon) {
+					top.linkTo(parent.top)
+					bottom.linkTo(parent.bottom)
+					start.linkTo(parent.start)
+				},
 			painter = painterResource(id = R.drawable.ic_action_link_dark),
 			contentDescription = null,
-			tint = theme.iconColor
+			tint = theme.iconColor,
 		)
-		Column(modifier = Modifier.constrainAs(textBox) {
-			top.linkTo(parent.top)
-			bottom.linkTo(parent.bottom)
-			start.linkTo(linkIcon.end, 12.dp)
-			end.linkTo(arrowIcon.start, 12.dp)
-			width = Dimension.fillToConstraints
-		}) {
+		Column(
+			modifier = Modifier.constrainAs(textBox) {
+				top.linkTo(parent.top)
+				bottom.linkTo(parent.bottom)
+				start.linkTo(linkIcon.end, 12.dp)
+				end.linkTo(arrowIcon.start, 12.dp)
+				width = Dimension.fillToConstraints
+			},
+		) {
 			theme.title.StyledText(title)
 			Spacer(Modifier.height(1.dp))
 			theme.subtitle.StyledText(link.value)
 		}
 		Icon(
 			modifier = Modifier
-                .size(20.dp)
-                .constrainAs(arrowIcon) {
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom)
-                    end.linkTo(parent.end)
-                },
+				.size(20.dp)
+				.constrainAs(arrowIcon) {
+					top.linkTo(parent.top)
+					bottom.linkTo(parent.bottom)
+					end.linkTo(parent.end)
+				},
 			painter = painterResource(id = R.drawable.chevron_right_dark),
 			contentDescription = null,
-			tint = theme.iconColor
+			tint = theme.iconColor,
 		)
 	}
 }
@@ -111,13 +112,12 @@ fun RRLinkButton(
 @Preview
 private fun PreviewRRLinkButton() {
 	RRComposeContextTest {
-
 		val theme = LocalComposeTheme.current
 
 		RRLinkButton(
 			title = "Test Button",
 			link = UriString("https://redreader.org"),
-			theme = theme.linkButton
+			theme = theme.linkButton,
 		)
 	}
 }

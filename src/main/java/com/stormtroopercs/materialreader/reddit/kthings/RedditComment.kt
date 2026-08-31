@@ -19,12 +19,12 @@ package com.stormtroopercs.materialreader.reddit.kthings
 
 import android.os.Parcelable
 import androidx.core.net.toUri
-import kotlinx.parcelize.Parcelize
-import kotlinx.serialization.Serializable
 import com.stormtroopercs.materialreader.common.LinkHandler
 import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.reddit.things.RedditThingWithIdAndType
 import com.stormtroopercs.materialreader.reddit.url.PostCommentListingURL
+import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
 // TODO add copyright messages to all Kotlin files
 
@@ -32,18 +32,18 @@ import com.stormtroopercs.materialreader.reddit.url.PostCommentListingURL
 @Serializable
 @Parcelize
 data class RedditComment(
-	val body: UrlEncodedString?=null,
-	val body_html: UrlEncodedString?=null,
- @Suppress("PropertyName")
+	val body: UrlEncodedString? = null,
+	val body_html: UrlEncodedString? = null,
+	@Suppress("PropertyName")
 	val COLLAPSED_REASON_BLOCKED_AUTHOR: String = "BLOCKED_AUTHOR",
 
-	val author: UrlEncodedString?=null,
-	val subreddit: UrlEncodedString?=null,
-	val permalink: UrlEncodedString?=null,
-	val author_flair_text: UrlEncodedString?=null,
-	val author_flair_richtext: List<MaybeParseError<FlairEmoteData>>?= null,
+	val author: UrlEncodedString? = null,
+	val subreddit: UrlEncodedString? = null,
+	val permalink: UrlEncodedString? = null,
+	val author_flair_text: UrlEncodedString? = null,
+	val author_flair_richtext: List<MaybeParseError<FlairEmoteData>>? = null,
 	val archived: Boolean = false,
-	val likes: Boolean?=null,
+	val likes: Boolean? = null,
 	val score_hidden: Boolean = false,
 	val locked: Boolean = false,
 	val can_mod_post: Boolean = false,
@@ -52,11 +52,11 @@ data class RedditComment(
 	val replies: RedditFieldReplies = RedditFieldReplies.None,
 
 	val id: String,
-	val subreddit_id: String?=null,
-	val link_id: String?=null,
-	val parent_id: String?=null,
+	val subreddit_id: String? = null,
+	val link_id: String? = null,
+	val parent_id: String? = null,
 	val name: RedditIdAndType,
-	val context: UrlEncodedString?=null,
+	val context: UrlEncodedString? = null,
 
 	val ups: Int = 0,
 	val downs: Int = 0,
@@ -69,13 +69,14 @@ data class RedditComment(
 
 	val saved: Boolean = false,
 
-	val distinguished: String?=null, // TODO enum? Test unknown values
+	val distinguished: String? = null, // TODO enum? Test unknown values
 
 	val stickied: Boolean = false,
 
-	val collapsed_reason_code: String?=null
+	val collapsed_reason_code: String? = null,
 
-) : Parcelable, RedditThingWithIdAndType {
+) : Parcelable,
+	RedditThingWithIdAndType {
 
 	// TODO do this in the HTML parser instead
 	fun copyWithNewBodyHtml(value: String) = copy(body_html = UrlEncodedString(value))
@@ -88,7 +89,7 @@ data class RedditComment(
 		val m: String,
 		val s: ImageMetadata,
 		val t: String,
-		val id: String
+		val id: String,
 	) : Parcelable
 
 	@Serializable
@@ -96,7 +97,7 @@ data class RedditComment(
 	data class ImageMetadata(
 		val x: String,
 		val y: String,
-		val u: String?=null
+		val u: String? = null,
 	) : Parcelable
 
 	@Serializable
@@ -104,49 +105,39 @@ data class RedditComment(
 	data class FlairEmoteData(
 		val e: String,
 		val a: String,
-		val u: String
+		val u: String,
 	) : Parcelable
 
 	override val idAlone get() = id
 
 	override val idAndType get() = name
 
-	fun getContextUrl(): PostCommentListingURL {
+	fun getContextUrl(): PostCommentListingURL = context?.run {
+		var result = decoded
+		if (result.startsWith("r/")) {
+			result = "/$result"
+		}
+		if (result.startsWith("/")) {
+			result = "https://reddit.com$result"
+		}
+		PostCommentListingURL.parse(result.toUri())
+	} ?: PostCommentListingURL(
+		null,
+		link_id,
+		idAlone,
+		3,
+		null,
+		null,
+		false,
+	)
 
-		return context?.run {
-			var result = decoded
-			if (result.startsWith("r/")) {
-				result = "/$result"
-			}
-			if (result.startsWith("/")) {
-				result = "https://reddit.com$result"
-			}
-			PostCommentListingURL.parse(result.toUri())
+	fun computeAllLinks(): Set<UriString> = body_html?.decoded?.run { LinkHandler.computeAllLinks(this) } ?: emptySet()
 
-		} ?: PostCommentListingURL(
-			null,
-			link_id,
-			idAlone,
-			3,
-			null,
-			null,
-			false
-		)
-	}
-
-	fun computeAllLinks(): Set<UriString> {
-		return body_html?.decoded?.run { LinkHandler.computeAllLinks(this) } ?: emptySet()
-	}
-
-	fun computeAllLinksString(): List<String> {
-		return computeAllLinks().map { it.value }
-	}
+	fun computeAllLinksString(): List<String> = computeAllLinks().map { it.value }
 
 	fun wasEdited(): Boolean = edited != RedditFieldEdited.Bool(false)
 
 	fun isControversial(): Boolean = controversiality == 1
 
-	fun isBlockedByUser(): Boolean {
-		return COLLAPSED_REASON_BLOCKED_AUTHOR == collapsed_reason_code
-	}
+	fun isBlockedByUser(): Boolean = COLLAPSED_REASON_BLOCKED_AUTHOR == collapsed_reason_code
 }

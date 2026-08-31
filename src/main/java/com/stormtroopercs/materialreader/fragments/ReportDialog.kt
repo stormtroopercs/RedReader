@@ -24,9 +24,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.os.BundleCompat
 import com.stormtroopercs.materialreader.R
 import com.stormtroopercs.materialreader.account.RedditAccountManager
-import com.stormtroopercs.materialreader.common.BugReporter
 import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.common.AndroidCommon
+import com.stormtroopercs.materialreader.common.BugReporter
 import com.stormtroopercs.materialreader.common.General
 import com.stormtroopercs.materialreader.common.LinkHandler
 import com.stormtroopercs.materialreader.common.RRError
@@ -56,7 +56,7 @@ class ReportDialog : ComposeDialogFragment() {
 			activity: AppCompatActivity,
 			idAndType: RedditIdAndType,
 			subredditName: String,
-			isComment: Boolean
+			isComment: Boolean,
 		) {
 			ReportDialog().apply {
 				arguments = Bundle().apply {
@@ -72,7 +72,7 @@ class ReportDialog : ComposeDialogFragment() {
 		BundleCompat.getParcelable(
 			requireArguments(),
 			ARG_ID_AND_TYPE,
-			RedditIdAndType::class.java
+			RedditIdAndType::class.java,
 		)!!
 	}
 
@@ -94,12 +94,11 @@ class ReportDialog : ComposeDialogFragment() {
 			submitting = submitting.value,
 			onCancel = ::dismiss,
 			onSubmit = ::submit,
-			onFileComplaint = ::fileComplaint
+			onFileComplaint = ::fileComplaint,
 		)
 	}
 
 	private fun submit(reason: ReportReason) {
-
 		val activity = baseActivity
 		val user = RedditAccountManager.getInstance(activity).defaultAccount
 
@@ -130,12 +129,11 @@ class ReportDialog : ComposeDialogFragment() {
 			idAndType,
 			subredditName,
 			reason.toPostFields(),
-			activity
+			activity,
 		)
 	}
 
 	private fun fileComplaint(entry: SiteRulesFlowEntry) {
-
 		val url = entry.complaintUrl ?: return
 
 		// The URL contains a Python-style template for the thing's fullname,

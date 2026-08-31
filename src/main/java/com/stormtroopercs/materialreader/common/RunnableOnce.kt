@@ -19,15 +19,15 @@ package com.stormtroopercs.materialreader.common
 import java.util.concurrent.atomic.AtomicBoolean
 
 class RunnableOnce(private val mRunnable: Runnable) : Runnable {
-    private val mAlreadyRun = AtomicBoolean(false)
+	private val mAlreadyRun = AtomicBoolean(false)
 
-    override fun run() {
-        if (!mAlreadyRun.getAndSet(true)) {
-            mRunnable.run()
-        }
-    }
+	override fun run() {
+		if (!mAlreadyRun.getAndSet(true)) {
+			mRunnable.run()
+		}
+	}
 
-    companion object {
-        val DO_NOTHING: RunnableOnce = RunnableOnce(Runnable {})
-    }
+	companion object {
+		val DO_NOTHING: RunnableOnce = RunnableOnce(Runnable {})
+	}
 }

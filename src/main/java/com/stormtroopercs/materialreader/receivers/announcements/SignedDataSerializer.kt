@@ -26,53 +26,53 @@ import java.security.PublicKey
 import java.security.SignatureException
 
 object SignedDataSerializer {
-    private const val MARKER_START = "START"
-    private const val MARKER_END = "END"
+	private const val MARKER_START = "START"
+	private const val MARKER_END = "END"
 
-    @Throws(NoSuchAlgorithmException::class, InvalidKeyException::class, SignatureException::class)
-    fun serialize(
-        privateKey: PrivateKey,
-        data: ByteArray
-    ): String {
-        return (MARKER_START
-                + HexUtils.toHex(SignatureHandler.generateSignedPayload(privateKey, data))
-                + MARKER_END)
-    }
+	@Throws(NoSuchAlgorithmException::class, InvalidKeyException::class, SignatureException::class)
+	fun serialize(
+		privateKey: PrivateKey,
+		data: ByteArray,
+	): String = (
+		MARKER_START +
+			HexUtils.toHex(SignatureHandler.generateSignedPayload(privateKey, data)) +
+			MARKER_END
+		)
 
-    @JvmStatic
-    @Throws(
-        NoSuchAlgorithmException::class,
-        InvalidKeyException::class,
-        SignatureException::class,
-        IOException::class,
-        SignatureInvalidException::class
-    )
-    fun deserialize(
-        publicKey: PublicKey,
-        data: String
-    ): ByteArray {
-        val startMarkerIndex = data.indexOf(MARKER_START)
-        val endMarkerIndex = data.indexOf(MARKER_END)
+	@JvmStatic
+	@Throws(
+		NoSuchAlgorithmException::class,
+		InvalidKeyException::class,
+		SignatureException::class,
+		IOException::class,
+		SignatureInvalidException::class,
+	)
+	fun deserialize(
+		publicKey: PublicKey,
+		data: String,
+	): ByteArray {
+		val startMarkerIndex = data.indexOf(MARKER_START)
+		val endMarkerIndex = data.indexOf(MARKER_END)
 
-        if (startMarkerIndex == -1) {
-            throw IOException("Start marker not found")
-        }
+		if (startMarkerIndex == -1) {
+			throw IOException("Start marker not found")
+		}
 
-        if (endMarkerIndex == -1) {
-            throw IOException("End marker not found")
-        }
+		if (endMarkerIndex == -1) {
+			throw IOException("End marker not found")
+		}
 
-        val start = startMarkerIndex + MARKER_START.length
-        val length = endMarkerIndex - start
+		val start = startMarkerIndex + MARKER_START.length
+		val length = endMarkerIndex - start
 
-        if (length < 0) {
-            throw IOException("Negative length")
-        }
+		if (length < 0) {
+			throw IOException("Negative length")
+		}
 
-        val hexData = data.substring(start, endMarkerIndex)
+		val hexData = data.substring(start, endMarkerIndex)
 
-        val signedPayload = HexUtils.fromHex(hexData)
+		val signedPayload = HexUtils.fromHex(hexData)
 
-        return SignatureHandler.readAndVerifySignedPayload(publicKey, signedPayload)
-    }
+		return SignatureHandler.readAndVerifySignedPayload(publicKey, signedPayload)
+	}
 }

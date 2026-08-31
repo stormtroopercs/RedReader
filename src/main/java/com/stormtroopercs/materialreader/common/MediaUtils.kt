@@ -28,200 +28,208 @@ import java.nio.ByteBuffer
 import kotlin.math.min
 
 object MediaUtils {
-    private const val TAG = "MediaUtils"
+	private const val TAG = "MediaUtils"
 
-    fun muxFiles(
-        outputFile: File,
-        inputFiles: Array<File>,
-        successCallback: Runnable,
-        failureCallback: FunctionOneArgNoReturn<Exception?>
-    ) {
-        Thread(Runnable {
-            class InputFile internal constructor(
-                val file: File,
-                val extractor: MediaExtractor,
-                private val mTrackIds: MutableMap<Int, Int>
-            ) : Closeable {
-                fun getOutputTrackId(inputTrackId: Int): Int {
-                    return mTrackIds.get(inputTrackId)!!
-                }
+	fun muxFiles(
+		outputFile: File,
+		inputFiles: Array<File>,
+		successCallback: Runnable,
+		failureCallback: FunctionOneArgNoReturn<Exception?>,
+	) {
+		Thread(
+			Runnable {
+				class InputFile internal constructor(
+					val file: File,
+					val extractor: MediaExtractor,
+					private val mTrackIds: MutableMap<Int, Int>,
+				) : Closeable {
+					fun getOutputTrackId(inputTrackId: Int): Int = mTrackIds.get(inputTrackId)!!
 
-                @Throws(IOException::class)
-                override fun close() {
-                    extractor.release()
-                }
-            }
+					@Throws(IOException::class)
+					override fun close() {
+						extractor.release()
+					}
+				}
 
-            var muxer: MediaMuxer?=null
+				var muxer: MediaMuxer? = null
 
-            val inputFilesToClose = ArrayList<InputFile>()
+				val inputFilesToClose = ArrayList<InputFile>()
 
-            Log.i(TAG, "muxFiles: " + outputFile)
-            try {
-                muxer = MediaMuxer(
-                    outputFile.getAbsolutePath(),
-                    MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
-                )
+				Log.i(TAG, "muxFiles: " + outputFile)
+				try {
+					muxer = MediaMuxer(
+						outputFile.getAbsolutePath(),
+						MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4,
+					)
 
-                for (inputFile in inputFiles) {
-                    val mediaExtractor = MediaExtractor()
+					for (inputFile in inputFiles) {
+						val mediaExtractor = MediaExtractor()
 
-                    val path = inputFile.getAbsolutePath()
+						val path = inputFile.getAbsolutePath()
 
-                    mediaExtractor.setDataSource(path)
+						mediaExtractor.setDataSource(path)
 
-                    val trackIds = HashMap<Int, Int>()
+						val trackIds = HashMap<Int, Int>()
 
-                    for (inputTrackId in 0..<mediaExtractor.getTrackCount()) {
-                        mediaExtractor.selectTrack(inputTrackId)
+						for (inputTrackId in 0..<mediaExtractor.getTrackCount()) {
+							mediaExtractor.selectTrack(inputTrackId)
 
-                        val format = mediaExtractor.getTrackFormat(inputTrackId)
+							val format = mediaExtractor.getTrackFormat(inputTrackId)
 
-                        val outputTrackId = muxer.addTrack(format)
+							val outputTrackId = muxer.addTrack(format)
 
-                        trackIds.put(inputTrackId, outputTrackId)
+							trackIds.put(inputTrackId, outputTrackId)
 
-                        Log.i(
-                            TAG, ("Track "
-                                    + outputTrackId
-                                    + ": path '"
-                                    + path
-                                    + "' format "
-                                    + format.toString())
-                        )
-                    }
+							Log.i(
+								TAG,
+								(
+									"Track " +
+										outputTrackId +
+										": path '" +
+										path +
+										"' format " +
+										format.toString()
+									),
+							)
+						}
 
-                    mediaExtractor.seekTo(0, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
+						mediaExtractor.seekTo(0, MediaExtractor.SEEK_TO_CLOSEST_SYNC)
 
-                    inputFilesToClose.add(
-                        InputFile(
-                            inputFile,
-                            mediaExtractor,
-                            trackIds
-                        )
-                    )
-                }
+						inputFilesToClose.add(
+							InputFile(
+								inputFile,
+								mediaExtractor,
+								trackIds,
+							),
+						)
+					}
 
-                val inputFilesToRead = ArrayList<InputFile>(inputFilesToClose)
+					val inputFilesToRead = ArrayList<InputFile>(inputFilesToClose)
 
-                Log.i(TAG, "Starting mux for " + outputFile)
+					Log.i(TAG, "Starting mux for " + outputFile)
 
-                muxer.start()
+					muxer.start()
 
-                val sampleBuffer = ByteBuffer.allocateDirect(1024 * 1024) // 1MiB
-                val bufferInfo = MediaCodec.BufferInfo()
+					val sampleBuffer = ByteBuffer.allocateDirect(1024 * 1024) // 1MiB
+					val bufferInfo = MediaCodec.BufferInfo()
 
-                while (!inputFilesToRead.isEmpty()) {
-                    var minTime = Long.MAX_VALUE
+					while (!inputFilesToRead.isEmpty()) {
+						var minTime = Long.MAX_VALUE
 
-                    for (file in inputFilesToRead) {
-                        val sampleTime = file.extractor.getSampleTime()
-                        minTime = min(minTime, sampleTime)
-                    }
+						for (file in inputFilesToRead) {
+							val sampleTime = file.extractor.getSampleTime()
+							minTime = min(minTime, sampleTime)
+						}
 
-                    run {
-                        val iterator = inputFilesToRead.iterator()
-                        while (iterator.hasNext()) {
-                            val file = iterator.next()
+						run {
+							val iterator = inputFilesToRead.iterator()
+							while (iterator.hasNext()) {
+								val file = iterator.next()
 
-                            val extractor = file.extractor
+								val extractor = file.extractor
 
-                            while (extractor.getSampleTime() == minTime) {
-                                sampleBuffer.clear()
+								while (extractor.getSampleTime() == minTime) {
+									sampleBuffer.clear()
 
-                                val readResult = extractor.readSampleData(sampleBuffer, 0)
+									val readResult = extractor.readSampleData(sampleBuffer, 0)
 
-                                if (readResult < 0) {
-                                    iterator.remove()
-                                    Log.i(
-                                        MediaUtils.TAG, "No bytes to read from "
-                                                + file.file.getAbsolutePath()
-                                    )
-                                    break
-                                } else {
-                                    val outputTrackId = file.getOutputTrackId(
-                                        extractor.getSampleTrackIndex()
-                                    )
+									if (readResult < 0) {
+										iterator.remove()
+										Log.i(
+											MediaUtils.TAG,
+											"No bytes to read from " +
+												file.file.getAbsolutePath(),
+										)
+										break
+									} else {
+										val outputTrackId = file.getOutputTrackId(
+											extractor.getSampleTrackIndex(),
+										)
 
-                                    sampleBuffer.limit(
-                                        readResult
-                                    )
-                                    sampleBuffer.position(0)
+										sampleBuffer.limit(
+											readResult,
+										)
+										sampleBuffer.position(0)
 
-                                    var flags = 0
+										var flags = 0
 
-                                    if ((extractor.getSampleFlags()
-                                                and MediaExtractor.SAMPLE_FLAG_SYNC) != 0
-                                    ) {
-                                        flags = flags or MediaCodec.BUFFER_FLAG_KEY_FRAME
-                                    }
+										if ((
+												extractor.getSampleFlags()
+													and MediaExtractor.SAMPLE_FLAG_SYNC
+												) != 0
+										) {
+											flags = flags or MediaCodec.BUFFER_FLAG_KEY_FRAME
+										}
 
-                                    if ((extractor.getSampleFlags()
-                                                and MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME) != 0
-                                    ) {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                            flags = flags or MediaCodec.BUFFER_FLAG_PARTIAL_FRAME
-                                        }
-                                    }
+										if ((
+												extractor.getSampleFlags()
+													and MediaExtractor.SAMPLE_FLAG_PARTIAL_FRAME
+												) != 0
+										) {
+											if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+												flags = flags or MediaCodec.BUFFER_FLAG_PARTIAL_FRAME
+											}
+										}
 
-                                    bufferInfo.set(
-                                        0,
-                                        sampleBuffer.remaining(),
-                                        extractor.getSampleTime(),
-                                        flags
-                                    )
+										bufferInfo.set(
+											0,
+											sampleBuffer.remaining(),
+											extractor.getSampleTime(),
+											flags,
+										)
 
-                                    muxer.writeSampleData(
-                                        outputTrackId,
-                                        sampleBuffer,
-                                        bufferInfo
-                                    )
+										muxer.writeSampleData(
+											outputTrackId,
+											sampleBuffer,
+											bufferInfo,
+										)
 
-                                    if (!extractor.advance()) {
-                                        iterator.remove()
-                                        Log.i(
-                                            MediaUtils.TAG,
-                                            "Finished writing track " + outputTrackId
-                                        )
-                                        break
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+										if (!extractor.advance()) {
+											iterator.remove()
+											Log.i(
+												MediaUtils.TAG,
+												"Finished writing track " + outputTrackId,
+											)
+											break
+										}
+									}
+								}
+							}
+						}
+					}
 
-                Log.i(TAG, "Stopping muxer...")
-                muxer.stop()
+					Log.i(TAG, "Stopping muxer...")
+					muxer.stop()
 
-                Log.i(TAG, "Mux complete for " + outputFile)
+					Log.i(TAG, "Mux complete for " + outputFile)
 
-                successCallback.run()
-            } catch (e: Exception) {
-                failureCallback.apply(e)
-            } finally {
-                if (muxer != null) {
-                    try {
-                        Log.i(TAG, "Releasing muxer...")
-                        muxer.release()
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Got exception during release in finally()", e)
-                    }
-                }
+					successCallback.run()
+				} catch (e: Exception) {
+					failureCallback.apply(e)
+				} finally {
+					if (muxer != null) {
+						try {
+							Log.i(TAG, "Releasing muxer...")
+							muxer.release()
+						} catch (e: Exception) {
+							Log.e(TAG, "Got exception during release in finally()", e)
+						}
+					}
 
-                for (file in inputFilesToClose) {
-                    try {
-                        file.close()
-                    } catch (e: IOException) {
-                        Log.e(
-                            TAG,
-                            "Failed to clean up input file "
-                                    + file.file.getAbsolutePath(),
-                            e
-                        )
-                    }
-                }
-            }
-        }).start()
-    }
+					for (file in inputFilesToClose) {
+						try {
+							file.close()
+						} catch (e: IOException) {
+							Log.e(
+								TAG,
+								"Failed to clean up input file " +
+									file.file.getAbsolutePath(),
+								e,
+							)
+						}
+					}
+				}
+			},
+		).start()
+	}
 }

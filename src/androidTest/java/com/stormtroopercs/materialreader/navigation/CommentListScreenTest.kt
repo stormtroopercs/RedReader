@@ -22,11 +22,11 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.stormtroopercs.materialreader.compose.ctx.RRComposeContextTest
+import com.stormtroopercs.materialreader.compose.ui.HiltTestHostActivity
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import com.stormtroopercs.materialreader.compose.ctx.RRComposeContextTest
-import com.stormtroopercs.materialreader.compose.ui.HiltTestHostActivity
 
 /**
  * Compose UI test for CommentListScreen.
@@ -42,38 +42,38 @@ import com.stormtroopercs.materialreader.compose.ui.HiltTestHostActivity
 @RunWith(AndroidJUnit4::class)
 class CommentListScreenTest {
 
-    @get:Rule
-    val composeTestRule = createAndroidComposeRule(HiltTestHostActivity::class.java)
+	@get:Rule
+	val composeTestRule = createAndroidComposeRule(HiltTestHostActivity::class.java)
 
-    private fun setContent(onNavigateBack: () -> Unit) {
-        composeTestRule.setContent {
-            RRComposeContextTest {
-                RealCommentListScreen(
-                    postId = "test_post_id",
-                    onNavigateBack = onNavigateBack
-                )
-            }
-        }
-    }
+	private fun setContent(onNavigateBack: () -> Unit) {
+		composeTestRule.setContent {
+			RRComposeContextTest {
+				RealCommentListScreen(
+					postId = "test_post_id",
+					onNavigateBack = onNavigateBack,
+				)
+			}
+		}
+	}
 
-    @Test
-    fun commentListScreen_displaysTitle() {
-        setContent(onNavigateBack = { /* no-op */ })
+	@Test
+	fun commentListScreen_displaysTitle() {
+		setContent(onNavigateBack = { /* no-op */ })
 
-        // Verify comment list title is displayed
-        composeTestRule.onNodeWithText("Comments").assertExists()
-    }
+		// Verify comment list title is displayed
+		composeTestRule.onNodeWithText("Comments").assertExists()
+	}
 
-    @Test
-    fun commentListScreen_backButtonWorks() {
-        var backClicked = false
+	@Test
+	fun commentListScreen_backButtonWorks() {
+		var backClicked = false
 
-        setContent(onNavigateBack = { backClicked = true })
+		setContent(onNavigateBack = { backClicked = true })
 
-        // Click back button
-        composeTestRule.onNodeWithContentDescription("Back").performClick()
+		// Click back button
+		composeTestRule.onNodeWithContentDescription("Back").performClick()
 
-        // Verify back navigation was triggered
-        assert(backClicked) { "Back navigation should have been triggered" }
-    }
+		// Verify back navigation was triggered
+		assert(backClicked) { "Back navigation should have been triggered" }
+	}
 }

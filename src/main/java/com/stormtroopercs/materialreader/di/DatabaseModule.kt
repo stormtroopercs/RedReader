@@ -17,13 +17,13 @@
 package com.stormtroopercs.materialreader.di
 
 import android.content.Context
+import com.stormtroopercs.materialreader.database.MaterialReaderDatabase
+import com.stormtroopercs.materialreader.database.dao.SubredditDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import com.stormtroopercs.materialreader.database.MaterialReaderDatabase
-import com.stormtroopercs.materialreader.database.dao.SubredditDao
 import javax.inject.Singleton
 
 /**
@@ -36,15 +36,11 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
-    @Provides
-    @Singleton
-    fun provideMaterialReaderDatabase(@ApplicationContext context: Context): MaterialReaderDatabase {
-        return MaterialReaderDatabase.getDatabase(context)
-    }
+	@Provides
+	@Singleton
+	fun provideMaterialReaderDatabase(@ApplicationContext context: Context): MaterialReaderDatabase = MaterialReaderDatabase.getDatabase(context)
 
-    @Provides
-    @Singleton
-    fun provideSubredditDao(database: MaterialReaderDatabase): SubredditDao {
-        return database.subredditDao()
-    }
+	@Provides
+	@Singleton
+	fun provideSubredditDao(database: MaterialReaderDatabase): SubredditDao = database.subredditDao()
 }

@@ -19,19 +19,19 @@ package com.stormtroopercs.materialreader.io
 import com.stormtroopercs.materialreader.common.TimestampBound
 
 interface CacheDataSource<K, V, F> {
-    fun performRequest(
-        key: K,
-        timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<V, F>
-    )
+	fun performRequest(
+		key: K,
+		timestampBound: TimestampBound?,
+		handler: RequestResponseHandler<V, F>,
+	)
 
-    fun performRequest(
-        keys: MutableCollection<K>,
-        timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<HashMap<K, V>, F>
-    )
+	fun performRequest(
+		keys: MutableCollection<K>,
+		timestampBound: TimestampBound?,
+		handler: RequestResponseHandler<HashMap<K, V>, F>,
+	)
 
-    fun performWrite(value: V)
+	fun performWrite(value: V)
 
-    fun performWrite(values: MutableCollection<V>)
+	fun performWrite(values: MutableCollection<V>)
 }

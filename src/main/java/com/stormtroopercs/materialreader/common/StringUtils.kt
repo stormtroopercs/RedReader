@@ -17,72 +17,68 @@
 package com.stormtroopercs.materialreader.common
 
 object StringUtils {
-    @JvmStatic
-    fun removePrefix(
-        input: String,
-        prefix: String
-    ): Optional<String> {
-        if (input.startsWith(prefix)) {
-            return Optional.Companion.of<String>(input.substring(prefix.length))
-        } else {
-            return Optional.Companion.empty<String>()
-        }
-    }
+	@JvmStatic
+	fun removePrefix(
+		input: String,
+		prefix: String,
+	): Optional<String> {
+		if (input.startsWith(prefix)) {
+			return Optional.Companion.of<String>(input.substring(prefix.length))
+		} else {
+			return Optional.Companion.empty<String>()
+		}
+	}
 
-    @JvmStatic
-    fun asciiUppercase(input: String): String {
-        val chars = input.toCharArray()
+	@JvmStatic
+	fun asciiUppercase(input: String): String {
+		val chars = input.toCharArray()
 
-        for (i in chars.indices) {
-            if (chars[i] >= 'a' && chars[i] <= 'z') {
-                chars[i] -= 'a'.code
-                chars[i] += 'A'.code
-            }
-        }
+		for (i in chars.indices) {
+			if (chars[i] >= 'a' && chars[i] <= 'z') {
+				chars[i] -= 'a'.code
+				chars[i] += 'A'.code
+			}
+		}
 
-        return String(chars)
-    }
+		return String(chars)
+	}
 
-    @JvmStatic
-    fun asciiLowercase(input: String): String {
-        val chars = input.toCharArray()
+	@JvmStatic
+	fun asciiLowercase(input: String): String {
+		val chars = input.toCharArray()
 
-        for (i in chars.indices) {
-            if (chars[i] >= 'A' && chars[i] <= 'Z') {
-                chars[i] -= 'A'.code
-                chars[i] += 'a'.code
-            }
-        }
+		for (i in chars.indices) {
+			if (chars[i] >= 'A' && chars[i] <= 'Z') {
+				chars[i] -= 'A'.code
+				chars[i] += 'a'.code
+			}
+		}
 
-        return String(chars)
-    }
+		return String(chars)
+	}
 
-    fun join(
-        elements: MutableCollection<*>,
-        separator: CharSequence
-    ): String {
-        val result = StringBuilder()
+	fun join(
+		elements: MutableCollection<*>,
+		separator: CharSequence,
+	): String {
+		val result = StringBuilder()
 
-        var first = true
+		var first = true
 
-        for (element in elements) {
-            if (!first) {
-                result.append(separator)
-            }
+		for (element in elements) {
+			if (!first) {
+				result.append(separator)
+			}
 
-            result.append(element.toString())
-            first = false
-        }
+			result.append(element.toString())
+			first = false
+		}
 
-        return result.toString()
-    }
+		return result.toString()
+	}
 
-    @JvmStatic
-    fun isEmpty(value: CharSequence?): Boolean {
-        return value == null || value.length == 0
-    }
+	@JvmStatic
+	fun isEmpty(value: CharSequence?): Boolean = value == null || value.length == 0
 
-    fun fromUTF8(bytes: ByteArray): String {
-        return String(bytes, General.CHARSET_UTF8)
-    }
+	fun fromUTF8(bytes: ByteArray): String = String(bytes, General.CHARSET_UTF8)
 }

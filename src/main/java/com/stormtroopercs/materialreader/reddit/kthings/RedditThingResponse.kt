@@ -38,15 +38,12 @@ sealed class RedditThingResponse {
 }
 
 object RedditThingResponseSerializer : JsonContentPolymorphicSerializer<RedditThingResponse>(
-	RedditThingResponse::class
+	RedditThingResponse::class,
 ) {
-	override fun selectDeserializer(element: JsonElement): KSerializer<out RedditThingResponse> {
-
-		return if (element is JsonArray) {
-			RedditThingResponseMultipleSerializer
-		} else {
-			RedditThingResponseSingleSerializer
-		}
+	override fun selectDeserializer(element: JsonElement): KSerializer<out RedditThingResponse> = if (element is JsonArray) {
+		RedditThingResponseMultipleSerializer
+	} else {
+		RedditThingResponseSingleSerializer
 	}
 }
 
@@ -54,7 +51,7 @@ object RedditThingResponseSingleSerializer : KSerializer<RedditThingResponse.Sin
 	override val descriptor: SerialDescriptor
 		get() = RedditThing.serializer().descriptor
 
-	override fun deserialize(decoder: Decoder) = 		RedditThingResponse.Single(decoder.decodeSerializableValue(RedditThing.serializer()))
+	override fun deserialize(decoder: Decoder) = RedditThingResponse.Single(decoder.decodeSerializableValue(RedditThing.serializer()))
 
 	override fun serialize(encoder: Encoder, value: RedditThingResponse.Single) {
 		encoder.encodeSerializableValue(RedditThing.serializer(), value.thing)
@@ -67,7 +64,7 @@ object RedditThingResponseMultipleSerializer : KSerializer<RedditThingResponse.M
 
 	private val multipleThingSerializer = ListSerializer(RedditThing.serializer())
 
-	override fun deserialize(decoder: Decoder) = 		RedditThingResponse.Multiple(decoder.decodeSerializableValue(multipleThingSerializer))
+	override fun deserialize(decoder: Decoder) = RedditThingResponse.Multiple(decoder.decodeSerializableValue(multipleThingSerializer))
 
 	override fun serialize(encoder: Encoder, value: RedditThingResponse.Multiple) {
 		encoder.encodeSerializableValue(multipleThingSerializer, value.things)

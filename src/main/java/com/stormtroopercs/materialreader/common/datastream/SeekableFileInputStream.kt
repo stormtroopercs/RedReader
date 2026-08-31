@@ -21,75 +21,70 @@ import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
 import kotlin.math.min
-import com.stormtroopercs.materialreader.common.General
 
 class SeekableFileInputStream(file: File) : SeekableInputStream() {
-    private val mFile: RandomAccessFile
-    private var mPosition: Long = 0
+	private val mFile: RandomAccessFile
+	private var mPosition: Long = 0
 
-    init {
-        mFile = RandomAccessFile(file, "r")
-    }
+	init {
+		mFile = RandomAccessFile(file, "r")
+	}
 
-    override val position: Long get() = mPosition
+	override val position: Long get() = mPosition
 
-    @Throws(IOException::class)
-    override fun seek(position: Long) {
-        mFile.seek(position)
-        mPosition = position
-    }
+	@Throws(IOException::class)
+	override fun seek(position: Long) {
+		mFile.seek(position)
+		mPosition = position
+	}
 
-    @Throws(IOException::class)
-    override fun readRemainingAsBytes(callback: ByteArrayCallback) {
-        val result = readWholeStream(this)
-        callback.onByteArray(result, 0, result.size)
-    }
+	@Throws(IOException::class)
+	override fun readRemainingAsBytes(callback: ByteArrayCallback) {
+		val result = readWholeStream(this)
+		callback.onByteArray(result, 0, result.size)
+	}
 
-    @Throws(IOException::class)
-    override fun read(): Int {
-        val result = mFile.read()
+	@Throws(IOException::class)
+	override fun read(): Int {
+		val result = mFile.read()
 
-        if (result >= 0) {
-            mPosition++
-        }
+		if (result >= 0) {
+			mPosition++
+		}
 
-        return result
-    }
+		return result
+	}
 
-    @Throws(IOException::class)
-    override fun read(buf: ByteArray): Int {
-        return read(buf, 0, buf.size)
-    }
+	@Throws(IOException::class)
+	override fun read(buf: ByteArray): Int = read(buf, 0, buf.size)
 
-    @Throws(IOException::class)
-    override fun read(buf: ByteArray?, off: Int, len: Int): Int {
-        if (len == 0) {
-            throw IOException("Attempted to read zero bytes")
-        }
+	@Throws(IOException::class)
+	override fun read(buf: ByteArray?, off: Int, len: Int): Int {
+		if (len == 0) {
+			throw IOException("Attempted to read zero bytes")
+		}
 
-        val result = mFile.read(buf, off, len)
+		val result = mFile.read(buf, off, len)
 
-        if (result > 0) {
-            mPosition += result.toLong()
-        }
+		if (result > 0) {
+			mPosition += result.toLong()
+		}
 
-        return result
-    }
+		return result
+	}
 
-    @Throws(IOException::class)
-    override fun skip(n: Long): Long {
-        val bytesToSkip = min(n, available().toLong())
-        seek((mPosition + bytesToSkip).toInt().toLong())
-        return bytesToSkip
-    }
+	@Throws(IOException::class)
+	override fun skip(n: Long): Long {
+		val bytesToSkip = min(n, available().toLong())
+		seek((mPosition + bytesToSkip).toInt().toLong())
+		return bytesToSkip
+	}
 
-    @Throws(IOException::class)
-    override fun available(): Int {
-        return (mFile.length() - mPosition).toInt()
-    }
+	@Throws(IOException::class)
+	override fun available(): Int = (mFile.length() - mPosition).toInt()
 
-    @Throws(IOException::class)
-    override fun close() {
-        mFile.close()
-    }
+	@Throws(IOException::class)
+	override fun close() {
+		mFile.close()
+	}
 }

@@ -23,39 +23,39 @@ import com.stormtroopercs.materialreader.reddit.things.RedditSubreddit
 import com.stormtroopercs.materialreader.reddit.things.SubredditCanonicalId
 
 class SubredditDetails : HasUniqueId {
-    val id: SubredditCanonicalId
-    val name: String
-    val url: UriString
-    val publicDescriptionHtmlEscaped: String?
-    val subscribers: Int?
+	val id: SubredditCanonicalId
+	val name: String
+	val url: UriString
+	val publicDescriptionHtmlEscaped: String?
+	val subscribers: Int?
 
-    constructor(subreddit: RedditSubreddit) {
-        id = subreddit.canonicalId
-        name = subreddit.display_name!!
-        url = subreddit.getUrl()
-        publicDescriptionHtmlEscaped = subreddit.public_description_html
-        subscribers = subreddit.subscribers
-    }
+	constructor(subreddit: RedditSubreddit) {
+		id = subreddit.canonicalId
+		name = subreddit.display_name!!
+		url = subreddit.getUrl()
+		publicDescriptionHtmlEscaped = subreddit.public_description_html
+		subscribers = subreddit.subscribers
+	}
 
-    constructor(subreddit: SubredditCanonicalId) {
-        id = subreddit
-        name = subreddit.displayNameLowercase
-        url = UriString(subreddit.toString())
-        publicDescriptionHtmlEscaped = null
-        subscribers = null
-    }
+	constructor(subreddit: SubredditCanonicalId) {
+		id = subreddit
+		name = subreddit.displayNameLowercase
+		url = UriString(subreddit.toString())
+		publicDescriptionHtmlEscaped = null
+		subscribers = null
+	}
 
-    override val uniqueId: String get() = id.toString()
+	override val uniqueId: String get() = id.toString()
 
-    companion object {
-        fun newWithRuntimeException(
-            subreddit: RedditSubreddit
-        ): SubredditDetails {
-            try {
-                return SubredditDetails(subreddit)
-            } catch (e: InvalidSubredditNameException) {
-                throw RuntimeException(e)
-            }
-        }
-    }
+	companion object {
+		fun newWithRuntimeException(
+			subreddit: RedditSubreddit,
+		): SubredditDetails {
+			try {
+				return SubredditDetails(subreddit)
+			} catch (e: InvalidSubredditNameException) {
+				throw RuntimeException(e)
+			}
+		}
+	}
 }

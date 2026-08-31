@@ -45,7 +45,7 @@ abstract class ComposeDialogFragment : AppCompatDialogFragment() {
 	override fun onCreateView(
 		inflater: LayoutInflater,
 		container: ViewGroup?,
-		savedInstanceState: Bundle?
+		savedInstanceState: Bundle?,
 	): View {
 		baseActivity = requireActivity() as BaseActivity
 
@@ -64,7 +64,7 @@ abstract class ComposeDialogFragment : AppCompatDialogFragment() {
 		dialog?.window?.apply {
 			setLayout(
 				ViewGroup.LayoutParams.MATCH_PARENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT
+				ViewGroup.LayoutParams.WRAP_CONTENT,
 			)
 			setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
 		}

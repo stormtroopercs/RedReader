@@ -28,40 +28,34 @@ import android.view.ViewGroup
 import android.webkit.WebView
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
-
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBackUnconditionally
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-
-import org.hamcrest.Description
-import org.hamcrest.Matcher
-import org.hamcrest.TypeSafeMatcher
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
 import com.stormtroopercs.materialreader.R
 import com.stormtroopercs.materialreader.common.FeatureFlagHandler
 import com.stormtroopercs.materialreader.common.General
 import com.stormtroopercs.materialreader.common.PrefsUtility
 import com.stormtroopercs.materialreader.common.SharedPrefsWrapper
-
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
-
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.Espresso.pressBackUnconditionally
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withId
+import org.hamcrest.Description
+import org.hamcrest.Matcher
 import org.hamcrest.Matchers.allOf
+import org.hamcrest.TypeSafeMatcher
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Tests for the predictive back migration (API 36 / Android 16).
@@ -74,507 +68,490 @@ import org.junit.Assume.assumeTrue
 @RunWith(AndroidJUnit4::class)
 class BackNavigationUITest {
 
-    private companion object {
-        private const val PREF_BACK_AGAIN = "pref_behaviour_back_again"
-        private const val PREF_TWOPANE = "pref_appearance_twopane"
-        private const val PREF_POST_TAP_ACTION = "pref_behaviour_post_tap_action"
-
-        private const val HTML_NO_HISTORY = "<html><body>no history</body></html>"
-    }
-
-    private lateinit var mContext: Context
-    private lateinit var mPrefs: SharedPrefsWrapper
-    private lateinit var mRawPrefs: android.content.SharedPreferences
-
-    @Before
-    fun setUp() {
-        mContext = ApplicationProvider.getApplicationContext()
-        mPrefs = General.getSharedPrefs(mContext)
-        mRawPrefs = mContext.getSharedPreferences(
-            mContext.packageName + "_preferences",
-            Context.MODE_PRIVATE
-        )
-
-        // Stop the terms screen, the first-run login prompt and the changelog
-        // dialog from covering the activities under test
-        PrefsUtility.acceptRedditUserAgreement()
-
-        val versionCode = mContext.packageManager
-            .getPackageInfo(mContext.packageName, 0)
-            .longVersionCode.toInt()
-
-        if (!mRawPrefs.contains(FeatureFlagHandler.PREF_FIRST_RUN_MESSAGE_SHOWN)
-            || mRawPrefs.getInt(FeatureFlagHandler.PREF_LAST_VERSION, 0)
-            != versionCode
-        ) {
-
-            // Marking the first run as done skips MainActivity's call to
-            // handleFirstInstall(), so the feature flags must be set here
-            // instead. Without this, handleUpgrade() writes preferences during
-            // onCreate(), which triggers a refresh before the layout exists.
-            FeatureFlagHandler.handleFirstInstall(mPrefs)
-
-            mPrefs.edit()
-                .putString(FeatureFlagHandler.PREF_FIRST_RUN_MESSAGE_SHOWN, "true")
-                .putInt(FeatureFlagHandler.PREF_LAST_VERSION, versionCode)
-                .apply()
-
-            settlePreferences()
-        }
-
-        setBackAgain(false)
-        setTwoPane("auto")
-        setPostTapAction("link")
-    }
-
-    private fun setBackAgain(value: Boolean) {
-
-        if (mRawPrefs.getBoolean(PREF_BACK_AGAIN, false) != value) {
-            mPrefs.edit().putBoolean(PREF_BACK_AGAIN, value).apply()
-            settlePreferences()
-        }
-    }
-
-    private fun setTwoPane(value: String) {
-
-        if (value != mRawPrefs.getString(PREF_TWOPANE, "auto")) {
-            mPrefs.edit().putString(PREF_TWOPANE, value).apply()
-            settlePreferences()
-        }
-    }
-
-    private fun setPostTapAction(value: String) {
-
-        if (value != mRawPrefs.getString(PREF_POST_TAP_ACTION, "link")) {
-            mPrefs.edit().putString(PREF_POST_TAP_ACTION, value).apply()
-            settlePreferences()
-        }
-    }
-
-    /**
-     * `apply()` delivers its listener callbacks asynchronously on the main
-     * thread. Activities refresh themselves when preferences change, so the
-     * callbacks must be drained before an activity is launched -- otherwise they
-     * arrive midway through `onCreate()`, before the activity has finished
-     * building its layout.
-     */
-    private fun settlePreferences() {
-        SystemClock.sleep(300)
-        waitForIdle()
-    }
-
-    /**
-     * Whether the activity is currently intercepting back presses. When this is
-     * false on Android 16, the system handles back itself (with predictive back
-     * animations).
-     */
-    private fun hasEnabledCallbacks(scenario: ActivityScenario<*>): Boolean {
-
-        val result = AtomicBoolean()
-
-        scenario.onActivity { activity ->
-            result.set(
-                (activity as BaseActivity).onBackPressedDispatcher
-                    .hasEnabledCallbacks()
-            )
-        }
-
-        return result.get()
-    }
-
-    /**
-     * Asserts whether the activity is intercepting back presses.
-     *
-     * Below API 36 the callback is always enabled, because it also runs the
-     * double-press guard; `expectedOnApi36` therefore only applies where
-     * the OS provides predictive back.
-     */
-    private fun assertIntercepts(
-        message: String,
-        expectedOnApi36: Boolean,
-        scenario: ActivityScenario<*>
-    ) {
-
-        assertEquals(
-            message,
-            Build.VERSION.SDK_INT < 36 || expectedOnApi36,
-            hasEnabledCallbacks(scenario)
-        )
-    }
-
-    /**
-     * Presses back, having first waited out the 300ms double-press guard. Below
-     * API 36 the guard is active and Espresso's back press is fast enough to
-     * fall inside its window.
-     */
-    private fun pressBackAfterGuardWindow() {
-        SystemClock.sleep(400)
-        pressBackUnconditionally()
-    }
-
-    /**
-     * Polls until a view matching `matcher` is displayed, or the timeout
-     * expires. Used in place of a fixed wait for content which is loaded over
-     * the network.
-     */
-    private fun awaitView(matcher: Matcher<View>, timeoutSeconds: Int) {
-
-        for (attempt in 0 until timeoutSeconds * 2) {
-
-            try {
-                onView(firstMatching(allOf(matcher, isDisplayed())))
-                    .check(matches(isDisplayed()))
-                return
-
-            } catch (e: Throwable) {
-                SystemClock.sleep(500)
-            }
-        }
-    }
-
-    private fun waitForIdle() {
-        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-    }
-
-    /**
-     * `finish()` is asynchronous, so an activity that is on its way out
-     * briefly reports STARTED rather than DESTROYED.
-     */
-    private fun awaitDestroyed(scenario: ActivityScenario<*>): Lifecycle.State {
-
-        repeat(100) {
-            if (scenario.state == Lifecycle.State.DESTROYED) {
-                return Lifecycle.State.DESTROYED
-            }
-
-            SystemClock.sleep(50)
-        }
-
-        return scenario.state
-    }
-
-    // ---------------------------------------------------------------------
-    // Premise: predictive back really is active for this app on this device
-    // ---------------------------------------------------------------------
-
-    /**
-     * The whole migration only matters if the platform has actually enabled
-     * the ahead-of-time back dispatch for us. If this fails, every other test
-     * in this class would be passing via the legacy key-event path.
-     *
-     * Registering a platform [OnBackInvokedCallback] and observing it
-     * fire proves the ahead-of-time dispatch is live: when it is disabled, the
-     * platform dispatcher never invokes registered callbacks and back arrives
-     * as a `KEYCODE_BACK` key event instead.
-     */
-    @Test
-    fun predictiveBackIsEnabledExactlyOnApi36AndAbove() {
-
-        ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
-
-            waitForIdle()
-
-            val invoked = AtomicBoolean(false)
-            val callbackRef = AtomicReference<OnBackInvokedCallback?>(null)
-
-            scenario.onActivity { activity ->
-                val callback = OnBackInvokedCallback { invoked.set(true) }
-                callbackRef.set(callback)
-                activity.onBackInvokedDispatcher.registerOnBackInvokedCallback(
-                    OnBackInvokedDispatcher.PRIORITY_OVERLAY,
-                    callback
-                )
-            }
-
-            waitForIdle()
-
-            pressBackUnconditionally()
-            waitForIdle()
-
-            // This is exactly the condition BaseActivity.osHandlesBackAnimations()
-            // tests, so this asserts that predicate is correct on this device.
-            assertEquals(
-                "Predictive back should be enabled precisely when the app "
-                    + "targets API 36 and the device is API 36+",
-                Build.VERSION.SDK_INT >= 36,
-                invoked.get()
-            )
-
-            if (invoked.get()) {
-                scenario.onActivity { activity ->
-                    activity.onBackInvokedDispatcher
-                        .unregisterOnBackInvokedCallback(callbackRef.get()!!)
-                }
-            }
-        }
-    }
-
-    // ---------------------------------------------------------------------
-    // HTML view (MainActivityCompose + HtmlView route): WebView history
-    // ---------------------------------------------------------------------
-
-    private fun htmlIntent(context: Context, html: String): Intent {
-        val intent = Intent(context, MainActivityCompose::class.java)
-        intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_HTML_VIEW)
-        intent.putExtra(MainActivityCompose.EXTRA_HTML_VIEW_HTML, html)
-        intent.putExtra(MainActivityCompose.EXTRA_HTML_VIEW_TITLE, "test")
-        return intent
-    }
-
-    @Test
-    fun htmlView_alwaysInterceptsBack() {
-
-        ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
-
-            waitForIdle()
-
-            assertIntercepts(
-                "The host activity must intercept back while the on-screen "
-                    + "HtmlView route is on the stack, so it can navigate the "
-                    + "document history (and the navigation stack)",
-                true,
-                scenario
-            )
-        }
-    }
-
-    /**
-     * With no history to go back through, `onBackButtonPressed()` returns
-     * false and the activity must still close. This exercises the re-dispatch
-     * path in BaseActivity (disable the callback, dispatch again, fall through
-     * to finishing the activity).
-     */
-    @Test
-    fun htmlView_noHistory_backExits() {
-
-        ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
-
-            waitForIdle()
-
-            // The HtmlView route is on the navigation stack (it is a child
-            // screen of the Main top level), so the first back press pops it
-            // (back to the Main root) and the second exits.
-            pressBackUnconditionally()
-            waitForIdle()
-
-            assertEquals(
-                "Back from the HtmlView route should pop it, not exit",
-                Lifecycle.State.RESUMED,
-                scenario.state
-            )
-
-            pressBackAfterGuardWindow()
-            waitForIdle()
-
-            assertEquals(
-                "Back at the Main root should exit",
-                Lifecycle.State.DESTROYED,
-                awaitDestroyed(scenario)
-            )
-        }
-    }
-
-    @Test
-    fun htmlView_withHistory_backNavigatesHistoryThenExits() {
-
-        ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
-
-            waitForIdle()
-
-            val webViewRef = AtomicReference<WebView?>(null)
-            scenario.onActivity { activity -> webViewRef.set(findWebView(activity)) }
-            assertNotNull("Could not find the WebView", webViewRef.get())
-
-            // Let the initial page settle, then navigate to a second page so
-            // that the WebView has history to go back through
-            SystemClock.sleep(1000)
-
-            scenario.onActivity { activity -> findWebView(activity)!!.loadDataWithBaseURL(
-                "https://reddit.com/",
-                "<html><body>second page</body></html>",
-                "text/html; charset=utf-8",
-                "UTF-8",
-                null
-            ) }
-
-            assertNotNull(
-                "WebView should have history to go back through",
-                awaitCanGoBack(scenario)
-            )
-
-            pressBackUnconditionally()
-            waitForIdle()
-
-            assertEquals(
-                "Back should navigate the WebView, not close the activity",
-                Lifecycle.State.RESUMED,
-                scenario.state
-            )
-
-            // The history entry should have been consumed
-            val canStillGoBack = AtomicBoolean(true)
-            scenario.onActivity { activity -> canStillGoBack.set(
-                findWebView(activity)!!.canGoBack()
-            ) }
-
-            assertFalse(
-                "The WebView should have navigated back",
-                canStillGoBack.get()
-            )
-
-            pressBackAfterGuardWindow()
-            waitForIdle()
-
-            // The route itself is still on the navigation stack, so the next
-            // press pops it (back to the Main root) rather than exiting — on
-            // every API level, since MainActivityCompose routes system back
-            // through the Navigation 3 stack once the WebView history is gone.
-            assertEquals(
-                "Back should pop the HtmlView route, not exit",
-                Lifecycle.State.RESUMED,
-                scenario.state
-            )
-
-            pressBackAfterGuardWindow()
-            waitForIdle()
-
-            assertEquals(
-                "Once history and the route are exhausted, back should exit",
-                Lifecycle.State.DESTROYED,
-                awaitDestroyed(scenario)
-            )
-        }
-    }
-
-    /**
-     * Polls until the WebView reports that it has history, returning it (or
-     * null on timeout).
-     */
-    private fun awaitCanGoBack(scenario: ActivityScenario<*>): WebView? {
-
-        val result = AtomicReference<WebView?>(null)
-
-        repeat(100) {
-            scenario.onActivity { activity ->
-                val webView = findWebView(activity)
-                if (webView != null && webView.canGoBack()) {
-                    result.set(webView)
-                }
-            }
-
-            if (result.get() != null) {
-                return result.get()
-            }
-
-            SystemClock.sleep(100)
-        }
-
-        return null
-    }
-
-    private fun findWebView(activity: android.app.Activity): WebView? {
-        return findWebView(activity.findViewById(android.R.id.content))
-    }
-
-    private fun findWebView(view: View): WebView? {
-
-        if (view is WebView) {
-            return view
-        }
-
-        if (view is ViewGroup) {
-            for (i in 0 until view.childCount) {
-                findWebView(view.getChildAt(i))?.let { return it }
-            }
-        }
-
-        return null
-    }
-
-    /**
-     * Matches only the first view satisfying the given matcher, so that a
-     * listing full of posts does not produce an ambiguous match.
-     */
-    private fun firstMatching(matcher: Matcher<View>): Matcher<View> {
-
-        return object : TypeSafeMatcher<View>() {
-
-            private var found = false
-
-            override fun describeTo(description: Description) {
-                description.appendText("first view matching: ")
-                matcher.describeTo(description)
-            }
-
-            override fun matchesSafely(view: View): Boolean {
-
-                if (found || !matcher.matches(view)) {
-                    return false
-                }
-
-                found = true
-                return true
-            }
-        }
-    }
-
-    // ---------------------------------------------------------------------
-    // Progress dialogs
-    // ---------------------------------------------------------------------
-
-    /**
-     * The app's progress dialogs intercept back via
-     * `setOnKeyListener(KEYCODE_BACK)`, which predictive back no longer
-     * dispatches. They rely instead on their `OnCancelListener`, which
-     * the platform triggers via `Dialog.onBackPressed() -> cancel()`.
-     * This verifies that platform contract, which is what makes those dialogs
-     * keep working unchanged on Android 16.
-     */
-    @Test
-    fun progressDialog_backTriggersOnCancelListener() {
-
-        ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
-
-            waitForIdle()
-
-            val cancelled = AtomicBoolean(false)
-            val dialogRef = AtomicReference<Dialog?>(null)
-
-            scenario.onActivity { activity ->
-                @Suppress("DEPRECATION")
-                val dialog
-                    = ProgressDialog(activity)
-                dialog.setTitle(R.string.comment_reply_submitting_title)
-                dialog.setCancelable(true)
-                dialog.setCanceledOnTouchOutside(false)
-                dialog.setOnCancelListener { cancelled.set(true) }
-                dialog.show()
-                dialogRef.set(dialog)
-            }
-
-            waitForIdle()
-            SystemClock.sleep(500)
-
-            pressBackUnconditionally()
-            waitForIdle()
-            SystemClock.sleep(500)
-
-            assertTrue(
-                "Back should cancel the progress dialog (firing its "
-                    + "OnCancelListener) on Android 16",
-                cancelled.get()
-            )
-
-            assertFalse(
-                "The dialog should no longer be showing",
-                dialogRef.get()!!.isShowing
-            )
-
-            assertEquals(
-                "Cancelling the dialog should not close the activity",
-                Lifecycle.State.RESUMED,
-                scenario.state
-            )
-        }
-    }
+	private companion object {
+		private const val PREF_BACK_AGAIN = "pref_behaviour_back_again"
+		private const val PREF_TWOPANE = "pref_appearance_twopane"
+		private const val PREF_POST_TAP_ACTION = "pref_behaviour_post_tap_action"
+
+		private const val HTML_NO_HISTORY = "<html><body>no history</body></html>"
+	}
+
+	private lateinit var mContext: Context
+	private lateinit var mPrefs: SharedPrefsWrapper
+	private lateinit var mRawPrefs: android.content.SharedPreferences
+
+	@Before
+	fun setUp() {
+		mContext = ApplicationProvider.getApplicationContext()
+		mPrefs = General.getSharedPrefs(mContext)
+		mRawPrefs = mContext.getSharedPreferences(
+			mContext.packageName + "_preferences",
+			Context.MODE_PRIVATE,
+		)
+
+		// Stop the terms screen, the first-run login prompt and the changelog
+		// dialog from covering the activities under test
+		PrefsUtility.acceptRedditUserAgreement()
+
+		val versionCode = mContext.packageManager
+			.getPackageInfo(mContext.packageName, 0)
+			.longVersionCode.toInt()
+
+		if (!mRawPrefs.contains(FeatureFlagHandler.PREF_FIRST_RUN_MESSAGE_SHOWN) ||
+			mRawPrefs.getInt(FeatureFlagHandler.PREF_LAST_VERSION, 0)
+			!= versionCode
+		) {
+			// Marking the first run as done skips MainActivity's call to
+			// handleFirstInstall(), so the feature flags must be set here
+			// instead. Without this, handleUpgrade() writes preferences during
+			// onCreate(), which triggers a refresh before the layout exists.
+			FeatureFlagHandler.handleFirstInstall(mPrefs)
+
+			mPrefs.edit()
+				.putString(FeatureFlagHandler.PREF_FIRST_RUN_MESSAGE_SHOWN, "true")
+				.putInt(FeatureFlagHandler.PREF_LAST_VERSION, versionCode)
+				.apply()
+
+			settlePreferences()
+		}
+
+		setBackAgain(false)
+		setTwoPane("auto")
+		setPostTapAction("link")
+	}
+
+	private fun setBackAgain(value: Boolean) {
+		if (mRawPrefs.getBoolean(PREF_BACK_AGAIN, false) != value) {
+			mPrefs.edit().putBoolean(PREF_BACK_AGAIN, value).apply()
+			settlePreferences()
+		}
+	}
+
+	private fun setTwoPane(value: String) {
+		if (value != mRawPrefs.getString(PREF_TWOPANE, "auto")) {
+			mPrefs.edit().putString(PREF_TWOPANE, value).apply()
+			settlePreferences()
+		}
+	}
+
+	private fun setPostTapAction(value: String) {
+		if (value != mRawPrefs.getString(PREF_POST_TAP_ACTION, "link")) {
+			mPrefs.edit().putString(PREF_POST_TAP_ACTION, value).apply()
+			settlePreferences()
+		}
+	}
+
+	/**
+	 * `apply()` delivers its listener callbacks asynchronously on the main
+	 * thread. Activities refresh themselves when preferences change, so the
+	 * callbacks must be drained before an activity is launched -- otherwise they
+	 * arrive midway through `onCreate()`, before the activity has finished
+	 * building its layout.
+	 */
+	private fun settlePreferences() {
+		SystemClock.sleep(300)
+		waitForIdle()
+	}
+
+	/**
+	 * Whether the activity is currently intercepting back presses. When this is
+	 * false on Android 16, the system handles back itself (with predictive back
+	 * animations).
+	 */
+	private fun hasEnabledCallbacks(scenario: ActivityScenario<*>): Boolean {
+		val result = AtomicBoolean()
+
+		scenario.onActivity { activity ->
+			result.set(
+				(activity as BaseActivity).onBackPressedDispatcher
+					.hasEnabledCallbacks(),
+			)
+		}
+
+		return result.get()
+	}
+
+	/**
+	 * Asserts whether the activity is intercepting back presses.
+	 *
+	 * Below API 36 the callback is always enabled, because it also runs the
+	 * double-press guard; `expectedOnApi36` therefore only applies where
+	 * the OS provides predictive back.
+	 */
+	private fun assertIntercepts(
+		message: String,
+		expectedOnApi36: Boolean,
+		scenario: ActivityScenario<*>,
+	) {
+		assertEquals(
+			message,
+			Build.VERSION.SDK_INT < 36 || expectedOnApi36,
+			hasEnabledCallbacks(scenario),
+		)
+	}
+
+	/**
+	 * Presses back, having first waited out the 300ms double-press guard. Below
+	 * API 36 the guard is active and Espresso's back press is fast enough to
+	 * fall inside its window.
+	 */
+	private fun pressBackAfterGuardWindow() {
+		SystemClock.sleep(400)
+		pressBackUnconditionally()
+	}
+
+	/**
+	 * Polls until a view matching `matcher` is displayed, or the timeout
+	 * expires. Used in place of a fixed wait for content which is loaded over
+	 * the network.
+	 */
+	private fun awaitView(matcher: Matcher<View>, timeoutSeconds: Int) {
+		for (attempt in 0 until timeoutSeconds * 2) {
+			try {
+				onView(firstMatching(allOf(matcher, isDisplayed())))
+					.check(matches(isDisplayed()))
+				return
+			} catch (e: Throwable) {
+				SystemClock.sleep(500)
+			}
+		}
+	}
+
+	private fun waitForIdle() {
+		InstrumentationRegistry.getInstrumentation().waitForIdleSync()
+	}
+
+	/**
+	 * `finish()` is asynchronous, so an activity that is on its way out
+	 * briefly reports STARTED rather than DESTROYED.
+	 */
+	private fun awaitDestroyed(scenario: ActivityScenario<*>): Lifecycle.State {
+		repeat(100) {
+			if (scenario.state == Lifecycle.State.DESTROYED) {
+				return Lifecycle.State.DESTROYED
+			}
+
+			SystemClock.sleep(50)
+		}
+
+		return scenario.state
+	}
+
+	// ---------------------------------------------------------------------
+	// Premise: predictive back really is active for this app on this device
+	// ---------------------------------------------------------------------
+
+	/**
+	 * The whole migration only matters if the platform has actually enabled
+	 * the ahead-of-time back dispatch for us. If this fails, every other test
+	 * in this class would be passing via the legacy key-event path.
+	 *
+	 * Registering a platform [OnBackInvokedCallback] and observing it
+	 * fire proves the ahead-of-time dispatch is live: when it is disabled, the
+	 * platform dispatcher never invokes registered callbacks and back arrives
+	 * as a `KEYCODE_BACK` key event instead.
+	 */
+	@Test
+	fun predictiveBackIsEnabledExactlyOnApi36AndAbove() {
+		ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
+
+			waitForIdle()
+
+			val invoked = AtomicBoolean(false)
+			val callbackRef = AtomicReference<OnBackInvokedCallback?>(null)
+
+			scenario.onActivity { activity ->
+				val callback = OnBackInvokedCallback { invoked.set(true) }
+				callbackRef.set(callback)
+				activity.onBackInvokedDispatcher.registerOnBackInvokedCallback(
+					OnBackInvokedDispatcher.PRIORITY_OVERLAY,
+					callback,
+				)
+			}
+
+			waitForIdle()
+
+			pressBackUnconditionally()
+			waitForIdle()
+
+			// This is exactly the condition BaseActivity.osHandlesBackAnimations()
+			// tests, so this asserts that predicate is correct on this device.
+			assertEquals(
+				"Predictive back should be enabled precisely when the app " +
+					"targets API 36 and the device is API 36+",
+				Build.VERSION.SDK_INT >= 36,
+				invoked.get(),
+			)
+
+			if (invoked.get()) {
+				scenario.onActivity { activity ->
+					activity.onBackInvokedDispatcher
+						.unregisterOnBackInvokedCallback(callbackRef.get()!!)
+				}
+			}
+		}
+	}
+
+	// ---------------------------------------------------------------------
+	// HTML view (MainActivityCompose + HtmlView route): WebView history
+	// ---------------------------------------------------------------------
+
+	private fun htmlIntent(context: Context, html: String): Intent {
+		val intent = Intent(context, MainActivityCompose::class.java)
+		intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_HTML_VIEW)
+		intent.putExtra(MainActivityCompose.EXTRA_HTML_VIEW_HTML, html)
+		intent.putExtra(MainActivityCompose.EXTRA_HTML_VIEW_TITLE, "test")
+		return intent
+	}
+
+	@Test
+	fun htmlView_alwaysInterceptsBack() {
+		ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
+
+			waitForIdle()
+
+			assertIntercepts(
+				"The host activity must intercept back while the on-screen " +
+					"HtmlView route is on the stack, so it can navigate the " +
+					"document history (and the navigation stack)",
+				true,
+				scenario,
+			)
+		}
+	}
+
+	/**
+	 * With no history to go back through, `onBackButtonPressed()` returns
+	 * false and the activity must still close. This exercises the re-dispatch
+	 * path in BaseActivity (disable the callback, dispatch again, fall through
+	 * to finishing the activity).
+	 */
+	@Test
+	fun htmlView_noHistory_backExits() {
+		ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
+
+			waitForIdle()
+
+			// The HtmlView route is on the navigation stack (it is a child
+			// screen of the Main top level), so the first back press pops it
+			// (back to the Main root) and the second exits.
+			pressBackUnconditionally()
+			waitForIdle()
+
+			assertEquals(
+				"Back from the HtmlView route should pop it, not exit",
+				Lifecycle.State.RESUMED,
+				scenario.state,
+			)
+
+			pressBackAfterGuardWindow()
+			waitForIdle()
+
+			assertEquals(
+				"Back at the Main root should exit",
+				Lifecycle.State.DESTROYED,
+				awaitDestroyed(scenario),
+			)
+		}
+	}
+
+	@Test
+	fun htmlView_withHistory_backNavigatesHistoryThenExits() {
+		ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
+
+			waitForIdle()
+
+			val webViewRef = AtomicReference<WebView?>(null)
+			scenario.onActivity { activity -> webViewRef.set(findWebView(activity)) }
+			assertNotNull("Could not find the WebView", webViewRef.get())
+
+			// Let the initial page settle, then navigate to a second page so
+			// that the WebView has history to go back through
+			SystemClock.sleep(1000)
+
+			scenario.onActivity { activity ->
+				findWebView(activity)!!.loadDataWithBaseURL(
+					"https://reddit.com/",
+					"<html><body>second page</body></html>",
+					"text/html; charset=utf-8",
+					"UTF-8",
+					null,
+				)
+			}
+
+			assertNotNull(
+				"WebView should have history to go back through",
+				awaitCanGoBack(scenario),
+			)
+
+			pressBackUnconditionally()
+			waitForIdle()
+
+			assertEquals(
+				"Back should navigate the WebView, not close the activity",
+				Lifecycle.State.RESUMED,
+				scenario.state,
+			)
+
+			// The history entry should have been consumed
+			val canStillGoBack = AtomicBoolean(true)
+			scenario.onActivity { activity ->
+				canStillGoBack.set(
+					findWebView(activity)!!.canGoBack(),
+				)
+			}
+
+			assertFalse(
+				"The WebView should have navigated back",
+				canStillGoBack.get(),
+			)
+
+			pressBackAfterGuardWindow()
+			waitForIdle()
+
+			// The route itself is still on the navigation stack, so the next
+			// press pops it (back to the Main root) rather than exiting — on
+			// every API level, since MainActivityCompose routes system back
+			// through the Navigation 3 stack once the WebView history is gone.
+			assertEquals(
+				"Back should pop the HtmlView route, not exit",
+				Lifecycle.State.RESUMED,
+				scenario.state,
+			)
+
+			pressBackAfterGuardWindow()
+			waitForIdle()
+
+			assertEquals(
+				"Once history and the route are exhausted, back should exit",
+				Lifecycle.State.DESTROYED,
+				awaitDestroyed(scenario),
+			)
+		}
+	}
+
+	/**
+	 * Polls until the WebView reports that it has history, returning it (or
+	 * null on timeout).
+	 */
+	private fun awaitCanGoBack(scenario: ActivityScenario<*>): WebView? {
+		val result = AtomicReference<WebView?>(null)
+
+		repeat(100) {
+			scenario.onActivity { activity ->
+				val webView = findWebView(activity)
+				if (webView != null && webView.canGoBack()) {
+					result.set(webView)
+				}
+			}
+
+			if (result.get() != null) {
+				return result.get()
+			}
+
+			SystemClock.sleep(100)
+		}
+
+		return null
+	}
+
+	private fun findWebView(activity: android.app.Activity): WebView? = findWebView(activity.findViewById(android.R.id.content))
+
+	private fun findWebView(view: View): WebView? {
+		if (view is WebView) {
+			return view
+		}
+
+		if (view is ViewGroup) {
+			for (i in 0 until view.childCount) {
+				findWebView(view.getChildAt(i))?.let { return it }
+			}
+		}
+
+		return null
+	}
+
+	/**
+	 * Matches only the first view satisfying the given matcher, so that a
+	 * listing full of posts does not produce an ambiguous match.
+	 */
+	private fun firstMatching(matcher: Matcher<View>): Matcher<View> {
+		return object : TypeSafeMatcher<View>() {
+
+			private var found = false
+
+			override fun describeTo(description: Description) {
+				description.appendText("first view matching: ")
+				matcher.describeTo(description)
+			}
+
+			override fun matchesSafely(view: View): Boolean {
+				if (found || !matcher.matches(view)) {
+					return false
+				}
+
+				found = true
+				return true
+			}
+		}
+	}
+
+	// ---------------------------------------------------------------------
+	// Progress dialogs
+	// ---------------------------------------------------------------------
+
+	/**
+	 * The app's progress dialogs intercept back via
+	 * `setOnKeyListener(KEYCODE_BACK)`, which predictive back no longer
+	 * dispatches. They rely instead on their `OnCancelListener`, which
+	 * the platform triggers via `Dialog.onBackPressed() -> cancel()`.
+	 * This verifies that platform contract, which is what makes those dialogs
+	 * keep working unchanged on Android 16.
+	 */
+	@Test
+	fun progressDialog_backTriggersOnCancelListener() {
+		ActivityScenario.launch<MainActivityCompose>(htmlIntent(mContext, HTML_NO_HISTORY)).use { scenario ->
+
+			waitForIdle()
+
+			val cancelled = AtomicBoolean(false)
+			val dialogRef = AtomicReference<Dialog?>(null)
+
+			scenario.onActivity { activity ->
+				@Suppress("DEPRECATION")
+				val dialog =
+					ProgressDialog(activity)
+				dialog.setTitle(R.string.comment_reply_submitting_title)
+				dialog.setCancelable(true)
+				dialog.setCanceledOnTouchOutside(false)
+				dialog.setOnCancelListener { cancelled.set(true) }
+				dialog.show()
+				dialogRef.set(dialog)
+			}
+
+			waitForIdle()
+			SystemClock.sleep(500)
+
+			pressBackUnconditionally()
+			waitForIdle()
+			SystemClock.sleep(500)
+
+			assertTrue(
+				"Back should cancel the progress dialog (firing its " +
+					"OnCancelListener) on Android 16",
+				cancelled.get(),
+			)
+
+			assertFalse(
+				"The dialog should no longer be showing",
+				dialogRef.get()!!.isShowing,
+			)
+
+			assertEquals(
+				"Cancelling the dialog should not close the activity",
+				Lifecycle.State.RESUMED,
+				scenario.state,
+			)
+		}
+	}
 }

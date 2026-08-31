@@ -17,9 +17,9 @@
 
 package com.stormtroopercs.materialreader.repository
 
-import kotlinx.coroutines.flow.Flow
 import com.stormtroopercs.materialreader.database.dao.SubredditDao
 import com.stormtroopercs.materialreader.database.entities.SubredditEntity
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,65 +30,61 @@ import javax.inject.Singleton
  */
 @Singleton
 class SubredditRepository @Inject constructor(
-    private val subredditDao: SubredditDao
+	private val subredditDao: SubredditDao,
 ) {
 
-    /**
-     * Flow of all subreddits in the database, ordered by last update.
-     */
-    val allSubreddits: Flow<List<SubredditEntity>> = subredditDao.getAllSubreddits()
+	/**
+	 * Flow of all subreddits in the database, ordered by last update.
+	 */
+	val allSubreddits: Flow<List<SubredditEntity>> = subredditDao.getAllSubreddits()
 
-    /**
-     * Get a single subreddit by name.
-     */
-    suspend fun getSubredditByName(name: String): SubredditEntity? {
-        return subredditDao.getSubredditByName(name)
-    }
+	/**
+	 * Get a single subreddit by name.
+	 */
+	suspend fun getSubredditByName(name: String): SubredditEntity? = subredditDao.getSubredditByName(name)
 
-    /**
-     * Search for subreddits matching a query.
-     */
-    fun searchSubreddits(query: String): Flow<List<SubredditEntity>> {
-        return subredditDao.searchSubreddits(query)
-    }
+	/**
+	 * Search for subreddits matching a query.
+	 */
+	fun searchSubreddits(query: String): Flow<List<SubredditEntity>> = subredditDao.searchSubreddits(query)
 
-    /**
-     * Insert a single subreddit into the database.
-     */
-    suspend fun insertSubreddit(subreddit: SubredditEntity) {
-        subredditDao.insertSubreddit(subreddit)
-    }
+	/**
+	 * Insert a single subreddit into the database.
+	 */
+	suspend fun insertSubreddit(subreddit: SubredditEntity) {
+		subredditDao.insertSubreddit(subreddit)
+	}
 
-    /**
-     * Insert multiple subreddits into the database.
-     */
-    suspend fun insertSubreddits(subreddits: List<SubredditEntity>) {
-        subredditDao.insertSubreddits(subreddits)
-    }
+	/**
+	 * Insert multiple subreddits into the database.
+	 */
+	suspend fun insertSubreddits(subreddits: List<SubredditEntity>) {
+		subredditDao.insertSubreddits(subreddits)
+	}
 
-    /**
-     * Update an existing subreddit.
-     */
-    suspend fun updateSubreddit(subreddit: SubredditEntity) {
-        subredditDao.updateSubreddit(subreddit)
-    }
+	/**
+	 * Update an existing subreddit.
+	 */
+	suspend fun updateSubreddit(subreddit: SubredditEntity) {
+		subredditDao.updateSubreddit(subreddit)
+	}
 
-    /**
-     * Delete a single subreddit.
-     */
-    suspend fun deleteSubreddit(subreddit: SubredditEntity) {
-        subredditDao.deleteSubreddit(subreddit)
-    }
+	/**
+	 * Delete a single subreddit.
+	 */
+	suspend fun deleteSubreddit(subreddit: SubredditEntity) {
+		subredditDao.deleteSubreddit(subreddit)
+	}
 
-    /**
-     * Delete all subreddits from the database.
-     */
-    suspend fun deleteAllSubreddits() {
-        subredditDao.deleteAllSubreddits()
-    }
+	/**
+	 * Delete all subreddits from the database.
+	 */
+	suspend fun deleteAllSubreddits() {
+		subredditDao.deleteAllSubreddits()
+	}
 
-    /**
-     * Get the total number of subreddits in the database.
-     */
-    val subredditCount: Flow<Int> = subredditDao.getSubredditCount()
+	/**
+	 * Get the total number of subreddits in the database.
+	 */
+	val subredditCount: Flow<Int> = subredditDao.getSubredditCount()
 }

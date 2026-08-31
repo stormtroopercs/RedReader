@@ -21,77 +21,69 @@ import android.os.Parcelable
 import com.stormtroopercs.materialreader.common.StringUtils
 import com.stormtroopercs.materialreader.jsonwrap.JsonObject.JsonDeserializable
 
-class SubredditCanonicalId(name: String) : Comparable<SubredditCanonicalId>, Parcelable,
-    JsonDeserializable {
-    private val mId: String
+class SubredditCanonicalId(name: String) :
+	Comparable<SubredditCanonicalId>,
+	Parcelable,
+	JsonDeserializable {
+	private val mId: String
 
-    init {
-        var name = name
-        name = StringUtils.asciiLowercase(name.trim { it <= ' ' })
-        val userSr: String? = RedditSubreddit.Companion.stripUserPrefix(name)
+	init {
+		var name = name
+		name = StringUtils.asciiLowercase(name.trim { it <= ' ' })
+		val userSr: String? = RedditSubreddit.Companion.stripUserPrefix(name)
 
-        if (userSr != null) {
-            mId = "/user/" + userSr
-        } else {
-            mId = "/r/" + RedditSubreddit.Companion.stripRPrefix(name)
-        }
-    }
+		if (userSr != null) {
+			mId = "/user/" + userSr
+		} else {
+			mId = "/r/" + RedditSubreddit.Companion.stripRPrefix(name)
+		}
+	}
 
-    val displayNameLowercase: String
-        get() {
-            if (mId.startsWith("/user/")) {
-                return mId
-            }
+	val displayNameLowercase: String
+		get() {
+			if (mId.startsWith("/user/")) {
+				return mId
+			}
 
-            return mId.substring(3)
-        }
+			return mId.substring(3)
+		}
 
-    override fun toString(): String {
-        return mId
-    }
+	override fun toString(): String = mId
 
-    override fun hashCode(): Int {
-        return mId.hashCode()
-    }
+	override fun hashCode(): Int = mId.hashCode()
 
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) {
-            return true
-        }
+	override fun equals(obj: Any?): Boolean {
+		if (this === obj) {
+			return true
+		}
 
-        if (obj !is SubredditCanonicalId) {
-            return false
-        }
+		if (obj !is SubredditCanonicalId) {
+			return false
+		}
 
-        return obj.mId == mId
-    }
+		return obj.mId == mId
+	}
 
-    override fun compareTo(o: SubredditCanonicalId): Int {
-        return mId.compareTo(o.mId)
-    }
+	override fun compareTo(o: SubredditCanonicalId): Int = mId.compareTo(o.mId)
 
-    override fun describeContents(): Int {
-        return 0
-    }
+	override fun describeContents(): Int = 0
 
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-        dest.writeString(mId)
-    }
+	override fun writeToParcel(dest: Parcel, flags: Int) {
+		dest.writeString(mId)
+	}
 
-    companion object {
-        val CREATOR: Parcelable.Creator<SubredditCanonicalId?> =
-            object : Parcelable.Creator<SubredditCanonicalId?> {
-                override fun createFromParcel(`in`: Parcel): SubredditCanonicalId {
-                    try {
-                        return SubredditCanonicalId(`in`.readString()!!)
-                    } catch (e: InvalidSubredditNameException) {
-                        throw RuntimeException(e)
-                    }
-                }
+	companion object {
+		val CREATOR: Parcelable.Creator<SubredditCanonicalId?> =
+			object : Parcelable.Creator<SubredditCanonicalId?> {
+				override fun createFromParcel(`in`: Parcel): SubredditCanonicalId {
+					try {
+						return SubredditCanonicalId(`in`.readString()!!)
+					} catch (e: InvalidSubredditNameException) {
+						throw RuntimeException(e)
+					}
+				}
 
-                override fun newArray(size: Int): Array<SubredditCanonicalId?> {
-                    return arrayOfNulls<SubredditCanonicalId>(size)
-                }
-            }
-    }
+				override fun newArray(size: Int): Array<SubredditCanonicalId?> = arrayOfNulls<SubredditCanonicalId>(size)
+			}
+	}
 }

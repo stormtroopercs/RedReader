@@ -21,39 +21,37 @@ import android.os.Looper
 import androidx.annotation.UiThread
 import com.stormtroopercs.materialreader.common.General.checkThisIsUIThread
 
-class UIThreadRepeatingTimer(private val mIntervalMs: Long, private val mListener: Listener) :
-    Runnable {
-    fun interface Listener {
-        fun onUIThreadRepeatingTimer(timer: UIThreadRepeatingTimer?)
-    }
+class UIThreadRepeatingTimer(private val mIntervalMs: Long, private val mListener: Listener) : Runnable {
+	fun interface Listener {
+		fun onUIThreadRepeatingTimer(timer: UIThreadRepeatingTimer?)
+	}
 
-    private val mHandler = Handler(Looper.getMainLooper())
+	private val mHandler = Handler(Looper.getMainLooper())
 
-    private var mShouldTimerRun = false
+	private var mShouldTimerRun = false
 
-    @UiThread
-    fun startTimer() {
-        checkThisIsUIThread()
+	@UiThread
+	fun startTimer() {
+		checkThisIsUIThread()
 
-        mShouldTimerRun = true
-        mHandler.postDelayed(this, mIntervalMs)
-    }
+		mShouldTimerRun = true
+		mHandler.postDelayed(this, mIntervalMs)
+	}
 
-    @UiThread
-    fun stopTimer() {
-        checkThisIsUIThread()
+	@UiThread
+	fun stopTimer() {
+		checkThisIsUIThread()
 
-        mShouldTimerRun = false
-    }
+		mShouldTimerRun = false
+	}
 
+	override fun run() {
+		if (mShouldTimerRun) {
+			mListener.onUIThreadRepeatingTimer(this)
 
-    override fun run() {
-        if (mShouldTimerRun) {
-            mListener.onUIThreadRepeatingTimer(this)
-
-            if (mShouldTimerRun) {
-                mHandler.postDelayed(this, mIntervalMs)
-            }
-        }
-    }
+			if (mShouldTimerRun) {
+				mHandler.postDelayed(this, mIntervalMs)
+			}
+		}
+	}
 }

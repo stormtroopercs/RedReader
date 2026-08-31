@@ -61,7 +61,6 @@ import com.stormtroopercs.materialreader.compose.theme.StyledText
 
 @Composable
 fun RRErrorView(error: RRError) {
-
 	val theme = LocalComposeTheme.current.error
 	val launch = LocalLauncher.current
 
@@ -72,7 +71,7 @@ fun RRErrorView(error: RRError) {
 			.padding(8.dp)
 			.fillMaxWidth()
 			.onSizeChanged { size = it },
-		contentAlignment = Alignment.Center
+		contentAlignment = Alignment.Center,
 	) {
 		val smallWidth = with(LocalDensity.current) {
 			size.width.toDp() < 150.dp
@@ -90,7 +89,7 @@ fun RRErrorView(error: RRError) {
 					})
 				}
 				.padding(12.dp),
-			contentAlignment = Alignment.Center
+			contentAlignment = Alignment.Center,
 		) {
 			if (smallWidth) {
 				Icon(
@@ -98,10 +97,8 @@ fun RRErrorView(error: RRError) {
 					contentDescription = stringResource(R.string.error_title),
 					tint = theme.border,
 				)
-
 			} else {
 				ConstraintLayout(Modifier.fillMaxWidth()) {
-
 					val (icon, text) = createRefs()
 
 					Icon(
@@ -112,7 +109,7 @@ fun RRErrorView(error: RRError) {
 								start.linkTo(parent.start)
 								top.linkTo(parent.top)
 							},
-						tint = theme.border
+						tint = theme.border,
 					)
 
 					Column(
@@ -123,9 +120,8 @@ fun RRErrorView(error: RRError) {
 								top.linkTo(parent.top)
 								bottom.linkTo(parent.bottom)
 								width = Dimension.fillToConstraints
-							}
+							},
 					) {
-
 						theme.title.StyledText(error.title ?: stringResource(R.string.error_title))
 
 						error.message?.let {
@@ -137,7 +133,7 @@ fun RRErrorView(error: RRError) {
 
 						Row(
 							Modifier.fillMaxWidth(),
-							horizontalArrangement = Arrangement.End
+							horizontalArrangement = Arrangement.End,
 						) {
 							RRButton(
 								onClick = {
@@ -148,7 +144,7 @@ fun RRErrorView(error: RRError) {
 									theme.primaryButton
 								} else {
 									theme.secondaryButton
-								}
+								},
 							)
 
 							if (error.resolution != null) {
@@ -169,7 +165,7 @@ fun RRErrorView(error: RRError) {
 										}
 									},
 									text = stringResource(error.resolution.buttonText),
-									theme = theme.primaryButton
+									theme = theme.primaryButton,
 								)
 							}
 						}
@@ -187,8 +183,8 @@ private fun PreviewRRErrorView() {
 		RRErrorView(
 			error = RRError(
 				title = "Error title",
-				message = "Error message"
-			)
+				message = "Error message",
+			),
 		)
 	}
 }
@@ -200,8 +196,8 @@ private fun PreviewRRErrorViewSmall() {
 		RRErrorView(
 			error = RRError(
 				title = "Error title",
-				message = "Error message"
-			)
+				message = "Error message",
+			),
 		)
 	}
 }

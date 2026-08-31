@@ -16,64 +16,63 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.general
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
 import com.stormtroopercs.materialreader.common.FileUtils
 import com.stormtroopercs.materialreader.common.Optional
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class FileUtilsTest {
 
-    @Test
-    fun testGetExtensionFromPath() {
+	@Test
+	fun testGetExtensionFromPath() {
+		assertEquals(
+			Optional.of("jpg"),
+			FileUtils.getExtensionFromPath("image.jpg"),
+		)
 
-        assertEquals(
-            Optional.of("jpg"),
-            FileUtils.getExtensionFromPath("image.jpg")
-        )
+		assertEquals(
+			Optional.of("mp4"),
+			FileUtils.getExtensionFromPath("path/segments/image.other.mp4"),
+		)
 
-        assertEquals(
-            Optional.of("mp4"),
-            FileUtils.getExtensionFromPath("path/segments/image.other.mp4")
-        )
+		assertEquals(
+			Optional.of("jpg"),
+			FileUtils.getExtensionFromPath("other.image.jpg"),
+		)
 
-        assertEquals(
-            Optional.of("jpg"),
-            FileUtils.getExtensionFromPath("other.image.jpg")
-        )
+		assertEquals(
+			Optional.empty<String>(),
+			FileUtils.getExtensionFromPath("image"),
+		)
 
-        assertEquals(
-            Optional.empty<String>(),
-            FileUtils.getExtensionFromPath("image")
-        )
+		assertEquals(
+			Optional.empty<String>(),
+			FileUtils.getExtensionFromPath("path/segments.test/image"),
+		)
 
-        assertEquals(
-            Optional.empty<String>(),
-            FileUtils.getExtensionFromPath("path/segments.test/image")
-        )
+		assertEquals(
+			Optional.of("bmp"),
+			FileUtils.getExtensionFromPath("path/segments.test/image.bmp"),
+		)
 
-        assertEquals(
-            Optional.of("bmp"),
-            FileUtils.getExtensionFromPath("path/segments.test/image.bmp")
-        )
+		assertEquals(
+			Optional.empty<String>(),
+			FileUtils.getExtensionFromPath("path/segments.test/image."),
+		)
 
-        assertEquals(
-            Optional.empty<String>(),
-            FileUtils.getExtensionFromPath("path/segments.test/image.")
-        )
+		assertEquals(
+			Optional.empty<String>(),
+			FileUtils.getExtensionFromPath("path/segments.test/.image"),
+		)
 
-        assertEquals(
-            Optional.empty<String>(),
-            FileUtils.getExtensionFromPath("path/segments.test/.image")
-        )
+		assertEquals(
+			Optional.empty<String>(),
+			FileUtils.getExtensionFromPath("path/segments.test/.image."),
+		)
 
-        assertEquals(
-            Optional.empty<String>(),
-            FileUtils.getExtensionFromPath("path/segments.test/.image.")
-        )
-
-        assertEquals(
-            Optional.of("jpg"),
-            FileUtils.getExtensionFromPath("path/segments.test/.image.jpg")
-        )
-    }
+		assertEquals(
+			Optional.of("jpg"),
+			FileUtils.getExtensionFromPath("path/segments.test/.image.jpg"),
+		)
+	}
 }

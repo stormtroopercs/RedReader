@@ -23,19 +23,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -61,8 +59,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.stormtroopercs.materialreader.compose.ui.RRErrorView
 import com.stormtroopercs.materialreader.common.LinkHandler
+import com.stormtroopercs.materialreader.compose.ui.RRErrorView
 import com.stormtroopercs.materialreader.fragments.ReportDialog
 import com.stormtroopercs.materialreader.settings.types.PostViewMode
 
@@ -138,12 +136,12 @@ fun RealPostListScreen(
 				activity,
 				com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType(post.id),
 				post.subreddit,
-				isComment = false
+				isComment = false,
 			)
 			PostAction.SHARE -> LinkHandler.shareText(
 				activity,
 				post.title,
-				"https://www.reddit.com${post.permalink}"
+				"https://www.reddit.com${post.permalink}",
 			)
 			else -> viewModel.performAction(activity, post, action)
 		}
@@ -159,19 +157,19 @@ fun RealPostListScreen(
 				title = {
 					Text(
 						text = listTitle.ifEmpty { "r/$subreddit" },
-						fontWeight = FontWeight.SemiBold
+						fontWeight = FontWeight.SemiBold,
 					)
 				},
 				navigationIcon = {
 					IconButton(onClick = onNavigateBack) {
 						Icon(
 							imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-							contentDescription = "Back"
+							contentDescription = "Back",
 						)
 					}
 				},
-			actions = {
-				IconButton(onClick = onNavigateToSubredditSearch) {
+				actions = {
+					IconButton(onClick = onNavigateToSubredditSearch) {
 						Icon(Icons.Filled.Search, contentDescription = "Search")
 					}
 					IconButton(onClick = { sortDialogOpen = true }) {
@@ -192,15 +190,15 @@ fun RealPostListScreen(
 					IconButton(onClick = { moreActionsOpen = true }) {
 						Icon(Icons.Filled.MoreVert, contentDescription = "More actions")
 					}
-					}
+				},
 			)
 		},
-		snackbarHost = { SnackbarHost(snackbarHostState) }
+		snackbarHost = { SnackbarHost(snackbarHostState) },
 	) { paddingValues ->
 		Column(
 			modifier = Modifier
 				.fillMaxSize()
-				.padding(paddingValues)
+				.padding(paddingValues),
 		) {
 			// The reference's feed filter chips: the Active sort chip (opens
 			// the 9-option dialog) + Communities / Instances (their
@@ -220,7 +218,7 @@ fun RealPostListScreen(
 							modifier = Modifier
 								.fillMaxSize()
 								.padding(32.dp),
-							contentAlignment = Alignment.Center
+							contentAlignment = Alignment.Center,
 						) {
 							CircularProgressIndicator()
 						}
@@ -233,11 +231,11 @@ fun RealPostListScreen(
 							modifier = Modifier
 								.fillMaxSize()
 								.padding(32.dp),
-							contentAlignment = Alignment.Center
+							contentAlignment = Alignment.Center,
 						) {
 							Text(
 								text = "No posts found",
-								style = MaterialTheme.typography.bodyLarge
+								style = MaterialTheme.typography.bodyLarge,
 							)
 						}
 					} else {
@@ -259,7 +257,7 @@ fun RealPostListScreen(
 										onSwipeHide = { onPostAction(post, if (post.hidden) PostAction.UNHIDE else PostAction.HIDE) },
 									)
 								}
-							}
+							},
 						)
 					}
 				}
@@ -269,16 +267,16 @@ fun RealPostListScreen(
 						modifier = Modifier
 							.fillMaxSize()
 							.padding(16.dp),
-						contentAlignment = Alignment.Center
+						contentAlignment = Alignment.Center,
 					) {
 						Column(
 							horizontalAlignment = Alignment.CenterHorizontally,
-							verticalArrangement = Arrangement.spacedBy(16.dp)
+							verticalArrangement = Arrangement.spacedBy(16.dp),
 						) {
 							RRErrorView(error = state.error)
 							FilledTonalButton(
 								onClick = { viewModel.refresh() },
-								modifier = Modifier.align(Alignment.CenterHorizontally)
+								modifier = Modifier.align(Alignment.CenterHorizontally),
 							) {
 								Icon(Icons.Filled.Refresh, contentDescription = null)
 								Spacer(Modifier.width(8.dp))
@@ -368,7 +366,10 @@ fun RealPostListScreen(
 				moreActionsOpen = false
 				onOpenListing(path)
 			},
-			onOpenLicense = { aboutOpen = false; onOpenLicense() },
+			onOpenLicense = {
+				aboutOpen = false
+				onOpenLicense()
+			},
 		)
 	}
 
@@ -382,6 +383,4 @@ fun RealPostListScreen(
 }
 
 /** The per-feed preference key: the listing path (search listings get a `search:` prefix). */
-internal fun feedIdFor(subreddit: String, searchQuery: String?): String {
-	return if (searchQuery != null) "search:$subreddit:$searchQuery" else subreddit.ifBlank { "frontpage" }
-}
+internal fun feedIdFor(subreddit: String, searchQuery: String?): String = if (searchQuery != null) "search:$subreddit:$searchQuery" else subreddit.ifBlank { "frontpage" }

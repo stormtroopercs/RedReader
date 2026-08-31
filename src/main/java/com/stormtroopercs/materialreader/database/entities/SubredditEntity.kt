@@ -26,17 +26,17 @@ import androidx.room.PrimaryKey
  * Enables faster subreddit resolution and offline subscription support.
  */
 @Entity(
-    tableName = "subreddits",
-    indices = [Index(value = ["name"], unique = true)]
+	tableName = "subreddits",
+	indices = [Index(value = ["name"], unique = true)],
 )
 data class SubredditEntity(
-    @PrimaryKey
-    val name: String,
-    val displayName: String?,
-    val subscribers: Int?,
-    val description: String?,
-    val iconUrl: String?,
-    val headerUrl: String?,
-    val createdUtc: Long?,
-    val lastUpdated: Long = System.currentTimeMillis()
+	@PrimaryKey
+	val name: String,
+	val displayName: String?,
+	val subscribers: Int?,
+	val description: String?,
+	val iconUrl: String?,
+	val headerUrl: String?,
+	val createdUtc: Long?,
+	val lastUpdated: Long = System.currentTimeMillis(),
 )

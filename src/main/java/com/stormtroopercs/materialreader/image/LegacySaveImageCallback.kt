@@ -35,73 +35,74 @@ import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.http.FailedRequestBody
 import java.io.File
 import java.io.IOException
-import com.stormtroopercs.materialreader.common.General
 
-class LegacySaveImageCallback(private val activity: BaseActivity, private val uri: UriString) :
-    PermissionCallback {
-    override fun onPermissionGranted() {
-        FileUtils.downloadImageToSave(
-            activity,
-            uri,
-            DownloadImageToSaveSuccessCallback { info: ImageInfo?, cacheFile: ReadableCacheFile?, mimetype: String? ->
-                val filename = filenameFromString(info!!.original.url.value)
-                var dst = File(
-                    Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_PICTURES
-                    ),
-                    filename
-                )
+class LegacySaveImageCallback(private val activity: BaseActivity, private val uri: UriString) : PermissionCallback {
+	override fun onPermissionGranted() {
+		FileUtils.downloadImageToSave(
+			activity,
+			uri,
+			DownloadImageToSaveSuccessCallback { info: ImageInfo?, cacheFile: ReadableCacheFile?, mimetype: String? ->
+				val filename = filenameFromString(info!!.original.url.value)
+				var dst = File(
+					Environment.getExternalStoragePublicDirectory(
+						Environment.DIRECTORY_PICTURES,
+					),
+					filename,
+				)
 
-                if (dst.exists()) {
-                    var count = 0
+				if (dst.exists()) {
+					var count = 0
 
-                    while (dst.exists()) {
-                        count++
-                        dst = File(
-                            Environment.getExternalStoragePublicDirectory(
-                                Environment.DIRECTORY_PICTURES
-                            ),
-                            count.toString() + "_" + filename.substring(1)
-                        )
-                    }
-                }
+					while (dst.exists()) {
+						count++
+						dst = File(
+							Environment.getExternalStoragePublicDirectory(
+								Environment.DIRECTORY_PICTURES,
+							),
+							count.toString() + "_" + filename.substring(1),
+						)
+					}
+				}
 
-                try {
-                    cacheFile!!.inputStream.use { cacheFileInputStream ->
-                        FileUtils.copyFile(cacheFileInputStream, dst)
-                    }
-                } catch (e: IOException) {
-                    showResultDialog(
-                        activity,
-                        getGeneralErrorForFailure(
-                            activity,
-                            RequestFailureType.STORAGE,
-                            RuntimeException("Could not copy file", e),
-                            null,
-                            uri,
-                            Optional.Companion.empty<FailedRequestBody>()
-                        )
-                    )
+				try {
+					cacheFile!!.inputStream.use { cacheFileInputStream ->
+						FileUtils.copyFile(cacheFileInputStream, dst)
+					}
+				} catch (e: IOException) {
+					showResultDialog(
+						activity,
+						getGeneralErrorForFailure(
+							activity,
+							RequestFailureType.STORAGE,
+							RuntimeException("Could not copy file", e),
+							null,
+							uri,
+							Optional.Companion.empty<FailedRequestBody>(),
+						),
+					)
 
-                    return@DownloadImageToSaveSuccessCallback
-                }
+					return@DownloadImageToSaveSuccessCallback
+				}
 
-                activity.sendBroadcast(
-                    Intent(
-                        Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-                        Uri.parse("file://" + dst.getAbsolutePath())
-                    )
-                )
-                quickToast(
-                    activity,
-                    (activity.getString(string.action_save_image_success)
-                            + " "
-                            + dst.getAbsolutePath())
-                )
-            })
-    }
+				activity.sendBroadcast(
+					Intent(
+						Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
+						Uri.parse("file://" + dst.getAbsolutePath()),
+					),
+				)
+				quickToast(
+					activity,
+					(
+						activity.getString(string.action_save_image_success) +
+							" " +
+							dst.getAbsolutePath()
+						),
+				)
+			},
+		)
+	}
 
-    override fun onPermissionDenied() {
-        quickToast(activity, string.save_image_permission_denied)
-    }
+	override fun onPermissionDenied() {
+		quickToast(activity, string.save_image_permission_denied)
+	}
 }

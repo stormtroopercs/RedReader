@@ -70,16 +70,16 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.stormtroopercs.materialreader.R
-import com.stormtroopercs.materialreader.compose.prefs.ComposePrefsSingleton
 import com.stormtroopercs.materialreader.common.PrefsUtility
+import com.stormtroopercs.materialreader.compose.prefs.ComposePrefsSingleton
 import com.stormtroopercs.materialreader.settings.types.AppearanceTheme
 import com.stormtroopercs.materialreader.settings.types.ThemeLightness
 import kotlinx.coroutines.TimeoutCancellationException
@@ -594,7 +594,7 @@ fun AboutDialog(
 			Text(
 				"Version ${info?.versionName ?: "?"}\n\n" +
 					"A fast, modern Reddit client.\n" +
-					"Built in the open — report bugs, send ideas."
+					"Built in the open — report bugs, send ideas.",
 			)
 		},
 		confirmButton = {

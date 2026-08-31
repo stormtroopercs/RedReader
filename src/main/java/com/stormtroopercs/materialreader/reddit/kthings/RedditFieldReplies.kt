@@ -48,19 +48,16 @@ sealed class RedditFieldReplies : Parcelable {
 }
 
 object RedditFieldRepliesSerializer : JsonContentPolymorphicSerializer<RedditFieldReplies>(
-	RedditFieldReplies::class
+	RedditFieldReplies::class,
 ) {
-	override fun selectDeserializer(element: JsonElement): KSerializer<out RedditFieldReplies> {
-
-		return if (element is JsonObject) {
-			RedditFieldRepliesSomeSerializer
-		} else if (element is JsonPrimitive) {
-			RedditFieldRepliesNoneStringSerializer
-		} else if (element is JsonNull) {
-			RedditFieldRepliesNoneNullSerializer
-		} else {
-			throw IOException("Unexpected replies type $element");
-		}
+	override fun selectDeserializer(element: JsonElement): KSerializer<out RedditFieldReplies> = if (element is JsonObject) {
+		RedditFieldRepliesSomeSerializer
+	} else if (element is JsonPrimitive) {
+		RedditFieldRepliesNoneStringSerializer
+	} else if (element is JsonNull) {
+		RedditFieldRepliesNoneNullSerializer
+	} else {
+		throw IOException("Unexpected replies type $element")
 	}
 }
 
@@ -98,7 +95,7 @@ object RedditFieldRepliesSomeSerializer : KSerializer<RedditFieldReplies.Some> {
 		get() = PrimitiveSerialDescriptor("RedditFieldReplies.Some", PrimitiveKind.BOOLEAN)
 
 	override fun deserialize(decoder: Decoder) = RedditFieldReplies.Some(
-		decoder.decodeSerializableValue(RedditThing.serializer())
+		decoder.decodeSerializableValue(RedditThing.serializer()),
 	)
 
 	override fun serialize(encoder: Encoder, value: RedditFieldReplies.Some) {

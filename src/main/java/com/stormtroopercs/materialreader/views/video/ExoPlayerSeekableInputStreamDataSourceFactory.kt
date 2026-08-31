@@ -25,10 +25,8 @@ import java.io.IOException
 
 @OptIn(UnstableApi::class)
 class ExoPlayerSeekableInputStreamDataSourceFactory(
-    private val mIsNetwork: Boolean,
-    private val mStreamFactory: GenericFactory<SeekableInputStream, IOException>
+	private val mIsNetwork: Boolean,
+	private val mStreamFactory: GenericFactory<SeekableInputStream, IOException>,
 ) : DataSource.Factory {
-    override fun createDataSource(): DataSource {
-        return ExoPlayerSeekableInputStreamDataSource(mIsNetwork, mStreamFactory)
-    }
+	override fun createDataSource(): DataSource = ExoPlayerSeekableInputStreamDataSource(mIsNetwork, mStreamFactory)
 }

@@ -23,39 +23,39 @@ import com.stormtroopercs.materialreader.common.time.TimestampUTC.Companion.from
 import java.util.UUID
 
 class CacheEntry internal constructor(cursor: Cursor) {
-    val id: Long
-    val url: UriString
-    val session: UUID
-    val timestamp: TimestampUTC
-    val mimetype: String?
-    val cacheCompressionType: CacheCompressionType
-    val lengthCompressed: Long
-    val lengthUncompressed: Long
+	val id: Long
+	val url: UriString
+	val session: UUID
+	val timestamp: TimestampUTC
+	val mimetype: String?
+	val cacheCompressionType: CacheCompressionType
+	val lengthCompressed: Long
+	val lengthUncompressed: Long
 
-    init {
-        id = cursor.getLong(0)
-        url = UriString(cursor.getString(1))
-        session = UUID.fromString(cursor.getString(2))
-        timestamp = fromUtcMs(cursor.getLong(3))
-        mimetype = cursor.getString(4)
-        cacheCompressionType = CacheCompressionType.Companion.fromDatabaseId(
-            cursor.getInt(5)
-        )
-        lengthCompressed = cursor.getLong(6)
-        lengthUncompressed = cursor.getLong(7)
-    }
+	init {
+		id = cursor.getLong(0)
+		url = UriString(cursor.getString(1))
+		session = UUID.fromString(cursor.getString(2))
+		timestamp = fromUtcMs(cursor.getLong(3))
+		mimetype = cursor.getString(4)
+		cacheCompressionType = CacheCompressionType.Companion.fromDatabaseId(
+			cursor.getInt(5),
+		)
+		lengthCompressed = cursor.getLong(6)
+		lengthUncompressed = cursor.getLong(7)
+	}
 
-    companion object {
-        @Suppress("PropertyName")
-        val DB_FIELDS: Array<String?> = arrayOf<String?>(
-            CacheDbManager.Companion.FIELD_ID,
-            CacheDbManager.Companion.FIELD_URL,
-            CacheDbManager.Companion.FIELD_SESSION,
-            CacheDbManager.Companion.FIELD_TIMESTAMP,
-            CacheDbManager.Companion.FIELD_MIMETYPE,
-            CacheDbManager.Companion.FIELD_COMPRESSION_TYPE,
-            CacheDbManager.Companion.FIELD_LENGTH_COMPRESSED,
-            CacheDbManager.Companion.FIELD_LENGTH_UNCOMPRESSED
-        )
-    }
+	companion object {
+		@Suppress("PropertyName")
+		val DB_FIELDS: Array<String?> = arrayOf<String?>(
+			CacheDbManager.Companion.FIELD_ID,
+			CacheDbManager.Companion.FIELD_URL,
+			CacheDbManager.Companion.FIELD_SESSION,
+			CacheDbManager.Companion.FIELD_TIMESTAMP,
+			CacheDbManager.Companion.FIELD_MIMETYPE,
+			CacheDbManager.Companion.FIELD_COMPRESSION_TYPE,
+			CacheDbManager.Companion.FIELD_LENGTH_COMPRESSED,
+			CacheDbManager.Companion.FIELD_LENGTH_UNCOMPRESSED,
+		)
+	}
 }

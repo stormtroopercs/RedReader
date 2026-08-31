@@ -27,13 +27,12 @@ import java.io.IOException
  * itself and opens the Compose `HtmlView` route.
  */
 object AssetHelper {
-    /**
-     * Read an asset file as a UTF-8 string, or `null` if it cannot be opened.
-     */
-    fun loadAssetAsString(context: Context, filename: String): String? =
-        try {
-            context.assets.open(filename).bufferedReader().use { it.readText() }
-        } catch (e: IOException) {
-            null
-        }
+	/**
+	 * Read an asset file as a UTF-8 string, or `null` if it cannot be opened.
+	 */
+	fun loadAssetAsString(context: Context, filename: String): String? = try {
+		context.assets.open(filename).bufferedReader().use { it.readText() }
+	} catch (e: IOException) {
+		null
+	}
 }

@@ -36,62 +36,64 @@ import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import com.stormtroopercs.materialreader.http.FailedRequestBody
 import com.stormtroopercs.materialreader.jsonwrap.JsonValue
 import java.util.UUID
-import com.stormtroopercs.materialreader.common.General
 
 object RedgifsAPI {
-    fun getImageInfo(
-        context: Context,
-        imageId: String?,
-        priority: Priority,
-        listener: GetImageInfoListener
-    ) {
-        val apiUrl = UriString("https://api.redgifs.com/v1/gfycats/" + imageId)
+	fun getImageInfo(
+		context: Context,
+		imageId: String?,
+		priority: Priority,
+		listener: GetImageInfoListener,
+	) {
+		val apiUrl = UriString("https://api.redgifs.com/v1/gfycats/" + imageId)
 
-        CacheManager.Companion.getInstance(context).makeRequest(
-            CacheRequest(
-                apiUrl,
-                RedditAccountManager.Companion.getAnon(),
-                null,
-                priority,  // RedGifs links expire after an undocumented period of time
-                DownloadStrategyIfTimestampOutsideBounds(
-                    TimestampBound.Companion.notOlderThan(minutes(10))
-                ),
-                Constants.FileType.IMAGE_INFO,
-                DownloadQueueType.IMMEDIATE,
-                context,
-                CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
-                    override fun onJsonParsed(
-                        result: JsonValue,
-                        timestamp: TimestampUTC,
-                        session: UUID,
-                        fromCache: Boolean
-                    ) {
-                        try {
-                            val outer = result.asObject()!!.getObject("gfyItem")
-                            listener.onSuccess(ImageInfo.parseGfycat(outer!!))
-                        } catch (t: Throwable) {
-                            listener.onFailure(
-                                getGeneralErrorForFailure(
-                                    context,
-                                    RequestFailureType.PARSE,
-                                    t,
-                                    null,
-                                    apiUrl,
-                                    Optional.Companion.of<FailedRequestBody>(
-                                        FailedRequestBody(
-                                            result
-                                        )
-                                    )
-                                )
-                            )
-                        }
-                    }
+		CacheManager.Companion.getInstance(context).makeRequest(
+			CacheRequest(
+				apiUrl,
+				RedditAccountManager.Companion.getAnon(),
+				null,
+				priority, // RedGifs links expire after an undocumented period of time
+				DownloadStrategyIfTimestampOutsideBounds(
+					TimestampBound.Companion.notOlderThan(minutes(10)),
+				),
+				Constants.FileType.IMAGE_INFO,
+				DownloadQueueType.IMMEDIATE,
+				context,
+				CacheRequestJSONParser(
+					context,
+					object : CacheRequestJSONParser.Listener {
+						override fun onJsonParsed(
+							result: JsonValue,
+							timestamp: TimestampUTC,
+							session: UUID,
+							fromCache: Boolean,
+						) {
+							try {
+								val outer = result.asObject()!!.getObject("gfyItem")
+								listener.onSuccess(ImageInfo.parseGfycat(outer!!))
+							} catch (t: Throwable) {
+								listener.onFailure(
+									getGeneralErrorForFailure(
+										context,
+										RequestFailureType.PARSE,
+										t,
+										null,
+										apiUrl,
+										Optional.Companion.of<FailedRequestBody>(
+											FailedRequestBody(
+												result,
+											),
+										),
+									),
+								)
+							}
+						}
 
-                    override fun onFailure(error: RRError) {
-                        listener.onFailure(error)
-                    }
-                })
-            )
-        )
-    }
+						override fun onFailure(error: RRError) {
+							listener.onFailure(error)
+						}
+					},
+				),
+			),
+		)
+	}
 }

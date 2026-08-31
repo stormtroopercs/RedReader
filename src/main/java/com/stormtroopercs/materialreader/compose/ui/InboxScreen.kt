@@ -17,23 +17,19 @@
 
 package com.stormtroopercs.materialreader.compose.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,313 +44,309 @@ import com.stormtroopercs.materialreader.navigation.InboxViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InboxScreen(
-    onNavigateBack: () -> Unit,
-    onSendMessage: () -> Unit,
-    onReplyToMessage: (InboxViewModel.InboxItem) -> Unit,
-    viewModel: InboxViewModel = hiltViewModel(),
-    onMarkAllRead: () -> Unit = { viewModel.markAllAsRead() }
+	onNavigateBack: () -> Unit,
+	onSendMessage: () -> Unit,
+	onReplyToMessage: (InboxViewModel.InboxItem) -> Unit,
+	viewModel: InboxViewModel = hiltViewModel(),
+	onMarkAllRead: () -> Unit = { viewModel.markAllAsRead() },
 ) {
-    val state by viewModel.state.collectAsState()
-    val markError by viewModel.markError.collectAsState()
+	val state by viewModel.state.collectAsState()
+	val markError by viewModel.markError.collectAsState()
 
-    val snackbarHostState = remember { SnackbarHostState() }
-    LaunchedEffect(markError) {
-        markError?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearMarkError()
-        }
-    }
+	val snackbarHostState = remember { SnackbarHostState() }
+	LaunchedEffect(markError) {
+		markError?.let {
+			snackbarHostState.showSnackbar(it)
+			viewModel.clearMarkError()
+		}
+	}
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = "Inbox")
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onMarkAllRead) {
-                        Icon(
-                            imageVector = Icons.Default.DoneAll,
-                            contentDescription = "Mark all as read"
-                        )
-                    }
-                    IconButton(onClick = onSendMessage) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Send message"
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        when (val uiState = state) {
-            is InboxViewModel.InboxUiState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
+	Scaffold(
+		snackbarHost = { SnackbarHost(snackbarHostState) },
+		topBar = {
+			TopAppBar(
+				title = {
+					Text(text = "Inbox")
+				},
+				navigationIcon = {
+					IconButton(onClick = onNavigateBack) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Default.ArrowBack,
+							contentDescription = "Back",
+						)
+					}
+				},
+				actions = {
+					IconButton(onClick = onMarkAllRead) {
+						Icon(
+							imageVector = Icons.Default.DoneAll,
+							contentDescription = "Mark all as read",
+						)
+					}
+					IconButton(onClick = onSendMessage) {
+						Icon(
+							imageVector = Icons.Default.Add,
+							contentDescription = "Send message",
+						)
+					}
+				},
+			)
+		},
+	) { paddingValues ->
+		when (val uiState = state) {
+			is InboxViewModel.InboxUiState.Loading -> {
+				Box(
+					modifier = Modifier
+						.fillMaxSize()
+						.padding(paddingValues),
+					contentAlignment = Alignment.Center,
+				) {
+					CircularProgressIndicator()
+				}
+			}
 
-            is InboxViewModel.InboxUiState.Success -> {
-                InboxContent(
-                    uiState = uiState,
-                    onMarkAsRead = { viewModel.markAsRead(it.id) },
-                    onReplyToMessage = onReplyToMessage,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                )
-            }
+			is InboxViewModel.InboxUiState.Success -> {
+				InboxContent(
+					uiState = uiState,
+					onMarkAsRead = { viewModel.markAsRead(it.id) },
+					onReplyToMessage = onReplyToMessage,
+					modifier = Modifier
+						.fillMaxSize()
+						.padding(paddingValues),
+				)
+			}
 
-            is InboxViewModel.InboxUiState.Error -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = uiState.message,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.loadInbox() }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-            }
-        }
-    }
+			is InboxViewModel.InboxUiState.Error -> {
+				Box(
+					modifier = Modifier
+						.fillMaxSize()
+						.padding(paddingValues),
+					contentAlignment = Alignment.Center,
+				) {
+					Column(
+						horizontalAlignment = Alignment.CenterHorizontally,
+					) {
+						Text(
+							text = uiState.message,
+							color = MaterialTheme.colorScheme.error,
+							style = MaterialTheme.typography.bodyLarge,
+						)
+						Spacer(modifier = Modifier.height(16.dp))
+						Button(onClick = { viewModel.loadInbox() }) {
+							Text("Retry")
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 @Composable
 private fun InboxContent(
-    uiState: InboxViewModel.InboxUiState.Success,
-    onMarkAsRead: (InboxViewModel.InboxItem) -> Unit,
-    onReplyToMessage: (InboxViewModel.InboxItem) -> Unit,
-    modifier: Modifier = Modifier
+	uiState: InboxViewModel.InboxUiState.Success,
+	onMarkAsRead: (InboxViewModel.InboxItem) -> Unit,
+	onReplyToMessage: (InboxViewModel.InboxItem) -> Unit,
+	modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(16.dp)
-    ) {
-        if (uiState.unreadCount > 0) {
-            item {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text(
-                        text = "${uiState.unreadCount} unread message${if (uiState.unreadCount != 1) "s" else ""}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
+	LazyColumn(
+		modifier = modifier,
+		verticalArrangement = Arrangement.spacedBy(8.dp),
+		contentPadding = PaddingValues(16.dp),
+	) {
+		if (uiState.unreadCount > 0) {
+			item {
+				Surface(
+					modifier = Modifier.fillMaxWidth(),
+					color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+					shape = MaterialTheme.shapes.small,
+				) {
+					Text(
+						text = "${uiState.unreadCount} unread message${if (uiState.unreadCount != 1) "s" else ""}",
+						style = MaterialTheme.typography.bodyMedium,
+						fontWeight = FontWeight.Medium,
+						modifier = Modifier.padding(12.dp),
+					)
+				}
+				Spacer(modifier = Modifier.height(8.dp))
+			}
+		}
 
-        if (uiState.messages.isEmpty()) {
-            item {
-                EmptyInboxState()
-            }
-        } else {
-            items(uiState.messages, key = { it.id }) { message ->
-                InboxMessageCard(
-                    message = message,
-                    onClick = { onMarkAsRead(message) },
-                    onReply = { onReplyToMessage(message) }
-                )
-            }
-        }
-    }
+		if (uiState.messages.isEmpty()) {
+			item {
+				EmptyInboxState()
+			}
+		} else {
+			items(uiState.messages, key = { it.id }) { message ->
+				InboxMessageCard(
+					message = message,
+					onClick = { onMarkAsRead(message) },
+					onReply = { onReplyToMessage(message) },
+				)
+			}
+		}
+	}
 }
 
 @Composable
 private fun EmptyInboxState() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Default.Message,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "No messages yet",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "When someone sends you a message or replies to you,\nit will appear here.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
-    }
+	Column(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(32.dp),
+		horizontalAlignment = Alignment.CenterHorizontally,
+	) {
+		Icon(
+			imageVector = Icons.AutoMirrored.Default.Message,
+			contentDescription = null,
+			modifier = Modifier.size(64.dp),
+			tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+		)
+		Spacer(modifier = Modifier.height(16.dp))
+		Text(
+			text = "No messages yet",
+			style = MaterialTheme.typography.titleMedium,
+			color = MaterialTheme.colorScheme.onSurfaceVariant,
+		)
+		Spacer(modifier = Modifier.height(8.dp))
+		Text(
+			text = "When someone sends you a message or replies to you,\nit will appear here.",
+			style = MaterialTheme.typography.bodyMedium,
+			color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+			textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+		)
+	}
 }
 
 @Composable
 private fun InboxMessageCard(
-    message: InboxViewModel.InboxItem,
-    onClick: () -> Unit,
-    onReply: () -> Unit
+	message: InboxViewModel.InboxItem,
+	onClick: () -> Unit,
+	onReply: () -> Unit,
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = if (message.isRead) {
-                MaterialTheme.colorScheme.surface
-            } else {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
-            }
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Header with sender and type
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = getSenderText(message),
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    if (!message.isRead) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "New",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                // Message type icon
-                Icon(
-                    imageVector = getMessageTypeIcon(message.messageType),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+	Card(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(onClick = onClick),
+		colors = CardDefaults.cardColors(
+			containerColor = if (message.isRead) {
+				MaterialTheme.colorScheme.surface
+			} else {
+				MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+			},
+		),
+	) {
+		Column(
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(16.dp),
+		) {
+			// Header with sender and type
+			Row(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalArrangement = Arrangement.SpaceBetween,
+				verticalAlignment = Alignment.Top,
+			) {
+				Column(
+					modifier = Modifier.weight(1f),
+				) {
+					Text(
+						text = getSenderText(message),
+						style = MaterialTheme.typography.bodyLarge,
+						fontWeight = FontWeight.Medium,
+						maxLines = 1,
+						overflow = TextOverflow.Ellipsis,
+					)
+					if (!message.isRead) {
+						Spacer(modifier = Modifier.height(4.dp))
+						Text(
+							text = "New",
+							style = MaterialTheme.typography.labelSmall,
+							color = MaterialTheme.colorScheme.primary,
+							fontWeight = FontWeight.Bold,
+						)
+					}
+				}
+				// Message type icon
+				Icon(
+					imageVector = getMessageTypeIcon(message.messageType),
+					contentDescription = null,
+					tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+					modifier = Modifier.size(20.dp),
+				)
+			}
 
-            // Subject
-            message.subject?.let { subject ->
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = subject,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+			// Subject
+			message.subject?.let { subject ->
+				Spacer(modifier = Modifier.height(8.dp))
+				Text(
+					text = subject,
+					style = MaterialTheme.typography.bodyMedium,
+					fontWeight = FontWeight.SemiBold,
+					maxLines = 2,
+					overflow = TextOverflow.Ellipsis,
+				)
+			}
 
-            // Body preview
-            message.body?.let { body ->
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = body,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    textDecoration = if (!message.isRead) TextDecoration.None else TextDecoration.LineThrough
-                )
-            }
+			// Body preview
+			message.body?.let { body ->
+				Spacer(modifier = Modifier.height(4.dp))
+				Text(
+					text = body,
+					style = MaterialTheme.typography.bodySmall,
+					color = MaterialTheme.colorScheme.onSurfaceVariant,
+					maxLines = 3,
+					overflow = TextOverflow.Ellipsis,
+					textDecoration = if (!message.isRead) TextDecoration.None else TextDecoration.LineThrough,
+				)
+			}
 
-            // Footer with timestamp
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = formatTimestamp(message.timestamp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (message.messageType == InboxViewModel.MessageType.MESSAGE) {
-                    TextButton(onClick = onReply) {
-                        Text("Reply")
-                    }
-                }
-            }
-        }
-    }
+			// Footer with timestamp
+			Spacer(modifier = Modifier.height(12.dp))
+			Row(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalArrangement = Arrangement.SpaceBetween,
+				verticalAlignment = Alignment.CenterVertically,
+			) {
+				Text(
+					text = formatTimestamp(message.timestamp),
+					style = MaterialTheme.typography.labelSmall,
+					color = MaterialTheme.colorScheme.onSurfaceVariant,
+				)
+				if (message.messageType == InboxViewModel.MessageType.MESSAGE) {
+					TextButton(onClick = onReply) {
+						Text("Reply")
+					}
+				}
+			}
+		}
+	}
 }
 
-private fun getSenderText(message: InboxViewModel.InboxItem): String {
-    return when (message.messageType) {
-        InboxViewModel.MessageType.MESSAGE -> "From: ${message.sender ?: "Unknown"}"
-        InboxViewModel.MessageType.COMMENT_REPLY -> "Comment reply on ${message.subreddit ?: "a subreddit"}"
-        InboxViewModel.MessageType.POST_REPLY -> "Post reply on ${message.subreddit ?: "a subreddit"}"
-        InboxViewModel.MessageType.LIKE -> "New like"
-        InboxViewModel.MessageType.OTHER -> "Notification"
-    }
+private fun getSenderText(message: InboxViewModel.InboxItem): String = when (message.messageType) {
+	InboxViewModel.MessageType.MESSAGE -> "From: ${message.sender ?: "Unknown"}"
+	InboxViewModel.MessageType.COMMENT_REPLY -> "Comment reply on ${message.subreddit ?: "a subreddit"}"
+	InboxViewModel.MessageType.POST_REPLY -> "Post reply on ${message.subreddit ?: "a subreddit"}"
+	InboxViewModel.MessageType.LIKE -> "New like"
+	InboxViewModel.MessageType.OTHER -> "Notification"
 }
 
-private fun getMessageTypeIcon(messageType: InboxViewModel.MessageType): androidx.compose.ui.graphics.vector.ImageVector {
-    return when (messageType) {
-        InboxViewModel.MessageType.MESSAGE -> Icons.AutoMirrored.Default.Message
-        InboxViewModel.MessageType.COMMENT_REPLY -> Icons.AutoMirrored.Filled.Comment
-        InboxViewModel.MessageType.POST_REPLY -> Icons.Default.PostAdd
-        InboxViewModel.MessageType.LIKE -> Icons.Default.Favorite
-        InboxViewModel.MessageType.OTHER -> Icons.Default.Notifications
-    }
+private fun getMessageTypeIcon(messageType: InboxViewModel.MessageType): androidx.compose.ui.graphics.vector.ImageVector = when (messageType) {
+	InboxViewModel.MessageType.MESSAGE -> Icons.AutoMirrored.Default.Message
+	InboxViewModel.MessageType.COMMENT_REPLY -> Icons.AutoMirrored.Filled.Comment
+	InboxViewModel.MessageType.POST_REPLY -> Icons.Default.PostAdd
+	InboxViewModel.MessageType.LIKE -> Icons.Default.Favorite
+	InboxViewModel.MessageType.OTHER -> Icons.Default.Notifications
 }
 
 private fun formatTimestamp(timestamp: Long): String {
-    val now = System.currentTimeMillis()
-    val diff = now - timestamp
-    return when {
-        diff < 60_000 -> "Just now"
-        diff < 3_600_000 -> "${diff / 60_000}m ago"
-        diff < 86_400_000 -> "${diff / 3_600_000}h ago"
-        diff < 604_800_000 -> "${diff / 86_400_000}d ago"
-        else -> "${diff / (604_800_000 * 4)} weeks ago"
-    }
+	val now = System.currentTimeMillis()
+	val diff = now - timestamp
+	return when {
+		diff < 60_000 -> "Just now"
+		diff < 3_600_000 -> "${diff / 60_000}m ago"
+		diff < 86_400_000 -> "${diff / 3_600_000}h ago"
+		diff < 604_800_000 -> "${diff / 86_400_000}d ago"
+		else -> "${diff / (604_800_000 * 4)} weeks ago"
+	}
 }

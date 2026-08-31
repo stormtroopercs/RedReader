@@ -19,18 +19,18 @@ package com.stormtroopercs.materialreader.navigation
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
+import com.stormtroopercs.materialreader.account.RedditAccountManager
+import com.stormtroopercs.materialreader.cache.CacheManager
+import com.stormtroopercs.materialreader.common.BugReporter
+import com.stormtroopercs.materialreader.common.RRError
+import com.stormtroopercs.materialreader.reddit.APIResponseHandler.ActionResponseHandler
+import com.stormtroopercs.materialreader.reddit.RedditAPI
+import com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import com.stormtroopercs.materialreader.common.BugReporter
-import com.stormtroopercs.materialreader.account.RedditAccountManager
-import com.stormtroopercs.materialreader.cache.CacheManager
-import com.stormtroopercs.materialreader.common.RRError
-import com.stormtroopercs.materialreader.reddit.APIResponseHandler.ActionResponseHandler
-import com.stormtroopercs.materialreader.reddit.RedditAPI
-import com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType
 import javax.inject.Inject
 
 /**
@@ -46,74 +46,74 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class CommentEditViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val accountManager: RedditAccountManager,
-    private val cacheManager: CacheManager
+	@ApplicationContext private val context: Context,
+	private val accountManager: RedditAccountManager,
+	private val cacheManager: CacheManager,
 ) : ViewModel() {
 
-    sealed class EditUiState {
-        object Idle : EditUiState()
-        object Submitting : EditUiState()
-        object Success : EditUiState()
-        data class Error(val message: String) : EditUiState()
-    }
+	sealed class EditUiState {
+		object Idle : EditUiState()
+		object Submitting : EditUiState()
+		object Success : EditUiState()
+		data class Error(val message: String) : EditUiState()
+	}
 
-    private val _state = MutableStateFlow<EditUiState>(EditUiState.Idle)
-    val state: StateFlow<EditUiState> = _state.asStateFlow()
+	private val _state = MutableStateFlow<EditUiState>(EditUiState.Idle)
+	val state: StateFlow<EditUiState> = _state.asStateFlow()
 
-    private var thingIdAndType: RedditIdAndType? = null
-    private var initialText: String = ""
+	private var thingIdAndType: RedditIdAndType? = null
+	private var initialText: String = ""
 
-    /**
-     * Seed the (per-navigation-entry) ViewModel with the thing being edited
-     * and its current markdown.
-     */
-    fun setThing(idAndType: RedditIdAndType, text: String) {
-        thingIdAndType = idAndType
-        initialText = text
-    }
+	/**
+	 * Seed the (per-navigation-entry) ViewModel with the thing being edited
+	 * and its current markdown.
+	 */
+	fun setThing(idAndType: RedditIdAndType, text: String) {
+		thingIdAndType = idAndType
+		initialText = text
+	}
 
-    /** The text to show in the editor (current, or the seeded markdown). */
-    fun initialText(): String = initialText
+	/** The text to show in the editor (current, or the seeded markdown). */
+	fun initialText(): String = initialText
 
-    /**
-     * Issue the `api/editusertext` request with the given markdown, exactly
-     * as the legacy `CommentEditActivity.onOptionsItemSelected` did (default
-     * account, same handler semantics: success -> [EditUiState.Success],
-     * failure -> [EditUiState.Error] with the [RRError] message, exception
-     * -> global bug report).
-     */
-    fun submit(activity: AppCompatActivity, markdown: String) {
-        val idAndType = thingIdAndType ?: return
-        _state.value = EditUiState.Submitting
+	/**
+	 * Issue the `api/editusertext` request with the given markdown, exactly
+	 * as the legacy `CommentEditActivity.onOptionsItemSelected` did (default
+	 * account, same handler semantics: success -> [EditUiState.Success],
+	 * failure -> [EditUiState.Error] with the [RRError] message, exception
+	 * -> global bug report).
+	 */
+	fun submit(activity: AppCompatActivity, markdown: String) {
+		val idAndType = thingIdAndType ?: return
+		_state.value = EditUiState.Submitting
 
-        val handler = object : ActionResponseHandler(activity) {
-            override fun onSuccess() {
-                _state.value = EditUiState.Success
-            }
+		val handler = object : ActionResponseHandler(activity) {
+			override fun onSuccess() {
+				_state.value = EditUiState.Success
+			}
 
-            override fun onFailure(error: RRError) {
-                _state.value = EditUiState.Error(error.message ?: "Edit failed")
-            }
+			override fun onFailure(error: RRError) {
+				_state.value = EditUiState.Error(error.message ?: "Edit failed")
+			}
 
-            override fun onCallbackException(t: Throwable) {
-                BugReporter.handleGlobalError(activity, t)
-            }
-        }
+			override fun onCallbackException(t: Throwable) {
+				BugReporter.handleGlobalError(activity, t)
+			}
+		}
 
-        val account = accountManager.getDefaultAccount()
-        RedditAPI.editComment(
-            cacheManager,
-            handler,
-            account,
-            idAndType,
-            markdown,
-            activity
-        )
-    }
+		val account = accountManager.getDefaultAccount()
+		RedditAPI.editComment(
+			cacheManager,
+			handler,
+			account,
+			idAndType,
+			markdown,
+			activity,
+		)
+	}
 
-    /** Reset to Idle after a success (used to dismiss back to the list). */
-    fun onDone() {
-        _state.value = EditUiState.Idle
-    }
+	/** Reset to Idle after a success (used to dismiss back to the list). */
+	fun onDone() {
+		_state.value = EditUiState.Idle
+	}
 }

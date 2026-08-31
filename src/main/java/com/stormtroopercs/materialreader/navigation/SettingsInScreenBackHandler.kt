@@ -42,53 +42,55 @@ package com.stormtroopercs.materialreader.navigation
  */
 object SettingsInScreenBackHandler {
 
-    /** The in-screen sub-states that can be open (topmost-first for back). */
-    enum class SubState {
-        /** The Theme colours panel (highest; opened from inside a category). */
-        THEME_COLOURS,
-        /** The Appbar sub-screen. */
-        APPBAR,
-        /** A category "folder" sub-screen. */
-        CATEGORY
-    }
+	/** The in-screen sub-states that can be open (topmost-first for back). */
+	enum class SubState {
+		/** The Theme colours panel (highest; opened from inside a category). */
+		THEME_COLOURS,
 
-    /** The topmost open sub-state, or null when the root list is showing. */
-    private var subState: SubState? = null
+		/** The Appbar sub-screen. */
+		APPBAR,
 
-    /**
-     * Invoked on the main thread whenever [canGoBack] might have changed
-     * (a sub-state opened/closed), so that a host activity can re-evaluate
-     * whether it must intercept the system back key (see
-     * BaseActivity.invalidateBackPressedCallback()).
-     */
-    var onBackChanged: (() -> Unit)? = null
+		/** A category "folder" sub-screen. */
+		CATEGORY,
+	}
 
-    /** Invoked with the sub-state that [goBack] just closed. */
-    var onClosed: ((SubState) -> Unit)? = null
+	/** The topmost open sub-state, or null when the root list is showing. */
+	private var subState: SubState? = null
 
-    /** Whether a Settings sub-state is open and could consume a back press. */
-    val canGoBack: Boolean
-        get() = subState != null
+	/**
+	 * Invoked on the main thread whenever [canGoBack] might have changed
+	 * (a sub-state opened/closed), so that a host activity can re-evaluate
+	 * whether it must intercept the system back key (see
+	 * BaseActivity.invalidateBackPressedCallback()).
+	 */
+	var onBackChanged: (() -> Unit)? = null
 
-    /** Publish (or clear) the currently open topmost sub-state. */
-    fun setTopState(sub: SubState?) {
-        if (this.subState != sub) {
-            this.subState = sub
-            onBackChanged?.invoke()
-        }
-    }
+	/** Invoked with the sub-state that [goBack] just closed. */
+	var onClosed: ((SubState) -> Unit)? = null
 
-    /** Close the topmost open sub-state. `true` if the back press was consumed. */
-    fun goBack(): Boolean {
-        val current = subState ?: return false
-        subState = null
-        onClosed?.invoke(current)
-        onBackChanged?.invoke()
-        return true
-    }
+	/** Whether a Settings sub-state is open and could consume a back press. */
+	val canGoBack: Boolean
+		get() = subState != null
 
-    /** Drop the registered sub-state (e.g. when the Settings route is disposed). */
-    fun clear() {
-        setTopState(null)
-    }
+	/** Publish (or clear) the currently open topmost sub-state. */
+	fun setTopState(sub: SubState?) {
+		if (this.subState != sub) {
+			this.subState = sub
+			onBackChanged?.invoke()
+		}
+	}
+
+	/** Close the topmost open sub-state. `true` if the back press was consumed. */
+	fun goBack(): Boolean {
+		val current = subState ?: return false
+		subState = null
+		onClosed?.invoke(current)
+		onBackChanged?.invoke()
+		return true
+	}
+
+	/** Drop the registered sub-state (e.g. when the Settings route is disposed). */
+	fun clear() {
+		setTopState(null)
+	}
 }

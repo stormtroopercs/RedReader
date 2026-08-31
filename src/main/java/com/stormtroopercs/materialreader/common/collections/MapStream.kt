@@ -17,18 +17,14 @@
 package com.stormtroopercs.materialreader.common.collections
 
 class MapStream<Input, Output>(
-    private val mInput: Stream<Input>,
-    private val mOperator: Operator<Input, Output>
+	private val mInput: Stream<Input>,
+	private val mOperator: Operator<Input, Output>,
 ) : Stream<Output>() {
-    fun interface Operator<Input, Output> {
-        fun operate(value: Input): Output
-    }
+	fun interface Operator<Input, Output> {
+		fun operate(value: Input): Output
+	}
 
-    override fun hasNext(): Boolean {
-        return mInput.hasNext()
-    }
+	override fun hasNext(): Boolean = mInput.hasNext()
 
-    override fun take(): Output {
-        return mOperator.operate(mInput.take())
-    }
+	override fun take(): Output = mOperator.operate(mInput.take())
 }

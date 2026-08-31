@@ -17,5 +17,5 @@
 package com.stormtroopercs.materialreader.account
 
 fun interface RedditAccountChangeListener {
-    fun onRedditAccountChanged()
+	fun onRedditAccountChanged()
 }

@@ -23,95 +23,87 @@ import com.stormtroopercs.materialreader.jsonwrap.JsonArray
 import com.stormtroopercs.materialreader.jsonwrap.JsonObject
 
 class RedditFlairChoice private constructor(
-    val text: String,
-    val templateId: String
+	val text: String,
+	val templateId: String,
 ) : Parcelable {
-    override fun describeContents(): Int {
-        return 0
-    }
+	override fun describeContents(): Int = 0
 
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-        dest.writeString(text)
-        dest.writeString(templateId)
-    }
+	override fun writeToParcel(dest: Parcel, flags: Int) {
+		dest.writeString(text)
+		dest.writeString(templateId)
+	}
 
-    override fun toString(): String {
-        return "RedditFlairChoice(" +
-                "text='" + text + '\'' +
-                ", templateId='" + templateId + '\'' +
-                ')'
-    }
+	override fun toString(): String = "RedditFlairChoice(" +
+		"text='" + text + '\'' +
+		", templateId='" + templateId + '\'' +
+		')'
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
-            return true
-        }
+	override fun equals(o: Any?): Boolean {
+		if (this === o) {
+			return true
+		}
 
-        if (o !is RedditFlairChoice) {
-            return false
-        }
+		if (o !is RedditFlairChoice) {
+			return false
+		}
 
-        val other = o
-        return text == other.text && templateId == other.templateId
-    }
+		val other = o
+		return text == other.text && templateId == other.templateId
+	}
 
-    override fun hashCode(): Int {
-        return text.hashCode() + 37 * templateId.hashCode()
-    }
+	override fun hashCode(): Int = text.hashCode() + 37 * templateId.hashCode()
 
-    companion object {
-        fun fromJsonList(json: JsonArray): Optional<MutableList<RedditFlairChoice>> {
-            val result = ArrayList<RedditFlairChoice>(json.size())
+	companion object {
+		fun fromJsonList(json: JsonArray): Optional<MutableList<RedditFlairChoice>> {
+			val result = ArrayList<RedditFlairChoice>(json.size())
 
-            for (value in json) {
-                val `object` = value.asObject()
+			for (value in json) {
+				val `object` = value.asObject()
 
-                if (`object` == null) {
-                    return Optional.Companion.empty<MutableList<RedditFlairChoice>>()
-                }
+				if (`object` == null) {
+					return Optional.Companion.empty<MutableList<RedditFlairChoice>>()
+				}
 
-                val choice: Optional<RedditFlairChoice> = fromJson(`object`)
+				val choice: Optional<RedditFlairChoice> = fromJson(`object`)
 
-                if (choice.isEmpty) {
-                    return Optional.Companion.empty<MutableList<RedditFlairChoice>>()
-                }
+				if (choice.isEmpty) {
+					return Optional.Companion.empty<MutableList<RedditFlairChoice>>()
+				}
 
-                result.add(choice.get())
-            }
+				result.add(choice.get())
+			}
 
-            return Optional.Companion.of<MutableList<RedditFlairChoice>>(result)
-        }
+			return Optional.Companion.of<MutableList<RedditFlairChoice>>(result)
+		}
 
-        fun fromJson(
-            json: JsonObject
-        ): Optional<RedditFlairChoice> {
-            val flairText = json.getString("flair_text")
-            val flairTemplateId = json.getString("flair_template_id")
+		fun fromJson(
+			json: JsonObject,
+		): Optional<RedditFlairChoice> {
+			val flairText = json.getString("flair_text")
+			val flairTemplateId = json.getString("flair_template_id")
 
-            if (flairText == null || flairTemplateId == null) {
-                return Optional.Companion.empty<RedditFlairChoice>()
-            }
+			if (flairText == null || flairTemplateId == null) {
+				return Optional.Companion.empty<RedditFlairChoice>()
+			}
 
-            return Optional.Companion.of<RedditFlairChoice>(
-                RedditFlairChoice(
-                    flairText,
-                    flairTemplateId
-                )
-            )
-        }
+			return Optional.Companion.of<RedditFlairChoice>(
+				RedditFlairChoice(
+					flairText,
+					flairTemplateId,
+				),
+			)
+		}
 
-        val CREATOR: Parcelable.Creator<RedditFlairChoice?> =
-            object : Parcelable.Creator<RedditFlairChoice?> {
-                override fun createFromParcel(`in`: Parcel): RedditFlairChoice {
-                    val text = `in`.readString()
-                    val templateId = `in`.readString()
+		val CREATOR: Parcelable.Creator<RedditFlairChoice?> =
+			object : Parcelable.Creator<RedditFlairChoice?> {
+				override fun createFromParcel(`in`: Parcel): RedditFlairChoice {
+					val text = `in`.readString()
+					val templateId = `in`.readString()
 
-                    return RedditFlairChoice(text!!, templateId!!)
-                }
+					return RedditFlairChoice(text!!, templateId!!)
+				}
 
-                override fun newArray(size: Int): Array<RedditFlairChoice?> {
-                    return arrayOfNulls<RedditFlairChoice>(size)
-                }
-            }
-    }
+				override fun newArray(size: Int): Array<RedditFlairChoice?> = arrayOfNulls<RedditFlairChoice>(size)
+			}
+	}
 }

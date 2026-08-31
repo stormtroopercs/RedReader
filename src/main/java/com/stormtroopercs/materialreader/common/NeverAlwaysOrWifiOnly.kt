@@ -17,21 +17,15 @@
 package com.stormtroopercs.materialreader.common
 
 enum class NeverAlwaysOrWifiOnly {
-    NEVER {
-        override fun isEnabled(wifiActive: Boolean): Boolean {
-            return false
-        }
-    },
-    WIFIONLY {
-        override fun isEnabled(wifiActive: Boolean): Boolean {
-            return wifiActive
-        }
-    },
-    ALWAYS {
-        override fun isEnabled(wifiActive: Boolean): Boolean {
-            return true
-        }
-    };
+	NEVER {
+		override fun isEnabled(wifiActive: Boolean): Boolean = false
+	},
+	WIFIONLY {
+		override fun isEnabled(wifiActive: Boolean): Boolean = wifiActive
+	},
+	ALWAYS {
+		override fun isEnabled(wifiActive: Boolean): Boolean = true
+	}, ;
 
-    abstract fun isEnabled(wifiActive: Boolean): Boolean
+	abstract fun isEnabled(wifiActive: Boolean): Boolean
 }

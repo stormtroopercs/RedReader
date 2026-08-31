@@ -17,10 +17,11 @@
 package com.stormtroopercs.materialreader.cache
 
 import android.content.Context
-import com.stormtroopercs.materialreader.common.BugReporter.handleGlobalError
 import com.stormtroopercs.materialreader.cache.CacheRequest.RequestFailureType
+import com.stormtroopercs.materialreader.common.BugReporter.handleGlobalError
 import com.stormtroopercs.materialreader.common.CachedThreadPool
 import com.stormtroopercs.materialreader.common.FunctionOneArgWithReturn
+import com.stormtroopercs.materialreader.common.General
 import com.stormtroopercs.materialreader.common.General.getGeneralErrorForFailure
 import com.stormtroopercs.materialreader.common.General.ignoreIOException
 import com.stormtroopercs.materialreader.common.GenericFactory
@@ -34,92 +35,95 @@ import com.stormtroopercs.materialreader.jsonwrap.JsonValue
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
-import com.stormtroopercs.materialreader.common.General
 
 class CacheRequestJSONParser(
-    private val mContext: Context,
-    private val mListener: Listener
+	private val mContext: Context,
+	private val mListener: Listener,
 ) : CacheRequestCallbacks {
-    interface Listener {
-        fun onJsonParsed(
-            result: JsonValue,
-            timestamp: TimestampUTC,
-            session: UUID,
-            fromCache: Boolean
-        )
+	interface Listener {
+		fun onJsonParsed(
+			result: JsonValue,
+			timestamp: TimestampUTC,
+			session: UUID,
+			fromCache: Boolean,
+		)
 
-        fun onFailure(error: RRError)
+		fun onFailure(error: RRError)
 
-        fun onDownloadNecessary() {
-            // Do nothing by default
-        }
-    }
+		fun onDownloadNecessary() {
+			// Do nothing by default
+		}
+	}
 
-    private val mNotifiedFailure = AtomicBoolean(false)
+	private val mNotifiedFailure = AtomicBoolean(false)
 
-    override fun onDataStreamAvailable(
-        streamFactory: GenericFactory<SeekableInputStream, IOException>,
-        timestamp: TimestampUTC,
-        session: UUID,
-        fromCache: Boolean,
-        mimetype: String?
-    ) {
-        try {
-            mThreadPool.add(Runnable {
-                val jsonValue: JsonValue
-                try {
-                    streamFactory.create().use { `is` ->
-                        jsonValue = JsonValue.Companion.parse(`is`)
-                    }
-                } catch (e: IOException) {
-                    if (!mNotifiedFailure.getAndSet(true)) {
-                        mListener.onFailure(
-                            getGeneralErrorForFailure(
-                                mContext,
-                                RequestFailureType.PARSE,
-                                e,
-                                null,
-                                null,
-                                General.ignoreIOException<SeekableInputStream>(streamFactory)
-                                    .filter<FailedRequestBody>(FunctionOneArgWithReturn { `is` ->
-                                        FailedRequestBody.Companion.from(
-                                            `is`
-                                        )
-                                    })
-                            )
-                        )
-                    }
-                    return@Runnable
-                }
-                try {
-                    mListener.onJsonParsed(jsonValue, timestamp, session, fromCache)
-                } catch (e: Exception) {
-                    handleGlobalError(mContext, e)
-                }
-            })
-        } catch (e: Exception) {
-            if (!mNotifiedFailure.getAndSet(true)) {
-                onFailure(
-                    getGeneralErrorForFailure(
-                        mContext,
-                        RequestFailureType.STORAGE,
-                        e,
-                        null,
-                        null,
-                        Optional.Companion.empty<FailedRequestBody>()
-                    )
-                )
-            }
-        }
-    }
+	override fun onDataStreamAvailable(
+		streamFactory: GenericFactory<SeekableInputStream, IOException>,
+		timestamp: TimestampUTC,
+		session: UUID,
+		fromCache: Boolean,
+		mimetype: String?,
+	) {
+		try {
+			mThreadPool.add(
+				Runnable {
+					val jsonValue: JsonValue
+					try {
+						streamFactory.create().use { `is` ->
+							jsonValue = JsonValue.Companion.parse(`is`)
+						}
+					} catch (e: IOException) {
+						if (!mNotifiedFailure.getAndSet(true)) {
+							mListener.onFailure(
+								getGeneralErrorForFailure(
+									mContext,
+									RequestFailureType.PARSE,
+									e,
+									null,
+									null,
+									General.ignoreIOException<SeekableInputStream>(streamFactory)
+										.filter<FailedRequestBody>(
+											FunctionOneArgWithReturn { `is` ->
+												FailedRequestBody.Companion.from(
+													`is`,
+												)
+											},
+										),
+								),
+							)
+						}
+						return@Runnable
+					}
+					try {
+						mListener.onJsonParsed(jsonValue, timestamp, session, fromCache)
+					} catch (e: Exception) {
+						handleGlobalError(mContext, e)
+					}
+				},
+			)
+		} catch (e: Exception) {
+			if (!mNotifiedFailure.getAndSet(true)) {
+				onFailure(
+					getGeneralErrorForFailure(
+						mContext,
+						RequestFailureType.STORAGE,
+						e,
+						null,
+						null,
+						Optional.Companion.empty<FailedRequestBody>(),
+					),
+				)
+			}
+		}
+	}
 
-    override fun onFailure(error: RRError) {
-        if (!mNotifiedFailure.getAndSet(true)) {
-            mListener.onFailure(error)
-        }
-    }
+	override fun onFailure(error: RRError) {
+		if (!mNotifiedFailure.getAndSet(true)) {
+			mListener.onFailure(error)
+		}
+	}
 
-    companion object {
-        private val mThreadPool = CachedThreadPool(5, "JSONParser")
-    }
+	companion object {
+		private val mThreadPool = CachedThreadPool(5, "JSONParser")
+	}
 }

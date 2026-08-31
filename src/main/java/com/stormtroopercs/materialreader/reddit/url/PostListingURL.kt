@@ -21,10 +21,10 @@ import com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType
 import com.stormtroopercs.materialreader.reddit.url.RedditURLParser.RedditURL
 
 abstract class PostListingURL : RedditURL() {
-    abstract fun after(after : RedditIdAndType): PostListingURL
+	abstract fun after(after: RedditIdAndType): PostListingURL
 
-    abstract fun limit(limit: Int?): PostListingURL
+	abstract fun limit(limit: Int?): PostListingURL
 
-    open val order: PostSort?
-        get() = null
+	open val order: PostSort?
+		get() = null
 }

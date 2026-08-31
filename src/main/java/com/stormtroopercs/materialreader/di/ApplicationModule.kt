@@ -20,12 +20,12 @@ package com.stormtroopercs.materialreader.di
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.work.WorkManager
+import com.stormtroopercs.materialreader.cache.CacheManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import com.stormtroopercs.materialreader.cache.CacheManager
 import javax.inject.Singleton
 
 /**
@@ -36,27 +36,19 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object ApplicationModule {
 
-    @Provides
-    @Singleton
-    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
-        return context.getSharedPreferences("redreader_prefs", Context.MODE_PRIVATE)
-    }
+	@Provides
+	@Singleton
+	fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences = context.getSharedPreferences("redreader_prefs", Context.MODE_PRIVATE)
 
-    @Provides
-    @Singleton
-    fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
-        return WorkManager.getInstance(context)
-    }
+	@Provides
+	@Singleton
+	fun provideWorkManager(@ApplicationContext context: Context): WorkManager = WorkManager.getInstance(context)
 
-    @Provides
-    @Singleton
-    fun provideContext(@ApplicationContext context: Context): Context {
-        return context.applicationContext
-    }
+	@Provides
+	@Singleton
+	fun provideContext(@ApplicationContext context: Context): Context = context.applicationContext
 
-    @Provides
-    @Singleton
-    fun provideCacheManager(@ApplicationContext context: Context): CacheManager {
-        return CacheManager(context)
-    }
+	@Provides
+	@Singleton
+	fun provideCacheManager(@ApplicationContext context: Context): CacheManager = CacheManager(context)
 }

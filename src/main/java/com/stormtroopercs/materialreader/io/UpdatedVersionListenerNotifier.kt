@@ -18,9 +18,8 @@ package com.stormtroopercs.materialreader.io
 
 import com.stormtroopercs.materialreader.common.collections.WeakReferenceListManager.ArgOperator
 
-class UpdatedVersionListenerNotifier<K, V : WritableObject<K>>
-    : ArgOperator<UpdatedVersionListener<K, V>, V> {
-    override fun operate(listener: UpdatedVersionListener<K, V>, data: V) {
-        listener.onUpdatedVersion(data)
-    }
+class UpdatedVersionListenerNotifier<K, V : WritableObject<K>> : ArgOperator<UpdatedVersionListener<K, V>, V> {
+	override fun operate(listener: UpdatedVersionListener<K, V>, data: V) {
+		listener.onUpdatedVersion(data)
+	}
 }

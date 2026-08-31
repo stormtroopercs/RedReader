@@ -36,211 +36,200 @@ import com.stormtroopercs.materialreader.common.StringUtils
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.Locale
-import com.stormtroopercs.materialreader.common.General
 
 class CacheContentProvider : ContentProvider() {
-    private var mCacheManager: CacheManager?=null
+	private var mCacheManager: CacheManager? = null
 
-    private fun getReadableCacheFile(uri: Uri): Optional<ReadableCacheFile> {
-        val filename = filenameFromString(uri.toString())
+	private fun getReadableCacheFile(uri: Uri): Optional<ReadableCacheFile> {
+		val filename = filenameFromString(uri.toString())
 
-        val cacheId: Optional<Long> = getCacheIdFromFilename(filename)
+		val cacheId: Optional<Long> = getCacheIdFromFilename(filename)
 
-        if (!cacheId.isPresent) {
-            return Optional.Companion.empty<ReadableCacheFile>()
-        }
+		if (!cacheId.isPresent) {
+			return Optional.Companion.empty<ReadableCacheFile>()
+		}
 
-        return Optional.Companion.of<ReadableCacheFile>(
-            mCacheManager!!.getExistingCacheFileById(
-                cacheId.get(),
-                CacheCompressionType.NONE
-            )
-        ) // No compression is used for images
-    }
+		return Optional.Companion.of<ReadableCacheFile>(
+			mCacheManager!!.getExistingCacheFileById(
+				cacheId.get(),
+				CacheCompressionType.NONE,
+			),
+		) // No compression is used for images
+	}
 
-    private fun getFile(uri: Uri): Optional<File> {
-        val readableCacheFile = getReadableCacheFile(uri)
+	private fun getFile(uri: Uri): Optional<File> {
+		val readableCacheFile = getReadableCacheFile(uri)
 
-        if (!readableCacheFile.isPresent) {
-            return Optional.Companion.empty<File>()
-        }
+		if (!readableCacheFile.isPresent) {
+			return Optional.Companion.empty<File>()
+		}
 
-        return readableCacheFile.get().file
-    }
+		return readableCacheFile.get().file
+	}
 
-    @Throws(FileNotFoundException::class)
-    override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor? {
-        return ParcelFileDescriptor.open(
-            getFile(uri).orThrow<FileNotFoundException>(GenericFactory { FileNotFoundException(uri.toString()) }),
-            ParcelFileDescriptor.MODE_READ_ONLY
-        )
-    }
+	@Throws(FileNotFoundException::class)
+	override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor? = ParcelFileDescriptor.open(
+		getFile(uri).orThrow<FileNotFoundException>(GenericFactory { FileNotFoundException(uri.toString()) }),
+		ParcelFileDescriptor.MODE_READ_ONLY,
+	)
 
-    override fun onCreate(): Boolean {
-        mCacheManager = CacheManager.Companion.getInstance(getContext()!!)
-        return true
-    }
+	override fun onCreate(): Boolean {
+		mCacheManager = CacheManager.Companion.getInstance(getContext()!!)
+		return true
+	}
 
-    override fun attachInfo(
-        context: Context,
-        info: ProviderInfo
-    ) {
-        super.attachInfo(context, info)
+	override fun attachInfo(
+		context: Context,
+		info: ProviderInfo,
+	) {
+		super.attachInfo(context, info)
 
-        // Sanity check our security
-        if (info.exported) {
-            throw SecurityException("Provider must not be exported")
-        }
+		// Sanity check our security
+		if (info.exported) {
+			throw SecurityException("Provider must not be exported")
+		}
 
-        if (!info.grantUriPermissions) {
-            throw SecurityException("Provider must grant uri permissions")
-        }
-    }
+		if (!info.grantUriPermissions) {
+			throw SecurityException("Provider must grant uri permissions")
+		}
+	}
 
-    override fun query(
-        uri: Uri,
-        projection: Array<String?>?,
-        selection: String?,
-        selectionArgs: Array<String?>?,
-        sortOrder: String?
-    ): Cursor? {
-        val readableCacheFile = getReadableCacheFile(uri)
+	override fun query(
+		uri: Uri,
+		projection: Array<String?>?,
+		selection: String?,
+		selectionArgs: Array<String?>?,
+		sortOrder: String?,
+	): Cursor? {
+		val readableCacheFile = getReadableCacheFile(uri)
 
-        if (!readableCacheFile.isPresent) {
-            Log.e(TAG, "Couldn't get readable cache file: " + uri)
-            return MatrixCursor(COLUMNS, 0)
-        }
+		if (!readableCacheFile.isPresent) {
+			Log.e(TAG, "Couldn't get readable cache file: " + uri)
+			return MatrixCursor(COLUMNS, 0)
+		}
 
-        val file = readableCacheFile.get().file
+		val file = readableCacheFile.get().file
 
-        if (!file.isPresent) {
-            Log.e(TAG, "Couldn't get underlying file: " + uri)
-            return MatrixCursor(COLUMNS, 0)
-        }
+		if (!file.isPresent) {
+			Log.e(TAG, "Couldn't get underlying file: " + uri)
+			return MatrixCursor(COLUMNS, 0)
+		}
 
-        val mimetype = readableCacheFile.get().lookupMimetype()
+		val mimetype = readableCacheFile.get().lookupMimetype()
 
-        if (!mimetype.isPresent) {
-            Log.e(TAG, "Couldn't get mimetype: " + uri)
-            return MatrixCursor(COLUMNS, 0)
-        }
+		if (!mimetype.isPresent) {
+			Log.e(TAG, "Couldn't get mimetype: " + uri)
+			return MatrixCursor(COLUMNS, 0)
+		}
 
-        val cols = ArrayList<String?>()
-        val values = ArrayList<Any?>()
+		val cols = ArrayList<String?>()
+		val values = ArrayList<Any?>()
 
-        for (col in if (projection == null) COLUMNS else projection) {
-            if (OpenableColumns.DISPLAY_NAME == col) {
-                cols.add(OpenableColumns.DISPLAY_NAME)
-                values.add(
-                    generateFilename(
-                        readableCacheFile.get().id,
-                        mimetype.get(),
-                        "jpg"
-                    )
-                )
-            } else if (OpenableColumns.SIZE == col) {
-                cols.add(OpenableColumns.SIZE)
-                values.add(file.get().length())
-            } else if (MediaStore.MediaColumns.MIME_TYPE == col) {
-                cols.add(MediaStore.MediaColumns.MIME_TYPE)
-                values.add(mimetype.get())
-            }
-        }
+		for (col in if (projection == null) COLUMNS else projection) {
+			if (OpenableColumns.DISPLAY_NAME == col) {
+				cols.add(OpenableColumns.DISPLAY_NAME)
+				values.add(
+					generateFilename(
+						readableCacheFile.get().id,
+						mimetype.get(),
+						"jpg",
+					),
+				)
+			} else if (OpenableColumns.SIZE == col) {
+				cols.add(OpenableColumns.SIZE)
+				values.add(file.get().length())
+			} else if (MediaStore.MediaColumns.MIME_TYPE == col) {
+				cols.add(MediaStore.MediaColumns.MIME_TYPE)
+				values.add(mimetype.get())
+			}
+		}
 
-        val cursor = MatrixCursor(cols.toTypedArray<String?>(), 1)
-        cursor.addRow(values)
-        return cursor
-    }
+		val cursor = MatrixCursor(cols.toTypedArray<String?>(), 1)
+		cursor.addRow(values)
+		return cursor
+	}
 
-    override fun getType(uri: Uri): String? {
-        val readableCacheFile = getReadableCacheFile(uri)
+	override fun getType(uri: Uri): String? {
+		val readableCacheFile = getReadableCacheFile(uri)
 
-        if (!readableCacheFile.isPresent) {
-            Log.e(TAG, "Couldn't get readable cache file: " + uri)
-            return null
-        }
+		if (!readableCacheFile.isPresent) {
+			Log.e(TAG, "Couldn't get readable cache file: " + uri)
+			return null
+		}
 
-        return readableCacheFile.get().lookupMimetype().orElseNull()
-    }
+		return readableCacheFile.get().lookupMimetype().orElseNull()
+	}
 
-    override fun insert(
-        uri: Uri,
-        values: ContentValues?
-    ): Uri? {
-        throw UnsupportedOperationException("No external inserts")
-    }
+	override fun insert(
+		uri: Uri,
+		values: ContentValues?,
+	): Uri? = throw UnsupportedOperationException("No external inserts")
 
-    override fun delete(
-        uri: Uri,
-        selection: String?,
-        selectionArgs: Array<String?>?
-    ): Int {
-        return 0
-    }
+	override fun delete(
+		uri: Uri,
+		selection: String?,
+		selectionArgs: Array<String?>?,
+	): Int = 0
 
-    override fun update(
-        uri: Uri,
-        values: ContentValues?,
-        selection: String?,
-        selectionArgs: Array<String?>?
-    ): Int {
-        throw UnsupportedOperationException("No external updates")
-    }
+	override fun update(
+		uri: Uri,
+		values: ContentValues?,
+		selection: String?,
+		selectionArgs: Array<String?>?,
+	): Int = throw UnsupportedOperationException("No external updates")
 
-    companion object {
-        private const val TAG = "CacheContentProvider"
+	companion object {
+		private const val TAG = "CacheContentProvider"
 
-        @Suppress("PropertyName")
-        private val COLUMNS = arrayOf<String?>(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)
+		@Suppress("PropertyName")
+		private val COLUMNS = arrayOf<String?>(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE)
 
-        private fun generateFilename(
-            cacheId: Long,
-            mimetype: String,
-            defaultExtension: String
-        ): String {
-            val extension = FileUtils.getExtensionForMimetype(mimetype).orElse(defaultExtension)
+		private fun generateFilename(
+			cacheId: Long,
+			mimetype: String,
+			defaultExtension: String,
+		): String {
+			val extension = FileUtils.getExtensionForMimetype(mimetype).orElse(defaultExtension)
 
-            return String.format(
-                Locale.US,
-                "redreader_dl_%d.%s",
-                cacheId,
-                extension
-            )
-        }
+			return String.format(
+				Locale.US,
+				"redreader_dl_%d.%s",
+				cacheId,
+				extension,
+			)
+		}
 
-        private fun getCacheIdFromFilename(filename: String): Optional<Long> {
-            val filenameSplitDot: Array<String?> =                 filename.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+		private fun getCacheIdFromFilename(filename: String): Optional<Long> {
+			val filenameSplitDot: Array<String?> = filename.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
-            if (filenameSplitDot.size != 2) {
-                Log.e(TAG, "Expecting one dot in filename: " + filename)
-                return Optional.Companion.empty<Long>()
-            }
+			if (filenameSplitDot.size != 2) {
+				Log.e(TAG, "Expecting one dot in filename: " + filename)
+				return Optional.Companion.empty<Long>()
+			}
 
-            val prefixRemoved = StringUtils.removePrefix(filenameSplitDot[0]!!, "redreader_dl_")
+			val prefixRemoved = StringUtils.removePrefix(filenameSplitDot[0]!!, "redreader_dl_")
 
-            if (!prefixRemoved.isPresent) {
-                Log.e(TAG, "Expecting redreader_dl_ prefix in filename: " + filename)
-                return Optional.Companion.empty<Long>()
-            }
+			if (!prefixRemoved.isPresent) {
+				Log.e(TAG, "Expecting redreader_dl_ prefix in filename: " + filename)
+				return Optional.Companion.empty<Long>()
+			}
 
-            try {
-                return Optional.Companion.of<Long>(prefixRemoved.get().toLong())
-            } catch (e: NumberFormatException) {
-                Log.e(TAG, "Invalid number in filename: " + filename, e)
-                return Optional.Companion.empty<Long>()
-            }
-        }
+			try {
+				return Optional.Companion.of<Long>(prefixRemoved.get().toLong())
+			} catch (e: NumberFormatException) {
+				Log.e(TAG, "Invalid number in filename: " + filename, e)
+				return Optional.Companion.empty<Long>()
+			}
+		}
 
-        fun getUriForFile(
-            cacheId: Long,
-            mimetype: String,
-            defaultExtension: String
-        ): Uri? {
-            return Uri.Builder()
-                .scheme("content")
-                .authority("com.stormtroopercs.materialreader.cacheprovider")
-                .encodedPath(generateFilename(cacheId, mimetype, defaultExtension))
-                .build()
-        }
-    }
+		fun getUriForFile(
+			cacheId: Long,
+			mimetype: String,
+			defaultExtension: String,
+		): Uri? = Uri.Builder()
+			.scheme("content")
+			.authority("com.stormtroopercs.materialreader.cacheprovider")
+			.encodedPath(generateFilename(cacheId, mimetype, defaultExtension))
+			.build()
+	}
 }

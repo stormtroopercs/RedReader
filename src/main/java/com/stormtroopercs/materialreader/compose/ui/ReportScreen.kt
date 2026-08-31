@@ -78,7 +78,7 @@ fun ReportScreen(
 	submitting: Boolean,
 	onCancel: () -> Unit,
 	onSubmit: (ReportReason) -> Unit,
-	onFileComplaint: (SiteRulesFlowEntry) -> Unit
+	onFileComplaint: (SiteRulesFlowEntry) -> Unit,
 ) {
 	val flowStatus by fetchSubredditReportFlow(subredditName)
 
@@ -103,7 +103,7 @@ fun ReportScreen(
 					submitting = submitting,
 					onCancel = onCancel,
 					onSubmit = onSubmit,
-					onFileComplaint = onFileComplaint
+					onFileComplaint = onFileComplaint,
 				)
 			}
 		}
@@ -117,7 +117,7 @@ private fun ColumnScope.ReportScreenContent(
 	submitting: Boolean,
 	onCancel: () -> Unit,
 	onSubmit: (ReportReason) -> Unit,
-	onFileComplaint: (SiteRulesFlowEntry) -> Unit
+	onFileComplaint: (SiteRulesFlowEntry) -> Unit,
 ) {
 	val theme = LocalComposeTheme.current.reportFlow
 
@@ -146,7 +146,7 @@ private fun ColumnScope.ReportScreenContent(
 			theme.body.StyledText(
 				text = position.header
 					?: stringResource(R.string.report_prompt_why),
-				modifier = Modifier.padding(horizontal = 24.dp)
+				modifier = Modifier.padding(horizontal = 24.dp),
 			)
 
 			Spacer(Modifier.height(4.dp))
@@ -154,7 +154,7 @@ private fun ColumnScope.ReportScreenContent(
 			LazyColumn(
 				modifier = Modifier
 					.fillMaxWidth()
-					.weight(1f, fill = false)
+					.weight(1f, fill = false),
 			) {
 				items(position.nodes.size) { index ->
 					ReportOptionRow(position.nodes[index]) {
@@ -184,7 +184,7 @@ private fun ColumnScope.ReportScreenContent(
 				onBack = { path = path.dropLast(1) },
 				onCancel = onCancel,
 				onSubmit = onSubmit,
-				onFileComplaint = onFileComplaint
+				onFileComplaint = onFileComplaint,
 			)
 		}
 	}
@@ -196,7 +196,7 @@ private fun ColumnScope.ReportLeafScreen(
 	onBack: () -> Unit,
 	onCancel: () -> Unit,
 	onSubmit: (ReportReason) -> Unit,
-	onFileComplaint: (SiteRulesFlowEntry) -> Unit
+	onFileComplaint: (SiteRulesFlowEntry) -> Unit,
 ) {
 	val theme = LocalComposeTheme.current.reportFlow
 
@@ -208,12 +208,12 @@ private fun ColumnScope.ReportLeafScreen(
 		modifier = Modifier
 			.fillMaxWidth()
 			.weight(1f, fill = false)
-			.padding(horizontal = 24.dp)
+			.padding(horizontal = 24.dp),
 	) {
 		when (leaf) {
 			is ReportNode.ComplaintLeaf -> {
 				theme.body.StyledText(
-					leaf.entry.complaintPrompt ?: leaf.label
+					leaf.entry.complaintPrompt ?: leaf.label,
 				)
 			}
 
@@ -226,7 +226,7 @@ private fun ColumnScope.ReportLeafScreen(
 					modifier = Modifier.fillMaxWidth(),
 					label = {
 						Text(stringResource(R.string.report_other_reason_hint))
-					}
+					},
 				)
 			}
 
@@ -247,9 +247,9 @@ private fun ColumnScope.ReportLeafScreen(
 					label = {
 						Text(
 							leaf.entry.usernamesInputTitle
-								?: stringResource(R.string.report_username_hint)
+								?: stringResource(R.string.report_username_hint),
 						)
-					}
+					},
 				)
 			}
 
@@ -265,9 +265,9 @@ private fun ColumnScope.ReportLeafScreen(
 					label = {
 						Text(
 							leaf.entry.notesInputTitle
-								?: stringResource(R.string.report_additional_info_hint)
+								?: stringResource(R.string.report_additional_info_hint),
 						)
-					}
+					},
 				)
 			}
 		}
@@ -289,7 +289,7 @@ private fun ColumnScope.ReportLeafScreen(
 				TextButton(onClick = { onFileComplaint(leaf.entry) }) {
 					Text(
 						leaf.entry.complaintButtonText
-							?: stringResource(R.string.report_file_complaint)
+							?: stringResource(R.string.report_file_complaint),
 					)
 				}
 			}
@@ -304,11 +304,13 @@ private fun ColumnScope.ReportLeafScreen(
 
 			is ReportNode.SiteLeaf -> {
 				TextButton(onClick = {
-					onSubmit(ReportReason.Site(
-						reasonText = leaf.entry.reasonText ?: leaf.label,
-						customText = notesText,
-						usernames = usernameText
-					))
+					onSubmit(
+						ReportReason.Site(
+							reasonText = leaf.entry.reasonText ?: leaf.label,
+							customText = notesText,
+							usernames = usernameText,
+						),
+					)
 				}) {
 					Text(stringResource(R.string.action_report))
 				}
@@ -317,7 +319,7 @@ private fun ColumnScope.ReportLeafScreen(
 			is ReportNode.OtherLeaf -> {
 				TextButton(
 					onClick = { onSubmit(ReportReason.Other(otherText)) },
-					enabled = otherText.isNotBlank()
+					enabled = otherText.isNotBlank(),
 				) {
 					Text(stringResource(R.string.action_report))
 				}
@@ -332,7 +334,7 @@ private fun ColumnScope.ReportLeafScreen(
 
 @Composable
 private fun ReportDialogSurface(
-	content: @Composable ColumnScope.() -> Unit
+	content: @Composable ColumnScope.() -> Unit,
 ) {
 	val theme = LocalComposeTheme.current.reportFlow
 
@@ -340,23 +342,23 @@ private fun ReportDialogSurface(
 		modifier = Modifier
 			.fillMaxWidth()
 			.padding(horizontal = 24.dp, vertical = 24.dp),
-		contentAlignment = Alignment.Center
+		contentAlignment = Alignment.Center,
 	) {
 		Surface(
 			modifier = Modifier
 				.widthIn(max = 560.dp)
 				.fillMaxWidth(),
 			shape = RoundedCornerShape(12.dp),
-			color = theme.background
+			color = theme.background,
 		) {
 			Column(
-				modifier = Modifier.padding(top = 20.dp, bottom = 8.dp)
+				modifier = Modifier.padding(top = 20.dp, bottom = 8.dp),
 			) {
 				theme.title.StyledText(
 					text = stringResource(R.string.action_report),
 					modifier = Modifier
 						.padding(horizontal = 24.dp)
-						.semantics { heading() }
+						.semantics { heading() },
 				)
 
 				Spacer(Modifier.height(12.dp))
@@ -373,7 +375,7 @@ private fun ReportProgress() {
 		modifier = Modifier
 			.fillMaxWidth()
 			.height(120.dp),
-		contentAlignment = Alignment.Center
+		contentAlignment = Alignment.Center,
 	) {
 		CircularProgressIndicator()
 	}
@@ -381,7 +383,7 @@ private fun ReportProgress() {
 
 @Composable
 private fun CancelButtonRow(
-	onCancel: () -> Unit
+	onCancel: () -> Unit,
 ) {
 	ButtonRow {
 		Spacer(Modifier.weight(1f))
@@ -394,21 +396,21 @@ private fun CancelButtonRow(
 
 @Composable
 private fun ButtonRow(
-	content: @Composable RowScope.() -> Unit
+	content: @Composable RowScope.() -> Unit,
 ) {
 	Row(
 		modifier = Modifier
 			.fillMaxWidth()
 			.padding(horizontal = 16.dp, vertical = 4.dp),
 		verticalAlignment = Alignment.CenterVertically,
-		content = content
+		content = content,
 	)
 }
 
 @Composable
 private fun ReportOptionRow(
 	node: ReportNode,
-	onClick: () -> Unit
+	onClick: () -> Unit,
 ) {
 	val theme = LocalComposeTheme.current.reportFlow
 
@@ -417,11 +419,11 @@ private fun ReportOptionRow(
 			.fillMaxWidth()
 			.clickable(onClick = onClick, role = Role.Button)
 			.padding(horizontal = 24.dp, vertical = 12.dp),
-		verticalAlignment = Alignment.CenterVertically
+		verticalAlignment = Alignment.CenterVertically,
 	) {
 		theme.item.StyledText(
 			text = node.label,
-			modifier = Modifier.weight(1f)
+			modifier = Modifier.weight(1f),
 		)
 
 		if (node is ReportNode.Branch) {
@@ -430,7 +432,7 @@ private fun ReportOptionRow(
 			Icon(
 				painter = painterResource(R.drawable.chevron_right_dark),
 				contentDescription = null,
-				tint = theme.iconColor
+				tint = theme.iconColor,
 			)
 		}
 	}
@@ -444,50 +446,49 @@ private sealed interface ReportNode {
 	data class Branch(
 		override val label: String,
 		val header: String?,
-		val children: List<ReportNode>
+		val children: List<ReportNode>,
 	) : ReportNode
 
 	@Immutable
 	data class RuleLeaf(
 		override val label: String,
-		val shortName: String
+		val shortName: String,
 	) : ReportNode
 
 	@Immutable
 	data class SiteLeaf(
 		override val label: String,
-		val entry: SiteRulesFlowEntry
+		val entry: SiteRulesFlowEntry,
 	) : ReportNode
 
 	@Immutable
 	data class ComplaintLeaf(
 		override val label: String,
-		val entry: SiteRulesFlowEntry
+		val entry: SiteRulesFlowEntry,
 	) : ReportNode
 
 	@Immutable
 	data class OtherLeaf(
-		override val label: String
+		override val label: String,
 	) : ReportNode
 }
 
 private sealed interface ReportPosition {
 	data class ListScreen(
 		val header: String?,
-		val nodes: List<ReportNode>
+		val nodes: List<ReportNode>,
 	) : ReportPosition
 
 	data class LeafScreen(
-		val leaf: ReportNode
+		val leaf: ReportNode,
 	) : ReportPosition
 }
 
 private fun buildReportTree(
 	flow: SubredditReportFlow,
 	targetKind: SubredditRuleKind,
-	otherLabel: String
+	otherLabel: String,
 ): List<ReportNode> = buildList {
-
 	flow.rules.filter { it.appliesTo(targetKind) }.forEach {
 		add(ReportNode.RuleLeaf(label = it.violationReason, shortName = it.shortName))
 	}
@@ -505,27 +506,26 @@ private fun buildSiteNode(entry: SiteRulesFlowEntry): ReportNode = when {
 	entry.nextStepReasons.isNotEmpty() -> ReportNode.Branch(
 		label = entry.reasonTextToShow,
 		header = entry.nextStepHeader,
-		children = entry.nextStepReasons.map(::buildSiteNode)
+		children = entry.nextStepReasons.map(::buildSiteNode),
 	)
 
 	entry.fileComplaint && entry.complaintUrl != null -> ReportNode.ComplaintLeaf(
 		label = entry.reasonTextToShow,
-		entry = entry
+		entry = entry,
 	)
 
 	else -> ReportNode.SiteLeaf(
 		label = entry.reasonTextToShow,
-		entry = entry
+		entry = entry,
 	)
 }
 
 private fun resolvePath(
 	root: List<ReportNode>,
-	path: List<Int>
+	path: List<Int>,
 ): ReportPosition? {
-
 	var nodes = root
-	var header: String?=null
+	var header: String? = null
 
 	path.forEachIndexed { depth, index ->
 		when (val node = nodes.getOrNull(index) ?: return null) {
@@ -556,13 +556,13 @@ private fun PreviewReportScreen() {
 						SubredditRule(
 							kind = SubredditRuleKind.ALL,
 							shortName = "No spam",
-							violationReason = "This is spam"
+							violationReason = "This is spam",
 						),
 						SubredditRule(
 							kind = SubredditRuleKind.POST,
 							shortName = "No memes",
-							violationReason = "This is a meme"
-						)
+							violationReason = "This is a meme",
+						),
 					),
 					siteRulesFlow = listOf(
 						SiteRulesFlowEntry(
@@ -582,8 +582,8 @@ private fun PreviewReportScreen() {
 									canWriteNotes = false,
 									notesInputTitle = null,
 									canSpecifyUsernames = false,
-									usernamesInputTitle = null
-								)
+									usernamesInputTitle = null,
+								),
 							),
 							fileComplaint = false,
 							complaintPrompt = null,
@@ -592,16 +592,16 @@ private fun PreviewReportScreen() {
 							canWriteNotes = false,
 							notesInputTitle = null,
 							canSpecifyUsernames = false,
-							usernamesInputTitle = null
-						)
+							usernamesInputTitle = null,
+						),
 					),
-					freeFormReports = true
+					freeFormReports = true,
 				),
 				targetKind = SubredditRuleKind.POST,
 				submitting = false,
 				onCancel = {},
 				onSubmit = {},
-				onFileComplaint = {}
+				onFileComplaint = {},
 			)
 		}
 	}

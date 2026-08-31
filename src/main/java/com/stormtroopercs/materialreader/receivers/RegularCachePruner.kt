@@ -24,14 +24,14 @@ import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.reddit.prepared.RedditChangeDataManager
 
 class RegularCachePruner : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent?) {
-        Log.i("RegularCachePruner", "Pruning cache...")
+	override fun onReceive(context: Context, intent: Intent?) {
+		Log.i("RegularCachePruner", "Pruning cache...")
 
-        object : Thread() {
-            override fun run() {
-                RedditChangeDataManager.Companion.pruneAllUsersDefaultMaxAge()
-                CacheManager.Companion.getInstance(context).pruneCache()
-            }
-        }.start()
-    }
+		object : Thread() {
+			override fun run() {
+				RedditChangeDataManager.Companion.pruneAllUsersDefaultMaxAge()
+				CacheManager.Companion.getInstance(context).pruneCache()
+			}
+		}.start()
+	}
 }

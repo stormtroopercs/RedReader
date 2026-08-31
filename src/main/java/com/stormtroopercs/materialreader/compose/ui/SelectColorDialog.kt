@@ -28,14 +28,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -92,7 +88,7 @@ fun SelectColorDialog(
 					modifier = Modifier
 						.fillMaxWidth()
 						.height(96.dp)
-						.background(current, RoundedCornerShape(12.dp))
+						.background(current, RoundedCornerShape(12.dp)),
 				)
 				OutlinedTextField(
 					value = hexText,
@@ -130,13 +126,13 @@ private fun ColorChannelSlider(label: String, value: Int, onChange: (Int) -> Uni
 	}
 	Row(
 		modifier = Modifier.fillMaxWidth(),
-		verticalAlignment = Alignment.CenterVertically
+		verticalAlignment = Alignment.CenterVertically,
 	) {
 		Text(
 			text = label,
 			color = channelColor,
 			fontWeight = FontWeight.SemiBold,
-			modifier = Modifier.width(20.dp)
+			modifier = Modifier.width(20.dp),
 		)
 		Slider(
 			value = value.toFloat(),
@@ -147,7 +143,7 @@ private fun ColorChannelSlider(label: String, value: Int, onChange: (Int) -> Uni
 		Text(
 			text = value.toString(),
 			modifier = Modifier.width(36.dp),
-			style = MaterialTheme.typography.bodySmall
+			style = MaterialTheme.typography.bodySmall,
 		)
 	}
 }
@@ -182,7 +178,7 @@ private fun PreviewCard(isLight: Boolean, accent: Color) {
 			Box(
 				modifier = Modifier
 					.size(32.dp)
-					.background(accent, RoundedCornerShape(16.dp))
+					.background(accent, RoundedCornerShape(16.dp)),
 			)
 			Spacer(Modifier.width(8.dp))
 			Column(modifier = Modifier.weight(1f)) {
@@ -190,12 +186,12 @@ private fun PreviewCard(isLight: Boolean, accent: Color) {
 					text = if (isLight) "Light mode" else "Dark mode",
 					color = textPrimary,
 					fontWeight = FontWeight.SemiBold,
-					fontSize = 14.sp
+					fontSize = 14.sp,
 				)
 				Text(
 					text = "A community name • 2.3k subs",
 					color = textSecondary,
-					fontSize = 12.sp
+					fontSize = 12.sp,
 				)
 			}
 		}
@@ -227,7 +223,7 @@ private fun PreviewChip(isLight: Boolean, accent: Color, label: String) {
 		modifier = Modifier
 			.background(
 				if (label.startsWith("▲")) accent.copy(alpha = 0.18f) else bg,
-				RoundedCornerShape(999.dp)
+				RoundedCornerShape(999.dp),
 			)
 			.padding(horizontal = 10.dp, vertical = 6.dp),
 		verticalAlignment = Alignment.CenterVertically,

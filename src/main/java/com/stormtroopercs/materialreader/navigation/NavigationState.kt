@@ -31,78 +31,78 @@ import androidx.navigation3.runtime.NavKey
  * @param backStacks - the back stacks for each top level route
  */
 class NavigationState(
-    val startRoute: NavKey,
-    topLevelRoute: MutableState<NavKey>,
-    val backStacks: Map<NavKey, SnapshotStateList<NavKey>>
+	val startRoute: NavKey,
+	topLevelRoute: MutableState<NavKey>,
+	val backStacks: Map<NavKey, SnapshotStateList<NavKey>>,
 ) {
-    var topLevelRoute: NavKey by topLevelRoute
-        private set
+	var topLevelRoute: NavKey by topLevelRoute
+		private set
 
-    /**
-     * Switch the active top-level route (tab switch).
-     */
-    fun switchTopLevel(route: NavKey) {
-        topLevelRoute = route
-    }
+	/**
+	 * Switch the active top-level route (tab switch).
+	 */
+	fun switchTopLevel(route: NavKey) {
+		topLevelRoute = route
+	}
 
-    /**
-     * Pop the active top-level route's back stack back to its root, keeping
-     * the root entry. Used by the bottom nav: tapping the current tab returns
-     * to that tab's root.
-     */
-    fun popToRoot() {
-        val stack = backStacks[topLevelRoute] ?: return
-        while (stack.size > 1) {
-            stack.removeAt(stack.size - 1)
-        }
-    }
+	/**
+	 * Pop the active top-level route's back stack back to its root, keeping
+	 * the root entry. Used by the bottom nav: tapping the current tab returns
+	 * to that tab's root.
+	 */
+	fun popToRoot() {
+		val stack = backStacks[topLevelRoute] ?: return
+		while (stack.size > 1) {
+			stack.removeAt(stack.size - 1)
+		}
+	}
 
-    /**
-     * Land directly on [child] under the [root] top-level route: switch to
-     * [root] (resetting its back stack to the base) and push [child]. Used for
-     * cold-start deep links (e.g. tapping a notification) where the app should
-     * open on a child screen of a top-level route rather than at the root.
-     */
-    fun navigateTo(root: NavKey, child: NavKey) {
-        topLevelRoute = root
-        val stack = backStacks[root] ?: return
-        if (stack.size != 1 || stack[0] != root) {
-            stack.clear()
-            stack.add(root)
-        }
-        stack.add(child)
-    }
+	/**
+	 * Land directly on [child] under the [root] top-level route: switch to
+	 * [root] (resetting its back stack to the base) and push [child]. Used for
+	 * cold-start deep links (e.g. tapping a notification) where the app should
+	 * open on a child screen of a top-level route rather than at the root.
+	 */
+	fun navigateTo(root: NavKey, child: NavKey) {
+		topLevelRoute = root
+		val stack = backStacks[root] ?: return
+		if (stack.size != 1 || stack[0] != root) {
+			stack.clear()
+			stack.add(root)
+		}
+		stack.add(child)
+	}
 
-    /**
-     * Land directly on the [root] top-level route itself (its back stack
-     * reset to the base). Used for deep links that open a whole screen, e.g.
-     * the settings root, without any child on the stack.
-     */
-    fun navigateTo(root: NavKey) {
-        topLevelRoute = root
-        val stack = backStacks[root] ?: return
-        if (stack.size != 1 || stack[0] != root) {
-            stack.clear()
-            stack.add(root)
-        }
-    }
+	/**
+	 * Land directly on the [root] top-level route itself (its back stack
+	 * reset to the base). Used for deep links that open a whole screen, e.g.
+	 * the settings root, without any child on the stack.
+	 */
+	fun navigateTo(root: NavKey) {
+		topLevelRoute = root
+		val stack = backStacks[root] ?: return
+		if (stack.size != 1 || stack[0] != root) {
+			stack.clear()
+			stack.add(root)
+		}
+	}
 
-    /**
-     * The back stack for the currently active top-level route. This is the
-     * list passed to NavDisplay: it is a live [SnapshotStateList], so
-     * pushing/popping child routes (or switching top-level routes) recomposes
-     * the display.
-     */
-    val activeBackStack: List<NavKey>
-        get() = backStacks[topLevelRoute] ?: emptyList()
+	/**
+	 * The back stack for the currently active top-level route. This is the
+	 * list passed to NavDisplay: it is a live [SnapshotStateList], so
+	 * pushing/popping child routes (or switching top-level routes) recomposes
+	 * the display.
+	 */
+	val activeBackStack: List<NavKey>
+		get() = backStacks[topLevelRoute] ?: emptyList()
 
-    /**
-     * Whether a back action is available from the current position: a child
-     * entry to pop on the active top-level stack, or a non-start top-level
-     * route to return from.
-     */
-    fun canGoBack(): Boolean {
-        val stack = backStacks[topLevelRoute] ?: return false
-        return stack.size > 1 || topLevelRoute != startRoute
-    }
+	/**
+	 * Whether a back action is available from the current position: a child
+	 * entry to pop on the active top-level stack, or a non-start top-level
+	 * route to return from.
+	 */
+	fun canGoBack(): Boolean {
+		val stack = backStacks[topLevelRoute] ?: return false
+		return stack.size > 1 || topLevelRoute != startRoute
+	}
 }

@@ -26,40 +26,40 @@ import com.stormtroopercs.materialreader.http.okhttp.OKHTTPBackend
 import java.io.InputStream
 
 abstract class HTTPBackend {
-    data class RequestDetails(
-        val url: UriString,
-        val requestBody: HTTPRequestBody?
-    )
+	data class RequestDetails(
+		val url: UriString,
+		val requestBody: HTTPRequestBody?,
+	)
 
-    interface Request {
-        fun executeInThisThread(listener: Listener)
-        fun cancel()
-        fun addHeader(name: String, value: String)
-    }
+	interface Request {
+		fun executeInThisThread(listener: Listener)
+		fun cancel()
+		fun addHeader(name: String, value: String)
+	}
 
-    interface Listener {
-        fun onError(
-            failureType: RequestFailureType,
-            exception: Throwable?,
-            httpStatus: Int?,
-            body: FailedRequestBody?
-        )
+	interface Listener {
+		fun onError(
+			failureType: RequestFailureType,
+			exception: Throwable?,
+			httpStatus: Int?,
+			body: FailedRequestBody?,
+		)
 
-        fun onSuccess(mimetype: String?, bodyBytes: Long?, body : InputStream)
-    }
+		fun onSuccess(mimetype: String?, bodyBytes: Long?, body: InputStream)
+	}
 
-    abstract fun resolveRedirectUri(
-        context: Context,
-        url: UriString
-    ): Result<UriString>
+	abstract fun resolveRedirectUri(
+		context: Context,
+		url: UriString,
+	): Result<UriString>
 
-    abstract fun prepareRequest(context: Context, details: RequestDetails): Request
+	abstract fun prepareRequest(context: Context, details: RequestDetails): Request
 
-    abstract fun recreateHttpBackend()
+	abstract fun recreateHttpBackend()
 
-    companion object {
-        @JvmStatic
+	companion object {
+		@JvmStatic
 		val backend: HTTPBackend
-            get() = OKHTTPBackend.getHttpBackend()
-    }
+			get() = OKHTTPBackend.getHttpBackend()
+	}
 }

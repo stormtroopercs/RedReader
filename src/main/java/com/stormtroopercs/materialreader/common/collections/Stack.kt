@@ -17,32 +17,28 @@
 package com.stormtroopercs.materialreader.common.collections
 
 class Stack<E>(initialCapacity: Int) {
-    private val mData: ArrayList<E?>
+	private val mData: ArrayList<E?>
 
-    init {
-        mData = ArrayList<E?>(initialCapacity)
-    }
+	init {
+		mData = ArrayList<E?>(initialCapacity)
+	}
 
-    fun push(obj: E?) {
-        mData.add(obj)
-    }
+	fun push(obj: E?) {
+		mData.add(obj)
+	}
 
-    fun pop(): E? {
-        return mData.removeAt(mData.size - 1)
-    }
+	fun pop(): E? = mData.removeAt(mData.size - 1)
 
-    val isEmpty: Boolean
-        get() = mData.isEmpty()
+	val isEmpty: Boolean
+		get() = mData.isEmpty()
 
-    fun remove(obj: E?): Boolean {
-        return mData.remove(obj)
-    }
+	fun remove(obj: E?): Boolean = mData.remove(obj)
 
-    fun peek(): E? {
-        if (this.isEmpty) {
-            return null
-        }
+	fun peek(): E? {
+		if (this.isEmpty) {
+			return null
+		}
 
-        return mData.get(mData.size - 1)
-    }
+		return mData.get(mData.size - 1)
+	}
 }

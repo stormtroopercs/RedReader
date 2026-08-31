@@ -55,9 +55,11 @@ object FeedPreferences {
 	/** The host context, resolved lazily (set by [init] from the Application). */
 	private var contextRef: Context? = null
 
-	private val prefs get() = General.getSharedPrefs(contextRef ?: error(
-		"FeedPreferences not initialized (call init(context) from the Application)"
-	))
+	private val prefs get() = General.getSharedPrefs(
+		contextRef ?: error(
+			"FeedPreferences not initialized (call init(context) from the Application)",
+		),
+	)
 
 	/**
 	 * The sort option the feed identified by [feedId] was last browsed
@@ -133,9 +135,7 @@ object FeedPreferences {
 	 * restricted (no `=` or `,`), so a naive split is safe; a malformed
 	 * entry is dropped rather than throwing.
 	 */
-	internal fun parseViewModes(): Map<String, String> {
-		return parseMapping(KEY_VIEW_MODES)
-	}
+	internal fun parseViewModes(): Map<String, String> = parseMapping(KEY_VIEW_MODES)
 
 	// ── "More actions" grid (FINAL-DESIGN Phase 5) ──
 
@@ -147,6 +147,7 @@ object FeedPreferences {
 	 * as the hidden set). [actionOrder] returns the visible order;
 	 * [hiddenActions] the ids to omit.
 	 */
+
 	/** All known action ids, in the reference's default grid order. */
 	fun defaultActionOrder(): List<String> = listOf(
 		"search", "profile", "hide_read", "about",

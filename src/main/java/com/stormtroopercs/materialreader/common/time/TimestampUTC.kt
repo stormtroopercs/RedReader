@@ -27,7 +27,7 @@ import kotlin.time.Instant
 
 @OptIn(ExperimentalTime::class)
 data class TimestampUTC(
-	val value: Instant
+	val value: Instant,
 ) : Comparable<TimestampUTC> {
 	companion object {
 
@@ -59,26 +59,26 @@ data class TimestampUTC(
 
 	fun format() = localDateTime().run {
 		String.format(
-				Locale.US,
-				"%d-%02d-%02d %02d:%02d",
-				year,
-				month.number,
-				day,
-				hour,
-				minute
+			Locale.US,
+			"%d-%02d-%02d %02d:%02d",
+			year,
+			month.number,
+			day,
+			hour,
+			minute,
 		)
 	}
 
 	fun formatFilenameSafe() = localDateTime().run {
 		String.format(
-				Locale.US,
-				"%d_%02d_%02d__%02d_%02d_%02d",
-				year,
-				month.number,
-				day,
-				hour,
-				minute,
-				second
+			Locale.US,
+			"%d_%02d_%02d__%02d_%02d_%02d",
+			year,
+			month.number,
+			day,
+			hour,
+			minute,
+			second,
 		)
 	}
 

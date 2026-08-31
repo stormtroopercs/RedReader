@@ -17,34 +17,33 @@
 package com.stormtroopercs.materialreader.common
 
 class GenerationalCache<In : HasUniqueId, Out>(private val mCreator: FunctionOneArgWithReturn<In, Out>) {
-    private var mPreviousGen = HashMap<String, Out>()
-    private var mThisGen = HashMap<String, Out>()
+	private var mPreviousGen = HashMap<String, Out>()
+	private var mThisGen = HashMap<String, Out>()
 
+	fun get(`in`: In): Out {
+		val uniqueId = `in`.uniqueId
 
-    fun get(`in`: In): Out {
-        val uniqueId = `in`.uniqueId
+		val current: Out? = mThisGen.get(uniqueId)
 
-        val current: Out? = mThisGen.get(uniqueId)
+		if (current != null) {
+			return current
+		}
 
-        if (current != null) {
-            return current
-        }
+		val previous: Out? = mPreviousGen.get(uniqueId)
 
-        val previous: Out? = mPreviousGen.get(uniqueId)
+		if (previous != null) {
+			mThisGen.put(uniqueId, previous)
+			return previous
+		}
 
-        if (previous != null) {
-            mThisGen.put(uniqueId, previous)
-            return previous
-        }
+		val created = mCreator.apply(`in`)
 
-        val created = mCreator.apply(`in`)
+		mThisGen.put(uniqueId, created)
+		return created
+	}
 
-        mThisGen.put(uniqueId, created)
-        return created
-    }
-
-    fun nextGeneration() {
-        mPreviousGen = mThisGen
-        mThisGen = HashMap<String, Out>()
-    }
+	fun nextGeneration() {
+		mPreviousGen = mThisGen
+		mThisGen = HashMap<String, Out>()
+	}
 }

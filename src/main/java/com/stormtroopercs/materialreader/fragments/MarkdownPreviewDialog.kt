@@ -23,39 +23,36 @@ import com.stormtroopercs.materialreader.R.string
 import com.stormtroopercs.materialreader.activities.BaseActivity
 import com.stormtroopercs.materialreader.common.General.dpToPixels
 import com.stormtroopercs.materialreader.reddit.prepared.markdown.MarkdownParser
-import com.stormtroopercs.materialreader.common.General
 
 class MarkdownPreviewDialog : PropertiesDialog() {
-    override fun getTitle(context: Context): String {
-        return context.getString(string.comment_reply_preview)
-    }
+	override fun getTitle(context: Context): String = context.getString(string.comment_reply_preview)
 
-    override fun prepare(
-        activity: BaseActivity,
-        items: LinearLayout
-    ) {
-        val parsedGen = MarkdownParser.parse(
-            getArguments()!!.getString("markdown")!!
-                .toCharArray()
-        )
+	override fun prepare(
+		activity: BaseActivity,
+		items: LinearLayout,
+	) {
+		val parsedGen = MarkdownParser.parse(
+			getArguments()!!.getString("markdown")!!
+				.toCharArray(),
+		)
 
-        val parsed = parsedGen.buildView(activity, null, 14f, false)
+		val parsed = parsedGen.buildView(activity, null, 14f, false)
 
-        val paddingPx = dpToPixels(activity, 10f)
-        parsed.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
+		val paddingPx = dpToPixels(activity, 10f)
+		parsed.setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
 
-        items.addView(parsed)
-    }
+		items.addView(parsed)
+	}
 
-    companion object {
-        fun newInstance(markdown: String?): MarkdownPreviewDialog {
-            val dialog = MarkdownPreviewDialog()
+	companion object {
+		fun newInstance(markdown: String?): MarkdownPreviewDialog {
+			val dialog = MarkdownPreviewDialog()
 
-            val args = Bundle(1)
-            args.putString("markdown", markdown)
-            dialog.setArguments(args)
+			val args = Bundle(1)
+			args.putString("markdown", markdown)
+			dialog.setArguments(args)
 
-            return dialog
-        }
-    }
+			return dialog
+		}
+	}
 }

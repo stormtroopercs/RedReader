@@ -18,8 +18,8 @@
 package com.stormtroopercs.materialreader.database.dao
 
 import androidx.room.*
-import kotlinx.coroutines.flow.Flow
 import com.stormtroopercs.materialreader.database.entities.SubredditEntity
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Data Access Object for SubredditEntity operations.
@@ -28,30 +28,30 @@ import com.stormtroopercs.materialreader.database.entities.SubredditEntity
 @Dao
 interface SubredditDao {
 
-    @Query("SELECT * FROM subreddits ORDER BY lastUpdated DESC")
-    fun getAllSubreddits(): Flow<List<SubredditEntity>>
+	@Query("SELECT * FROM subreddits ORDER BY lastUpdated DESC")
+	fun getAllSubreddits(): Flow<List<SubredditEntity>>
 
-    @Query("SELECT * FROM subreddits WHERE name = :name LIMIT 1")
-    suspend fun getSubredditByName(name: String): SubredditEntity?
+	@Query("SELECT * FROM subreddits WHERE name = :name LIMIT 1")
+	suspend fun getSubredditByName(name: String): SubredditEntity?
 
-    @Query("SELECT * FROM subreddits WHERE name LIKE :query || '%' ORDER BY subscribers DESC LIMIT 20")
-    fun searchSubreddits(query: String): Flow<List<SubredditEntity>>
+	@Query("SELECT * FROM subreddits WHERE name LIKE :query || '%' ORDER BY subscribers DESC LIMIT 20")
+	fun searchSubreddits(query: String): Flow<List<SubredditEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSubreddit(subreddit: SubredditEntity)
+	@Insert(onConflict = OnConflictStrategy.REPLACE)
+	suspend fun insertSubreddit(subreddit: SubredditEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSubreddits(subreddits: List<SubredditEntity>)
+	@Insert(onConflict = OnConflictStrategy.REPLACE)
+	suspend fun insertSubreddits(subreddits: List<SubredditEntity>)
 
-    @Update
-    suspend fun updateSubreddit(subreddit: SubredditEntity)
+	@Update
+	suspend fun updateSubreddit(subreddit: SubredditEntity)
 
-    @Delete
-    suspend fun deleteSubreddit(subreddit: SubredditEntity)
+	@Delete
+	suspend fun deleteSubreddit(subreddit: SubredditEntity)
 
-    @Query("DELETE FROM subreddits")
-    suspend fun deleteAllSubreddits()
+	@Query("DELETE FROM subreddits")
+	suspend fun deleteAllSubreddits()
 
-    @Query("SELECT COUNT(*) FROM subreddits")
-    fun getSubredditCount(): Flow<Int>
+	@Query("SELECT COUNT(*) FROM subreddits")
+	fun getSubredditCount(): Flow<Int>
 }

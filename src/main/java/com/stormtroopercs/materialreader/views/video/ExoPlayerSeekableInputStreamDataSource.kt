@@ -29,63 +29,61 @@ import java.util.Objects
 
 @OptIn(UnstableApi::class)
 class ExoPlayerSeekableInputStreamDataSource(
-    isNetwork: Boolean,
-    private val mStreamFactory: GenericFactory<SeekableInputStream, IOException>
+	isNetwork: Boolean,
+	private val mStreamFactory: GenericFactory<SeekableInputStream, IOException>,
 ) : BaseDataSource(isNetwork) {
-    private var mCurrentStream: SeekableInputStream?=null
+	private var mCurrentStream: SeekableInputStream? = null
 
-    @Throws(IOException::class)
-    override fun open(dataSpec: DataSpec): Long {
-        if (mCurrentStream != null) {
-            throw IOException("Already open!")
-        }
+	@Throws(IOException::class)
+	override fun open(dataSpec: DataSpec): Long {
+		if (mCurrentStream != null) {
+			throw IOException("Already open!")
+		}
 
-        transferInitializing(dataSpec)
+		transferInitializing(dataSpec)
 
-        mCurrentStream = mStreamFactory.create()
-        mCurrentStream!!.seek(dataSpec.position)
+		mCurrentStream = mStreamFactory.create()
+		mCurrentStream!!.seek(dataSpec.position)
 
-        transferStarted(dataSpec)
+		transferStarted(dataSpec)
 
-        return C.LENGTH_UNSET.toLong()
-    }
+		return C.LENGTH_UNSET.toLong()
+	}
 
-    @Throws(IOException::class)
-    override fun read(
-        buffer: ByteArray,
-        offset: Int,
-        readLength: Int
-    ): Int {
-        if (readLength == 0) {
-            return 0
-        }
+	@Throws(IOException::class)
+	override fun read(
+		buffer: ByteArray,
+		offset: Int,
+		readLength: Int,
+	): Int {
+		if (readLength == 0) {
+			return 0
+		}
 
-        val result = Objects.requireNonNull<SeekableInputStream>(mCurrentStream)
-            .read(buffer, offset, readLength)
+		val result = Objects.requireNonNull<SeekableInputStream>(mCurrentStream)
+			.read(buffer, offset, readLength)
 
-        if (result < 0) {
-            return C.RESULT_END_OF_INPUT
-        }
+		if (result < 0) {
+			return C.RESULT_END_OF_INPUT
+		}
 
-        bytesTransferred(result)
-        return result
-    }
+		bytesTransferred(result)
+		return result
+	}
 
-    override fun getUri(): Uri? {
-        return URI
-    }
+	override fun getUri(): Uri? = URI
 
-    @Throws(IOException::class)
-    override fun close() {
-        if (mCurrentStream != null) {
-            mCurrentStream!!.close()
-            mCurrentStream = null
-            transferEnded()
-        }
-    }
+	@Throws(IOException::class)
+	override fun close() {
+		if (mCurrentStream != null) {
+			mCurrentStream!!.close()
+			mCurrentStream = null
+			transferEnded()
+		}
+	}
 
-    companion object {
-        @Suppress("PropertyName")
-        val URI: Uri = Uri.parse("redreader://video")
-    }
+	companion object {
+		@Suppress("PropertyName")
+		val URI: Uri = Uri.parse("redreader://video")
+	}
 }

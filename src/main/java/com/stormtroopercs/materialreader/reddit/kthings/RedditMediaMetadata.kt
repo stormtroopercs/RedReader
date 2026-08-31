@@ -29,5 +29,5 @@ data class RedditMediaMetadata(
 	val m: String,
 	val s: ImageMetadata,
 	val id: String,
-	val p: List<ImageMetadata>? = null
+	val p: List<ImageMetadata>? = null,
 ) : Parcelable

@@ -26,57 +26,57 @@ import androidx.appcompat.widget.AppCompatTextView
 import com.stormtroopercs.materialreader.common.PrefsUtility
 
 class LinkifiedTextView(val activity: AppCompatActivity) : AppCompatTextView(activity) {
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        val text = getText()
+	@SuppressLint("ClickableViewAccessibility")
+	override fun onTouchEvent(event: MotionEvent): Boolean {
+		val text = getText()
 
-        if (text !is Spannable) {
-            return false
-        }
+		if (text !is Spannable) {
+			return false
+		}
 
-        if (!PrefsUtility.pref_appearance_link_text_clickable()) {
-            return false
-        }
+		if (!PrefsUtility.pref_appearance_link_text_clickable()) {
+			return false
+		}
 
-        val buffer = text
+		val buffer = text
 
-        val action = event.getAction()
+		val action = event.getAction()
 
-        if (action == MotionEvent.ACTION_UP ||
-            action == MotionEvent.ACTION_DOWN
-        ) {
-            var x = event.getX().toInt()
-            var y = event.getY().toInt()
+		if (action == MotionEvent.ACTION_UP ||
+			action == MotionEvent.ACTION_DOWN
+		) {
+			var x = event.getX().toInt()
+			var y = event.getY().toInt()
 
-            x -= getTotalPaddingLeft()
-            y -= getTotalPaddingTop()
+			x -= getTotalPaddingLeft()
+			y -= getTotalPaddingTop()
 
-            x += getScrollX()
-            y += getScrollY()
+			x += getScrollX()
+			y += getScrollY()
 
-            val layout = getLayout()
-            val line = layout.getLineForVertical(y)
-            val off = layout.getOffsetForHorizontal(line, x.toFloat())
+			val layout = getLayout()
+			val line = layout.getLineForVertical(y)
+			val off = layout.getOffsetForHorizontal(line, x.toFloat())
 
-            val links = buffer.getSpans<ClickableSpan?>(off, off, ClickableSpan::class.java)
+			val links = buffer.getSpans<ClickableSpan?>(off, off, ClickableSpan::class.java)
 
-            if (links.size != 0) {
-                if (action == MotionEvent.ACTION_UP) {
-                    links[0]!!.onClick(this)
-                } else if (action == MotionEvent.ACTION_DOWN) {
-                    Selection.setSelection(
-                        buffer,
-                        buffer.getSpanStart(links[0]),
-                        buffer.getSpanEnd(links[0])
-                    )
-                }
+			if (links.size != 0) {
+				if (action == MotionEvent.ACTION_UP) {
+					links[0]!!.onClick(this)
+				} else if (action == MotionEvent.ACTION_DOWN) {
+					Selection.setSelection(
+						buffer,
+						buffer.getSpanStart(links[0]),
+						buffer.getSpanEnd(links[0]),
+					)
+				}
 
-                return true
-            } else {
-                Selection.removeSelection(buffer)
-            }
-        }
+				return true
+			} else {
+				Selection.removeSelection(buffer)
+			}
+		}
 
-        return false
-    }
+		return false
+	}
 }

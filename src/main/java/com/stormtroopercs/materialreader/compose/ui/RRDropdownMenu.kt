@@ -92,7 +92,6 @@ fun RRDropdownMenuIconButton(
 	content: @Composable RRDropdownMenuScope.() -> Unit,
 ) {
 	Box(modifier = modifier) {
-
 		val state = rememberRRDropdownMenuState()
 
 		RRIconButton(
@@ -103,7 +102,7 @@ fun RRDropdownMenuIconButton(
 
 		RRDropdownMenu(
 			state = state,
-			content = content
+			content = content,
 		)
 	}
 }
@@ -119,12 +118,12 @@ fun rememberRRDropdownMenuState() = remember {
 }
 
 class RRDropdownMenuScope(
-	private val menuState: RRDropdownMenuState
+	private val menuState: RRDropdownMenuState,
 ) {
 	@Composable
 	fun ItemGroupCollapsible(
 		@StringRes text: Int,
-		content: @Composable RRDropdownMenuScope.() -> Unit
+		content: @Composable RRDropdownMenuScope.() -> Unit,
 	) {
 		var expanded by remember { mutableStateOf(false) }
 
@@ -136,7 +135,7 @@ class RRDropdownMenuScope(
 				R.drawable.chevron_right_dark
 			},
 			onClick = { expanded = !expanded },
-			dismissOnClick = false
+			dismissOnClick = false,
 		)
 
 		if (expanded) {
@@ -147,11 +146,11 @@ class RRDropdownMenuScope(
 	@Composable
 	fun Item(
 		@StringRes text: Int,
-		@DrawableRes icon: Int?=null,
-		radioButtonWithValue: Boolean?=null,
-		checkboxWithValue: Boolean?=null,
+		@DrawableRes icon: Int? = null,
+		radioButtonWithValue: Boolean? = null,
+		checkboxWithValue: Boolean? = null,
 		onClick: () -> Unit,
-		dismissOnClick: Boolean = true
+		dismissOnClick: Boolean = true,
 	) {
 		RRDropdownMenuItem(
 			text = text,
@@ -172,16 +171,16 @@ class RRDropdownMenuScope(
 	@Composable
 	fun ItemPrefBool(
 		@StringRes text: Int,
-		@DrawableRes icon: Int?=null,
+		@DrawableRes icon: Int? = null,
 		pref: Preference<Boolean>,
-		dismissOnClick: Boolean = false
+		dismissOnClick: Boolean = false,
 	) {
 		Item(
 			text = text,
 			icon = icon,
 			checkboxWithValue = pref.value,
 			onClick = { pref.value = !pref.value },
-			dismissOnClick = dismissOnClick
+			dismissOnClick = dismissOnClick,
 		)
 	}
 
@@ -189,11 +188,10 @@ class RRDropdownMenuScope(
 	fun <T> ItemPrefRadio(
 		pref: Preference<T>,
 		dismissOnClick: Boolean = false,
-		items: @Composable RRRadioScope<T>.() -> Unit
+		items: @Composable RRRadioScope<T>.() -> Unit,
 	) {
 		items(RRRadioScope(pref, dismissOnClick))
 	}
-
 
 	@Composable
 	fun ItemPrefIntSlider(
@@ -201,7 +199,7 @@ class RRDropdownMenuScope(
 		pref: Preference<Int>,
 		min: Int,
 		max: Int,
-		continuous: Boolean
+		continuous: Boolean,
 	) {
 		val theme = LocalComposeTheme.current
 
@@ -211,13 +209,13 @@ class RRDropdownMenuScope(
 				.padding(
 					top = 12.dp,
 					start = 18.dp,
-					end = 18.dp
+					end = 18.dp,
 				)
 				.sizeIn(
 					minWidth = 112.dp,
 					maxWidth = 280.dp,
-					minHeight = 48.dp
-				)
+					minHeight = 48.dp,
+				),
 		) {
 			theme.dropdownMenu.text.StyledText(stringResource(text))
 
@@ -246,14 +244,14 @@ class RRRadioScope<T>(
 	fun RRDropdownMenuScope.Option(
 		value: T,
 		@StringRes text: Int,
-		@DrawableRes icon: Int?=null,
+		@DrawableRes icon: Int? = null,
 	) {
 		Item(
 			text = text,
 			icon = icon,
 			dismissOnClick = dismissOnClick,
 			onClick = { pref.value = value },
-			radioButtonWithValue = pref.value == value
+			radioButtonWithValue = pref.value == value,
 		)
 	}
 }
@@ -278,7 +276,7 @@ private fun RRDropdownMenuItem(
 	@DrawableRes icon: Int?,
 	onClick: () -> Unit,
 	radioButtonWithValue: Boolean?,
-	checkboxWithValue: Boolean?
+	checkboxWithValue: Boolean?,
 ) {
 	val theme = LocalComposeTheme.current
 
@@ -287,13 +285,12 @@ private fun RRDropdownMenuItem(
 		onClick = onClick,
 		text = {
 			Row(verticalAlignment = Alignment.CenterVertically) {
-
 				Spacer(Modifier.width(6.dp))
 
 				if (icon != null) {
 					Icon(
 						painter = painterResource(id = icon),
-						contentDescription = null
+						contentDescription = null,
 					)
 
 					Spacer(Modifier.width(12.dp))
@@ -312,10 +309,10 @@ private fun RRDropdownMenuItem(
 
 				RadioButton(
 					modifier = Modifier
-                        .clearAndSetSemantics {
-                            contentDescription = description
-                        }
-                        .focusable(false),
+						.clearAndSetSemantics {
+							contentDescription = description
+						}
+						.focusable(false),
 					selected = radioButtonWithValue,
 					onClick = onClick,
 				)
@@ -330,15 +327,15 @@ private fun RRDropdownMenuItem(
 
 				Checkbox(
 					modifier = Modifier
-                        .clearAndSetSemantics {
-                            contentDescription = description
-                        }
-                        .focusable(false),
+						.clearAndSetSemantics {
+							contentDescription = description
+						}
+						.focusable(false),
 					checked = checkboxWithValue,
-					onCheckedChange = { onClick() }
+					onCheckedChange = { onClick() },
 				)
 			}
-		}
+		},
 	)
 }
 
@@ -352,7 +349,7 @@ private fun BaseDropdownMenu(
 	offset: DpOffset = DpOffset(0.dp, 0.dp),
 	scrollState: ScrollState = rememberScrollState(),
 	properties: PopupProperties = PopupProperties(focusable = true),
-	content: @Composable ColumnScope.() -> Unit
+	content: @Composable ColumnScope.() -> Unit,
 ) {
 	val expandedStates = remember { MutableTransitionState(false) }
 	expandedStates.targetState = expanded
@@ -362,7 +359,7 @@ private fun BaseDropdownMenu(
 		val density = LocalDensity.current
 		val popupPositionProvider = DropdownMenuPositionProvider(
 			offset,
-			density
+			density,
 		) { parentBounds, menuBounds ->
 			transformOriginState.value = calculateTransformOrigin(parentBounds, menuBounds)
 		}
@@ -370,14 +367,14 @@ private fun BaseDropdownMenu(
 		Popup(
 			onDismissRequest = onDismissRequest,
 			popupPositionProvider = popupPositionProvider,
-			properties = properties
+			properties = properties,
 		) {
 			BaseDropdownMenuContent(
 				expandedStates = expandedStates,
 				transformOriginState = transformOriginState,
 				scrollState = scrollState,
 				modifier = modifier,
-				content = content
+				content = content,
 			)
 		}
 	}
@@ -389,7 +386,7 @@ private fun BaseDropdownMenuContent(
 	transformOriginState: MutableState<TransformOrigin>,
 	scrollState: ScrollState,
 	modifier: Modifier = Modifier,
-	content: @Composable ColumnScope.() -> Unit
+	content: @Composable ColumnScope.() -> Unit,
 ) {
 	val theme = LocalComposeTheme.current
 
@@ -402,16 +399,17 @@ private fun BaseDropdownMenuContent(
 				// Dismissed to expanded
 				tween(
 					durationMillis = 120,
-					easing = LinearOutSlowInEasing
+					easing = LinearOutSlowInEasing,
 				)
 			} else {
 				// Expanded to dismissed.
 				tween(
 					durationMillis = 1,
-					delayMillis = 75 - 1
+					delayMillis = 75 - 1,
 				)
 			}
-		}, label = "Dropdown menu open/close"
+		},
+		label = "Dropdown menu open/close",
 	) {
 		if (it) {
 			// Menu is expanded.
@@ -431,7 +429,8 @@ private fun BaseDropdownMenuContent(
 				// Expanded to dismissed.
 				tween(durationMillis = 75)
 			}
-		}, label = "Dropdown menu alpha"
+		},
+		label = "Dropdown menu alpha",
 	) {
 		if (it) {
 			// Menu is expanded.
@@ -443,22 +442,22 @@ private fun BaseDropdownMenuContent(
 	}
 	Box(
 		modifier = Modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                this.alpha = alpha
-                transformOrigin = transformOriginState.value
-            }
-            .shadow(3.dp, RoundedCornerShape(6.dp))
-            .clip(RoundedCornerShape(6.dp))
-            .background(theme.dropdownMenu.background),
+			.graphicsLayer {
+				scaleX = scale
+				scaleY = scale
+				this.alpha = alpha
+				transformOrigin = transformOriginState.value
+			}
+			.shadow(3.dp, RoundedCornerShape(6.dp))
+			.clip(RoundedCornerShape(6.dp))
+			.background(theme.dropdownMenu.background),
 	) {
 		Column(
 			modifier = modifier
-                .padding(vertical = 0.dp)
-                .width(IntrinsicSize.Max)
-                .verticalScroll(scrollState),
-			content = content
+				.padding(vertical = 0.dp)
+				.width(IntrinsicSize.Max)
+				.verticalScroll(scrollState),
+			content = content,
 		)
 	}
 }
@@ -467,13 +466,13 @@ private fun BaseDropdownMenuContent(
 internal data class DropdownMenuPositionProvider(
 	val contentOffset: DpOffset,
 	val density: Density,
-	val onPositionCalculated: (IntRect, IntRect) -> Unit = { _, _ -> }
+	val onPositionCalculated: (IntRect, IntRect) -> Unit = { _, _ -> },
 ) : PopupPositionProvider {
 	override fun calculatePosition(
 		anchorBounds: IntRect,
 		windowSize: IntSize,
 		layoutDirection: LayoutDirection,
-		popupContentSize: IntSize
+		popupContentSize: IntSize,
 	): IntOffset {
 		// The min margin above and below the menu, relative to the screen.
 		val verticalMargin = with(density) { 48.dp.roundToPx() }
@@ -494,7 +493,7 @@ internal data class DropdownMenuPositionProvider(
 				rightToAnchorRight,
 				// If the anchor gets outside of the window on the left, we want to position
 				// toDisplayLeft for proximity to the anchor. Otherwise, toDisplayRight.
-				if (anchorBounds.left >= 0) rightToWindowRight else leftToWindowLeft
+				if (anchorBounds.left >= 0) rightToWindowRight else leftToWindowLeft,
 			)
 		} else {
 			sequenceOf(
@@ -502,7 +501,7 @@ internal data class DropdownMenuPositionProvider(
 				leftToAnchorLeft,
 				// If the anchor gets outside of the window on the right, we want to position
 				// toDisplayRight for proximity to the anchor. Otherwise, toDisplayLeft.
-				if (anchorBounds.right <= windowSize.width) leftToWindowLeft else rightToWindowRight
+				if (anchorBounds.right <= windowSize.width) leftToWindowLeft else rightToWindowRight,
 			)
 		}.firstOrNull {
 			it >= 0 && it + popupContentSize.width <= windowSize.width
@@ -517,15 +516,15 @@ internal data class DropdownMenuPositionProvider(
 			topToAnchorBottom,
 			bottomToAnchorTop,
 			centerToAnchorTop,
-			bottomToWindowBottom
+			bottomToWindowBottom,
 		).firstOrNull {
 			it >= verticalMargin &&
-					it + popupContentSize.height <= windowSize.height - verticalMargin
+				it + popupContentSize.height <= windowSize.height - verticalMargin
 		} ?: bottomToAnchorTop
 
 		onPositionCalculated(
 			anchorBounds,
-			IntRect(x, y, x + popupContentSize.width, y + popupContentSize.height)
+			IntRect(x, y, x + popupContentSize.width, y + popupContentSize.height),
 		)
 		return IntOffset(x, y)
 	}
@@ -533,17 +532,17 @@ internal data class DropdownMenuPositionProvider(
 
 private fun calculateTransformOrigin(
 	parentBounds: IntRect,
-	menuBounds: IntRect
+	menuBounds: IntRect,
 ): TransformOrigin {
 	val pivotX = when {
 		menuBounds.left >= parentBounds.right -> 0f
 		menuBounds.right <= parentBounds.left -> 1f
 		menuBounds.width == 0 -> 0f
 		else -> {
-			val intersectionCenter = 				(
-						max(parentBounds.left, menuBounds.left) +
-								min(parentBounds.right, menuBounds.right)
-						) / 2
+			val intersectionCenter = (
+				max(parentBounds.left, menuBounds.left) +
+					min(parentBounds.right, menuBounds.right)
+				) / 2
 			(intersectionCenter - menuBounds.left).toFloat() / menuBounds.width
 		}
 	}
@@ -552,10 +551,10 @@ private fun calculateTransformOrigin(
 		menuBounds.bottom <= parentBounds.top -> 1f
 		menuBounds.height == 0 -> 0f
 		else -> {
-			val intersectionCenter = 				(
-						max(parentBounds.top, menuBounds.top) +
-								min(parentBounds.bottom, menuBounds.bottom)
-						) / 2
+			val intersectionCenter = (
+				max(parentBounds.top, menuBounds.top) +
+					min(parentBounds.bottom, menuBounds.bottom)
+				) / 2
 			(intersectionCenter - menuBounds.top).toFloat() / menuBounds.height
 		}
 	}

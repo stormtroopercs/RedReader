@@ -17,5 +17,5 @@
 package com.stormtroopercs.materialreader.common
 
 fun interface GenericFactory<E, T : Throwable> {
-    fun create(): E
+	fun create(): E
 }

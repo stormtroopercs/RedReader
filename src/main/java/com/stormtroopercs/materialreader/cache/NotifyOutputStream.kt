@@ -20,16 +20,15 @@ import java.io.FilterOutputStream
 import java.io.IOException
 import java.io.OutputStream
 
-class NotifyOutputStream(out: OutputStream?, private val listener: Listener) :
-    FilterOutputStream(out) {
-    @Throws(IOException::class)
-    override fun close() {
-        super.close()
-        listener.onClose()
-    }
+class NotifyOutputStream(out: OutputStream?, private val listener: Listener) : FilterOutputStream(out) {
+	@Throws(IOException::class)
+	override fun close() {
+		super.close()
+		listener.onClose()
+	}
 
-    fun interface Listener {
-        @Throws(IOException::class)
-        fun onClose()
-    }
+	fun interface Listener {
+		@Throws(IOException::class)
+		fun onClose()
+	}
 }

@@ -17,18 +17,19 @@
 package com.stormtroopercs.materialreader.cache
 
 enum class CacheCompressionType(val databaseId: Int) {
-    NONE(0),
-    ZSTD(1);
+	NONE(0),
+	ZSTD(1),
+	;
 
-    companion object {
-        fun fromDatabaseId(databaseId: Int): CacheCompressionType {
-            for (type in entries) {
-                if (type.databaseId == databaseId) {
-                    return type
-                }
-            }
+	companion object {
+		fun fromDatabaseId(databaseId: Int): CacheCompressionType {
+			for (type in entries) {
+				if (type.databaseId == databaseId) {
+					return type
+				}
+			}
 
-            throw RuntimeException("Unknown compression type " + databaseId)
-        }
-    }
+			throw RuntimeException("Unknown compression type " + databaseId)
+		}
+	}
 }

@@ -23,43 +23,46 @@ import com.stormtroopercs.materialreader.common.General.startNewThread
 import java.util.concurrent.atomic.AtomicReference
 
 object Fonts {
-    private const val TAG = "Fonts"
+	private const val TAG = "Fonts"
 
-    private val sVeraMono = AtomicReference<Typeface?>()
-    private val sRobotoLight = AtomicReference<Typeface?>()
+	private val sVeraMono = AtomicReference<Typeface?>()
+	private val sRobotoLight = AtomicReference<Typeface?>()
 
-    fun onAppCreate(assetManager: AssetManager) {
-        startNewThread("FontCreate", Runnable {
-            try {
-                sVeraMono.set(Typeface.createFromAsset(assetManager, "fonts/VeraMono.ttf"))
-                sRobotoLight.set(Typeface.createFromAsset(assetManager, "fonts/Roboto-Light.ttf"))
+	fun onAppCreate(assetManager: AssetManager) {
+		startNewThread(
+			"FontCreate",
+			Runnable {
+				try {
+					sVeraMono.set(Typeface.createFromAsset(assetManager, "fonts/VeraMono.ttf"))
+					sRobotoLight.set(Typeface.createFromAsset(assetManager, "fonts/Roboto-Light.ttf"))
 
-                Log.i(TAG, "Fonts created")
-            } catch (e: Exception) {
-                Log.e(TAG, "Got exception while creating fonts", e)
-            }
-        })
-    }
+					Log.i(TAG, "Fonts created")
+				} catch (e: Exception) {
+					Log.e(TAG, "Got exception while creating fonts", e)
+				}
+			},
+		)
+	}
 
-    val veraMonoOrAlternative: Typeface
-        get() {
-            val result = sVeraMono.get()
+	val veraMonoOrAlternative: Typeface
+		get() {
+			val result = sVeraMono.get()
 
-            if (result == null) {
-                return Typeface.MONOSPACE
-            } else {
-                return result
-            }
-        }
+			if (result == null) {
+				return Typeface.MONOSPACE
+			} else {
+				return result
+			}
+		}
 
-    val robotoLightOrAlternative: Typeface
-        get() {
-            val result = sRobotoLight.get()
+	val robotoLightOrAlternative: Typeface
+		get() {
+			val result = sRobotoLight.get()
 
-            if (result == null) {
-                return Typeface.DEFAULT
-            } else {
-                return result
-            }
-        }
+			if (result == null) {
+				return Typeface.DEFAULT
+			} else {
+				return result
+			}
+		}
 }

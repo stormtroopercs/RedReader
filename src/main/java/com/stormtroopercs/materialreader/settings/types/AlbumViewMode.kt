@@ -18,11 +18,12 @@
 package com.stormtroopercs.materialreader.settings.types
 
 enum class AlbumViewMode(
-	override val stringValue: String
-): SerializableEnum<AlbumViewMode> {
+	override val stringValue: String,
+) : SerializableEnum<AlbumViewMode> {
 	Cards("cards"),
 	List("list"),
-	Grid("grid");
+	Grid("grid"),
+	;
 
 	companion object {
 		val settingSerializer = EnumSettingSerializer(entries)

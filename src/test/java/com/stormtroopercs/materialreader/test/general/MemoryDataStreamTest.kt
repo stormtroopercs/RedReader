@@ -16,64 +16,62 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.general
 
-import org.junit.Assert
-import org.junit.Test
 import com.stormtroopercs.materialreader.common.General
 import com.stormtroopercs.materialreader.common.datastream.MemoryDataStream
+import org.junit.Assert
+import org.junit.Test
 import java.io.IOException
 
 class MemoryDataStreamTest {
 
-    private fun assertBytesStartsWith(actual: ByteArray, vararg expected: Char) {
+	private fun assertBytesStartsWith(actual: ByteArray, vararg expected: Char) {
+		for (i in expected.indices) {
+			Assert.assertEquals(expected[i].code.toByte(), actual[i])
+		}
+	}
 
-        for (i in expected.indices) {
-            Assert.assertEquals(expected[i].code.toByte(), actual[i])
-        }
-    }
+	@Test
+	@Throws(IOException::class)
+	fun test() {
+		val stream = MemoryDataStream()
 
-    @Test
-    @Throws(IOException::class)
-    fun test() {
+		Assert.assertEquals(0, stream.size())
 
-        val stream = MemoryDataStream()
+		stream.writeBytes(byteArrayOf('H'.code.toByte(), 'i'.code.toByte()), 0, 2)
 
-        Assert.assertEquals(0, stream.size())
+		val buf = ByteArray(10)
+		Assert.assertEquals(
+			2,
+			stream.blockingRead(0, buf, 0, buf.size),
+		)
 
-        stream.writeBytes(byteArrayOf('H'.code.toByte(), 'i'.code.toByte()), 0, 2)
+		Assert.assertEquals('H'.code.toByte(), buf[0])
+		Assert.assertEquals('i'.code.toByte(), buf[1])
 
-        val buf = ByteArray(10)
-        Assert.assertEquals(
-            2,
-            stream.blockingRead(0, buf, 0, buf.size)
-        )
+		assertBytesStartsWith(buf, 'H', 'i')
 
-        Assert.assertEquals('H'.code.toByte(), buf[0])
-        Assert.assertEquals('i'.code.toByte(), buf[1])
+		stream.writeBytes(byteArrayOf('A'.code.toByte()), 0, 1)
+		stream.writeBytes(byteArrayOf('Z'.code.toByte()), 0, 1)
 
-        assertBytesStartsWith(buf, 'H', 'i')
+		Assert.assertEquals(
+			4,
+			stream.blockingRead(0, buf, 0, buf.size),
+		)
 
-        stream.writeBytes(byteArrayOf('A'.code.toByte()), 0, 1)
-        stream.writeBytes(byteArrayOf('Z'.code.toByte()), 0, 1)
+		assertBytesStartsWith(buf, 'H', 'i', 'A', 'Z')
 
-        Assert.assertEquals(
-            4,
-            stream.blockingRead(0, buf, 0, buf.size)
-        )
+		Assert.assertEquals(
+			3,
+			stream.blockingRead(1, buf, 0, buf.size),
+		)
 
-        assertBytesStartsWith(buf, 'H', 'i', 'A', 'Z')
+		assertBytesStartsWith(buf, 'i', 'A', 'Z')
 
-        Assert.assertEquals(
-            3,
-            stream.blockingRead(1, buf, 0, buf.size)
-        )
+		stream.setComplete()
 
-        assertBytesStartsWith(buf, 'i', 'A', 'Z')
-
-        stream.setComplete()
-
-        Assert.assertEquals(
-            "HiAZ",
-            General.readWholeStreamAsUTF8(stream.inputStream)
-        )
-    }
+		Assert.assertEquals(
+			"HiAZ",
+			General.readWholeStreamAsUTF8(stream.inputStream),
+		)
+	}
 }

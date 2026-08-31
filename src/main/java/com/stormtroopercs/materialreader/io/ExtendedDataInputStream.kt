@@ -21,12 +21,12 @@ import java.io.IOException
 import java.io.InputStream
 
 class ExtendedDataInputStream(`in`: InputStream?) : DataInputStream(`in`) {
-    @Throws(IOException::class)
-    fun readNullableBoolean(): Boolean? {
-        if (!readBoolean()) {
-            return null
-        }
+	@Throws(IOException::class)
+	fun readNullableBoolean(): Boolean? {
+		if (!readBoolean()) {
+			return null
+		}
 
-        return readBoolean()
-    }
+		return readBoolean()
+	}
 }

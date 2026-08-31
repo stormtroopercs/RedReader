@@ -23,7 +23,7 @@ class CachedStringHash(private val data: () -> String) {
 
 	private class CacheEntry(
 		val key: String,
-		val value: String
+		val value: String,
 	)
 
 	private var cache = AtomicReference<CacheEntry?>()

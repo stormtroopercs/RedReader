@@ -19,16 +19,6 @@ package com.stormtroopercs.materialreader.http.okhttp
 
 import android.content.Context
 import android.util.Log
-import okhttp3.CacheControl
-import okhttp3.Call
-import okhttp3.ConnectionPool
-import okhttp3.Cookie
-import okhttp3.CookieJar
-import okhttp3.HttpUrl
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.RequestBody.Companion.toRequestBody
 import com.stormtroopercs.materialreader.cache.CacheRequest
 import com.stormtroopercs.materialreader.common.Constants
 import com.stormtroopercs.materialreader.common.General.getGeneralErrorForFailure
@@ -43,6 +33,16 @@ import com.stormtroopercs.materialreader.http.FailedRequestBody
 import com.stormtroopercs.materialreader.http.HTTPBackend
 import com.stormtroopercs.materialreader.http.body.HTTPRequestBody
 import com.stormtroopercs.materialreader.http.body.multipart.Part
+import okhttp3.CacheControl
+import okhttp3.Call
+import okhttp3.ConnectionPool
+import okhttp3.Cookie
+import okhttp3.CookieJar
+import okhttp3.HttpUrl
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.io.InputStream
 import java.net.InetSocketAddress
@@ -72,21 +72,18 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 
 			list.add(cookieBuilder.build())
 
-
 			val cookieJar: CookieJar = object : CookieJar {
 				override fun saveFromResponse(
 					url: HttpUrl,
-					cookies: List<Cookie>
+					cookies: List<Cookie>,
 				) {
-					//LOL we do not care
+					// LOL we do not care
 				}
 
-				override fun loadForRequest(url: HttpUrl): List<Cookie> {
-					return if (url.toString().contains("search")) {
-						list
-					} else {
-						emptyList()
-					}
+				override fun loadForRequest(url: HttpUrl): List<Cookie> = if (url.toString().contains("search")) {
+					list
+				} else {
+					emptyList()
 				}
 			}
 
@@ -96,9 +93,9 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 		if (TorCommon.isTorEnabled) {
 			val tor = Proxy(
 				Proxy.Type.HTTP,
-				InetSocketAddress("127.0.0.1", 8118)
+				InetSocketAddress("127.0.0.1", 8118),
 			)
-			//SOCKS appears to be broken for now, Relevant: https://github.com/square/okhttp/issues/2315
+			// SOCKS appears to be broken for now, Relevant: https://github.com/square/okhttp/issues/2315
 			builder.proxy(tor)
 		}
 
@@ -113,8 +110,8 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 			ConnectionPool(
 				10,
 				30,
-				TimeUnit.SECONDS
-			)
+				TimeUnit.SECONDS,
+			),
 		)
 
 		builder.retryOnConnectionFailure(true)
@@ -129,12 +126,12 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 
 	override fun resolveRedirectUri(
 		context: Context,
-		url: UriString
+		url: UriString,
 	): Result<UriString> {
 		try {
 			val builder: OkHTTPRequest.Builder = OkHTTPRequest.Builder()
 			val headRequest: okhttp3.Request = builder.url(url.value).head().build()
-			val noRedirectsClient = 				mClient.newBuilder().followRedirects(false).build()
+			val noRedirectsClient = mClient.newBuilder().followRedirects(false).build()
 			noRedirectsClient.newCall(headRequest).execute().use { response ->
 				if (!response.isRedirect) {
 					return Result.Err(
@@ -144,8 +141,8 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 							true,
 							null,
 							response.code,
-							url
-						)
+							url,
+						),
 					)
 				}
 				val locationHeader = response.header("Location")
@@ -160,8 +157,8 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 					e,
 					null,
 					url,
-					Optional.empty()
-				)
+					Optional.empty(),
+				),
 			)
 		}
 	}
@@ -189,7 +186,7 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 									builder.addFormDataPart(
 										name = part.name,
 										filename = null,
-										body = part.value.toRequestBody("application/octet-stream".toMediaType())
+										body = part.value.toRequestBody("application/octet-stream".toMediaType()),
 									)
 								}
 							}
@@ -200,7 +197,7 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 
 					is HTTPRequestBody.PostFields -> requestBody.encodeFields()
 						.toRequestBody("application/x-www-form-urlencoded".toMediaType())
-				}
+				},
 			)
 		} else {
 			reqBuilder.get()
@@ -229,7 +226,7 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 						CacheRequest.RequestFailureType.CONNECTION,
 						e,
 						null,
-						null
+						null,
 					)
 					if (isSensitiveDebugLoggingEnabled) {
 						Log.i(TAG, "request didn't even connect: " + e.message)
@@ -239,10 +236,9 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 
 				try {
 					val status = response.code
-					val body = response.body
+					val body: okhttp3.ResponseBody = response.body
 
 					if (status == 200 || status == 202) {
-
 						val bodyStream: InputStream?
 						val bodyLength: Long?
 
@@ -260,16 +256,17 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 					} else {
 						if (isSensitiveDebugLoggingEnabled) {
 							Log.e(
-								TAG, String.format(
+								TAG,
+								String.format(
 									Locale.US,
 									"Got HTTP error %d for %s",
 									status,
-									details
-								)
+									details,
+								),
 							)
 						}
 
-						var bodyBytes: FailedRequestBody?=null
+						var bodyBytes: FailedRequestBody? = null
 
 						if (body != null) {
 							try {
@@ -283,19 +280,18 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 							CacheRequest.RequestFailureType.REQUEST,
 							null,
 							status,
-							bodyBytes
+							bodyBytes,
 						)
 					}
-				} catch(e: Exception) {
+				} catch (e: Exception) {
 					listener.onError(
 						CacheRequest.RequestFailureType.REQUEST,
 						e,
 						null,
-						null
+						null,
 					)
-
 				} finally {
-					response.body?.close()
+					response.body.close()
 				}
 			}
 
@@ -315,7 +311,7 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 	companion object {
 		private const val TAG = "OKHTTPBackend"
 
-		private var httpBackend: HTTPBackend?=null
+		private var httpBackend: HTTPBackend? = null
 
 		@Synchronized
 		fun getHttpBackend(): HTTPBackend {

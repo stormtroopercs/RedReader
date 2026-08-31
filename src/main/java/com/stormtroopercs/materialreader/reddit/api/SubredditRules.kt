@@ -29,7 +29,7 @@ import com.stormtroopercs.materialreader.jsonwrap.JsonValue
 enum class SubredditRuleKind {
 	POST,
 	COMMENT,
-	ALL
+	ALL,
 }
 
 /**
@@ -41,9 +41,9 @@ enum class SubredditRuleKind {
 data class SubredditRule(
 	val kind: SubredditRuleKind,
 	val shortName: String,
-	val violationReason: String
+	val violationReason: String,
 ) {
-	fun appliesTo(kind: SubredditRuleKind) = 		this.kind == SubredditRuleKind.ALL || this.kind == kind
+	fun appliesTo(kind: SubredditRuleKind) = this.kind == SubredditRuleKind.ALL || this.kind == kind
 }
 
 /**
@@ -68,13 +68,13 @@ data class SiteRulesFlowEntry(
 	val canWriteNotes: Boolean,
 	val notesInputTitle: String?,
 	val canSpecifyUsernames: Boolean,
-	val usernamesInputTitle: String?
+	val usernamesInputTitle: String?,
 )
 
 @Immutable
 data class SubredditRules(
 	val rules: List<SubredditRule>,
-	val siteRulesFlow: List<SiteRulesFlowEntry>
+	val siteRulesFlow: List<SiteRulesFlowEntry>,
 ) {
 	companion object {
 		/**
@@ -85,7 +85,6 @@ data class SubredditRules(
 		 */
 		@JvmStatic
 		fun parse(value: JsonValue): SubredditRules? {
-
 			val obj = value.asObject() ?: return null
 
 			val rules = obj.getArray("rules")?.mapNotNull {
@@ -104,7 +103,6 @@ data class SubredditRules(
 		}
 
 		private fun parseRule(obj: JsonObject): SubredditRule? {
-
 			val shortName = obj.getString("short_name") ?: return null
 
 			val kind = when (obj.getString("kind")) {
@@ -116,12 +114,11 @@ data class SubredditRules(
 			return SubredditRule(
 				kind = kind,
 				shortName = shortName,
-				violationReason = obj.getString("violation_reason") ?: shortName
+				violationReason = obj.getString("violation_reason") ?: shortName,
 			)
 		}
 
 		private fun parseFlowEntry(obj: JsonObject): SiteRulesFlowEntry? {
-
 			val reasonTextToShow = obj.getString("reasonTextToShow") ?: return null
 
 			val children = obj.getArray("nextStepReasons")?.mapNotNull {
@@ -133,9 +130,10 @@ data class SubredditRules(
 			val complaintUrl = obj.getString("complaintUrl")
 
 			// A leaf entry must have something we can act on
-			if (children.isEmpty()
-					&& reasonText == null
-					&& !(fileComplaint && complaintUrl != null)) {
+			if (children.isEmpty() &&
+				reasonText == null &&
+				!(fileComplaint && complaintUrl != null)
+			) {
 				return null
 			}
 
@@ -151,7 +149,7 @@ data class SubredditRules(
 				canWriteNotes = obj.getBoolean("canWriteNotes") == true,
 				notesInputTitle = obj.getString("notesInputTitle"),
 				canSpecifyUsernames = obj.getBoolean("canSpecifyUsernames") == true,
-				usernamesInputTitle = obj.getString("usernamesInputTitle")
+				usernamesInputTitle = obj.getString("usernamesInputTitle"),
 			)
 		}
 	}
@@ -166,7 +164,7 @@ data class SubredditRules(
 data class SubredditReportFlow(
 	val rules: List<SubredditRule>,
 	val siteRulesFlow: List<SiteRulesFlowEntry>,
-	val freeFormReports: Boolean
+	val freeFormReports: Boolean,
 )
 
 /**
@@ -181,15 +179,15 @@ sealed class ReportReason {
 	data class Rule(val ruleShortName: String) : ReportReason() {
 		override fun toPostFields() = listOf(
 			PostField("reason", "rule_reason_selected"),
-			PostField("rule_reason", ruleShortName.take(MAX_REASON_LENGTH))
+			PostField("rule_reason", ruleShortName.take(MAX_REASON_LENGTH)),
 		)
 	}
 
 	/** A sitewide reason from the `site_rules_flow` tree. */
 	data class Site(
 		val reasonText: String,
-		val customText: String?=null,
-		val usernames: String?=null
+		val customText: String? = null,
+		val usernames: String? = null,
 	) : ReportReason() {
 		override fun toPostFields() = buildList {
 			add(PostField("reason", "site_reason_selected"))
@@ -207,7 +205,7 @@ sealed class ReportReason {
 	data class Other(val text: String) : ReportReason() {
 		override fun toPostFields() = listOf(
 			PostField("reason", "other"),
-			PostField("other_reason", text.take(MAX_REASON_LENGTH))
+			PostField("other_reason", text.take(MAX_REASON_LENGTH)),
 		)
 	}
 

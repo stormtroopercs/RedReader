@@ -35,30 +35,28 @@ import com.stormtroopercs.materialreader.database.entities.SubredditEntity
  * screen) and were deleted.
  */
 @Database(
-    entities = [SubredditEntity::class],
-    version = 1,
-    exportSchema = true
+	entities = [SubredditEntity::class],
+	version = 1,
+	exportSchema = true,
 )
 abstract class MaterialReaderDatabase : RoomDatabase() {
 
-    abstract fun subredditDao(): SubredditDao
+	abstract fun subredditDao(): SubredditDao
 
-    companion object {
-        @Volatile
-        private var INSTANCE: MaterialReaderDatabase? = null
+	companion object {
+		@Volatile
+		private var INSTANCE: MaterialReaderDatabase? = null
 
-        fun getDatabase(context: Context): MaterialReaderDatabase {
-            return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    MaterialReaderDatabase::class.java,
-                    "redreader_database"
-                )
-                    .fallbackToDestructiveMigration()
-                    .build()
-                INSTANCE = instance
-                instance
-            }
-        }
-    }
+		fun getDatabase(context: Context): MaterialReaderDatabase = INSTANCE ?: synchronized(this) {
+			val instance = Room.databaseBuilder(
+				context.applicationContext,
+				MaterialReaderDatabase::class.java,
+				"redreader_database",
+			)
+				.fallbackToDestructiveMigration()
+				.build()
+			INSTANCE = instance
+			instance
+		}
+	}
 }

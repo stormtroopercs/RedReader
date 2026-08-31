@@ -19,27 +19,21 @@ package com.stormtroopercs.materialreader.common.streams
 import com.stormtroopercs.materialreader.common.Consumer
 
 interface Stream<E> {
-    fun hasNext(): Boolean
+	fun hasNext(): Boolean
 
-    fun next(): E
+	fun next(): E
 
-    fun filter(predicate: Predicate<E>): Stream<E> {
-        return FilterStream<E>(this, predicate)
-    }
+	fun filter(predicate: Predicate<E>): Stream<E> = FilterStream<E>(this, predicate)
 
-    fun forEach(consumer: Consumer<E>) {
-        while (hasNext()) {
-            consumer.consume(next())
-        }
-    }
+	fun forEach(consumer: Consumer<E>) {
+		while (hasNext()) {
+			consumer.consume(next())
+		}
+	}
 
-    companion object {
-        fun <E> from(iterator: MutableIterator<E>): Stream<E> {
-            return IteratorStream<E>(iterator)
-        }
+	companion object {
+		fun <E> from(iterator: MutableIterator<E>): Stream<E> = IteratorStream<E>(iterator)
 
-        fun <E> from(iterable: MutableIterable<E>): Stream<E> {
-            return IteratorStream<E>(iterable.iterator())
-        }
-    }
+		fun <E> from(iterable: MutableIterable<E>): Stream<E> = IteratorStream<E>(iterable.iterator())
+	}
 }

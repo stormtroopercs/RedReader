@@ -16,66 +16,64 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.announcements
 
-import org.junit.Assert
-import org.junit.Test
 import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.common.time.TimeDuration
 import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import com.stormtroopercs.materialreader.receivers.announcements.Announcement
 import com.stormtroopercs.materialreader.receivers.announcements.Payload
+import org.junit.Assert
+import org.junit.Test
 import java.io.IOException
 
 class AnnouncementTests {
 
-    @Test
-    @Throws(IOException::class)
-    fun announcementTest() {
+	@Test
+	@Throws(IOException::class)
+	fun announcementTest() {
+		val payload = Announcement.create(
+			"test_id",
+			"myTitle",
+			"my message",
+			UriString("https://my_url"),
+			TimeDuration.ms(100000),
+		).toPayload().toBytes()
 
-        val payload = Announcement.create(
-            "test_id",
-            "myTitle",
-            "my message",
-            UriString("https://my_url"),
-            TimeDuration.ms(100000)
-        ).toPayload().toBytes()
+		val estUntil = TimestampUTC.now().add(TimeDuration.ms(100000))
 
-        val estUntil = TimestampUTC.now().add(TimeDuration.ms(100000))
+		val reinflated = Announcement.fromPayload(Payload.fromBytes(payload))
 
-        val reinflated = Announcement.fromPayload(Payload.fromBytes(payload))
+		Assert.assertEquals("test_id", reinflated.id)
+		Assert.assertEquals("myTitle", reinflated.title)
+		Assert.assertEquals("my message", reinflated.message)
+		Assert.assertEquals(UriString("https://my_url"), reinflated.url)
 
-        Assert.assertEquals("test_id", reinflated.id)
-        Assert.assertEquals("myTitle", reinflated.title)
-        Assert.assertEquals("my message", reinflated.message)
-        Assert.assertEquals(UriString("https://my_url"), reinflated.url)
+		Assert.assertFalse(estUntil.isLessThan(reinflated.showUntil))
+		Assert.assertTrue(estUntil.subtract(TimeDuration.secs(1)).isLessThan(reinflated.showUntil))
+		Assert.assertFalse(reinflated.isExpired)
+	}
 
-        Assert.assertFalse(estUntil.isLessThan(reinflated.showUntil))
-        Assert.assertTrue(estUntil.subtract(TimeDuration.secs(1)).isLessThan(reinflated.showUntil))
-        Assert.assertFalse(reinflated.isExpired)
-    }
+	@Test
+	@Throws(IOException::class)
+	fun announcementTestNullMessage() {
+		val payload = Announcement.create(
+			"test_id",
+			"myTitle",
+			null,
+			UriString("https://my_url"),
+			TimeDuration.ms(100000),
+		).toPayload().toBytes()
 
-    @Test
-    @Throws(IOException::class)
-    fun announcementTestNullMessage() {
+		val estUntil = TimestampUTC.now().add(TimeDuration.ms(100000))
 
-        val payload = Announcement.create(
-            "test_id",
-            "myTitle",
-            null,
-            UriString("https://my_url"),
-            TimeDuration.ms(100000)
-        ).toPayload().toBytes()
+		val reinflated = Announcement.fromPayload(Payload.fromBytes(payload))
 
-        val estUntil = TimestampUTC.now().add(TimeDuration.ms(100000))
+		Assert.assertEquals("test_id", reinflated.id)
+		Assert.assertEquals("myTitle", reinflated.title)
+		Assert.assertNull(reinflated.message)
+		Assert.assertEquals(UriString("https://my_url"), reinflated.url)
 
-        val reinflated = Announcement.fromPayload(Payload.fromBytes(payload))
-
-        Assert.assertEquals("test_id", reinflated.id)
-        Assert.assertEquals("myTitle", reinflated.title)
-        Assert.assertNull(reinflated.message)
-        Assert.assertEquals(UriString("https://my_url"), reinflated.url)
-
-        Assert.assertFalse(estUntil.isLessThan(reinflated.showUntil))
-        Assert.assertTrue(estUntil.subtract(TimeDuration.secs(1)).isLessThan(reinflated.showUntil))
-        Assert.assertFalse(reinflated.isExpired)
-    }
+		Assert.assertFalse(estUntil.isLessThan(reinflated.showUntil))
+		Assert.assertTrue(estUntil.subtract(TimeDuration.secs(1)).isLessThan(reinflated.showUntil))
+		Assert.assertFalse(reinflated.isExpired)
+	}
 }

@@ -17,5 +17,5 @@
 package com.stormtroopercs.materialreader.common.streams
 
 fun interface Predicate<E> {
-    fun matches(value: E): Boolean
+	fun matches(value: E): Boolean
 }

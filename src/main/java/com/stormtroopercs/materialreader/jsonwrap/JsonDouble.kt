@@ -18,19 +18,13 @@
 package com.stormtroopercs.materialreader.jsonwrap
 
 class JsonDouble(private val mValue: Double) : JsonValue() {
-    override fun prettyPrint(indent: Int, sb: StringBuilder) {
-        sb.append(mValue)
-    }
+	override fun prettyPrint(indent: Int, sb: StringBuilder) {
+		sb.append(mValue)
+	}
 
-    public override fun asString(): String {
-        return mValue.toString()
-    }
+	public override fun asString(): String = mValue.toString()
 
-    public override fun asDouble(): Double {
-        return mValue
-    }
+	public override fun asDouble(): Double = mValue
 
-    public override fun asLong(): Long {
-        return Math.round(mValue)
-    }
+	public override fun asLong(): Long = Math.round(mValue)
 }

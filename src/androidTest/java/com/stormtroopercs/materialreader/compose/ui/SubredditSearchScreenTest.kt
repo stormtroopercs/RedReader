@@ -39,39 +39,39 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SubredditSearchScreenTest {
 
-    @get:Rule
-    val composeTestRule = createAndroidComposeRule(HiltTestHostActivity::class.java)
+	@get:Rule
+	val composeTestRule = createAndroidComposeRule(HiltTestHostActivity::class.java)
 
-    @Test
-    fun subredditSearchScreen_displaysTitle() {
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    SubredditSearchScreen(
-                        onNavigateBack = { /* no-op */ },
-                        onSubredditSelected = { /* no-op */ }
-                    )
-                }
-            }
-        }
+	@Test
+	fun subredditSearchScreen_displaysTitle() {
+		composeTestRule.setContent {
+			MaterialTheme {
+				Surface(modifier = Modifier.fillMaxSize()) {
+					SubredditSearchScreen(
+						onNavigateBack = { /* no-op */ },
+						onSubredditSelected = { /* no-op */ },
+					)
+				}
+			}
+		}
 
-        composeTestRule.onNodeWithText("Search Subreddits").assertExists()
-    }
+		composeTestRule.onNodeWithText("Search Subreddits").assertExists()
+	}
 
-    @Test
-    fun subredditSearchScreen_displaysIdleHint() {
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    SubredditSearchScreen(
-                        onNavigateBack = { /* no-op */ },
-                        onSubredditSelected = { /* no-op */ }
-                    )
-                }
-            }
-        }
+	@Test
+	fun subredditSearchScreen_displaysIdleHint() {
+		composeTestRule.setContent {
+			MaterialTheme {
+				Surface(modifier = Modifier.fillMaxSize()) {
+					SubredditSearchScreen(
+						onNavigateBack = { /* no-op */ },
+						onSubredditSelected = { /* no-op */ },
+					)
+				}
+			}
+		}
 
-        // No query typed yet → the idle hint.
-        composeTestRule.onNodeWithText("Type to search subreddits").assertExists()
-    }
+		// No query typed yet → the idle hint.
+		composeTestRule.onNodeWithText("Type to search subreddits").assertExists()
+	}
 }

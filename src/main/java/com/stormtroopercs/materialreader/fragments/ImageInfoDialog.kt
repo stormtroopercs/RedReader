@@ -26,71 +26,69 @@ import com.stormtroopercs.materialreader.image.ImageInfo
 import java.util.Objects
 
 class ImageInfoDialog : PropertiesDialog() {
-    override fun getTitle(context: Context): String {
-        return context.getString(string.props_image_title)
-    }
+	override fun getTitle(context: Context): String = context.getString(string.props_image_title)
 
-    override fun prepare(
-        context: BaseActivity,
-        items: LinearLayout
-    ) {
-        val info = Objects.requireNonNull<ImageInfo>(
-            BundleCompat.getParcelable<ImageInfo?>(
-                requireArguments(),
-                "info",
-                ImageInfo::class.java
-            )
-        )
+	override fun prepare(
+		context: BaseActivity,
+		items: LinearLayout,
+	) {
+		val info = Objects.requireNonNull<ImageInfo>(
+			BundleCompat.getParcelable<ImageInfo?>(
+				requireArguments(),
+				"info",
+				ImageInfo::class.java,
+			),
+		)
 
-        var first = true
+		var first = true
 
-        if (info.title != null && !info.title.trim { it <= ' ' }.isEmpty()) {
-            items.addView(
-                propView(
-                    context,
-                    string.props_title,
-                    info.title.trim { it <= ' ' },
-                    first
-                )
-            )
-            first = false
-        }
+		if (info.title != null && !info.title.trim { it <= ' ' }.isEmpty()) {
+			items.addView(
+				propView(
+					context,
+					string.props_title,
+					info.title.trim { it <= ' ' },
+					first,
+				),
+			)
+			first = false
+		}
 
-        if (info.caption != null && !info.caption.trim { it <= ' ' }.isEmpty()) {
-            items.addView(
-                propView(
-                    context,
-                    string.props_caption,
-                    info.caption.trim { it <= ' ' },
-                    first
-                )
-            )
-            first = false
-        }
+		if (info.caption != null && !info.caption.trim { it <= ' ' }.isEmpty()) {
+			items.addView(
+				propView(
+					context,
+					string.props_caption,
+					info.caption.trim { it <= ' ' },
+					first,
+				),
+			)
+			first = false
+		}
 
-        items.addView(propView(context, string.props_url, info.original.url.value, first))
+		items.addView(propView(context, string.props_url, info.original.url.value, first))
 
-        if (info.original.size != null) {
-            items.addView(
-                propView(
-                    context,
-                    string.props_resolution,
-                    info.original.size.width.toString() + " x " + info.original.size.height,
-                    false
-                )
-            )
-        }
-    }
+		if (info.original.size != null) {
+			items.addView(
+				propView(
+					context,
+					string.props_resolution,
+					info.original.size.width.toString() + " x " + info.original.size.height,
+					false,
+				),
+			)
+		}
+	}
 
-    companion object {
-        fun newInstance(info: ImageInfo?): ImageInfoDialog {
-            val pp = ImageInfoDialog()
+	companion object {
+		fun newInstance(info: ImageInfo?): ImageInfoDialog {
+			val pp = ImageInfoDialog()
 
-            val args = Bundle()
-            args.putParcelable("info", info)
-            pp.setArguments(args)
+			val args = Bundle()
+			args.putParcelable("info", info)
+			pp.setArguments(args)
 
-            return pp
-        }
-    }
+			return pp
+		}
+	}
 }

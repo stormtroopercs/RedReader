@@ -20,164 +20,162 @@ import java.io.IOException
 import kotlin.math.min
 
 class MemoryDataStream {
-    private val mLock = Any()
+	private val mLock = Any()
 
-    private var mData: ByteArray
-    private var mSize: Int
+	private var mData: ByteArray
+	private var mSize: Int
 
-    private var mFailed: IOException?=null
-    private var mComplete = false
+	private var mFailed: IOException? = null
+	private var mComplete = false
 
-    @JvmOverloads
-    constructor(initialCapacity: Int = 64 * 1024) {
-        if (initialCapacity < 1) {
-            throw RuntimeException("Initial capacity must be at least 1")
-        }
+	@JvmOverloads
+	constructor(initialCapacity: Int = 64 * 1024) {
+		if (initialCapacity < 1) {
+			throw RuntimeException("Initial capacity must be at least 1")
+		}
 
-        mData = ByteArray(initialCapacity)
-        mSize = 0
-    }
+		mData = ByteArray(initialCapacity)
+		mSize = 0
+	}
 
-    constructor(data: ByteArray) {
-        mData = data
-        mSize = data.size
-        mComplete = true
-    }
+	constructor(data: ByteArray) {
+		mData = data
+		mSize = data.size
+		mComplete = true
+	}
 
-    private fun ensureCapacity(desiredCapacity: Int) {
-        if (desiredCapacity <= mData.size) {
-            return
-        }
+	private fun ensureCapacity(desiredCapacity: Int) {
+		if (desiredCapacity <= mData.size) {
+			return
+		}
 
-        if (desiredCapacity > (mData.size * 2)) {
-            realloc(desiredCapacity + (desiredCapacity / 2))
-        } else {
-            realloc(mData.size * 2)
-        }
-    }
+		if (desiredCapacity > (mData.size * 2)) {
+			realloc(desiredCapacity + (desiredCapacity / 2))
+		} else {
+			realloc(mData.size * 2)
+		}
+	}
 
-    private fun realloc(newCapacity: Int) {
-        if (newCapacity < mSize) {
-            throw RuntimeException("Cannot shrink array")
-        }
+	private fun realloc(newCapacity: Int) {
+		if (newCapacity < mSize) {
+			throw RuntimeException("Cannot shrink array")
+		}
 
-        mData = mData.copyOf(newCapacity)
-    }
+		mData = mData.copyOf(newCapacity)
+	}
 
-    fun size(): Int {
-        synchronized(mLock) {
-            return mSize
-        }
-    }
+	fun size(): Int {
+		synchronized(mLock) {
+			return mSize
+		}
+	}
 
-    fun writeBytes(data: ByteArray, offset: Int, length: Int) {
-        synchronized(mLock) {
-            ensureCapacity(mSize + length)
-            System.arraycopy(data, offset, mData, mSize, length)
-            mSize += length
-            (mLock as Object).notifyAll()
-        }
-    }
+	fun writeBytes(data: ByteArray, offset: Int, length: Int) {
+		synchronized(mLock) {
+			ensureCapacity(mSize + length)
+			System.arraycopy(data, offset, mData, mSize, length)
+			mSize += length
+			(mLock as Object).notifyAll()
+		}
+	}
 
-    fun setComplete() {
-        synchronized(mLock) {
-            mComplete = true
-            (mLock as Object).notifyAll()
-        }
-    }
+	fun setComplete() {
+		synchronized(mLock) {
+			mComplete = true
+			(mLock as Object).notifyAll()
+		}
+	}
 
-    fun setFailed(e: IOException) {
-        synchronized(mLock) {
-            mFailed = e
-            (mLock as Object).notifyAll()
-        }
-    }
+	fun setFailed(e: IOException) {
+		synchronized(mLock) {
+			mFailed = e
+			(mLock as Object).notifyAll()
+		}
+	}
 
-    private fun notReadyForRead(startingPosition: Int): Boolean {
-        return !mComplete && mFailed == null && mSize <= startingPosition
-    }
+	private fun notReadyForRead(startingPosition: Int): Boolean = !mComplete && mFailed == null && mSize <= startingPosition
 
-    @Throws(IOException::class)
-    fun blockingReadOneByte(position: Int): Int {
-        synchronized(mLock) {
-            while (notReadyForRead(position)) {
-                try {
-                    (mLock as Object).wait()
-                } catch (e: InterruptedException) {
-                    throw RuntimeException(e)
-                }
-            }
-            if (mFailed != null) {
-                throw mFailed!!
-            }
+	@Throws(IOException::class)
+	fun blockingReadOneByte(position: Int): Int {
+		synchronized(mLock) {
+			while (notReadyForRead(position)) {
+				try {
+					(mLock as Object).wait()
+				} catch (e: InterruptedException) {
+					throw RuntimeException(e)
+				}
+			}
+			if (mFailed != null) {
+				throw mFailed!!
+			}
 
-            if (mSize > position) {
-                return mData[position].toInt()
-            }
+			if (mSize > position) {
+				return mData[position].toInt()
+			}
 
-            if (mComplete) {
-                return -1
-            }
-            throw IOException("Internal error: ready conditions not true")
-        }
-    }
+			if (mComplete) {
+				return -1
+			}
+			throw IOException("Internal error: ready conditions not true")
+		}
+	}
 
-    @Throws(IOException::class)
-    fun blockingRead(
-        startingPosition: Int,
-        output: ByteArray,
-        offset: Int,
-        maxLength: Int
-    ): Int {
-        if (maxLength == 0) {
-            throw RuntimeException("Attempted to read zero bytes")
-        }
+	@Throws(IOException::class)
+	fun blockingRead(
+		startingPosition: Int,
+		output: ByteArray,
+		offset: Int,
+		maxLength: Int,
+	): Int {
+		if (maxLength == 0) {
+			throw RuntimeException("Attempted to read zero bytes")
+		}
 
-        synchronized(mLock) {
-            while (notReadyForRead(startingPosition)) {
-                try {
-                    (mLock as Object).wait()
-                } catch (e: InterruptedException) {
-                    throw RuntimeException(e)
-                }
-            }
-            if (mFailed != null) {
-                throw mFailed!!
-            }
+		synchronized(mLock) {
+			while (notReadyForRead(startingPosition)) {
+				try {
+					(mLock as Object).wait()
+				} catch (e: InterruptedException) {
+					throw RuntimeException(e)
+				}
+			}
+			if (mFailed != null) {
+				throw mFailed!!
+			}
 
-            if (mSize > startingPosition) {
-                val bytesToRead = min(maxLength, mSize - startingPosition)
-                System.arraycopy(mData, startingPosition, output, offset, bytesToRead)
-                return bytesToRead
-            }
+			if (mSize > startingPosition) {
+				val bytesToRead = min(maxLength, mSize - startingPosition)
+				System.arraycopy(mData, startingPosition, output, offset, bytesToRead)
+				return bytesToRead
+			}
 
-            if (mComplete) {
-                return -1
-            }
-            throw IOException("Internal error: ready conditions not true")
-        }
-    }
+			if (mComplete) {
+				return -1
+			}
+			throw IOException("Internal error: ready conditions not true")
+		}
+	}
 
-    val inputStream: MemoryDataStreamInputStream
-        get() = MemoryDataStreamInputStream(this)
+	val inputStream: MemoryDataStreamInputStream
+		get() = MemoryDataStreamInputStream(this)
 
-    @Throws(IOException::class)
-    fun getUnderlyingByteArrayWhenComplete(
-        callback: ByteArrayCallback
-    ) {
-        synchronized(mLock) {
-            while (!mComplete && mFailed == null) {
-                try {
-                    (mLock as Object).wait()
-                } catch (e: InterruptedException) {
-                    throw RuntimeException(e)
-                }
-            }
-            if (mFailed != null) {
-                throw mFailed!!
-            }
-        }
+	@Throws(IOException::class)
+	fun getUnderlyingByteArrayWhenComplete(
+		callback: ByteArrayCallback,
+	) {
+		synchronized(mLock) {
+			while (!mComplete && mFailed == null) {
+				try {
+					(mLock as Object).wait()
+				} catch (e: InterruptedException) {
+					throw RuntimeException(e)
+				}
+			}
+			if (mFailed != null) {
+				throw mFailed!!
+			}
+		}
 
-        callback.onByteArray(mData, 0, mSize)
-    }
+		callback.onByteArray(mData, 0, mSize)
+	}
 }

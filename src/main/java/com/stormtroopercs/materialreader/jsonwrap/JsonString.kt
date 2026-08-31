@@ -17,42 +17,36 @@
 
 package com.stormtroopercs.materialreader.jsonwrap
 
-import org.apache.commons.text.StringEscapeUtils
 import com.stormtroopercs.materialreader.common.StringUtils
+import org.apache.commons.text.StringEscapeUtils
 
 class JsonString(private val mValue: String) : JsonValue() {
-    override fun prettyPrint(indent: Int, sb: StringBuilder) {
-        sb.append('"').append(StringEscapeUtils.escapeJson(mValue)).append('"')
-    }
+	override fun prettyPrint(indent: Int, sb: StringBuilder) {
+		sb.append('"').append(StringEscapeUtils.escapeJson(mValue)).append('"')
+	}
 
-    public override fun asBoolean(): Boolean? {
-        val lowercase = StringUtils.asciiLowercase(mValue)
+	public override fun asBoolean(): Boolean? {
+		val lowercase = StringUtils.asciiLowercase(mValue)
 
-        when (lowercase) {
-            "true", "t", "1" -> return true
-            "false", "f", "0" -> return false
-        }
+		when (lowercase) {
+			"true", "t", "1" -> return true
+			"false", "f", "0" -> return false
+		}
 
-        return null
-    }
+		return null
+	}
 
-    public override fun asString(): String {
-        return mValue
-    }
+	public override fun asString(): String = mValue
 
-    public override fun asDouble(): Double? {
-        return try {
-            mValue.toDouble()
-        } catch (e: NumberFormatException) {
-            null
-        }
-    }
+	public override fun asDouble(): Double? = try {
+		mValue.toDouble()
+	} catch (e: NumberFormatException) {
+		null
+	}
 
-    public override fun asLong(): Long? {
-        return try {
-            mValue.toLong()
-        } catch (e: NumberFormatException) {
-            null
-        }
-    }
+	public override fun asLong(): Long? = try {
+		mValue.toLong()
+	} catch (e: NumberFormatException) {
+		null
+	}
 }

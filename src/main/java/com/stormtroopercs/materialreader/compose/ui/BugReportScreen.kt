@@ -29,7 +29,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.stormtroopercs.materialreader.common.BugReporter.getErrors
 import com.stormtroopercs.materialreader.common.BugReporter.sendBugReport
-import com.stormtroopercs.materialreader.common.RRError
 
 /**
  * Compose Bug Report Screen.
@@ -38,76 +37,76 @@ import com.stormtroopercs.materialreader.common.RRError
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BugReportScreen(
-    onNavigateBack: () -> Unit
+	onNavigateBack: () -> Unit,
 ) {
-    val context = LocalContext.current
+	val context = LocalContext.current
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Bug Report") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.BugReport,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.error
-            )
+	Scaffold(
+		topBar = {
+			TopAppBar(
+				title = { Text("Bug Report") },
+				navigationIcon = {
+					IconButton(onClick = onNavigateBack) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Default.ArrowBack,
+							contentDescription = "Back",
+						)
+					}
+				},
+			)
+		},
+	) { paddingValues ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(paddingValues)
+				.padding(24.dp),
+			horizontalAlignment = Alignment.CenterHorizontally,
+			verticalArrangement = Arrangement.Center,
+		) {
+			Icon(
+				imageVector = Icons.Default.BugReport,
+				contentDescription = null,
+				modifier = Modifier.size(64.dp),
+				tint = MaterialTheme.colorScheme.error,
+			)
 
-            Spacer(modifier = Modifier.height(24.dp))
+			Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "Oops! Something went wrong.",
-                style = MaterialTheme.typography.headlineSmall
-            )
+			Text(
+				text = "Oops! Something went wrong.",
+				style = MaterialTheme.typography.headlineSmall,
+			)
 
-            Spacer(modifier = Modifier.height(8.dp))
+			Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = "Would you like to send a bug report to help us fix the issue?",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+			Text(
+				text = "Would you like to send a bug report to help us fix the issue?",
+				style = MaterialTheme.typography.bodyLarge,
+				color = MaterialTheme.colorScheme.onSurfaceVariant,
+			)
 
-            Spacer(modifier = Modifier.height(32.dp))
+			Spacer(modifier = Modifier.height(32.dp))
 
-            Button(
-                onClick = {
-                    val errorsList = getErrors()
-                    sendBugReport(context, errorsList)
-                    onNavigateBack()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Send Bug Report")
-            }
+			Button(
+				onClick = {
+					val errorsList = getErrors()
+					sendBugReport(context, errorsList)
+					onNavigateBack()
+				},
+				modifier = Modifier.fillMaxWidth(),
+			) {
+				Text("Send Bug Report")
+			}
 
-            Spacer(modifier = Modifier.height(8.dp))
+			Spacer(modifier = Modifier.height(8.dp))
 
-            TextButton(
-                onClick = onNavigateBack,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Dismiss")
-            }
-        }
-    }
+			TextButton(
+				onClick = onNavigateBack,
+				modifier = Modifier.fillMaxWidth(),
+			) {
+				Text("Dismiss")
+			}
+		}
+	}
 }

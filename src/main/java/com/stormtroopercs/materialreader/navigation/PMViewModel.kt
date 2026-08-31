@@ -19,18 +19,18 @@ package com.stormtroopercs.materialreader.navigation
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
+import com.stormtroopercs.materialreader.account.RedditAccount
+import com.stormtroopercs.materialreader.account.RedditAccountManager
+import com.stormtroopercs.materialreader.cache.CacheManager
+import com.stormtroopercs.materialreader.common.BugReporter
+import com.stormtroopercs.materialreader.common.RRError
+import com.stormtroopercs.materialreader.reddit.APIResponseHandler.ActionResponseHandler
+import com.stormtroopercs.materialreader.reddit.RedditAPI
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import com.stormtroopercs.materialreader.common.BugReporter
-import com.stormtroopercs.materialreader.account.RedditAccount
-import com.stormtroopercs.materialreader.account.RedditAccountManager
-import com.stormtroopercs.materialreader.cache.CacheManager
-import com.stormtroopercs.materialreader.common.RRError
-import com.stormtroopercs.materialreader.reddit.APIResponseHandler.ActionResponseHandler
-import com.stormtroopercs.materialreader.reddit.RedditAPI
 import javax.inject.Inject
 
 /**
@@ -41,21 +41,21 @@ import javax.inject.Inject
  * the Compose route re-creates the ViewModel per navigation entry.
  */
 object PMSendDraft {
-    var recipient: String? = null
-    var subject: String? = null
-    var text: String? = null
+	var recipient: String? = null
+	var subject: String? = null
+	var text: String? = null
 
-    fun save(recipient: String, subject: String, text: String) {
-        this.recipient = recipient
-        this.subject = subject
-        this.text = text
-    }
+	fun save(recipient: String, subject: String, text: String) {
+		this.recipient = recipient
+		this.subject = subject
+		this.text = text
+	}
 
-    fun clear() {
-        recipient = null
-        subject = null
-        text = null
-    }
+	fun clear() {
+		recipient = null
+		subject = null
+		text = null
+	}
 }
 
 /**
@@ -71,75 +71,75 @@ object PMSendDraft {
  */
 @HiltViewModel
 class PMViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val accountManager: RedditAccountManager,
-    private val cacheManager: CacheManager
+	@ApplicationContext private val context: Context,
+	private val accountManager: RedditAccountManager,
+	private val cacheManager: CacheManager,
 ) : ViewModel() {
 
-    sealed class PMUiState {
-        object Idle : PMUiState()
-        object Submitting : PMUiState()
-        object Success : PMUiState()
-        data class Failed(val error: RRError) : PMUiState()
-    }
+	sealed class PMUiState {
+		object Idle : PMUiState()
+		object Submitting : PMUiState()
+		object Success : PMUiState()
+		data class Failed(val error: RRError) : PMUiState()
+	}
 
-    private val _state = MutableStateFlow<PMUiState>(PMUiState.Idle)
-    val state: StateFlow<PMUiState> = _state.asStateFlow()
+	private val _state = MutableStateFlow<PMUiState>(PMUiState.Idle)
+	val state: StateFlow<PMUiState> = _state.asStateFlow()
 
-    /** Non-anonymous account usernames, in account order (the legacy spinner list). */
-    val accounts: List<String> =
-        accountManager.accounts
-            .filter { !it.isAnonymous }
-            .map { it.username }
+	/** Non-anonymous account usernames, in account order (the legacy spinner list). */
+	val accounts: List<String> =
+		accountManager.accounts
+			.filter { !it.isAnonymous }
+			.map { it.username }
 
-    /**
-     * Issue the `api/compose` request with the given recipient / subject /
-     * body under the given account — the same call and handler semantics as
-     * the legacy `PMSendActivity.onOptionsItemSelected` (success -> [PMUiState.Success],
-     * failure -> [PMUiState.Failed], exception -> global bug report).
-     */
-    fun submit(
-        activity: AppCompatActivity,
-        accountUsername: String,
-        recipient: String,
-        subject: String,
-        body: String,
-    ) {
-        val account: RedditAccount? =
-            accountManager.accounts.firstOrNull {
-                !it.isAnonymous && it.username.equals(accountUsername, ignoreCase = true)
-            }
-        if (account == null) return
+	/**
+	 * Issue the `api/compose` request with the given recipient / subject /
+	 * body under the given account — the same call and handler semantics as
+	 * the legacy `PMSendActivity.onOptionsItemSelected` (success -> [PMUiState.Success],
+	 * failure -> [PMUiState.Failed], exception -> global bug report).
+	 */
+	fun submit(
+		activity: AppCompatActivity,
+		accountUsername: String,
+		recipient: String,
+		subject: String,
+		body: String,
+	) {
+		val account: RedditAccount? =
+			accountManager.accounts.firstOrNull {
+				!it.isAnonymous && it.username.equals(accountUsername, ignoreCase = true)
+			}
+		if (account == null) return
 
-        _state.value = PMUiState.Submitting
+		_state.value = PMUiState.Submitting
 
-        val handler = object : ActionResponseHandler(activity) {
-            override fun onSuccess() {
-                _state.value = PMUiState.Success
-            }
+		val handler = object : ActionResponseHandler(activity) {
+			override fun onSuccess() {
+				_state.value = PMUiState.Success
+			}
 
-            override fun onFailure(error: RRError) {
-                _state.value = PMUiState.Failed(error)
-            }
+			override fun onFailure(error: RRError) {
+				_state.value = PMUiState.Failed(error)
+			}
 
-            override fun onCallbackException(t: Throwable) {
-                BugReporter.handleGlobalError(activity, t)
-            }
-        }
+			override fun onCallbackException(t: Throwable) {
+				BugReporter.handleGlobalError(activity, t)
+			}
+		}
 
-        RedditAPI.compose(
-            cacheManager,
-            handler,
-            account,
-            recipient,
-            subject,
-            body,
-            context
-        )
-    }
+		RedditAPI.compose(
+			cacheManager,
+			handler,
+			account,
+			recipient,
+			subject,
+			body,
+			context,
+		)
+	}
 
-    /** Reset to Idle (used after a success dismisses the screen). */
-    fun onDone() {
-        _state.value = PMUiState.Idle
-    }
+	/** Reset to Idle (used after a success dismisses the screen). */
+	fun onDone() {
+		_state.value = PMUiState.Idle
+	}
 }

@@ -26,7 +26,7 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class UriString(
 	@JvmField
-	val value: String
+	val value: String,
 ) : Parcelable {
 	override fun toString() = value
 

@@ -57,97 +57,97 @@ import com.stormtroopercs.materialreader.navigation.CommentReplyViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommentReplyScreen(
-    parentThingId: String,
-    onDone: () -> Unit,
-    onNavigateBack: () -> Unit
+	parentThingId: String,
+	onDone: () -> Unit,
+	onNavigateBack: () -> Unit,
 ) {
-    val viewModel: CommentReplyViewModel = hiltViewModel()
-    val context = LocalContext.current
-    val state by viewModel.state.collectAsStateWithLifecycle()
+	val viewModel: CommentReplyViewModel = hiltViewModel()
+	val context = LocalContext.current
+	val state by viewModel.state.collectAsStateWithLifecycle()
 
-    var body by remember { mutableStateOf("") }
+	var body by remember { mutableStateOf("") }
 
-    // Seed the (per-navigation-entry) ViewModel with the thing being
-    // replied to.
-    LaunchedEffect(Unit) {
-        viewModel.setParent(parentThingId)
-    }
+	// Seed the (per-navigation-entry) ViewModel with the thing being
+	// replied to.
+	LaunchedEffect(Unit) {
+		viewModel.setParent(parentThingId)
+	}
 
-    LaunchedEffect(state) {
-        when (state) {
-            is CommentReplyViewModel.ReplyUiState.Success -> {
-                General.quickToast(context, "Reply submitted")
-                viewModel.onDone()
-                onDone()
-            }
+	LaunchedEffect(state) {
+		when (state) {
+			is CommentReplyViewModel.ReplyUiState.Success -> {
+				General.quickToast(context, "Reply submitted")
+				viewModel.onDone()
+				onDone()
+			}
 
-            is CommentReplyViewModel.ReplyUiState.Error ->
-                General.quickToast(
-                    context,
-                    (state as CommentReplyViewModel.ReplyUiState.Error).message
-                )
+			is CommentReplyViewModel.ReplyUiState.Error ->
+				General.quickToast(
+					context,
+					(state as CommentReplyViewModel.ReplyUiState.Error).message,
+				)
 
-            else -> Unit
-        }
-    }
+			else -> Unit
+		}
+	}
 
-    val isComment = parentThingId.startsWith("t1_")
+	val isComment = parentThingId.startsWith("t1_")
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = if (isComment) "Reply to Comment" else "Reply to Post")
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    val submitting = state is CommentReplyViewModel.ReplyUiState.Submitting
-                    IconButton(
-                        onClick = {
-                            (context as? AppCompatActivity)?.let {
-                                viewModel.submit(it, body)
-                            }
-                        },
-                        enabled = body.isNotBlank() && !submitting
-                    ) {
-                        if (submitting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.padding(4.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = "Submit"
-                            )
-                        }
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            OutlinedTextField(
-                value = body,
-                onValueChange = { body = it },
-                placeholder = { Text("Write your reply...") },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                minLines = 6,
-                maxLines = 20
-            )
-        }
-    }
+	Scaffold(
+		topBar = {
+			TopAppBar(
+				title = {
+					Text(text = if (isComment) "Reply to Comment" else "Reply to Post")
+				},
+				navigationIcon = {
+					IconButton(onClick = onNavigateBack) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Default.ArrowBack,
+							contentDescription = "Back",
+						)
+					}
+				},
+				actions = {
+					val submitting = state is CommentReplyViewModel.ReplyUiState.Submitting
+					IconButton(
+						onClick = {
+							(context as? AppCompatActivity)?.let {
+								viewModel.submit(it, body)
+							}
+						},
+						enabled = body.isNotBlank() && !submitting,
+					) {
+						if (submitting) {
+							CircularProgressIndicator(
+								modifier = Modifier.padding(4.dp),
+								strokeWidth = 2.dp,
+							)
+						} else {
+							Icon(
+								imageVector = Icons.AutoMirrored.Filled.Send,
+								contentDescription = "Submit",
+							)
+						}
+					}
+				},
+			)
+		},
+	) { paddingValues ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(paddingValues),
+		) {
+			OutlinedTextField(
+				value = body,
+				onValueChange = { body = it },
+				placeholder = { Text("Write your reply...") },
+				modifier = Modifier
+					.fillMaxSize()
+					.padding(16.dp),
+				minLines = 6,
+				maxLines = 20,
+			)
+		}
+	}
 }

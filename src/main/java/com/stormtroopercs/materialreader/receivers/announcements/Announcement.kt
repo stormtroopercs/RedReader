@@ -24,79 +24,77 @@ import com.stormtroopercs.materialreader.common.time.TimestampUTC.Companion.now
 import java.io.IOException
 
 class Announcement private constructor(
-    @JvmField val id: String,
-    @JvmField val title: String,
-    @JvmField val message: String?,
-    @JvmField val url: UriString,
-    @JvmField val showUntil: TimestampUTC
+	@JvmField val id: String,
+	@JvmField val title: String,
+	@JvmField val message: String?,
+	@JvmField val url: UriString,
+	@JvmField val showUntil: TimestampUTC,
 ) {
-    val isExpired: Boolean
-        get() = showUntil.hasPassed()
+	val isExpired: Boolean
+		get() = showUntil.hasPassed()
 
-    fun toPayload(): Payload {
-        val result = Payload()
+	fun toPayload(): Payload {
+		val result = Payload()
 
-        result.setString(ENTRY_ID, id)
-        result.setString(ENTRY_TITLE, title)
+		result.setString(ENTRY_ID, id)
+		result.setString(ENTRY_TITLE, title)
 
-        if (message != null) {
-            result.setString(ENTRY_MESSAGE, message)
-        }
+		if (message != null) {
+			result.setString(ENTRY_MESSAGE, message)
+		}
 
-        result.setString(ENTRY_URL, url.value)
-        result.setLong(ENTRY_SHOW_UNTIL, showUntil.toUtcMs())
+		result.setString(ENTRY_URL, url.value)
+		result.setLong(ENTRY_SHOW_UNTIL, showUntil.toUtcMs())
 
-        return result
-    }
+		return result
+	}
 
-    companion object {
-        private const val ENTRY_ID = "i"
-        private const val ENTRY_TITLE = "t"
-        private const val ENTRY_MESSAGE = "m"
-        private const val ENTRY_URL = "u"
-        private const val ENTRY_SHOW_UNTIL = "until"
+	companion object {
+		private const val ENTRY_ID = "i"
+		private const val ENTRY_TITLE = "t"
+		private const val ENTRY_MESSAGE = "m"
+		private const val ENTRY_URL = "u"
+		private const val ENTRY_SHOW_UNTIL = "until"
 
-        @JvmStatic
-        fun create(
-            id: String,
-            title: String,
-            message: String?,
-            url: UriString,
-            duration: TimeDuration
-        ): Announcement {
-            return Announcement(
-                id,
-                title,
-                message,
-                url,
-                now().add(duration)
-            )
-        }
+		@JvmStatic
+		fun create(
+			id: String,
+			title: String,
+			message: String?,
+			url: UriString,
+			duration: TimeDuration,
+		): Announcement = Announcement(
+			id,
+			title,
+			message,
+			url,
+			now().add(duration),
+		)
 
-        @JvmStatic
-        @Throws(IOException::class)
-        fun fromPayload(payload: Payload): Announcement {
-            var id = payload.getString(ENTRY_ID)
-            val title = payload.getString(ENTRY_TITLE)
-            val message = payload.getString(ENTRY_MESSAGE)
-            val url = payload.getString(ENTRY_URL)
-            val showUntil = payload.getLong(ENTRY_SHOW_UNTIL)
+		@JvmStatic
+		@Throws(IOException::class)
+		fun fromPayload(payload: Payload): Announcement {
+			var id = payload.getString(ENTRY_ID)
+			val title = payload.getString(ENTRY_TITLE)
+			val message = payload.getString(ENTRY_MESSAGE)
+			val url = payload.getString(ENTRY_URL)
+			val showUntil = payload.getLong(ENTRY_SHOW_UNTIL)
 
-            if (title == null || url == null || showUntil == null) {
-                throw IOException("Required entry missing")
-            }
+			if (title == null || url == null || showUntil == null) {
+				throw IOException("Required entry missing")
+			}
 
-            if (id == null) {
-                id = url
-            }
+			if (id == null) {
+				id = url
+			}
 
-            return Announcement(
-                id,
-                title,
-                message,
-                UriString(url),
-                fromUtcMs(showUntil)
-            )
-        }
-    }
+			return Announcement(
+				id,
+				title,
+				message,
+				UriString(url),
+				fromUtcMs(showUntil),
+			)
+		}
+	}
 }

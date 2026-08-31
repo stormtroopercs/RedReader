@@ -16,9 +16,9 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.general
 
+import com.stormtroopercs.materialreader.common.SerializeUtils
 import org.junit.Assert
 import org.junit.Test
-import com.stormtroopercs.materialreader.common.SerializeUtils
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.DataInputStream
@@ -27,313 +27,291 @@ import java.io.IOException
 
 class SerializeUtilsTests {
 
-    private class DataHandler {
+	private class DataHandler {
 
-        private val mOutput = ByteArrayOutputStream()
+		private val mOutput = ByteArrayOutputStream()
 
-        fun getOutput(): DataOutputStream {
-            return DataOutputStream(mOutput)
-        }
+		fun getOutput(): DataOutputStream = DataOutputStream(mOutput)
 
-        fun getInput(): DataInputStream {
-            return DataInputStream(ByteArrayInputStream(mOutput.toByteArray()))
-        }
-    }
+		fun getInput(): DataInputStream = DataInputStream(ByteArrayInputStream(mOutput.toByteArray()))
+	}
 
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testNull() {
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testNull() {
+		val dataHandler = DataHandler()
 
-        val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), null)
 
-        SerializeUtils.serialize(dataHandler.getOutput(), null)
+		Assert.assertNull(SerializeUtils.deserialize(dataHandler.getInput()))
+	}
 
-        Assert.assertNull(SerializeUtils.deserialize(dataHandler.getInput()))
-    }
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testByte() {
+		val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), 123.toByte())
 
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testByte() {
+		val result = SerializeUtils.deserialize(dataHandler.getInput())
 
-        val dataHandler = DataHandler()
-        SerializeUtils.serialize(dataHandler.getOutput(), 123.toByte())
+		Assert.assertTrue(result is Byte)
+		Assert.assertEquals(123.toByte(), result)
+	}
 
-        val result = SerializeUtils.deserialize(dataHandler.getInput())
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testChar() {
+		val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), 123.toChar())
 
-        Assert.assertTrue(result is Byte)
-        Assert.assertEquals(123.toByte(), result)
-    }
+		val result = SerializeUtils.deserialize(dataHandler.getInput())
 
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testChar() {
+		Assert.assertTrue(result is Char)
+		Assert.assertEquals(123.toChar(), result)
+	}
 
-        val dataHandler = DataHandler()
-        SerializeUtils.serialize(dataHandler.getOutput(), 123.toChar())
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testShort() {
+		val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), 123.toShort())
 
-        val result = SerializeUtils.deserialize(dataHandler.getInput())
+		val result = SerializeUtils.deserialize(dataHandler.getInput())
 
-        Assert.assertTrue(result is Char)
-        Assert.assertEquals(123.toChar(), result)
-    }
+		Assert.assertTrue(result is Short)
+		Assert.assertEquals(123.toShort(), result)
+	}
 
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testShort() {
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testInt() {
+		val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), 123)
 
-        val dataHandler = DataHandler()
-        SerializeUtils.serialize(dataHandler.getOutput(), 123.toShort())
+		val result = SerializeUtils.deserialize(dataHandler.getInput())
 
-        val result = SerializeUtils.deserialize(dataHandler.getInput())
+		Assert.assertTrue(result is Int)
+		Assert.assertEquals(123, result)
+	}
 
-        Assert.assertTrue(result is Short)
-        Assert.assertEquals(123.toShort(), result)
-    }
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testLong() {
+		val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), 123L)
 
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testInt() {
+		val result = SerializeUtils.deserialize(dataHandler.getInput())
 
-        val dataHandler = DataHandler()
-        SerializeUtils.serialize(dataHandler.getOutput(), 123)
+		Assert.assertTrue(result is Long)
+		Assert.assertEquals(123L, result)
+	}
 
-        val result = SerializeUtils.deserialize(dataHandler.getInput())
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testFloat() {
+		val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), 0.25f)
 
-        Assert.assertTrue(result is Int)
-        Assert.assertEquals(123, result)
-    }
+		val result = SerializeUtils.deserialize(dataHandler.getInput())
 
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testLong() {
+		Assert.assertTrue(result is Float)
+		Assert.assertEquals(0.25f, result)
+	}
 
-        val dataHandler = DataHandler()
-        SerializeUtils.serialize(dataHandler.getOutput(), 123L)
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testDouble() {
+		val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), 0.25)
 
-        val result = SerializeUtils.deserialize(dataHandler.getInput())
+		val result = SerializeUtils.deserialize(dataHandler.getInput())
 
-        Assert.assertTrue(result is Long)
-        Assert.assertEquals(123L, result)
-    }
+		Assert.assertTrue(result is Double)
+		Assert.assertEquals(0.25, result)
+	}
 
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testFloat() {
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testTrue() {
+		val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), true)
 
-        val dataHandler = DataHandler()
-        SerializeUtils.serialize(dataHandler.getOutput(), 0.25f)
+		val result = SerializeUtils.deserialize(dataHandler.getInput())
+
+		Assert.assertTrue(result is Boolean)
+		Assert.assertEquals(true, result)
+	}
+
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testFalse() {
+		val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), false)
 
-        val result = SerializeUtils.deserialize(dataHandler.getInput())
+		val result = SerializeUtils.deserialize(dataHandler.getInput())
 
-        Assert.assertTrue(result is Float)
-        Assert.assertEquals(0.25f, result)
-    }
+		Assert.assertTrue(result is Boolean)
+		Assert.assertEquals(false, result)
+	}
 
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testDouble() {
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testString() {
+		val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), "Hello world")
 
-        val dataHandler = DataHandler()
-        SerializeUtils.serialize(dataHandler.getOutput(), 0.25)
+		val result = SerializeUtils.deserialize(dataHandler.getInput())
+
+		Assert.assertTrue(result is String)
+		Assert.assertEquals("Hello world", result)
+	}
+
+	@Suppress("UNCHECKED_CAST")
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testSet() {
+		val dataHandler = DataHandler()
 
-        val result = SerializeUtils.deserialize(dataHandler.getInput())
+		val input: MutableSet<Any?> = HashSet()
+		input.add(12345)
+		input.add("String value")
+		input.add(null)
+
+		SerializeUtils.serialize(dataHandler.getOutput(), input)
+
+		val result =
+			SerializeUtils.deserialize(dataHandler.getInput()) as MutableSet<Any?>
+
+		Assert.assertNotNull(result)
+		Assert.assertEquals(input, result)
+		Assert.assertEquals(input.size, result.size)
+
+		Assert.assertTrue(result.contains(12345))
+		Assert.assertTrue(result.contains("String value"))
+		Assert.assertTrue(result.contains(null))
+	}
 
-        Assert.assertTrue(result is Double)
-        Assert.assertEquals(0.25, result)
-    }
+	@Suppress("UNCHECKED_CAST")
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testEmptySet() {
+		val dataHandler = DataHandler()
+
+		val input: MutableSet<Any?> = HashSet()
 
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testTrue() {
+		SerializeUtils.serialize(dataHandler.getOutput(), input)
+
+		val result =
+			SerializeUtils.deserialize(dataHandler.getInput()) as MutableSet<Any?>
 
-        val dataHandler = DataHandler()
-        SerializeUtils.serialize(dataHandler.getOutput(), true)
+		Assert.assertNotNull(result)
+		Assert.assertEquals(input, result)
+		Assert.assertEquals(input.size, result.size)
+	}
 
-        val result = SerializeUtils.deserialize(dataHandler.getInput())
+	@Suppress("UNCHECKED_CAST")
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testList() {
+		val dataHandler = DataHandler()
 
-        Assert.assertTrue(result is Boolean)
-        Assert.assertEquals(true, result)
-    }
+		val input: MutableList<Any?> = ArrayList()
+		input.add(12345)
+		input.add("String value")
+		input.add(null)
 
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testFalse() {
+		SerializeUtils.serialize(dataHandler.getOutput(), input)
 
-        val dataHandler = DataHandler()
-        SerializeUtils.serialize(dataHandler.getOutput(), false)
+		val result =
+			SerializeUtils.deserialize(dataHandler.getInput()) as MutableList<Any?>
 
-        val result = SerializeUtils.deserialize(dataHandler.getInput())
+		Assert.assertNotNull(result)
+		Assert.assertEquals(input, result)
+		Assert.assertEquals(input.size, result.size)
 
-        Assert.assertTrue(result is Boolean)
-        Assert.assertEquals(false, result)
-    }
+		Assert.assertEquals(12345, result[0])
+		Assert.assertEquals("String value", result[1])
+		Assert.assertNull(result[2])
+	}
 
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testString() {
+	@Suppress("UNCHECKED_CAST")
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testEmptyList() {
+		val dataHandler = DataHandler()
 
-        val dataHandler = DataHandler()
-        SerializeUtils.serialize(dataHandler.getOutput(), "Hello world")
+		val input: MutableList<Any?> = ArrayList()
 
-        val result = SerializeUtils.deserialize(dataHandler.getInput())
+		SerializeUtils.serialize(dataHandler.getOutput(), input)
 
-        Assert.assertTrue(result is String)
-        Assert.assertEquals("Hello world", result)
-    }
+		val result =
+			SerializeUtils.deserialize(dataHandler.getInput()) as MutableList<Any?>
 
-    @Suppress("UNCHECKED_CAST")
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testSet() {
+		Assert.assertNotNull(result)
+		Assert.assertEquals(input, result)
+		Assert.assertEquals(input.size, result.size)
+	}
 
-        val dataHandler = DataHandler()
+	@Suppress("UNCHECKED_CAST")
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testMap() {
+		val dataHandler = DataHandler()
 
-        val input: MutableSet<Any?> = HashSet()
-        input.add(12345)
-        input.add("String value")
-        input.add(null)
+		val input: MutableMap<Any?, Any?> = HashMap()
+		input["first"] = 12345
+		input["second"] = "String value"
+		input[543] = null
+		input[98.toByte()] = 0.25
 
-        SerializeUtils.serialize(dataHandler.getOutput(), input)
+		SerializeUtils.serialize(dataHandler.getOutput(), input)
 
-        val result =
-            SerializeUtils.deserialize(dataHandler.getInput()) as MutableSet<Any?>
+		val result =
+			SerializeUtils.deserialize(dataHandler.getInput()) as MutableMap<Any?, Any?>
 
-        Assert.assertNotNull(result)
-        Assert.assertEquals(input, result)
-        Assert.assertEquals(input.size, result.size)
+		Assert.assertNotNull(result)
+		Assert.assertEquals(input, result)
+		Assert.assertEquals(input.size, result.size)
 
-        Assert.assertTrue(result.contains(12345))
-        Assert.assertTrue(result.contains("String value"))
-        Assert.assertTrue(result.contains(null))
-    }
+		Assert.assertEquals(12345, result["first"])
+		Assert.assertEquals("String value", result["second"])
+		Assert.assertNull(result[543])
+		Assert.assertEquals(0.25, result[98.toByte()])
+	}
 
-    @Suppress("UNCHECKED_CAST")
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testEmptySet() {
+	@Suppress("UNCHECKED_CAST")
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testEmptyMap() {
+		val dataHandler = DataHandler()
 
-        val dataHandler = DataHandler()
+		val input: MutableMap<Any?, Any?> = HashMap()
 
-        val input: MutableSet<Any?> = HashSet()
+		SerializeUtils.serialize(dataHandler.getOutput(), input)
 
-        SerializeUtils.serialize(dataHandler.getOutput(), input)
+		val result =
+			SerializeUtils.deserialize(dataHandler.getInput()) as MutableMap<Any?, Any?>
 
-        val result =
-            SerializeUtils.deserialize(dataHandler.getInput()) as MutableSet<Any?>
+		Assert.assertNotNull(result)
+		Assert.assertEquals(input, result)
+		Assert.assertEquals(input.size, result.size)
+	}
 
-        Assert.assertNotNull(result)
-        Assert.assertEquals(input, result)
-        Assert.assertEquals(input.size, result.size)
-    }
+	@Suppress("UNCHECKED_CAST")
+	@Test
+	@Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
+	fun testMapContainingList() {
+		val dataHandler = DataHandler()
 
-    @Suppress("UNCHECKED_CAST")
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testList() {
+		val input: MutableMap<Any?, Any?> = HashMap()
+		input["first"] = listOf(0.25)
 
-        val dataHandler = DataHandler()
+		SerializeUtils.serialize(dataHandler.getOutput(), input)
 
-        val input: MutableList<Any?> = ArrayList()
-        input.add(12345)
-        input.add("String value")
-        input.add(null)
+		val result =
+			SerializeUtils.deserialize(dataHandler.getInput()) as MutableMap<Any?, Any?>
 
-        SerializeUtils.serialize(dataHandler.getOutput(), input)
-
-        val result =
-            SerializeUtils.deserialize(dataHandler.getInput()) as MutableList<Any?>
-
-        Assert.assertNotNull(result)
-        Assert.assertEquals(input, result)
-        Assert.assertEquals(input.size, result.size)
-
-        Assert.assertEquals(12345, result[0])
-        Assert.assertEquals("String value", result[1])
-        Assert.assertNull(result[2])
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testEmptyList() {
-
-        val dataHandler = DataHandler()
-
-        val input: MutableList<Any?> = ArrayList()
-
-        SerializeUtils.serialize(dataHandler.getOutput(), input)
-
-        val result =
-            SerializeUtils.deserialize(dataHandler.getInput()) as MutableList<Any?>
-
-        Assert.assertNotNull(result)
-        Assert.assertEquals(input, result)
-        Assert.assertEquals(input.size, result.size)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testMap() {
-
-        val dataHandler = DataHandler()
-
-        val input: MutableMap<Any?, Any?> = HashMap()
-        input["first"] = 12345
-        input["second"] = "String value"
-        input[543] = null
-        input[98.toByte()] = 0.25
-
-        SerializeUtils.serialize(dataHandler.getOutput(), input)
-
-        val result =
-            SerializeUtils.deserialize(dataHandler.getInput()) as MutableMap<Any?, Any?>
-
-        Assert.assertNotNull(result)
-        Assert.assertEquals(input, result)
-        Assert.assertEquals(input.size, result.size)
-
-        Assert.assertEquals(12345, result["first"])
-        Assert.assertEquals("String value", result["second"])
-        Assert.assertNull(result[543])
-        Assert.assertEquals(0.25, result[98.toByte()])
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testEmptyMap() {
-
-        val dataHandler = DataHandler()
-
-        val input: MutableMap<Any?, Any?> = HashMap()
-
-        SerializeUtils.serialize(dataHandler.getOutput(), input)
-
-        val result =
-            SerializeUtils.deserialize(dataHandler.getInput()) as MutableMap<Any?, Any?>
-
-        Assert.assertNotNull(result)
-        Assert.assertEquals(input, result)
-        Assert.assertEquals(input.size, result.size)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    @Test
-    @Throws(SerializeUtils.UnhandledTypeException::class, IOException::class)
-    fun testMapContainingList() {
-
-        val dataHandler = DataHandler()
-
-        val input: MutableMap<Any?, Any?> = HashMap()
-        input["first"] = listOf(0.25)
-
-        SerializeUtils.serialize(dataHandler.getOutput(), input)
-
-        val result =
-            SerializeUtils.deserialize(dataHandler.getInput()) as MutableMap<Any?, Any?>
-
-        Assert.assertNotNull(result)
-        Assert.assertEquals(input, result)
-    }
+		Assert.assertNotNull(result)
+		Assert.assertEquals(input, result)
+	}
 }

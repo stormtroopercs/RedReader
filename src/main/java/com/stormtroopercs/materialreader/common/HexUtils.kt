@@ -20,52 +20,52 @@ import java.io.IOException
 import java.util.Locale
 
 object HexUtils {
-    @JvmStatic
-    fun toHex(input: ByteArray): String {
-        val result = StringBuilder(input.size * 2)
+	@JvmStatic
+	fun toHex(input: ByteArray): String {
+		val result = StringBuilder(input.size * 2)
 
-        for (b in input) {
-            result.append(String.format(Locale.US, "%02X", b))
-        }
+		for (b in input) {
+			result.append(String.format(Locale.US, "%02X", b))
+		}
 
-        return result.toString()
-    }
+		return result.toString()
+	}
 
-    @JvmStatic
-    @Throws(IOException::class)
-    fun fromHex(digit: Char): Int {
-        if (digit >= '0' && digit <= '9') {
-            return digit.code - '0'.code
-        }
+	@JvmStatic
+	@Throws(IOException::class)
+	fun fromHex(digit: Char): Int {
+		if (digit >= '0' && digit <= '9') {
+			return digit.code - '0'.code
+		}
 
-        if (digit >= 'A' && digit <= 'F') {
-            return digit.code + 10 - 'A'.code
-        }
+		if (digit >= 'A' && digit <= 'F') {
+			return digit.code + 10 - 'A'.code
+		}
 
-        if (digit >= 'a' && digit <= 'f') {
-            return digit.code + 10 - 'a'.code
-        }
+		if (digit >= 'a' && digit <= 'f') {
+			return digit.code + 10 - 'a'.code
+		}
 
-        throw IOException("Invalid hex digit '" + digit + "'")
-    }
+		throw IOException("Invalid hex digit '" + digit + "'")
+	}
 
-    @JvmStatic
-    @Throws(IOException::class)
-    fun fromHex(input: String): ByteArray {
-        val inputTrimmed = input.trim { it <= ' ' }
+	@JvmStatic
+	@Throws(IOException::class)
+	fun fromHex(input: String): ByteArray {
+		val inputTrimmed = input.trim { it <= ' ' }
 
-        if (inputTrimmed.length % 2 != 0) {
-            throw IOException("Hex string length is not even: '" + inputTrimmed + "'")
-        }
+		if (inputTrimmed.length % 2 != 0) {
+			throw IOException("Hex string length is not even: '" + inputTrimmed + "'")
+		}
 
-        val chars = inputTrimmed.toCharArray()
+		val chars = inputTrimmed.toCharArray()
 
-        val result = ByteArray(chars.size / 2)
+		val result = ByteArray(chars.size / 2)
 
-        for (i in result.indices) {
-            result[i] = ((fromHex(chars[i * 2]) shl 4) or fromHex(chars[i * 2 + 1])).toByte()
-        }
+		for (i in result.indices) {
+			result[i] = ((fromHex(chars[i * 2]) shl 4) or fromHex(chars[i * 2 + 1])).toByte()
+		}
 
-        return result
-    }
+		return result
+	}
 }

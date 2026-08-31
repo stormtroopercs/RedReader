@@ -19,7 +19,7 @@ package com.stormtroopercs.materialreader.io
 import com.stormtroopercs.materialreader.common.time.TimestampUTC
 
 interface RequestResponseHandler<E, F> {
-    fun onRequestFailed(failureReason: F)
+	fun onRequestFailed(failureReason: F)
 
-    fun onRequestSuccess(result: E, timeCached: TimestampUTC?)
+	fun onRequestSuccess(result: E, timeCached: TimestampUTC?)
 }

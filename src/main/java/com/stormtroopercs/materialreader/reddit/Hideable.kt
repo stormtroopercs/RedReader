@@ -17,5 +17,5 @@
 package com.stormtroopercs.materialreader.reddit
 
 interface Hideable {
-    val isVisible: Boolean
+	val isVisible: Boolean
 }

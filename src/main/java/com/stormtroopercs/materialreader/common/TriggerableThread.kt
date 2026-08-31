@@ -17,49 +17,49 @@
 package com.stormtroopercs.materialreader.common
 
 class TriggerableThread(private val task: Runnable, private val initialDelay: Long) {
-    private var thread: InternalTriggerableThread?=null
-    private var allowRetrigger = false
-    private var shouldRetrigger = false
+	private var thread: InternalTriggerableThread? = null
+	private var allowRetrigger = false
+	private var shouldRetrigger = false
 
-    @Synchronized
-    fun trigger() {
-        if (thread == null) {
-            thread = InternalTriggerableThread()
-            thread!!.start()
-        } else if (allowRetrigger) {
-            shouldRetrigger = true
-        }
-    }
+	@Synchronized
+	fun trigger() {
+		if (thread == null) {
+			thread = InternalTriggerableThread()
+			thread!!.start()
+		} else if (allowRetrigger) {
+			shouldRetrigger = true
+		}
+	}
 
-    @Synchronized
-    private fun onSleepEnd() {
-        allowRetrigger = true
-    }
+	@Synchronized
+	private fun onSleepEnd() {
+		allowRetrigger = true
+	}
 
-    @Synchronized
-    private fun shouldThreadContinue(): Boolean {
-        if (shouldRetrigger) {
-            shouldRetrigger = false
-            return true
-        } else {
-            thread = null
-            allowRetrigger = false
-            return false
-        }
-    }
+	@Synchronized
+	private fun shouldThreadContinue(): Boolean {
+		if (shouldRetrigger) {
+			shouldRetrigger = false
+			return true
+		} else {
+			thread = null
+			allowRetrigger = false
+			return false
+		}
+	}
 
-    private inner class InternalTriggerableThread : Thread() {
-        override fun run() {
-            do {
-                try {
-                    sleep(initialDelay)
-                } catch (e: InterruptedException) {
-                    throw RuntimeException(e)
-                }
+	private inner class InternalTriggerableThread : Thread() {
+		override fun run() {
+			do {
+				try {
+					sleep(initialDelay)
+				} catch (e: InterruptedException) {
+					throw RuntimeException(e)
+				}
 
-                onSleepEnd()
-                task.run()
-            } while (shouldThreadContinue())
-        }
-    }
+				onSleepEnd()
+				task.run()
+			} while (shouldThreadContinue())
+		}
+	}
 }

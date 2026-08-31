@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 data class TimeDuration(
-	val value: Duration
+	val value: Duration,
 ) {
 	fun toMs() = value.inWholeMilliseconds
 

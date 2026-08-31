@@ -17,5 +17,5 @@
 package com.stormtroopercs.materialreader.common
 
 fun interface FunctionOneArgNoReturn<Param> {
-    fun apply(input: Param)
+	fun apply(input: Param)
 }

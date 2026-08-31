@@ -19,10 +19,10 @@ package com.stormtroopercs.materialreader.common.datastream
 import java.io.IOException
 
 fun interface ByteArrayCallback {
-    @Throws(IOException::class)
-    fun onByteArray(
-        buf: ByteArray,
-        offset: Int,
-        length: Int
-    )
+	@Throws(IOException::class)
+	fun onByteArray(
+		buf: ByteArray,
+		offset: Int,
+		length: Int,
+	)
 }

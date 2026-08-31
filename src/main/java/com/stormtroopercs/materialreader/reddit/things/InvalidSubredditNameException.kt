@@ -18,10 +18,11 @@ package com.stormtroopercs.materialreader.reddit.things
 
 import java.util.Locale
 
-class InvalidSubredditNameException(subredditName: String?) : Exception(
-    String.format(
-        Locale.US,
-        "Invalid subreddit name '%s'",
-        if (subredditName == null) "NULL" else subredditName
-    )
-)
+class InvalidSubredditNameException(subredditName: String?) :
+	Exception(
+		String.format(
+			Locale.US,
+			"Invalid subreddit name '%s'",
+			if (subredditName == null) "NULL" else subredditName,
+		),
+	)

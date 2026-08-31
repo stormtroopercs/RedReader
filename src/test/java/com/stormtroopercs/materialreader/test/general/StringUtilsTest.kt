@@ -16,88 +16,104 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.general
 
+import com.stormtroopercs.materialreader.common.Optional
+import com.stormtroopercs.materialreader.common.StringUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import com.stormtroopercs.materialreader.common.Optional
-import com.stormtroopercs.materialreader.common.StringUtils
 
 class StringUtilsTest {
 
-    @Test
-    fun testRemovePrefix() {
+	@Test
+	fun testRemovePrefix() {
+		assertEquals(Optional.empty<String>(), StringUtils.removePrefix("abc", "def"))
+		assertEquals(Optional.of("def"), StringUtils.removePrefix("abcdef", "abc"))
+		assertEquals(Optional.of("abcdef"), StringUtils.removePrefix("abcdef", ""))
+		assertEquals(Optional.of(""), StringUtils.removePrefix("123", "123"))
+	}
 
-        assertEquals(Optional.empty<String>(), StringUtils.removePrefix("abc", "def"))
-        assertEquals(Optional.of("def"), StringUtils.removePrefix("abcdef", "abc"))
-        assertEquals(Optional.of("abcdef"), StringUtils.removePrefix("abcdef", ""))
-        assertEquals(Optional.of(""), StringUtils.removePrefix("123", "123"))
-    }
+	@Test
+	fun testAsciiUppercase() {
+		assertEquals("ABC123", StringUtils.asciiUppercase("abc123"))
+		assertEquals("åBC123", StringUtils.asciiUppercase("åbc123"))
+		assertEquals("", StringUtils.asciiUppercase(""))
+	}
 
-    @Test
-    fun testAsciiUppercase() {
+	@Test
+	fun testAsciiLowercase() {
+		assertEquals("abc123", StringUtils.asciiLowercase("ABC123"))
+		assertEquals("Åbc123", StringUtils.asciiLowercase("ÅBC123"))
+		assertEquals("", StringUtils.asciiLowercase(""))
+	}
 
-        assertEquals("ABC123", StringUtils.asciiUppercase("abc123"))
-        assertEquals("åBC123", StringUtils.asciiUppercase("åbc123"))
-        assertEquals("", StringUtils.asciiUppercase(""))
-    }
+	@Test
+	fun testJoin() {
+		assertEquals(
+			"helloworld",
+			StringUtils.join(
+				mutableListOf("hello", "world"),
+				"",
+			),
+		)
 
-    @Test
-    fun testAsciiLowercase() {
+		assertEquals(
+			"hello,world",
+			StringUtils.join(
+				mutableListOf("hello", "world"),
+				",",
+			),
+		)
 
-        assertEquals("abc123", StringUtils.asciiLowercase("ABC123"))
-        assertEquals("Åbc123", StringUtils.asciiLowercase("ÅBC123"))
-        assertEquals("", StringUtils.asciiLowercase(""))
-    }
+		assertEquals(
+			"hello,world, abc ",
+			StringUtils.join(
+				mutableListOf("hello", "world", " abc "),
+				",",
+			),
+		)
 
-    @Test
-    fun testJoin() {
+		assertEquals(
+			"hello",
+			StringUtils.join(
+				mutableListOf("hello"),
+				",",
+			),
+		)
 
-        assertEquals("helloworld", StringUtils.join(
-            mutableListOf("hello", "world"),
-            ""
-        ))
+		assertEquals(
+			"hello",
+			StringUtils.join(
+				mutableListOf("hello"),
+				"",
+			),
+		)
 
-        assertEquals("hello,world", StringUtils.join(
-            mutableListOf("hello", "world"),
-            ","
-        ))
+		assertEquals(
+			"",
+			StringUtils.join(
+				mutableListOf(""),
+				"",
+			),
+		)
 
-        assertEquals("hello,world, abc ", StringUtils.join(
-            mutableListOf("hello", "world", " abc "),
-            ","
-        ))
+		assertEquals(
+			"abcdefabcdef",
+			StringUtils.join(
+				mutableListOf("", "", ""),
+				"abcdef",
+			),
+		)
+	}
 
-        assertEquals("hello", StringUtils.join(
-            mutableListOf("hello"),
-            ","
-        ))
-
-        assertEquals("hello", StringUtils.join(
-            mutableListOf("hello"),
-            ""
-        ))
-
-        assertEquals("", StringUtils.join(
-            mutableListOf(""),
-            ""
-        ))
-
-        assertEquals("abcdefabcdef", StringUtils.join(
-            mutableListOf("", "", ""),
-            "abcdef"
-        ))
-    }
-
-    @Test
-    fun testIsEmpty() {
-
-        assertTrue(StringUtils.isEmpty(null))
-        assertTrue(StringUtils.isEmpty(""))
-        assertFalse(StringUtils.isEmpty(" "))
-        assertFalse(StringUtils.isEmpty("\t"))
-        assertFalse(StringUtils.isEmpty("\n"))
-        assertFalse(StringUtils.isEmpty("\r"))
-        assertFalse(StringUtils.isEmpty("a"))
-    }
+	@Test
+	fun testIsEmpty() {
+		assertTrue(StringUtils.isEmpty(null))
+		assertTrue(StringUtils.isEmpty(""))
+		assertFalse(StringUtils.isEmpty(" "))
+		assertFalse(StringUtils.isEmpty("\t"))
+		assertFalse(StringUtils.isEmpty("\n"))
+		assertFalse(StringUtils.isEmpty("\r"))
+		assertFalse(StringUtils.isEmpty("a"))
+	}
 }

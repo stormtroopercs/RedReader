@@ -21,29 +21,22 @@ import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import com.stormtroopercs.materialreader.common.time.TimestampUTC.Companion.now
 
 abstract class TimestampBound {
-    abstract fun verifyTimestamp(timestamp : TimestampUTC): Boolean
+	abstract fun verifyTimestamp(timestamp: TimestampUTC): Boolean
 
-    class MoreRecentThanBound(private val minTimestamp: TimestampUTC) : TimestampBound() {
-        override fun verifyTimestamp(timestamp: TimestampUTC): Boolean {
-            return timestamp.isGreaterThan(minTimestamp)
-        }
-    }
+	class MoreRecentThanBound(private val minTimestamp: TimestampUTC) : TimestampBound() {
+		override fun verifyTimestamp(timestamp: TimestampUTC): Boolean = timestamp.isGreaterThan(minTimestamp)
+	}
 
-    companion object {
-        val ANY: TimestampBound = object : TimestampBound() {
-            override fun verifyTimestamp(timestamp : TimestampUTC): Boolean {
-                return true
-            }
-        }
-        @Suppress("PropertyName")
-    val NONE: TimestampBound = object : TimestampBound() {
-            override fun verifyTimestamp(timestamp : TimestampUTC): Boolean {
-                return false
-            }
-        }
+	companion object {
+		val ANY: TimestampBound = object : TimestampBound() {
+			override fun verifyTimestamp(timestamp: TimestampUTC): Boolean = true
+		}
 
-        fun notOlderThan(age: TimeDuration): MoreRecentThanBound {
-            return MoreRecentThanBound(now().subtract(age))
-        }
-    }
+		@Suppress("PropertyName")
+		val NONE: TimestampBound = object : TimestampBound() {
+			override fun verifyTimestamp(timestamp: TimestampUTC): Boolean = false
+		}
+
+		fun notOlderThan(age: TimeDuration): MoreRecentThanBound = MoreRecentThanBound(now().subtract(age))
+	}
 }

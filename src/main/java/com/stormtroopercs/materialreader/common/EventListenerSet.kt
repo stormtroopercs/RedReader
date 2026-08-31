@@ -17,27 +17,27 @@
 package com.stormtroopercs.materialreader.common
 
 class EventListenerSet<E> {
-    fun interface Listener<E> {
-        fun onEvent(event: E?)
-    }
+	fun interface Listener<E> {
+		fun onEvent(event: E?)
+	}
 
-    private var mMostRecentEvent: E? = null
+	private var mMostRecentEvent: E? = null
 
-    private val mListeners = ThreadCheckedVar<HashSet<Listener<E>>>(HashSet())
+	private val mListeners = ThreadCheckedVar<HashSet<Listener<E>>>(HashSet())
 
-    fun send(event: E?) {
-        mMostRecentEvent = event
-        for (listener in mListeners.get()!!) {
-            listener.onEvent(event)
-        }
-    }
+	fun send(event: E?) {
+		mMostRecentEvent = event
+		for (listener in mListeners.get()!!) {
+			listener.onEvent(event)
+		}
+	}
 
-    fun register(listener: Listener<E>): E? {
-        mListeners.get()!!.add(listener)
-        return mMostRecentEvent
-    }
+	fun register(listener: Listener<E>): E? {
+		mListeners.get()!!.add(listener)
+		return mMostRecentEvent
+	}
 
-    fun unregister(listener: Listener<E>) {
-        mListeners.get()!!.remove(listener)
-    }
+	fun unregister(listener: Listener<E>) {
+		mListeners.get()!!.remove(listener)
+	}
 }

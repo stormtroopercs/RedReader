@@ -19,21 +19,19 @@ package com.stormtroopercs.materialreader.cache.downloadstrategy
 import com.stormtroopercs.materialreader.cache.CacheEntry
 
 class DownloadStrategyAlways private constructor() : DownloadStrategy {
-    override fun shouldDownloadWithoutCheckingCache(): Boolean {
-        return true
-    }
+	override fun shouldDownloadWithoutCheckingCache(): Boolean = true
 
-    override fun shouldDownloadIfCacheEntryFound(entry : CacheEntry): Boolean {
-        // Should never get here
-        return true
-    }
+	override fun shouldDownloadIfCacheEntryFound(entry: CacheEntry): Boolean {
+		// Should never get here
+		return true
+	}
 
-    override fun shouldDownloadIfNotCached(): Boolean {
-        // Should never get here
-        return true
-    }
+	override fun shouldDownloadIfNotCached(): Boolean {
+		// Should never get here
+		return true
+	}
 
-    companion object {
-        val INSTANCE: DownloadStrategyAlways = DownloadStrategyAlways()
-    }
+	companion object {
+		val INSTANCE: DownloadStrategyAlways = DownloadStrategyAlways()
+	}
 }

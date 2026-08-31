@@ -22,104 +22,108 @@ import com.stormtroopercs.materialreader.R.string
 import java.util.Locale
 
 object ScreenreaderPronunciation {
-    @Suppress("PropertyName")
-    private val LANGUAGE_CODE_EN: String = Locale("en").getLanguage()
+	@Suppress("PropertyName")
+	private val LANGUAGE_CODE_EN: String = Locale("en").getLanguage()
 
-    fun getPronunciation(
-        context: Context,
-        text: String
-    ): String {
-        val textLowercase = text.lowercase()
+	fun getPronunciation(
+		context: Context,
+		text: String,
+	): String {
+		val textLowercase = text.lowercase()
 
-        when (textLowercase) {
-            "i.redd.it" -> return context.getString(
-                string.accessibility_subtitle_domain_i_redd_it
-            )
+		when (textLowercase) {
+			"i.redd.it" -> return context.getString(
+				string.accessibility_subtitle_domain_i_redd_it,
+			)
 
-            "v.redd.it" -> return context.getString(
-                string.accessibility_subtitle_domain_v_redd_it
-            )
+			"v.redd.it" -> return context.getString(
+				string.accessibility_subtitle_domain_v_redd_it,
+			)
 
-            "imgur.com", "i.imgur.com" -> return "imager dot com"
+			"imgur.com", "i.imgur.com" -> return "imager dot com"
 
-            "gfycat.com" -> return "giffy cat dot com"
-        }
+			"gfycat.com" -> return "giffy cat dot com"
+		}
 
-        return pronounceSubreddit(textLowercase)
-    }
+		return pronounceSubreddit(textLowercase)
+	}
 
-    fun getAccessibilityString(
-        context: Context,
-        @StringRes res: Int
-    ): String {
-        // Only override for English for now
+	fun getAccessibilityString(
+		context: Context,
+		@StringRes res: Int,
+	): String {
+		// Only override for English for now
 
-        if (Locale.getDefault().getLanguage() != LANGUAGE_CODE_EN) {
-            return context.getString(res)
-        }
+		if (Locale.getDefault().getLanguage() != LANGUAGE_CODE_EN) {
+			return context.getString(res)
+		}
 
-        // Replace "read" with the English homophone "red" to work around bad speech synth handling
-        if (res == string.accessibility_post_already_read_withperiod) {
-            return "Red."
-        } else {
-            return context.getString(res)
-        }
-    }
+		// Replace "read" with the English homophone "red" to work around bad speech synth handling
+		if (res == string.accessibility_post_already_read_withperiod) {
+			return "Red."
+		} else {
+			return context.getString(res)
+		}
+	}
 
-    private fun pronounceSubreddit(nameLowercase: String): String {
-        if (nameLowercase.startsWith("/r/") || nameLowercase.startsWith("/u/")) {
-            return (nameLowercase.get(1)
-                .toString() + " slash "
-                    + pronounceSubredditStripped(nameLowercase.substring(3)))
-        } else if (nameLowercase.startsWith("r/") || nameLowercase.startsWith("u/")) {
-            return (nameLowercase.get(0)
-                .toString() + " slash "
-                    + pronounceSubredditStripped(nameLowercase.substring(2)))
-        } else {
-            return pronounceSubredditStripped(nameLowercase)
-        }
-    }
+	private fun pronounceSubreddit(nameLowercase: String): String {
+		if (nameLowercase.startsWith("/r/") || nameLowercase.startsWith("/u/")) {
+			return (
+				nameLowercase.get(1)
+					.toString() + " slash " +
+					pronounceSubredditStripped(nameLowercase.substring(3))
+				)
+		} else if (nameLowercase.startsWith("r/") || nameLowercase.startsWith("u/")) {
+			return (
+				nameLowercase.get(0)
+					.toString() + " slash " +
+					pronounceSubredditStripped(nameLowercase.substring(2))
+				)
+		} else {
+			return pronounceSubredditStripped(nameLowercase)
+		}
+	}
 
-    @Suppress("SpellCheckingInspection")
-    private fun pronounceSubredditStripped(nameLowercase: String): String {
-        when (nameLowercase) {
-            "iama" -> return "i am a"
+	@Suppress("SpellCheckingInspection")
+	private fun pronounceSubredditStripped(nameLowercase: String): String {
+		when (nameLowercase) {
+			"iama" -> return "i am a"
 
-            "askreddit" -> return "ask reddit"
+			"askreddit" -> return "ask reddit"
 
-            "redreader" -> return "red reader"
+			"redreader" -> return "red reader"
 
-            "quantumbadger" -> return "quantum badger"
+			"quantumbadger" -> return "quantum badger"
 
-            "automoderator" -> return "auto moderator"
+			"automoderator" -> return "auto moderator"
 
-            "whatcouldgowrong" -> return "what could go wrong"
+			"whatcouldgowrong" -> return "what could go wrong"
 
-            "mildlyinteresting" -> return "mildly interesting"
+			"mildlyinteresting" -> return "mildly interesting"
 
-            "lifeprotips" -> return "life pro tips"
+			"lifeprotips" -> return "life pro tips"
 
-            "listentothis" -> return "listen to this"
+			"listentothis" -> return "listen to this"
 
-            "nosleep" -> return "no sleep"
+			"nosleep" -> return "no sleep"
 
-            "nottheonion" -> return "not the onion"
+			"nottheonion" -> return "not the onion"
 
-            "personalfinance" -> return "personal finance"
+			"personalfinance" -> return "personal finance"
 
-            "tifu" -> return "t i f u"
+			"tifu" -> return "t i f u"
 
-            "todayilearned" -> return "today i learned"
+			"todayilearned" -> return "today i learned"
 
-            "twoxchromosomes" -> return "two x chromosomes"
+			"twoxchromosomes" -> return "two x chromosomes"
 
-            "writingprompts" -> return "writing prompts"
+			"writingprompts" -> return "writing prompts"
 
-            "dataisbeautiful" -> return "data is beautiful"
+			"dataisbeautiful" -> return "data is beautiful"
 
-            "explainlikeimfive" -> return "explain like I'm five"
-        }
+			"explainlikeimfive" -> return "explain like I'm five"
+		}
 
-        return nameLowercase
-    }
+		return nameLowercase
+	}
 }

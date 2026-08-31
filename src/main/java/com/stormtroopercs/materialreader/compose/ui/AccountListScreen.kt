@@ -71,207 +71,216 @@ import com.stormtroopercs.materialreader.reddit.api.RedditOAuth
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountListScreen(
-    onNavigateBack: () -> Unit,
-    onNavigateToLogin: () -> Unit
+	onNavigateBack: () -> Unit,
+	onNavigateToLogin: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val accountManager = remember { RedditAccountManager.getInstance(context) }
+	val context = LocalContext.current
+	val accountManager = remember { RedditAccountManager.getInstance(context) }
 
-    // Live snapshot of the account list: refreshed on the UI thread whenever
-    // the manager's update notifier fires (login complete, delete, re-activate).
-    var accounts by remember { mutableStateOf(accountManager.accounts) }
+	// Live snapshot of the account list: refreshed on the UI thread whenever
+	// the manager's update notifier fires (login complete, delete, re-activate).
+	var accounts by remember { mutableStateOf(accountManager.accounts) }
 
-    DisposableEffect(accountManager) {
-        val listener = RedditAccountChangeListener {
-            AndroidCommon.runOnUiThread {
-                accounts = accountManager.accounts
-            }
-        }
-        accountManager.addUpdateListener(listener)
-        onDispose { accountManager.removeUpdateListener(listener) }
-    }
+	DisposableEffect(accountManager) {
+		val listener = RedditAccountChangeListener {
+			AndroidCommon.runOnUiThread {
+				accounts = accountManager.accounts
+			}
+		}
+		accountManager.addUpdateListener(listener)
+		onDispose { accountManager.removeUpdateListener(listener) }
+	}
 
-    // Transient dialogs.
-    var deleteTarget by remember { mutableStateOf<RedditAccount?>(null) }
-    var showLoginPrompt by remember { mutableStateOf(false) }
-    var menuTarget by remember { mutableStateOf<RedditAccount?>(null) }
+	// Transient dialogs.
+	var deleteTarget by remember { mutableStateOf<RedditAccount?>(null) }
+	var showLoginPrompt by remember { mutableStateOf(false) }
+	var menuTarget by remember { mutableStateOf<RedditAccount?>(null) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.options_accounts_long)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // "Add account" header (mirrors the legacy dialog's header row).
-            item(key = "add") {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.accounts_add)) },
-                    leadingContent = {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = null)
-                    },
-                    modifier = Modifier.clickable { showLoginPrompt = true }
-                )
-            }
-            item(key = "divider") { HorizontalDivider() }
-            items(accounts, key = { "acct${it.username}" }) { account ->
-                AccountRow(
-                    account = account,
-                    isActive = account == accountManager.defaultAccount,
-                    needsRelogin = RedditOAuth.needsRelogin(account),
-                    onClick = { menuTarget = account }
-                )
-                HorizontalDivider()
-            }
-        }
-    }
+	Scaffold(
+		topBar = {
+			TopAppBar(
+				title = { Text(stringResource(R.string.options_accounts_long)) },
+				navigationIcon = {
+					IconButton(onClick = onNavigateBack) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Default.ArrowBack,
+							contentDescription = stringResource(R.string.action_back),
+						)
+					}
+				},
+			)
+		},
+	) { paddingValues ->
+		LazyColumn(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(paddingValues),
+		) {
+			// "Add account" header (mirrors the legacy dialog's header row).
+			item(key = "add") {
+				ListItem(
+					headlineContent = { Text(stringResource(R.string.accounts_add)) },
+					leadingContent = {
+						Icon(imageVector = Icons.Default.Add, contentDescription = null)
+					},
+					modifier = Modifier.clickable { showLoginPrompt = true },
+				)
+			}
+			item(key = "divider") { HorizontalDivider() }
+			items(accounts, key = { "acct${it.username}" }) { account ->
+				AccountRow(
+					account = account,
+					isActive = account == accountManager.defaultAccount,
+					needsRelogin = RedditOAuth.needsRelogin(account),
+					onClick = { menuTarget = account },
+				)
+				HorizontalDivider()
+			}
+		}
+	}
 
-    // Per-account actions menu (the legacy dialog offered the same three).
-    menuTarget?.let { target ->
-        val actions = buildList {
-            if (target != accountManager.defaultAccount) {
-                add(stringResource(R.string.accounts_setactive) to {
-                    accountManager.defaultAccount = target
-                })
-            }
-            if (target.isNotAnonymous) {
-                add(stringResource(R.string.accounts_delete) to {
-                    deleteTarget = target
-                })
-            }
-            if (RedditOAuth.needsRelogin(target)) {
-                add(stringResource(R.string.accounts_reauth) to {
-                    showLoginPrompt = true
-                })
-            }
-        }
-        if (actions.isNotEmpty()) {
-            AlertDialog(
-                onDismissRequest = { menuTarget = null },
-                title = {
-                    Text(
-                        if (target.isAnonymous) stringResource(R.string.accounts_anon)
-                        else target.username
-                    )
-                },
-                text = {
-                    Column {
-                        actions.forEach { (label, action) ->
-                            TextButton(
-                                modifier = Modifier.fillMaxWidth(),
-                                onClick = {
-                                    menuTarget = null
-                                    action()
-                                }
-                            ) { Text(label) }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { menuTarget = null }) {
-                        Text(stringResource(R.string.dialog_cancel))
-                    }
-                }
-            )
-        }
-    }
+	// Per-account actions menu (the legacy dialog offered the same three).
+	menuTarget?.let { target ->
+		val actions = buildList {
+			if (target != accountManager.defaultAccount) {
+				add(
+					stringResource(R.string.accounts_setactive) to {
+						accountManager.defaultAccount = target
+					},
+				)
+			}
+			if (target.isNotAnonymous) {
+				add(
+					stringResource(R.string.accounts_delete) to {
+						deleteTarget = target
+					},
+				)
+			}
+			if (RedditOAuth.needsRelogin(target)) {
+				add(
+					stringResource(R.string.accounts_reauth) to {
+						showLoginPrompt = true
+					},
+				)
+			}
+		}
+		if (actions.isNotEmpty()) {
+			AlertDialog(
+				onDismissRequest = { menuTarget = null },
+				title = {
+					Text(
+						if (target.isAnonymous) {
+							stringResource(R.string.accounts_anon)
+						} else {
+							target.username
+						},
+					)
+				},
+				text = {
+					Column {
+						actions.forEach { (label, action) ->
+							TextButton(
+								modifier = Modifier.fillMaxWidth(),
+								onClick = {
+									menuTarget = null
+									action()
+								},
+							) { Text(label) }
+						}
+					}
+				},
+				confirmButton = {
+					TextButton(onClick = { menuTarget = null }) {
+						Text(stringResource(R.string.dialog_cancel))
+					}
+				},
+			)
+		}
+	}
 
-    // Delete confirmation (mirrors the legacy dialog's confirm dialog).
-    deleteTarget?.let { target ->
-        AlertDialog(
-            onDismissRequest = { deleteTarget = null },
-            title = { Text(stringResource(R.string.accounts_delete)) },
-            text = { Text(stringResource(R.string.accounts_delete_sure)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    deleteTarget = null
-                    accountManager.deleteAccount(target)
-                }) { Text(stringResource(R.string.accounts_delete)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { deleteTarget = null }) {
-                    Text(stringResource(R.string.dialog_cancel))
-                }
-            }
-        )
-    }
+	// Delete confirmation (mirrors the legacy dialog's confirm dialog).
+	deleteTarget?.let { target ->
+		AlertDialog(
+			onDismissRequest = { deleteTarget = null },
+			title = { Text(stringResource(R.string.accounts_delete)) },
+			text = { Text(stringResource(R.string.accounts_delete_sure)) },
+			confirmButton = {
+				TextButton(onClick = {
+					deleteTarget = null
+					accountManager.deleteAccount(target)
+				}) { Text(stringResource(R.string.accounts_delete)) }
+			},
+			dismissButton = {
+				TextButton(onClick = { deleteTarget = null }) {
+					Text(stringResource(R.string.dialog_cancel))
+				}
+			},
+		)
+	}
 
-    // Pre-login prompt (mirrors the legacy dialog's prelogin dialog): the
-    // OAuth flow opens Reddit in an in-app browser and redirects back on
-    // success.
-    if (showLoginPrompt) {
-        AlertDialog(
-            onDismissRequest = { showLoginPrompt = false },
-            text = {
-                Column {
-                    Text(stringResource(R.string.reddit_login_browser_popup_line_1))
-                    Spacer(Modifier.height(8.dp))
-                    Text(stringResource(R.string.reddit_login_browser_popup_line_2_internal_browser_only))
-                    Spacer(Modifier.height(16.dp))
-                    TextButton(onClick = {
-                        showLoginPrompt = false
-                        LinkHandler.onLinkClicked(
-                            context as androidx.appcompat.app.AppCompatActivity,
-                            UriString("https://redreader.org/loginhelp/")
-                        )
-                    }) {
-                        Text(
-                            stringResource(R.string.having_trouble_logging_in),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    showLoginPrompt = false
-                    onNavigateToLogin()
-                }) { Text(stringResource(R.string.dialog_continue)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLoginPrompt = false }) {
-                    Text(stringResource(R.string.dialog_close))
-                }
-            }
-        )
-    }
+	// Pre-login prompt (mirrors the legacy dialog's prelogin dialog): the
+	// OAuth flow opens Reddit in an in-app browser and redirects back on
+	// success.
+	if (showLoginPrompt) {
+		AlertDialog(
+			onDismissRequest = { showLoginPrompt = false },
+			text = {
+				Column {
+					Text(stringResource(R.string.reddit_login_browser_popup_line_1))
+					Spacer(Modifier.height(8.dp))
+					Text(stringResource(R.string.reddit_login_browser_popup_line_2_internal_browser_only))
+					Spacer(Modifier.height(16.dp))
+					TextButton(onClick = {
+						showLoginPrompt = false
+						LinkHandler.onLinkClicked(
+							context as androidx.appcompat.app.AppCompatActivity,
+							UriString("https://redreader.org/loginhelp/"),
+						)
+					}) {
+						Text(
+							stringResource(R.string.having_trouble_logging_in),
+							color = MaterialTheme.colorScheme.primary,
+						)
+					}
+				}
+			},
+			confirmButton = {
+				TextButton(onClick = {
+					showLoginPrompt = false
+					onNavigateToLogin()
+				}) { Text(stringResource(R.string.dialog_continue)) }
+			},
+			dismissButton = {
+				TextButton(onClick = { showLoginPrompt = false }) {
+					Text(stringResource(R.string.dialog_close))
+				}
+			},
+		)
+	}
 }
 
 @Composable
 private fun AccountRow(
-    account: RedditAccount,
-    isActive: Boolean,
-    needsRelogin: Boolean,
-    onClick: () -> Unit
+	account: RedditAccount,
+	isActive: Boolean,
+	needsRelogin: Boolean,
+	onClick: () -> Unit,
 ) {
-    val label = if (account.isAnonymous) {
-        stringResource(R.string.accounts_anon)
-    } else {
-        account.username
-    }
-    val subtitle = buildList {
-        if (isActive) add(stringResource(R.string.accounts_active))
-        if (needsRelogin) add(stringResource(R.string.reddit_relogin_error_title))
-    }.joinToString(", ").ifEmpty { null }
+	val label = if (account.isAnonymous) {
+		stringResource(R.string.accounts_anon)
+	} else {
+		account.username
+	}
+	val subtitle = buildList {
+		if (isActive) add(stringResource(R.string.accounts_active))
+		if (needsRelogin) add(stringResource(R.string.reddit_relogin_error_title))
+	}.joinToString(", ").ifEmpty { null }
 
-    ListItem(
-        headlineContent = { Text(label) },
-        supportingContent = {
-            subtitle?.let { sub -> Text(sub) }
-        },
-        modifier = Modifier.clickable(onClick = onClick)
-    )
+	ListItem(
+		headlineContent = { Text(label) },
+		supportingContent = {
+			subtitle?.let { sub -> Text(sub) }
+		},
+		modifier = Modifier.clickable(onClick = onClick),
+	)
 }

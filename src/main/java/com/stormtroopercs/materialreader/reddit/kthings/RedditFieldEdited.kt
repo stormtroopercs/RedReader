@@ -46,10 +46,9 @@ sealed class RedditFieldEdited : Parcelable {
 }
 
 object RedditBoolOrTimestampUTCSerializer : JsonContentPolymorphicSerializer<RedditFieldEdited>(
-	RedditFieldEdited::class
+	RedditFieldEdited::class,
 ) {
 	override fun selectDeserializer(element: JsonElement): KSerializer<out RedditFieldEdited> {
-
 		if (!(element is JsonPrimitive)) {
 			throw SerializationException("Expecting JSON primitive for BoolOrTimestamp")
 		}
@@ -77,8 +76,7 @@ object RedditFieldEditedTimestampSerializer : KSerializer<RedditFieldEdited.Time
 	override val descriptor: SerialDescriptor
 		get() = PrimitiveSerialDescriptor("RedditFieldEdited.Timestamp", PrimitiveKind.BOOLEAN)
 
-	override fun deserialize(decoder: Decoder) = RedditFieldEdited.Timestamp(
-		decoder.decodeSerializableValue(RedditTimestampUTC.serializer()))
+	override fun deserialize(decoder: Decoder) = RedditFieldEdited.Timestamp(decoder.decodeSerializableValue(RedditTimestampUTC.serializer()))
 
 	override fun serialize(encoder: Encoder, value: RedditFieldEdited.Timestamp) {
 		encoder.encodeSerializableValue(RedditTimestampUTC.serializer(), value.value)

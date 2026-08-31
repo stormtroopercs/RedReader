@@ -19,7 +19,7 @@ package com.stormtroopercs.materialreader.reddit.things
 import com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType
 
 interface RedditThingWithIdAndType {
-    val idAlone: String?
+	val idAlone: String?
 
-    val idAndType: RedditIdAndType?
+	val idAndType: RedditIdAndType?
 }

@@ -17,35 +17,36 @@
 package com.stormtroopercs.materialreader.reddit.prepared.markdown
 
 class IntArrayLengthPair(capacity: Int) {
-    @JvmField
-    val data: IntArray
-    @JvmField
-    var pos: Int = 0
+	@JvmField
+	val data: IntArray
 
-    init {
-        this.data = IntArray(capacity)
-    }
+	@JvmField
+	var pos: Int = 0
 
-    fun clear() {
-        pos = 0
-    }
+	init {
+		this.data = IntArray(capacity)
+	}
 
-    fun append(arr: IntArray) {
-        System.arraycopy(arr, 0, data, pos, arr.size)
-        pos += arr.size
-    }
+	fun clear() {
+		pos = 0
+	}
 
-    fun append(arr: CharArray) {
-        for (i in arr.indices) {
-            data[pos + i] = arr[i].code
-        }
+	fun append(arr: IntArray) {
+		System.arraycopy(arr, 0, data, pos, arr.size)
+		pos += arr.size
+	}
 
-        pos += arr.size
-    }
+	fun append(arr: CharArray) {
+		for (i in arr.indices) {
+			data[pos + i] = arr[i].code
+		}
 
-    fun substringAsArray(start: Int): IntArray {
-        val result = IntArray(pos - start)
-        System.arraycopy(data, start, result, 0, result.size)
-        return result
-    }
+		pos += arr.size
+	}
+
+	fun substringAsArray(start: Int): IntArray {
+		val result = IntArray(pos - start)
+		System.arraycopy(data, start, result, 0, result.size)
+		return result
+	}
 }

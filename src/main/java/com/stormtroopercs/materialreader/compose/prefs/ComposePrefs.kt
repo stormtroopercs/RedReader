@@ -42,8 +42,10 @@ interface ComposePrefs {
 
 	/** Accent colours: dynamic (Material You) vs hand-picked (manual). */
 	val themeColorMode: Preference<ThemeColorMode>
+
 	/** Manual accent (primary) colour as `#RRGGBB` hex, used in manual mode. */
 	val themeColorManual: Preference<String>
+
 	/** Accessibility overrides: custom upvote / downvote colours (`#RRGGBB`), or null = theme default. */
 	val themeUpvoteColor: Preference<String?>
 	val themeDownvoteColor: Preference<String?>
@@ -88,10 +90,10 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 
 	private val changeObservers = HashMap<String, () -> Unit>()
 
-	private val appearance_fontscale_global = 		FloatPref(R.string.pref_appearance_fontscale_global_key, 1f)
-	private val appearance_fontscale_bodytext = 		FloatPref(R.string.pref_appearance_fontscale_bodytext_key, -1f)
-	private val appearance_fontscale_posts = 		FloatPref(R.string.pref_appearance_fontscale_posts_key, -1f)
-	private val appearance_fontscale_post_subtitles = 		FloatPref(R.string.pref_appearance_fontscale_post_subtitles_key, -1f)
+	private val appearance_fontscale_global = FloatPref(R.string.pref_appearance_fontscale_global_key, 1f)
+	private val appearance_fontscale_bodytext = FloatPref(R.string.pref_appearance_fontscale_bodytext_key, -1f)
+	private val appearance_fontscale_posts = FloatPref(R.string.pref_appearance_fontscale_posts_key, -1f)
+	private val appearance_fontscale_post_subtitles = FloatPref(R.string.pref_appearance_fontscale_post_subtitles_key, -1f)
 
 	init {
 		General.checkThisIsUIThread()
@@ -102,7 +104,7 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 
 	private inner class FloatPref(
 		private val key: String,
-		private val default: Float
+		private val default: Float,
 	) : Preference<Float> {
 
 		constructor(@StringRes key: Int, default: Float) : this(context.getString(key), default)
@@ -115,7 +117,7 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 			}
 		}
 
-		private fun loadPref() = 			sharedPrefs.getString(key, default.toString())?.toFloatOrNull() ?: default
+		private fun loadPref() = sharedPrefs.getString(key, default.toString())?.toFloatOrNull() ?: default
 
 		override var value: Float
 			get() = mutableState.floatValue
@@ -127,7 +129,7 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 
 	private inner class IntPref(
 		private val key: String,
-		private val default: Int
+		private val default: Int,
 	) : Preference<Int> {
 
 		constructor(@StringRes key: Int, default: Int) : this(context.getString(key), default)
@@ -152,7 +154,7 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 
 	private inner class BoolPref(
 		private val key: String,
-		private val default: Boolean
+		private val default: Boolean,
 	) : Preference<Boolean> {
 
 		constructor(@StringRes key: Int, default: Boolean) : this(context.getString(key), default)
@@ -182,7 +184,7 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 	 */
 	private inner class NullableStringPref(
 		private val key: String,
-		private val default: String?
+		private val default: String?,
 	) : Preference<String?> {
 
 		private val mutableState = mutableStateOf(loadPref())
@@ -213,7 +215,7 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 	/** A non-null string pref (used for the manual accent colour hex). */
 	private inner class StringPref(
 		private val key: String,
-		private val default: String
+		private val default: String,
 	) : Preference<String> {
 
 		private val mutableState = mutableStateOf(loadPref())
@@ -237,13 +239,13 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 	private inner class EnumPref<T>(
 		private val key: String,
 		private val default: T,
-		private val serializer: SettingSerializer<T>
+		private val serializer: SettingSerializer<T>,
 	) : Preference<T> {
 
 		constructor(
 			@StringRes key: Int,
 			default: T,
-			serializer: SettingSerializer<T>
+			serializer: SettingSerializer<T>,
 		) : this(context.getString(key), default, serializer)
 
 		private val mutableState = mutableStateOf(loadPref())
@@ -254,8 +256,8 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 			}
 		}
 
-		private fun loadPref() = 			sharedPrefs.getString(key, serializer.serialize(default))?.let(serializer::deserialize)
-				?: default
+		private fun loadPref() = sharedPrefs.getString(key, serializer.serialize(default))?.let(serializer::deserialize)
+			?: default
 
 		override var value: T
 			get() = mutableState.value
@@ -283,85 +285,85 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 	override val appearanceTheme: Preference<AppearanceTheme> = EnumPref(
 		R.string.pref_appearance_theme_key,
 		AppearanceTheme.RED,
-		AppearanceTheme.settingSerializer
+		AppearanceTheme.settingSerializer,
 	)
 
 	override val themeColorMode: Preference<ThemeColorMode> = EnumPref(
 		"theme_color_mode",
 		ThemeColorMode.AUTOMATIC,
-		ThemeColorMode.settingSerializer
+		ThemeColorMode.settingSerializer,
 	)
 
 	override val navigationType: Preference<NavigationType> = EnumPref(
 		"navigation_type",
 		NavigationType.BOTTOM,
-		NavigationType.settingSerializer
+		NavigationType.settingSerializer,
 	)
 
 	override val themeColorManual: Preference<String> = StringPref(
 		"theme_color_manual",
-		"#6750A4"
+		"#6750A4",
 	)
 
 	override val themeUpvoteColor: Preference<String?> = NullableStringPref(
 		"theme_upvote_color",
-		null
+		null,
 	)
 
 	override val themeDownvoteColor: Preference<String?> = NullableStringPref(
 		"theme_downvote_color",
-		null
+		null,
 	)
 
 	override val albumViewMode: Preference<AlbumViewMode> = EnumPref(
 		"album_view_mode",
 		AlbumViewMode.Cards,
-		AlbumViewMode.settingSerializer
+		AlbumViewMode.settingSerializer,
 	)
 
 	override val albumCardShowButtons: Preference<Boolean> = BoolPref(
 		"album_card_show_buttons",
-		true
+		true,
 	)
 
 	override val albumListShowThumbnails: Preference<Boolean> = BoolPref(
 		"album_list_show_thumbnails",
-		true
+		true,
 	)
 
 	override val albumListThumbnailSize: Preference<Int> = IntPref(
 		"album_list_thumbnail_size",
-		64
+		64,
 	)
 
 	override val albumListShowButtons: Preference<Boolean> = BoolPref(
 		"album_list_show_buttons",
-		true
+		true,
 	)
 
 	override val albumGridCropToSquare: Preference<Boolean> = BoolPref(
 		"album_grid_crop_to_square",
-		true
+		true,
 	)
 
 	override val albumGridColumns: Preference<Int> = IntPref(
 		"album_grid_columns",
-		3
+		3,
 	)
 
 	override val albumGridRoundedCorners: Preference<Boolean> = BoolPref(
 		"album_grid_rounded_corners",
-		true
+		true,
 	)
 
 	override val albumGridHorizontalPadding: Preference<Boolean> = BoolPref(
 		"album_grid_horizontal_padding",
-		true
+		true,
 	)
 
 	override val albumCompactTitle: Preference<Boolean> = BoolPref(
 		"album_compact_title",
-		false
+		false,
 	)
 }
 

@@ -17,25 +17,25 @@
 package com.stormtroopercs.materialreader.common
 
 class ThreadCheckedVar<E>(private var mValue: E?) {
-    private val mThread: Thread
+	private val mThread: Thread
 
-    init {
-        mThread = Thread.currentThread()
-    }
+	init {
+		mThread = Thread.currentThread()
+	}
 
-    fun get(): E? {
-        if (mThread !== Thread.currentThread()) {
-            throw RuntimeException("Accessing variable from wrong thread")
-        }
+	fun get(): E? {
+		if (mThread !== Thread.currentThread()) {
+			throw RuntimeException("Accessing variable from wrong thread")
+		}
 
-        return mValue
-    }
+		return mValue
+	}
 
-    fun set(value: E?) {
-        if (mThread !== Thread.currentThread()) {
-            throw RuntimeException("Setting variable from wrong thread")
-        }
+	fun set(value: E?) {
+		if (mThread !== Thread.currentThread()) {
+			throw RuntimeException("Setting variable from wrong thread")
+		}
 
-        mValue = value
-    }
+		mValue = value
+	}
 }

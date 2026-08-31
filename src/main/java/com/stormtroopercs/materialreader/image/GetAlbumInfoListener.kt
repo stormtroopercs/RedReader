@@ -19,11 +19,11 @@ package com.stormtroopercs.materialreader.image
 import com.stormtroopercs.materialreader.common.RRError
 
 interface GetAlbumInfoListener {
-    fun onFailure(error: RRError)
+	fun onFailure(error: RRError)
 
-    fun onSuccess(info: AlbumInfo)
+	fun onSuccess(info: AlbumInfo)
 
-    fun onGalleryRemoved()
+	fun onGalleryRemoved()
 
-    fun onGalleryDataNotPresent()
+	fun onGalleryDataNotPresent()
 }

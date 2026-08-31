@@ -17,11 +17,7 @@
 package com.stormtroopercs.materialreader.common.streams
 
 class IteratorStream<E>(private val mInner: MutableIterator<E>) : Stream<E> {
-    override fun hasNext(): Boolean {
-        return mInner.hasNext()
-    }
+	override fun hasNext(): Boolean = mInner.hasNext()
 
-    override fun next(): E {
-        return mInner.next()
-    }
+	override fun next(): E = mInner.next()
 }

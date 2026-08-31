@@ -23,15 +23,15 @@ import android.util.Log
 import com.stormtroopercs.materialreader.common.Alarms
 
 class BootReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent == null || Intent.ACTION_BOOT_COMPLETED != intent.getAction()) {
-            Log.e(
-                "BootReceiver",
-                "Got invalid intent: " + (if (intent == null) "null" else intent.getAction())
-            )
-            return
-        }
+	override fun onReceive(context: Context?, intent: Intent?) {
+		if (intent == null || Intent.ACTION_BOOT_COMPLETED != intent.getAction()) {
+			Log.e(
+				"BootReceiver",
+				"Got invalid intent: " + (if (intent == null) "null" else intent.getAction()),
+			)
+			return
+		}
 
-        Alarms.onBoot(context!!)
-    }
+		Alarms.onBoot(context!!)
+	}
 }

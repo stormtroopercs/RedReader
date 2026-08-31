@@ -25,43 +25,43 @@ import java.io.IOException
 import java.util.UUID
 
 interface CacheRequestCallbacks {
-    fun onDownloadNecessary() {}
+	fun onDownloadNecessary() {}
 
-    fun onDownloadStarted() {}
+	fun onDownloadStarted() {}
 
-    fun onDataStreamAvailable(
-        streamFactory: GenericFactory<SeekableInputStream, IOException>,
-        timestamp: TimestampUTC,
-        session: UUID,
-        fromCache: Boolean,
-        mimetype: String?
-    ) {
-    }
+	fun onDataStreamAvailable(
+		streamFactory: GenericFactory<SeekableInputStream, IOException>,
+		timestamp: TimestampUTC,
+		session: UUID,
+		fromCache: Boolean,
+		mimetype: String?,
+	) {
+	}
 
-    fun onDataStreamComplete(
-        streamFactory: GenericFactory<SeekableInputStream, IOException>,
-        timestamp: TimestampUTC,
-        session: UUID,
-        fromCache: Boolean,
-        mimetype: String?
-    ) {
-    }
+	fun onDataStreamComplete(
+		streamFactory: GenericFactory<SeekableInputStream, IOException>,
+		timestamp: TimestampUTC,
+		session: UUID,
+		fromCache: Boolean,
+		mimetype: String?,
+	) {
+	}
 
-    fun onProgress(
-        authorizationInProgress: Boolean,
-        bytesRead: Long,
-        totalBytes: Long
-    ) {
-    }
+	fun onProgress(
+		authorizationInProgress: Boolean,
+		bytesRead: Long,
+		totalBytes: Long,
+	) {
+	}
 
-    fun onFailure(error: RRError)
+	fun onFailure(error: RRError)
 
-    fun onCacheFileWritten(
-        cacheFile: ReadableCacheFile,
-        timestamp: TimestampUTC?,
-        session: UUID,
-        fromCache: Boolean,
-        mimetype: String?
-    ) {
-    }
+	fun onCacheFileWritten(
+		cacheFile: ReadableCacheFile,
+		timestamp: TimestampUTC?,
+		session: UUID,
+		fromCache: Boolean,
+		mimetype: String?,
+	) {
+	}
 }

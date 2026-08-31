@@ -20,11 +20,11 @@ import java.io.Closeable
 import java.util.concurrent.locks.Lock
 
 class Locker(private val mLock: Lock) : Closeable {
-    init {
-        mLock.lock()
-    }
+	init {
+		mLock.lock()
+	}
 
-    override fun close() {
-        mLock.unlock()
-    }
+	override fun close() {
+		mLock.unlock()
+	}
 }

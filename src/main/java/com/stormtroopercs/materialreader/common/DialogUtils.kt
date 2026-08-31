@@ -37,130 +37,141 @@ import java.util.Objects
 import java.util.concurrent.atomic.AtomicReference
 
 object DialogUtils {
-    fun showSearchDialog(
-        context: Context,
-        listener: OnSearchListener
-    ) {
-        showSearchDialog(context, string.action_search, listener)
-    }
+	fun showSearchDialog(
+		context: Context,
+		listener: OnSearchListener,
+	) {
+		showSearchDialog(context, string.action_search, listener)
+	}
 
-    fun showSearchDialog(
-        context: Context,
-        @StringRes titleRes: Int,
-        listener: OnSearchListener
-    ) {
-        val alertBuilder = MaterialAlertDialogBuilder(context)
-        val editTextRef = AtomicReference<EditText?>()
+	fun showSearchDialog(
+		context: Context,
+		@StringRes titleRes: Int,
+		listener: OnSearchListener,
+	) {
+		val alertBuilder = MaterialAlertDialogBuilder(context)
+		val editTextRef = AtomicReference<EditText?>()
 
-        alertBuilder.setView(R.layout.dialog_editbox)
+		alertBuilder.setView(R.layout.dialog_editbox)
 
-        alertBuilder.setPositiveButton(
-            string.action_search,
-            DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
-                DialogUtils.performSearch(
-                    editTextRef.get()!!,
-                    listener
-                )
-            })
+		alertBuilder.setPositiveButton(
+			string.action_search,
+			DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
+				DialogUtils.performSearch(
+					editTextRef.get()!!,
+					listener,
+				)
+			},
+		)
 
-        alertBuilder.setNegativeButton(string.dialog_cancel, null)
+		alertBuilder.setNegativeButton(string.dialog_cancel, null)
 
-        val alertDialog = alertBuilder.create()
-        alertDialog.getWindow()!!
-            .setSoftInputMode(
-                WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
-                        or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
-            )
-        alertDialog.show()
+		val alertDialog = alertBuilder.create()
+		alertDialog.getWindow()!!
+			.setSoftInputMode(
+				WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+					or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN,
+			)
+		alertDialog.show()
 
-        val editText =             Objects.requireNonNull<TextInputEditText>(alertDialog.findViewById<TextInputEditText?>(R.id.editbox))
+		val editText = Objects.requireNonNull<TextInputEditText>(alertDialog.findViewById<TextInputEditText?>(R.id.editbox))
 
-        val editTextLayout =             Objects.requireNonNull<TextInputLayout>(alertDialog.findViewById<TextInputLayout?>(R.id.editbox_layout))
+		val editTextLayout = Objects.requireNonNull<TextInputLayout>(alertDialog.findViewById<TextInputLayout?>(R.id.editbox_layout))
 
-        editTextRef.set(editText)
+		editTextRef.set(editText)
 
-        val onEnter = OnEditorActionListener { v: TextView?, actionId: Int, event: KeyEvent? ->
-            performSearch(editText, listener)
-            true
-        }
-        editText.setImeOptions(EditorInfo.IME_ACTION_SEARCH)
-        editText.setOnEditorActionListener(onEnter)
-        editText.requestFocus()
+		val onEnter = OnEditorActionListener { v: TextView?, actionId: Int, event: KeyEvent? ->
+			performSearch(editText, listener)
+			true
+		}
+		editText.setImeOptions(EditorInfo.IME_ACTION_SEARCH)
+		editText.setOnEditorActionListener(onEnter)
+		editText.requestFocus()
 
-        editTextLayout.setHint(titleRes)
-    }
+		editTextLayout.setHint(titleRes)
+	}
 
-    private fun performSearch(
-        editText: EditText,
-        listener: OnSearchListener
-    ) {
-        val query = editText.getText().toString().trim { it <= ' ' }
-        if (StringUtils.isEmpty(query)) {
-            listener.onSearch(null)
-        } else {
-            listener.onSearch(query)
-        }
-    }
+	private fun performSearch(
+		editText: EditText,
+		listener: OnSearchListener,
+	) {
+		val query = editText.getText().toString().trim { it <= ' ' }
+		if (StringUtils.isEmpty(query)) {
+			listener.onSearch(null)
+		} else {
+			listener.onSearch(query)
+		}
+	}
 
-    fun showDialogPositiveNegative(
-        activity: AppCompatActivity,
-        title: String,
-        message: String,
-        @StringRes positiveText: Int,
-        @StringRes negativeText: Int,
-        positiveAction: Runnable,
-        negativeAction: Runnable
-    ) {
-        runOnUiThread(Runnable {
-            MaterialAlertDialogBuilder(activity)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton(
-                    positiveText,
-                    DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> positiveAction.run() })
-                .setNegativeButton(
-                    negativeText,
-                    DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> negativeAction.run() })
-                .create()
-                .show()
-        })
-    }
+	fun showDialogPositiveNegative(
+		activity: AppCompatActivity,
+		title: String,
+		message: String,
+		@StringRes positiveText: Int,
+		@StringRes negativeText: Int,
+		positiveAction: Runnable,
+		negativeAction: Runnable,
+	) {
+		runOnUiThread(
+			Runnable {
+				MaterialAlertDialogBuilder(activity)
+					.setTitle(title)
+					.setMessage(message)
+					.setPositiveButton(
+						positiveText,
+						DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> positiveAction.run() },
+					)
+					.setNegativeButton(
+						negativeText,
+						DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> negativeAction.run() },
+					)
+					.create()
+					.show()
+			},
+		)
+	}
 
-    fun showDialog(
-        activity: Activity,
-        title: String,
-        message: String
-    ) {
-        runOnUiThread(Runnable {
-            MaterialAlertDialogBuilder(activity)
-                .setTitle(title)
-                .setMessage(message)
-                .setNeutralButton(
-                    string.dialog_close,
-                    DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> })
-                .create()
-                .show()
-        })
-    }
+	fun showDialog(
+		activity: Activity,
+		title: String,
+		message: String,
+	) {
+		runOnUiThread(
+			Runnable {
+				MaterialAlertDialogBuilder(activity)
+					.setTitle(title)
+					.setMessage(message)
+					.setNeutralButton(
+						string.dialog_close,
+						DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> },
+					)
+					.create()
+					.show()
+			},
+		)
+	}
 
-    fun showDialog(
-        activity: Activity,
-        @StringRes title: Int,
-        @StringRes message: Int
-    ) {
-        runOnUiThread(Runnable {
-            MaterialAlertDialogBuilder(activity)
-                .setTitle(title)
-                .setMessage(message)
-                .setNeutralButton(
-                    string.dialog_close,
-                    DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> })
-                .create()
-                .show()
-        })
-    }
+	fun showDialog(
+		activity: Activity,
+		@StringRes title: Int,
+		@StringRes message: Int,
+	) {
+		runOnUiThread(
+			Runnable {
+				MaterialAlertDialogBuilder(activity)
+					.setTitle(title)
+					.setMessage(message)
+					.setNeutralButton(
+						string.dialog_close,
+						DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int -> },
+					)
+					.create()
+					.show()
+			},
+		)
+	}
 
-    fun interface OnSearchListener {
-        fun onSearch(query: String?)
-    }
+	fun interface OnSearchListener {
+		fun onSearch(query: String?)
+	}
 }

@@ -16,7 +16,6 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.common
 
-import com.stormtroopercs.materialreader.navigation.normalizeListingPath
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -57,12 +56,13 @@ import com.stormtroopercs.materialreader.image.RedditVideosAPI
 import com.stormtroopercs.materialreader.image.RedgifsAPI
 import com.stormtroopercs.materialreader.image.RedgifsAPIV2
 import com.stormtroopercs.materialreader.image.StreamableAPI
+import com.stormtroopercs.materialreader.navigation.normalizeListingPath
 import com.stormtroopercs.materialreader.reddit.kthings.RedditPost
 import com.stormtroopercs.materialreader.reddit.url.MultiredditPostListURL
 import com.stormtroopercs.materialreader.reddit.url.OpaqueSharedURL
-import com.stormtroopercs.materialreader.reddit.url.SearchPostListURL
 import com.stormtroopercs.materialreader.reddit.url.PostCommentListingURL
 import com.stormtroopercs.materialreader.reddit.url.RedditURLParser
+import com.stormtroopercs.materialreader.reddit.url.SearchPostListURL
 import com.stormtroopercs.materialreader.reddit.url.SubredditPostListURL
 import com.stormtroopercs.materialreader.reddit.url.UserCommentListingURL
 import com.stormtroopercs.materialreader.reddit.url.UserPostListingURL
@@ -73,7 +73,7 @@ import kotlin.concurrent.thread
 object LinkHandler {
 	private val youtubeDotComPattern = Pattern.compile("^https?://[.\\w]*youtube\\.\\w+/.*")
 
-	private val youtuDotBePattern = 		Pattern.compile("^https?://[.\\w]*youtu\\.be/([A-Za-z0-9\\-_]+)(\\?.*|).*")
+	private val youtuDotBePattern = Pattern.compile("^https?://[.\\w]*youtu\\.be/([A-Za-z0-9\\-_]+)(\\?.*|).*")
 
 	private val vimeoPattern = Pattern.compile("^https?://[.\\w]*vimeo\\.\\w+/.*")
 
@@ -85,10 +85,10 @@ object LinkHandler {
 		activity: AppCompatActivity,
 		url: UriString?,
 		forceNoImage: Boolean = false,
-		post: RedditPost?=null,
-		albumInfo: AlbumInfo?=null,
-		albumImageIndex: Int?=null,
-		fromExternalIntent: Boolean = false
+		post: RedditPost? = null,
+		albumInfo: AlbumInfo? = null,
+		albumImageIndex: Int? = null,
+		fromExternalIntent: Boolean = false,
 	) {
 		if (url == null) {
 			quickToast(activity, R.string.link_does_not_exist)
@@ -181,8 +181,11 @@ object LinkHandler {
 			return
 		}
 
-		if (!forceNoImage && (imgurAlbumPattern.matcher(normalUrlString.value).matches()
-					|| redditGalleryPattern.matcher(normalUrlString.value).matches())
+		if (!forceNoImage &&
+			(
+				imgurAlbumPattern.matcher(normalUrlString.value).matches() ||
+					redditGalleryPattern.matcher(normalUrlString.value).matches()
+				)
 		) {
 			val albumViewMode = PrefsUtility.pref_behaviour_albumview_mode()
 
@@ -190,11 +193,11 @@ object LinkHandler {
 				AlbumViewMode.INTERNAL_LIST -> {
 					val intent = Intent(
 						activity,
-						MainActivityCompose::class.java
+						MainActivityCompose::class.java,
 					).apply {
 						putExtra(
 							MainActivityCompose.EXTRA_DEEP_LINK,
-							MainActivityCompose.DEEP_LINK_ALBUM
+							MainActivityCompose.DEEP_LINK_ALBUM,
 						)
 						putExtra(MainActivityCompose.EXTRA_ALBUM_URL, normalUrlString.value)
 					}
@@ -222,7 +225,6 @@ object LinkHandler {
 		if (redditURL != null) {
 			when (redditURL.pathType()) {
 				RedditURLParser.OPAQUE_SHARED_URL -> {
-
 					// kick off a thread to get the real url
 					thread {
 						val toFetchUrl = (redditURL as OpaqueSharedURL).urlToFetch
@@ -242,7 +244,7 @@ object LinkHandler {
 										post,
 										albumInfo,
 										albumImageIndex,
-										fromExternalIntent
+										fromExternalIntent,
 									)
 								}
 							}
@@ -272,14 +274,14 @@ object LinkHandler {
 						return
 					}
 					// An unmodeled listing type has no in-app route; ignore.
-					}
-					RedditURLParser.USER_POST_LISTING_URL -> {
+				}
+				RedditURLParser.USER_POST_LISTING_URL -> {
 					val url = redditURL as? UserPostListingURL
 					// All user post listings (submitted/saved/hidden/upvoted/downvoted)
 					// map to the in-app Compose PostList route; the VM builds
 					// /u/<user>/<type>/.
 					if (url != null && url.user != null) {
-					val listPath = ("u/" + url.user + "/" + url.type.name.lowercase()).normalizeListingPath()
+						val listPath = ("u/" + url.user + "/" + url.type.name.lowercase()).normalizeListingPath()
 						val intent = Intent(activity, MainActivityCompose::class.java)
 						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_POST_LISTING)
 						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, listPath)
@@ -294,7 +296,7 @@ object LinkHandler {
 					// builds /me/m/<name>/ (the default user's own) or
 					// /u/<user>/m/<name>/ (another user's).
 					if (url != null) {
-					val listPath = if (url.username != null) ("u/" + url.username + "/m/" + url.name).normalizeListingPath() else ("m/" + url.name).normalizeListingPath()
+						val listPath = if (url.username != null) ("u/" + url.username + "/m/" + url.name).normalizeListingPath() else ("m/" + url.name).normalizeListingPath()
 						val intent = Intent(activity, MainActivityCompose::class.java)
 						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_POST_LISTING)
 						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, listPath)
@@ -397,10 +399,10 @@ object LinkHandler {
 			}
 		}
 
-		if (youtubeDotComPattern.matcher(normalUrlString.value).matches()
-			|| vimeoPattern.matcher(normalUrlString.value).matches()
-			|| googlePlayPattern.matcher(normalUrlString.value).matches()
-			|| normalUrlString.value.startsWith("mailto:")
+		if (youtubeDotComPattern.matcher(normalUrlString.value).matches() ||
+			vimeoPattern.matcher(normalUrlString.value).matches() ||
+			googlePlayPattern.matcher(normalUrlString.value).matches() ||
+			normalUrlString.value.startsWith("mailto:")
 		) {
 			if (openWebBrowser(activity, normalUrl, fromExternalIntent)) {
 				return
@@ -410,10 +412,14 @@ object LinkHandler {
 		val youtuDotBeMatcher = youtuDotBePattern.matcher(normalUrlString.value)
 
 		if (youtuDotBeMatcher.find() && youtuDotBeMatcher.group(1) != null) {
-			val youtuBeUrl = ("http://youtube.com/watch?v="
-					+ youtuDotBeMatcher.group(1)
-					+ (youtuDotBeMatcher.group(2)?.takeUnless { it.isEmpty() }
-				?.let { "&${it.substring(1)}" } ?: ""))
+			val youtuBeUrl = (
+				"http://youtube.com/watch?v=" +
+					youtuDotBeMatcher.group(1) +
+					(
+						youtuDotBeMatcher.group(2)?.takeUnless { it.isEmpty() }
+							?.let { "&${it.substring(1)}" } ?: ""
+						)
+				)
 			if (openWebBrowser(activity, youtuBeUrl.toUri(), fromExternalIntent)) {
 				return
 			}
@@ -431,7 +437,7 @@ object LinkHandler {
 	fun onLinkLongClicked(
 		activity: BaseActivity,
 		uri: UriString?,
-		forceNoImage: Boolean = false
+		forceNoImage: Boolean = false,
 	) {
 		if (uri == null) {
 			return
@@ -452,8 +458,8 @@ object LinkHandler {
 				LinkMenuItem(
 					activity,
 					R.string.action_copy_link,
-					LinkAction.COPY_URL
-				)
+					LinkAction.COPY_URL,
+				),
 			)
 		}
 		if (itemPref.contains(LinkAction.EXTERNAL)) {
@@ -461,35 +467,35 @@ object LinkHandler {
 				LinkMenuItem(
 					activity,
 					R.string.action_external,
-					LinkAction.EXTERNAL
-				)
+					LinkAction.EXTERNAL,
+				),
 			)
 		}
-		if (itemPref.contains(LinkAction.SAVE_IMAGE)
-			&& isProbablyAnImage(normalUriString)
-			&& !forceNoImage
+		if (itemPref.contains(LinkAction.SAVE_IMAGE) &&
+			isProbablyAnImage(normalUriString) &&
+			!forceNoImage
 		) {
 			menu.add(
 				LinkMenuItem(
 					activity,
 					R.string.action_save_image,
-					LinkAction.SAVE_IMAGE
-				)
+					LinkAction.SAVE_IMAGE,
+				),
 			)
 		}
 		if (itemPref.contains(LinkAction.SHARE)) {
 			menu.add(LinkMenuItem(activity, R.string.action_share, LinkAction.SHARE))
 		}
-		if (itemPref.contains(LinkAction.SHARE_IMAGE)
-			&& isProbablyAnImage(normalUriString)
-			&& !forceNoImage
+		if (itemPref.contains(LinkAction.SHARE_IMAGE) &&
+			isProbablyAnImage(normalUriString) &&
+			!forceNoImage
 		) {
 			menu.add(
 				LinkMenuItem(
 					activity,
 					R.string.action_share_image,
-					LinkAction.SHARE_IMAGE
-				)
+					LinkAction.SHARE_IMAGE,
+				),
 			)
 		}
 		val menuText = menu.map { it.title }.toTypedArray()
@@ -500,25 +506,25 @@ object LinkHandler {
 			onActionMenuItemSelected(
 				normalUriString,
 				activity,
-				menu[which].action
+				menu[which].action,
 			)
 		}
 
-		//builder.setNeutralButton(R.string.dialog_cancel, null);
+		// builder.setNeutralButton(R.string.dialog_cancel, null);
 		val alert = builder.create()
 		alert.setCanceledOnTouchOutside(true)
 		alert.show()
 	}
 
 	fun onActionMenuItemSelected(
-        uri: UriString,
-        activity: BaseActivity,
-        action: LinkAction
+		uri: UriString,
+		activity: BaseActivity,
+		action: LinkAction,
 	) {
 		when (action) {
 			LinkAction.SHARE -> shareText(activity, null, getPreferredRedditUriString(uri).value)
 			LinkAction.COPY_URL -> {
-				val clipboardManager = 					activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
+				val clipboardManager = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
 				if (clipboardManager != null) {
 					// Using newPlainText here instead of newRawUri because links from
 					// comments/self-text are often not valid URIs
@@ -527,7 +533,7 @@ object LinkHandler {
 
 					quickToast(
 						activity.applicationContext,
-						R.string.link_copied_to_clipboard
+						R.string.link_copied_to_clipboard,
 					)
 				}
 			}
@@ -539,7 +545,7 @@ object LinkHandler {
 			} catch (e: ActivityNotFoundException) {
 				quickToast(
 					activity,
-					R.string.error_no_suitable_apps_available
+					R.string.error_no_suitable_apps_available,
 				)
 			}
 
@@ -552,7 +558,7 @@ object LinkHandler {
 	fun openWebBrowser(
 		activity: AppCompatActivity,
 		uri: Uri,
-		fromExternalIntent: Boolean
+		fromExternalIntent: Boolean,
 	): Boolean {
 		if (!fromExternalIntent) {
 			try {
@@ -565,10 +571,10 @@ object LinkHandler {
 					activity,
 					String.format(
 						activity.getString(
-							R.string.error_toast_failed_open_external_browser
+							R.string.error_toast_failed_open_external_browser,
 						),
-						uri.toString()
-					)
+						uri.toString(),
+					),
 				)
 			}
 		} else {
@@ -583,8 +589,9 @@ object LinkHandler {
 				.queryIntentActivities(baseIntent, 0)) {
 				val packageName = info.activityInfo.packageName
 
-				if (packageName != null && !packageName.startsWith(
-						"com.stormtroopercs.materialreader"
+				if (packageName != null &&
+					!packageName.startsWith(
+						"com.stormtroopercs.materialreader",
 					)
 				) {
 					val intent = Intent(Intent.ACTION_VIEW)
@@ -597,13 +604,13 @@ object LinkHandler {
 			if (targetIntents.isNotEmpty()) {
 				val chooserIntent = Intent.createChooser(
 					targetIntents.removeAt(0),
-					activity.getString(R.string.open_with)
+					activity.getString(R.string.open_with),
 				)
 
 				if (targetIntents.isNotEmpty()) {
 					chooserIntent.putExtra(
 						Intent.EXTRA_INITIAL_INTENTS,
-						targetIntents.toArray(arrayOf<Parcelable>())
+						targetIntents.toArray(arrayOf<Parcelable>()),
 					)
 				}
 				activity.startActivity(chooserIntent)
@@ -618,7 +625,7 @@ object LinkHandler {
 	private fun openInternalBrowser(
 		activity: AppCompatActivity,
 		url: UriString?,
-		post: RedditPost?
+		post: RedditPost?,
 	) {
 		if (url != null) {
 			// The in-app browser now lives on the Compose WebViewRoute (Main top
@@ -638,7 +645,7 @@ object LinkHandler {
 		activity: AppCompatActivity,
 		uri: Uri,
 		post: RedditPost?,
-		showShare: Boolean
+		showShare: Boolean,
 	) {
 		try {
 			val intent = Intent()
@@ -657,21 +664,19 @@ object LinkHandler {
 			intent.putExtra("androidx.browser.customtabs.extra.OPEN_IN_BROWSER_STATE", if (showShare) 1 else 2)
 			intent.putExtra("androidx.browser.customtabs.extra.ENABLE_EPHEMERAL_BROWSING", true)
 
-
 			val typedValue = TypedValue()
 			activity.theme.resolveAttribute(
 				androidx.appcompat.R.attr.colorPrimary,
 				typedValue,
-				true
+				true,
 			)
 
 			intent.putExtra(
 				"android.support.customtabs.extra.TOOLBAR_COLOR",
-				typedValue.data
+				typedValue.data,
 			)
 
 			activity.startActivity(intent)
-
 		} catch (e: ActivityNotFoundException) {
 			// No suitable web browser installed. Use internal browser.
 			openInternalBrowser(activity, UriString(uri.toString()), post)
@@ -687,13 +692,13 @@ object LinkHandler {
 	private val qkmePattern2: Pattern = Pattern.compile(".*[^A-Za-z]quickmeme\\.com/meme/(\\w+).*")
 	private val lvmePattern: Pattern = Pattern.compile(".*[^A-Za-z]livememe\\.com/(\\w+).*")
 	private val gfycatPattern: Pattern = Pattern.compile(".*[^A-Za-z]gfycat\\.com/(?:gifs/detail/)?(\\w+).*")
-	private val redgifsPattern: Pattern = 		Pattern.compile(".*[^A-Za-z]redgifs\\.com/(?:watch|ifr)/(?:gifs/detail/)?(\\w+).*")
+	private val redgifsPattern: Pattern = Pattern.compile(".*[^A-Za-z]redgifs\\.com/(?:watch|ifr)/(?:gifs/detail/)?(\\w+).*")
 	private val streamablePattern: Pattern = Pattern.compile(".*[^A-Za-z]streamable\\.com/(\\w+).*")
-	private val reddituploadsPattern: Pattern = 		Pattern.compile(".*[^A-Za-z]i\\.reddituploads\\.com/(\\w+).*")
+	private val reddituploadsPattern: Pattern = Pattern.compile(".*[^A-Za-z]i\\.reddituploads\\.com/(\\w+).*")
 	private val redditVideosPattern: Pattern = Pattern.compile(".*[^A-Za-z]v.redd.it/(\\w+).*")
 	private val imgflipPattern: Pattern = Pattern.compile(".*[^A-Za-z]imgflip\\.com/i/(\\w+).*")
 	private val makeamemePattern: Pattern = Pattern.compile(".*[^A-Za-z]makeameme\\.org/meme/([\\w\\-]+).*")
-	private val deviantartPattern: Pattern = 		Pattern.compile("https://www\\.deviantart\\.com/([\\w\\-]+)/art/([\\w\\-]+)")
+	private val deviantartPattern: Pattern = Pattern.compile("https://www\\.deviantart\\.com/([\\w\\-]+)/art/([\\w\\-]+)")
 	private val giphyPattern: Pattern = Pattern.compile(".*[^A-Za-z]giphy\\.com/gifs/(\\w+).*")
 
 	@JvmStatic
@@ -718,7 +723,7 @@ object LinkHandler {
 	// The RedGifs API returns this link in the "urls.html" field, but its format
 	// is documented as permanent, so it can also be built from the gif id alone.
 	@JvmStatic
-	fun getRedGifsEmbedUrl(url: UriString): UriString?=getRedGifsId(url)?.let { imgId ->
+	fun getRedGifsEmbedUrl(url: UriString): UriString? = getRedGifsId(url)?.let { imgId ->
 		UriString("https://www.redgifs.com/ifr/" + StringUtils.asciiLowercase(imgId))
 	}
 
@@ -900,7 +905,7 @@ object LinkHandler {
 		imgId: String,
 		priority: Priority,
 		returnUrlOnFailure: Boolean,
-		listener: GetImageInfoListener
+		listener: GetImageInfoListener,
 	) {
 		if (isSensitiveDebugLoggingEnabled) {
 			Log.i("getImgurImageInfo", "Image $imgId: trying API v3 with auth")
@@ -916,7 +921,7 @@ object LinkHandler {
 					if (isSensitiveDebugLoggingEnabled) {
 						Log.i(
 							"getImgurImageInfo",
-							"Image $imgId: trying API v3 without auth"
+							"Image $imgId: trying API v3 without auth",
 						)
 					}
 
@@ -930,7 +935,7 @@ object LinkHandler {
 								if (isSensitiveDebugLoggingEnabled) {
 									Log.i(
 										"getImgurImageInfo",
-										"Image $imgId: trying API v2"
+										"Image $imgId: trying API v2",
 									)
 								}
 
@@ -940,29 +945,32 @@ object LinkHandler {
 									priority,
 									object : ImageInfoRetryListener(listener) {
 										override fun onFailure(
-											error: RRError
+											error: RRError,
 										) {
 											Log.i(
 												"getImgurImageInfo",
-												"All API requests failed!"
+												"All API requests failed!",
 											)
 
 											if (returnUrlOnFailure) {
 												listener.onSuccess(
 													ImageInfo(
 														original = ImageUrlInfo(url = UriString("https://i.imgur.com/$imgId.jpg")),
-														hasAudio = HasAudio.MAYBE_AUDIO
-													)
+														hasAudio = HasAudio.MAYBE_AUDIO,
+													),
 												)
 											} else {
 												listener.onFailure(firstError)
 											}
 										}
-									})
+									},
+								)
 							}
-						})
+						},
+					)
 				}
-			})
+			},
+		)
 	}
 
 	private fun getImgurAlbumInfo(
@@ -970,7 +978,7 @@ object LinkHandler {
 		albumUrl: UriString?,
 		albumId: String,
 		priority: Priority,
-		listener: GetAlbumInfoListener
+		listener: GetAlbumInfoListener,
 	) {
 		if (isSensitiveDebugLoggingEnabled) {
 			Log.i("getImgurAlbumInfo", "Album $albumId: trying API v3 with auth")
@@ -987,7 +995,7 @@ object LinkHandler {
 					if (isSensitiveDebugLoggingEnabled) {
 						Log.i(
 							"getImgurAlbumInfo",
-							"Album $albumId: trying API v3 without auth"
+							"Album $albumId: trying API v3 without auth",
 						)
 					}
 
@@ -1002,7 +1010,7 @@ object LinkHandler {
 								if (isSensitiveDebugLoggingEnabled) {
 									Log.i(
 										"getImgurAlbumInfo",
-										"Album $albumId: trying API v2"
+										"Album $albumId: trying API v2",
 									)
 								}
 
@@ -1013,19 +1021,22 @@ object LinkHandler {
 									priority,
 									object : AlbumInfoRetryListener(listener) {
 										override fun onFailure(
-											error: RRError
+											error: RRError,
 										) {
 											Log.i(
 												"getImgurImageInfo",
-												"All API requests failed!"
+												"All API requests failed!",
 											)
 											listener.onFailure(firstError)
 										}
-									})
+									},
+								)
 							}
-						})
+						},
+					)
 				}
-			})
+			},
+		)
 	}
 
 	@JvmStatic
@@ -1033,7 +1044,7 @@ object LinkHandler {
 		context: Context,
 		url: UriString,
 		priority: Priority,
-		listener: GetAlbumInfoListener
+		listener: GetAlbumInfoListener,
 	) {
 		run {
 			val matchImgur = imgurAlbumPattern.matcher(url.value)
@@ -1067,8 +1078,8 @@ object LinkHandler {
 				null,
 				null,
 				url,
-				Optional.empty()
-			)
+				Optional.empty(),
+			),
 		)
 	}
 
@@ -1077,7 +1088,7 @@ object LinkHandler {
 		context: Context,
 		url: UriString?,
 		priority: Priority,
-		listener: GetImageInfoListener
+		listener: GetImageInfoListener,
 	) {
 		if (url == null) {
 			listener.onNotAnImage()
@@ -1121,17 +1132,18 @@ object LinkHandler {
 							Log.e(
 								"getImageInfo",
 								"RedGifs V1 failed, trying V2 ($error)",
-								error.t
+								error.t,
 							)
 
 							RedgifsAPIV2.getImageInfo(
 								context,
 								imgId,
 								priority,
-								listener
+								listener,
 							)
 						}
-					})
+					},
+				)
 				return
 			}
 		}
@@ -1145,7 +1157,7 @@ object LinkHandler {
 							context,
 							imgId,
 							priority,
-							listener
+							listener,
 						)
 						return
 					}
@@ -1160,7 +1172,7 @@ object LinkHandler {
 						context,
 						url,
 						priority,
-						listener
+						listener,
 					)
 					return
 				}
@@ -1175,7 +1187,7 @@ object LinkHandler {
 							context,
 							imgId,
 							priority,
-							listener
+							listener,
 						)
 						return
 					}
@@ -1216,7 +1228,7 @@ object LinkHandler {
 						return ImageInfo(
 							original = ImageUrlInfo(url = url),
 							mediaType = ImageInfo.MediaType.IMAGE,
-							hasAudio = HasAudio.NO_AUDIO
+							hasAudio = HasAudio.NO_AUDIO,
 						)
 					}
 				}
@@ -1232,7 +1244,7 @@ object LinkHandler {
 						return ImageInfo(
 							original = ImageUrlInfo(UriString(imageUrl)),
 							mediaType = ImageInfo.MediaType.IMAGE,
-							hasAudio = HasAudio.NO_AUDIO
+							hasAudio = HasAudio.NO_AUDIO,
 						)
 					}
 				}
@@ -1244,13 +1256,15 @@ object LinkHandler {
 			if (matchMakeameme.find()) {
 				matchMakeameme.group(1)?.let { imgId ->
 					if (imgId.length > 3) {
-						val imageUrl = ("https://media.makeameme.org/created/"
-								+ imgId
-								+ ".jpg")
+						val imageUrl = (
+							"https://media.makeameme.org/created/" +
+								imgId +
+								".jpg"
+							)
 						return ImageInfo(
 							original = ImageUrlInfo(UriString(imageUrl)),
 							mediaType = ImageInfo.MediaType.IMAGE,
-							hasAudio = HasAudio.NO_AUDIO
+							hasAudio = HasAudio.NO_AUDIO,
 						)
 					}
 				}
@@ -1261,13 +1275,15 @@ object LinkHandler {
 			val matchGiphy = giphyPattern.matcher(url.value)
 			if (matchGiphy.find()) {
 				return ImageInfo(
-					original = ImageUrlInfo(UriString(
-						"https://media.giphy.com/media/"
-								+ matchGiphy.group(1)
-								+ "/giphy.mp4"
-					)),
+					original = ImageUrlInfo(
+						UriString(
+							"https://media.giphy.com/media/" +
+								matchGiphy.group(1) +
+								"/giphy.mp4",
+						),
+					),
 					mediaType = ImageInfo.MediaType.VIDEO,
-					hasAudio = HasAudio.NO_AUDIO
+					hasAudio = HasAudio.NO_AUDIO,
 				)
 			}
 		}
@@ -1280,16 +1296,15 @@ object LinkHandler {
 			".h264",
 			".gifv",
 			".mkv",
-			".3gp"
+			".3gp",
 		)
-
 
 		for (ext in imageExtensions) {
 			if (urlLower.endsWith(ext)) {
 				return ImageInfo(
 					original = ImageUrlInfo(url),
 					mediaType = ImageInfo.MediaType.IMAGE,
-					hasAudio = HasAudio.MAYBE_AUDIO
+					hasAudio = HasAudio.MAYBE_AUDIO,
 				)
 			}
 		}
@@ -1299,7 +1314,7 @@ object LinkHandler {
 				return ImageInfo(
 					original = ImageUrlInfo(url),
 					mediaType = ImageInfo.MediaType.VIDEO,
-					hasAudio = HasAudio.MAYBE_AUDIO
+					hasAudio = HasAudio.MAYBE_AUDIO,
 				)
 			}
 		}
@@ -1315,10 +1330,9 @@ object LinkHandler {
 				ImageUrlInfo(url),
 				mediaType = ImageInfo.MediaType.GIF,
 				hasAudio = audio,
-				isAnimated = true
+				isAnimated = true,
 			)
 		}
-
 
 		if (url.value.contains("?")) {
 			val urlBeforeQ = urlLower.split("\\?".toRegex()).dropLastWhile { it.isEmpty() }
@@ -1329,7 +1343,7 @@ object LinkHandler {
 					return ImageInfo(
 						ImageUrlInfo(url),
 						mediaType = ImageInfo.MediaType.IMAGE,
-						hasAudio = HasAudio.MAYBE_AUDIO
+						hasAudio = HasAudio.MAYBE_AUDIO,
 					)
 				}
 			}
@@ -1339,7 +1353,7 @@ object LinkHandler {
 					return ImageInfo(
 						ImageUrlInfo(url),
 						mediaType = ImageInfo.MediaType.VIDEO,
-						hasAudio = HasAudio.MAYBE_AUDIO
+						hasAudio = HasAudio.MAYBE_AUDIO,
 					)
 				}
 			}
@@ -1354,7 +1368,7 @@ object LinkHandler {
 				return ImageInfo(
 					ImageUrlInfo(url),
 					mediaType = ImageInfo.MediaType.GIF,
-					hasAudio = audio
+					hasAudio = audio,
 				)
 			}
 		}
@@ -1365,15 +1379,17 @@ object LinkHandler {
 			matchQkme1.group(1)?.let { imgId ->
 				if (imgId.length > 2) {
 					return ImageInfo(
-						original = ImageUrlInfo(UriString(
-							String.format(
-								Locale.US,
-								"http://i.qkme.me/%s.jpg",
-								imgId
-							)
-						)),
+						original = ImageUrlInfo(
+							UriString(
+								String.format(
+									Locale.US,
+									"http://i.qkme.me/%s.jpg",
+									imgId,
+								),
+							),
+						),
 						mediaType = ImageInfo.MediaType.IMAGE,
-						hasAudio = HasAudio.NO_AUDIO
+						hasAudio = HasAudio.NO_AUDIO,
 					)
 				}
 			}
@@ -1385,15 +1401,17 @@ object LinkHandler {
 			matchQkme2.group(1)?.let { imgId ->
 				if (imgId.length > 2) {
 					return ImageInfo(
-						original = ImageUrlInfo(UriString(
-							String.format(
-								Locale.US,
-								"http://i.qkme.me/%s.jpg",
-								imgId
-							)
-						)),
+						original = ImageUrlInfo(
+							UriString(
+								String.format(
+									Locale.US,
+									"http://i.qkme.me/%s.jpg",
+									imgId,
+								),
+							),
+						),
 						mediaType = ImageInfo.MediaType.IMAGE,
-						hasAudio = HasAudio.NO_AUDIO
+						hasAudio = HasAudio.NO_AUDIO,
 					)
 				}
 			}
@@ -1405,15 +1423,17 @@ object LinkHandler {
 			matchLvme.group(1)?.let { imgId ->
 				if (imgId.length > 2) {
 					return ImageInfo(
-						original = ImageUrlInfo(UriString(
-							String.format(
-								Locale.US,
-								"http://www.livememe.com/%s.jpg",
-								imgId
-							)
-						)),
+						original = ImageUrlInfo(
+							UriString(
+								String.format(
+									Locale.US,
+									"http://www.livememe.com/%s.jpg",
+									imgId,
+								),
+							),
+						),
 						mediaType = ImageInfo.MediaType.IMAGE,
-						hasAudio = HasAudio.NO_AUDIO
+						hasAudio = HasAudio.NO_AUDIO,
 					)
 				}
 			}
@@ -1430,15 +1450,15 @@ object LinkHandler {
 		// TODO may not handle .co.uk, similar (but should handle .co/.us/.it/etc fine)
 		val urlPattern = Pattern.compile(
 			"\\b((((ht|f)tp(s?)://|~/|/)|www.)" +
-					"(\\w+:\\w+@)?(([-\\w]+\\.)+(com|org|net|gov" +
-					"|mil|biz|info|mobi|name|aero|jobs|museum" +
-					"|travel|[a-z]{2}))(:\\d{1,5})?" +
-					"(((/([-\\w~!$+|.,=]|%[a-f\\d]{2})+)+|/)+|\\?|#)?" +
-					"((\\?([-\\w~!$+|.,*:]|%[a-f\\d{2}])+=?" +
-					"([-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)" +
-					"(&(?:[-\\w~!$+|.,*:]|%[a-f\\d{2}])+=?" +
-					"([-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)*)*" +
-					"(#([-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)?)\\b"
+				"(\\w+:\\w+@)?(([-\\w]+\\.)+(com|org|net|gov" +
+				"|mil|biz|info|mobi|name|aero|jobs|museum" +
+				"|travel|[a-z]{2}))(:\\d{1,5})?" +
+				"(((/([-\\w~!$+|.,=]|%[a-f\\d]{2})+)+|/)+|\\?|#)?" +
+				"((\\?([-\\w~!$+|.,*:]|%[a-f\\d{2}])+=?" +
+				"([-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)" +
+				"(&(?:[-\\w~!$+|.,*:]|%[a-f\\d{2}])+=?" +
+				"([-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)*)*" +
+				"(#([-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)?)\\b",
 		)
 
 		val urlMatcher = urlPattern.matcher(text)
@@ -1461,7 +1481,7 @@ object LinkHandler {
 	fun shareText(
 		activity: AppCompatActivity,
 		subject: String?,
-		text: String?
+		text: String?,
 	) {
 		val mailer = Intent(Intent.ACTION_SEND)
 		mailer.setType("text/plain")
@@ -1474,20 +1494,21 @@ object LinkHandler {
 		if (PrefsUtility.pref_behaviour_sharing_dialog()) {
 			ShareOrderDialog.newInstance(mailer).show(
 				activity.supportFragmentManager,
-				null
+				null,
 			)
 		} else {
 			activity.startActivity(
 				Intent.createChooser(
 					mailer,
-					activity.getString(R.string.action_share)
-				)
+					activity.getString(R.string.action_share),
+				),
 			)
 		}
 	}
 
 	fun convertAndNormalizeUri(uri: UriString): Uri {
-		@Suppress("NAME_SHADOWING") var uri = uri.value
+		@Suppress("NAME_SHADOWING")
+		var uri = uri.value
 		if (uri.startsWith("r/") || uri.startsWith("u/")) {
 			uri = "/$uri"
 		}
@@ -1507,12 +1528,12 @@ object LinkHandler {
 		if (authority != null) {
 			val normalAuthority: String
 
-			//Don't lowercase the rare userinfo component if present.
+			// Don't lowercase the rare userinfo component if present.
 			if (authority.contains("@")) {
 				val authorityParts = authority.split("@".toRegex(), limit = 2).toTypedArray()
-				normalAuthority = 					authorityParts[0] + "@" + StringUtils.asciiLowercase(
-						authorityParts[1]
-					)
+				normalAuthority = authorityParts[0] + "@" + StringUtils.asciiLowercase(
+					authorityParts[1],
+				)
 			} else {
 				normalAuthority = StringUtils.asciiLowercase(authority)
 			}
@@ -1527,19 +1548,19 @@ object LinkHandler {
 	fun getPreferredRedditUriString(uri: UriString): UriString {
 		val parsedUri = convertAndNormalizeUri(uri)
 
-		//Return non-Reddit links normalized but otherwise unaltered
+		// Return non-Reddit links normalized but otherwise unaltered
 		if (RedditURLParser.parse(parsedUri) == null) {
 			return UriString.from(parsedUri)
 		}
 
-		//Respect non-participation links
+		// Respect non-participation links
 		if (parsedUri.host == "np.reddit.com") {
 			return UriString.from(parsedUri)
 		}
 
 		val potentialPostLink = PostCommentListingURL.parse(parsedUri)
 		val postId = if (potentialPostLink != null && potentialPostLink.commentId == null) {
-			//Direct link to a post, not to a comment or anything else
+			// Direct link to a post, not to a comment or anything else
 			potentialPostLink.postId
 		} else {
 			null
@@ -1547,7 +1568,7 @@ object LinkHandler {
 
 		val preferredDomain = PrefsUtility.pref_behaviour_sharing_domain()
 
-		//Only direct links to posts will be converted to redd.it links
+		// Only direct links to posts will be converted to redd.it links
 		if (preferredDomain == SharingDomain.SHORT_REDDIT && postId == null) {
 			return UriString.from(parsedUri)
 		}
@@ -1567,11 +1588,10 @@ object LinkHandler {
 		COPY_URL(R.string.action_copy_link),
 		SHARE_IMAGE(R.string.action_share_image),
 		SAVE_IMAGE(R.string.action_save),
-		EXTERNAL(R.string.action_external)
+		EXTERNAL(R.string.action_external),
 	}
 
-	private abstract class ImageInfoRetryListener(private val mListener: GetImageInfoListener) :
-		GetImageInfoListener {
+	private abstract class ImageInfoRetryListener(private val mListener: GetImageInfoListener) : GetImageInfoListener {
 		override fun onSuccess(info: ImageInfo) {
 			mListener.onSuccess(info)
 		}
@@ -1581,8 +1601,7 @@ object LinkHandler {
 		}
 	}
 
-	private abstract class AlbumInfoRetryListener(private val mListener: GetAlbumInfoListener) :
-		GetAlbumInfoListener {
+	private abstract class AlbumInfoRetryListener(private val mListener: GetAlbumInfoListener) : GetAlbumInfoListener {
 		override fun onGalleryRemoved() {
 			mListener.onGalleryRemoved()
 		}

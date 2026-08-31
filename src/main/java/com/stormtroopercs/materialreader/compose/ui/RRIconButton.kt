@@ -36,19 +36,19 @@ fun RRIconButton(
 	@DrawableRes icon: Int,
 	@StringRes contentDescription: Int,
 	modifier: Modifier = Modifier,
-	tint: Color?=null,
+	tint: Color? = null,
 ) {
 	val theme = LocalComposeTheme.current
 
 	IconButton(
 		onClick = onClick,
-		modifier = modifier
+		modifier = modifier,
 	) {
 		Icon(
 			modifier = Modifier.size(24.dp),
 			painter = painterResource(id = icon),
 			contentDescription = stringResource(id = contentDescription),
-			tint = tint ?: theme.postCard.iconColor
+			tint = tint ?: theme.postCard.iconColor,
 		)
 	}
 }

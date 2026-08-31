@@ -15,14 +15,23 @@ plugins {
 }
 
 android {
-	compileSdk = libs.versions.sdk.compile.get().toInt()
+	compileSdk =
+		libs.versions.sdk.compile
+			.get()
+			.toInt()
 	ndkVersion = libs.versions.ndk.get()
 	namespace = "com.stormtroopercs.materialreader"
 
 	defaultConfig {
 		applicationId = "com.stormtroopercs.materialreader"
-		minSdk = libs.versions.sdk.min.get().toInt()
-		targetSdk = libs.versions.sdk.target.get().toInt()
+		minSdk =
+			libs.versions.sdk.min
+				.get()
+				.toInt()
+		targetSdk =
+			libs.versions.sdk.target
+				.get()
+				.toInt()
 		versionCode = 1
 		versionName = (findProperty("VERSION_NAME") as String?) ?: "0.0.1-alpha"
 
@@ -50,7 +59,7 @@ android {
 			signingConfig = if (System.getenv("KEYSTORE_PASSWORD") != null) signingConfigs.getByName("release") else null
 			proguardFiles(
 				getDefaultProguardFile("proguard-android-optimize.txt"),
-				"proguard-rules.pro"
+				"proguard-rules.pro",
 			)
 		}
 	}
@@ -76,23 +85,23 @@ android {
 		lintConfig = file("config/lint/lint.xml")
 	}
 
-		packaging {
-			resources.excludes.add("META-INF/*")
-		}
+	packaging {
+		resources.excludes.add("META-INF/*")
+	}
 
-		// Per-ABI split APKs: emit arm64-v8a + armeabi-v7a builds so releases
-		// ship smaller, device-appropriate APKs (materialreader-arm64-v8a-*.apk /
-		// materialreader-armeabi-v7a-*.apk). Universal APK disabled.
-		splits {
-			abi {
-				isEnable = true
-				reset()
-				include("arm64-v8a", "armeabi-v7a")
-				isUniversalApk = false
-			}
+	// Per-ABI split APKs: emit arm64-v8a + armeabi-v7a builds so releases
+	// ship smaller, device-appropriate APKs (materialreader-arm64-v8a-*.apk /
+	// materialreader-armeabi-v7a-*.apk). Universal APK disabled.
+	splits {
+		abi {
+			isEnable = true
+			reset()
+			include("arm64-v8a", "armeabi-v7a")
+			isUniversalApk = false
 		}
+	}
 
-		testOptions {
+	testOptions {
 		animationsDisabled = true
 		unitTests {
 			isIncludeAndroidResources = true
@@ -103,7 +112,7 @@ android {
 		buildConfig = true
 		compose = true
 	}
-    buildToolsVersion = "36.0.0"
+	buildToolsVersion = "36.0.0"
 }
 
 dependencies {
@@ -121,7 +130,6 @@ dependencies {
 	implementation(libs.androidx.hilt.work)
 	implementation(libs.room.runtime)
 	implementation(libs.room.ktx)
-
 
 	implementation(libs.work.runtime.ktx)
 	implementation(libs.work.gcm)
@@ -207,12 +215,16 @@ spotless {
 		target("**/*.kt")
 		targetExclude("**/build/**/*.kt")
 		targetExclude("**/generated/**/*.kt")
-		ktlint("1.6.0").editorConfigOverride(mapOf(
-			"ktlint_standard_property-naming" to "disabled",
-			"ktlint_standard_max-line-length" to "disabled",
-			"ktlint_standard_function-naming" to "disabled",
-			"ktlint_standard_comment-wrapping" to "disabled"
-		))
+		ktlint("1.6.0").editorConfigOverride(
+			mapOf(
+				"ktlint_standard_property-naming" to "disabled",
+				"ktlint_standard_max-line-length" to "disabled",
+				"ktlint_standard_function-naming" to "disabled",
+				"ktlint_standard_comment-wrapping" to "disabled",
+				"ktlint_standard_no-wildcard-imports" to "disabled",
+				"ktlint_standard_filename" to "disabled",
+			),
+		)
 		trimTrailingWhitespace()
 		endWithNewline()
 	}

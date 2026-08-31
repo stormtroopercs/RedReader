@@ -16,23 +16,22 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.general
 
+import com.stormtroopercs.materialreader.common.StringUtils
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import com.stormtroopercs.materialreader.common.StringUtils
 import java.util.Locale
 
 class GeneralTest {
 
-    @Test
-    fun testAsciiUppercase() {
+	@Test
+	fun testAsciiUppercase() {
+		for (c in 0 until 128) {
+			val ch = c.toChar()
+			val str = "This is a test" + ch
+			assertEquals(str.uppercase(Locale.ENGLISH), StringUtils.asciiUppercase(str))
 
-        for (c in 0 until 128) {
-            val ch = c.toChar()
-            val str = "This is a test" + ch
-            assertEquals(str.uppercase(Locale.ENGLISH), StringUtils.asciiUppercase(str))
-
-            val str2 = "${ch}${ch}${ch}${ch}${ch}A${ch}A"
-            assertEquals(str2.uppercase(Locale.ENGLISH), StringUtils.asciiUppercase(str2))
-        }
-    }
+			val str2 = "${ch}${ch}${ch}${ch}${ch}A${ch}A"
+			assertEquals(str2.uppercase(Locale.ENGLISH), StringUtils.asciiUppercase(str2))
+		}
+	}
 }

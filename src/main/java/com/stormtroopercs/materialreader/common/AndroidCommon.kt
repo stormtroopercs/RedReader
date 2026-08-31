@@ -30,72 +30,71 @@ import java.io.ByteArrayInputStream
 import java.security.cert.CertificateFactory
 
 object AndroidCommon {
-    @JvmField
- @Suppress("PropertyName")
+	@JvmField
+	@Suppress("PropertyName")
 	val UI_THREAD_HANDLER = Handler(Looper.getMainLooper())
 
-    @JvmStatic
+	@JvmStatic
 	fun runOnUiThread(runnable: Runnable) {
-        if (General.isThisUIThread) {
-            runnable.run()
-        } else {
-            UI_THREAD_HANDLER.post(runnable)
-        }
-    }
+		if (General.isThisUIThread) {
+			runnable.run()
+		} else {
+			UI_THREAD_HANDLER.post(runnable)
+		}
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun onTextChanged(
-        textBox: TextView,
-        action: Runnable
-    ) {
-        textBox.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(
-                s: CharSequence,
-                start: Int,
-                count: Int,
-                after: Int
-            ) {
-            }
+		textBox: TextView,
+		action: Runnable,
+	) {
+		textBox.addTextChangedListener(object : TextWatcher {
+			override fun beforeTextChanged(
+				s: CharSequence,
+				start: Int,
+				count: Int,
+				after: Int,
+			) {
+			}
 
-            override fun onTextChanged(
-                s: CharSequence,
-                start: Int,
-                before: Int,
-                count: Int
-            ) {
-            }
+			override fun onTextChanged(
+				s: CharSequence,
+				start: Int,
+				before: Int,
+				count: Int,
+			) {
+			}
 
-            override fun afterTextChanged(s: Editable) {
-                action.run()
-            }
-        })
-    }
+			override fun afterTextChanged(s: Editable) {
+				action.run()
+			}
+		})
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun onSelectedItemChanged(
-        view: AdapterView<*>,
-        action: Runnable
-    ) {
-        view.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                action.run()
-            }
+		view: AdapterView<*>,
+		action: Runnable,
+	) {
+		view.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+			override fun onItemSelected(
+				parent: AdapterView<*>?,
+				view: View?,
+				position: Int,
+				id: Long,
+			) {
+				action.run()
+			}
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                action.run()
-            }
-        }
-    }
+			override fun onNothingSelected(parent: AdapterView<*>?) {
+				action.run()
+			}
+		}
+	}
 
 	@Suppress("DEPRECATION")
 	@SuppressLint("PackageManagerGetSignatures")
 	fun getPackageInfo(context: Context): PackageInfo {
-
 		val name = context.packageName
 		val pInfo = context.packageManager.getPackageInfo(name, PackageManager.GET_SIGNATURES)
 
@@ -106,7 +105,7 @@ object AndroidCommon {
 			ids = pInfo.signatures!!.map {
 				CertificateFactory.getInstance("X509")
 					.generateCertificate(ByteArrayInputStream(it.toByteArray())).encoded
-			}
+			},
 		)
 	}
 
@@ -114,7 +113,7 @@ object AndroidCommon {
 		val packageName: String,
 		val versionCode: Int,
 		val versionName: String,
-		val ids: List<ByteArray>
+		val ids: List<ByteArray>,
 	)
 
 	@JvmStatic

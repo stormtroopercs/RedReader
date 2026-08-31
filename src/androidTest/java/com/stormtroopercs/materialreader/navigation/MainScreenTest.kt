@@ -34,74 +34,74 @@ import org.junit.Test
  */
 class MainScreenTest {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+	@get:Rule
+	val composeTestRule = createComposeRule()
 
-    @Test
-    fun mainScreen_displaysSubredditOptions() {
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    MainScreen(
-                        onNavigateToPostList = { /* no-op */ },
-                        onNavigateToSettings = { /* no-op */ }
-                    )
-                }
-            }
-        }
+	@Test
+	fun mainScreen_displaysSubredditOptions() {
+		composeTestRule.setContent {
+			MaterialTheme {
+				Surface(modifier = Modifier.fillMaxSize()) {
+					MainScreen(
+						onNavigateToPostList = { /* no-op */ },
+						onNavigateToSettings = { /* no-op */ },
+					)
+				}
+			}
+		}
 
-        // Verify subreddit options are displayed
-        composeTestRule.onNodeWithText("frontpage").assertExists()
-        composeTestRule.onNodeWithText("popular").assertExists()
-        composeTestRule.onNodeWithText("all").assertExists()
-    }
+		// Verify subreddit options are displayed
+		composeTestRule.onNodeWithText("frontpage").assertExists()
+		composeTestRule.onNodeWithText("popular").assertExists()
+		composeTestRule.onNodeWithText("all").assertExists()
+	}
 
-    @Test
-    fun mainScreen_frontpage_clickTriggersNavigation() {
-        var navigatedTo = false
-        var subreddit = ""
+	@Test
+	fun mainScreen_frontpage_clickTriggersNavigation() {
+		var navigatedTo = false
+		var subreddit = ""
 
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    MainScreen(
-                        onNavigateToPostList = { sub ->
-                            navigatedTo = true
-                            subreddit = sub
-                        },
-                        onNavigateToSettings = { /* no-op */ }
-                    )
-                }
-            }
-        }
+		composeTestRule.setContent {
+			MaterialTheme {
+				Surface(modifier = Modifier.fillMaxSize()) {
+					MainScreen(
+						onNavigateToPostList = { sub ->
+							navigatedTo = true
+							subreddit = sub
+						},
+						onNavigateToSettings = { /* no-op */ },
+					)
+				}
+			}
+		}
 
-        // Click on frontpage
-        composeTestRule.onNodeWithText("frontpage").performClick()
+		// Click on frontpage
+		composeTestRule.onNodeWithText("frontpage").performClick()
 
-        // Verify navigation was triggered
-        assert(navigatedTo) { "Navigation should have been triggered" }
-        assert(subreddit == "frontpage") { "Subreddit should be 'frontpage'" }
-    }
+		// Verify navigation was triggered
+		assert(navigatedTo) { "Navigation should have been triggered" }
+		assert(subreddit == "frontpage") { "Subreddit should be 'frontpage'" }
+	}
 
-    @Test
-    fun mainScreen_settings_clickTriggersNavigation() {
-        var settingsNavigated = false
+	@Test
+	fun mainScreen_settings_clickTriggersNavigation() {
+		var settingsNavigated = false
 
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    MainScreen(
-                        onNavigateToPostList = { /* no-op */ },
-                        onNavigateToSettings = { settingsNavigated = true }
-                    )
-                }
-            }
-        }
+		composeTestRule.setContent {
+			MaterialTheme {
+				Surface(modifier = Modifier.fillMaxSize()) {
+					MainScreen(
+						onNavigateToPostList = { /* no-op */ },
+						onNavigateToSettings = { settingsNavigated = true },
+					)
+				}
+			}
+		}
 
-        // Click on settings button (it's an Icon, addressed by content description)
-        composeTestRule.onNodeWithContentDescription("Settings").performClick()
+		// Click on settings button (it's an Icon, addressed by content description)
+		composeTestRule.onNodeWithContentDescription("Settings").performClick()
 
-        // Verify settings navigation was triggered
-        assert(settingsNavigated) { "Settings navigation should have been triggered" }
-    }
+		// Verify settings navigation was triggered
+		assert(settingsNavigated) { "Settings navigation should have been triggered" }
+	}
 }

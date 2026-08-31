@@ -72,7 +72,7 @@ fun AlbumListItem(
 			.background(theme.postCard.backgroundColor)
 			.combinedClickableWithHaptics(
 				onClick = { onClick(index) },
-				onLongClick = { onLongClick(index) }
+				onLongClick = { onLongClick(index) },
 			),
 	) {
 		val (thumbnail, text, buttons) = createRefs()
@@ -86,7 +86,7 @@ fun AlbumListItem(
 					height = Dimension.fillToConstraints.atLeast(thumbnailSize)
 				}
 				.background(theme.postCard.previewImageBackgroundColor),
-			contentAlignment = Alignment.Center
+			contentAlignment = Alignment.Center,
 		) {
 			if (prefs.albumListShowThumbnails.value && thumbnailImage != null) {
 				NetImage(
@@ -119,10 +119,10 @@ fun AlbumListItem(
 						String.format(
 							Locale.US,
 							"%.1f MB",
-							it.toFloat() / (1024 * 1024)
+							it.toFloat() / (1024 * 1024),
 						)
 					}
-				}
+				},
 			)
 				.joinToString(separator = ", ")
 				.takeUnless { it.isEmpty() }
@@ -137,7 +137,7 @@ fun AlbumListItem(
 					start.linkTo(thumbnail.end)
 					end.linkTo(buttons.start)
 					width = Dimension.fillToConstraints
-				}
+				},
 		) {
 			theme.postCard.title.StyledText(title ?: stringResource(R.string.album_image_default_text, index + 1))
 
@@ -152,7 +152,7 @@ fun AlbumListItem(
 				RRLinkButton(
 					title = stringResource(R.string.album_link_button),
 					link = image.outboundUrl,
-					theme = theme.linkButton
+					theme = theme.linkButton,
 				)
 			}
 		}
@@ -162,25 +162,24 @@ fun AlbumListItem(
 				top.linkTo(parent.top)
 				bottom.linkTo(parent.bottom)
 				end.linkTo(parent.end)
-			}
+			},
 		) {
 			AnimatedVisibility(
 				visible = prefs.albumListShowButtons.value,
 				enter = slideInHorizontally { it },
-				exit = slideOutHorizontally { it }
+				exit = slideOutHorizontally { it },
 			) {
 				val launch = LocalLauncher.current
 
 				RRIconButton(
 					onClick = { launch(Dest.LinkLongClick(image.original.url)) },
 					icon = R.drawable.dots_vertical_dark,
-					contentDescription = R.string.three_dots_menu
+					contentDescription = R.string.three_dots_menu,
 				)
 			}
 		}
 	}
 }
-
 
 @Composable
 @Preview(backgroundColor = 0x999999)
@@ -193,10 +192,10 @@ fun PreviewAlbumListItem() {
 				title = "Test title which is very long",
 				caption = null,
 				hasAudio = ImageInfo.HasAudio.NO_AUDIO,
-				outboundUrl = UriString("https://redreader.org")
+				outboundUrl = UriString("https://redreader.org"),
 			),
 			{},
-			{}
+			{},
 		)
 	}
 }

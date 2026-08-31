@@ -18,9 +18,9 @@
 package com.stormtroopercs.materialreader.reddit.kthings
 
 import android.os.Parcelable
+import com.stormtroopercs.materialreader.reddit.things.RedditThingWithIdAndType
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
-import com.stormtroopercs.materialreader.reddit.things.RedditThingWithIdAndType
 
 @Suppress("PropertyName")
 @Serializable
@@ -28,17 +28,18 @@ import com.stormtroopercs.materialreader.reddit.things.RedditThingWithIdAndType
 data class RedditMessage(
 	val id: String,
 	val name: RedditIdAndType,
-	val author: UrlEncodedString?=null,
-	val dest: UrlEncodedString?=null,
-	val body: UrlEncodedString?=null,
-	val body_html: UrlEncodedString?=null,
-	val context: UrlEncodedString?=null,
-	val subject: UrlEncodedString?=null,
-	val subreddit_name_prefixed: UrlEncodedString?=null,
+	val author: UrlEncodedString? = null,
+	val dest: UrlEncodedString? = null,
+	val body: UrlEncodedString? = null,
+	val body_html: UrlEncodedString? = null,
+	val context: UrlEncodedString? = null,
+	val subject: UrlEncodedString? = null,
+	val subreddit_name_prefixed: UrlEncodedString? = null,
 	val replies: RedditFieldReplies = RedditFieldReplies.None,
-	val created_utc: RedditTimestampUTC
+	val created_utc: RedditTimestampUTC,
 
-) : Parcelable, RedditThingWithIdAndType {
+) : Parcelable,
+	RedditThingWithIdAndType {
 
 	override val idAlone get() = id
 	override val idAndType get() = name

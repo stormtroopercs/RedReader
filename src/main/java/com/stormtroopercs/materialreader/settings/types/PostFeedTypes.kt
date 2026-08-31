@@ -38,7 +38,8 @@ enum class PostViewMode(
 	THUMB_LEFT("thumb_left"),
 	THUMB_RIGHT("thumb_right"),
 	HORIZONTAL("horizontal"),
-	SLIDES("slides");
+	SLIDES("slides"),
+	;
 
 	companion object {
 		val settingSerializer = EnumSettingSerializer(PostViewMode.entries)
@@ -58,7 +59,8 @@ enum class PostSwipeAction(
 	DOWNVOTE("downvote"),
 	HIDE("hide"),
 	SAVE("save"),
-	COMMENTS("comments");
+	COMMENTS("comments"),
+	;
 
 	companion object {
 		val settingSerializer = EnumSettingSerializer(PostSwipeAction.entries)

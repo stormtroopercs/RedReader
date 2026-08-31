@@ -17,5 +17,5 @@
 package com.stormtroopercs.materialreader.common
 
 fun interface UnaryOperator<E, R> {
-    fun operate(value: E?): R?
+	fun operate(value: E?): R?
 }

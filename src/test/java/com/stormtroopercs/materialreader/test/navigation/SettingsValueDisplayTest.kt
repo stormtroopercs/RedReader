@@ -11,29 +11,29 @@ import org.junit.Test
  */
 class SettingsValueDisplayTest {
 
-    @Test
-    fun underscoresBecomeSpaces() {
-        assertEquals("WiFi Only", displaySettingValue("WIFI_ONLY"))
-        assertEquals("Left Handed", displaySettingValue("LEFT_HANDED"))
-    }
+	@Test
+	fun underscoresBecomeSpaces() {
+		assertEquals("WiFi Only", displaySettingValue("WIFI_ONLY"))
+		assertEquals("Left Handed", displaySettingValue("LEFT_HANDED"))
+	}
 
-    @Test
-    fun commonAcronymsAreCorrected() {
-        assertEquals("NSFW", displaySettingValue("NSFW"))
-        assertEquals("Always", displaySettingValue("ALWAYS"))
-        assertEquals("Never", displaySettingValue("NEVER"))
-        assertEquals("Auto", displaySettingValue("AUTO"))
-    }
+	@Test
+	fun commonAcronymsAreCorrected() {
+		assertEquals("NSFW", displaySettingValue("NSFW"))
+		assertEquals("Always", displaySettingValue("ALWAYS"))
+		assertEquals("Never", displaySettingValue("NEVER"))
+		assertEquals("Auto", displaySettingValue("AUTO"))
+	}
 
-    @Test
-    fun wordsAreTitleCased() {
-        assertEquals("Absolute", displaySettingValue("ABSOLUTE"))
-        assertEquals("Normal", displaySettingValue("NORMAL"))
-        assertEquals("WiFi Only", displaySettingValue("WIFI_ONLY"))
-    }
+	@Test
+	fun wordsAreTitleCased() {
+		assertEquals("Absolute", displaySettingValue("ABSOLUTE"))
+		assertEquals("Normal", displaySettingValue("NORMAL"))
+		assertEquals("WiFi Only", displaySettingValue("WIFI_ONLY"))
+	}
 
-    @Test
-    fun emptyIsEmpty() {
-        assertEquals("", displaySettingValue(""))
-    }
+	@Test
+	fun emptyIsEmpty() {
+		assertEquals("", displaySettingValue(""))
+	}
 }

@@ -24,6 +24,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,6 +43,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.AddComment
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -51,7 +53,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -77,7 +78,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -85,15 +85,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.stormtroopercs.materialreader.common.LinkHandler
+import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.compose.net.NetRequestStatus
 import com.stormtroopercs.materialreader.compose.net.fetchImage
 import com.stormtroopercs.materialreader.compose.ui.ActionBarButton
 import com.stormtroopercs.materialreader.compose.ui.ActionBarRow
 import com.stormtroopercs.materialreader.compose.ui.RRErrorView
-import com.stormtroopercs.materialreader.common.LinkHandler
-import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.fragments.ReportDialog
-import com.stormtroopercs.materialreader.reddit.PostSort
 
 /**
  * The reference's signature **swipe feed** ("Slides", FINAL-DESIGN Phase 3):
@@ -173,12 +172,12 @@ fun RealSlidesFeedScreen(
 				activity,
 				com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType(post.id),
 				post.subreddit,
-				isComment = false
+				isComment = false,
 			)
 			PostAction.SHARE -> LinkHandler.shareText(
 				activity,
 				post.title,
-				"https://www.reddit.com${post.permalink}"
+				"https://www.reddit.com${post.permalink}",
 			)
 			else -> viewModel.performAction(activity, post, action)
 		}
@@ -271,16 +270,16 @@ fun RealSlidesFeedScreen(
 						modifier = Modifier.fillMaxWidth(),
 					) {
 						SlidesToolbar(
-								title = listTitle.ifEmpty { "r/$subreddit" },
-								community = community,
-								onSortMenuToggle = { sortDialogOpen = true },
-								onMoreActionsToggle = { moreActionsOpen = true },
-								onBack = onNavigateBack,
-								onSearch = onNavigateToSubredditSearch,
-								onCommunityTap = { onOpenCommunity(subreddit) },
-								onRefresh = { viewModel.refresh() },
-								onSubmit = onNavigateToPostSubmit,
-								onDismiss = { toolbarVisible.value = false },
+							title = listTitle.ifEmpty { "r/$subreddit" },
+							community = community,
+							onSortMenuToggle = { sortDialogOpen = true },
+							onMoreActionsToggle = { moreActionsOpen = true },
+							onBack = onNavigateBack,
+							onSearch = onNavigateToSubredditSearch,
+							onCommunityTap = { onOpenCommunity(subreddit) },
+							onRefresh = { viewModel.refresh() },
+							onSubmit = onNavigateToPostSubmit,
+							onDismiss = { toolbarVisible.value = false },
 						)
 					}
 				}
@@ -349,7 +348,10 @@ fun RealSlidesFeedScreen(
 					moreActionsOpen = false
 					onOpenListing(path)
 				},
-				onOpenLicense = { aboutOpen = false; onOpenLicense() },
+				onOpenLicense = {
+					aboutOpen = false
+					onOpenLicense()
+				},
 			)
 		}
 
@@ -385,7 +387,7 @@ fun RealSlidesFeedScreen(
 			snackbarHostState,
 			modifier = Modifier.align(Alignment.BottomCenter),
 		)
-		}
+	}
 }
 
 /**
@@ -543,9 +545,9 @@ private fun SlidePost(
 				.height(320.dp)
 				.background(
 					Brush.verticalGradient(
-						colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f))
-					)
-				)
+						colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f)),
+					),
+				),
 		)
 
 		// Overlay: meta + title + selftext, above the action bar.
@@ -701,11 +703,11 @@ private fun SlideMedia(
 	val revealed = remember { mutableStateOf(!(post.isOver18 || post.isSpoiler)) }
 	val mediaUrl = post.url?.takeIf { it.isNotBlank() && !it.startsWith("reddit.com") }
 		?: post.thumbnail
-		?.takeIf { it.isNotBlank() && it != "default" }
+			?.takeIf { it.isNotBlank() && it != "default" }
 
 	Box(
 		modifier = modifier
-			.then(if (mediaUrl != null) Modifier.clickable(onClick = onMediaClick) else Modifier)
+			.then(if (mediaUrl != null) Modifier.clickable(onClick = onMediaClick) else Modifier),
 	) {
 		if (post.isVideo) {
 			// Video placeholder (inline Media3 is a follow-up).
@@ -773,17 +775,15 @@ private fun SlideMedia(
 		} else {
 			// Self post with no media: a neutral backdrop so the overlay reads.
 			Box(
-				modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant)
+				modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant),
 			)
 		}
 	}
 }
 
 /** Compact count for action buttons and the pill (1.2K, 3.4M). */
-private fun formatCompact(value: Int): String {
-	return when {
-		value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
-		value >= 1_000 -> String.format("%.1fK", value / 1_000.0)
-		else -> value.toString()
-	}
+private fun formatCompact(value: Int): String = when {
+	value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
+	value >= 1_000 -> String.format("%.1fK", value / 1_000.0)
+	else -> value.toString()
 }

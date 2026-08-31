@@ -28,6 +28,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,8 +38,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -72,195 +72,196 @@ import com.stormtroopercs.materialreader.navigation.PMViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PMSendScreen(
-    initialRecipient: String? = null,
-    initialSubject: String? = null,
-    initialText: String? = null,
-    onDone: () -> Unit,
-    onNavigateBack: () -> Unit,
+	initialRecipient: String? = null,
+	initialSubject: String? = null,
+	initialText: String? = null,
+	onDone: () -> Unit,
+	onNavigateBack: () -> Unit,
 ) {
-    val viewModel: PMViewModel = hiltViewModel()
-    val context = LocalContext.current
-    val state by viewModel.state.collectAsStateWithLifecycle()
+	val viewModel: PMViewModel = hiltViewModel()
+	val context = LocalContext.current
+	val state by viewModel.state.collectAsStateWithLifecycle()
 
-    var account by remember { mutableStateOf(viewModel.accounts.firstOrNull()) }
-    var recipient by remember { mutableStateOf(initialRecipient ?: PMSendDraft.recipient ?: "") }
-    var subject by remember { mutableStateOf(initialSubject ?: PMSendDraft.subject ?: "") }
-    var text by remember { mutableStateOf(initialText ?: PMSendDraft.text ?: "") }
-    var showAccountMenu by remember { mutableStateOf(false) }
-    var showPreview by remember { mutableStateOf(false) }
+	var account by remember { mutableStateOf(viewModel.accounts.firstOrNull()) }
+	var recipient by remember { mutableStateOf(initialRecipient ?: PMSendDraft.recipient ?: "") }
+	var subject by remember { mutableStateOf(initialSubject ?: PMSendDraft.subject ?: "") }
+	var text by remember { mutableStateOf(initialText ?: PMSendDraft.text ?: "") }
+	var showAccountMenu by remember { mutableStateOf(false) }
+	var showPreview by remember { mutableStateOf(false) }
 
-    val canSend = recipient.isNotBlank() && text.isNotBlank() &&
-        state !is PMViewModel.PMUiState.Submitting
+	val canSend = recipient.isNotBlank() &&
+		text.isNotBlank() &&
+		state !is PMViewModel.PMUiState.Submitting
 
-    // Draft memory (the legacy activity saved in onDestroy when the send had
-    // not succeeded): snapshot the fields on leaving the composition, and
-    // clear them once a send succeeds.
-    var sentSuccessfully by remember { mutableStateOf(false) }
-    DisposableEffect(Unit) {
-        onDispose {
-            if (!sentSuccessfully) {
-                PMSendDraft.save(recipient, subject, text)
-            }
-        }
-    }
+	// Draft memory (the legacy activity saved in onDestroy when the send had
+	// not succeeded): snapshot the fields on leaving the composition, and
+	// clear them once a send succeeds.
+	var sentSuccessfully by remember { mutableStateOf(false) }
+	DisposableEffect(Unit) {
+		onDispose {
+			if (!sentSuccessfully) {
+				PMSendDraft.save(recipient, subject, text)
+			}
+		}
+	}
 
-    // React to the send result: success clears the draft + leaves; a failure
-    // shows the same result dialog the legacy activity used.
-    LaunchedEffect(state) {
-        val s = state
-        when (s) {
-            is PMViewModel.PMUiState.Success -> {
-                sentSuccessfully = true
-                PMSendDraft.clear()
-                General.quickToast(context, context.getString(R.string.pm_send_done))
-                viewModel.onDone()
-                onDone()
-            }
+	// React to the send result: success clears the draft + leaves; a failure
+	// shows the same result dialog the legacy activity used.
+	LaunchedEffect(state) {
+		val s = state
+		when (s) {
+			is PMViewModel.PMUiState.Success -> {
+				sentSuccessfully = true
+				PMSendDraft.clear()
+				General.quickToast(context, context.getString(R.string.pm_send_done))
+				viewModel.onDone()
+				onDone()
+			}
 
-            is PMViewModel.PMUiState.Failed -> {
-                val error = s.error
-                (context as? AppCompatActivity)?.let {
-                    General.showResultDialog(it, error)
-                }
-            }
+			is PMViewModel.PMUiState.Failed -> {
+				val error = s.error
+				(context as? AppCompatActivity)?.let {
+					General.showResultDialog(it, error)
+				}
+			}
 
-            else -> Unit
-        }
-    }
+			else -> Unit
+		}
+	}
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(context.getString(R.string.pm_send_actionbar)) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            (context as? AppCompatActivity)?.let {
-                                viewModel.submit(
-                                    it,
-                                    account ?: return@let,
-                                    recipient,
-                                    subject,
-                                    text
-                                )
-                            }
-                        },
-                        enabled = canSend && account != null
-                    ) {
-                        if (state is PMViewModel.PMUiState.Submitting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.padding(4.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Send,
-                                contentDescription = context.getString(R.string.comment_reply_send)
-                            )
-                        }
-                    }
-                    TextButton(
-                        onClick = { showPreview = true },
-                        enabled = text.isNotBlank()
-                    ) {
-                        Text(context.getString(R.string.comment_reply_preview))
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-        ) {
-            // Account dropdown (the legacy spinner) — send-as selection.
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Button(onClick = { showAccountMenu = true }) {
-                    Text(account ?: context.getString(R.string.error_toast_notloggedin))
-                }
-                DropdownMenu(
-                    expanded = showAccountMenu,
-                    onDismissRequest = { showAccountMenu = false }
-                ) {
-                    viewModel.accounts.forEach { name ->
-                        DropdownMenuItem(
-                            text = { Text(name) },
-                            onClick = {
-                                account = name
-                                showAccountMenu = false
-                            }
-                        )
-                    }
-                }
-            }
+	Scaffold(
+		topBar = {
+			TopAppBar(
+				title = { Text(context.getString(R.string.pm_send_actionbar)) },
+				navigationIcon = {
+					IconButton(onClick = onNavigateBack) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+							contentDescription = "Back",
+						)
+					}
+				},
+				actions = {
+					IconButton(
+						onClick = {
+							(context as? AppCompatActivity)?.let {
+								viewModel.submit(
+									it,
+									account ?: return@let,
+									recipient,
+									subject,
+									text,
+								)
+							}
+						},
+						enabled = canSend && account != null,
+					) {
+						if (state is PMViewModel.PMUiState.Submitting) {
+							CircularProgressIndicator(
+								modifier = Modifier.padding(4.dp),
+								strokeWidth = 2.dp,
+							)
+						} else {
+							Icon(
+								imageVector = Icons.AutoMirrored.Filled.Send,
+								contentDescription = context.getString(R.string.comment_reply_send),
+							)
+						}
+					}
+					TextButton(
+						onClick = { showPreview = true },
+						enabled = text.isNotBlank(),
+					) {
+						Text(context.getString(R.string.comment_reply_preview))
+					}
+				},
+			)
+		},
+	) { paddingValues ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(paddingValues)
+				.verticalScroll(rememberScrollState())
+				.padding(16.dp),
+		) {
+			// Account dropdown (the legacy spinner) — send-as selection.
+			Column(
+				modifier = Modifier.fillMaxWidth(),
+				horizontalAlignment = Alignment.Start,
+			) {
+				Button(onClick = { showAccountMenu = true }) {
+					Text(account ?: context.getString(R.string.error_toast_notloggedin))
+				}
+				DropdownMenu(
+					expanded = showAccountMenu,
+					onDismissRequest = { showAccountMenu = false },
+				) {
+					viewModel.accounts.forEach { name ->
+						DropdownMenuItem(
+							text = { Text(name) },
+							onClick = {
+								account = name
+								showAccountMenu = false
+							},
+						)
+					}
+				}
+			}
 
-            OutlinedTextField(
-                value = recipient,
-                onValueChange = { recipient = it },
-                label = { Text(context.getString(R.string.pm_send_hint_recipient)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-            )
+			OutlinedTextField(
+				value = recipient,
+				onValueChange = { recipient = it },
+				label = { Text(context.getString(R.string.pm_send_hint_recipient)) },
+				singleLine = true,
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(top = 16.dp),
+			)
 
-            OutlinedTextField(
-                value = subject,
-                onValueChange = { subject = it.take(100) },
-                label = { Text(context.getString(R.string.pm_send_hint_subject)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp)
-            )
+			OutlinedTextField(
+				value = subject,
+				onValueChange = { subject = it.take(100) },
+				label = { Text(context.getString(R.string.pm_send_hint_subject)) },
+				singleLine = true,
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(top = 12.dp),
+			)
 
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                label = { Text(context.getString(R.string.pm_send_hint_message_text)) },
-                minLines = 8,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp)
-            )
+			OutlinedTextField(
+				value = text,
+				onValueChange = { text = it },
+				label = { Text(context.getString(R.string.pm_send_hint_message_text)) },
+				minLines = 8,
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(top = 12.dp),
+			)
 
-            Button(
-                onClick = {
-                    (context as? AppCompatActivity)?.let {
-                        viewModel.submit(
-                            it,
-                            account ?: return@let,
-                            recipient,
-                            subject,
-                            text
-                        )
-                    }
-                },
-                enabled = canSend && account != null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-            ) {
-                Text(context.getString(R.string.comment_reply_send))
-            }
-        }
-    }
+			Button(
+				onClick = {
+					(context as? AppCompatActivity)?.let {
+						viewModel.submit(
+							it,
+							account ?: return@let,
+							recipient,
+							subject,
+							text,
+						)
+					}
+				},
+				enabled = canSend && account != null,
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(top = 16.dp),
+			) {
+				Text(context.getString(R.string.comment_reply_send))
+			}
+		}
+	}
 
-    if (showPreview) {
-        MarkdownPreviewDialog(markdown = text, onDismiss = { showPreview = false })
-    }
+	if (showPreview) {
+		MarkdownPreviewDialog(markdown = text, onDismiss = { showPreview = false })
+	}
 }

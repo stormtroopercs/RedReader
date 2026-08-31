@@ -18,11 +18,11 @@
 package com.stormtroopercs.materialreader.reddit.kthings
 
 import android.os.Parcelable
-import kotlinx.parcelize.Parcelize
-import kotlinx.serialization.Serializable
 import com.stormtroopercs.materialreader.reddit.url.PostCommentListingURL
 import com.stormtroopercs.materialreader.reddit.url.RedditURLParser
 import com.stormtroopercs.materialreader.reddit.url.RedditURLParser.RedditURL
+import kotlinx.parcelize.Parcelize
+import kotlinx.serialization.Serializable
 
 @Suppress("PropertyName")
 @Serializable
@@ -30,13 +30,12 @@ import com.stormtroopercs.materialreader.reddit.url.RedditURLParser.RedditURL
 data class RedditMore(
 	var count: Int,
 	var children: List<String>,
-	var parent_id: String
+	var parent_id: String,
 ) : Parcelable {
 
 	fun getMoreUrls(
-		commentListingURL: RedditURL
+		commentListingURL: RedditURL,
 	): List<PostCommentListingURL> {
-
 		val urls = ArrayList<PostCommentListingURL>(16)
 
 		if (commentListingURL.pathType() == RedditURLParser.POST_COMMENT_LISTING_URL) {

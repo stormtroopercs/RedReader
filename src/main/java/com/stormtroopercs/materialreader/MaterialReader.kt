@@ -21,12 +21,6 @@ import android.app.Application
 import android.content.Context
 import android.os.Process
 import android.util.Log
-import dagger.hilt.EntryPoint
-import dagger.hilt.android.HiltAndroidApp
-import dagger.hilt.EntryPoints
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
 import com.stormtroopercs.materialreader.account.RedditAccountManager
 import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.common.AndroidCommon
@@ -39,6 +33,10 @@ import com.stormtroopercs.materialreader.io.RedditChangeDataIO
 import com.stormtroopercs.materialreader.navigation.FeedPreferences
 import com.stormtroopercs.materialreader.reddit.api.RedditOAuth
 import com.stormtroopercs.materialreader.reddit.prepared.RedditChangeDataManager
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.HiltAndroidApp
+import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
 
 /**
@@ -48,83 +46,81 @@ import javax.inject.Inject
 @HiltAndroidApp
 class MaterialReader : Application() {
 
-    companion object {
-        const val TAG = "MaterialReader"
+	companion object {
+		const val TAG = "MaterialReader"
 
-        @Volatile
-        private var instance: MaterialReader? = null
+		@Volatile
+		private var instance: MaterialReader? = null
 
-        /**
-         * Legacy accessor for converted pre-Hilt call sites that still use
-         * the static `MaterialReader.getInstance(context)` form.
-         */
-        fun getInstance(context: Context): MaterialReader {
-            return instance ?: synchronized(this) {
-                instance ?: throw IllegalStateException(
-                    "MaterialReader not initialized by Application.onCreate()"
-                )
-            }
-        }
+		/**
+		 * Legacy accessor for converted pre-Hilt call sites that still use
+		 * the static `MaterialReader.getInstance(context)` form.
+		 */
+		fun getInstance(context: Context): MaterialReader = instance ?: synchronized(this) {
+			instance ?: throw IllegalStateException(
+				"MaterialReader not initialized by Application.onCreate()",
+			)
+		}
 
-        @EntryPoint
-        @InstallIn(SingletonComponent::class)
-        interface CacheManagerEntryPoint {
-            fun cacheManager(): CacheManager
+		@EntryPoint
+		@InstallIn(SingletonComponent::class)
+		interface CacheManagerEntryPoint {
+			fun cacheManager(): CacheManager
 
-            fun redditAccountManager(): RedditAccountManager
-        }
-    }
+			fun redditAccountManager(): RedditAccountManager
+		}
+	}
 
-    lateinit var packageInfo: AndroidCommon.PackageInfo
+	lateinit var packageInfo: AndroidCommon.PackageInfo
 
-    @Inject
-    lateinit var cacheManager: CacheManager
+	@Inject
+	lateinit var cacheManager: CacheManager
 
-    @Inject
-    lateinit var redditAccountManager: RedditAccountManager
+	@Inject
+	lateinit var redditAccountManager: RedditAccountManager
 
-    override fun onCreate() {
-        super.onCreate()
-        instance = this
+	override fun onCreate() {
+		super.onCreate()
+		instance = this
 
-        Log.i(TAG, "Application created.")
+		Log.i(TAG, "Application created.")
 
-        packageInfo = AndroidCommon.getPackageInfo(this)
+		packageInfo = AndroidCommon.getPackageInfo(this)
 
-        GlobalExceptionHandler.init(this)
-        PrefsUtility.init(this)
-        PrefsUtility.applyLanguageSetting()
-        ComposePrefsSingleton.init(this)
-        FeedPreferences.init(this)
-        Fonts.onAppCreate(assets)
+		GlobalExceptionHandler.init(this)
+		PrefsUtility.init(this)
+		PrefsUtility.applyLanguageSetting()
+		ComposePrefsSingleton.init(this)
+		FeedPreferences.init(this)
+		Fonts.onAppCreate(assets)
 
-        // Initialise the Reddit OAuth client ID. RedditOAuth.init() reads the built-in
-        // client ID (falls back to RedReader's public ID when no local reddit_auth.txt
-        // is present) so the app can authenticate out of the box.
-        RedditOAuth.init(this)
+		// Initialise the Reddit OAuth client ID. RedditOAuth.init() reads the built-in
+		// client ID (falls back to RedReader's public ID when no local reddit_auth.txt
+		// is present) so the app can authenticate out of the box.
+		RedditOAuth.init(this)
 
-        // Note: Network initialization moved to Hilt modules
-        // OkHttpClient and HTTPBackend are now provided via NetworkModule
+		// Note: Network initialization moved to Hilt modules
+		// OkHttpClient and HTTPBackend are now provided via NetworkModule
 
-        Log.i(TAG, "Config: " + GlobalConfig.appName + " (" + GlobalConfig.appBuildType + ")")
+		Log.i(TAG, "Config: " + GlobalConfig.appName + " (" + GlobalConfig.appBuildType + ")")
 
-        // Wire CacheManager static instance for legacy call sites
-        CacheManager.setInstance(cacheManager)
-        RedditAccountManager.setInstance(redditAccountManager)
+		// Wire CacheManager static instance for legacy call sites
+		CacheManager.setInstance(cacheManager)
+		RedditAccountManager.setInstance(redditAccountManager)
 
-        object : Thread() {
-            override fun run() {
-                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-                CacheManager.getInstance(this@MaterialReader).pruneTemp()
-                CacheManager.getInstance(this@MaterialReader).pruneCache()
-            }
-        }.start()
+		object : Thread() {
+			override fun run() {
+				Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+				CacheManager.getInstance(this@MaterialReader).pruneTemp()
+				CacheManager.getInstance(this@MaterialReader).pruneCache()
+			}
+		}.start()
 
-        object : Thread() {
-            override fun run() {
-                RedditChangeDataIO.getInstance(this@MaterialReader).runInitialReadInThisThread()
-                RedditChangeDataManager.pruneAllUsersDefaultMaxAge()
-            }
-        }.start()
-    }
+		object : Thread() {
+			override fun run() {
+				RedditChangeDataIO.getInstance(this@MaterialReader).runInitialReadInThisThread()
+				RedditChangeDataManager.pruneAllUsersDefaultMaxAge()
+			}
+		}.start()
+	}
 }

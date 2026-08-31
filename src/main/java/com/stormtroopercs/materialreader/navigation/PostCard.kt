@@ -19,9 +19,9 @@ package com.stormtroopercs.materialreader.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -62,12 +62,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.stormtroopercs.materialreader.common.LinkHandler
-import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.compose.theme.LocalComposeTheme
 import com.stormtroopercs.materialreader.compose.ui.PostThumbnailPreview
 import com.stormtroopercs.materialreader.settings.types.PostSwipeAction
@@ -95,70 +91,70 @@ fun StatsAndIconsRow(
 		modifier = modifier.fillMaxWidth(),
 		verticalAlignment = Alignment.CenterVertically,
 	) {
-			// Left: the tappable stats — score + comment count as plain
-			// numbers (the reference's "PostStats" text).
-			Text(
-				text = "${formatFeedCount(post.score)}  •  ${formatFeedCount(post.numComments)}",
-				style = MaterialTheme.typography.labelMedium,
-				color = MaterialTheme.colorScheme.onSurfaceVariant,
-				modifier = Modifier.clickable(
-					interactionSource = null,
-					indication = null,
-					onClick = onOpenThread,
-					role = Role.Button,
-				),
-			)
-			Spacer(Modifier.weight(1f))
-			// Right: compact icon row.
-			IconSlot(icon = Icons.Filled.ChatBubbleOutline, label = "Comments", onClick = onOpenThread)
-			IconSlot(
-				icon = Icons.Filled.Share,
-				label = "Share",
-				onClick = { onPostAction(post, PostAction.SHARE) },
-			)
-			IconSlot(
-				icon = Icons.AutoMirrored.Filled.Reply,
-				label = "Reply",
+		// Left: the tappable stats — score + comment count as plain
+		// numbers (the reference's "PostStats" text).
+		Text(
+			text = "${formatFeedCount(post.score)}  •  ${formatFeedCount(post.numComments)}",
+			style = MaterialTheme.typography.labelMedium,
+			color = MaterialTheme.colorScheme.onSurfaceVariant,
+			modifier = Modifier.clickable(
+				interactionSource = null,
+				indication = null,
 				onClick = onOpenThread,
-			)
-			IconSlot(
-				icon = Icons.Filled.ArrowUpward,
-				label = "Upvote",
-				onClick = onUpvote,
-			)
-			IconSlot(
-				icon = Icons.Filled.ArrowDownward,
-				label = "Downvote",
-				onClick = { onPostAction(post, PostAction.DOWNVOTE) },
-			)
-			IconSlot(
-				icon = Icons.Filled.Bookmark,
-				label = if (post.saved) "Unsave" else "Save",
-				onClick = { onPostAction(post, if (post.saved) PostAction.UNSAVE else PostAction.SAVE) },
-			)
-			Box {
-				IconSlot(icon = Icons.Filled.MoreVert, label = "More options", onClick = { moreExpanded = true })
-				DropdownMenu(
-					expanded = moreExpanded,
-					onDismissRequest = { moreExpanded = false },
-				) {
-					DropdownMenuItem(
-						text = { Text("Report") },
-						onClick = {
-							moreExpanded = false
-							onPostAction(post, PostAction.REPORT)
-						},
-					)
-					DropdownMenuItem(
-						text = { Text(if (post.hidden) "Unhide" else "Hide") },
-						onClick = {
-							moreExpanded = false
-							onPostAction(post, if (post.hidden) PostAction.UNHIDE else PostAction.HIDE)
-							},
-							)
-							}
-						}
+				role = Role.Button,
+			),
+		)
+		Spacer(Modifier.weight(1f))
+		// Right: compact icon row.
+		IconSlot(icon = Icons.Filled.ChatBubbleOutline, label = "Comments", onClick = onOpenThread)
+		IconSlot(
+			icon = Icons.Filled.Share,
+			label = "Share",
+			onClick = { onPostAction(post, PostAction.SHARE) },
+		)
+		IconSlot(
+			icon = Icons.AutoMirrored.Filled.Reply,
+			label = "Reply",
+			onClick = onOpenThread,
+		)
+		IconSlot(
+			icon = Icons.Filled.ArrowUpward,
+			label = "Upvote",
+			onClick = onUpvote,
+		)
+		IconSlot(
+			icon = Icons.Filled.ArrowDownward,
+			label = "Downvote",
+			onClick = { onPostAction(post, PostAction.DOWNVOTE) },
+		)
+		IconSlot(
+			icon = Icons.Filled.Bookmark,
+			label = if (post.saved) "Unsave" else "Save",
+			onClick = { onPostAction(post, if (post.saved) PostAction.UNSAVE else PostAction.SAVE) },
+		)
+		Box {
+			IconSlot(icon = Icons.Filled.MoreVert, label = "More options", onClick = { moreExpanded = true })
+			DropdownMenu(
+				expanded = moreExpanded,
+				onDismissRequest = { moreExpanded = false },
+			) {
+				DropdownMenuItem(
+					text = { Text("Report") },
+					onClick = {
+						moreExpanded = false
+						onPostAction(post, PostAction.REPORT)
+					},
+				)
+				DropdownMenuItem(
+					text = { Text(if (post.hidden) "Unhide" else "Hide") },
+					onClick = {
+						moreExpanded = false
+						onPostAction(post, if (post.hidden) PostAction.UNHIDE else PostAction.HIDE)
+					},
+				)
 			}
+		}
+	}
 }
 
 /** One compact icon button of the [StatsAndIconsRow] right side. */
@@ -249,7 +245,7 @@ fun Modifier.postSwipeToAction(
 				offset = 0f
 			}
 		}
-	}
+}
 
 /**
  * A single post in the list feed, in one of the reference's card modes
@@ -290,7 +286,8 @@ fun PostCard(
 	// Mode geometry: media size + body line count.
 	val mediaSize = when (mode) {
 		PostViewMode.CARDS, PostViewMode.SMALLER, PostViewMode.THUMB_LEFT,
-		PostViewMode.THUMB_RIGHT, PostViewMode.HORIZONTAL -> 220.dp
+		PostViewMode.THUMB_RIGHT, PostViewMode.HORIZONTAL,
+		-> 220.dp
 		PostViewMode.COMPACT, PostViewMode.LIST, PostViewMode.SIMPLE -> 0.dp
 		PostViewMode.SLIDES -> 220.dp // unreachable (slides has its own screen)
 	}
@@ -320,9 +317,9 @@ fun PostCard(
 					)
 				} else {
 					Modifier
-				}
+				},
 			)
-			.clickable(onClick = onOpenThread)
+			.clickable(onClick = onOpenThread),
 	) {
 		// ── Media (per mode) ──
 		val media = rememberMedia(post)
@@ -409,10 +406,8 @@ fun PostCard(
 }
 
 /** Resolve the media URI for a post's card (post url, else thumbnail). */
-private fun rememberMedia(post: PostItem): String? {
-	return post.url?.takeIf { it.isNotBlank() && !it.startsWith("reddit.com") }
-		?: post.thumbnail?.takeIf { it.isNotBlank() && it != "default" }
-}
+private fun rememberMedia(post: PostItem): String? = post.url?.takeIf { it.isNotBlank() && !it.startsWith("reddit.com") }
+	?: post.thumbnail?.takeIf { it.isNotBlank() && it != "default" }
 
 /**
  * The card's text column: title → meta (author • time • flair) → body, in
@@ -474,12 +469,10 @@ private fun PostCardTextColumn(
 }
 
 /** Compact feed counts (1.2K / 3.4M) — the stats row + action buttons. */
-internal fun formatFeedCount(value: Int): String {
-	return when {
-		value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
-		value >= 1_000 -> String.format("%.1fK", value / 1_000.0)
-		else -> value.toString()
-	}
+internal fun formatFeedCount(value: Int): String = when {
+	value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
+	value >= 1_000 -> String.format("%.1fK", value / 1_000.0)
+	else -> value.toString()
 }
 
 /** Short relative age for card meta lines (5h, 2d, 3w). */

@@ -27,97 +27,97 @@ import java.io.IOException
 import java.io.InputStream
 
 class FailedRequestBody {
-    private var mBytes: Optional<ByteArray>
-    private var mString: Optional<String>
-    private var mJson: Optional<JsonValue>
-    private var mAttemptedParse = false
+	private var mBytes: Optional<ByteArray>
+	private var mString: Optional<String>
+	private var mJson: Optional<JsonValue>
+	private var mAttemptedParse = false
 
-    constructor(bytes: ByteArray) {
-        mBytes = Optional.Companion.of<ByteArray>(bytes)
-        mString = Optional.Companion.empty<String>()
-        mJson = Optional.Companion.empty<JsonValue>()
-    }
+	constructor(bytes: ByteArray) {
+		mBytes = Optional.Companion.of<ByteArray>(bytes)
+		mString = Optional.Companion.empty<String>()
+		mJson = Optional.Companion.empty<JsonValue>()
+	}
 
-    constructor(value: String) {
-        mBytes = Optional.Companion.empty<ByteArray>()
-        mString = Optional.Companion.of<String>(value)
-        mJson = Optional.Companion.empty<JsonValue>()
-    }
+	constructor(value: String) {
+		mBytes = Optional.Companion.empty<ByteArray>()
+		mString = Optional.Companion.of<String>(value)
+		mJson = Optional.Companion.empty<JsonValue>()
+	}
 
-    constructor(value: JsonValue) {
-        mBytes = Optional.Companion.empty<ByteArray>()
-        mString = Optional.Companion.empty<String>()
-        mJson = Optional.Companion.of<JsonValue>(value)
-    }
+	constructor(value: JsonValue) {
+		mBytes = Optional.Companion.empty<ByteArray>()
+		mString = Optional.Companion.empty<String>()
+		mJson = Optional.Companion.of<JsonValue>(value)
+	}
 
-    @Synchronized
-    override fun toString(): String {
-        if (!mString.isPresent) {
-            if (mBytes.isPresent) {
-                mString = Optional.Companion.of<String>(String(mBytes.get(), General.CHARSET_UTF8))
-            } else if (mJson.isPresent) {
-                mString = Optional.Companion.of<String>(mJson.toString())
-            } else {
-                throw RuntimeException("No data present")
-            }
-        }
+	@Synchronized
+	override fun toString(): String {
+		if (!mString.isPresent) {
+			if (mBytes.isPresent) {
+				mString = Optional.Companion.of<String>(String(mBytes.get(), General.CHARSET_UTF8))
+			} else if (mJson.isPresent) {
+				mString = Optional.Companion.of<String>(mJson.toString())
+			} else {
+				throw RuntimeException("No data present")
+			}
+		}
 
-        return mString.get()
-    }
+		return mString.get()
+	}
 
-    @Synchronized
-    fun toBytes(): ByteArray {
-        if (!mBytes.isPresent) {
-            mBytes = Optional.Companion.of<ByteArray>(toString().toByteArray(General.CHARSET_UTF8))
-        }
+	@Synchronized
+	fun toBytes(): ByteArray {
+		if (!mBytes.isPresent) {
+			mBytes = Optional.Companion.of<ByteArray>(toString().toByteArray(General.CHARSET_UTF8))
+		}
 
-        return mBytes.get()
-    }
+		return mBytes.get()
+	}
 
-    @Synchronized
-    fun toJson(): Optional<JsonValue> {
-        if (!mJson.isPresent && !mAttemptedParse) {
-            mAttemptedParse = true
+	@Synchronized
+	fun toJson(): Optional<JsonValue> {
+		if (!mJson.isPresent && !mAttemptedParse) {
+			mAttemptedParse = true
 
-            try {
-                mJson = Optional.Companion.of<JsonValue>(
-                    JsonValue.Companion.parse(
-                        ByteArrayInputStream(toBytes())
-                    )
-                )
-            } catch (e: IOException) {
-                // Ignore this
-            }
-        }
+			try {
+				mJson = Optional.Companion.of<JsonValue>(
+					JsonValue.Companion.parse(
+						ByteArrayInputStream(toBytes()),
+					),
+				)
+			} catch (e: IOException) {
+				// Ignore this
+			}
+		}
 
-        return mJson
-    }
+		return mJson
+	}
 
-    companion object {
-        fun from(
-            `is`: InputStream
-        ): Optional<FailedRequestBody> {
-            try {
-                return Optional.Companion.of<FailedRequestBody>(
-                    FailedRequestBody(
-                        readWholeStream(
-                            `is`
-                        )
-                    )
-                )
-            } catch (e: IOException) {
-                return Optional.Companion.empty<FailedRequestBody>()
-            }
-        }
+	companion object {
+		fun from(
+			`is`: InputStream,
+		): Optional<FailedRequestBody> {
+			try {
+				return Optional.Companion.of<FailedRequestBody>(
+					FailedRequestBody(
+						readWholeStream(
+							`is`,
+						),
+					),
+				)
+			} catch (e: IOException) {
+				return Optional.Companion.empty<FailedRequestBody>()
+			}
+		}
 
-        fun from(
-            `is`: GenericFactory<SeekableInputStream, IOException>
-        ): Optional<FailedRequestBody> {
-            try {
-                return from(`is`.create())
-            } catch (e: IOException) {
-                return Optional.Companion.empty<FailedRequestBody>()
-            }
-        }
-    }
+		fun from(
+			`is`: GenericFactory<SeekableInputStream, IOException>,
+		): Optional<FailedRequestBody> {
+			try {
+				return from(`is`.create())
+			} catch (e: IOException) {
+				return Optional.Companion.empty<FailedRequestBody>()
+			}
+		}
+	}
 }

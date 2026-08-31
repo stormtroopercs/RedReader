@@ -40,25 +40,25 @@ import javax.inject.Inject
 @Config(sdk = [30], application = HiltTestApplication::class)
 class HiltIntegrationTest {
 
-    @get:Rule(order = 0)
-    var hiltRule = HiltAndroidRule(this)
+	@get:Rule(order = 0)
+	var hiltRule = HiltAndroidRule(this)
 
-    @Inject
-    @ApplicationContext
-    lateinit var context: Context
+	@Inject
+	@ApplicationContext
+	lateinit var context: Context
 
-    @Before
-    fun setUp() {
-        hiltRule.inject()
-    }
+	@Before
+	fun setUp() {
+		hiltRule.inject()
+	}
 
-    @Test
-    fun applicationContextIsProvided() {
-        assertNotNull("Application context should be provided by Hilt", context)
-        assertTrue("Context should be application context", context.packageName.isNotEmpty())
-    }
+	@Test
+	fun applicationContextIsProvided() {
+		assertNotNull("Application context should be provided by Hilt", context)
+		assertTrue("Context should be application context", context.packageName.isNotEmpty())
+	}
 
-    // Note: Additional injection tests can be added for other Hilt-provided dependencies
-    // such as SharedPreferences, WorkManager, OkHttpClient, etc.
-    // These require proper setup with Robolectric and Hilt test rules.
+	// Note: Additional injection tests can be added for other Hilt-provided dependencies
+	// such as SharedPreferences, WorkManager, OkHttpClient, etc.
+	// These require proper setup with Robolectric and Hilt test rules.
 }

@@ -15,62 +15,62 @@ import org.junit.Test
  */
 class NormalizeListingPathTest {
 
-    // --- community names: every form must collapse to the bare name ------
+	// --- community names: every form must collapse to the bare name ------
 
-    @Test
-    fun bareNamePassesThrough() {
-        assertEquals("palworld", "Palworld".normalizeListingPath())
-    }
+	@Test
+	fun bareNamePassesThrough() {
+		assertEquals("palworld", "Palworld".normalizeListingPath())
+	}
 
-    @Test
-    fun rPrefixedNameIsStripped() {
-        assertEquals("palworld", "r/Palworld".normalizeListingPath())
-    }
+	@Test
+	fun rPrefixedNameIsStripped() {
+		assertEquals("palworld", "r/Palworld".normalizeListingPath())
+	}
 
-    @Test
-    fun slashRPrefixedNameIsStripped() {
-        assertEquals("palworld", "/r/Palworld".normalizeListingPath())
-    }
+	@Test
+	fun slashRPrefixedNameIsStripped() {
+		assertEquals("palworld", "/r/Palworld".normalizeListingPath())
+	}
 
-    @Test
-    fun doubledRPrefixIsStripped() {
-        // The exact shape that reached the wire in issue #21.
-        assertEquals("palworld", "r/r/Palworld".normalizeListingPath())
-    }
+	@Test
+	fun doubledRPrefixIsStripped() {
+		// The exact shape that reached the wire in issue #21.
+		assertEquals("palworld", "r/r/Palworld".normalizeListingPath())
+	}
 
-    @Test
-    fun surroundingWhitespaceIsTrimmed() {
-        assertEquals("palworld", "  r/Palworld  ".normalizeListingPath())
-    }
+	@Test
+	fun surroundingWhitespaceIsTrimmed() {
+		assertEquals("palworld", "  r/Palworld  ".normalizeListingPath())
+	}
 
-    // --- other path shapes must pass through untouched -------------------
+	// --- other path shapes must pass through untouched -------------------
 
-    @Test
-    fun userListingPathIsUnchanged() {
-        // Usernames are case-sensitive — the community lowercasing must not
-        // leak into `u/…` paths.
-        assertEquals("u/SpecialUser/submitted", "u/SpecialUser/submitted".normalizeListingPath())
-        assertEquals("u/SpecialUser/comments", "u/SpecialUser/comments".normalizeListingPath())
-        assertEquals("me/submitted", "me/submitted".normalizeListingPath())
-    }
+	@Test
+	fun userListingPathIsUnchanged() {
+		// Usernames are case-sensitive — the community lowercasing must not
+		// leak into `u/…` paths.
+		assertEquals("u/SpecialUser/submitted", "u/SpecialUser/submitted".normalizeListingPath())
+		assertEquals("u/SpecialUser/comments", "u/SpecialUser/comments".normalizeListingPath())
+		assertEquals("me/submitted", "me/submitted".normalizeListingPath())
+	}
 
-    @Test
-    fun multiredditPathIsUnchanged() {
-        assertEquals("m/mylist", "m/mylist".normalizeListingPath())
-        assertEquals("u/SpecialUser/m/mylist", "u/SpecialUser/m/mylist".normalizeListingPath())
-    }
+	@Test
+	fun multiredditPathIsUnchanged() {
+		assertEquals("m/mylist", "m/mylist".normalizeListingPath())
+		assertEquals("u/SpecialUser/m/mylist", "u/SpecialUser/m/mylist".normalizeListingPath())
+	}
 
-    @Test
-    fun searchPathIsUnchanged() {
-        assertEquals("s/palworld", "s/palworld".normalizeListingPath())
-    }
+	@Test
+	fun searchPathIsUnchanged() {
+		assertEquals("s/palworld", "s/palworld".normalizeListingPath())
+	}
 
-    @Test
-    fun defaultFeedIdsAreUnchanged() {
-        assertEquals("frontpage", "frontpage".normalizeListingPath())
-        assertEquals("popular", "popular".normalizeListingPath())
-        assertEquals("all", "all".normalizeListingPath())
-        assertEquals("", "".normalizeListingPath())
-        assertEquals("", "   ".normalizeListingPath())
-    }
+	@Test
+	fun defaultFeedIdsAreUnchanged() {
+		assertEquals("frontpage", "frontpage".normalizeListingPath())
+		assertEquals("popular", "popular".normalizeListingPath())
+		assertEquals("all", "all".normalizeListingPath())
+		assertEquals("", "".normalizeListingPath())
+		assertEquals("", "   ".normalizeListingPath())
+	}
 }

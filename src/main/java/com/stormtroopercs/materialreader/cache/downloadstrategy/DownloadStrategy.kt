@@ -21,9 +21,9 @@ import com.stormtroopercs.materialreader.cache.CacheEntry
 
 @Immutable
 interface DownloadStrategy {
-    fun shouldDownloadWithoutCheckingCache(): Boolean
+	fun shouldDownloadWithoutCheckingCache(): Boolean
 
-    fun shouldDownloadIfCacheEntryFound(entry : CacheEntry): Boolean
+	fun shouldDownloadIfCacheEntryFound(entry: CacheEntry): Boolean
 
-    fun shouldDownloadIfNotCached(): Boolean
+	fun shouldDownloadIfNotCached(): Boolean
 }

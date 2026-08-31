@@ -16,9 +16,9 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.announcements
 
+import com.stormtroopercs.materialreader.receivers.announcements.SignatureHandler
 import org.junit.Assert
 import org.junit.Test
-import com.stormtroopercs.materialreader.receivers.announcements.SignatureHandler
 import java.nio.charset.StandardCharsets
 import java.security.InvalidAlgorithmParameterException
 import java.security.KeyPair
@@ -29,97 +29,98 @@ import java.security.spec.ECGenParameterSpec
 
 class SignatureHandlerTests {
 
-    companion object {
+	companion object {
 
-        @JvmStatic
-        @Throws(NoSuchAlgorithmException::class, InvalidAlgorithmParameterException::class)
-        fun generateKeyPair(): KeyPair {
+		@JvmStatic
+		@Throws(NoSuchAlgorithmException::class, InvalidAlgorithmParameterException::class)
+		fun generateKeyPair(): KeyPair {
+			val keyGen = KeyPairGenerator.getInstance("EC")
 
-            val keyGen = KeyPairGenerator.getInstance("EC")
+			keyGen.initialize(ECGenParameterSpec("secp256r1"), SecureRandom())
 
-            keyGen.initialize(ECGenParameterSpec("secp256r1"), SecureRandom())
+			return keyGen.generateKeyPair()
+		}
+	}
 
-            return keyGen.generateKeyPair()
-        }
-    }
+	@Test
+	@Throws(Exception::class)
+	fun signTest1() {
+		val keyPair = generateKeyPair()
 
-    @Test
-    @Throws(Exception::class)
-    fun signTest1() {
+		val msg = "Hello World".toByteArray(StandardCharsets.UTF_8)
 
-        val keyPair = generateKeyPair()
+		val payload = SignatureHandler.generateSignedPayload(keyPair.private, msg)
 
-        val msg = "Hello World".toByteArray(StandardCharsets.UTF_8)
+		Assert.assertArrayEquals(
+			msg,
+			SignatureHandler.readAndVerifySignedPayload(keyPair.public, payload),
+		)
+	}
 
-        val payload = SignatureHandler.generateSignedPayload(keyPair.private, msg)
+	@Test
+	@Throws(Exception::class)
+	fun signTest2() {
+		val keyPair = generateKeyPair()
 
-        Assert.assertArrayEquals(
-            msg,
-            SignatureHandler.readAndVerifySignedPayload(keyPair.public, payload)
-        )
-    }
+		val msg = "Hello World".toByteArray(StandardCharsets.UTF_8)
 
-    @Test
-    @Throws(Exception::class)
-    fun signTest2() {
+		val payload = SignatureHandler.generateSignedPayload(keyPair.private, msg)
 
-        val keyPair = generateKeyPair()
+		// The message starts at payload[4]
+		Assert.assertArrayEquals(msg, payload.copyOfRange(4, 4 + msg.size))
 
-        val msg = "Hello World".toByteArray(StandardCharsets.UTF_8)
+		// Corrupt the message
+		payload[6] = (payload[6] + 1).toByte()
 
-        val payload = SignatureHandler.generateSignedPayload(keyPair.private, msg)
+		Assert.assertThrows(
+			SignatureHandler.SignatureInvalidException::class.java,
+			{ SignatureHandler.readAndVerifySignedPayload(keyPair.public, payload) },
+		)
+	}
 
-        // The message starts at payload[4]
-        Assert.assertArrayEquals(msg, payload.copyOfRange(4, 4 + msg.size))
+	@Test
+	@Throws(Exception::class)
+	fun signTest3() {
+		val keyPair = generateKeyPair()
+		val keyPair2 = generateKeyPair()
 
-        // Corrupt the message
-        payload[6] = (payload[6] + 1).toByte()
+		val msg = "Hello World".toByteArray(StandardCharsets.UTF_8)
 
-        Assert.assertThrows(
-            SignatureHandler.SignatureInvalidException::class.java,
-            { SignatureHandler.readAndVerifySignedPayload(keyPair.public, payload) }
-        )
-    }
+		val payload = SignatureHandler.generateSignedPayload(keyPair.private, msg)
 
-    @Test
-    @Throws(Exception::class)
-    fun signTest3() {
+		Assert.assertThrows(
+			SignatureHandler.SignatureInvalidException::class.java,
+			{ SignatureHandler.readAndVerifySignedPayload(keyPair2.public, payload) },
+		)
+	}
 
-        val keyPair = generateKeyPair()
-        val keyPair2 = generateKeyPair()
+	@Test
+	@Throws(Exception::class)
+	fun keyTest() {
+		val keyPair = generateKeyPair()
 
-        val msg = "Hello World".toByteArray(StandardCharsets.UTF_8)
+		val pubKeyStr = SignatureHandler.keyToString(keyPair.public)
+		val privKeyStr = SignatureHandler.keyToString(keyPair.private)
 
-        val payload = SignatureHandler.generateSignedPayload(keyPair.private, msg)
+		val msg = "Testing 123".toByteArray(StandardCharsets.UTF_8)
 
-        Assert.assertThrows(
-            SignatureHandler.SignatureInvalidException::class.java,
-            { SignatureHandler.readAndVerifySignedPayload(keyPair2.public, payload) }
-        )
-    }
+		Assert.assertArrayEquals(
+			msg,
+			SignatureHandler.readAndVerifySignedPayload(
+				SignatureHandler.stringToPublicKey(pubKeyStr),
+				SignatureHandler.generateSignedPayload(keyPair.private, msg),
+			),
+		)
 
-    @Test
-    @Throws(Exception::class)
-    fun keyTest() {
-
-        val keyPair = generateKeyPair()
-
-        val pubKeyStr = SignatureHandler.keyToString(keyPair.public)
-        val privKeyStr = SignatureHandler.keyToString(keyPair.private)
-
-        val msg = "Testing 123".toByteArray(StandardCharsets.UTF_8)
-
-        Assert.assertArrayEquals(msg, SignatureHandler.readAndVerifySignedPayload(
-            SignatureHandler.stringToPublicKey(pubKeyStr),
-            SignatureHandler.generateSignedPayload(keyPair.private, msg)
-        ))
-
-        Assert.assertArrayEquals(msg, SignatureHandler.readAndVerifySignedPayload(
-            keyPair.public,
-            SignatureHandler.generateSignedPayload(
-                SignatureHandler.stringToPrivateKey(privKeyStr),
-                msg
-            )
-        ))
-    }
+		Assert.assertArrayEquals(
+			msg,
+			SignatureHandler.readAndVerifySignedPayload(
+				keyPair.public,
+				SignatureHandler.generateSignedPayload(
+					SignatureHandler.stringToPrivateKey(privKeyStr),
+					msg,
+				),
+			),
+		)
+	}
 }

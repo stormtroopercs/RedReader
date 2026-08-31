@@ -20,28 +20,26 @@ import java.io.IOException
 import java.io.InputStream
 
 abstract class SeekableInputStream : InputStream() {
-    private var mMark = 0
+	private var mMark = 0
 
-    abstract val position: Long
+	abstract val position: Long
 
-    @Throws(IOException::class)
-    abstract fun seek(position: Long)
+	@Throws(IOException::class)
+	abstract fun seek(position: Long)
 
-    override fun mark(readlimit: Int) {
-        mMark = this.position.toInt()
-    }
+	override fun mark(readlimit: Int) {
+		mMark = this.position.toInt()
+	}
 
-    @Throws(IOException::class)
-    override fun reset() {
-        seek(mMark.toLong())
-    }
+	@Throws(IOException::class)
+	override fun reset() {
+		seek(mMark.toLong())
+	}
 
-    override fun markSupported(): Boolean {
-        return true
-    }
+	override fun markSupported(): Boolean = true
 
-    @Throws(IOException::class)
-    abstract fun readRemainingAsBytes(
-        callback: ByteArrayCallback
-    )
+	@Throws(IOException::class)
+	abstract fun readRemainingAsBytes(
+		callback: ByteArrayCallback,
+	)
 }

@@ -24,7 +24,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,24 +33,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,10 +60,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,11 +76,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.stormtroopercs.materialreader.common.LinkHandler
+import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.compose.net.NetRequestStatus
 import com.stormtroopercs.materialreader.compose.net.fetchImage
 import com.stormtroopercs.materialreader.compose.ui.RRErrorView
-import com.stormtroopercs.materialreader.common.LinkHandler
-import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.fragments.ReportDialog
 import com.stormtroopercs.materialreader.reddit.api.SubredditSubscriptionState
 import com.stormtroopercs.materialreader.settings.types.PostViewMode
@@ -93,7 +90,12 @@ import com.stormtroopercs.materialreader.settings.types.PostViewMode
  * feed) / About / Favorite (join/leave) / Mods.
  */
 enum class CommunityTab {
-	ACTIVE, ABOUT, FAVORITE, MODS;
+	ACTIVE,
+	ABOUT,
+	FAVORITE,
+	MODS,
+	;
+
 	val label: String
 		get() = when (this) {
 			CommunityTab.ACTIVE -> "Active"
@@ -665,46 +667,46 @@ private fun CommunityModsTab(
 				}
 			} else {
 				content.moderators.forEach { mod ->
-				Row(
-					modifier = Modifier
-						.fillMaxWidth()
-						.clickable { onModClick(mod.name) }
-						.padding(horizontal = 16.dp, vertical = 10.dp),
-					verticalAlignment = Alignment.CenterVertically,
-				) {
-					Box(
+					Row(
 						modifier = Modifier
-							.size(40.dp)
-							.clip(CircleShape)
-							.background(MaterialTheme.colorScheme.surfaceVariant),
-						contentAlignment = Alignment.Center,
+							.fillMaxWidth()
+							.clickable { onModClick(mod.name) }
+							.padding(horizontal = 16.dp, vertical = 10.dp),
+						verticalAlignment = Alignment.CenterVertically,
 					) {
-						if (mod.iconUrl != null) {
-							val data by fetchImage(UriString(mod.iconUrl), scaleToMaxAxis = 96)
-							when (val it = data) {
-								is NetRequestStatus.Success -> Image(
-									bitmap = it.result.data,
+						Box(
+							modifier = Modifier
+								.size(40.dp)
+								.clip(CircleShape)
+								.background(MaterialTheme.colorScheme.surfaceVariant),
+							contentAlignment = Alignment.Center,
+						) {
+							if (mod.iconUrl != null) {
+								val data by fetchImage(UriString(mod.iconUrl), scaleToMaxAxis = 96)
+								when (val it = data) {
+									is NetRequestStatus.Success -> Image(
+										bitmap = it.result.data,
+										contentDescription = null,
+										contentScale = ContentScale.Crop,
+										modifier = Modifier.fillMaxSize().clip(CircleShape),
+									)
+									else -> Unit
+								}
+							} else {
+								Icon(
+									imageVector = Icons.Filled.Person,
 									contentDescription = null,
-									contentScale = ContentScale.Crop,
-									modifier = Modifier.fillMaxSize().clip(CircleShape),
+									modifier = Modifier.size(20.dp),
 								)
-								else -> Unit
 							}
-						} else {
-							Icon(
-								imageVector = Icons.Filled.Person,
-								contentDescription = null,
-								modifier = Modifier.size(20.dp),
-							)
 						}
+						Spacer(Modifier.width(12.dp))
+						Text(
+							text = mod.name,
+							style = MaterialTheme.typography.bodyLarge,
+						)
 					}
-					Spacer(Modifier.width(12.dp))
-					Text(
-						text = mod.name,
-						style = MaterialTheme.typography.bodyLarge,
-					)
 				}
-			}
 			}
 		}
 		is CommunityViewModel.ModsContent.Error -> {

@@ -17,10 +17,8 @@
 package com.stormtroopercs.materialreader.common
 
 class MutableFloatRectangle2D {
-    val mTopLeft: MutableFloatPoint2D = MutableFloatPoint2D()
-    val mBottomRight: MutableFloatPoint2D = MutableFloatPoint2D()
+	val mTopLeft: MutableFloatPoint2D = MutableFloatPoint2D()
+	val mBottomRight: MutableFloatPoint2D = MutableFloatPoint2D()
 
-    fun intersect(other: MutableFloatRectangle2D): Boolean {
-        return !(mTopLeft.x > other.mBottomRight.x || mTopLeft.y > other.mBottomRight.y || other.mTopLeft.x > mBottomRight.x || other.mTopLeft.y > mBottomRight.y)
-    }
+	fun intersect(other: MutableFloatRectangle2D): Boolean = !(mTopLeft.x > other.mBottomRight.x || mTopLeft.y > other.mBottomRight.y || other.mTopLeft.x > mBottomRight.x || other.mTopLeft.y > mBottomRight.y)
 }

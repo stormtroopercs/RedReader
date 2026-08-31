@@ -49,7 +49,7 @@ import com.stormtroopercs.materialreader.image.ImageUrlInfo
 fun NetImage(
 	modifier: Modifier,
 	image: ImageUrlInfo,
-	cropToAspect: Float?=null,
+	cropToAspect: Float? = null,
 	showVideoPlayOverlay: Boolean = false,
 	maxCanvasDimension: Int = 2048,
 ) {
@@ -65,36 +65,35 @@ fun NetImage(
 
 	Box(
 		modifier = modifier
-            .invokeIfNotNull(cropToAspect, Modifier::aspectRatio)
-            .invokeIf(data is NetRequestStatus.Success) {
-                background(theme.postCard.previewImageBackgroundColor)
-            },
+			.invokeIfNotNull(cropToAspect, Modifier::aspectRatio)
+			.invokeIf(data is NetRequestStatus.Success) {
+				background(theme.postCard.previewImageBackgroundColor)
+			},
 		contentAlignment = Alignment.Center,
 	) {
-
-		if (expectedImageAspect != null
-			&& data !is NetRequestStatus.Success
-			&& data !is NetRequestStatus.Failed
+		if (expectedImageAspect != null &&
+			data !is NetRequestStatus.Success &&
+			data !is NetRequestStatus.Failed
 		) {
 			// Pad the view to the desired aspect ratio
 			Box(
-                Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(expectedImageAspect)
+				Modifier
+					.fillMaxWidth()
+					.aspectRatio(expectedImageAspect),
 			)
 		}
 
 		when (val it = data) {
 			NetRequestStatus.Connecting -> {
 				CircularProgressIndicator(
-					Modifier.padding(24.dp)
+					Modifier.padding(24.dp),
 				)
 			}
 
 			is NetRequestStatus.Downloading -> {
 				CircularProgressIndicator(
 					modifier = Modifier.padding(24.dp),
-					progress = { it.fractionComplete }
+					progress = { it.fractionComplete },
 				)
 			}
 
@@ -113,9 +112,9 @@ fun NetImage(
 							0.0
 						}
 
-                        Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(imageAspect.toFloat(), matchHeightConstraintsFirst = true)
+						Modifier
+							.fillMaxWidth()
+							.aspectRatio(imageAspect.toFloat(), matchHeightConstraintsFirst = true)
 					} else {
 						Modifier.fillMaxSize()
 					},
@@ -125,26 +124,26 @@ fun NetImage(
 						ContentScale.Fit
 					} else {
 						ContentScale.Crop
-					}
+					},
 				)
 
 				if (showVideoPlayOverlay) {
 					Box(
-                        Modifier
-                            .background(Color(0f, 0f, 0f, 0.2f))
-                            .matchParentSize(),
-						contentAlignment = Alignment.Center
+						Modifier
+							.background(Color(0f, 0f, 0f, 0.2f))
+							.matchParentSize(),
+						contentAlignment = Alignment.Center,
 					) {
 						Box(
-                            Modifier
-                                .clip(CircleShape)
-                                .background(Color(0f, 0f, 0f, 0.7f))
-                                .padding(12.dp)
+							Modifier
+								.clip(CircleShape)
+								.background(Color(0f, 0f, 0f, 0.7f))
+								.padding(12.dp),
 						) {
 							Icon(
 								painter = painterResource(R.drawable.icon_play),
 								contentDescription = null,
-								tint = Color.White
+								tint = Color.White,
 							)
 						}
 					}

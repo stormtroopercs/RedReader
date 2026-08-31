@@ -19,13 +19,11 @@ package com.stormtroopercs.materialreader.common
 
 data class Priority @JvmOverloads constructor(
 	@JvmField val primary: Int,
-	@JvmField val secondary: Int = 0
+	@JvmField val secondary: Int = 0,
 ) {
-    fun isHigherPriorityThan(other: Priority): Boolean {
-        return if (primary != other.primary) {
-            primary < other.primary
-        } else {
-            secondary < other.secondary
-        }
-    }
+	fun isHigherPriorityThan(other: Priority): Boolean = if (primary != other.primary) {
+		primary < other.primary
+	} else {
+		secondary < other.secondary
+	}
 }

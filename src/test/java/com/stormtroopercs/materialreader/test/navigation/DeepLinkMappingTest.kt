@@ -17,9 +17,6 @@
 
 package com.stormtroopercs.materialreader.test.navigation
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
 import com.stormtroopercs.materialreader.activities.MainActivityCompose
 import com.stormtroopercs.materialreader.navigation.Accounts
 import com.stormtroopercs.materialreader.navigation.Album
@@ -43,6 +40,9 @@ import com.stormtroopercs.materialreader.navigation.SubredditSearch
 import com.stormtroopercs.materialreader.navigation.UserProfile
 import com.stormtroopercs.materialreader.navigation.WebViewRoute
 import com.stormtroopercs.materialreader.navigation.deepLinkDestination
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Test
 
 /**
  * Tests for [deepLinkDestination] — the pure cold-start deep-link route
@@ -52,227 +52,227 @@ import com.stormtroopercs.materialreader.navigation.deepLinkDestination
  */
 class DeepLinkMappingTest {
 
-    private val noExtras = DeepLinkExtras()
+	private val noExtras = DeepLinkExtras()
 
-    // --- Main-scoped children --------------------------------------------
+	// --- Main-scoped children --------------------------------------------
 
-    @Test
-    fun inbox_mapsToMain_plusInbox() {
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_INBOX, noExtras)
-        assertEquals(DeepLinkDestination.Child(Main, Inbox), dest)
-    }
+	@Test
+	fun inbox_mapsToMain_plusInbox() {
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_INBOX, noExtras)
+		assertEquals(DeepLinkDestination.Child(Main, Inbox), dest)
+	}
 
-    @Test
-    fun search_mapsToMain_plusSubredditSearch() {
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_SEARCH, noExtras)
-        assertEquals(DeepLinkDestination.Child(Main, SubredditSearch), dest)
-    }
+	@Test
+	fun search_mapsToMain_plusSubredditSearch() {
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_SEARCH, noExtras)
+		assertEquals(DeepLinkDestination.Child(Main, SubredditSearch), dest)
+	}
 
-    @Test
-    fun accounts_mapsToMain_plusAccounts() {
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_ACCOUNTS, noExtras)
-        assertEquals(DeepLinkDestination.Child(Main, Accounts), dest)
-    }
+	@Test
+	fun accounts_mapsToMain_plusAccounts() {
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_ACCOUNTS, noExtras)
+		assertEquals(DeepLinkDestination.Child(Main, Accounts), dest)
+	}
 
-    @Test
-    fun album_mapsToMain_plusAlbumWithUrl() {
-        val extras = DeepLinkExtras(albumUrl = "https://i.imgur.com/album/abc")
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_ALBUM, extras)
-        assertEquals(DeepLinkDestination.Child(Main, Album("https://i.imgur.com/album/abc")), dest)
-    }
+	@Test
+	fun album_mapsToMain_plusAlbumWithUrl() {
+		val extras = DeepLinkExtras(albumUrl = "https://i.imgur.com/album/abc")
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_ALBUM, extras)
+		assertEquals(DeepLinkDestination.Child(Main, Album("https://i.imgur.com/album/abc")), dest)
+	}
 
-    @Test
-    fun album_withMissingUrl_returnsNull() {
-        assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_ALBUM, noExtras))
-    }
+	@Test
+	fun album_withMissingUrl_returnsNull() {
+		assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_ALBUM, noExtras))
+	}
 
-    @Test
-    fun image_mapsToMain_plusImageWithAllFields() {
-        val extras = DeepLinkExtras(
-            imageUrl = "https://i.imgur.com/x.png",
-            imageIsGif = true,
-            imageIsVideo = false,
-            imageAlbumUrl = "https://i.imgur.com/album/x",
-            imageAlbumIndex = 3
-        )
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_IMAGE, extras)
-        assertEquals(
-            DeepLinkDestination.Child(
-                Main,
-                Image("https://i.imgur.com/x.png", true, false, "https://i.imgur.com/album/x", 3)
-            ),
-            dest
-        )
-    }
+	@Test
+	fun image_mapsToMain_plusImageWithAllFields() {
+		val extras = DeepLinkExtras(
+			imageUrl = "https://i.imgur.com/x.png",
+			imageIsGif = true,
+			imageIsVideo = false,
+			imageAlbumUrl = "https://i.imgur.com/album/x",
+			imageAlbumIndex = 3,
+		)
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_IMAGE, extras)
+		assertEquals(
+			DeepLinkDestination.Child(
+				Main,
+				Image("https://i.imgur.com/x.png", true, false, "https://i.imgur.com/album/x", 3),
+			),
+			dest,
+		)
+	}
 
-    @Test
-    fun image_withMissingUrl_returnsNull() {
-        assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_IMAGE, noExtras))
-    }
+	@Test
+	fun image_withMissingUrl_returnsNull() {
+		assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_IMAGE, noExtras))
+	}
 
-    @Test
-    fun commentReply_mapsToMain_plusCommentReply() {
-        val extras = DeepLinkExtras(commentReplyIdAndType = "t1_abc123")
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_REPLY, extras)
-        assertEquals(DeepLinkDestination.Child(Main, CommentReply("t1_abc123")), dest)
-    }
+	@Test
+	fun commentReply_mapsToMain_plusCommentReply() {
+		val extras = DeepLinkExtras(commentReplyIdAndType = "t1_abc123")
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_REPLY, extras)
+		assertEquals(DeepLinkDestination.Child(Main, CommentReply("t1_abc123")), dest)
+	}
 
-    @Test
-    fun commentReply_withMissingId_returnsNull() {
-        assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_REPLY, noExtras))
-    }
+	@Test
+	fun commentReply_withMissingId_returnsNull() {
+		assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_REPLY, noExtras))
+	}
 
-    @Test
-    fun postListing_mapsToMain_plusPostList() {
-        val extras = DeepLinkExtras(postListingSubreddit = "test", postListingSearchQuery = "hi")
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_POST_LISTING, extras)
-        assertEquals(DeepLinkDestination.Child(Main, PostList("test", "hi")), dest)
-    }
+	@Test
+	fun postListing_mapsToMain_plusPostList() {
+		val extras = DeepLinkExtras(postListingSubreddit = "test", postListingSearchQuery = "hi")
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_POST_LISTING, extras)
+		assertEquals(DeepLinkDestination.Child(Main, PostList("test", "hi")), dest)
+	}
 
-    @Test
-    fun postListing_withoutQuery_stillMaps() {
-        val extras = DeepLinkExtras(postListingSubreddit = "test")
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_POST_LISTING, extras)
-        assertEquals(DeepLinkDestination.Child(Main, PostList("test", null)), dest)
-    }
+	@Test
+	fun postListing_withoutQuery_stillMaps() {
+		val extras = DeepLinkExtras(postListingSubreddit = "test")
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_POST_LISTING, extras)
+		assertEquals(DeepLinkDestination.Child(Main, PostList("test", null)), dest)
+	}
 
-    @Test
-    fun postListing_withMissingSubreddit_returnsNull() {
-        assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_POST_LISTING, noExtras))
-    }
+	@Test
+	fun postListing_withMissingSubreddit_returnsNull() {
+		assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_POST_LISTING, noExtras))
+	}
 
-    @Test
-    fun commentListing_mapsToMain_plusCommentList() {
-        val extras = DeepLinkExtras(commentListingPostId = "t3_abc123")
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_LISTING, extras)
-        assertEquals(DeepLinkDestination.Child(Main, CommentList("t3_abc123")), dest)
-    }
+	@Test
+	fun commentListing_mapsToMain_plusCommentList() {
+		val extras = DeepLinkExtras(commentListingPostId = "t3_abc123")
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_LISTING, extras)
+		assertEquals(DeepLinkDestination.Child(Main, CommentList("t3_abc123")), dest)
+	}
 
-    @Test
-    fun commentListing_withMissingPostId_returnsNull() {
-        assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_LISTING, noExtras))
-    }
+	@Test
+	fun commentListing_withMissingPostId_returnsNull() {
+		assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_LISTING, noExtras))
+	}
 
-    @Test
-    fun userProfile_mapsToMain_plusUserProfile() {
-        val extras = DeepLinkExtras(userProfileUsername = "someuser")
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_USER_PROFILE, extras)
-        assertEquals(DeepLinkDestination.Child(Main, UserProfile("someuser")), dest)
-    }
+	@Test
+	fun userProfile_mapsToMain_plusUserProfile() {
+		val extras = DeepLinkExtras(userProfileUsername = "someuser")
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_USER_PROFILE, extras)
+		assertEquals(DeepLinkDestination.Child(Main, UserProfile("someuser")), dest)
+	}
 
-    @Test
-    fun userProfile_withMissingUsername_returnsNull() {
-        assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_USER_PROFILE, noExtras))
-    }
+	@Test
+	fun userProfile_withMissingUsername_returnsNull() {
+		assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_USER_PROFILE, noExtras))
+	}
 
-    @Test
-    fun postSubmit_mapsToMain_plusPostSubmit() {
-        val extras = DeepLinkExtras(postSubmitSubreddit = "test", postSubmitShareUrl = "https://example.com")
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_POST_SUBMIT, extras)
-        assertEquals(DeepLinkDestination.Child(Main, PostSubmit("test", "https://example.com")), dest)
-    }
+	@Test
+	fun postSubmit_mapsToMain_plusPostSubmit() {
+		val extras = DeepLinkExtras(postSubmitSubreddit = "test", postSubmitShareUrl = "https://example.com")
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_POST_SUBMIT, extras)
+		assertEquals(DeepLinkDestination.Child(Main, PostSubmit("test", "https://example.com")), dest)
+	}
 
-    @Test
-    fun postSubmit_withMissingSubreddit_returnsNull() {
-        assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_POST_SUBMIT, noExtras))
-    }
+	@Test
+	fun postSubmit_withMissingSubreddit_returnsNull() {
+		assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_POST_SUBMIT, noExtras))
+	}
 
-    @Test
-    fun commentEdit_mapsToMain_plusCommentEdit() {
-        val extras = DeepLinkExtras(
-            commentEditIdAndType = "t1_abc",
-            commentEditText = "hello world",
-            commentEditSelfPost = true
-        )
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_EDIT, extras)
-        assertEquals(DeepLinkDestination.Child(Main, CommentEdit("t1_abc", "hello world", true)), dest)
-    }
+	@Test
+	fun commentEdit_mapsToMain_plusCommentEdit() {
+		val extras = DeepLinkExtras(
+			commentEditIdAndType = "t1_abc",
+			commentEditText = "hello world",
+			commentEditSelfPost = true,
+		)
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_EDIT, extras)
+		assertEquals(DeepLinkDestination.Child(Main, CommentEdit("t1_abc", "hello world", true)), dest)
+	}
 
-    @Test
-    fun commentEdit_withMissingId_returnsNull() {
-        assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_EDIT, noExtras))
-    }
+	@Test
+	fun commentEdit_withMissingId_returnsNull() {
+		assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_COMMENT_EDIT, noExtras))
+	}
 
-    @Test
-    fun pmSend_mapsToMain_plusPMSend() {
-        val extras = DeepLinkExtras(pmSendRecipient = "someuser", pmSendSubject = "Subj", pmSendText = "Body")
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_PM_SEND, extras)
-        assertEquals(DeepLinkDestination.Child(Main, PMSend("someuser", "Subj", "Body")), dest)
-    }
+	@Test
+	fun pmSend_mapsToMain_plusPMSend() {
+		val extras = DeepLinkExtras(pmSendRecipient = "someuser", pmSendSubject = "Subj", pmSendText = "Body")
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_PM_SEND, extras)
+		assertEquals(DeepLinkDestination.Child(Main, PMSend("someuser", "Subj", "Body")), dest)
+	}
 
-    @Test
-    fun pmSend_withMissingFields_mapsWithNulls() {
-        // PM send has no required extra — it always maps, even with empty fields.
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_PM_SEND, noExtras)
-        assertEquals(DeepLinkDestination.Child(Main, PMSend(null, null, null)), dest)
-    }
+	@Test
+	fun pmSend_withMissingFields_mapsWithNulls() {
+		// PM send has no required extra — it always maps, even with empty fields.
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_PM_SEND, noExtras)
+		assertEquals(DeepLinkDestination.Child(Main, PMSend(null, null, null)), dest)
+	}
 
-    @Test
-    fun htmlView_mapsToMain_plusHtmlView() {
-        val extras = DeepLinkExtras(htmlViewHtml = "<html>hi</html>", htmlViewTitle = "Title")
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_HTML_VIEW, extras)
-        assertEquals(DeepLinkDestination.Child(Main, HtmlView("<html>hi</html>", "Title")), dest)
-    }
+	@Test
+	fun htmlView_mapsToMain_plusHtmlView() {
+		val extras = DeepLinkExtras(htmlViewHtml = "<html>hi</html>", htmlViewTitle = "Title")
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_HTML_VIEW, extras)
+		assertEquals(DeepLinkDestination.Child(Main, HtmlView("<html>hi</html>", "Title")), dest)
+	}
 
-    @Test
-    fun htmlView_withMissingTitle_defaultsToEmpty() {
-        val extras = DeepLinkExtras(htmlViewHtml = "<html>hi</html>")
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_HTML_VIEW, extras)
-        assertEquals(DeepLinkDestination.Child(Main, HtmlView("<html>hi</html>", "")), dest)
-    }
+	@Test
+	fun htmlView_withMissingTitle_defaultsToEmpty() {
+		val extras = DeepLinkExtras(htmlViewHtml = "<html>hi</html>")
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_HTML_VIEW, extras)
+		assertEquals(DeepLinkDestination.Child(Main, HtmlView("<html>hi</html>", "")), dest)
+	}
 
-    @Test
-    fun htmlView_withMissingHtml_returnsNull() {
-        assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_HTML_VIEW, noExtras))
-    }
+	@Test
+	fun htmlView_withMissingHtml_returnsNull() {
+		assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_HTML_VIEW, noExtras))
+	}
 
-    @Test
-    fun webview_mapsToMain_plusWebViewRoute() {
-        val extras = DeepLinkExtras(webviewUrl = "https://example.com/page")
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_WEBVIEW, extras)
-        assertEquals(DeepLinkDestination.Child(Main, WebViewRoute("https://example.com/page")), dest)
-    }
+	@Test
+	fun webview_mapsToMain_plusWebViewRoute() {
+		val extras = DeepLinkExtras(webviewUrl = "https://example.com/page")
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_WEBVIEW, extras)
+		assertEquals(DeepLinkDestination.Child(Main, WebViewRoute("https://example.com/page")), dest)
+	}
 
-    @Test
-    fun webview_withMissingUrl_returnsNull() {
-        assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_WEBVIEW, noExtras))
-    }
+	@Test
+	fun webview_withMissingUrl_returnsNull() {
+		assertNull(deepLinkDestination(MainActivityCompose.DEEP_LINK_WEBVIEW, noExtras))
+	}
 
-    // --- Settings-scoped children ----------------------------------------
+	// --- Settings-scoped children ----------------------------------------
 
-    @Test
-    fun settings_mapsToSettingsRoot() {
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_SETTINGS, noExtras)
-        assertEquals(DeepLinkDestination.Root(Settings), dest)
-    }
+	@Test
+	fun settings_mapsToSettingsRoot() {
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_SETTINGS, noExtras)
+		assertEquals(DeepLinkDestination.Root(Settings), dest)
+	}
 
-    @Test
-    fun changelog_mapsToSettings_plusChangelog() {
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_CHANGELOG, noExtras)
-        assertEquals(DeepLinkDestination.Child(Settings, Changelog), dest)
-    }
+	@Test
+	fun changelog_mapsToSettings_plusChangelog() {
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_CHANGELOG, noExtras)
+		assertEquals(DeepLinkDestination.Child(Settings, Changelog), dest)
+	}
 
-    @Test
-    fun terms_mapsToSettings_plusRedditTerms() {
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_TERMS, noExtras)
-        assertEquals(DeepLinkDestination.Child(Settings, RedditTerms), dest)
-    }
+	@Test
+	fun terms_mapsToSettings_plusRedditTerms() {
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_TERMS, noExtras)
+		assertEquals(DeepLinkDestination.Child(Settings, RedditTerms), dest)
+	}
 
-    @Test
-    fun bugReport_mapsToSettings_plusBugReport() {
-        val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_BUG_REPORT, noExtras)
-        assertEquals(DeepLinkDestination.Child(Settings, BugReport), dest)
-    }
+	@Test
+	fun bugReport_mapsToSettings_plusBugReport() {
+		val dest = deepLinkDestination(MainActivityCompose.DEEP_LINK_BUG_REPORT, noExtras)
+		assertEquals(DeepLinkDestination.Child(Settings, BugReport), dest)
+	}
 
-    // --- Fallback ---------------------------------------------------------
+	// --- Fallback ---------------------------------------------------------
 
-    @Test
-    fun unknownRoute_returnsNull() {
-        assertNull(deepLinkDestination("nonsense_route", noExtras))
-    }
+	@Test
+	fun unknownRoute_returnsNull() {
+		assertNull(deepLinkDestination("nonsense_route", noExtras))
+	}
 
-    @Test
-    fun emptyRoute_returnsNull() {
-        assertNull(deepLinkDestination("", noExtras))
-    }
+	@Test
+	fun emptyRoute_returnsNull() {
+		assertNull(deepLinkDestination("", noExtras))
+	}
 }

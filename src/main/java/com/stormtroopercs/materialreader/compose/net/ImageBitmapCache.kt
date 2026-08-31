@@ -44,11 +44,9 @@ object ImageBitmapCache {
 
 	fun key(uri: String, scaleToMaxAxis: Int): String = "$uri#scale$scaleToMaxAxis"
 
-	fun get(uri: String, scaleToMaxAxis: Int): ImageBitmap? =
-		cache.get(key(uri, scaleToMaxAxis))
+	fun get(uri: String, scaleToMaxAxis: Int): ImageBitmap? = cache.get(key(uri, scaleToMaxAxis))
 
-	fun put(uri: String, scaleToMaxAxis: Int, bitmap: ImageBitmap) =
-		cache.put(key(uri, scaleToMaxAxis), bitmap)
+	fun put(uri: String, scaleToMaxAxis: Int, bitmap: ImageBitmap) = cache.put(key(uri, scaleToMaxAxis), bitmap)
 
 	fun size(): Int = cache.size()
 

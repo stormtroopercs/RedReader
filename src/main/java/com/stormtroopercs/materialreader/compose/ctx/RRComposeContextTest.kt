@@ -30,7 +30,6 @@ import com.stormtroopercs.materialreader.settings.types.ThemeColorMode
 
 @Composable
 fun RRComposeContextTest(content: @Composable () -> Unit) {
-
 	val prefValues = object : ComposePrefs {
 		override val appearanceTheme: Preference<AppearanceTheme> = testPref(AppearanceTheme.RED)
 		override val themeColorMode: Preference<ThemeColorMode> = testPref(ThemeColorMode.AUTOMATIC)

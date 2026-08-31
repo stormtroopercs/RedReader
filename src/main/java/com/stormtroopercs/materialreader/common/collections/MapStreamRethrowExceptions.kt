@@ -17,23 +17,21 @@
 package com.stormtroopercs.materialreader.common.collections
 
 class MapStreamRethrowExceptions<Input, Output>(
-    private val mInput: Stream<Input>,
-    private val mOperator: Operator<Input, Output>
+	private val mInput: Stream<Input>,
+	private val mOperator: Operator<Input, Output>,
 ) : Stream<Output>() {
-    fun interface Operator<Input, Output> {
-        @Throws(Exception::class)
-        fun operate(value: Input): Output
-    }
+	fun interface Operator<Input, Output> {
+		@Throws(Exception::class)
+		fun operate(value: Input): Output
+	}
 
-    override fun hasNext(): Boolean {
-        return mInput.hasNext()
-    }
+	override fun hasNext(): Boolean = mInput.hasNext()
 
-    override fun take(): Output {
-        try {
-            return mOperator.operate(mInput.take())
-        } catch (e: Exception) {
-            throw RuntimeException(e)
-        }
-    }
+	override fun take(): Output {
+		try {
+			return mOperator.operate(mInput.take())
+		} catch (e: Exception) {
+			throw RuntimeException(e)
+		}
+	}
 }

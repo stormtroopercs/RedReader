@@ -20,15 +20,15 @@ import android.graphics.Rect
 import androidx.appcompat.app.AppCompatActivity
 
 object DisplayUtils {
-    private val sWindowVisibleDisplayFrame = Rect()
+	private val sWindowVisibleDisplayFrame = Rect()
 
-    fun getWindowVisibleDisplayFrame(
-        activity: AppCompatActivity
-    ): Rect {
-        activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(
-            sWindowVisibleDisplayFrame
-        )
+	fun getWindowVisibleDisplayFrame(
+		activity: AppCompatActivity,
+	): Rect {
+		activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(
+			sWindowVisibleDisplayFrame,
+		)
 
-        return sWindowVisibleDisplayFrame
-    }
+		return sWindowVisibleDisplayFrame
+	}
 }

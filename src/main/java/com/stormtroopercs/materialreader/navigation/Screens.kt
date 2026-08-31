@@ -86,17 +86,17 @@ data class CommentReply(val parentThingId: String) : NavKey
  */
 @Serializable
 data class CommentEdit(
-    val idAndType: String,
-    val initialText: String = "",
-    val isSelfPost: Boolean = false
+	val idAndType: String,
+	val initialText: String = "",
+	val isSelfPost: Boolean = false,
 ) : NavKey
 
 /** PM composer (recipient / subject / message; optional `cm:`-URL prefill). */
 @Serializable
 data class PMSend(
-    val recipient: String? = null,
-    val subject: String? = null,
-    val text: String? = null
+	val recipient: String? = null,
+	val subject: String? = null,
+	val text: String? = null,
 ) : NavKey
 
 @Serializable
@@ -131,11 +131,11 @@ data class Album(val url: String) : NavKey
 /** Full-screen image viewer (direct still-image/GIF/video file URLs, or an album). */
 @Serializable
 data class Image(
-    val url: String,
-    val isGif: Boolean = false,
-    val isVideo: Boolean = false,
-    val albumUrl: String? = null,
-    val albumIndex: Int = 0
+	val url: String,
+	val isGif: Boolean = false,
+	val isVideo: Boolean = false,
+	val albumUrl: String? = null,
+	val albumIndex: Int = 0,
 ) : NavKey
 
 /** All top-level routes (displayed in navigation bar/rail/drawer). */

@@ -38,10 +38,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.stormtroopercs.materialreader.R
+import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.compose.net.NetRequestStatus
 import com.stormtroopercs.materialreader.compose.net.fetchImage
 import com.stormtroopercs.materialreader.compose.theme.LocalComposeTheme
-import com.stormtroopercs.materialreader.common.UriString
 
 /**
  * A post's media preview shared by the list feed's [PostCard] and the

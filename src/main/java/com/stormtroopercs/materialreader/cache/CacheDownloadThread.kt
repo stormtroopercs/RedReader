@@ -19,18 +19,18 @@ package com.stormtroopercs.materialreader.cache
 import android.os.Process
 
 internal class CacheDownloadThread(
-    private val singleDownload: CacheDownload,
-    start: Boolean,
-    name: String
+	private val singleDownload: CacheDownload,
+	start: Boolean,
+	name: String,
 ) : Thread(name) {
-    init {
-        if (start) {
-            start()
-        }
-    }
+	init {
+		if (start) {
+			start()
+		}
+	}
 
-    override fun run() {
-        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
-        singleDownload.doDownload()
-    }
+	override fun run() {
+		Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+		singleDownload.doDownload()
+	}
 }

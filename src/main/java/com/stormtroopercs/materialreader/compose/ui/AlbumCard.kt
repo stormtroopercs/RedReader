@@ -89,7 +89,7 @@ fun AlbumCard(
 	Box(
 		modifier = Modifier
 			.fillMaxWidth()
-			.padding(horizontal = horizontalPadding, vertical = 6.dp)
+			.padding(horizontal = horizontalPadding, vertical = 6.dp),
 	) {
 		val description = stringResource(R.string.album_image_default_text, index + 1)
 
@@ -112,7 +112,7 @@ fun AlbumCard(
 				.combinedClickableWithHaptics(
 					onClick = { onClick(index) },
 					onLongClick = { onLongClick(index) },
-				)
+				),
 		) {
 			Column(Modifier.fillMaxWidth()) {
 				if (preview != null) {
@@ -121,9 +121,11 @@ fun AlbumCard(
 							.fillMaxWidth()
 							.heightIn(max = maxImageHeight),
 						image = preview,
-						showVideoPlayOverlay = (image.mediaType == ImageInfo.MediaType.VIDEO
-								|| image.mediaType == ImageInfo.MediaType.GIF
-								|| image.isAnimated == true),
+						showVideoPlayOverlay = (
+							image.mediaType == ImageInfo.MediaType.VIDEO ||
+								image.mediaType == ImageInfo.MediaType.GIF ||
+								image.isAnimated == true
+							),
 					)
 				}
 
@@ -133,7 +135,7 @@ fun AlbumCard(
 
 				if (title != null && caption != null) {
 					Column(
-						modifier = Modifier.padding(14.dp)
+						modifier = Modifier.padding(14.dp),
 					) {
 						theme.postCard.title.StyledText(title)
 						theme.postCard.subtitle.StyledText(caption)
@@ -143,7 +145,7 @@ fun AlbumCard(
 
 					if (text != null) {
 						Column(
-							modifier = Modifier.padding(14.dp)
+							modifier = Modifier.padding(14.dp),
 						) {
 							theme.postCard.caption.StyledText(text)
 						}
@@ -155,7 +157,7 @@ fun AlbumCard(
 						RRLinkButton(
 							title = stringResource(R.string.album_link_button),
 							link = image.outboundUrl,
-							theme = theme.linkButton
+							theme = theme.linkButton,
 						)
 					}
 				}
@@ -167,7 +169,6 @@ fun AlbumCard(
 		}
 	}
 }
-
 
 @Composable
 @Preview(backgroundColor = 0x999999)
@@ -182,7 +183,7 @@ fun PreviewAlbumCard() {
 				hasAudio = ImageInfo.HasAudio.NO_AUDIO,
 			),
 			{},
-			{}
+			{},
 		)
 	}
 }

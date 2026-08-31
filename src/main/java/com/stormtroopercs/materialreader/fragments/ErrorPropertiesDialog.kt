@@ -31,123 +31,122 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
 class ErrorPropertiesDialog private constructor(private val mError: RRError) : PropertiesDialog() {
-    private var mContext: AppCompatActivity?=null
+	private var mContext: AppCompatActivity? = null
 
-    override fun interceptBuilder(builder: MaterialAlertDialogBuilder) {
-        if ((mError.t !is UnknownHostException) && (mError.t !is SocketTimeoutException) && mError.reportable) {
-            builder.setPositiveButton(
-                string.button_error_send_report,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
-                    BugReporter.sendBugReport(
-                        mContext!!,
-                        mError
-                    )
-                })
-        }
-    }
+	override fun interceptBuilder(builder: MaterialAlertDialogBuilder) {
+		if ((mError.t !is UnknownHostException) && (mError.t !is SocketTimeoutException) && mError.reportable) {
+			builder.setPositiveButton(
+				string.button_error_send_report,
+				DialogInterface.OnClickListener { dialog: DialogInterface?, which: Int ->
+					BugReporter.sendBugReport(
+						mContext!!,
+						mError,
+					)
+				},
+			)
+		}
+	}
 
-    override fun getTitle(context: Context): String {
-        return context.getString(string.props_error_title)
-    }
+	override fun getTitle(context: Context): String = context.getString(string.props_error_title)
 
-    override fun prepare(
-        context: BaseActivity,
-        items: LinearLayout
-    ) {
-        mContext = context
+	override fun prepare(
+		context: BaseActivity,
+		items: LinearLayout,
+	) {
+		mContext = context
 
-        items.addView(
-            propView(
-                context,
-                string.props_title,
-                getArguments()!!.getString("title"),
-                true
-            )
-        )
-        items.addView(
-            propView(
-                context,
-                "Message",
-                getArguments()!!.getString("message"),
-                false
-            )
-        )
+		items.addView(
+			propView(
+				context,
+				string.props_title,
+				getArguments()!!.getString("title"),
+				true,
+			),
+		)
+		items.addView(
+			propView(
+				context,
+				"Message",
+				getArguments()!!.getString("message"),
+				false,
+			),
+		)
 
-        if (getArguments()!!.containsKey("httpStatus")) {
-            items.addView(
-                propView(
-                    context,
-                    "HTTP status",
-                    getArguments()!!.getString("httpStatus"),
-                    false
-                )
-            )
-        }
+		if (getArguments()!!.containsKey("httpStatus")) {
+			items.addView(
+				propView(
+					context,
+					"HTTP status",
+					getArguments()!!.getString("httpStatus"),
+					false,
+				),
+			)
+		}
 
-        if (getArguments()!!.containsKey("url")) {
-            items.addView(
-                propView(
-                    context,
-                    "URL",
-                    getArguments()!!.getString("url"),
-                    false
-                )
-            )
-        }
+		if (getArguments()!!.containsKey("url")) {
+			items.addView(
+				propView(
+					context,
+					"URL",
+					getArguments()!!.getString("url"),
+					false,
+				),
+			)
+		}
 
-        if (getArguments()!!.containsKey("t")) {
-            items.addView(
-                propView(
-                    context,
-                    "Exception",
-                    getArguments()!!.getString("t"),
-                    false
-                )
-            )
-        }
+		if (getArguments()!!.containsKey("t")) {
+			items.addView(
+				propView(
+					context,
+					"Exception",
+					getArguments()!!.getString("t"),
+					false,
+				),
+			)
+		}
 
-        if (getArguments()!!.containsKey("response")) {
-            items.addView(
-                propView(
-                    context,
-                    "Response",
-                    getArguments()!!.getString("response"),
-                    false
-                )
-            )
-        }
-    }
+		if (getArguments()!!.containsKey("response")) {
+			items.addView(
+				propView(
+					context,
+					"Response",
+					getArguments()!!.getString("response"),
+					false,
+				),
+			)
+		}
+	}
 
-    companion object {
-        fun newInstance(error: RRError): ErrorPropertiesDialog {
-            val dialog = ErrorPropertiesDialog(error)
+	companion object {
+		fun newInstance(error: RRError): ErrorPropertiesDialog {
+			val dialog = ErrorPropertiesDialog(error)
 
-            val args = Bundle()
+			val args = Bundle()
 
-            args.putString("title", error.title)
-            args.putString("message", error.message)
+			args.putString("title", error.title)
+			args.putString("message", error.message)
 
-            if (error.t != null) {
-                val sb = StringBuilder(1024)
-                appendException(sb, error.t, 10)
-                args.putString("t", sb.toString())
-            }
+			if (error.t != null) {
+				val sb = StringBuilder(1024)
+				appendException(sb, error.t, 10)
+				args.putString("t", sb.toString())
+			}
 
-            if (error.httpStatus != null) {
-                args.putString("httpStatus", error.httpStatus.toString())
-            }
+			if (error.httpStatus != null) {
+				args.putString("httpStatus", error.httpStatus.toString())
+			}
 
-            if (error.url != null) {
-                args.putString("url", error.url.value)
-            }
+			if (error.url != null) {
+				args.putString("url", error.url.value)
+			}
 
-            if (error.responseString != null) {
-                args.putString("response", error.responseString)
-            }
+			if (error.responseString != null) {
+				args.putString("response", error.responseString)
+			}
 
-            dialog.setArguments(args)
+			dialog.setArguments(args)
 
-            return dialog
-        }
-    }
+			return dialog
+		}
+	}
 }

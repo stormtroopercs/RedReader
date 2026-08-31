@@ -27,7 +27,7 @@ interface SerializableEnum<T : Enum<T>> {
 }
 
 class EnumSettingSerializer<T>(
-	values: Iterable<T>
+	values: Iterable<T>,
 ) : SettingSerializer<T> where T : SerializableEnum<T>, T : Enum<T> {
 
 	private val lookupTable = values.associateBy { it.stringValue }

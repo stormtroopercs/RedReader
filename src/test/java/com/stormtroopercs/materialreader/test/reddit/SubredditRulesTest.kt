@@ -16,30 +16,28 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.reddit
 
+import com.stormtroopercs.materialreader.http.PostField
+import com.stormtroopercs.materialreader.jsonwrap.JsonValue
+import com.stormtroopercs.materialreader.reddit.api.ReportReason
+import com.stormtroopercs.materialreader.reddit.api.SubredditRuleKind
+import com.stormtroopercs.materialreader.reddit.api.SubredditRules
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import com.stormtroopercs.materialreader.http.PostField
-import com.stormtroopercs.materialreader.jsonwrap.JsonValue
-import com.stormtroopercs.materialreader.reddit.api.ReportReason
-import com.stormtroopercs.materialreader.reddit.api.SubredditRuleKind
-import com.stormtroopercs.materialreader.reddit.api.SubredditRules
 import java.io.File
 
 class SubredditRulesTest {
 
 	// Real response from /r/AskReddit/about/rules, captured 2026-07-19
-	private fun loadTestData(): JsonValue =
-		File("src/test/resources/reddit/subreddit_rules_askreddit.json")
-			.inputStream()
-			.use(JsonValue::parse)
+	private fun loadTestData(): JsonValue = File("src/test/resources/reddit/subreddit_rules_askreddit.json")
+		.inputStream()
+		.use(JsonValue::parse)
 
 	@Test
 	fun testParseSubredditRules() {
-
 		val result = SubredditRules.parse(loadTestData())
 
 		assertNotNull(result)
@@ -51,7 +49,7 @@ class SubredditRulesTest {
 		assertEquals(SubredditRuleKind.POST, rule1.kind)
 		assertEquals(
 			"Rule 1 - Questions must be clear and direct and may not use the body textbox",
-			rule1.shortName
+			rule1.shortName,
 		)
 		assertEquals(rule1.shortName, rule1.violationReason)
 
@@ -59,17 +57,16 @@ class SubredditRulesTest {
 
 		assertEquals(
 			11,
-			result.rules.count { it.appliesTo(SubredditRuleKind.POST) }
+			result.rules.count { it.appliesTo(SubredditRuleKind.POST) },
 		)
 		assertEquals(
 			8,
-			result.rules.count { it.appliesTo(SubredditRuleKind.COMMENT) }
+			result.rules.count { it.appliesTo(SubredditRuleKind.COMMENT) },
 		)
 	}
 
 	@Test
 	fun testParseSiteRulesFlow() {
-
 		val result = SubredditRules.parse(loadTestData())
 
 		assertNotNull(result)
@@ -96,7 +93,7 @@ class SubredditRulesTest {
 		assertEquals(2, targeted.nextStepReasons.size)
 		assertEquals(
 			"It's targeted harassment at me",
-			targeted.nextStepReasons[0].reasonText
+			targeted.nextStepReasons[0].reasonText,
 		)
 
 		// Leaf with optional notes
@@ -122,9 +119,14 @@ class SubredditRulesTest {
 	fun testParseInvalidData() {
 		assertNull(SubredditRules.parse(JsonValue.parse("{}".byteInputStream())))
 		assertNull(SubredditRules.parse(JsonValue.parse("[1, 2, 3]".byteInputStream())))
-		assertNull(SubredditRules.parse(JsonValue.parse(
-			"{\"rules\": [{\"kind\": \"link\"}], \"site_rules_flow\": [{}]}"
-				.byteInputStream())))
+		assertNull(
+			SubredditRules.parse(
+				JsonValue.parse(
+					"{\"rules\": [{\"kind\": \"link\"}], \"site_rules_flow\": [{}]}"
+						.byteInputStream(),
+				),
+			),
+		)
 	}
 
 	@Test
@@ -132,9 +134,9 @@ class SubredditRulesTest {
 		assertEquals(
 			listOf(
 				PostField("reason", "rule_reason_selected"),
-				PostField("rule_reason", "No spam")
+				PostField("rule_reason", "No spam"),
 			),
-			ReportReason.Rule("No spam").toPostFields()
+			ReportReason.Rule("No spam").toPostFields(),
 		)
 
 		// Long rule names are truncated to the API limit
@@ -142,9 +144,9 @@ class SubredditRulesTest {
 		assertEquals(
 			listOf(
 				PostField("reason", "rule_reason_selected"),
-				PostField("rule_reason", "a".repeat(100))
+				PostField("rule_reason", "a".repeat(100)),
 			),
-			ReportReason.Rule(longName).toPostFields()
+			ReportReason.Rule(longName).toPostFields(),
 		)
 	}
 
@@ -153,22 +155,22 @@ class SubredditRulesTest {
 		assertEquals(
 			listOf(
 				PostField("reason", "site_reason_selected"),
-				PostField("site_reason", "This is spam")
+				PostField("site_reason", "This is spam"),
 			),
-			ReportReason.Site("This is spam").toPostFields()
+			ReportReason.Site("This is spam").toPostFields(),
 		)
 
 		// Blank notes and usernames are omitted
 		assertEquals(
 			listOf(
 				PostField("reason", "site_reason_selected"),
-				PostField("site_reason", "It's abusing the report button")
+				PostField("site_reason", "It's abusing the report button"),
 			),
 			ReportReason.Site(
 				reasonText = "It's abusing the report button",
 				customText = "  ",
-				usernames = ""
-			).toPostFields()
+				usernames = "",
+			).toPostFields(),
 		)
 
 		assertEquals(
@@ -176,13 +178,13 @@ class SubredditRulesTest {
 				PostField("reason", "site_reason_selected"),
 				PostField("site_reason", "Someone is considering suicide or serious self-harm."),
 				PostField("custom_text", "Some notes"),
-				PostField("usernames", "someuser")
+				PostField("usernames", "someuser"),
 			),
 			ReportReason.Site(
 				reasonText = "Someone is considering suicide or serious self-harm.",
 				customText = "Some notes",
-				usernames = " someuser "
-			).toPostFields()
+				usernames = " someuser ",
+			).toPostFields(),
 		)
 	}
 
@@ -191,9 +193,9 @@ class SubredditRulesTest {
 		assertEquals(
 			listOf(
 				PostField("reason", "other"),
-				PostField("other_reason", "Some other reason")
+				PostField("other_reason", "Some other reason"),
 			),
-			ReportReason.Other("Some other reason").toPostFields()
+			ReportReason.Other("Some other reason").toPostFields(),
 		)
 	}
 }

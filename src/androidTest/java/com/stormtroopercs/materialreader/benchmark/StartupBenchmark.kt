@@ -35,45 +35,45 @@ import org.junit.Test
  */
 class StartupBenchmark {
 
-    @get:Rule
-    val benchmarkRule = MacrobenchmarkRule()
+	@get:Rule
+	val benchmarkRule = MacrobenchmarkRule()
 
-    @Test
-    fun coldStartup() {
-        benchmarkRule.measureRepeated(
-            packageName = "com.stormtroopercs.materialreader",
-            metrics = listOf(StartupTimingMetric()),
-            startupMode = StartupMode.COLD,
-            iterations = 3,
-            compilationMode = CompilationMode.DEFAULT
-        ) {
-            device.wait(Until.hasObject(By.pkg("com.stormtroopercs.materialreader")), 10_000)
-        }
-    }
+	@Test
+	fun coldStartup() {
+		benchmarkRule.measureRepeated(
+			packageName = "com.stormtroopercs.materialreader",
+			metrics = listOf(StartupTimingMetric()),
+			startupMode = StartupMode.COLD,
+			iterations = 3,
+			compilationMode = CompilationMode.DEFAULT,
+		) {
+			device.wait(Until.hasObject(By.pkg("com.stormtroopercs.materialreader")), 10_000)
+		}
+	}
 
-    @Test
-    fun warmStartup() {
-        benchmarkRule.measureRepeated(
-            packageName = "com.stormtroopercs.materialreader",
-            metrics = listOf(StartupTimingMetric()),
-            startupMode = StartupMode.WARM,
-            iterations = 3,
-            compilationMode = CompilationMode.DEFAULT
-        ) {
-            device.pressKeyCode(KeyEvent.KEYCODE_BACK)
-        }
-    }
+	@Test
+	fun warmStartup() {
+		benchmarkRule.measureRepeated(
+			packageName = "com.stormtroopercs.materialreader",
+			metrics = listOf(StartupTimingMetric()),
+			startupMode = StartupMode.WARM,
+			iterations = 3,
+			compilationMode = CompilationMode.DEFAULT,
+		) {
+			device.pressKeyCode(KeyEvent.KEYCODE_BACK)
+		}
+	}
 
-    @Test
-    fun hotStartup() {
-        benchmarkRule.measureRepeated(
-            packageName = "com.stormtroopercs.materialreader",
-            metrics = listOf(StartupTimingMetric()),
-            startupMode = StartupMode.HOT,
-            iterations = 3,
-            compilationMode = CompilationMode.DEFAULT
-        ) {
-            device.pressKeyCode(KeyEvent.KEYCODE_BACK)
-        }
-    }
+	@Test
+	fun hotStartup() {
+		benchmarkRule.measureRepeated(
+			packageName = "com.stormtroopercs.materialreader",
+			metrics = listOf(StartupTimingMetric()),
+			startupMode = StartupMode.HOT,
+			iterations = 3,
+			compilationMode = CompilationMode.DEFAULT,
+		) {
+			device.pressKeyCode(KeyEvent.KEYCODE_BACK)
+		}
+	}
 }

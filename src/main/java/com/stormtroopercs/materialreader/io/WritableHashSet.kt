@@ -24,138 +24,136 @@ import com.stormtroopercs.materialreader.io.WritableObject.WritableObjectKey
 import com.stormtroopercs.materialreader.io.WritableObject.WritableObjectTimestamp
 import com.stormtroopercs.materialreader.io.WritableObject.WritableObjectVersion
 
-class WritableHashSet : WritableObject<String>, Iterable<String> {
-    @Transient
-    private var hashSet: HashSet<String>? = null
+class WritableHashSet :
+	WritableObject<String>,
+	Iterable<String> {
+	@Transient
+	private var hashSet: HashSet<String>? = null
 
-    @WritableField
-    private var serialised: String? = null
+	@WritableField
+	private var serialised: String? = null
 
-    @WritableObjectKey
-    private val mKey: String
+	@WritableObjectKey
+	private val mKey: String
 
-    @WritableObjectTimestamp
-    private val mTimestamp: Long
+	@WritableObjectTimestamp
+	private val mTimestamp: Long
 
-    constructor(
-        data: HashSet<String>,
-        timestamp: TimestampUTC,
-        key: String
-    ) {
-        this.hashSet = data
-        this.mTimestamp = timestamp.toUtcMs()
-        this.mKey = key
-        serialised = Companion.listToEscapedString(hashSet!!)
-    }
+	constructor(
+		data: HashSet<String>,
+		timestamp: TimestampUTC,
+		key: String,
+	) {
+		this.hashSet = data
+		this.mTimestamp = timestamp.toUtcMs()
+		this.mKey = key
+		serialised = Companion.listToEscapedString(hashSet!!)
+	}
 
-    private constructor(serializedData: String, timestamp: Long, key: String) {
-        this.mTimestamp = timestamp
-        this.mKey = key
-        serialised = serializedData
-    }
+	private constructor(serializedData: String, timestamp: Long, key: String) {
+		this.mTimestamp = timestamp
+		this.mKey = key
+		serialised = serializedData
+	}
 
-    constructor(creationData: WritableObject.CreationData) {
-        this.mTimestamp = creationData.timestamp
-        this.mKey = creationData.key
-    }
+	constructor(creationData: WritableObject.CreationData) {
+		this.mTimestamp = creationData.timestamp
+		this.mKey = creationData.key
+	}
 
-    override fun toString(): String {
-        throw UnexpectedInternalStateException(
-            "Using toString() is the wrong way to serialise a WritableHashSet"
-        )
-    }
+	override fun toString(): String = throw UnexpectedInternalStateException(
+		"Using toString() is the wrong way to serialise a WritableHashSet",
+	)
 
-    fun serializeWithMetadata(): String {
-        val result = ArrayList<String>(3)
-        result.add(serialised!!)
-        result.add(mTimestamp.toString())
-        result.add(mKey)
-        return Companion.listToEscapedString(result)
-    }
+	fun serializeWithMetadata(): String {
+		val result = ArrayList<String>(3)
+		result.add(serialised!!)
+		result.add(mTimestamp.toString())
+		result.add(mKey)
+		return Companion.listToEscapedString(result)
+	}
 
-    @Synchronized
-    fun toHashset(): HashSet<String> {
-        if (hashSet != null) {
-            return hashSet!!
-        }
-        return (HashSet<String>(Companion.escapedStringToList(serialised)).also { hashSet = it })
-    }
+	@Synchronized
+	fun toHashset(): HashSet<String> {
+		if (hashSet != null) {
+			return hashSet!!
+		}
+		return (HashSet<String>(Companion.escapedStringToList(serialised)).also { hashSet = it })
+	}
 
-    override val key: String get() = mKey
+	override val key: String get() = mKey
 
-    override val timestamp: TimestampUTC get() = fromUtcMs(mTimestamp)
+	override val timestamp: TimestampUTC get() = fromUtcMs(mTimestamp)
 
-    override fun iterator(): MutableIterator<String> {
-        return toHashset().iterator()
-    }
+	override fun iterator(): MutableIterator<String> = toHashset().iterator()
 
-    companion object {
-        @WritableObjectVersion
-        @Suppress("PropertyName")
-        var DB_VERSION: Int = 1
+	companion object {
+		@WritableObjectVersion
+		@Suppress("PropertyName")
+		var DB_VERSION: Int = 1
 
-        fun unserializeWithMetadata(raw: String?): WritableHashSet {
-            val data: ArrayList<String> = escapedStringToList(raw)
-            return WritableHashSet(data.get(0), data.get(1).toLong(), data.get(2))
-        }
+		fun unserializeWithMetadata(raw: String?): WritableHashSet {
+			val data: ArrayList<String> = escapedStringToList(raw)
+			return WritableHashSet(data.get(0), data.get(1).toLong(), data.get(2))
+		}
 
-        fun listToEscapedString(list: MutableCollection<String>): String {
-            if (list.isEmpty()) {
-                return ""
-            }
+		fun listToEscapedString(list: MutableCollection<String>): String {
+			if (list.isEmpty()) {
+				return ""
+			}
 
-            val sb = StringBuilder()
+			val sb = StringBuilder()
 
-            for (str in list) {
-                for (i in 0..<str.length) {
-                    val c = str.get(i)
+			for (str in list) {
+				for (i in 0..<str.length) {
+					val c = str.get(i)
 
-                    when (c) {
-                        '\\' -> sb.append("\\\\")
-                        ';' -> sb.append("\\;")
-                        else -> sb.append(c)
-                    }
-                }
+					when (c) {
+						'\\' -> sb.append("\\\\")
+						';' -> sb.append("\\;")
+						else -> sb.append(c)
+					}
+				}
 
-                sb.append(';')
-            }
+				sb.append(';')
+			}
 
-            return sb.toString()
-        }
+			return sb.toString()
+		}
 
-        fun escapedStringToList(str: String?): ArrayList<String> {
-            var str = str
-            val result = ArrayList<String>()
+		fun escapedStringToList(str: String?): ArrayList<String> {
+			var str = str
+			val result = ArrayList<String>()
 
-            if (str != null) {
-                // Workaround to improve parsing of lists saved by older versions of the app
+			if (str != null) {
+				// Workaround to improve parsing of lists saved by older versions of the app
 
-                if (!str.isEmpty() && !str.endsWith(";")) {
-                    str += ";"
-                }
+				if (!str.isEmpty() && !str.endsWith(";")) {
+					str += ";"
+				}
 
-                var isEscaped = false
-                val sb = StringBuilder()
+				var isEscaped = false
+				val sb = StringBuilder()
 
-                for (i in 0..<str.length) {
-                    val c = str.get(i)
+				for (i in 0..<str.length) {
+					val c = str.get(i)
 
-                    if (c == ';' && !isEscaped) {
-                        result.add(sb.toString())
-                        sb.setLength(0)
-                    } else if (c == '\\') {
-                        if (isEscaped) {
-                            sb.append('\\')
-                        }
-                    } else {
-                        sb.append(c)
-                    }
+					if (c == ';' && !isEscaped) {
+						result.add(sb.toString())
+						sb.setLength(0)
+					} else if (c == '\\') {
+						if (isEscaped) {
+							sb.append('\\')
+						}
+					} else {
+						sb.append(c)
+					}
 
-                    isEscaped = c == '\\' && !isEscaped
-                }
-            }
+					isEscaped = c == '\\' && !isEscaped
+				}
+			}
 
-            return result
-        }
-    }
+			return result
+		}
+	}
 }

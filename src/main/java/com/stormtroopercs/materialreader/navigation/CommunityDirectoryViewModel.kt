@@ -20,16 +20,6 @@ package com.stormtroopercs.materialreader.navigation
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import java.io.IOException
-import java.util.UUID
-import java.util.concurrent.atomic.AtomicInteger
-import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import com.stormtroopercs.materialreader.account.RedditAccountManager
 import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.cache.CacheRequest
@@ -43,6 +33,16 @@ import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.common.datastream.SeekableInputStream
 import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import com.stormtroopercs.materialreader.jsonwrap.JsonValue
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.io.IOException
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
+import javax.inject.Inject
 
 /**
  * The Explore tab's community directory sub-tab (FINAL-DESIGN 6.5):
@@ -53,26 +53,27 @@ import com.stormtroopercs.materialreader.jsonwrap.JsonValue
  * them all.
  */
 enum class CommunityDirectoryTab {
-    POPULAR,
-    ALL,
-    NEW,
-    CONTROVERSIAL;
+	POPULAR,
+	ALL,
+	NEW,
+	CONTROVERSIAL,
+	;
 
-    val label: String
-        get() = when (this) {
-            CommunityDirectoryTab.POPULAR -> "Popular"
-            CommunityDirectoryTab.ALL -> "All"
-            CommunityDirectoryTab.NEW -> "New"
-            CommunityDirectoryTab.CONTROVERSIAL -> "Controversial"
-        }
+	val label: String
+		get() = when (this) {
+			CommunityDirectoryTab.POPULAR -> "Popular"
+			CommunityDirectoryTab.ALL -> "All"
+			CommunityDirectoryTab.NEW -> "New"
+			CommunityDirectoryTab.CONTROVERSIAL -> "Controversial"
+		}
 
-    val path: String
-        get() = when (this) {
-            CommunityDirectoryTab.POPULAR -> "/subreddits/popular.json"
-            CommunityDirectoryTab.ALL -> "/subreddits.json"
-            CommunityDirectoryTab.NEW -> "/subreddits/new.json"
-            CommunityDirectoryTab.CONTROVERSIAL -> "/subreddits/controversial.json"
-        }
+	val path: String
+		get() = when (this) {
+			CommunityDirectoryTab.POPULAR -> "/subreddits/popular.json"
+			CommunityDirectoryTab.ALL -> "/subreddits.json"
+			CommunityDirectoryTab.NEW -> "/subreddits/new.json"
+			CommunityDirectoryTab.CONTROVERSIAL -> "/subreddits/controversial.json"
+		}
 }
 
 /**
@@ -83,88 +84,88 @@ enum class CommunityDirectoryTab {
  */
 @HiltViewModel
 class CommunityDirectoryViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val accountManager: RedditAccountManager,
-    private val cacheManager: CacheManager
+	@ApplicationContext private val context: Context,
+	private val accountManager: RedditAccountManager,
+	private val cacheManager: CacheManager,
 ) : ViewModel() {
 
-    private val _rows = MutableStateFlow<List<SubredditSearchViewModel.SubredditItem>>(emptyList())
-    val rows: StateFlow<List<SubredditSearchViewModel.SubredditItem>> = _rows.asStateFlow()
+	private val _rows = MutableStateFlow<List<SubredditSearchViewModel.SubredditItem>>(emptyList())
+	val rows: StateFlow<List<SubredditSearchViewModel.SubredditItem>> = _rows.asStateFlow()
 
-    private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+	private val _loading = MutableStateFlow(false)
+	val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+	private val _error = MutableStateFlow<String?>(null)
+	val error: StateFlow<String?> = _error.asStateFlow()
 
-    /** Stale-response guard (a slow earlier tab must not clobber a newer one). */
-    private val requestSeq = AtomicInteger(0)
+	/** Stale-response guard (a slow earlier tab must not clobber a newer one). */
+	private val requestSeq = AtomicInteger(0)
 
-    fun load(tab: CommunityDirectoryTab) {
-        _error.value = null
-        _loading.value = true
-        val seq = requestSeq.incrementAndGet()
+	fun load(tab: CommunityDirectoryTab) {
+		_error.value = null
+		_loading.value = true
+		val seq = requestSeq.incrementAndGet()
 
-        viewModelScope.launch {
-            try {
-                val account = accountManager.getDefaultAccount()
-                val uriBuilder = Constants.Reddit.getUriBuilder(tab.path)
-                    .appendQueryParameter("limit", "100")
-                val jsonUri = UriString(uriBuilder.build().toString())
+		viewModelScope.launch {
+			try {
+				val account = accountManager.getDefaultAccount()
+				val uriBuilder = Constants.Reddit.getUriBuilder(tab.path)
+					.appendQueryParameter("limit", "100")
+				val jsonUri = UriString(uriBuilder.build().toString())
 
-                val callbacks = object : CacheRequestCallbacks {
-                    override fun onDataStreamComplete(
-                        streamFactory: GenericFactory<SeekableInputStream, IOException>,
-                        timestamp: TimestampUTC,
-                        session: UUID,
-                        fromCache: Boolean,
-                        mimetype: String?
-                    ) {
-                        if (seq != requestSeq.get()) return // stale response
-                        try {
-                            val result = streamFactory.create().use { input ->
-                                JsonValue.parse(input)
-                            }
-                            val children = result.getArrayAtPath("data", "children").get()
-                            val items = children.mapNotNull { child -> toSubredditItem(child) }
-                            _rows.value = items
-                            _loading.value = false
-                            if (items.isEmpty()) {
-                                _error.value = "No communities found"
-                            }
-                        } catch (e: Exception) {
-                            if (seq == requestSeq.get()) {
-                                _error.value = e.message ?: e.toString()
-                                _loading.value = false
-                            }
-                        }
-                    }
+				val callbacks = object : CacheRequestCallbacks {
+					override fun onDataStreamComplete(
+						streamFactory: GenericFactory<SeekableInputStream, IOException>,
+						timestamp: TimestampUTC,
+						session: UUID,
+						fromCache: Boolean,
+						mimetype: String?,
+					) {
+						if (seq != requestSeq.get()) return // stale response
+						try {
+							val result = streamFactory.create().use { input ->
+								JsonValue.parse(input)
+							}
+							val children = result.getArrayAtPath("data", "children").get()
+							val items = children.mapNotNull { child -> toSubredditItem(child) }
+							_rows.value = items
+							_loading.value = false
+							if (items.isEmpty()) {
+								_error.value = "No communities found"
+							}
+						} catch (e: Exception) {
+							if (seq == requestSeq.get()) {
+								_error.value = e.message ?: e.toString()
+								_loading.value = false
+							}
+						}
+					}
 
-                    override fun onFailure(error: RRError) {
-                        if (seq != requestSeq.get()) return // stale response
-                        _error.value = error.message ?: "Failed to load communities"
-                        _loading.value = false
-                    }
-                }
+					override fun onFailure(error: RRError) {
+						if (seq != requestSeq.get()) return // stale response
+						_error.value = error.message ?: "Failed to load communities"
+						_loading.value = false
+					}
+				}
 
-                val request = CacheRequest(
-                    jsonUri,
-                    account,
-                    null,
-                    Priority(Constants.Priority.API_SUBREDDIT_LIST),
-                    DownloadStrategyAlways.INSTANCE,
-                    Constants.FileType.SUBREDDIT_LIST,
-                    CacheRequest.DownloadQueueType.REDDIT_API,
-                    context,
-                    callbacks
-                )
-                cacheManager.makeRequest(request)
-            } catch (e: Exception) {
-                if (seq == requestSeq.get()) {
-                    _error.value = "Failed to load communities: ${e.message}"
-                    _loading.value = false
-                }
-            }
-        }
-    }
+				val request = CacheRequest(
+					jsonUri,
+					account,
+					null,
+					Priority(Constants.Priority.API_SUBREDDIT_LIST),
+					DownloadStrategyAlways.INSTANCE,
+					Constants.FileType.SUBREDDIT_LIST,
+					CacheRequest.DownloadQueueType.REDDIT_API,
+					context,
+					callbacks,
+				)
+				cacheManager.makeRequest(request)
+			} catch (e: Exception) {
+				if (seq == requestSeq.get()) {
+					_error.value = "Failed to load communities: ${e.message}"
+					_loading.value = false
+				}
+			}
+		}
+	}
 }

@@ -37,67 +37,70 @@ import com.stormtroopercs.materialreader.jsonwrap.JsonValue
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 import java.util.UUID
-import com.stormtroopercs.materialreader.common.General
 
 object DeviantArtAPI {
-    fun getImageInfo(
-        context: Context,
-        url: UriString,
-        priority: Priority,
-        listener: GetImageInfoListener
-    ) {
-        val apiUrl: UriString
-        try {
-            apiUrl = UriString(
-                "https://backend.deviantart.com/oembed?url="
-                        + URLEncoder.encode(url.value, "UTF-8")
-            )
-        } catch (e: UnsupportedEncodingException) {
-            throw RuntimeException(e)
-        }
+	fun getImageInfo(
+		context: Context,
+		url: UriString,
+		priority: Priority,
+		listener: GetImageInfoListener,
+	) {
+		val apiUrl: UriString
+		try {
+			apiUrl = UriString(
+				"https://backend.deviantart.com/oembed?url=" +
+					URLEncoder.encode(url.value, "UTF-8"),
+			)
+		} catch (e: UnsupportedEncodingException) {
+			throw RuntimeException(e)
+		}
 
-        CacheManager.Companion.getInstance(context).makeRequest(
-            CacheRequest(
-                apiUrl,
-                RedditAccountManager.Companion.getAnon(),
-                null,
-                priority,
-                DownloadStrategyIfNotCached.Companion.INSTANCE,
-                Constants.FileType.IMAGE_INFO,
-                DownloadQueueType.IMMEDIATE,
-                context,
-                CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
-                    override fun onJsonParsed(
-                        result: JsonValue,
-                        timestamp: TimestampUTC,
-                        session: UUID, fromCache: Boolean
-                    ) {
-                        try {
-                            val outer = result.asObject()
-                            listener.onSuccess(parseDeviantArt(outer))
-                        } catch (t: Throwable) {
-                            listener.onFailure(
-                                getGeneralErrorForFailure(
-                                    context,
-                                    RequestFailureType.PARSE,
-                                    t,
-                                    null,
-                                    apiUrl,
-                                    Optional.Companion.of<FailedRequestBody>(
-                                        FailedRequestBody(
-                                            result
-                                        )
-                                    )
-                                )
-                            )
-                        }
-                    }
+		CacheManager.Companion.getInstance(context).makeRequest(
+			CacheRequest(
+				apiUrl,
+				RedditAccountManager.Companion.getAnon(),
+				null,
+				priority,
+				DownloadStrategyIfNotCached.Companion.INSTANCE,
+				Constants.FileType.IMAGE_INFO,
+				DownloadQueueType.IMMEDIATE,
+				context,
+				CacheRequestJSONParser(
+					context,
+					object : CacheRequestJSONParser.Listener {
+						override fun onJsonParsed(
+							result: JsonValue,
+							timestamp: TimestampUTC,
+							session: UUID,
+							fromCache: Boolean,
+						) {
+							try {
+								val outer = result.asObject()
+								listener.onSuccess(parseDeviantArt(outer))
+							} catch (t: Throwable) {
+								listener.onFailure(
+									getGeneralErrorForFailure(
+										context,
+										RequestFailureType.PARSE,
+										t,
+										null,
+										apiUrl,
+										Optional.Companion.of<FailedRequestBody>(
+											FailedRequestBody(
+												result,
+											),
+										),
+									),
+								)
+							}
+						}
 
-                    override fun onFailure(error: RRError) {
-                        listener.onFailure(error)
-                    }
-                })
-            )
-        )
-    }
+						override fun onFailure(error: RRError) {
+							listener.onFailure(error)
+						}
+					},
+				),
+			),
+		)
+	}
 }

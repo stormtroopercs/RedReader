@@ -17,19 +17,19 @@
 package com.stormtroopercs.materialreader.common
 
 class TriggerableThreadGroup(threads: Int, task: Runnable) {
-    private val mThreads: Array<TriggerableThread?>
-    private var mNextThreadToTrigger = 0
+	private val mThreads: Array<TriggerableThread?>
+	private var mNextThreadToTrigger = 0
 
-    init {
-        mThreads = arrayOfNulls<TriggerableThread>(threads)
+	init {
+		mThreads = arrayOfNulls<TriggerableThread>(threads)
 
-        for (i in 0..<threads) {
-            mThreads[i] = TriggerableThread(task, 0)
-        }
-    }
+		for (i in 0..<threads) {
+			mThreads[i] = TriggerableThread(task, 0)
+		}
+	}
 
-    fun triggerOne() {
-        mThreads[mNextThreadToTrigger]!!.trigger()
-        mNextThreadToTrigger = (mNextThreadToTrigger + 1) % mThreads.size
-    }
+	fun triggerOne() {
+		mThreads[mNextThreadToTrigger]!!.trigger()
+		mNextThreadToTrigger = (mNextThreadToTrigger + 1) % mThreads.size
+	}
 }

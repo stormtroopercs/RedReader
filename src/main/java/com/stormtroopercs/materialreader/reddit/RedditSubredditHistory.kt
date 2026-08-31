@@ -23,46 +23,46 @@ import java.util.Collections
 
 // Keeps an in-memory list of all known subreddits per account
 object RedditSubredditHistory {
-    @Suppress("PropertyName")
-    private val SUBREDDITS = HashMap<RedditAccount, HashSet<SubredditCanonicalId>>()
+	@Suppress("PropertyName")
+	private val SUBREDDITS = HashMap<RedditAccount, HashSet<SubredditCanonicalId>>()
 
-    private fun getForAccount(account: RedditAccount): HashSet<SubredditCanonicalId> {
-        var result = SUBREDDITS.get(account)
+	private fun getForAccount(account: RedditAccount): HashSet<SubredditCanonicalId> {
+		var result = SUBREDDITS.get(account)
 
-        if (result == null) {
-            result = HashSet<SubredditCanonicalId>(Reddit.DEFAULT_SUBREDDITS)
-            SUBREDDITS.put(account, result)
-        }
+		if (result == null) {
+			result = HashSet<SubredditCanonicalId>(Reddit.DEFAULT_SUBREDDITS)
+			SUBREDDITS.put(account, result)
+		}
 
-        return result
-    }
+		return result
+	}
 
-    @Synchronized
-    fun addSubreddit(
-        account: RedditAccount,
-        id: SubredditCanonicalId
-    ) {
-        getForAccount(account).add(id)
-    }
+	@Synchronized
+	fun addSubreddit(
+		account: RedditAccount,
+		id: SubredditCanonicalId,
+	) {
+		getForAccount(account).add(id)
+	}
 
-    @Synchronized
-    fun addSubreddits(
-        account: RedditAccount,
-        ids: MutableCollection<SubredditCanonicalId>
-    ) {
-        getForAccount(account).addAll(ids)
-    }
+	@Synchronized
+	fun addSubreddits(
+		account: RedditAccount,
+		ids: MutableCollection<SubredditCanonicalId>,
+	) {
+		getForAccount(account).addAll(ids)
+	}
 
-    @Synchronized
-    fun getSubredditsSorted(
-        account: RedditAccount
-    ): ArrayList<SubredditCanonicalId> {
-        val result = ArrayList<SubredditCanonicalId>(
-            getForAccount(
-                account
-            )
-        )
-        Collections.sort<SubredditCanonicalId>(result)
-        return result
-    }
+	@Synchronized
+	fun getSubredditsSorted(
+		account: RedditAccount,
+	): ArrayList<SubredditCanonicalId> {
+		val result = ArrayList<SubredditCanonicalId>(
+			getForAccount(
+				account,
+			),
+		)
+		Collections.sort<SubredditCanonicalId>(result)
+		return result
+	}
 }

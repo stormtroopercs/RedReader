@@ -31,48 +31,48 @@ import android.webkit.WebView
  * platform back-callback stays in the right enabled/disabled state.
  */
 object HtmlViewBackHandler {
-    private var webView: WebView? = null
+	private var webView: WebView? = null
 
-    /**
-     * Invoked on the main thread whenever [canGoBack] might have changed
-     * (a WebView registered/unregistered, or its history grew/shrank), so
-     * that a host activity can re-evaluate whether it must intercept the
-     * system back key (see BaseActivity.invalidateBackPressedCallback()).
-     */
-    var onBackChanged: (() -> Unit)? = null
+	/**
+	 * Invoked on the main thread whenever [canGoBack] might have changed
+	 * (a WebView registered/unregistered, or its history grew/shrank), so
+	 * that a host activity can re-evaluate whether it must intercept the
+	 * system back key (see BaseActivity.invalidateBackPressedCallback()).
+	 */
+	var onBackChanged: (() -> Unit)? = null
 
-    /** Whether the current WebView could consume a back press. */
-    val canGoBack: Boolean
-        get() = webView?.canGoBack() == true
+	/** Whether the current WebView could consume a back press. */
+	val canGoBack: Boolean
+		get() = webView?.canGoBack() == true
 
-    fun register(webView: WebView) {
-        this.webView = webView
-        onBackChanged?.invoke()
-    }
+	fun register(webView: WebView) {
+		this.webView = webView
+		onBackChanged?.invoke()
+	}
 
-    fun unregister(webView: WebView) {
-        if (this.webView === webView) {
-            this.webView = null
-            onBackChanged?.invoke()
-        }
-    }
+	fun unregister(webView: WebView) {
+		if (this.webView === webView) {
+			this.webView = null
+			onBackChanged?.invoke()
+		}
+	}
 
-    /** Drop the currently registered WebView (e.g. when its route is disposed). */
-    fun clear() {
-        val current = webView ?: return
-        this.webView = null
-        onBackChanged?.invoke()
-    }
+	/** Drop the currently registered WebView (e.g. when its route is disposed). */
+	fun clear() {
+		val current = webView ?: return
+		this.webView = null
+		onBackChanged?.invoke()
+	}
 
-    /** Walk the WebView's history. `true` if the back press was consumed. */
-    fun goBack(): Boolean {
-        val webView = webView ?: return false
-        return if (webView.canGoBack()) {
-            webView.goBack()
-            onBackChanged?.invoke()
-            true
-        } else {
-            false
-        }
-    }
+	/** Walk the WebView's history. `true` if the back press was consumed. */
+	fun goBack(): Boolean {
+		val webView = webView ?: return false
+		return if (webView.canGoBack()) {
+			webView.goBack()
+			onBackChanged?.invoke()
+			true
+		} else {
+			false
+		}
+	}
 }

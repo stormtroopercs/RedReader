@@ -39,7 +39,7 @@ fun RRButton(
 	modifier: Modifier = Modifier,
 	onClick: () -> Unit,
 	text: String,
-	theme: ComposeThemeButton
+	theme: ComposeThemeButton,
 ) {
 	Box(
 		modifier = modifier
@@ -48,7 +48,7 @@ fun RRButton(
 			.clip(theme.shape)
 			.background(theme.background)
 			.padding(horizontal = 16.dp, vertical = 8.dp),
-		contentAlignment = Alignment.Center
+		contentAlignment = Alignment.Center,
 	) {
 		theme.text.StyledText(text)
 	}
@@ -58,13 +58,12 @@ fun RRButton(
 @Preview
 private fun PreviewRRButton() {
 	RRComposeContextTest {
-
 		val theme = LocalComposeTheme.current
 
 		RRButton(
 			onClick = { },
 			text = "Test Button",
-			theme = theme.error.primaryButton
+			theme = theme.error.primaryButton,
 		)
 	}
 }

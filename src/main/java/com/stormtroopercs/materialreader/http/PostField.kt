@@ -24,9 +24,11 @@ data class PostField(val name: String, val value: String) {
 
 	fun encode(): String {
 		try {
-			return (URLEncoder.encode(name, "UTF-8")
-					+ "="
-					+ URLEncoder.encode(value, "UTF-8"))
+			return (
+				URLEncoder.encode(name, "UTF-8") +
+					"=" +
+					URLEncoder.encode(value, "UTF-8")
+				)
 		} catch (e: UnsupportedEncodingException) {
 			throw RuntimeException(e)
 		}

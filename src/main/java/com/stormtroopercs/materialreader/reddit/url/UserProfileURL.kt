@@ -23,67 +23,65 @@ import com.stormtroopercs.materialreader.common.StringUtils
 import com.stormtroopercs.materialreader.reddit.url.RedditURLParser.RedditURL
 
 class UserProfileURL(val username: String) : RedditURL() {
-    override fun generateJsonUri(): Uri? {
-        val builder = Uri.Builder()
-        builder.scheme(Reddit.scheme)
-            .authority(Reddit.domain)
+	override fun generateJsonUri(): Uri? {
+		val builder = Uri.Builder()
+		builder.scheme(Reddit.scheme)
+			.authority(Reddit.domain)
 
-        builder.appendEncodedPath("user")
-        builder.appendPath(username)
+		builder.appendEncodedPath("user")
+		builder.appendPath(username)
 
-        builder.appendEncodedPath(".json")
+		builder.appendEncodedPath(".json")
 
-        return builder.build()
-    }
+		return builder.build()
+	}
 
-    @RedditURLParser.PathType
-    override fun pathType(): Int {
-        return RedditURLParser.USER_PROFILE_URL
-    }
+	@RedditURLParser.PathType
+	override fun pathType(): Int = RedditURLParser.USER_PROFILE_URL
 
-    override fun humanReadableName(context : Context, shorter: Boolean): String {
-        return username
-    }
+	override fun humanReadableName(context: Context, shorter: Boolean): String = username
 
-    companion object {
-        fun parse(uri: Uri): UserProfileURL? {
-            val pathSegments: Array<String>
-            run {
-                val pathSegmentsList = uri.getPathSegments()
-                val pathSegmentsFiltered = ArrayList<String>(
-                    pathSegmentsList.size
-                )
-                for (segment in pathSegmentsList) {
-                    var segment = segment
-                    while (StringUtils.asciiLowercase(segment).endsWith(".json")
-                        || StringUtils.asciiLowercase(segment).endsWith(".xml")
-                    ) {
-                        segment = segment.substring(0, segment.lastIndexOf('.'))
-                    }
+	companion object {
+		fun parse(uri: Uri): UserProfileURL? {
+			val pathSegments: Array<String>
+			run {
+				val pathSegmentsList = uri.getPathSegments()
+				val pathSegmentsFiltered = ArrayList<String>(
+					pathSegmentsList.size,
+				)
+				for (segment in pathSegmentsList) {
+					var segment = segment
+					while (StringUtils.asciiLowercase(segment).endsWith(".json") ||
+						StringUtils.asciiLowercase(segment).endsWith(".xml")
+					) {
+						segment = segment.substring(0, segment.lastIndexOf('.'))
+					}
 
-                    if (!segment.isEmpty()) {
-                        pathSegmentsFiltered.add(segment)
-                    }
-                }
+					if (!segment.isEmpty()) {
+						pathSegmentsFiltered.add(segment)
+					}
+				}
 
-                pathSegments = pathSegmentsFiltered.toTypedArray()
-            }
+				pathSegments = pathSegmentsFiltered.toTypedArray()
+			}
 
-            if (pathSegments.size != 2) {
-                return null
-            }
+			if (pathSegments.size != 2) {
+				return null
+			}
 
-            if (!pathSegments[0].equals("user", ignoreCase = true) && !pathSegments[0].equals(
-                    "u", ignoreCase = true
-                )
-            ) {
-                return null
-            }
+			if (!pathSegments[0].equals("user", ignoreCase = true) &&
+				!pathSegments[0].equals(
+					"u",
+					ignoreCase = true,
+				)
+			) {
+				return null
+			}
 
-            // TODO validate username with regex
-            val username = pathSegments[1]
+			// TODO validate username with regex
+			val username = pathSegments[1]
 
-            return UserProfileURL(username)
-        }
-    }
+			return UserProfileURL(username)
+		}
+	}
 }

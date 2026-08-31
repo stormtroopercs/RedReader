@@ -18,14 +18,14 @@ package com.stormtroopercs.materialreader.test.general
 
 import android.app.Application
 import android.view.WindowInsetsController
+import com.stormtroopercs.materialreader.account.RedditAccountManager
+import com.stormtroopercs.materialreader.common.General
+import com.stormtroopercs.materialreader.common.PrefsUtility
+import com.stormtroopercs.materialreader.compose.prefs.ComposePrefsSingleton
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import com.stormtroopercs.materialreader.account.RedditAccountManager
-import com.stormtroopercs.materialreader.compose.prefs.ComposePrefsSingleton
-import com.stormtroopercs.materialreader.common.General
-import com.stormtroopercs.materialreader.common.PrefsUtility
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -35,67 +35,64 @@ import org.robolectric.annotation.Config
 @Config(sdk = [35], qualifiers = "w411dp-h891dp")
 class EdgeToEdgeInsetsTest {
 
-    @Before
-    fun initPrefs() {
+	@Before
+	fun initPrefs() {
+		// Initialise PrefsUtility's static state directly: the full init()
+		// path calls General.initAppConfig(), which doesn't work under
+		// Robolectric
+		val app = RuntimeEnvironment.getApplication() as Application
 
-        // Initialise PrefsUtility's static state directly: the full init()
-        // path calls General.initAppConfig(), which doesn't work under
-        // Robolectric
-        val app = RuntimeEnvironment.getApplication() as Application
+		try {
+			val resField = PrefsUtility::class.java.getDeclaredField("mRes")
+			resField.isAccessible = true
+			resField.set(null, app.resources)
 
-        try {
-            val resField = PrefsUtility::class.java.getDeclaredField("mRes")
-            resField.isAccessible = true
-            resField.set(null, app.resources)
+			val prefsField = PrefsUtility::class.java.getDeclaredField("sharedPrefs")
+			prefsField.isAccessible = true
+			prefsField.set(null, General.getSharedPrefs(app))
+		} catch (e: ReflectiveOperationException) {
+			throw RuntimeException(e)
+		}
 
-            val prefsField = PrefsUtility::class.java.getDeclaredField("sharedPrefs")
-            prefsField.isAccessible = true
-            prefsField.set(null, General.getSharedPrefs(app))
+		// The Compose activity wrappers pull RedditAccountManager and
+		// ComposePrefsSingleton from state wired in MaterialReader.onCreate, which
+		// Robolectric doesn't run
+		ComposePrefsSingleton.init(app)
+		RedditAccountManager.setInstance(RedditAccountManager(app))
+	}
 
-        } catch (e: ReflectiveOperationException) {
-            throw RuntimeException(e)
-        }
+	@Test
+	fun testNavBarIconAppearanceForWhitePref() {
+		val app = RuntimeEnvironment.getApplication() as Application
 
-        // The Compose activity wrappers pull RedditAccountManager and
-        // ComposePrefsSingleton from state wired in MaterialReader.onCreate, which
-        // Robolectric doesn't run
-        ComposePrefsSingleton.init(app)
-        RedditAccountManager.setInstance(RedditAccountManager(app))
-    }
+		General.getSharedPrefs(app)
+			.edit()
+			.putString("pref_appearance_navbar_color", "white")
+			.apply()
 
-    @Test
-    fun testNavBarIconAppearanceForWhitePref() {
+		// A plain ComposeBaseActivity host (see EdgeToEdgeInsetsTestActivity):
+		// the window's system-bar appearance is what's under test, not the
+		// composed screen.
+		val activity = Robolectric.buildActivity(EdgeToEdgeInsetsTestActivity::class.java)
+			.setup()
+			.get()
 
-        val app = RuntimeEnvironment.getApplication() as Application
+		val appearance = activity.window.insetsController!!.systemBarsAppearance
 
-        General.getSharedPrefs(app)
-            .edit()
-            .putString("pref_appearance_navbar_color", "white")
-            .apply()
+		val appearanceForceLightNavigationBars = 1 shl 9
 
-        // A plain ComposeBaseActivity host (see EdgeToEdgeInsetsTestActivity):
-        // the window's system-bar appearance is what's under test, not the
-        // composed screen.
-        val activity = Robolectric.buildActivity(EdgeToEdgeInsetsTestActivity::class.java)
-            .setup()
-            .get()
+		println("==== Final appearance bits: 0x" + Integer.toHexString(appearance) + " ====")
 
-        val appearance = activity.window.insetsController!!.systemBarsAppearance
+		Assert.assertEquals(
+			"FORCE_LIGHT_NAVIGATION_BARS should be clear",
+			0,
+			appearance and appearanceForceLightNavigationBars,
+		)
 
-        val appearanceForceLightNavigationBars = 1 shl 9
-
-        println("==== Final appearance bits: 0x" + Integer.toHexString(appearance) + " ====")
-
-        Assert.assertEquals(
-            "FORCE_LIGHT_NAVIGATION_BARS should be clear",
-            0,
-            appearance and appearanceForceLightNavigationBars
-        )
-
-        Assert.assertNotEquals(
-            "LIGHT_NAVIGATION_BARS should be set for a white nav bar",
-            0,
-            appearance and WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-        )
-    }
+		Assert.assertNotEquals(
+			"LIGHT_NAVIGATION_BARS should be set for a white nav bar",
+			0,
+			appearance and WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+		)
+	}
 }

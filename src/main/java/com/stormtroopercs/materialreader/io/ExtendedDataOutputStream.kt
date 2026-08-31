@@ -21,13 +21,13 @@ import java.io.IOException
 import java.io.OutputStream
 
 class ExtendedDataOutputStream(out: OutputStream?) : DataOutputStream(out) {
-    @Throws(IOException::class)
-    fun writeNullableBoolean(value: Boolean?) {
-        if (value == null) {
-            writeBoolean(false)
-        } else {
-            writeBoolean(true)
-            writeBoolean(value)
-        }
-    }
+	@Throws(IOException::class)
+	fun writeNullableBoolean(value: Boolean?) {
+		if (value == null) {
+			writeBoolean(false)
+		} else {
+			writeBoolean(true)
+			writeBoolean(value)
+		}
+	}
 }

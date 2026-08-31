@@ -17,7 +17,7 @@
 package com.stormtroopercs.materialreader.common
 
 class UnexpectedInternalStateException : RuntimeException {
-    constructor() : super("The application's internal state is invalid")
+	constructor() : super("The application's internal state is invalid")
 
-    constructor(message: String?) : super(message)
+	constructor(message: String?) : super(message)
 }

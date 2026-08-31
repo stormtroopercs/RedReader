@@ -21,103 +21,99 @@ import com.stormtroopercs.materialreader.image.ImageInfo
 import com.stormtroopercs.materialreader.image.ImageInfo.HasAudio
 
 object ParcelHelper {
-    fun readBoolean(`in`: Parcel): Boolean {
-        return `in`.readByte().toInt() == 1
-    }
+	fun readBoolean(`in`: Parcel): Boolean = `in`.readByte().toInt() == 1
 
-    fun readNullableString(`in`: Parcel): String? {
-        val isNull = readBoolean(`in`)
-        if (isNull) {
-            return null
-        }
+	fun readNullableString(`in`: Parcel): String? {
+		val isNull = readBoolean(`in`)
+		if (isNull) {
+			return null
+		}
 
-        return `in`.readString()
-    }
+		return `in`.readString()
+	}
 
-    fun readNullableImageInfoMediaType(`in`: Parcel): ImageInfo.MediaType? {
-        val isNull = readBoolean(`in`)
-        if (isNull) {
-            return null
-        }
+	fun readNullableImageInfoMediaType(`in`: Parcel): ImageInfo.MediaType? {
+		val isNull = readBoolean(`in`)
+		if (isNull) {
+			return null
+		}
 
-        return ImageInfo.MediaType.valueOf(`in`.readString()!!)
-    }
+		return ImageInfo.MediaType.valueOf(`in`.readString()!!)
+	}
 
-    fun readImageInfoHasAudio(`in`: Parcel): HasAudio {
-        return HasAudio.valueOf(`in`.readString()!!)
-    }
+	fun readImageInfoHasAudio(`in`: Parcel): HasAudio = HasAudio.valueOf(`in`.readString()!!)
 
-    fun writeNullableEnum(
-        parcel: Parcel,
-        value: Enum<*>?
-    ) {
-        if (value == null) {
-            writeBoolean(parcel, false)
-        } else {
-            writeBoolean(parcel, true)
-            parcel.writeString(value.name)
-        }
-    }
+	fun writeNullableEnum(
+		parcel: Parcel,
+		value: Enum<*>?,
+	) {
+		if (value == null) {
+			writeBoolean(parcel, false)
+		} else {
+			writeBoolean(parcel, true)
+			parcel.writeString(value.name)
+		}
+	}
 
-    fun writeNonNullEnum(parcel: Parcel, value: Enum<*>) {
-        parcel.writeString(value.name)
-    }
+	fun writeNonNullEnum(parcel: Parcel, value: Enum<*>) {
+		parcel.writeString(value.name)
+	}
 
-    fun readNullableInt(`in`: Parcel): Int? {
-        val isNull = readBoolean(`in`)
-        if (isNull) {
-            return null
-        }
+	fun readNullableInt(`in`: Parcel): Int? {
+		val isNull = readBoolean(`in`)
+		if (isNull) {
+			return null
+		}
 
-        return `in`.readInt()
-    }
+		return `in`.readInt()
+	}
 
-    fun readNullableLong(`in`: Parcel): Long? {
-        val isNull = readBoolean(`in`)
-        if (isNull) {
-            return null
-        }
+	fun readNullableLong(`in`: Parcel): Long? {
+		val isNull = readBoolean(`in`)
+		if (isNull) {
+			return null
+		}
 
-        return `in`.readLong()
-    }
+		return `in`.readLong()
+	}
 
-    fun readNullableBoolean(`in`: Parcel): Boolean? {
-        val isNull = readBoolean(`in`)
-        if (isNull) {
-            return null
-        }
+	fun readNullableBoolean(`in`: Parcel): Boolean? {
+		val isNull = readBoolean(`in`)
+		if (isNull) {
+			return null
+		}
 
-        return readBoolean(`in`)
-    }
+		return readBoolean(`in`)
+	}
 
-    fun writeBoolean(parcel: Parcel, b: Boolean) {
-        parcel.writeByte((if (b) 1 else 0).toByte())
-    }
+	fun writeBoolean(parcel: Parcel, b: Boolean) {
+		parcel.writeByte((if (b) 1 else 0).toByte())
+	}
 
-    fun writeNullableString(parcel: Parcel, value: String?) {
-        if (value == null) {
-            writeBoolean(parcel, false)
-        } else {
-            writeBoolean(parcel, true)
-            parcel.writeString(value)
-        }
-    }
+	fun writeNullableString(parcel: Parcel, value: String?) {
+		if (value == null) {
+			writeBoolean(parcel, false)
+		} else {
+			writeBoolean(parcel, true)
+			parcel.writeString(value)
+		}
+	}
 
-    fun writeNullableLong(parcel: Parcel, value: Long?) {
-        if (value == null) {
-            writeBoolean(parcel, false)
-        } else {
-            writeBoolean(parcel, true)
-            parcel.writeLong(value)
-        }
-    }
+	fun writeNullableLong(parcel: Parcel, value: Long?) {
+		if (value == null) {
+			writeBoolean(parcel, false)
+		} else {
+			writeBoolean(parcel, true)
+			parcel.writeLong(value)
+		}
+	}
 
-    fun writeNullableBoolean(parcel: Parcel, value: Boolean?) {
-        if (value == null) {
-            writeBoolean(parcel, false)
-        } else {
-            writeBoolean(parcel, true)
-            writeBoolean(parcel, value)
-        }
-    }
+	fun writeNullableBoolean(parcel: Parcel, value: Boolean?) {
+		if (value == null) {
+			writeBoolean(parcel, false)
+		} else {
+			writeBoolean(parcel, true)
+			writeBoolean(parcel, value)
+		}
+	}
 }

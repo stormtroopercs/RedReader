@@ -23,18 +23,12 @@ import com.stormtroopercs.materialreader.common.TimestampBound
 
 @Immutable
 data class DownloadStrategyIfTimestampOutsideBounds(
-	private val timestampBound: TimestampBound
+	private val timestampBound: TimestampBound,
 ) : DownloadStrategy {
 
-	override fun shouldDownloadWithoutCheckingCache(): Boolean {
-		return false
-	}
+	override fun shouldDownloadWithoutCheckingCache(): Boolean = false
 
-	override fun shouldDownloadIfCacheEntryFound(entry: CacheEntry): Boolean {
-		return !timestampBound.verifyTimestamp(entry.timestamp)
-	}
+	override fun shouldDownloadIfCacheEntryFound(entry: CacheEntry): Boolean = !timestampBound.verifyTimestamp(entry.timestamp)
 
-	override fun shouldDownloadIfNotCached(): Boolean {
-		return true
-	}
+	override fun shouldDownloadIfNotCached(): Boolean = true
 }

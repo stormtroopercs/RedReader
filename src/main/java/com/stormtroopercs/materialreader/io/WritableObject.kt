@@ -19,25 +19,25 @@ package com.stormtroopercs.materialreader.io
 import com.stormtroopercs.materialreader.common.time.TimestampUTC
 
 interface WritableObject<K> {
-    class CreationData(val key: String, val timestamp: Long)
+	class CreationData(val key: String, val timestamp: Long)
 
-    val key: K
+	val key: K
 
-    val timestamp: TimestampUTC
+	val timestamp: TimestampUTC
 
-    @Retention(AnnotationRetention.RUNTIME)
-    @Target(AnnotationTarget.FIELD)
-    annotation class WritableObjectVersion
+	@Retention(AnnotationRetention.RUNTIME)
+	@Target(AnnotationTarget.FIELD)
+	annotation class WritableObjectVersion
 
-    @Retention(AnnotationRetention.RUNTIME)
-    @Target(AnnotationTarget.FIELD)
-    annotation class WritableObjectKey
+	@Retention(AnnotationRetention.RUNTIME)
+	@Target(AnnotationTarget.FIELD)
+	annotation class WritableObjectKey
 
-    @Retention(AnnotationRetention.RUNTIME)
-    @Target(AnnotationTarget.FIELD)
-    annotation class WritableObjectTimestamp
+	@Retention(AnnotationRetention.RUNTIME)
+	@Target(AnnotationTarget.FIELD)
+	annotation class WritableObjectTimestamp
 
-    @Retention(AnnotationRetention.RUNTIME)
-    @Target(AnnotationTarget.FIELD)
-    annotation class WritableField
+	@Retention(AnnotationRetention.RUNTIME)
+	@Target(AnnotationTarget.FIELD)
+	annotation class WritableField
 }

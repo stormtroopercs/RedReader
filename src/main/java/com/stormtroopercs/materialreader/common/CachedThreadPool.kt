@@ -19,52 +19,52 @@ package com.stormtroopercs.materialreader.common
 import java.util.ArrayDeque
 
 class CachedThreadPool(private val mMaxThreads: Int, private val mThreadName: String?) {
-    private val mTasks = ArrayDeque<Runnable>(16)
-    private val mExecutor: Executor by lazy { Executor() }
+	private val mTasks = ArrayDeque<Runnable>(16)
+	private val mExecutor: Executor by lazy { Executor() }
 
-    private var mThreadNameCount = 0
+	private var mThreadNameCount = 0
 
-    private var mRunningThreads = 0
-    private var mIdleThreads = 0
+	private var mRunningThreads = 0
+	private var mIdleThreads = 0
 
-    fun add(task: Runnable?) {
-        synchronized(mTasks) {
-            mTasks.addLast(task)
-            (mTasks as Object).notifyAll()
-            if (mIdleThreads < 1 && mRunningThreads < mMaxThreads) {
-                mRunningThreads++
-                Thread(mExecutor, mThreadName + " " + (mThreadNameCount++)).start()
-            }
-        }
-    }
+	fun add(task: Runnable?) {
+		synchronized(mTasks) {
+			mTasks.addLast(task)
+			(mTasks as Object).notifyAll()
+			if (mIdleThreads < 1 && mRunningThreads < mMaxThreads) {
+				mRunningThreads++
+				Thread(mExecutor, mThreadName + " " + (mThreadNameCount++)).start()
+			}
+		}
+	}
 
-    private inner class Executor : Runnable {
-        override fun run() {
-            while (true) {
-                val taskToRun: Runnable
+	private inner class Executor : Runnable {
+		override fun run() {
+			while (true) {
+				val taskToRun: Runnable
 
-                synchronized(mTasks) {
-                    if (mTasks.isEmpty()) {
-                        mIdleThreads++
+				synchronized(mTasks) {
+					if (mTasks.isEmpty()) {
+						mIdleThreads++
 
-                        try {
-                            (mTasks as Object).wait(30000)
-                        } catch (e: InterruptedException) {
-                            throw RuntimeException(e)
-                        } finally {
-                            mIdleThreads--
-                        }
+						try {
+							(mTasks as Object).wait(30000)
+						} catch (e: InterruptedException) {
+							throw RuntimeException(e)
+						} finally {
+							mIdleThreads--
+						}
 
-                        if (mTasks.isEmpty()) {
-                            mRunningThreads--
-                            return
-                        }
-                    }
-                    taskToRun = mTasks.removeFirst()
-                }
+						if (mTasks.isEmpty()) {
+							mRunningThreads--
+							return
+						}
+					}
+					taskToRun = mTasks.removeFirst()
+				}
 
-                taskToRun.run()
-            }
-        }
-    }
+				taskToRun.run()
+			}
+		}
+	}
 }

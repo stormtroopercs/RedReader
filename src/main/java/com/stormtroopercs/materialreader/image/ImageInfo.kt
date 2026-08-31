@@ -18,10 +18,10 @@ package com.stormtroopercs.materialreader.image
 
 import android.os.Parcelable
 import androidx.compose.runtime.Immutable
-import kotlinx.parcelize.Parcelize
-import org.apache.commons.text.StringEscapeUtils
 import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.jsonwrap.JsonObject
+import kotlinx.parcelize.Parcelize
+import org.apache.commons.text.StringEscapeUtils
 import java.io.IOException
 
 private fun Long.isValidPositiveInt() = this < Int.MAX_VALUE && this >= 0
@@ -33,24 +33,22 @@ data class ImageSize(
 	val height: Int,
 ) : Parcelable {
 	companion object {
-		fun from(width: Long?, height: Long?): ImageSize? {
-			return if (
-				width?.takeIf { it.isValidPositiveInt() } != null &&
-				height?.takeIf { it.isValidPositiveInt() } != null
-			) {
-				ImageSize(width.toInt(), height.toInt())
-			} else {
-				null
-			}
+		fun from(width: Long?, height: Long?): ImageSize? = if (
+			width?.takeIf { it.isValidPositiveInt() } != null &&
+			height?.takeIf { it.isValidPositiveInt() } != null
+		) {
+			ImageSize(width.toInt(), height.toInt())
+		} else {
+			null
 		}
 
 		fun fromJson(
 			obj: JsonObject?,
 			fieldWidth: String = "width",
-			fieldHeight: String = "height"
+			fieldHeight: String = "height",
 		) = from(
 			obj?.getLong(fieldWidth),
-			obj?.getLong(fieldHeight)
+			obj?.getLong(fieldHeight),
 		)
 	}
 
@@ -61,8 +59,8 @@ data class ImageSize(
 @Parcelize
 data class ImageUrlInfo(
 	@JvmField val url: UriString,
-	@JvmField val size: ImageSize?=null,
-	@JvmField val sizeBytes: Long?=null,
+	@JvmField val size: ImageSize? = null,
+	@JvmField val sizeBytes: Long? = null,
 ) : Parcelable
 
 @Immutable
@@ -71,32 +69,37 @@ data class ImageInfo(
 
 	// TODO include all sizes and select at usage time
 	@JvmField val original: ImageUrlInfo,
-	@JvmField val bigSquare: ImageUrlInfo?=null,
-	@JvmField val preview: ImageUrlInfo?=null,
+	@JvmField val bigSquare: ImageUrlInfo? = null,
+	@JvmField val preview: ImageUrlInfo? = null,
 
-	@JvmField val urlAudioStream: UriString?=null,
+	@JvmField val urlAudioStream: UriString? = null,
 
 	// A page containing a compact HTML player, suitable for showing in a WebView
-	@JvmField val urlEmbeddedPlayer: UriString?=null,
+	@JvmField val urlEmbeddedPlayer: UriString? = null,
 
-	@JvmField val title: String?=null,
-	@JvmField val caption: String?=null,
+	@JvmField val title: String? = null,
+	@JvmField val caption: String? = null,
 
-	@JvmField val outboundUrl: UriString?=null,
+	@JvmField val outboundUrl: UriString? = null,
 
-	@JvmField val type: String?=null,
-	val isAnimated: Boolean?=null,
+	@JvmField val type: String? = null,
+	val isAnimated: Boolean? = null,
 
-	@JvmField val mediaType: MediaType?=null,
+	@JvmField val mediaType: MediaType? = null,
 	@JvmField val hasAudio: HasAudio,
 ) : Parcelable {
 
 	enum class MediaType {
-		IMAGE, VIDEO, GIF
+		IMAGE,
+		VIDEO,
+		GIF,
 	}
 
 	enum class HasAudio {
-		HAS_AUDIO, MAYBE_AUDIO, NO_AUDIO;
+		HAS_AUDIO,
+		MAYBE_AUDIO,
+		NO_AUDIO,
+		;
 
 		companion object {
 			fun fromBoolean(value: Boolean?): HasAudio {
@@ -116,7 +119,6 @@ data class ImageInfo(
 	companion object {
 		@JvmStatic
 		fun parseGfycat(obj: JsonObject): ImageInfo {
-
 			val title = obj.getString("title")
 
 			val hasAudio = obj.getBoolean("hasAudio")
@@ -125,7 +127,7 @@ data class ImageInfo(
 				ImageUrlInfo(
 					url = UriString(originalUrl),
 					size = ImageSize.from(obj.getLong("width"), obj.getLong("height")),
-					sizeBytes = obj.getLong("mp4Size")
+					sizeBytes = obj.getLong("mp4Size"),
 				)
 			}
 
@@ -138,7 +140,7 @@ data class ImageInfo(
 			val preview = mobilePoster?.getString("url")?.let { previewUrl ->
 				ImageUrlInfo(
 					url = UriString(previewUrl),
-					size = ImageSize.fromJson(mobilePoster)
+					size = ImageSize.fromJson(mobilePoster),
 				)
 			}
 
@@ -156,7 +158,7 @@ data class ImageInfo(
 		@JvmStatic
 		@Throws(IOException::class)
 		fun parseStreamable(obj: JsonObject): ImageInfo {
-			var fileObj: JsonObject?=null
+			var fileObj: JsonObject? = null
 			val files = obj.getObject("files")
 
 			val preferredTypes = arrayOf(
@@ -165,9 +167,9 @@ data class ImageInfo(
 				"mp4-high",
 				"webm-high",
 				"mp4-mobile",
-				"webm-mobile"
+				"webm-mobile",
 			)
-			var selectedType: String?=null
+			var selectedType: String? = null
 
 			if (files != null) {
 				for (type in preferredTypes) {
@@ -183,8 +185,8 @@ data class ImageInfo(
 				throw IOException("No suitable Streamable files found")
 			}
 
-			val mimeType = 				"video/" + selectedType!!.split("-".toRegex()).dropLastWhile { it.isEmpty() }
-					.toTypedArray()[0]
+			val mimeType = "video/" + selectedType!!.split("-".toRegex()).dropLastWhile { it.isEmpty() }
+				.toTypedArray()[0]
 
 			val original = fileObj.getString("url")?.let { originalUrl ->
 				ImageUrlInfo(
@@ -193,9 +195,9 @@ data class ImageInfo(
 							"https:$originalUrl"
 						} else {
 							originalUrl
-						}
+						},
 					),
-					size = ImageSize.fromJson(fileObj)
+					size = ImageSize.fromJson(fileObj),
 				)
 			}
 
@@ -227,10 +229,10 @@ data class ImageInfo(
 							originalUrl.replace(".gif", ".mp4")
 						} else {
 							originalUrl
-						}
+						},
 					),
 					size = ImageSize.fromJson(image),
-					sizeBytes = image?.getLong("size")
+					sizeBytes = image?.getLong("size"),
 				)
 			}
 
@@ -260,7 +262,7 @@ data class ImageInfo(
 			val isAnimated = obj?.getBoolean("animated")
 
 			var mp4 = false
-			var hasSound: Boolean?=null
+			var hasSound: Boolean? = null
 
 			val originalSize = ImageSize.fromJson(obj)
 
@@ -274,7 +276,6 @@ data class ImageInfo(
 					size = originalSize,
 					sizeBytes = obj.getLong("mp4_size"),
 				)
-
 			} ?: run {
 				hasSound = false
 				mp4 = false
@@ -283,7 +284,7 @@ data class ImageInfo(
 					ImageUrlInfo(
 						url = UriString(urlLink),
 						size = originalSize,
-						sizeBytes = obj.getLong("size")
+						sizeBytes = obj.getLong("size"),
 					)
 				}
 			}
@@ -310,7 +311,6 @@ data class ImageInfo(
 
 		@JvmStatic
 		fun parseDeviantArt(obj: JsonObject?): ImageInfo {
-
 			val original = obj?.getString("url")?.let { url ->
 				ImageUrlInfo(
 					url = UriString(url),
@@ -340,13 +340,12 @@ data class ImageInfo(
 
 		@JvmStatic
 		fun parseRedgifsV2(obj: JsonObject): ImageInfo {
-
 			val original = obj.getStringAtPath("urls", "hd")
 				.orElse(obj.getStringAtPath("urls", "sd"))
 				.asNullable()?.let {
 					ImageUrlInfo(
 						url = UriString(it),
-						size = ImageSize.fromJson(obj)
+						size = ImageSize.fromJson(obj),
 					)
 				}
 

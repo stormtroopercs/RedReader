@@ -27,99 +27,95 @@ import com.stormtroopercs.materialreader.receivers.NewMessageChecker
 import com.stormtroopercs.materialreader.receivers.RegularCachePruner
 
 object Alarms {
-    private val alarmMap: MutableMap<Alarm?, AlarmManager?> = HashMap<Alarm?, AlarmManager?>()
-    private val intentMap: MutableMap<Alarm?, PendingIntent?> = HashMap<Alarm?, PendingIntent?>()
+	private val alarmMap: MutableMap<Alarm?, AlarmManager?> = HashMap<Alarm?, AlarmManager?>()
+	private val intentMap: MutableMap<Alarm?, PendingIntent?> = HashMap<Alarm?, PendingIntent?>()
 
-    /**
-     * Starts the specified alarm
-     */
-    fun startAlarm(alarm: Alarm, context: Context) {
-        if (!alarmMap.containsKey(alarm)) {
-            val alarmIntent = Intent(context, alarm.alarmClass())
+	/**
+	 * Starts the specified alarm
+	 */
+	fun startAlarm(alarm: Alarm, context: Context) {
+		if (!alarmMap.containsKey(alarm)) {
+			val alarmIntent = Intent(context, alarm.alarmClass())
 
-            var flags = 0
+			var flags = 0
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                flags = flags or PendingIntent.FLAG_IMMUTABLE
-            }
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+				flags = flags or PendingIntent.FLAG_IMMUTABLE
+			}
 
-            @SuppressLint("UnspecifiedImmutableFlag") val pendingIntent =                 PendingIntent.getBroadcast(
-                    context,
-                    0,
-                    alarmIntent,
-                    flags
-                )
+			@SuppressLint("UnspecifiedImmutableFlag")
+			val pendingIntent = PendingIntent.getBroadcast(
+				context,
+				0,
+				alarmIntent,
+				flags,
+			)
 
-            val alarmManager = (context.getSystemService(Context.ALARM_SERVICE)) as AlarmManager
-            alarmManager.setInexactRepeating(
-                AlarmManager.RTC,
-                System.currentTimeMillis(),
-                alarm.interval(),
-                pendingIntent
-            )
+			val alarmManager = (context.getSystemService(Context.ALARM_SERVICE)) as AlarmManager
+			alarmManager.setInexactRepeating(
+				AlarmManager.RTC,
+				System.currentTimeMillis(),
+				alarm.interval(),
+				pendingIntent,
+			)
 
-            alarmMap.put(alarm, alarmManager)
-            intentMap.put(alarm, pendingIntent)
-        }
-    }
+			alarmMap.put(alarm, alarmManager)
+			intentMap.put(alarm, pendingIntent)
+		}
+	}
 
-    /**
-     * Stops the specified alarm
-     *
-     * @param alarm alarm to stop
-     */
-    fun stopAlarm(alarm: Alarm?) {
-        if (alarmMap.containsKey(alarm)) {
-            alarmMap.get(alarm)!!.cancel(intentMap.get(alarm)!!)
-            alarmMap.remove(alarm)
-            intentMap.remove(alarm)
-        }
-    }
+	/**
+	 * Stops the specified alarm
+	 *
+	 * @param alarm alarm to stop
+	 */
+	fun stopAlarm(alarm: Alarm?) {
+		if (alarmMap.containsKey(alarm)) {
+			alarmMap.get(alarm)!!.cancel(intentMap.get(alarm)!!)
+			alarmMap.remove(alarm)
+			intentMap.remove(alarm)
+		}
+	}
 
-    /**
-     * Starts all alarms that are supposed to start at device boot
-     *
-     * @param context
-     */
-    fun onBoot(context: Context) {
-        for (alarm in Alarm.entries) {
-            if (alarm.startOnBoot()) {
-                startAlarm(alarm, context)
-            }
-        }
-    }
+	/**
+	 * Starts all alarms that are supposed to start at device boot
+	 *
+	 * @param context
+	 */
+	fun onBoot(context: Context) {
+		for (alarm in Alarm.entries) {
+			if (alarm.startOnBoot()) {
+				startAlarm(alarm, context)
+			}
+		}
+	}
 
     /*
 		An enum to represent an alarm that may be created.
 		If you wish to add an alarm, just add it at the top of the enum with the 3 arguments,
 		and then call startAlarm() on it.
-	 */
-    enum class Alarm(
-        private val interval: Long,
-        alarmClass: Class<out BroadcastReceiver?>,
-        startOnBoot: Boolean
-    ) {
-        MESSAGE_CHECKER(AlarmManager.INTERVAL_HALF_HOUR, NewMessageChecker::class.java, true),
-        CACHE_PRUNER(AlarmManager.INTERVAL_HOUR, RegularCachePruner::class.java, true);
+     */
+	enum class Alarm(
+		private val interval: Long,
+		alarmClass: Class<out BroadcastReceiver?>,
+		startOnBoot: Boolean,
+	) {
+		MESSAGE_CHECKER(AlarmManager.INTERVAL_HALF_HOUR, NewMessageChecker::class.java, true),
+		CACHE_PRUNER(AlarmManager.INTERVAL_HOUR, RegularCachePruner::class.java, true),
+		;
 
-        private val alarmClass: Class<out BroadcastReceiver?>?
-        private val startOnBoot: Boolean
+		private val alarmClass: Class<out BroadcastReceiver?>?
+		private val startOnBoot: Boolean
 
-        init {
-            this.alarmClass = alarmClass
-            this.startOnBoot = startOnBoot
-        }
+		init {
+			this.alarmClass = alarmClass
+			this.startOnBoot = startOnBoot
+		}
 
-        internal fun interval(): Long {
-            return interval
-        }
+		internal fun interval(): Long = interval
 
-        internal fun alarmClass(): Class<out BroadcastReceiver?>? {
-            return alarmClass
-        }
+		internal fun alarmClass(): Class<out BroadcastReceiver?>? = alarmClass
 
-        internal fun startOnBoot(): Boolean {
-            return startOnBoot
-        }
-    }
+		internal fun startOnBoot(): Boolean = startOnBoot
+	}
 }

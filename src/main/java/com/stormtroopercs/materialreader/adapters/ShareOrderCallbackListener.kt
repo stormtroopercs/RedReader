@@ -17,5 +17,5 @@
 package com.stormtroopercs.materialreader.adapters
 
 interface ShareOrderCallbackListener {
-    fun onSelectedIntent(position: Int)
+	fun onSelectedIntent(position: Int)
 }

@@ -25,8 +25,8 @@ import java.util.Base64
  * none) plus the underlying bytes.
  */
 data class DataUriImage(
-    val mimeType: String?,
-    val bytes: ByteArray
+	val mimeType: String?,
+	val bytes: ByteArray,
 )
 
 /**
@@ -40,38 +40,38 @@ data class DataUriImage(
  * pipeline.
  */
 fun parseDataUri(dataUri: String): DataUriImage? {
-    val prefix = "data:"
-    if (!dataUri.startsWith(prefix, ignoreCase = true)) {
-        return null
-    }
+	val prefix = "data:"
+	if (!dataUri.startsWith(prefix, ignoreCase = true)) {
+		return null
+	}
 
-    val comma = dataUri.indexOf(',')
-    if (comma < 0) {
-        return null
-    }
+	val comma = dataUri.indexOf(',')
+	if (comma < 0) {
+		return null
+	}
 
-    val metadata = dataUri.substring(prefix.length, comma).trim()
-    val payload = dataUri.substring(comma + 1)
+	val metadata = dataUri.substring(prefix.length, comma).trim()
+	val payload = dataUri.substring(comma + 1)
 
-    val mimeType = metadata
-        .split(';')
-        .firstOrNull()
-        ?.trim()
-        ?.takeIf { it.isNotEmpty() }
+	val mimeType = metadata
+		.split(';')
+		.firstOrNull()
+		?.trim()
+		?.takeIf { it.isNotEmpty() }
 
-    return if (metadata.contains("base64", ignoreCase = true)) {
-        // MIME decoder: lenient about stray newlines in the payload.
-        val bytes = try {
-            Base64.getMimeDecoder().decode(payload)
-        } catch (e: IllegalArgumentException) {
-            return null
-        }
-        DataUriImage(mimeType, bytes)
-    } else {
-        try {
-            DataUriImage(mimeType, URLDecoder.decode(payload, "UTF-8").toByteArray())
-        } catch (e: IllegalArgumentException) {
-            null
-        }
-    }
+	return if (metadata.contains("base64", ignoreCase = true)) {
+		// MIME decoder: lenient about stray newlines in the payload.
+		val bytes = try {
+			Base64.getMimeDecoder().decode(payload)
+		} catch (e: IllegalArgumentException) {
+			return null
+		}
+		DataUriImage(mimeType, bytes)
+	} else {
+		try {
+			DataUriImage(mimeType, URLDecoder.decode(payload, "UTF-8").toByteArray())
+		} catch (e: IllegalArgumentException) {
+			null
+		}
+	}
 }

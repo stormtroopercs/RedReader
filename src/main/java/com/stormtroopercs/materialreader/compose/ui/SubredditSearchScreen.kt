@@ -40,156 +40,156 @@ import com.stormtroopercs.materialreader.navigation.SubredditSearchViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubredditSearchScreen(
-    onNavigateBack: () -> Unit,
-    onSubredditSelected: (String) -> Unit,
-    viewModel: SubredditSearchViewModel = hiltViewModel()
+	onNavigateBack: () -> Unit,
+	onSubredditSelected: (String) -> Unit,
+	viewModel: SubredditSearchViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.state.collectAsState()
-    var query by remember { mutableStateOf("") }
+	val state by viewModel.state.collectAsState()
+	var query by remember { mutableStateOf("") }
 
-    LaunchedEffect(query) {
-        viewModel.searchSubreddits(query)
-    }
+	LaunchedEffect(query) {
+		viewModel.searchSubreddits(query)
+	}
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = "Search Subreddits")
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                actions = {
-                    Icon(Icons.Default.Search, contentDescription = null)
-                }
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Search bar
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                placeholder = { Text("Search subreddits...") },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                singleLine = true
-            )
+	Scaffold(
+		topBar = {
+			TopAppBar(
+				title = {
+					Text(text = "Search Subreddits")
+				},
+				navigationIcon = {
+					IconButton(onClick = onNavigateBack) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Default.ArrowBack,
+							contentDescription = "Back",
+						)
+					}
+				},
+				actions = {
+					Icon(Icons.Default.Search, contentDescription = null)
+				},
+			)
+		},
+	) { paddingValues ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(paddingValues),
+		) {
+			// Search bar
+			OutlinedTextField(
+				value = query,
+				onValueChange = { query = it },
+				placeholder = { Text("Search subreddits...") },
+				leadingIcon = {
+					Icon(Icons.Default.Search, contentDescription = null)
+				},
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(16.dp),
+				singleLine = true,
+			)
 
-            // Results
-            when (state) {
-                is SubredditSearchViewModel.SubredditSearchUiState.Idle -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Text(
-                                "Type to search subreddits",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                "Search the live subreddit list (results are cached locally)",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-                is SubredditSearchViewModel.SubredditSearchUiState.Loading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is SubredditSearchViewModel.SubredditSearchUiState.Success -> {
-                    val results = (state as SubredditSearchViewModel.SubredditSearchUiState.Success).results
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 8.dp)
-                    ) {
-                        items(results, key = { it.name }) { subreddit ->
-                            SubredditSearchItem(
-                                subreddit = subreddit,
-                                onClick = { onSubredditSelected(subreddit.name) }
-                            )
-                        }
-                    }
-                }
-                is SubredditSearchViewModel.SubredditSearchUiState.Error -> {
-                    val error = (state as SubredditSearchViewModel.SubredditSearchUiState.Error).message
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Error: $error")
-                    }
-                }
-            }
-        }
-    }
+			// Results
+			when (state) {
+				is SubredditSearchViewModel.SubredditSearchUiState.Idle -> {
+					Box(
+						modifier = Modifier.fillMaxSize(),
+						contentAlignment = Alignment.Center,
+					) {
+						Column(
+							horizontalAlignment = Alignment.CenterHorizontally,
+							modifier = Modifier.padding(16.dp),
+						) {
+							Text(
+								"Type to search subreddits",
+								style = MaterialTheme.typography.bodyLarge,
+							)
+							Text(
+								"Search the live subreddit list (results are cached locally)",
+								style = MaterialTheme.typography.bodySmall,
+								color = MaterialTheme.colorScheme.onSurfaceVariant,
+							)
+						}
+					}
+				}
+				is SubredditSearchViewModel.SubredditSearchUiState.Loading -> {
+					Box(
+						modifier = Modifier.fillMaxSize(),
+						contentAlignment = Alignment.Center,
+					) {
+						CircularProgressIndicator()
+					}
+				}
+				is SubredditSearchViewModel.SubredditSearchUiState.Success -> {
+					val results = (state as SubredditSearchViewModel.SubredditSearchUiState.Success).results
+					LazyColumn(
+						modifier = Modifier.fillMaxSize(),
+						contentPadding = PaddingValues(horizontal = 8.dp),
+					) {
+						items(results, key = { it.name }) { subreddit ->
+							SubredditSearchItem(
+								subreddit = subreddit,
+								onClick = { onSubredditSelected(subreddit.name) },
+							)
+						}
+					}
+				}
+				is SubredditSearchViewModel.SubredditSearchUiState.Error -> {
+					val error = (state as SubredditSearchViewModel.SubredditSearchUiState.Error).message
+					Box(
+						modifier = Modifier.fillMaxSize(),
+						contentAlignment = Alignment.Center,
+					) {
+						Text("Error: $error")
+					}
+				}
+			}
+		}
+	}
 }
 
 @Composable
 private fun SubredditSearchItem(
-    subreddit: SubredditSearchViewModel.SubredditItem,
-    onClick: () -> Unit
+	subreddit: SubredditSearchViewModel.SubredditItem,
+	onClick: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 8.dp)
-        ) {
-            Text(
-                text = "r/${subreddit.name}",
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            subreddit.description?.let { description ->
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(onClick = onClick)
+			.padding(12.dp),
+		verticalAlignment = Alignment.CenterVertically,
+	) {
+		Column(
+			modifier = Modifier
+				.weight(1f)
+				.padding(end = 8.dp),
+		) {
+			Text(
+				text = "r/${subreddit.name}",
+				style = MaterialTheme.typography.bodyLarge,
+				maxLines = 1,
+				overflow = TextOverflow.Ellipsis,
+			)
+			subreddit.description?.let { description ->
+				Text(
+					text = description,
+					style = MaterialTheme.typography.bodySmall,
+					color = MaterialTheme.colorScheme.onSurfaceVariant,
+					maxLines = 2,
+					overflow = TextOverflow.Ellipsis,
+				)
+			}
+		}
 
-        subreddit.subscribersLabel()?.let { label ->
-            Text(
-                text = "${label} subscribers",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-    }
+		subreddit.subscribersLabel()?.let { label ->
+			Text(
+				text = "$label subscribers",
+				style = MaterialTheme.typography.bodySmall,
+				color = MaterialTheme.colorScheme.onSurfaceVariant,
+				modifier = Modifier.padding(start = 8.dp),
+			)
+		}
+	}
 }

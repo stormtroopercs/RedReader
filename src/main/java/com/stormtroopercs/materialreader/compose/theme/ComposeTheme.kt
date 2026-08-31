@@ -23,8 +23,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -34,9 +32,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -94,8 +92,8 @@ data class ComposeThemeButton(
 	val text: TextStyle,
 	val background: Color,
 	val shape: Shape,
-	val border: Color?=null,
-	val borderThickness: Dp?=null,
+	val border: Color? = null,
+	val borderThickness: Dp? = null,
 )
 
 @Immutable
@@ -105,7 +103,7 @@ data class ComposeThemeLinkButton(
 	val shape: Shape,
 	val borderColor: Color,
 	val borderThickness: Dp,
-	val iconColor: Color
+	val iconColor: Color,
 )
 
 interface ComposeTheme {
@@ -149,7 +147,7 @@ fun RRComposeContextTheme(
 	val colorScheme = resolveThemeColorScheme(prefs, themePref.lightness, context)
 
 	MaterialTheme(
-		colorScheme = colorScheme
+		colorScheme = colorScheme,
 	) {
 		CompositionLocalProvider(LocalComposeTheme provides theme) {
 			content()
@@ -223,19 +221,19 @@ class ComposeThemeImpl(prefs: ComposePrefs) : ComposeTheme {
 		override val title = baseTextStyle.copy(
 			color = colorText,
 			fontWeight = FontWeight.W600,
-			fontSize = 18.sp * prefs.appearanceFontScalePosts
+			fontSize = 18.sp * prefs.appearanceFontScalePosts,
 		)
 
 		override val subtitle = baseTextStyle.copy(
 			color = colorSubtext,
 			fontWeight = FontWeight.W400,
-			fontSize = 14.sp * prefs.appearanceFontScalePostSubtitles
+			fontSize = 14.sp * prefs.appearanceFontScalePostSubtitles,
 		)
 
 		override val caption = baseTextStyle.copy(
 			color = colorText,
 			fontWeight = FontWeight.W500,
-			fontSize = 16.sp * prefs.appearanceFontScalePostSubtitles
+			fontSize = 16.sp * prefs.appearanceFontScalePostSubtitles,
 		)
 
 		override val iconColor = colorIcon
@@ -248,18 +246,18 @@ class ComposeThemeImpl(prefs: ComposePrefs) : ComposeTheme {
 		override val title = baseTextStyle.copy(
 			color = colorText,
 			fontWeight = FontWeight.W600,
-			fontSize = 22.sp * prefs.appearanceFontScalePosts // TODO different setting?
+			fontSize = 22.sp * prefs.appearanceFontScalePosts, // TODO different setting?
 		)
 
 		override val subtitle = baseTextStyle.copy(
 			color = colorSubtext,
 			fontWeight = FontWeight.W400,
-			fontSize = 16.sp * prefs.appearanceFontScalePostSubtitles
+			fontSize = 16.sp * prefs.appearanceFontScalePostSubtitles,
 		)
 		override val titleCompact = baseTextStyle.copy(
 			color = colorText,
 			fontWeight = FontWeight.W600,
-			fontSize = 16.sp
+			fontSize = 16.sp,
 		)
 
 		override val toolbarIconColor = colorIcon
@@ -269,7 +267,7 @@ class ComposeThemeImpl(prefs: ComposePrefs) : ComposeTheme {
 		override val text = baseTextStyle.copy(
 			color = colorText,
 			fontWeight = FontWeight.W500,
-			fontSize = 16.sp * prefs.appearanceFontScaleGlobal // TODO different setting
+			fontSize = 16.sp * prefs.appearanceFontScaleGlobal, // TODO different setting
 		)
 		override val background = colorPopupBackground
 	}
@@ -278,19 +276,19 @@ class ComposeThemeImpl(prefs: ComposePrefs) : ComposeTheme {
 		override val title = baseTextStyle.copy(
 			color = colorText,
 			fontWeight = FontWeight.W600,
-			fontSize = 18.sp * prefs.appearanceFontScaleGlobal
+			fontSize = 18.sp * prefs.appearanceFontScaleGlobal,
 		)
 
 		override val item = baseTextStyle.copy(
 			color = colorText,
 			fontWeight = FontWeight.W500,
-			fontSize = 15.sp * prefs.appearanceFontScaleGlobal
+			fontSize = 15.sp * prefs.appearanceFontScaleGlobal,
 		)
 
 		override val body = baseTextStyle.copy(
 			color = colorSubtext,
 			fontWeight = FontWeight.W400,
-			fontSize = 14.sp * prefs.appearanceFontScaleGlobal
+			fontSize = 14.sp * prefs.appearanceFontScaleGlobal,
 		)
 
 		override val background = colorPopupBackground
@@ -301,13 +299,13 @@ class ComposeThemeImpl(prefs: ComposePrefs) : ComposeTheme {
 		override val title = baseTextStyle.copy(
 			color = colorText,
 			fontWeight = FontWeight.W600,
-			fontSize = 16.sp
+			fontSize = 16.sp,
 		)
 
 		override val message = baseTextStyle.copy(
 			color = colorSubtext,
 			fontWeight = FontWeight.W400,
-			fontSize = 13.sp
+			fontSize = 13.sp,
 		)
 
 		override val background = if (light) {
@@ -326,21 +324,21 @@ class ComposeThemeImpl(prefs: ComposePrefs) : ComposeTheme {
 			text = baseTextStyle.copy(
 				color = Color.White,
 				fontWeight = FontWeight.W500,
-				fontSize = 13.sp
+				fontSize = 13.sp,
 			),
 			background = if (light) {
 				Colors.Red.s5
 			} else {
 				Colors.Red.s7
 			},
-			shape = RoundedCornerShape(6.dp)
+			shape = RoundedCornerShape(6.dp),
 		)
 
 		override val secondaryButton = ComposeThemeButton(
 			text = baseTextStyle.copy(
 				color = colorText,
 				fontWeight = FontWeight.W500,
-				fontSize = 13.sp
+				fontSize = 13.sp,
 			),
 			background = Color.Transparent,
 			shape = RoundedCornerShape(6.dp),
@@ -351,21 +349,21 @@ class ComposeThemeImpl(prefs: ComposePrefs) : ComposeTheme {
 		title = baseTextStyle.copy(
 			color = colorText,
 			fontWeight = FontWeight.W500,
-			fontSize = 14.sp
+			fontSize = 14.sp,
 		),
 		subtitle = baseTextStyle.copy(
 			color = colorSubtext,
 			fontWeight = FontWeight.W400,
-			fontSize = 12.sp
+			fontSize = 12.sp,
 		),
 		shape = RoundedCornerShape(6.dp),
 		borderColor = if (light) Colors.Grey.s4 else Colors.Grey.s7,
 		borderThickness = 1.dp,
-		iconColor = if (light) Colors.Grey.s4 else Colors.Grey.s7
+		iconColor = if (light) Colors.Grey.s4 else Colors.Grey.s7,
 	)
 }
 
-val LocalComposeTheme = 	staticCompositionLocalOf<ComposeTheme> { throw RuntimeException("Theme not initialized") }
+val LocalComposeTheme = staticCompositionLocalOf<ComposeTheme> { throw RuntimeException("Theme not initialized") }
 
 object Colors {
 	object Grey {
@@ -402,7 +400,7 @@ fun TextStyle.StyledText(
 	text: String,
 	modifier: Modifier = Modifier,
 	overflow: TextOverflow = TextOverflow.Clip,
-	maxLines: Int = Int.MAX_VALUE
+	maxLines: Int = Int.MAX_VALUE,
 ) {
 	Text(
 		modifier = modifier,
@@ -412,7 +410,7 @@ fun TextStyle.StyledText(
 		fontWeight = fontWeight,
 		color = color,
 		overflow = overflow,
-		maxLines = maxLines
+		maxLines = maxLines,
 	)
 }
 
@@ -420,12 +418,12 @@ fun TextStyle.StyledText(
 @Composable
 fun Modifier.combinedClickableWithHaptics(
 	enabled: Boolean = true,
-	onClickLabel: String?=null,
-	role: Role?=null,
-	onLongClickLabel: String?=null,
+	onClickLabel: String? = null,
+	role: Role? = null,
+	onLongClickLabel: String? = null,
 	onLongClick: (() -> Unit)? = null,
 	onDoubleClick: (() -> Unit)? = null,
-	onClick: () -> Unit
+	onClick: () -> Unit,
 ): Modifier {
 	val haptics = LocalHapticFeedback.current
 
@@ -441,6 +439,6 @@ fun Modifier.combinedClickableWithHaptics(
 			}
 		},
 		onDoubleClick = onDoubleClick,
-		onClick = onClick
+		onClick = onClick,
 	)
 }

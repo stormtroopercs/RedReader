@@ -35,7 +35,7 @@ sealed class RedditThing : Parcelable {
 	@Serializable
 	@SerialName("t1")
 	@Parcelize
-	data class Comment(val data : RedditComment) : RedditThing()
+	data class Comment(val data: RedditComment) : RedditThing()
 
 	@Serializable
 	@SerialName("t2")
@@ -45,12 +45,12 @@ sealed class RedditThing : Parcelable {
 	@Serializable
 	@SerialName("t3")
 	@Parcelize
-	data class Post(val data : RedditPost) : RedditThing()
+	data class Post(val data: RedditPost) : RedditThing()
 
 	@Serializable
 	@SerialName("t4")
 	@Parcelize
-	data class Message(val data : RedditMessage) : RedditThing()
+	data class Message(val data: RedditMessage) : RedditThing()
 
 	@Serializable
 	@SerialName("t5")
@@ -65,5 +65,5 @@ sealed class RedditThing : Parcelable {
 	@Serializable
 	@SerialName("Listing")
 	@Parcelize
-	data class Listing(val data : RedditListing) : RedditThing()
+	data class Listing(val data: RedditListing) : RedditThing()
 }

@@ -62,9 +62,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.compose.net.NetRequestStatus
 import com.stormtroopercs.materialreader.compose.net.fetchImage
-import com.stormtroopercs.materialreader.common.UriString
 
 /**
  * The Explore tab (FINAL-DESIGN Phase 6): a search field (opens the subreddit
@@ -77,119 +77,119 @@ import com.stormtroopercs.materialreader.common.UriString
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExploreScreen(
-    onNavigateToSubreddit: (String) -> Unit,
-    onNavigateToCommunity: (String) -> Unit,
-    onNavigateToSearch: () -> Unit,
+	onNavigateToSubreddit: (String) -> Unit,
+	onNavigateToCommunity: (String) -> Unit,
+	onNavigateToSearch: () -> Unit,
 ) {
-    val directoryVm: CommunityDirectoryViewModel = hiltViewModel()
-    val rows by directoryVm.rows.collectAsStateWithLifecycle()
-    val loading by directoryVm.loading.collectAsStateWithLifecycle()
-    val error by directoryVm.error.collectAsStateWithLifecycle()
-    var directoryTab by remember { mutableStateOf(CommunityDirectoryTab.POPULAR) }
+	val directoryVm: CommunityDirectoryViewModel = hiltViewModel()
+	val rows by directoryVm.rows.collectAsStateWithLifecycle()
+	val loading by directoryVm.loading.collectAsStateWithLifecycle()
+	val error by directoryVm.error.collectAsStateWithLifecycle()
+	var directoryTab by remember { mutableStateOf(CommunityDirectoryTab.POPULAR) }
 
-    LaunchedEffect(directoryTab) {
-        directoryVm.load(directoryTab)
-    }
+	LaunchedEffect(directoryTab) {
+		directoryVm.load(directoryTab)
+	}
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // The search field (the reference's Explore header). Tapping the
-        // magnifier or pressing the IME action opens the subreddit search.
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-            OutlinedTextField(
-                value = "",
-                onValueChange = {},
-                placeholder = { Text("Search") },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-                trailingIcon = {
-                    IconButton(onClick = onNavigateToSearch) {
-                        Icon(Icons.Filled.Search, contentDescription = "Search communities")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                readOnly = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { onNavigateToSearch() }),
-            )
-        }
+	Column(modifier = Modifier.fillMaxSize()) {
+		// The search field (the reference's Explore header). Tapping the
+		// magnifier or pressing the IME action opens the subreddit search.
+		Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+			OutlinedTextField(
+				value = "",
+				onValueChange = {},
+				placeholder = { Text("Search") },
+				leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+				trailingIcon = {
+					IconButton(onClick = onNavigateToSearch) {
+						Icon(Icons.Filled.Search, contentDescription = "Search communities")
+					}
+				},
+				modifier = Modifier.fillMaxWidth(),
+				singleLine = true,
+				readOnly = true,
+				keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+				keyboardActions = KeyboardActions(onSearch = { onNavigateToSearch() }),
+			)
+		}
 
-        // The communities directory sub-tabs (Popular / All / New /
-        // Controversial) — FINAL-DESIGN 6.2.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            CommunityDirectoryTab.entries.forEach { t ->
-                FilterChip(
-                    selected = t == directoryTab,
-                    onClick = { directoryTab = t },
-                    label = { Text(t.label) },
-                )
-            }
-        }
+		// The communities directory sub-tabs (Popular / All / New /
+		// Controversial) — FINAL-DESIGN 6.2.
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(horizontal = 8.dp),
+			horizontalArrangement = Arrangement.spacedBy(8.dp),
+		) {
+			CommunityDirectoryTab.entries.forEach { t ->
+				FilterChip(
+					selected = t == directoryTab,
+					onClick = { directoryTab = t },
+					label = { Text(t.label) },
+				)
+			}
+		}
 
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            // The directory rows (icon + name + Nk subs).
-            if (loading) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-            } else {
-                error?.let { message ->
-                    item {
-                        Text(
-                            text = message,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(16.dp),
-                        )
-                    }
-                }
-                items(rows) { item ->
-                    CommunityDirectoryRow(
-                        name = item.name,
-                        iconUrl = item.iconUrl,
-                        subscribers = item.subscribers,
-                        onClick = { onNavigateToCommunity(item.name) },
-                    )
-                }
-                // The Feeds section (the default listings) — each carries an
-                // active `Default` chip (FINAL-DESIGN 6.1).
-                item {
-                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        Text(
-                            text = "Feeds",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-                items(
-                    items = listOf(
-                        "frontpage" to "Your home feed",
-                        "popular" to "Popular across Reddit",
-                        "all" to "All public posts",
-                    ),
-                ) { (feed, description) ->
-                    FeedDirectoryRow(
-                        title = feed,
-                        subtitle = description,
-                        onClick = { onNavigateToSubreddit(feed) },
-                    )
-                }
-            }
-        }
-    }
+		LazyColumn(modifier = Modifier.fillMaxSize()) {
+			// The directory rows (icon + name + Nk subs).
+			if (loading) {
+				item {
+					Box(
+						modifier = Modifier
+							.fillMaxWidth()
+							.height(120.dp),
+						contentAlignment = Alignment.Center,
+					) {
+						CircularProgressIndicator()
+					}
+				}
+			} else {
+				error?.let { message ->
+					item {
+						Text(
+							text = message,
+							style = MaterialTheme.typography.bodyMedium,
+							color = MaterialTheme.colorScheme.error,
+							modifier = Modifier.padding(16.dp),
+						)
+					}
+				}
+				items(rows) { item ->
+					CommunityDirectoryRow(
+						name = item.name,
+						iconUrl = item.iconUrl,
+						subscribers = item.subscribers,
+						onClick = { onNavigateToCommunity(item.name) },
+					)
+				}
+				// The Feeds section (the default listings) — each carries an
+				// active `Default` chip (FINAL-DESIGN 6.1).
+				item {
+					Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+						Text(
+							text = "Feeds",
+							style = MaterialTheme.typography.titleSmall,
+							fontWeight = FontWeight.Bold,
+							color = MaterialTheme.colorScheme.primary,
+						)
+					}
+				}
+				items(
+					items = listOf(
+						"frontpage" to "Your home feed",
+						"popular" to "Popular across Reddit",
+						"all" to "All public posts",
+					),
+				) { (feed, description) ->
+					FeedDirectoryRow(
+						title = feed,
+						subtitle = description,
+						onClick = { onNavigateToSubreddit(feed) },
+					)
+				}
+			}
+		}
+	}
 }
 
 /**
@@ -199,67 +199,67 @@ fun ExploreScreen(
  */
 @Composable
 private fun CommunityDirectoryRow(
-    name: String,
-    iconUrl: String?,
-    subscribers: Int?,
-    onClick: () -> Unit,
+	name: String,
+	iconUrl: String?,
+	subscribers: Int?,
+	onClick: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (iconUrl != null) {
-                val data by fetchImage(UriString(iconUrl), scaleToMaxAxis = 96)
-                when (val it = data) {
-                    is NetRequestStatus.Success -> Image(
-                        bitmap = it.result.data,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize().clip(CircleShape),
-                    )
-                    else -> Unit
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = name.firstOrNull()?.uppercase() ?: "?",
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            }
-        }
-        Spacer(Modifier.width(16.dp))
-        Column {
-            Text(
-                text = "r/$name",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            subscribers?.let {
-                Text(
-                    text = "${CommunityViewModel.formatCount(it)} subs",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(onClick = onClick)
+			.padding(horizontal = 16.dp, vertical = 8.dp),
+		verticalAlignment = Alignment.CenterVertically,
+	) {
+		Box(
+			modifier = Modifier
+				.size(32.dp)
+				.clip(CircleShape),
+			contentAlignment = Alignment.Center,
+		) {
+			if (iconUrl != null) {
+				val data by fetchImage(UriString(iconUrl), scaleToMaxAxis = 96)
+				when (val it = data) {
+					is NetRequestStatus.Success -> Image(
+						bitmap = it.result.data,
+						contentDescription = null,
+						contentScale = ContentScale.Crop,
+						modifier = Modifier.fillMaxSize().clip(CircleShape),
+					)
+					else -> Unit
+				}
+			} else {
+				Box(
+					modifier = Modifier
+						.fillMaxSize()
+						.background(MaterialTheme.colorScheme.primaryContainer),
+					contentAlignment = Alignment.Center,
+				) {
+					Text(
+						text = name.firstOrNull()?.uppercase() ?: "?",
+						color = MaterialTheme.colorScheme.onPrimaryContainer,
+						fontWeight = FontWeight.Bold,
+						style = MaterialTheme.typography.bodyMedium,
+					)
+				}
+			}
+		}
+		Spacer(Modifier.width(16.dp))
+		Column {
+			Text(
+				text = "r/$name",
+				style = MaterialTheme.typography.bodyLarge,
+				color = MaterialTheme.colorScheme.onSurface,
+			)
+			subscribers?.let {
+				Text(
+					text = "${CommunityViewModel.formatCount(it)} subs",
+					style = MaterialTheme.typography.bodySmall,
+					color = MaterialTheme.colorScheme.onSurfaceVariant,
+				)
+			}
+		}
+	}
 }
 
 /**
@@ -269,33 +269,33 @@ private fun CommunityDirectoryRow(
  */
 @Composable
 private fun FeedDirectoryRow(
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit,
+	title: String,
+	subtitle: String,
+	onClick: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Spacer(Modifier.width(8.dp))
-        AssistChip(
-            onClick = {},
-            label = { Text("Default") },
-        )
-    }
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(onClick = onClick)
+			.padding(horizontal = 16.dp, vertical = 8.dp),
+		verticalAlignment = Alignment.CenterVertically,
+	) {
+		Column(modifier = Modifier.weight(1f)) {
+			Text(
+				text = title,
+				style = MaterialTheme.typography.bodyLarge,
+				color = MaterialTheme.colorScheme.onSurface,
+			)
+			Text(
+				text = subtitle,
+				style = MaterialTheme.typography.bodySmall,
+				color = MaterialTheme.colorScheme.onSurfaceVariant,
+			)
+		}
+		Spacer(Modifier.width(8.dp))
+		AssistChip(
+			onClick = {},
+			label = { Text("Default") },
+		)
+	}
 }

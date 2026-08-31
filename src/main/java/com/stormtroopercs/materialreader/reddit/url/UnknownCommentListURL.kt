@@ -19,36 +19,30 @@ package com.stormtroopercs.materialreader.reddit.url
 import android.net.Uri
 
 class UnknownCommentListURL internal constructor(private val uri: Uri) : CommentListingURL() {
-    override fun after(after: String?): CommentListingURL {
-        return UnknownCommentListURL(
-            uri.buildUpon()
-                .appendQueryParameter("after", after)
-                .build()
-        )
-    }
+	override fun after(after: String?): CommentListingURL = UnknownCommentListURL(
+		uri.buildUpon()
+			.appendQueryParameter("after", after)
+			.build(),
+	)
 
-    override fun limit(limit: Int?): CommentListingURL {
-        return UnknownCommentListURL(
-            uri.buildUpon()
-                .appendQueryParameter(
-                    "limit",
-                    limit.toString()
-                )
-                .build()
-        )
-    }
+	override fun limit(limit: Int?): CommentListingURL = UnknownCommentListURL(
+		uri.buildUpon()
+			.appendQueryParameter(
+				"limit",
+				limit.toString(),
+			)
+			.build(),
+	)
 
-    // TODO handle this better
-    override fun generateJsonUri(): Uri? {
-        if (uri.getPath()!!.endsWith(".json")) {
-            return uri
-        } else {
-            return uri.buildUpon().appendEncodedPath(".json").build()
-        }
-    }
+	// TODO handle this better
+	override fun generateJsonUri(): Uri? {
+		if (uri.getPath()!!.endsWith(".json")) {
+			return uri
+		} else {
+			return uri.buildUpon().appendEncodedPath(".json").build()
+		}
+	}
 
-    @RedditURLParser.PathType
-    override fun pathType(): Int {
-        return RedditURLParser.UNKNOWN_COMMENT_LISTING_URL
-    }
+	@RedditURLParser.PathType
+	override fun pathType(): Int = RedditURLParser.UNKNOWN_COMMENT_LISTING_URL
 }

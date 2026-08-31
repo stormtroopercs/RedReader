@@ -17,37 +17,35 @@
 package com.stormtroopercs.materialreader.common.streams
 
 class FilterStream<E>(
-    private val mInner: Stream<E>,
-    private val mPredicate: Predicate<E>
+	private val mInner: Stream<E>,
+	private val mPredicate: Predicate<E>,
 ) : Stream<E> {
-    private var mHasNext = true
-    private var mNext: E? = null
+	private var mHasNext = true
+	private var mNext: E? = null
 
-    init {
-        moveToNext()
-    }
+	init {
+		moveToNext()
+	}
 
-    private fun moveToNext() {
-        while (mInner.hasNext()) {
-            val next = mInner.next()
+	private fun moveToNext() {
+		while (mInner.hasNext()) {
+			val next = mInner.next()
 
-            if (mPredicate.matches(next)) {
-                mNext = next
-                return
-            }
-        }
+			if (mPredicate.matches(next)) {
+				mNext = next
+				return
+			}
+		}
 
-        mNext = null
-        mHasNext = false
-    }
+		mNext = null
+		mHasNext = false
+	}
 
-    override fun hasNext(): Boolean {
-        return mHasNext
-    }
+	override fun hasNext(): Boolean = mHasNext
 
-    override fun next(): E {
-        val result = mNext!!
-        moveToNext()
-        return result
-    }
+	override fun next(): E {
+		val result = mNext!!
+		moveToNext()
+		return result
+	}
 }

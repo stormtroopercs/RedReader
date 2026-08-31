@@ -42,30 +42,28 @@ import java.util.UUID
 
 class RedditGalleryAPI {
 
-    companion object {
+	companion object {
 		private val cache = object : LinkedHashMap<String, AlbumInfo>() {
-			override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, AlbumInfo>?): Boolean {
-				return this.size > 100
-			}
+			override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, AlbumInfo>?): Boolean = this.size > 100
 		}
 
-        fun addToCache(post: RedditPost) {
+		fun addToCache(post: RedditPost) {
 			AlbumInfo.parseRedditGallery(post)?.apply {
 				synchronized(cache) {
 					cache.remove(post.id)
 					cache.put(post.id, this)
 				}
 			}
-        }
+		}
 
-        @JvmStatic
+		@JvmStatic
 		fun getAlbumInfo(
-            context: Context,
-            albumUrl: UriString,
-            albumId: String,
-            priority: Priority,
-            listener: GetAlbumInfoListener
-        ) {
+			context: Context,
+			albumUrl: UriString,
+			albumId: String,
+			priority: Priority,
+			listener: GetAlbumInfoListener,
+		) {
 			val cacheEntry = synchronized(cache) {
 				cache[albumId]
 			}
@@ -75,26 +73,26 @@ class RedditGalleryAPI {
 				return
 			}
 
-            val apiUrl = PostCommentListingURL(
-                null,
-                albumId,
-                null,
-                null,
-                null,
-                null,
-                false
-            ).generateJsonUri()
+			val apiUrl = PostCommentListingURL(
+				null,
+				albumId,
+				null,
+				null,
+				null,
+				null,
+				false,
+			).generateJsonUri()
 
-            CacheManager.getInstance(context).makeRequest(
-                CacheRequest(
+			CacheManager.getInstance(context).makeRequest(
+				CacheRequest(
 					UriString.from(apiUrl!!),
-                    RedditAccountManager.getInstance(context).defaultAccount,
-                    null,
-                    priority,
-                    DownloadStrategyIfNotCached.INSTANCE,
-                    Constants.FileType.IMAGE_INFO,
+					RedditAccountManager.getInstance(context).defaultAccount,
+					null,
+					priority,
+					DownloadStrategyIfNotCached.INSTANCE,
+					Constants.FileType.IMAGE_INFO,
 					CacheRequest.DownloadQueueType.REDDIT_API,
-                    context,
+					context,
 					object : CacheRequestCallbacks {
 
 						override fun onDataStreamComplete(
@@ -102,21 +100,21 @@ class RedditGalleryAPI {
 							timestamp: TimestampUTC,
 							session: UUID,
 							fromCache: Boolean,
-							mimetype: String?
+							mimetype: String?,
 						) {
 							try {
 								val thingResponse = JsonUtils.decodeRedditThingResponseFromStream(streamFactory.create())
 
-								val responseMultiple = (thingResponse as? RedditThingResponse.Multiple) ?:
-									throw RuntimeException("Expecting RedditThingResponse.Multiple")
+								val responseMultiple = (thingResponse as? RedditThingResponse.Multiple)
+									?: throw RuntimeException("Expecting RedditThingResponse.Multiple")
 
-								val listing = (responseMultiple.things.firstOrNull() as? RedditThing.Listing)?.data ?:
-									throw RuntimeException("No listing in response")
+								val listing = (responseMultiple.things.firstOrNull() as? RedditThing.Listing)?.data
+									?: throw RuntimeException("No listing in response")
 
 								val firstItem = listing.children.firstOrNull()?.ok()
 
-								val post = (firstItem as? RedditThing.Post)?.data ?:
-									throw RuntimeException("No post found in response")
+								val post = (firstItem as? RedditThing.Post)?.data
+									?: throw RuntimeException("No post found in response")
 
 								val album = AlbumInfo.parseRedditGallery(post)
 
@@ -129,24 +127,26 @@ class RedditGalleryAPI {
 								} else {
 									listener.onSuccess(album)
 								}
-
-							} catch(t: Throwable) {
-								onFailure(getGeneralErrorForFailure(
-									context,
-									CacheRequest.RequestFailureType.PARSE,
-									t,
-									null,
-									albumUrl,
-									FailedRequestBody.from(streamFactory)));
+							} catch (t: Throwable) {
+								onFailure(
+									getGeneralErrorForFailure(
+										context,
+										CacheRequest.RequestFailureType.PARSE,
+										t,
+										null,
+										albumUrl,
+										FailedRequestBody.from(streamFactory),
+									),
+								)
 							}
 						}
 
 						override fun onFailure(error: RRError) {
 							listener.onFailure(error)
 						}
-					}
-                )
-            )
-        }
-    }
+					},
+				),
+			)
+		}
+	}
 }

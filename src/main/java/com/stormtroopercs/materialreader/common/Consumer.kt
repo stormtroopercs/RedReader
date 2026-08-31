@@ -17,5 +17,5 @@
 package com.stormtroopercs.materialreader.common
 
 fun interface Consumer<E> {
-    fun consume(value: E)
+	fun consume(value: E)
 }

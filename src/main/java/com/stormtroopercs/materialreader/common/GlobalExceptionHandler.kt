@@ -20,8 +20,8 @@ import android.content.Context
 import android.util.Log
 import com.stormtroopercs.materialreader.R
 import com.stormtroopercs.materialreader.activities.BaseActivity
-import com.stormtroopercs.materialreader.common.BugReporter
 import com.stormtroopercs.materialreader.common.AndroidCommon.runOnUiThread
+import com.stormtroopercs.materialreader.common.BugReporter
 import com.stormtroopercs.materialreader.common.General.checkThisIsUIThread
 import com.stormtroopercs.materialreader.common.General.readWholeStreamAsUTF8
 import java.io.File
@@ -30,8 +30,7 @@ import java.io.FileWriter
 import java.io.IOException
 import java.io.PrintWriter
 
-class GlobalExceptionHandler private constructor(context: Context) :
-	Thread.UncaughtExceptionHandler {
+class GlobalExceptionHandler private constructor(context: Context) : Thread.UncaughtExceptionHandler {
 	private val mNextHandler = Thread.getDefaultUncaughtExceptionHandler()
 	private val mFile: File
 
@@ -60,9 +59,7 @@ class GlobalExceptionHandler private constructor(context: Context) :
 	companion object {
 		private const val TAG = "GlobalExceptionHandler"
 		private var sCheckedForLastCrash = false
-		private fun getFileLocation(context: Context): File {
-			return File(context.filesDir, "unhandled_exception.txt")
-		}
+		private fun getFileLocation(context: Context): File = File(context.filesDir, "unhandled_exception.txt")
 
 		fun init(context: Context) {
 			Thread.setDefaultUncaughtExceptionHandler(GlobalExceptionHandler(context))
@@ -77,43 +74,46 @@ class GlobalExceptionHandler private constructor(context: Context) :
 			sCheckedForLastCrash = true
 			val file = getFileLocation(activity)
 			val context = activity.applicationContext
-			Thread(Runnable {
-				if (!file.exists()) {
-					return@Runnable
-				}
-				val fileText: String
-				try {
-					FileInputStream(file).use { inStr -> fileText = readWholeStreamAsUTF8(inStr) }
-				} catch (e: IOException) {
-					Log.e(TAG, "Got exception when reading file", e)
-					return@Runnable
-				}
-				if (!file.delete()) {
-					Log.e(TAG, "Unable to delete file")
-				}
-				runOnUiThread {
-					DialogUtils.showDialogPositiveNegative(
-						activity,
-						context.getString(R.string.error_title_report_previous_crash),
-						context.getString(R.string.error_message_report_previous_crash),
-						R.string.dialog_yes,
-						R.string.dialog_no,
-						{
-							BugReporter.sendBugReport(
-								activity, RRError(
-									"Previous crash",
-									null,
-									true,
-									null,
-									null,
-									null,
-									fileText
+			Thread(
+				Runnable {
+					if (!file.exists()) {
+						return@Runnable
+					}
+					val fileText: String
+					try {
+						FileInputStream(file).use { inStr -> fileText = readWholeStreamAsUTF8(inStr) }
+					} catch (e: IOException) {
+						Log.e(TAG, "Got exception when reading file", e)
+						return@Runnable
+					}
+					if (!file.delete()) {
+						Log.e(TAG, "Unable to delete file")
+					}
+					runOnUiThread {
+						DialogUtils.showDialogPositiveNegative(
+							activity,
+							context.getString(R.string.error_title_report_previous_crash),
+							context.getString(R.string.error_message_report_previous_crash),
+							R.string.dialog_yes,
+							R.string.dialog_no,
+							{
+								BugReporter.sendBugReport(
+									activity,
+									RRError(
+										"Previous crash",
+										null,
+										true,
+										null,
+										null,
+										null,
+										fileText,
+									),
 								)
-							)
-						}
-					) {}
-				}
-			}).start()
+							},
+						) {}
+					}
+				},
+			).start()
 		}
 	}
 }

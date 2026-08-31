@@ -17,68 +17,69 @@
 package com.stormtroopercs.materialreader.common
 
 class PrioritisedCachedThreadPool(private val mMaxThreads: Int, private val mThreadName: String?) {
-    private val mTasks = ArrayList<Task?>(16)
-    private val mExecutor: Executor by lazy { Executor() }
+	private val mTasks = ArrayList<Task?>(16)
+	private val mExecutor: Executor by lazy { Executor() }
 
-    private var mThreadNameCount = 0
+	private var mThreadNameCount = 0
 
-    private var mRunningThreads = 0
-    private var mIdleThreads = 0
+	private var mRunningThreads = 0
+	private var mIdleThreads = 0
 
-    fun add(task: Task?) {
-        synchronized(mTasks) {
-            mTasks.add(task)
-            (mTasks as Object).notifyAll()
-            if (mIdleThreads < 1 && mRunningThreads < mMaxThreads) {
-                mRunningThreads++
-                Thread(mExecutor, mThreadName + " " + (mThreadNameCount++)).start()
-            }
-        }
-    }
+	fun add(task: Task?) {
+		synchronized(mTasks) {
+			mTasks.add(task)
+			(mTasks as Object).notifyAll()
+			if (mIdleThreads < 1 && mRunningThreads < mMaxThreads) {
+				mRunningThreads++
+				Thread(mExecutor, mThreadName + " " + (mThreadNameCount++)).start()
+			}
+		}
+	}
 
-    abstract class Task {
-        abstract val priority: Priority
+	abstract class Task {
+		abstract val priority: Priority
 
-        abstract fun run()
-    }
+		abstract fun run()
+	}
 
-    private inner class Executor : Runnable {
-        override fun run() {
-            while (true) {
-                var taskToRun: Task?=null
+	private inner class Executor : Runnable {
+		override fun run() {
+			while (true) {
+				var taskToRun: Task? = null
 
-                synchronized(mTasks) {
-                    if (mTasks.isEmpty()) {
-                        mIdleThreads++
+				synchronized(mTasks) {
+					if (mTasks.isEmpty()) {
+						mIdleThreads++
 
-                        try {
-                            (mTasks as Object).wait(30000)
-                        } catch (e: InterruptedException) {
-                            throw RuntimeException(e)
-                        } finally {
-                            mIdleThreads--
-                        }
+						try {
+							(mTasks as Object).wait(30000)
+						} catch (e: InterruptedException) {
+							throw RuntimeException(e)
+						} finally {
+							mIdleThreads--
+						}
 
-                        if (mTasks.isEmpty()) {
-                            mRunningThreads--
-                            return
-                        }
-                    }
-                    var taskIndex = -1
-                    for (i in mTasks.indices) {
-                        if (taskToRun == null || mTasks.get(i)!!.priority
-                                .isHigherPriorityThan(taskToRun.priority)
-                        ) {
-                            taskToRun = mTasks.get(i)
-                            taskIndex = i
-                        }
-                    }
-                    mTasks.removeAt(taskIndex)
-                }
+						if (mTasks.isEmpty()) {
+							mRunningThreads--
+							return
+						}
+					}
+					var taskIndex = -1
+					for (i in mTasks.indices) {
+						if (taskToRun == null ||
+							mTasks.get(i)!!.priority
+								.isHigherPriorityThan(taskToRun.priority)
+						) {
+							taskToRun = mTasks.get(i)
+							taskIndex = i
+						}
+					}
+					mTasks.removeAt(taskIndex)
+				}
 
-                checkNotNull(taskToRun)
-                taskToRun.run()
-            }
-        }
-    }
+				checkNotNull(taskToRun)
+				taskToRun.run()
+			}
+		}
+	}
 }

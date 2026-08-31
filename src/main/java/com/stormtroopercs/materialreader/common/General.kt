@@ -70,54 +70,54 @@ import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 object General {
-    @JvmField
- @Suppress("PropertyName")
+	@JvmField
+	@Suppress("PropertyName")
 	val CHARSET_UTF8: Charset = Objects.requireNonNull(Charset.forName("UTF-8"))
 
-    const val LTR_OVERRIDE_MARK = "\u202D"
+	const val LTR_OVERRIDE_MARK = "\u202D"
 
-    const val COLOR_INVALID = Color.MAGENTA
+	const val COLOR_INVALID = Color.MAGENTA
 
-    private val mPrefs = AtomicReference<SharedPrefsWrapper>()
-    private var lastBackPress: Long = -1
+	private val mPrefs = AtomicReference<SharedPrefsWrapper>()
+	private var lastBackPress: Long = -1
 
-    @JvmStatic
+	@JvmStatic
 	fun onBackPressed(): Boolean {
-        if (lastBackPress < SystemClock.uptimeMillis() - 300) {
-            lastBackPress = SystemClock.uptimeMillis()
-            return true
-        }
-        return false
-    }
+		if (lastBackPress < SystemClock.uptimeMillis() - 300) {
+			lastBackPress = SystemClock.uptimeMillis()
+			return true
+		}
+		return false
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun getSharedPrefs(context: Context): SharedPrefsWrapper {
-        var prefs = mPrefs.get()
-        if (prefs == null) {
-            prefs = SharedPrefsWrapper(
-                context.getSharedPreferences(
-                    context.packageName + "_preferences",
-                    Context.MODE_PRIVATE
-                )
-            )
-            if (!mPrefs.compareAndSet(null, prefs)) {
-                prefs = mPrefs.get()
-            }
-        }
-        return prefs
-    }
+		var prefs = mPrefs.get()
+		if (prefs == null) {
+			prefs = SharedPrefsWrapper(
+				context.getSharedPreferences(
+					context.packageName + "_preferences",
+					Context.MODE_PRIVATE,
+				),
+			)
+			if (!mPrefs.compareAndSet(null, prefs)) {
+				prefs = mPrefs.get()
+			}
+		}
+		return prefs
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun handlerMessage(what: Int, obj: Any?): Message {
-        val msg = Message.obtain()
-        msg.what = what
-        msg.obj = obj
-        return msg
-    }
+		val msg = Message.obtain()
+		msg.what = what
+		msg.obj = obj
+		return msg
+	}
 
-    /**
-     * Takes a size in bytes and converts it into a human-readable String with units.
-     */
+	/**
+	 * Takes a size in bytes and converts it into a human-readable String with units.
+	 */
 	@JvmStatic
 	fun addUnits(input: Long): String {
 		var i = 0
@@ -134,65 +134,68 @@ object General {
 		}
 		return if (i > 0 && result.roundToLong() < 10) {
 			String.format(Locale.US, "%.1f%s", result, unit)
-		} else String.format(Locale.US, "%.0f%s", result, unit)
+		} else {
+			String.format(Locale.US, "%.0f%s", result, unit)
+		}
 	}
 
-    @JvmStatic
+	@JvmStatic
 	fun bytesToMegabytes(input: Long): String {
-        val totalKilobytes = input / 1024
-        val totalMegabytes = totalKilobytes / 1024
-        val remainder = totalKilobytes % 1024
-        return String.format(Locale.US, "%d.%02d MB", totalMegabytes, remainder / 10)
-    }
+		val totalKilobytes = input / 1024
+		val totalMegabytes = totalKilobytes / 1024
+		val remainder = totalKilobytes % 1024
+		return String.format(Locale.US, "%d.%02d MB", totalMegabytes, remainder / 10)
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun dpToPixels(context: Context, dp: Float) = TypedValue.applyDimension(
 		TypedValue.COMPLEX_UNIT_DIP,
 		dp,
-		context.resources.displayMetrics
+		context.resources.displayMetrics,
 	).roundToInt()
 
 	@JvmStatic
 	val isSensitiveDebugLoggingEnabled: Boolean
-        get() = BuildConfig.DEBUG
+		get() = BuildConfig.DEBUG
 
-    @JvmStatic
+	@JvmStatic
 	fun quickToast(context: Context, textRes: Int) {
-        quickToast(context, context.applicationContext.getString(textRes))
-    }
+		quickToast(context, context.applicationContext.getString(textRes))
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun quickToast(context: Context?, text: String?) {
-        runOnUiThread { Toast.makeText(context, text, Toast.LENGTH_LONG).show() }
-    }
+		runOnUiThread { Toast.makeText(context, text, Toast.LENGTH_LONG).show() }
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun quickToast(
-        context: Context?,
-        text: String?,
-        duration: Int
-    ) {
-        runOnUiThread { Toast.makeText(context, text, duration).show() }
-    }
+		context: Context?,
+		text: String?,
+		duration: Int,
+	) {
+		runOnUiThread { Toast.makeText(context, text, duration).show() }
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun quickToast(
-        context: Context,
-        textRes: Int,
-        duration: Int
-    ) {
-        runOnUiThread {
-            Toast.makeText(
-                context,
-                context.applicationContext.getString(textRes),
-                duration
-            ).show()
-        }
-    }
+		context: Context,
+		textRes: Int,
+		duration: Int,
+	) {
+		runOnUiThread {
+			Toast.makeText(
+				context,
+				context.applicationContext.getString(textRes),
+				duration,
+			).show()
+		}
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun isTablet(context: Context) = when (PrefsUtility.appearance_twopane()) {
-		AppearanceTwopane.AUTO -> context.resources.configuration.screenLayout and
+		AppearanceTwopane.AUTO ->
+			context.resources.configuration.screenLayout and
 				Configuration.SCREENLAYOUT_SIZE_MASK ==
 				Configuration.SCREENLAYOUT_SIZE_XLARGE
 
@@ -200,109 +203,111 @@ object General {
 		AppearanceTwopane.FORCE -> true
 	}
 
-    @Suppress("DEPRECATION")
+	@Suppress("DEPRECATION")
 	@JvmStatic
 	fun isConnectionWifi(context: Context): Boolean {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val info = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
-        return (info != null
-                && info.detailedState == NetworkInfo.DetailedState.CONNECTED)
-    }
+		val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+		val info = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
+		return (
+			info != null &&
+				info.detailedState == NetworkInfo.DetailedState.CONNECTED
+			)
+	}
 
-    @Suppress("DEPRECATION")
+	@Suppress("DEPRECATION")
 	@JvmStatic
 	fun isNetworkConnected(context: Context): Boolean {
-        val cm = context.getSystemService(
-            Context.CONNECTIVITY_SERVICE
-        ) as ConnectivityManager
-        val activeNetworkInfo = cm.activeNetworkInfo
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected
-    }
+		val cm = context.getSystemService(
+			Context.CONNECTIVITY_SERVICE,
+		) as ConnectivityManager
+		val activeNetworkInfo = cm.activeNetworkInfo
+		return activeNetworkInfo != null && activeNetworkInfo.isConnected
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun getGeneralErrorForFailure(
-        context: Context,
-        type: RequestFailureType,
-        t: Throwable?,
-        status: Int?,
-        url: UriString?,
-        response: Optional<FailedRequestBody>
-    ): RRError {
-        val title: Int
-        val message: Int
-        var reportable = true
-        when (type) {
+		context: Context,
+		type: RequestFailureType,
+		t: Throwable?,
+		status: Int?,
+		url: UriString?,
+		response: Optional<FailedRequestBody>,
+	): RRError {
+		val title: Int
+		val message: Int
+		var reportable = true
+		when (type) {
 			RequestFailureType.CANCELLED -> {
-                title = R.string.error_cancelled_title
-                message = R.string.error_cancelled_message
-            }
+				title = R.string.error_cancelled_title
+				message = R.string.error_cancelled_message
+			}
 
 			RequestFailureType.PARSE -> {
-                title = R.string.error_parse_title
-                message = R.string.error_parse_message
-            }
+				title = R.string.error_parse_title
+				message = R.string.error_parse_message
+			}
 
 			RequestFailureType.CACHE_MISS -> {
-                title = R.string.error_postlist_cache_title
-                message = R.string.error_postlist_cache_message
-            }
+				title = R.string.error_postlist_cache_title
+				message = R.string.error_postlist_cache_message
+			}
 
 			RequestFailureType.STORAGE -> {
-                title = R.string.error_unexpected_storage_title
-                message = R.string.error_unexpected_storage_message
-            }
+				title = R.string.error_unexpected_storage_title
+				message = R.string.error_unexpected_storage_message
+			}
 
 			RequestFailureType.CONNECTION ->
-                // TODO check network and customise message
-                if (isTorError(t)) {
-                    title = R.string.error_tor_connection_title
-                    message = R.string.error_tor_connection_message
-                } else if (isContentBlockerError(t)) {
-                    title = R.string.error_content_blocker_title
-                    message = R.string.error_content_blocker_message
-                } else {
-                    title = R.string.error_connection_title
-                    message = R.string.error_connection_message
-                }
+				// TODO check network and customise message
+				if (isTorError(t)) {
+					title = R.string.error_tor_connection_title
+					message = R.string.error_tor_connection_message
+				} else if (isContentBlockerError(t)) {
+					title = R.string.error_content_blocker_title
+					message = R.string.error_content_blocker_message
+				} else {
+					title = R.string.error_connection_title
+					message = R.string.error_connection_message
+				}
 
 			RequestFailureType.MALFORMED_URL -> {
-                title = R.string.error_malformed_url_title
-                message = R.string.error_malformed_url_message
-            }
+				title = R.string.error_malformed_url_title
+				message = R.string.error_malformed_url_message
+			}
 
 			RequestFailureType.DISK_SPACE -> {
-                title = R.string.error_disk_space_title
-                message = R.string.error_disk_space_message
-            }
+				title = R.string.error_disk_space_title
+				message = R.string.error_disk_space_message
+			}
 
 			RequestFailureType.CACHE_DIR_DOES_NOT_EXIST -> {
-                title = R.string.error_cache_dir_does_not_exist_title
-                message = R.string.error_cache_dir_does_not_exist_message
-            }
+				title = R.string.error_cache_dir_does_not_exist_title
+				message = R.string.error_cache_dir_does_not_exist_message
+			}
 
 			RequestFailureType.REQUEST -> if (status != null) {
-                when (status) {
-                    400, 401, 403, 404 -> {
-                        val uri = url?.value?.toUri()
-                        var isImgurApiRequest = false
-                        var isRedditRequest = false
-                        if (uri != null && uri.host != null) {
-                            if ("reddit.com".equals(uri.host, ignoreCase = true)
-                                || uri.host?.endsWith(".reddit.com") == true
-                            ) {
-                                isRedditRequest = true
-                            } else if (uri.host.equals(
-                                    "api.imgur.com", ignoreCase = true
-                                )
-                            ) {
-                                isImgurApiRequest = true
-                            }
-                        }
-                        if (isRedditRequest) {
-
+				when (status) {
+					400, 401, 403, 404 -> {
+						val uri = url?.value?.toUri()
+						var isImgurApiRequest = false
+						var isRedditRequest = false
+						if (uri != null && uri.host != null) {
+							if ("reddit.com".equals(uri.host, ignoreCase = true) ||
+								uri.host?.endsWith(".reddit.com") == true
+							) {
+								isRedditRequest = true
+							} else if (uri.host.equals(
+									"api.imgur.com",
+									ignoreCase = true,
+								)
+							) {
+								isImgurApiRequest = true
+							}
+						}
+						if (isRedditRequest) {
 							val responseJson = response.flatMap { it.toJson() }
 
-							when(responseJson.asNullable()?.asObject()?.getString("reason")) {
+							when (responseJson.asNullable()?.asObject()?.getString("reason")) {
 								"private" -> {
 									title = R.string.error_403_private_sr_title
 									message = R.string.error_403_private_sr_message
@@ -316,7 +321,7 @@ object General {
 									title = R.string.error_404_banned_sr_title
 									message = R.string.error_404_banned_sr_message
 								} else -> {
-									if(status == 404) {
+									if (status == 404) {
 										title = R.string.error_404_title
 										message = R.string.error_404_message
 									} else {
@@ -325,192 +330,190 @@ object General {
 									}
 								}
 							}
-
-                        } else if (status == 400 && isImgurApiRequest) {
-                            title = R.string.error_imgur_400_title
-                            message = R.string.error_imgur_400_message
-                        } else if (status == 404) {
+						} else if (status == 400 && isImgurApiRequest) {
+							title = R.string.error_imgur_400_title
+							message = R.string.error_imgur_400_message
+						} else if (status == 404) {
 							title = R.string.error_404_title
 							message = R.string.error_404_message
 						} else {
-                            title = R.string.error_403_title_nonreddit
-                            message = R.string.error_403_message_nonreddit
-                        }
-                    }
+							title = R.string.error_403_title_nonreddit
+							message = R.string.error_403_message_nonreddit
+						}
+					}
 
-                    429 -> {
-                        title = R.string.error_http_429_title
-                        message = R.string.error_http_429_message
-                    }
+					429 -> {
+						title = R.string.error_http_429_title
+						message = R.string.error_http_429_message
+					}
 
-                    502, 503, 504 -> {
-                        title = R.string.error_redditdown_title
-                        message = R.string.error_redditdown_message
-                        reportable = false
-                    }
+					502, 503, 504 -> {
+						title = R.string.error_redditdown_title
+						message = R.string.error_redditdown_message
+						reportable = false
+					}
 
-                    else -> {
-                        title = R.string.error_unknown_api_title
-                        message = R.string.error_unknown_api_message
-                    }
-                }
-            } else if (isTorError(t)) {
-                title = R.string.error_tor_connection_title
-                message = R.string.error_tor_connection_message
-            } else {
-                title = R.string.error_unknown_api_title
-                message = R.string.error_unknown_api_message
-            }
+					else -> {
+						title = R.string.error_unknown_api_title
+						message = R.string.error_unknown_api_message
+					}
+				}
+			} else if (isTorError(t)) {
+				title = R.string.error_tor_connection_title
+				message = R.string.error_tor_connection_message
+			} else {
+				title = R.string.error_unknown_api_title
+				message = R.string.error_unknown_api_message
+			}
 
 			RequestFailureType.REDDIT_REDIRECT -> {
-                title = R.string.error_403_title
-                message = R.string.error_403_message
-            }
+				title = R.string.error_403_title
+				message = R.string.error_403_message
+			}
 
 			RequestFailureType.PARSE_IMGUR -> {
-                title = R.string.error_parse_imgur_title
-                message = R.string.error_parse_imgur_message
-            }
+				title = R.string.error_parse_imgur_title
+				message = R.string.error_parse_imgur_message
+			}
 
 			RequestFailureType.UPLOAD_FAIL_IMGUR -> {
-                title = R.string.error_upload_fail_imgur_title
-                message = R.string.error_upload_fail_imgur_message
-            }
+				title = R.string.error_upload_fail_imgur_title
+				message = R.string.error_upload_fail_imgur_message
+			}
 		}
-        return RRError.createLegacy(
-            context.getString(title),
-            context.getString(message),
-            reportable,
-            t,
-            status,
-            url,
-            null,
-            response
-        )
-    }
+		return RRError.createLegacy(
+			context.getString(title),
+			context.getString(message),
+			reportable,
+			t,
+			status,
+			url,
+			null,
+			response,
+		)
+	}
 
-    private fun isTorError(t: Throwable?): Boolean {
-        return t?.message != null && t.message!!.contains("127.0.0.1:8118")
-    }
+	private fun isTorError(t: Throwable?): Boolean = t?.message != null && t.message!!.contains("127.0.0.1:8118")
 
-    private fun isContentBlockerError(t: Throwable?): Boolean {
-        return t?.message != null && (t.message!!.contains("127.0.0.1:443")
-                || t.message!!.contains("127.0.0.1:80"))
-    }
+	private fun isContentBlockerError(t: Throwable?): Boolean = t?.message != null &&
+		(
+			t.message!!.contains("127.0.0.1:443") ||
+				t.message!!.contains("127.0.0.1:80")
+			)
 
-    @JvmStatic
+	@JvmStatic
 	fun getGeneralErrorForFailure(
-        context: Context,
-        type: APIFailureType?,
-        debuggingContext: String?,
-        response: Optional<FailedRequestBody>
-    ): RRError {
-        val title: Int
-        val message: Int
-        when (type) {
-            APIFailureType.INVALID_USER, APIFailureType.NOTALLOWED -> {
-                title = R.string.error_403_title
-                message = R.string.error_403_message
-            }
+		context: Context,
+		type: APIFailureType?,
+		debuggingContext: String?,
+		response: Optional<FailedRequestBody>,
+	): RRError {
+		val title: Int
+		val message: Int
+		when (type) {
+			APIFailureType.INVALID_USER, APIFailureType.NOTALLOWED -> {
+				title = R.string.error_403_title
+				message = R.string.error_403_message
+			}
 
-            APIFailureType.BAD_CAPTCHA -> {
-                title = R.string.error_bad_captcha_title
-                message = R.string.error_bad_captcha_message
-            }
+			APIFailureType.BAD_CAPTCHA -> {
+				title = R.string.error_bad_captcha_title
+				message = R.string.error_bad_captcha_message
+			}
 
-            APIFailureType.SUBREDDIT_REQUIRED -> {
-                title = R.string.error_subreddit_required_title
-                message = R.string.error_subreddit_required_message
-            }
+			APIFailureType.SUBREDDIT_REQUIRED -> {
+				title = R.string.error_subreddit_required_title
+				message = R.string.error_subreddit_required_message
+			}
 
-            APIFailureType.URL_REQUIRED -> {
-                title = R.string.error_url_required_title
-                message = R.string.error_url_required_message
-            }
+			APIFailureType.URL_REQUIRED -> {
+				title = R.string.error_url_required_title
+				message = R.string.error_url_required_message
+			}
 
-            APIFailureType.TOO_FAST -> {
-                title = R.string.error_too_fast_title
-                message = R.string.error_too_fast_message
-            }
+			APIFailureType.TOO_FAST -> {
+				title = R.string.error_too_fast_title
+				message = R.string.error_too_fast_message
+			}
 
-            APIFailureType.TOO_LONG -> {
-                title = R.string.error_too_long_title
-                message = R.string.error_too_long_message
-            }
+			APIFailureType.TOO_LONG -> {
+				title = R.string.error_too_long_title
+				message = R.string.error_too_long_message
+			}
 
-            APIFailureType.ALREADY_SUBMITTED -> {
-                title = R.string.error_already_submitted_title
-                message = R.string.error_already_submitted_message
-            }
+			APIFailureType.ALREADY_SUBMITTED -> {
+				title = R.string.error_already_submitted_title
+				message = R.string.error_already_submitted_message
+			}
 
-            APIFailureType.POST_FLAIR_REQUIRED -> {
-                title = R.string.error_post_flair_required_title
-                message = R.string.error_post_flair_required_message
-            }
+			APIFailureType.POST_FLAIR_REQUIRED -> {
+				title = R.string.error_post_flair_required_title
+				message = R.string.error_post_flair_required_message
+			}
 
-            else -> {
-                title = R.string.error_unknown_api_title
-                message = R.string.error_unknown_api_message
-            }
-        }
-        return RRError.createLegacy(
-            context.getString(title),
-            context.getString(message),
-            true,
-            null,
-            null,
-            null,
-            debuggingContext,
-            response
-        )
-    }
+			else -> {
+				title = R.string.error_unknown_api_title
+				message = R.string.error_unknown_api_message
+			}
+		}
+		return RRError.createLegacy(
+			context.getString(title),
+			context.getString(message),
+			true,
+			null,
+			null,
+			null,
+			debuggingContext,
+			response,
+		)
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun showResultDialog(
-        context: AppCompatActivity,
-        error: RRError
-    ) {
-        runOnUiThread {
-            try {
-                val alertBuilder = MaterialAlertDialogBuilder(
-                    context
-                )
-                alertBuilder.setNeutralButton(R.string.dialog_close, null)
-                alertBuilder.setNegativeButton(
-                    R.string.button_moredetail
-                ) { _: DialogInterface?, _: Int ->
-                    ErrorPropertiesDialog.newInstance(error).show(
-                        context.supportFragmentManager,
-                        "ErrorPropertiesDialog"
-                    )
-                }
-                alertBuilder.setTitle(error.title)
-                alertBuilder.setMessage(error.message)
-                alertBuilder.create().show()
-            } catch (e: BadTokenException) {
-                Log.e(
-                    "General",
-                    "Tried to show result dialog after activity closed",
-                    e
-                )
-            }
-        }
-    }
+		context: AppCompatActivity,
+		error: RRError,
+	) {
+		runOnUiThread {
+			try {
+				val alertBuilder = MaterialAlertDialogBuilder(
+					context,
+				)
+				alertBuilder.setNeutralButton(R.string.dialog_close, null)
+				alertBuilder.setNegativeButton(
+					R.string.button_moredetail,
+				) { _: DialogInterface?, _: Int ->
+					ErrorPropertiesDialog.newInstance(error).show(
+						context.supportFragmentManager,
+						"ErrorPropertiesDialog",
+					)
+				}
+				alertBuilder.setTitle(error.title)
+				alertBuilder.setMessage(error.message)
+				alertBuilder.create().show()
+			} catch (e: BadTokenException) {
+				Log.e(
+					"General",
+					"Tried to show result dialog after activity closed",
+					e,
+				)
+			}
+		}
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun filenameFromString(url: String): String {
-        val uri = url.toUri()
-        var filename = uri.path?.replace(File.separator, "") ?: "file"
-        val parts = filename.substring(1).split("\\.".toRegex(), limit = 2).toTypedArray()
-        if (parts.size < 2) {
-            filename += if ("v.redd.it" == uri.host) {
-                ".mp4"
-            } else {
-                ".jpg"
-            }
-        }
-        return filename
-    }
+		val uri = url.toUri()
+		var filename = uri.path?.replace(File.separator, "") ?: "file"
+		val parts = filename.substring(1).split("\\.".toRegex(), limit = 2).toTypedArray()
+		if (parts.size < 2) {
+			filename += if ("v.redd.it" == uri.host) {
+				".mp4"
+			} else {
+				".jpg"
+			}
+		}
+		return filename
+	}
 
 	private fun toHex(bytes: ByteArray): String {
 		val result = StringBuilder(bytes.size * 2)
@@ -530,7 +533,7 @@ object General {
 		return toHex(digest.digest(plaintext.encodeToByteArray()))
 	}
 
-    @JvmStatic
+	@JvmStatic
 	fun sha1(plaintext: ByteArray): String {
 		val digest: MessageDigest = try {
 			MessageDigest.getInstance("SHA-1")
@@ -538,7 +541,7 @@ object General {
 			throw RuntimeException(e)
 		}
 		return toHex(digest.digest(plaintext))
-    }
+	}
 
 	private fun appIds(context: Context) = AndroidCommon.getPackageInfo(context).run {
 		ids.map {
@@ -549,78 +552,74 @@ object General {
 		}.toList()
 	}
 
-    // Adapted from Android:
-    // http://grepcode.com/file/repository.grepcode.com/java/ext/com.google.android/android/4.1.1_r1/android/net/Uri.java?av=f
+	// Adapted from Android:
+	// http://grepcode.com/file/repository.grepcode.com/java/ext/com.google.android/android/4.1.1_r1/android/net/Uri.java?av=f
 	@JvmStatic
 	fun getUriQueryParameterNames(uri: Uri): Set<String> {
-        if (uri.isOpaque) {
-            throw UnsupportedOperationException("This isn't a hierarchical URI.")
-        }
-        val query = uri.encodedQuery ?: return emptySet()
-        val names: MutableSet<String> = LinkedHashSet()
-        var pos = 0
-        while (pos < query.length) {
-            val next = query.indexOf('&', pos)
-            val end = if (next == -1) query.length else next
-            var separator = query.indexOf('=', pos)
-            if (separator > end || separator == -1) {
-                separator = end
-            }
-            val name = query.substring(pos, separator)
-            names.add(Uri.decode(name))
+		if (uri.isOpaque) {
+			throw UnsupportedOperationException("This isn't a hierarchical URI.")
+		}
+		val query = uri.encodedQuery ?: return emptySet()
+		val names: MutableSet<String> = LinkedHashSet()
+		var pos = 0
+		while (pos < query.length) {
+			val next = query.indexOf('&', pos)
+			val end = if (next == -1) query.length else next
+			var separator = query.indexOf('=', pos)
+			if (separator > end || separator == -1) {
+				separator = end
+			}
+			val name = query.substring(pos, separator)
+			names.add(Uri.decode(name))
 
-            // Move start to end of name.
-            pos = end + 1
-        }
-        return Collections.unmodifiableSet(names)
-    }
+			// Move start to end of name.
+			pos = end + 1
+		}
+		return Collections.unmodifiableSet(names)
+	}
 
-    @JvmStatic
-	fun divideCeil(num: Int, divisor: Int): Int {
-        return (num + divisor - 1) / divisor
-    }
+	@JvmStatic
+	fun divideCeil(num: Int, divisor: Int): Int = (num + divisor - 1) / divisor
 
-    @JvmStatic
+	@JvmStatic
 	fun checkThisIsUIThread() {
-        if (!isThisUIThread) {
-            throw RuntimeException("Called from invalid thread")
-        }
-    }
+		if (!isThisUIThread) {
+			throw RuntimeException("Called from invalid thread")
+		}
+	}
 
-    @JvmStatic
+	@JvmStatic
 	val isThisUIThread: Boolean
-        get() = Looper.getMainLooper().thread === Thread.currentThread()
+		get() = Looper.getMainLooper().thread === Thread.currentThread()
 
-    @JvmStatic
+	@JvmStatic
 	fun <E> listOfOne(obj: E): ArrayList<E> {
-        val result = ArrayList<E>(1)
-        result.add(obj)
-        return result
-    }
+		val result = ArrayList<E>(1)
+		result.add(obj)
+		return result
+	}
 
-    @JvmStatic
+	@JvmStatic
 	@Throws(IOException::class)
-    fun copyStream(inStr: InputStream, out: OutputStream) {
-        var bytesRead: Int
-        val buffer = ByteArray(64 * 1024)
-        while (inStr.read(buffer).also { bytesRead = it } > 0) {
-            out.write(buffer, 0, bytesRead)
-        }
-    }
+	fun copyStream(inStr: InputStream, out: OutputStream) {
+		var bytesRead: Int
+		val buffer = ByteArray(64 * 1024)
+		while (inStr.read(buffer).also { bytesRead = it } > 0) {
+			out.write(buffer, 0, bytesRead)
+		}
+	}
 
-    @JvmStatic
+	@JvmStatic
 	@Throws(IOException::class)
-    fun readWholeStream(inStr: InputStream): ByteArray {
-        val out = ByteArrayOutputStream()
-        copyStream(inStr, out)
-        return out.toByteArray()
-    }
+	fun readWholeStream(inStr: InputStream): ByteArray {
+		val out = ByteArrayOutputStream()
+		copyStream(inStr, out)
+		return out.toByteArray()
+	}
 
-    @JvmStatic
+	@JvmStatic
 	@Throws(IOException::class)
-    fun readWholeStreamAsUTF8(inStr: InputStream): String {
-        return String(readWholeStream(inStr), CHARSET_UTF8)
-    }
+	fun readWholeStreamAsUTF8(inStr: InputStream): String = String(readWholeStream(inStr), CHARSET_UTF8)
 
 	@JvmStatic
 	fun initAppConfig(context: Context) {
@@ -644,54 +643,54 @@ object General {
 		}
 	}
 
-    @JvmStatic
+	@JvmStatic
 	fun setAllMarginsDp(
-        context: Context,
-        view: View,
-        marginDp: Int
-    ) {
-        val layoutParams = view.layoutParams as MarginLayoutParams
-        val marginPx = dpToPixels(context, marginDp.toFloat())
-        layoutParams.leftMargin = marginPx
-        layoutParams.rightMargin = marginPx
-        layoutParams.topMargin = marginPx
-        layoutParams.bottomMargin = marginPx
-        view.layoutParams = layoutParams
-    }
+		context: Context,
+		view: View,
+		marginDp: Int,
+	) {
+		val layoutParams = view.layoutParams as MarginLayoutParams
+		val marginPx = dpToPixels(context, marginDp.toFloat())
+		layoutParams.leftMargin = marginPx
+		layoutParams.rightMargin = marginPx
+		layoutParams.topMargin = marginPx
+		layoutParams.bottomMargin = marginPx
+		view.layoutParams = layoutParams
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun setLayoutMatchParent(view: View) {
-        setLayoutWidthHeight(
-            view,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        )
-    }
+		setLayoutWidthHeight(
+			view,
+			ViewGroup.LayoutParams.MATCH_PARENT,
+			ViewGroup.LayoutParams.MATCH_PARENT,
+		)
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun setLayoutMatchWidthWrapHeight(view: View) {
-        setLayoutWidthHeight(
-            view,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-    }
+		setLayoutWidthHeight(
+			view,
+			ViewGroup.LayoutParams.MATCH_PARENT,
+			ViewGroup.LayoutParams.WRAP_CONTENT,
+		)
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun setLayoutWidthHeight(
-        view: View,
-        width: Int,
-        height: Int
-    ) {
-        var layoutParams = view.layoutParams
-        if (layoutParams == null) {
-            layoutParams = ViewGroup.LayoutParams(width, height)
-        } else {
-            layoutParams.width = width
-            layoutParams.height = height
-        }
-        view.layoutParams = layoutParams
-    }
+		view: View,
+		width: Int,
+		height: Int,
+	) {
+		var layoutParams = view.layoutParams
+		if (layoutParams == null) {
+			layoutParams = ViewGroup.LayoutParams(width, height)
+		} else {
+			layoutParams.width = width
+			layoutParams.height = height
+		}
+		view.layoutParams = layoutParams
+	}
 
 	private fun parseConfig(b1: ByteArray, b2: ByteArray, action: (String, String) -> Unit) {
 		try {
@@ -699,28 +698,26 @@ object General {
 			cipher.init(
 				Cipher.DECRYPT_MODE,
 				SecretKeySpec(b1, "AES"),
-				IvParameterSpec(ByteArray(16))
+				IvParameterSpec(ByteArray(16)),
 			)
 			val dis = DataInputStream(ByteArrayInputStream(cipher.doFinal(b2)))
 			val key = dis.readUTF()
 			val value = dis.readUTF()
 
 			action(key, value)
-
-		} catch(_: Exception) {}
+		} catch (_: Exception) {}
 	}
 
-    @JvmStatic
+	@JvmStatic
 	fun recreateActivityNoAnimation(activity: AppCompatActivity) {
-
-        // http://stackoverflow.com/a/3419987/1526861
-        val intent = activity.intent
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-        activity.finish()
-        activity.overridePendingTransitionWithNoAnimation()
-        activity.startActivity(intent)
-        activity.overridePendingTransitionWithNoAnimation()
-    }
+		// http://stackoverflow.com/a/3419987/1526861
+		val intent = activity.intent
+		intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+		activity.finish()
+		activity.overridePendingTransitionWithNoAnimation()
+		activity.startActivity(intent)
+		activity.overridePendingTransitionWithNoAnimation()
+	}
 
 	@Suppress("DEPRECATION")
 	private fun Activity.overridePendingTransitionWithNoAnimation() {
@@ -729,100 +726,98 @@ object General {
 
 	@JvmStatic
 	fun safeDismissDialog(dialog: Dialog) {
-        runOnUiThread {
-            try {
-                if (dialog.isShowing) {
-                    dialog.dismiss()
-                }
-            } catch (e: Exception) {
-                Log.e("safeDismissDialog", "Caught exception while dismissing dialog", e)
-            }
-        }
-    }
+		runOnUiThread {
+			try {
+				if (dialog.isShowing) {
+					dialog.dismiss()
+				}
+			} catch (e: Exception) {
+				Log.e("safeDismissDialog", "Caught exception while dismissing dialog", e)
+			}
+		}
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun closeSafely(closeable: Closeable?) {
-        try {
-            closeable?.close()
-        } catch (e: IOException) {
-            Log.e("closeSafely", "Failed to close resource", e)
-        }
-    }
+		try {
+			closeable?.close()
+		} catch (e: IOException) {
+			Log.e("closeSafely", "Failed to close resource", e)
+		}
+	}
 
-    @JvmStatic
-fun startNewThread(
-        name: String,
-        runnable: Runnable
-    ) {
-        Thread(runnable, name).start()
-    }
+	@JvmStatic
+	fun startNewThread(
+		name: String,
+		runnable: Runnable,
+	) {
+		Thread(runnable, name).start()
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun <T : View?> findViewById(view: View, id: Int): T? {
-        if (view.id == id) {
+		if (view.id == id) {
 			@Suppress("UNCHECKED_CAST")
 			return view as T
 		}
-        if (view is ViewGroup) {
+		if (view is ViewGroup) {
 			for (i in 0 until view.childCount) {
-                val result = findViewById<T>(view.getChildAt(i), id)
-                if (result != null) {
-                    return result
-                }
-            }
-        }
-        return null
-    }
+				val result = findViewById<T>(view.getChildAt(i), id)
+				if (result != null) {
+					return result
+				}
+			}
+		}
+		return null
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun <E, R> mapIfNotNull(
-        value: E?,
-        op: UnaryOperator<E, R>
-    ): R? = value?.run(op::operate)
+		value: E?,
+		op: UnaryOperator<E, R>,
+	): R? = value?.run(op::operate)
 
-    @JvmStatic
+	@JvmStatic
 	val isAlpha: Boolean
-        get() = General::class.java.canonicalName?.contains("alpha") == true
+		get() = General::class.java.canonicalName?.contains("alpha") == true
 
-    @JvmStatic
+	@JvmStatic
 	@SafeVarargs
-    fun <E> hashsetFromArray(vararg data: E): Set<E> {
-        val result = HashSet<E>(data.size)
-        Collections.addAll(result, *data)
-        return result
-    }
+	fun <E> hashsetFromArray(vararg data: E): Set<E> {
+		val result = HashSet<E>(data.size)
+		Collections.addAll(result, *data)
+		return result
+	}
 
-    @JvmStatic
+	@JvmStatic
 	@SafeVarargs
-    fun <E> listFromArray(vararg data: E): ArrayList<E> {
-        val result = ArrayList<E>(data.size)
-        Collections.addAll(result, *data)
-        return result
-    }
+	fun <E> listFromArray(vararg data: E): ArrayList<E> {
+		val result = ArrayList<E>(data.size)
+		Collections.addAll(result, *data)
+		return result
+	}
 
-    @JvmStatic
+	@JvmStatic
 	@SafeVarargs
-    fun <E> nullAlternative(
-        vararg values: E
-    ): E {
-        for (value in values) {
-            if (value != null) {
-                return value
-            }
-        }
-        return values[values.size - 1]
-    }
+	fun <E> nullAlternative(
+		vararg values: E,
+	): E {
+		for (value in values) {
+			if (value != null) {
+				return value
+			}
+		}
+		return values[values.size - 1]
+	}
 
-    @JvmStatic
+	@JvmStatic
 	fun <E> ignoreIOException(
-        factory: GenericFactory<E, IOException>
-    ): Optional<E> {
-        return try {
-            Optional.of(factory.create())
-        } catch (e: IOException) {
-            Optional.empty()
-        }
-    }
+		factory: GenericFactory<E, IOException>,
+	): Optional<E> = try {
+		Optional.of(factory.create())
+	} catch (e: IOException) {
+		Optional.empty()
+	}
 }
 
 fun <E> E.invokeIf(condition: Boolean, action: E.() -> E): E = if (condition) {

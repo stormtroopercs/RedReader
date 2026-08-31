@@ -19,30 +19,31 @@ package com.stormtroopercs.materialreader.reddit
 import com.stormtroopercs.materialreader.common.StringUtils
 
 enum class PostCommentSort(
-    val key: String
+	val key: String,
 ) {
-    BEST("confidence"),
-    HOT("hot"),
-    NEW("new"),
-    OLD("old"),
-    TOP("top"),
-    CONTROVERSIAL("controversial"),
-    QA("qa");
+	BEST("confidence"),
+	HOT("hot"),
+	NEW("new"),
+	OLD("old"),
+	TOP("top"),
+	CONTROVERSIAL("controversial"),
+	QA("qa"),
+	;
 
-    companion object {
-        fun lookup(name: String): PostCommentSort? {
-            var name = name
-            name = StringUtils.asciiUppercase(name)
+	companion object {
+		fun lookup(name: String): PostCommentSort? {
+			var name = name
+			name = StringUtils.asciiUppercase(name)
 
-            if (name == "CONFIDENCE") {
-                return PostCommentSort.BEST // oh, reddit...
-            }
+			if (name == "CONFIDENCE") {
+				return PostCommentSort.BEST // oh, reddit...
+			}
 
-            try {
-                return valueOf(name)
-            } catch (e: IllegalArgumentException) {
-                return null
-            }
-        }
-    }
+			try {
+				return valueOf(name)
+			} catch (e: IllegalArgumentException) {
+				return null
+			}
+		}
+	}
 }

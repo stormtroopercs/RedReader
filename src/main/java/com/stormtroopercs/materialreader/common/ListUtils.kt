@@ -17,11 +17,11 @@
 package com.stormtroopercs.materialreader.common
 
 object ListUtils {
-    fun <E> getLast(list: MutableList<E?>): E? {
-        if (list.isEmpty()) {
-            return null
-        }
+	fun <E> getLast(list: MutableList<E?>): E? {
+		if (list.isEmpty()) {
+			return null
+		}
 
-        return list.get(list.size - 1)
-    }
+		return list.get(list.size - 1)
+	}
 }

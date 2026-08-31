@@ -21,7 +21,7 @@ import android.content.res.Resources
 import com.stormtroopercs.materialreader.R
 
 class TimeStringsImpl constructor(
-		private val resources: Resources
+	private val resources: Resources,
 ) : TimeStrings {
 	override val year: String
 		get() = resources.getString(R.string.time_year)

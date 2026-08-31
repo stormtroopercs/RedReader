@@ -27,127 +27,123 @@ import com.stormtroopercs.materialreader.http.FailedRequestBody
 import com.stormtroopercs.materialreader.reddit.things.RedditUser
 
 abstract class APIResponseHandler private constructor(val context: AppCompatActivity) {
-    enum class APIFailureType {
-        INVALID_USER,
-        BAD_CAPTCHA,
-        NOTALLOWED,
-        SUBREDDIT_REQUIRED,
-        URL_REQUIRED,
-        UNKNOWN,
-        TOO_FAST,
-        TOO_LONG,
-        ALREADY_SUBMITTED,
-        POST_FLAIR_REQUIRED
-    }
+	enum class APIFailureType {
+		INVALID_USER,
+		BAD_CAPTCHA,
+		NOTALLOWED,
+		SUBREDDIT_REQUIRED,
+		URL_REQUIRED,
+		UNKNOWN,
+		TOO_FAST,
+		TOO_LONG,
+		ALREADY_SUBMITTED,
+		POST_FLAIR_REQUIRED,
+	}
 
-    abstract fun onCallbackException(t : Throwable)
+	abstract fun onCallbackException(t: Throwable)
 
-    abstract fun onFailure(error: RRError)
+	abstract fun onFailure(error: RRError)
 
-    fun notifyFailure(error: RRError) {
-        try {
-            onFailure(error)
-        } catch (t1: Throwable) {
-            try {
-                onCallbackException(t1)
-            } catch (t2: Throwable) {
-                addGlobalError(RRError(null, null, true, t1))
-                handleGlobalError(context, t2)
-            }
-        }
-    }
+	fun notifyFailure(error: RRError) {
+		try {
+			onFailure(error)
+		} catch (t1: Throwable) {
+			try {
+				onCallbackException(t1)
+			} catch (t2: Throwable) {
+				addGlobalError(RRError(null, null, true, t1))
+				handleGlobalError(context, t2)
+			}
+		}
+	}
 
-    fun notifyFailure(
-        type: APIFailureType,
-        debuggingContext: String?,
-        response: Optional<FailedRequestBody>
-    ) {
-        notifyFailure(
-            General.getGeneralErrorForFailure(
-                context,
-                type,
-                debuggingContext,
-                response
-            )
-        )
-    }
+	fun notifyFailure(
+		type: APIFailureType,
+		debuggingContext: String?,
+		response: Optional<FailedRequestBody>,
+	) {
+		notifyFailure(
+			General.getGeneralErrorForFailure(
+				context,
+				type,
+				debuggingContext,
+				response,
+			),
+		)
+	}
 
-    abstract class SubmitResponseHandler protected constructor(context: AppCompatActivity) :
-        APIResponseHandler(context) {
-        abstract fun onSubmitErrors(errors: ArrayList<String?>)
+	abstract class SubmitResponseHandler protected constructor(context: AppCompatActivity) : APIResponseHandler(context) {
+		abstract fun onSubmitErrors(errors: ArrayList<String?>)
 
-        abstract fun onSuccess(
-            redirectUrl: Optional<String>,
-            thingId: Optional<String>
-        )
-    }
+		abstract fun onSuccess(
+			redirectUrl: Optional<String>,
+			thingId: Optional<String>,
+		)
+	}
 
-    abstract class ActionResponseHandler protected constructor(context: AppCompatActivity) :
-        APIResponseHandler(context) {
-        fun notifySuccess() {
-            try {
-                onSuccess()
-            } catch (t1: Throwable) {
-                try {
-                    onCallbackException(t1)
-                } catch (t2: Throwable) {
-                    addGlobalError(RRError(null, null, true, t1))
-                    handleGlobalError(context, t2)
-                }
-            }
-        }
+	abstract class ActionResponseHandler protected constructor(context: AppCompatActivity) : APIResponseHandler(context) {
+		fun notifySuccess() {
+			try {
+				onSuccess()
+			} catch (t1: Throwable) {
+				try {
+					onCallbackException(t1)
+				} catch (t2: Throwable) {
+					addGlobalError(RRError(null, null, true, t1))
+					handleGlobalError(context, t2)
+				}
+			}
+		}
 
-        protected abstract fun onSuccess()
-    }
+		protected abstract fun onSuccess()
+	}
 
-    abstract class ValueResponseHandler<E> protected constructor(context: AppCompatActivity) :
-        APIResponseHandler(context) {
-        fun notifySuccess(value: E) {
-            try {
-                onSuccess(value)
-            } catch (t1: Throwable) {
-                try {
-                    onCallbackException(t1)
-                } catch (t2: Throwable) {
-                    addGlobalError(RRError(null, null, true, t1))
-                    handleGlobalError(context, t2)
-                }
-            }
-        }
+	abstract class ValueResponseHandler<E> protected constructor(context: AppCompatActivity) : APIResponseHandler(context) {
+		fun notifySuccess(value: E) {
+			try {
+				onSuccess(value)
+			} catch (t1: Throwable) {
+				try {
+					onCallbackException(t1)
+				} catch (t2: Throwable) {
+					addGlobalError(RRError(null, null, true, t1))
+					handleGlobalError(context, t2)
+				}
+			}
+		}
 
-        abstract fun onSuccess(value: E)
-    }
+		abstract fun onSuccess(value: E)
+	}
 
-    abstract class UserResponseHandler protected constructor(context: AppCompatActivity) :
-        APIResponseHandler(context) {
-        fun notifySuccess(result: RedditUser, timestamp: TimestampUTC) {
-            try {
-                onSuccess(result, timestamp)
-            } catch (t1: Throwable) {
-                try {
-                    onCallbackException(t1)
-                } catch (t2: Throwable) {
-                    addGlobalError(RRError(null, null, true, t1))
-                    handleGlobalError(context, t2)
-                }
-            }
-        }
+	abstract class UserResponseHandler protected constructor(context: AppCompatActivity) : APIResponseHandler(context) {
+		fun notifySuccess(result: RedditUser, timestamp: TimestampUTC) {
+			try {
+				onSuccess(result, timestamp)
+			} catch (t1: Throwable) {
+				try {
+					onCallbackException(t1)
+				} catch (t2: Throwable) {
+					addGlobalError(RRError(null, null, true, t1))
+					handleGlobalError(context, t2)
+				}
+			}
+		}
 
-        fun notifyDownloadStarted() {
-            try {
-                onDownloadStarted()
-            } catch (t1: Throwable) {
-                try {
-                    onCallbackException(t1)
-                } catch (t2: Throwable) {
-                    addGlobalError(RRError(null, null, true, t1))
-                    handleGlobalError(context, t2)
-                }
-            }
-        }
+		fun notifyDownloadStarted() {
+			try {
+				onDownloadStarted()
+			} catch (t1: Throwable) {
+				try {
+					onCallbackException(t1)
+				} catch (t2: Throwable) {
+					addGlobalError(RRError(null, null, true, t1))
+					handleGlobalError(context, t2)
+				}
+			}
+		}
 
-        protected abstract fun onDownloadStarted()
+		protected abstract fun onDownloadStarted()
 
-        protected abstract fun onSuccess(result : RedditUser, timestamp : TimestampUTC)
-    }
+		protected abstract fun onSuccess(result: RedditUser, timestamp: TimestampUTC)
+	}
 }

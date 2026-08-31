@@ -17,9 +17,9 @@
 
 package com.stormtroopercs.materialreader.test.navigation
 
+import com.stormtroopercs.materialreader.navigation.normalizeSubreddit
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import com.stormtroopercs.materialreader.navigation.normalizeSubreddit
 
 /**
  * Tests for [normalizeSubreddit] — the pure normalisation of user-typed
@@ -29,73 +29,73 @@ import com.stormtroopercs.materialreader.navigation.normalizeSubreddit
  */
 class PostSubmitViewModelTest {
 
-    @Test
-    fun plainName_unchanged() {
-        assertEquals("kotlin", normalizeSubreddit("kotlin"))
-    }
+	@Test
+	fun plainName_unchanged() {
+		assertEquals("kotlin", normalizeSubreddit("kotlin"))
+	}
 
-    @Test
-    fun uppercasedName_isLowercased() {
-        assertEquals("kotlin", normalizeSubreddit("Kotlin"))
-    }
+	@Test
+	fun uppercasedName_isLowercased() {
+		assertEquals("kotlin", normalizeSubreddit("Kotlin"))
+	}
 
-    @Test
-    fun leadingSlashStripped() {
-        assertEquals("kotlin", normalizeSubreddit("/kotlin"))
-    }
+	@Test
+	fun leadingSlashStripped() {
+		assertEquals("kotlin", normalizeSubreddit("/kotlin"))
+	}
 
-    @Test
-    fun leadingRSlashStripped() {
-        assertEquals("kotlin", normalizeSubreddit("r/kotlin"))
-    }
+	@Test
+	fun leadingRSlashStripped() {
+		assertEquals("kotlin", normalizeSubreddit("r/kotlin"))
+	}
 
-    @Test
-    fun trailingSlashStripped() {
-        assertEquals("kotlin", normalizeSubreddit("kotlin/"))
-    }
+	@Test
+	fun trailingSlashStripped() {
+		assertEquals("kotlin", normalizeSubreddit("kotlin/"))
+	}
 
-    @Test
-    fun fullUrlPrefixStripped() {
-        assertEquals("kotlin", normalizeSubreddit("r/Kotlin/"))
-    }
+	@Test
+	fun fullUrlPrefixStripped() {
+		assertEquals("kotlin", normalizeSubreddit("r/Kotlin/"))
+	}
 
-    @Test
-    fun leadingSlashAndRSlashStripped() {
-        assertEquals("kotlin", normalizeSubreddit("/r/kotlin"))
-    }
+	@Test
+	fun leadingSlashAndRSlashStripped() {
+		assertEquals("kotlin", normalizeSubreddit("/r/kotlin"))
+	}
 
-    @Test
-    fun surroundingWhitespaceTrimmed() {
-        assertEquals("kotlin", normalizeSubreddit("  kotlin  "))
-    }
+	@Test
+	fun surroundingWhitespaceTrimmed() {
+		assertEquals("kotlin", normalizeSubreddit("  kotlin  "))
+	}
 
-    @Test
-    fun allDecorationsStripped() {
-        assertEquals("kotlin", normalizeSubreddit("  R/Kotlin/  "))
-    }
+	@Test
+	fun allDecorationsStripped() {
+		assertEquals("kotlin", normalizeSubreddit("  R/Kotlin/  "))
+	}
 
-    @Test
-    fun multipleLeadingSlashesStripped() {
-        assertEquals("kotlin", normalizeSubreddit("///kotlin"))
-    }
+	@Test
+	fun multipleLeadingSlashesStripped() {
+		assertEquals("kotlin", normalizeSubreddit("///kotlin"))
+	}
 
-    @Test
-    fun multipleTrailingSlashesStripped() {
-        assertEquals("kotlin", normalizeSubreddit("kotlin///"))
-    }
+	@Test
+	fun multipleTrailingSlashesStripped() {
+		assertEquals("kotlin", normalizeSubreddit("kotlin///"))
+	}
 
-    @Test
-    fun multiWordSubredditPreserved() {
-        assertEquals("askscience", normalizeSubreddit("r/AskScience"))
-    }
+	@Test
+	fun multiWordSubredditPreserved() {
+		assertEquals("askscience", normalizeSubreddit("r/AskScience"))
+	}
 
-    @Test
-    fun emptyInput_staysEmpty() {
-        assertEquals("", normalizeSubreddit(""))
-    }
+	@Test
+	fun emptyInput_staysEmpty() {
+		assertEquals("", normalizeSubreddit(""))
+	}
 
-    @Test
-    fun whitespaceOnlyInput_becomesEmpty() {
-        assertEquals("", normalizeSubreddit("   "))
-    }
+	@Test
+	fun whitespaceOnlyInput_becomesEmpty() {
+		assertEquals("", normalizeSubreddit("   "))
+	}
 }

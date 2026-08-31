@@ -17,27 +17,23 @@
 package com.stormtroopercs.materialreader.common.collections
 
 abstract class Stream<Type> {
-    abstract fun hasNext(): Boolean
+	abstract fun hasNext(): Boolean
 
-    abstract fun take(): Type
+	abstract fun take(): Type
 
-    fun <Output> map(operator: MapStream.Operator<Type, Output>): Stream<Output> {
-        return MapStream<Type, Output>(this, operator)
-    }
+	fun <Output> map(operator: MapStream.Operator<Type, Output>): Stream<Output> = MapStream<Type, Output>(this, operator)
 
-    fun <Output> mapRethrowExceptions(
-        operator: MapStreamRethrowExceptions.Operator<Type, Output>
-    ): Stream<Output> {
-        return MapStreamRethrowExceptions<Type, Output>(this, operator)
-    }
+	fun <Output> mapRethrowExceptions(
+		operator: MapStreamRethrowExceptions.Operator<Type, Output>,
+	): Stream<Output> = MapStreamRethrowExceptions<Type, Output>(this, operator)
 
-    fun <Output : MutableCollection<in Type>> collect(
-        output: Output
-    ): Output {
-        while (hasNext()) {
-            output.add(take())
-        }
+	fun <Output : MutableCollection<in Type>> collect(
+		output: Output,
+	): Output {
+		while (hasNext()) {
+			output.add(take())
+		}
 
-        return output
-    }
+		return output
+	}
 }

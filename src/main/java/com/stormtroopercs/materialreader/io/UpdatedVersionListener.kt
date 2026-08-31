@@ -17,5 +17,5 @@
 package com.stormtroopercs.materialreader.io
 
 interface UpdatedVersionListener<K, V : WritableObject<K>> {
-    fun onUpdatedVersion(data: V)
+	fun onUpdatedVersion(data: V)
 }

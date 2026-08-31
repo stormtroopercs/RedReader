@@ -19,81 +19,79 @@ package com.stormtroopercs.materialreader.common.collections
 import java.lang.ref.WeakReference
 
 class WeakReferenceListManager<E> {
-    private val data = ArrayList<WeakReference<E>>()
+	private val data = ArrayList<WeakReference<E>>()
 
-    @Synchronized
-    fun size(): Int {
-        return data.size
-    }
+	@Synchronized
+	fun size(): Int = data.size
 
-    @Synchronized
-    fun add(`object`: E) {
-        data.add(WeakReference<E>(`object`))
-    }
+	@Synchronized
+	fun add(`object`: E) {
+		data.add(WeakReference<E>(`object`))
+	}
 
-    @Synchronized
-    fun map(operator: Operator<E>) {
-        val iterator = data.iterator()
+	@Synchronized
+	fun map(operator: Operator<E>) {
+		val iterator = data.iterator()
 
-        while (iterator.hasNext()) {
-            val `object` = iterator.next().get()
+		while (iterator.hasNext()) {
+			val `object` = iterator.next().get()
 
-            if (`object` == null) {
-                iterator.remove()
-            } else {
-                operator.operate(`object`)
-            }
-        }
-    }
+			if (`object` == null) {
+				iterator.remove()
+			} else {
+				operator.operate(`object`)
+			}
+		}
+	}
 
-    @Synchronized
-    fun <A> map(operator: ArgOperator<E, A>, arg: A) {
-        val iterator = data.iterator()
+	@Synchronized
+	fun <A> map(operator: ArgOperator<E, A>, arg: A) {
+		val iterator = data.iterator()
 
-        while (iterator.hasNext()) {
-            val `object` = iterator.next().get()
+		while (iterator.hasNext()) {
+			val `object` = iterator.next().get()
 
-            if (`object` == null) {
-                iterator.remove()
-            } else {
-                operator.operate(`object`, arg)
-            }
-        }
-    }
+			if (`object` == null) {
+				iterator.remove()
+			} else {
+				operator.operate(`object`, arg)
+			}
+		}
+	}
 
-    @Synchronized
-    fun remove(`object`: E) {
-        val iterator = data.iterator()
+	@Synchronized
+	fun remove(`object`: E) {
+		val iterator = data.iterator()
 
-        while (iterator.hasNext()) {
-            if (iterator.next().get() === `object`) {
-                iterator.remove()
-            }
-        }
-    }
+		while (iterator.hasNext()) {
+			if (iterator.next().get() === `object`) {
+				iterator.remove()
+			}
+		}
+	}
 
-    @Synchronized
-    fun clean() {
-        val iterator = data.iterator()
+	@Synchronized
+	fun clean() {
+		val iterator = data.iterator()
 
-        while (iterator.hasNext()) {
-            val `object` = iterator.next().get()
+		while (iterator.hasNext()) {
+			val `object` = iterator.next().get()
 
-            if (`object` == null) {
-                iterator.remove()
-            }
-        }
-    }
+			if (`object` == null) {
+				iterator.remove()
+			}
+		}
+	}
 
-    @get:Synchronized
-    val isEmpty: Boolean
-        get() = data.isEmpty()
+	@get:Synchronized
+	val isEmpty: Boolean
+		get() = data.isEmpty()
 
-    fun interface Operator<E> {
-        fun operate(`object`: E)
-    }
+	fun interface Operator<E> {
+		fun operate(`object`: E)
+	}
 
-    interface ArgOperator<E, A> {
-        fun operate(`object`: E, arg: A)
-    }
+	interface ArgOperator<E, A> {
+		fun operate(`object`: E, arg: A)
+	}
 }

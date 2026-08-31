@@ -19,11 +19,11 @@ package com.stormtroopercs.materialreader.compose.theme
 
 import android.content.Context
 import android.os.Build
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import com.stormtroopercs.materialreader.compose.prefs.ComposePrefs
@@ -69,8 +69,7 @@ fun colorToHex(color: Color): String {
 }
 
 /** Resolve the manual accent, falling back to a safe default if the stored hex is malformed. */
-fun resolveManualAccent(hex: String?): Color =
-	parseColorHex(hex ?: DEFAULT_MANUAL_ACCENT) ?: parseColorHex(DEFAULT_MANUAL_ACCENT)!!
+fun resolveManualAccent(hex: String?): Color = parseColorHex(hex ?: DEFAULT_MANUAL_ACCENT) ?: parseColorHex(DEFAULT_MANUAL_ACCENT)!!
 
 /**
  * Build the [ColorScheme] for the current settings:

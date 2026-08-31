@@ -18,12 +18,12 @@
 package com.stormtroopercs.materialreader.image
 
 import androidx.compose.runtime.Immutable
-import org.apache.commons.text.StringEscapeUtils
 import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.jsonwrap.JsonObject
 import com.stormtroopercs.materialreader.reddit.kthings.ImageMetadata
 import com.stormtroopercs.materialreader.reddit.kthings.MaybeParseError
 import com.stormtroopercs.materialreader.reddit.kthings.RedditPost
+import org.apache.commons.text.StringEscapeUtils
 import kotlin.math.min
 
 @Immutable
@@ -31,7 +31,7 @@ class AlbumInfo(
 	@JvmField val url: UriString,
 	@JvmField val title: String?,
 	val description: String?,
-	images: List<ImageInfo>
+	images: List<ImageInfo>,
 ) {
 	@JvmField
 	val images = ArrayList(images)
@@ -40,7 +40,7 @@ class AlbumInfo(
 		@JvmStatic
 		fun parseImgur(
 			url: UriString,
-			obj: JsonObject
+			obj: JsonObject,
 		): AlbumInfo {
 			var title = obj.getString("title")
 			var description = obj.getString("description")
@@ -66,7 +66,7 @@ class AlbumInfo(
 		@JvmStatic
 		fun parseImgurV3(
 			url: UriString,
-			obj: JsonObject
+			obj: JsonObject,
 		): AlbumInfo {
 			var title = obj.getString("title")
 			var description = obj.getString("description")
@@ -89,31 +89,27 @@ class AlbumInfo(
 			return AlbumInfo(url, title, description, images)
 		}
 
-		private fun stringToMediaType(mediaTypeString: String?): ImageInfo.MediaType {
-			return if (mediaTypeString == null) {
-				ImageInfo.MediaType.IMAGE
-			} else {
-				when (mediaTypeString) {
-					"AnimatedImage" -> ImageInfo.MediaType.GIF
-					// This string doesn't seem to exist yet, but it might do in future
-					"Video" -> ImageInfo.MediaType.VIDEO
-					"Image" -> ImageInfo.MediaType.IMAGE
-					else -> ImageInfo.MediaType.IMAGE
-				}
+		private fun stringToMediaType(mediaTypeString: String?): ImageInfo.MediaType = if (mediaTypeString == null) {
+			ImageInfo.MediaType.IMAGE
+		} else {
+			when (mediaTypeString) {
+				"AnimatedImage" -> ImageInfo.MediaType.GIF
+				// This string doesn't seem to exist yet, but it might do in future
+				"Video" -> ImageInfo.MediaType.VIDEO
+				"Image" -> ImageInfo.MediaType.IMAGE
+				else -> ImageInfo.MediaType.IMAGE
 			}
 		}
 
 		private fun getPreview(
 			minSizePx: Int,
-			images: List<ImageMetadata>
+			images: List<ImageMetadata>,
 		): ImageUrlInfo? {
-
-			var bestSizeMinAxis: Long?=null
-			var bestUrl: String?=null
-			var bestSize: ImageSize?=null
+			var bestSizeMinAxis: Long? = null
+			var bestUrl: String? = null
+			var bestSize: ImageSize? = null
 
 			for (image in images) {
-
 				if (image.u == null) {
 					continue
 				}
@@ -123,8 +119,9 @@ class AlbumInfo(
 
 				val minAxis = min(x, y)
 
-				if (bestSizeMinAxis == null || (bestSizeMinAxis < minSizePx && minAxis > bestSizeMinAxis)
-					|| (minAxis >= minSizePx && minAxis < bestSizeMinAxis)
+				if (bestSizeMinAxis == null ||
+					(bestSizeMinAxis < minSizePx && minAxis > bestSizeMinAxis) ||
+					(minAxis >= minSizePx && minAxis < bestSizeMinAxis)
 				) {
 					bestSizeMinAxis = minAxis
 					bestUrl = image.u.decoded
@@ -135,20 +132,19 @@ class AlbumInfo(
 			return bestUrl?.let {
 				ImageUrlInfo(
 					UriString(bestUrl),
-					size = bestSize
+					size = bestSize,
 				)
 			}
 		}
 
 		fun parseRedditGallery(post: RedditPost): AlbumInfo? {
-
 			val galleryItems = post.gallery_data?.items ?: return null
 
 			val images = galleryItems.mapNotNull { (it as? MaybeParseError.Ok)?.value }
 				.mapNotNull { item ->
 
-					val mediaMetadataEntry = 						(post.media_metadata?.get(item.media_id) as? MaybeParseError.Ok)?.value
-							?: return@mapNotNull null
+					val mediaMetadataEntry = (post.media_metadata?.get(item.media_id) as? MaybeParseError.Ok)?.value
+						?: return@mapNotNull null
 
 					val standardImage = mediaMetadataEntry.s
 
@@ -159,7 +155,7 @@ class AlbumInfo(
 					val original = urlEscaped?.let {
 						ImageUrlInfo(
 							url = UriString(urlEscaped.decoded),
-							size = ImageSize.from(standardImage.x, standardImage.y)
+							size = ImageSize.from(standardImage.x, standardImage.y),
 						)
 					}
 
@@ -167,8 +163,8 @@ class AlbumInfo(
 						throw RuntimeException("url missing from response")
 					}
 
-					var bigSquare: ImageUrlInfo?=null
-					var preview: ImageUrlInfo?=null
+					var bigSquare: ImageUrlInfo? = null
+					var preview: ImageUrlInfo? = null
 
 					mediaMetadataEntry.p?.let { p ->
 						val images = p + listOf(standardImage)
@@ -182,8 +178,7 @@ class AlbumInfo(
 						preview = preview,
 						bigSquare = bigSquare,
 						title = item.caption?.decoded,
-						outboundUrl = UriString.fromNullable(
-							item.outbound_url?.decoded?.trim()?.takeUnless { it.isEmpty() }),
+						outboundUrl = UriString.fromNullable(item.outbound_url?.decoded?.trim()?.takeUnless { it.isEmpty() }),
 						type = mediaMetadataEntry.m,
 						isAnimated = mediaType != ImageInfo.MediaType.IMAGE,
 						mediaType = mediaType,

@@ -25,18 +25,20 @@ object TimeFormatHelper {
 
 	@JvmStatic
 	fun format(
-			period: TimePeriod,
-			context: Context,
-			@StringRes stringRes: Int,
-			unitsToDisplay: Int
-	) : String {
-
+		period: TimePeriod,
+		context: Context,
+		@StringRes stringRes: Int,
+		unitsToDisplay: Int,
+	): String {
 		val res = context.resources
 
-		return String.format(Locale.US, res.getString(stringRes), period.format(
+		return String.format(
+			Locale.US,
+			res.getString(stringRes),
+			period.format(
 				TimeStringsImpl(res),
-				unitsToDisplay
-		))
+				unitsToDisplay,
+			),
+		)
 	}
-
 }

@@ -20,24 +20,24 @@ import android.os.SystemClock
 import java.util.concurrent.atomic.AtomicReference
 
 class CachedValue<E>(
-    private val mFactory: GenericFactory<E, RuntimeException>,
-    private val mMaxAgeMs: Long
+	private val mFactory: GenericFactory<E, RuntimeException>,
+	private val mMaxAgeMs: Long,
 ) {
-    private class CacheEntry<E>(val value: E, val lastUpdateMs: Long)
+	private class CacheEntry<E>(val value: E, val lastUpdateMs: Long)
 
-    private val mEntry = AtomicReference<CacheEntry<E>?>()
+	private val mEntry = AtomicReference<CacheEntry<E>?>()
 
-    fun get(): E {
-        val timeNow = SystemClock.uptimeMillis()
+	fun get(): E {
+		val timeNow = SystemClock.uptimeMillis()
 
-        val entry = mEntry.get()
+		val entry = mEntry.get()
 
-        if (entry != null && timeNow - entry.lastUpdateMs < mMaxAgeMs) {
-            return entry.value
-        }
+		if (entry != null && timeNow - entry.lastUpdateMs < mMaxAgeMs) {
+			return entry.value
+		}
 
-        val newValue: E = mFactory.create()
-        mEntry.set(CacheEntry<E>(newValue, timeNow))
-        return newValue
-    }
+		val newValue: E = mFactory.create()
+		mEntry.set(CacheEntry<E>(newValue, timeNow))
+		return newValue
+	}
 }

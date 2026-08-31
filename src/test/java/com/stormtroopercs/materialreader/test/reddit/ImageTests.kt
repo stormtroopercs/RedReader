@@ -16,11 +16,11 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.reddit
 
-import org.junit.Assert
-import org.junit.Test
 import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.reddit.kthings.JsonUtils
 import com.stormtroopercs.materialreader.reddit.kthings.RedditThing
+import org.junit.Assert
+import org.junit.Test
 
 class ImageTests {
 
@@ -228,7 +228,8 @@ class ImageTests {
 
 		Assert.assertEquals(
 			UriString("https://preview.redd.it/kcxj4pb54r3c1.gif?format=mp4&s=10d866af8122f89103f57b6ee19a64cd3fefaf14"),
-			(post as RedditThing.Post).data.findUrl())
+			(post as RedditThing.Post).data.findUrl(),
+		)
 	}
 
 	@Test

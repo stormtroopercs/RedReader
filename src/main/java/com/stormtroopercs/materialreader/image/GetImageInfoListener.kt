@@ -19,9 +19,9 @@ package com.stormtroopercs.materialreader.image
 import com.stormtroopercs.materialreader.common.RRError
 
 interface GetImageInfoListener {
-    fun onFailure(error: RRError)
+	fun onFailure(error: RRError)
 
-    fun onSuccess(info : ImageInfo)
+	fun onSuccess(info: ImageInfo)
 
-    fun onNotAnImage()
+	fun onNotAnImage()
 }

@@ -21,68 +21,66 @@ import kotlin.math.max
 import kotlin.math.min
 
 class MemoryDataStreamInputStream(private val mStream: MemoryDataStream) : SeekableInputStream() {
-    private var mPosition = 0
+	private var mPosition = 0
 
-    @Throws(IOException::class)
-    override fun read(): Int {
-        val result = mStream.blockingReadOneByte(mPosition)
+	@Throws(IOException::class)
+	override fun read(): Int {
+		val result = mStream.blockingReadOneByte(mPosition)
 
-        if (result >= 0) {
-            mPosition++
-        }
+		if (result >= 0) {
+			mPosition++
+		}
 
-        return result
-    }
+		return result
+	}
 
-    @Throws(IOException::class)
-    override fun read(buf: ByteArray): Int {
-        return read(buf, 0, buf.size)
-    }
+	@Throws(IOException::class)
+	override fun read(buf: ByteArray): Int = read(buf, 0, buf.size)
 
-    @Throws(IOException::class)
-    override fun read(buf: ByteArray, off: Int, len: Int): Int {
-        val bytesRead = mStream.blockingRead(mPosition, buf, off, len)
+	@Throws(IOException::class)
+	override fun read(buf: ByteArray, off: Int, len: Int): Int {
+		val bytesRead = mStream.blockingRead(mPosition, buf, off, len)
 
-        if (bytesRead > 0) {
-            mPosition += bytesRead
-        }
+		if (bytesRead > 0) {
+			mPosition += bytesRead
+		}
 
-        return bytesRead
-    }
+		return bytesRead
+	}
 
-    override val position: Long get() = mPosition.toLong()
+	override val position: Long get() = mPosition.toLong()
 
-    @Throws(IOException::class)
-    override fun seek(position: Long) {
-        if (position < 0) {
-            throw IOException("Attempted to seek before zero")
-        }
+	@Throws(IOException::class)
+	override fun seek(position: Long) {
+		if (position < 0) {
+			throw IOException("Attempted to seek before zero")
+		}
 
-        mPosition = position.toInt()
-    }
+		mPosition = position.toInt()
+	}
 
-    override fun skip(offset: Long): Long {
-        val bytesToSkip = min(offset, max(0, mStream.size() - mPosition).toLong()).toInt()
-        mPosition += bytesToSkip
-        return bytesToSkip.toLong()
-    }
+	override fun skip(offset: Long): Long {
+		val bytesToSkip = min(offset, max(0, mStream.size() - mPosition).toLong()).toInt()
+		mPosition += bytesToSkip
+		return bytesToSkip.toLong()
+	}
 
-    override fun available(): Int {
-        return mStream.size()
-    }
+	override fun available(): Int = mStream.size()
 
-    override fun close() {
-        // Nothing to do here
-    }
+	override fun close() {
+		// Nothing to do here
+	}
 
-    @Throws(IOException::class)
-    override fun readRemainingAsBytes(callback: ByteArrayCallback) {
-        mStream.getUnderlyingByteArrayWhenComplete(ByteArrayCallback { buf: ByteArray?, offset: Int, length: Int ->
-            callback.onByteArray(
-                buf!!,
-                offset + mPosition,
-                length - mPosition
-            )
-        })
-    }
+	@Throws(IOException::class)
+	override fun readRemainingAsBytes(callback: ByteArrayCallback) {
+		mStream.getUnderlyingByteArrayWhenComplete(
+			ByteArrayCallback { buf: ByteArray?, offset: Int, length: Int ->
+				callback.onByteArray(
+					buf!!,
+					offset + mPosition,
+					length - mPosition,
+				)
+			},
+		)
+	}
 }

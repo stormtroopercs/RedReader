@@ -21,89 +21,85 @@ import com.stormtroopercs.materialreader.common.Constants.Reddit
 import com.stormtroopercs.materialreader.common.General.getUriQueryParameterNames
 import com.stormtroopercs.materialreader.common.StringUtils
 import com.stormtroopercs.materialreader.reddit.url.RedditURLParser.RedditURL
-import com.stormtroopercs.materialreader.common.General
 
-class ComposeMessageURL(val recipient: String?, val subject: String?, val message: String?) :
-    RedditURL() {
-    override fun generateJsonUri(): Uri? {
-        val builder = Uri.Builder()
-        builder.scheme(Reddit.scheme)
-            .authority(Reddit.domain)
+class ComposeMessageURL(val recipient: String?, val subject: String?, val message: String?) : RedditURL() {
+	override fun generateJsonUri(): Uri? {
+		val builder = Uri.Builder()
+		builder.scheme(Reddit.scheme)
+			.authority(Reddit.domain)
 
-        builder.appendEncodedPath("message")
-        builder.appendEncodedPath("compose")
+		builder.appendEncodedPath("message")
+		builder.appendEncodedPath("compose")
 
-        if (recipient != null) {
-            builder.appendQueryParameter("to", recipient)
-        }
+		if (recipient != null) {
+			builder.appendQueryParameter("to", recipient)
+		}
 
-        if (subject != null) {
-            builder.appendQueryParameter("subject", subject)
-        }
+		if (subject != null) {
+			builder.appendQueryParameter("subject", subject)
+		}
 
-        if (message != null) {
-            builder.appendQueryParameter("message", message)
-        }
+		if (message != null) {
+			builder.appendQueryParameter("message", message)
+		}
 
-        builder.appendEncodedPath(".json")
+		builder.appendEncodedPath(".json")
 
-        return builder.build()
-    }
+		return builder.build()
+	}
 
-    @RedditURLParser.PathType
-    override fun pathType(): Int {
-        return RedditURLParser.COMPOSE_MESSAGE_URL
-    }
+	@RedditURLParser.PathType
+	override fun pathType(): Int = RedditURLParser.COMPOSE_MESSAGE_URL
 
-    companion object {
-        fun parse(uri: Uri): ComposeMessageURL? {
-            val pathSegments: Array<String?>
-            run {
-                val pathSegmentsList = uri.getPathSegments()
-                val pathSegmentsFiltered = ArrayList<String?>(
-                    pathSegmentsList.size
-                )
-                for (segment in pathSegmentsList) {
-                    var segment = segment
-                    while (StringUtils.asciiLowercase(segment).endsWith(".json")
-                        || StringUtils.asciiLowercase(segment).endsWith(".xml")
-                    ) {
-                        segment = segment.substring(0, segment.lastIndexOf('.'))
-                    }
+	companion object {
+		fun parse(uri: Uri): ComposeMessageURL? {
+			val pathSegments: Array<String?>
+			run {
+				val pathSegmentsList = uri.getPathSegments()
+				val pathSegmentsFiltered = ArrayList<String?>(
+					pathSegmentsList.size,
+				)
+				for (segment in pathSegmentsList) {
+					var segment = segment
+					while (StringUtils.asciiLowercase(segment).endsWith(".json") ||
+						StringUtils.asciiLowercase(segment).endsWith(".xml")
+					) {
+						segment = segment.substring(0, segment.lastIndexOf('.'))
+					}
 
-                    if (!segment.isEmpty()) {
-                        pathSegmentsFiltered.add(segment)
-                    }
-                }
+					if (!segment.isEmpty()) {
+						pathSegmentsFiltered.add(segment)
+					}
+				}
 
-                pathSegments = pathSegmentsFiltered.toTypedArray<String?>()
-            }
+				pathSegments = pathSegmentsFiltered.toTypedArray<String?>()
+			}
 
-            if (pathSegments.size != 2) {
-                return null
-            }
+			if (pathSegments.size != 2) {
+				return null
+			}
 
-            if (!pathSegments[0].equals("message", ignoreCase = true)
-                || !pathSegments[1].equals("compose", ignoreCase = true)
-            ) {
-                return null
-            }
+			if (!pathSegments[0].equals("message", ignoreCase = true) ||
+				!pathSegments[1].equals("compose", ignoreCase = true)
+			) {
+				return null
+			}
 
-            var recipient: String?=null
-            var subject: String?=null
-            var message: String?=null
-            for (parameterKey in getUriQueryParameterNames(uri)) {
-                if (parameterKey.equals("to", ignoreCase = true)) {
-                    // TODO validate username with regex
-                    recipient = uri.getQueryParameter(parameterKey)
-                } else if (parameterKey.equals("subject", ignoreCase = true)) {
-                    subject = uri.getQueryParameter(parameterKey)
-                } else if (parameterKey.equals("message", ignoreCase = true)) {
-                    message = uri.getQueryParameter(parameterKey)
-                }
-            }
+			var recipient: String? = null
+			var subject: String? = null
+			var message: String? = null
+			for (parameterKey in getUriQueryParameterNames(uri)) {
+				if (parameterKey.equals("to", ignoreCase = true)) {
+					// TODO validate username with regex
+					recipient = uri.getQueryParameter(parameterKey)
+				} else if (parameterKey.equals("subject", ignoreCase = true)) {
+					subject = uri.getQueryParameter(parameterKey)
+				} else if (parameterKey.equals("message", ignoreCase = true)) {
+					message = uri.getQueryParameter(parameterKey)
+				}
+			}
 
-            return ComposeMessageURL(recipient, subject, message)
-        }
-    }
+			return ComposeMessageURL(recipient, subject, message)
+		}
+	}
 }

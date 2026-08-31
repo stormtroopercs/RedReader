@@ -45,7 +45,7 @@ object RedditVideosAPI {
 		context: Context,
 		imageId: String,
 		priority: Priority,
-		listener: GetImageInfoListener
+		listener: GetImageInfoListener,
 	) {
 		val apiUrl = UriString("https://v.redd.it/$imageId/DASHPlaylist.mpd")
 
@@ -67,7 +67,7 @@ object RedditVideosAPI {
 						timestamp: TimestampUTC,
 						session: UUID,
 						fromCache: Boolean,
-						mimetype: String?
+						mimetype: String?,
 					) {
 						val mpd = try {
 							stream.create().use(::readWholeStreamAsUTF8)
@@ -82,8 +82,8 @@ object RedditVideosAPI {
 										e,
 										null,
 										apiUrl,
-										FailedRequestBody.from(stream)
-									)
+										FailedRequestBody.from(stream),
+									),
 								)
 							}
 
@@ -91,7 +91,6 @@ object RedditVideosAPI {
 						}
 
 						try {
-
 							val mpdParseResult = parseMPD(mpd)
 
 							if (mpdParseResult.video == null) {
@@ -103,14 +102,14 @@ object RedditVideosAPI {
 											null,
 											null,
 											apiUrl,
-											Optional.of(FailedRequestBody(mpd))
-										)
+											Optional.of(FailedRequestBody(mpd)),
+										),
 									)
 								}
 								return
 							}
 
-							fun fileUrl(filename: String) = 								UriString("https://v.redd.it/$imageId/$filename")
+							fun fileUrl(filename: String) = UriString("https://v.redd.it/$imageId/$filename")
 
 							val result = ImageInfo(
 								original = ImageUrlInfo(
@@ -121,7 +120,7 @@ object RedditVideosAPI {
 										} else {
 											null
 										}
-									}
+									},
 								),
 								urlAudioStream = mpdParseResult.audio?.filename?.let(::fileUrl),
 								mediaType = ImageInfo.MediaType.VIDEO,
@@ -129,7 +128,7 @@ object RedditVideosAPI {
 									ImageInfo.HasAudio.HAS_AUDIO
 								} else {
 									ImageInfo.HasAudio.NO_AUDIO
-								}
+								},
 							)
 
 							listener.onSuccess(result)
@@ -144,8 +143,8 @@ object RedditVideosAPI {
 										e,
 										null,
 										apiUrl,
-										Optional.of(FailedRequestBody(mpd))
-									)
+										Optional.of(FailedRequestBody(mpd)),
+									),
 								)
 							}
 						}
@@ -156,7 +155,8 @@ object RedditVideosAPI {
 							listener.onFailure(error)
 						}
 					}
-				})
+				},
+			),
 		)
 	}
 }

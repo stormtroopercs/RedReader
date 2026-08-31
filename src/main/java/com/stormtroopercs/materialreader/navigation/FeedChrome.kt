@@ -135,8 +135,7 @@ data class FeedSortOption(
 		)
 
 		/** The option for a persisted [id] (unknown ids fall back to Active). */
-		fun forId(id: String): FeedSortOption =
-			options.firstOrNull { it.id == id } ?: options.first()
+		fun forId(id: String): FeedSortOption = options.firstOrNull { it.id == id } ?: options.first()
 	}
 }
 

@@ -17,8 +17,8 @@
 package com.stormtroopercs.materialreader.reddit.api
 
 enum class SubredditSubscriptionState {
-    SUBSCRIBED,
-    SUBSCRIBING,
-    UNSUBSCRIBING,
-    NOT_SUBSCRIBED
+	SUBSCRIBED,
+	SUBSCRIBING,
+	UNSUBSCRIBING,
+	NOT_SUBSCRIBED,
 }

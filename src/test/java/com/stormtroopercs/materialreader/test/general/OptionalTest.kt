@@ -16,45 +16,44 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.general
 
+import com.stormtroopercs.materialreader.common.Optional
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import com.stormtroopercs.materialreader.common.Optional
 
 class OptionalTest {
 
-    @Test
-    fun testOptional() {
+	@Test
+	fun testOptional() {
+		assertEquals(Optional.empty<Any>(), Optional.empty<Any>())
+		assertNotEquals(Optional.empty<Int>(), Optional.of(123))
 
-        assertEquals(Optional.empty<Any>(), Optional.empty<Any>())
-        assertNotEquals(Optional.empty<Int>(), Optional.of(123))
+		assertEquals(Optional.of(123), Optional.of(123))
+		assertNotEquals(Optional.of(123), Optional.of(456))
 
-        assertEquals(Optional.of(123), Optional.of(123))
-        assertNotEquals(Optional.of(123), Optional.of(456))
+		assertNotEquals(Optional.of<Any>(Object()), Optional.of<Any>(Object()))
 
-        assertNotEquals(Optional.of<Any>(Object()), Optional.of<Any>(Object()))
+		assertFalse(Optional.empty<Any>().isPresent)
+		assertTrue(Optional.of(123).isPresent)
 
-        assertFalse(Optional.empty<Any>().isPresent)
-        assertTrue(Optional.of(123).isPresent)
+		assertEquals("Hello", Optional.of("Hello").get())
+		assertThrows(Optional.OptionalHasNoValueException::class.java) {
+			Optional.empty<Any>().get()
+		}
 
-        assertEquals("Hello", Optional.of("Hello").get())
-        assertThrows(Optional.OptionalHasNoValueException::class.java) {
-            Optional.empty<Any>().get()
-        }
+		assertEquals("Hello", Optional.of("Hello").orElse("Alternative"))
+		assertEquals("Alternative", Optional.empty<String>().orElse("Alternative"))
 
-        assertEquals("Hello", Optional.of("Hello").orElse("Alternative"))
-        assertEquals("Alternative", Optional.empty<String>().orElse("Alternative"))
+		assertEquals(Optional.empty<Any?>(), Optional.ofNullable<Any?>(null))
+		assertEquals(Optional.of("Test"), Optional.ofNullable("Test"))
 
-        assertEquals(Optional.empty<Any?>(), Optional.ofNullable<Any?>(null))
-        assertEquals(Optional.of("Test"), Optional.ofNullable("Test"))
+		assertThrows(RuntimeException::class.java) {
+			Optional.empty<Any>().orThrow { RuntimeException() }
+		}
 
-        assertThrows(RuntimeException::class.java) {
-            Optional.empty<Any>().orThrow { RuntimeException() }
-        }
-
-        assertEquals("Test", Optional.of("Test").orThrow { RuntimeException() })
-    }
+		assertEquals("Test", Optional.of("Test").orThrow { RuntimeException() })
+	}
 }

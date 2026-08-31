@@ -26,61 +26,60 @@ import android.view.View
 import kotlin.math.min
 
 class GIFView(context: Context?, movie: Movie) : View(context) {
-    private val mMovie: Movie
-    private var movieStart: Long = 0
+	private val mMovie: Movie
+	private var movieStart: Long = 0
 
-    private val paint = Paint()
+	private val paint = Paint()
 
-    // Accept as byte[] rather than stream due to Android bug workaround
-    init {
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
+	// Accept as byte[] rather than stream due to Android bug workaround
+	init {
+		setLayerType(LAYER_TYPE_SOFTWARE, null)
 
-        mMovie = movie
+		mMovie = movie
 
-        paint.setAntiAlias(true)
-        paint.setFilterBitmap(true)
-    }
+		paint.setAntiAlias(true)
+		paint.setFilterBitmap(true)
+	}
 
-    override fun onDraw(canvas: Canvas) {
-        canvas.drawColor(Color.TRANSPARENT)
-        super.onDraw(canvas)
-        val now = SystemClock.uptimeMillis()
+	override fun onDraw(canvas: Canvas) {
+		canvas.drawColor(Color.TRANSPARENT)
+		super.onDraw(canvas)
+		val now = SystemClock.uptimeMillis()
 
-        val scale = min(
-            getWidth().toFloat() / mMovie.width(),
-            getHeight().toFloat() / mMovie.height()
-        )
+		val scale = min(
+			getWidth().toFloat() / mMovie.width(),
+			getHeight().toFloat() / mMovie.height(),
+		)
 
-        canvas.scale(scale, scale)
-        canvas.translate(
-            (getWidth().toFloat() / scale - mMovie.width().toFloat()) / 2f,
-            (getHeight().toFloat() / scale - mMovie.height().toFloat()) / 2f
-        )
+		canvas.scale(scale, scale)
+		canvas.translate(
+			(getWidth().toFloat() / scale - mMovie.width().toFloat()) / 2f,
+			(getHeight().toFloat() / scale - mMovie.height().toFloat()) / 2f,
+		)
 
+		if (movieStart == 0L) {
+			movieStart = now.toInt().toLong()
+		}
 
-        if (movieStart == 0L) {
-            movieStart = now.toInt().toLong()
-        }
+		mMovie.setTime(((now - movieStart) % mMovie.duration()).toInt())
+		mMovie.draw(canvas, 0f, 0f, paint)
 
-        mMovie.setTime(((now - movieStart) % mMovie.duration()).toInt())
-        mMovie.draw(canvas, 0f, 0f, paint)
+		this.invalidate()
+	}
 
-        this.invalidate()
-    }
+	companion object {
+		fun prepareMovie(
+			data: ByteArray,
+			offset: Int,
+			length: Int,
+		): Movie {
+			val movie = Movie.decodeByteArray(data, offset, length)
 
-    companion object {
-        fun prepareMovie(
-            data: ByteArray,
-            offset: Int,
-            length: Int
-        ): Movie {
-            val movie = Movie.decodeByteArray(data, offset, length)
+			if (movie.duration() < 1) {
+				throw RuntimeException("Invalid GIF")
+			}
 
-            if (movie.duration() < 1) {
-                throw RuntimeException("Invalid GIF")
-            }
-
-            return movie
-        }
-    }
+			return movie
+		}
+	}
 }

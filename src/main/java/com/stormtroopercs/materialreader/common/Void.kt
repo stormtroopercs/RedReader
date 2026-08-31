@@ -17,8 +17,8 @@
 package com.stormtroopercs.materialreader.common
 
 class Void private constructor() {
-    companion object {
-        @JvmField
-        val INSTANCE: Void = Void()
-    }
+	companion object {
+		@JvmField
+		val INSTANCE: Void = Void()
+	}
 }

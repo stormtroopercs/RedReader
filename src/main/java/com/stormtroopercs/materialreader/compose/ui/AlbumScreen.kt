@@ -77,7 +77,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import com.stormtroopercs.materialreader.R
 import com.stormtroopercs.materialreader.common.PrefsUtility
 import com.stormtroopercs.materialreader.common.UriString
@@ -92,12 +91,13 @@ import com.stormtroopercs.materialreader.compose.theme.combinedClickableWithHapt
 import com.stormtroopercs.materialreader.image.AlbumInfo
 import com.stormtroopercs.materialreader.image.ImageInfo
 import com.stormtroopercs.materialreader.settings.types.AlbumViewMode
+import kotlinx.coroutines.delay
 import kotlin.math.min
 
 @Composable
 fun AlbumScreen(
 	onBackPressed: () -> Unit,
-	albumUrl: UriString
+	albumUrl: UriString,
 ) {
 	val album by fetchAlbum(albumUrl)
 
@@ -117,7 +117,7 @@ fun AlbumScreen(
 		is NetRequestStatus.Success -> {
 			AlbumScreen(
 				onBackPressed = onBackPressed,
-				album = it.result
+				album = it.result,
 			)
 		}
 	}
@@ -126,16 +126,16 @@ fun AlbumScreen(
 @Composable
 private fun InitialContainer(
 	modifier: Modifier = Modifier,
-	content: @Composable () -> Unit
+	content: @Composable () -> Unit,
 ) {
 	val theme = LocalComposeTheme.current
 
 	Box(
-        modifier
-            .fillMaxSize()
-            .background(theme.postCard.listBackgroundColor)
-            .systemBarsPadding(),
-		contentAlignment = Alignment.Center
+		modifier
+			.fillMaxSize()
+			.background(theme.postCard.listBackgroundColor)
+			.systemBarsPadding(),
+		contentAlignment = Alignment.Center,
 	) {
 		content()
 	}
@@ -143,7 +143,6 @@ private fun InitialContainer(
 
 @Composable
 private fun DoOnce(input: AlbumInfo, action: () -> Unit) {
-
 	// Only do this once, even if the activity gets relaunched
 	var alreadyDone by rememberSaveable(input) {
 		mutableStateOf(false)
@@ -160,7 +159,7 @@ private fun DoOnce(input: AlbumInfo, action: () -> Unit) {
 @Composable
 fun AlbumScreen(
 	onBackPressed: () -> Unit,
-	album: AlbumInfo
+	album: AlbumInfo,
 ) {
 	val prefs = LocalComposePrefs.current
 	val theme = LocalComposeTheme.current
@@ -188,11 +187,13 @@ fun AlbumScreen(
 	DoOnce(album) {
 		if (PrefsUtility.pref_album_skip_to_first()) {
 			album.images.firstOrNull()?.let {
-				launch(Dest.Link(
-					url = it.original.url,
-					albumInfo = album,
-					albumImageIndex = 0
-				))
+				launch(
+					Dest.Link(
+						url = it.original.url,
+						albumInfo = album,
+						albumImageIndex = 0,
+					),
+				)
 			}
 		}
 	}
@@ -209,8 +210,8 @@ fun AlbumScreen(
 				Dest.Link(
 					url = url,
 					albumInfo = album,
-					albumImageIndex = index
-				)
+					albumImageIndex = index,
+				),
 			)
 		}
 	}
@@ -223,12 +224,11 @@ fun AlbumScreen(
 
 	val head = @Composable {
 		Column(
-            Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-				.animateContentSize()
+			Modifier
+				.padding(horizontal = 16.dp)
+				.fillMaxWidth()
+				.animateContentSize(),
 		) {
-
 			// Space for the top bar
 			Spacer(Modifier.height(topBarHeight))
 
@@ -236,9 +236,8 @@ fun AlbumScreen(
 				modifier = Modifier.fillMaxWidth(),
 				visible = !prefs.albumCompactTitle.value,
 				enter = fadeIn() + slideInVertically { -it },
-				exit = fadeOut() + slideOutVertically { -it }
+				exit = fadeOut() + slideOutVertically { -it },
 			) {
-
 				Column {
 					Spacer(Modifier.height(10.dp))
 
@@ -252,7 +251,7 @@ fun AlbumScreen(
 							},
 						text = album.title ?: stringResource(R.string.image_gallery),
 						overflow = TextOverflow.Ellipsis,
-						maxLines = 2
+						maxLines = 2,
 					)
 
 					Spacer(Modifier.height(6.dp))
@@ -262,10 +261,10 @@ fun AlbumScreen(
 						text = album.description ?: pluralStringResource(
 							R.plurals.album_image_count,
 							album.images.size,
-							album.images.size
+							album.images.size,
 						),
 						overflow = TextOverflow.Ellipsis,
-						maxLines = 3
+						maxLines = 3,
 					)
 
 					Spacer(Modifier.height(16.dp))
@@ -275,20 +274,18 @@ fun AlbumScreen(
 	}
 
 	Box {
-
 		// Content
 
 		val scrollState = when (prefs.albumViewMode.value) {
 			AlbumViewMode.Cards -> {
-
 				val state = rememberLazyListState()
 
 				LazyColumn(
-                    Modifier
-                        .fillMaxSize()
-                        .background(theme.postCard.listBackgroundColor),
+					Modifier
+						.fillMaxSize()
+						.background(theme.postCard.listBackgroundColor),
 					contentPadding = contentPadding,
-					state = state
+					state = state,
 				) {
 					item {
 						head()
@@ -299,7 +296,7 @@ fun AlbumScreen(
 							index = it,
 							image = album.images[it],
 							onClick = itemClickHandler,
-							onLongClick = itemLongClickListener
+							onLongClick = itemLongClickListener,
 						)
 					}
 				}
@@ -316,11 +313,11 @@ fun AlbumScreen(
 				val state = rememberLazyListState()
 
 				LazyColumn(
-                    Modifier
-                        .fillMaxSize()
-                        .background(theme.postCard.listBackgroundColor),
+					Modifier
+						.fillMaxSize()
+						.background(theme.postCard.listBackgroundColor),
 					contentPadding = contentPadding,
-					state = state
+					state = state,
 				) {
 					item {
 						head()
@@ -354,8 +351,8 @@ fun AlbumScreen(
 					state = state,
 					columns = GridCells.Fixed(colCount),
 					modifier = Modifier
-                        .fillMaxSize()
-                        .background(theme.postCard.listBackgroundColor),
+						.fillMaxSize()
+						.background(theme.postCard.listBackgroundColor),
 					contentPadding = contentPadding,
 					verticalArrangement = Arrangement.spacedBy(2.dp),
 					horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -365,28 +362,29 @@ fun AlbumScreen(
 					}
 
 					items(count = album.images.size, key = { it }) {
-
 						val image = album.images[it]
 
 						val description = stringResource(R.string.album_image_default_text, it + 1)
 
 						NetImage(
 							modifier = Modifier
-                                .combinedClickableWithHaptics(
-                                    onClick = { itemClickHandler(it) },
-                                    onLongClick = { itemLongClickListener(it) }
-                                )
-                                .semantics {
-                                    role = Role.Image
-                                    contentDescription = description
-                                },
+								.combinedClickableWithHaptics(
+									onClick = { itemClickHandler(it) },
+									onLongClick = { itemLongClickListener(it) },
+								)
+								.semantics {
+									role = Role.Image
+									contentDescription = description
+								},
 							image = image.run {
 								bigSquare ?: preview ?: original
 							},
 							cropToAspect = 1f.takeIf { prefs.albumGridCropToSquare.value },
-							showVideoPlayOverlay = (image.mediaType == ImageInfo.MediaType.VIDEO
-									|| image.mediaType == ImageInfo.MediaType.GIF
-									|| image.isAnimated == true)
+							showVideoPlayOverlay = (
+								image.mediaType == ImageInfo.MediaType.VIDEO ||
+									image.mediaType == ImageInfo.MediaType.GIF ||
+									image.isAnimated == true
+								),
 						)
 					}
 				}
@@ -417,52 +415,51 @@ fun AlbumScreen(
 		// Top bar
 		Row(
 			modifier = Modifier
-                // The top bar floats above the list, but a background alone isn't hit-testable,
-                // so without this taps and scrolls would pass through to the items underneath
-                .pointerInput(Unit) {
-                    awaitPointerEventScope {
-                        while (true) {
-                            awaitPointerEvent().changes.forEach { it.consume() }
-                        }
-                    }
-                }
-                .shadow(topBarShadow)
-                .background(theme.postCard.listBackgroundColor)
-                .padding(insets)
-                .padding(horizontal = 6.dp)
-                .height(topBarHeight)
-                .fillMaxWidth(),
+				// The top bar floats above the list, but a background alone isn't hit-testable,
+				// so without this taps and scrolls would pass through to the items underneath
+				.pointerInput(Unit) {
+					awaitPointerEventScope {
+						while (true) {
+							awaitPointerEvent().changes.forEach { it.consume() }
+						}
+					}
+				}
+				.shadow(topBarShadow)
+				.background(theme.postCard.listBackgroundColor)
+				.padding(insets)
+				.padding(horizontal = 6.dp)
+				.height(topBarHeight)
+				.fillMaxWidth(),
 			verticalAlignment = Alignment.CenterVertically,
 		) {
-
 			RRIconButton(
 				onClick = { onBackPressed() },
 				icon = R.drawable.ic_action_back_dark,
 				contentDescription = R.string.action_back,
-				tint = theme.album.toolbarIconColor
+				tint = theme.album.toolbarIconColor,
 			)
 
 			Box(
 				modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 6.dp),
+					.weight(1f)
+					.padding(start = 6.dp),
 			) {
 				androidx.compose.animation.AnimatedVisibility(
 					modifier = Modifier.fillMaxWidth(),
 					visible = prefs.albumCompactTitle.value,
 					enter = fadeIn() + slideInVertically { -it },
-					exit = fadeOut() + slideOutVertically { -it }
+					exit = fadeOut() + slideOutVertically { -it },
 				) {
 					theme.album.titleCompact.StyledText(
 						modifier = Modifier
-                            .focusRequester(accessibilityFocusRequester)
-                            .focusable(true)
-                            .semantics {
-                                heading()
-                            },
+							.focusRequester(accessibilityFocusRequester)
+							.focusable(true)
+							.semantics {
+								heading()
+							},
 						text = album.title ?: stringResource(R.string.image_gallery),
 						overflow = TextOverflow.Ellipsis,
-						maxLines = 1
+						maxLines = 1,
 					)
 				}
 			}
@@ -474,7 +471,7 @@ fun AlbumScreen(
 
 @Composable
 fun AlbumSettingsButton(
-	modifier: Modifier = Modifier
+	modifier: Modifier = Modifier,
 ) {
 	val prefs = LocalComposePrefs.current
 	val launch = LocalLauncher.current
@@ -508,14 +505,14 @@ fun AlbumSettingsButton(
 			AlbumViewMode.Cards -> {
 				ItemPrefBool(
 					text = R.string.album_card_pref_buttons,
-					pref = prefs.albumCardShowButtons
+					pref = prefs.albumCardShowButtons,
 				)
 			}
 
 			AlbumViewMode.List -> {
 				ItemPrefBool(
 					text = R.string.album_list_pref_thumbnails,
-					pref = prefs.albumListShowThumbnails
+					pref = prefs.albumListShowThumbnails,
 				)
 
 				if (prefs.albumListShowThumbnails.value) {
@@ -525,21 +522,21 @@ fun AlbumSettingsButton(
 						pref = prefs.albumListThumbnailSize,
 						min = 64,
 						max = 256,
-						continuous = true
+						continuous = true,
 					)
 				}
 
 				ItemDivider()
 				ItemPrefBool(
 					text = R.string.album_list_pref_buttons,
-					pref = prefs.albumListShowButtons
+					pref = prefs.albumListShowButtons,
 				)
 			}
 
 			AlbumViewMode.Grid -> {
 				ItemPrefBool(
 					text = R.string.album_grid_pref_crop_to_square,
-					pref = prefs.albumGridCropToSquare
+					pref = prefs.albumGridCropToSquare,
 				)
 
 				ItemDivider()
@@ -549,7 +546,7 @@ fun AlbumSettingsButton(
 					pref = prefs.albumGridColumns,
 					min = 2,
 					max = 5,
-					continuous = false
+					continuous = false,
 				)
 			}
 		}
@@ -557,21 +554,20 @@ fun AlbumSettingsButton(
 		ItemDivider()
 
 		ItemGroupCollapsible(text = R.string.album_more_options) {
-
 			ItemPrefBool(
 				text = R.string.album_pref_compact_title,
-				pref = prefs.albumCompactTitle
+				pref = prefs.albumCompactTitle,
 			)
 
 			if (prefs.albumViewMode.value == AlbumViewMode.Cards) {
 				ItemPrefBool(
 					text = R.string.album_grid_pref_rounded_corners,
-					pref = prefs.albumGridRoundedCorners
+					pref = prefs.albumGridRoundedCorners,
 				)
 
 				ItemPrefBool(
 					text = R.string.album_grid_pref_horizontal_padding,
-					pref = prefs.albumGridHorizontalPadding
+					pref = prefs.albumGridHorizontalPadding,
 				)
 			}
 		}
@@ -588,31 +584,31 @@ fun AlbumSettingsButton(
 
 class OverridePaddingValues(
 	private val parent: PaddingValues,
-	private val top: Dp?=null,
-	private val bottom: Dp?=null,
-	private val left: Dp?=null,
-	private val right: Dp?=null,
+	private val top: Dp? = null,
+	private val bottom: Dp? = null,
+	private val left: Dp? = null,
+	private val right: Dp? = null,
 ) : PaddingValues {
 	override fun calculateBottomPadding() = bottom ?: parent.calculateBottomPadding()
 
-	override fun calculateLeftPadding(layoutDirection: LayoutDirection) = 		left ?: parent.calculateLeftPadding(layoutDirection)
+	override fun calculateLeftPadding(layoutDirection: LayoutDirection) = left ?: parent.calculateLeftPadding(layoutDirection)
 
-	override fun calculateRightPadding(layoutDirection: LayoutDirection) = 		right ?: parent.calculateRightPadding(layoutDirection)
+	override fun calculateRightPadding(layoutDirection: LayoutDirection) = right ?: parent.calculateRightPadding(layoutDirection)
 
 	override fun calculateTopPadding() = top ?: parent.calculateTopPadding()
 }
 
 fun PaddingValues.override(
-	top: Dp?=null,
-	bottom: Dp?=null,
-	left: Dp?=null,
-	right: Dp?=null,
+	top: Dp? = null,
+	bottom: Dp? = null,
+	left: Dp? = null,
+	right: Dp? = null,
 ) = OverridePaddingValues(
 	parent = this,
 	top = top,
 	bottom = bottom,
 	left = left,
-	right = right
+	right = right,
 )
 
 @Stable

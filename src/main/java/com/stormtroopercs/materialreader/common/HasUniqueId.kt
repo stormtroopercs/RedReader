@@ -17,5 +17,5 @@
 package com.stormtroopercs.materialreader.common
 
 interface HasUniqueId {
-    val uniqueId: String
+	val uniqueId: String
 }

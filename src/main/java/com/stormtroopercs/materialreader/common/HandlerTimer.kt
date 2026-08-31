@@ -21,39 +21,42 @@ import android.util.SparseBooleanArray
 import androidx.annotation.UiThread
 
 class HandlerTimer(private val mHandler: Handler) {
-    private var mNextId = 0
+	private var mNextId = 0
 
-    private val mTimers = SparseBooleanArray()
+	private val mTimers = SparseBooleanArray()
 
-    private val nextId: Int
-        get() {
-            mNextId++
+	private val nextId: Int
+		get() {
+			mNextId++
 
-            while (mTimers.get(mNextId, false) || mNextId == 0) {
-                mNextId++
-            }
+			while (mTimers.get(mNextId, false) || mNextId == 0) {
+				mNextId++
+			}
 
-            return mNextId
-        }
+			return mNextId
+		}
 
-    // Should never return 0
-    @UiThread
-    fun setTimer(delayMs: Long, runnable: Runnable): Int {
-        val id = this.nextId
-        mTimers.put(id, true)
+	// Should never return 0
+	@UiThread
+	fun setTimer(delayMs: Long, runnable: Runnable): Int {
+		val id = this.nextId
+		mTimers.put(id, true)
 
-        mHandler.postDelayed(Runnable {
-            if (!mTimers.get(id, false)) {
-                return@Runnable
-            }
-            mTimers.delete(id)
-            runnable.run()
-        }, delayMs)
+		mHandler.postDelayed(
+			Runnable {
+				if (!mTimers.get(id, false)) {
+					return@Runnable
+				}
+				mTimers.delete(id)
+				runnable.run()
+			},
+			delayMs,
+		)
 
-        return id
-    }
+		return id
+	}
 
-    fun cancelTimer(timerId: Int) {
-        mTimers.delete(timerId)
-    }
+	fun cancelTimer(timerId: Int) {
+		mTimers.delete(timerId)
+	}
 }

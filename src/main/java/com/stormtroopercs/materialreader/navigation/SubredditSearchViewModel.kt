@@ -20,18 +20,6 @@ package com.stormtroopercs.materialreader.navigation
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import java.io.IOException
-import java.util.UUID
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.CompletableDeferred
 import com.stormtroopercs.materialreader.account.RedditAccountManager
 import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.cache.CacheRequest
@@ -44,13 +32,25 @@ import com.stormtroopercs.materialreader.common.RRError
 import com.stormtroopercs.materialreader.common.TimestampBound
 import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.common.datastream.SeekableInputStream
-import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import com.stormtroopercs.materialreader.common.time.TimeDuration.Companion.minutes
+import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import com.stormtroopercs.materialreader.database.entities.SubredditEntity
 import com.stormtroopercs.materialreader.jsonwrap.JsonValue
 import com.stormtroopercs.materialreader.reddit.things.RedditSubreddit
 import com.stormtroopercs.materialreader.reddit.things.RedditThing
 import com.stormtroopercs.materialreader.repository.SubredditRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.launch
+import java.io.IOException
+import java.util.UUID
 import javax.inject.Inject
 
 /**
@@ -70,194 +70,192 @@ import javax.inject.Inject
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
 class SubredditSearchViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val subredditRepository: SubredditRepository,
-    private val accountManager: RedditAccountManager,
-    private val cacheManager: CacheManager
+	@ApplicationContext private val context: Context,
+	private val subredditRepository: SubredditRepository,
+	private val accountManager: RedditAccountManager,
+	private val cacheManager: CacheManager,
 ) : ViewModel() {
 
-    sealed class SubredditSearchUiState {
-        object Idle : SubredditSearchUiState()
-        object Loading : SubredditSearchUiState()
-        data class Success(
-            val results: List<SubredditItem>,
-            val query: String
-        ) : SubredditSearchUiState()
-        data class Error(val message: String) : SubredditSearchUiState()
-    }
+	sealed class SubredditSearchUiState {
+		object Idle : SubredditSearchUiState()
+		object Loading : SubredditSearchUiState()
+		data class Success(
+			val results: List<SubredditItem>,
+			val query: String,
+		) : SubredditSearchUiState()
+		data class Error(val message: String) : SubredditSearchUiState()
+	}
 
-    /** One search result row (decoupled from the jsonwrap types). */
-    data class SubredditItem(
-        val name: String,
-        val subscribers: Int?,
-        val description: String?,
-        val iconUrl: String?
-    ) {
-        /** Format the subscriber count for display ("1.2M"). */
-        fun subscribersLabel(): String? {
-            val count = subscribers ?: return null
-            return when {
-                count >= 1_000_000 -> String.format(java.util.Locale.US, "%.1fM", count / 1_000_000.0)
-                count >= 1_000 -> String.format(java.util.Locale.US, "%.1fK", count / 1_000.0)
-                else -> count.toString()
-            }
-        }
-    }
+	/** One search result row (decoupled from the jsonwrap types). */
+	data class SubredditItem(
+		val name: String,
+		val subscribers: Int?,
+		val description: String?,
+		val iconUrl: String?,
+	) {
+		/** Format the subscriber count for display ("1.2M"). */
+		fun subscribersLabel(): String? {
+			val count = subscribers ?: return null
+			return when {
+				count >= 1_000_000 -> String.format(java.util.Locale.US, "%.1fM", count / 1_000_000.0)
+				count >= 1_000 -> String.format(java.util.Locale.US, "%.1fK", count / 1_000.0)
+				else -> count.toString()
+			}
+		}
+	}
 
-    private val _state = MutableStateFlow<SubredditSearchUiState>(SubredditSearchUiState.Idle)
-    val state: StateFlow<SubredditSearchUiState> = _state.asStateFlow()
+	private val _state = MutableStateFlow<SubredditSearchUiState>(SubredditSearchUiState.Idle)
+	val state: StateFlow<SubredditSearchUiState> = _state.asStateFlow()
 
-    /**
-     * Query input flow. Each new non-blank value triggers a search via
-     * [searchQueryFlow]; [mapLatest] cancels the previous in-flight search when
-     * a newer query arrives, so an older response can never clobber a newer
-     * one (replaces the old AtomicInteger race-guard).
-     */
-    private val searchQuery = MutableStateFlow("")
+	/**
+	 * Query input flow. Each new non-blank value triggers a search via
+	 * [searchQueryFlow]; [mapLatest] cancels the previous in-flight search when
+	 * a newer query arrives, so an older response can never clobber a newer
+	 * one (replaces the old AtomicInteger race-guard).
+	 */
+	private val searchQuery = MutableStateFlow("")
 
-    init {
-        viewModelScope.launch {
-            searchQuery
-                .filter { it.isNotBlank() }
-                .mapLatest { query -> doSearch(query) }
-                .collect { _state.value = it }
-        }
-    }
+	init {
+		viewModelScope.launch {
+			searchQuery
+				.filter { it.isNotBlank() }
+				.mapLatest { query -> doSearch(query) }
+				.collect { _state.value = it }
+		}
+	}
 
-    /**
-     * Search for subreddits matching the query (live API). Pushes the query
-     * into [searchQuery]; the collected flow performs the request.
-     */
-    fun searchSubreddits(query: String) {
-        if (query.isBlank()) {
-            _state.value = SubredditSearchUiState.Idle
-        } else {
-            _state.value = SubredditSearchUiState.Loading
-        }
-        searchQuery.value = query
-    }
+	/**
+	 * Search for subreddits matching the query (live API). Pushes the query
+	 * into [searchQuery]; the collected flow performs the request.
+	 */
+	fun searchSubreddits(query: String) {
+		if (query.isBlank()) {
+			_state.value = SubredditSearchUiState.Idle
+		} else {
+			_state.value = SubredditSearchUiState.Loading
+		}
+		searchQuery.value = query
+	}
 
-    /**
-     * Run one subreddit search for [query] and return its terminal
-     * [SubredditSearchUiState]. Backed by a CacheRequest bridged into a
-     * suspend function; cancellation (from [mapLatest] on a newer query)
-     * leaves the stale result un-collected.
-     */
-    private suspend fun doSearch(query: String): SubredditSearchUiState {
-        // Bridge the callback-based CacheRequest into coroutines. The deferred's
-        // await() is cancellable, so a newer query arriving via mapLatest cancels
-        // this search and the stale result is dropped.
-        val deferred = CompletableDeferred<SubredditSearchUiState>()
-        val account = accountManager.getDefaultAccount()
-        val uriBuilder = Constants.Reddit.getUriBuilder("/subreddits/search.json")
-            .appendQueryParameter("q", query)
-            .appendQueryParameter("limit", "100")
-        val jsonUri = UriString(uriBuilder.build().toString())
+	/**
+	 * Run one subreddit search for [query] and return its terminal
+	 * [SubredditSearchUiState]. Backed by a CacheRequest bridged into a
+	 * suspend function; cancellation (from [mapLatest] on a newer query)
+	 * leaves the stale result un-collected.
+	 */
+	private suspend fun doSearch(query: String): SubredditSearchUiState {
+		// Bridge the callback-based CacheRequest into coroutines. The deferred's
+		// await() is cancellable, so a newer query arriving via mapLatest cancels
+		// this search and the stale result is dropped.
+		val deferred = CompletableDeferred<SubredditSearchUiState>()
+		val account = accountManager.getDefaultAccount()
+		val uriBuilder = Constants.Reddit.getUriBuilder("/subreddits/search.json")
+			.appendQueryParameter("q", query)
+			.appendQueryParameter("limit", "100")
+		val jsonUri = UriString(uriBuilder.build().toString())
 
-        val callbacks = object : CacheRequestCallbacks {
-            override fun onDataStreamComplete(
-                streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<SeekableInputStream, IOException>,
-                timestamp: TimestampUTC,
-                session: UUID,
-                fromCache: Boolean,
-                mimetype: String?
-            ) {
-                if (!deferred.isActive) return
-                try {
-                    val result = streamFactory.create().use { input ->
-                        JsonValue.parse(input)
-                    }
-                    val children = result.getArrayAtPath("data", "children").get()
-                    val items = children.mapNotNull { child ->
-                        toSubredditItem(child)
-                    }
-                    if (items.isEmpty()) {
-                        deferred.complete(
-                            SubredditSearchUiState.Error(
-                                "No subreddits found for \"$query\""
-                            )
-                        )
-                        return
-                    }
-                    seedLocalCache(items)
-                    deferred.complete(SubredditSearchUiState.Success(items, query))
-                } catch (e: Exception) {
-                    deferred.complete(
-                        SubredditSearchUiState.Error(e.message ?: e.toString())
-                    )
-                }
-            }
+		val callbacks = object : CacheRequestCallbacks {
+			override fun onDataStreamComplete(
+				streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<SeekableInputStream, IOException>,
+				timestamp: TimestampUTC,
+				session: UUID,
+				fromCache: Boolean,
+				mimetype: String?,
+			) {
+				if (!deferred.isActive) return
+				try {
+					val result = streamFactory.create().use { input ->
+						JsonValue.parse(input)
+					}
+					val children = result.getArrayAtPath("data", "children").get()
+					val items = children.mapNotNull { child ->
+						toSubredditItem(child)
+					}
+					if (items.isEmpty()) {
+						deferred.complete(
+							SubredditSearchUiState.Error(
+								"No subreddits found for \"$query\"",
+							),
+						)
+						return
+					}
+					seedLocalCache(items)
+					deferred.complete(SubredditSearchUiState.Success(items, query))
+				} catch (e: Exception) {
+					deferred.complete(
+						SubredditSearchUiState.Error(e.message ?: e.toString()),
+					)
+				}
+			}
 
-            override fun onFailure(error: RRError) {
-                if (!deferred.isActive) return
-                deferred.complete(
-                    SubredditSearchUiState.Error(
-                        error.message ?: "Subreddit search failed"
-                    )
-                )
-            }
-        }
+			override fun onFailure(error: RRError) {
+				if (!deferred.isActive) return
+				deferred.complete(
+					SubredditSearchUiState.Error(
+						error.message ?: "Subreddit search failed",
+					),
+				)
+			}
+		}
 
-        val request = CacheRequest(
-            jsonUri,
-            account,
-            null,
-            Priority(Constants.Priority.API_SUBREDDIT_SEARCH),
-            DownloadStrategyIfTimestampOutsideBounds(
-                TimestampBound.Companion.notOlderThan(minutes(1))
-            ),
-            Constants.FileType.SUBREDDIT_LIST,
-            CacheRequest.DownloadQueueType.REDDIT_API,
-            context,
-            callbacks
-        )
-        cacheManager.makeRequest(request)
-        return deferred.await()
-    }
+		val request = CacheRequest(
+			jsonUri,
+			account,
+			null,
+			Priority(Constants.Priority.API_SUBREDDIT_SEARCH),
+			DownloadStrategyIfTimestampOutsideBounds(
+				TimestampBound.Companion.notOlderThan(minutes(1)),
+			),
+			Constants.FileType.SUBREDDIT_LIST,
+			CacheRequest.DownloadQueueType.REDDIT_API,
+			context,
+			callbacks,
+		)
+		cacheManager.makeRequest(request)
+		return deferred.await()
+	}
 
-    /**
-     * Upsert the search results into the Room `subreddits` table so the
-     * cache is not empty (it was never populated before the 47th — the
-     * local search ran against an always-empty table).
-     */
-    private fun seedLocalCache(items: List<SubredditItem>) {
-        viewModelScope.launch {
-            items.forEach { item ->
-                try {
-                    subredditRepository.insertSubreddit(
-                        SubredditEntity(
-                            name = item.name,
-                            displayName = null,
-                            subscribers = item.subscribers,
-                            description = item.description,
-                            iconUrl = item.iconUrl,
-                            headerUrl = null,
-                            createdUtc = null,
-                            lastUpdated = System.currentTimeMillis()
-                        )
-                    )
-                } catch (e: Exception) {
-                    // The cache is best-effort — never fail the search
-                    // because the local write failed.
-                }
-            }
-        }
-    }
+	/**
+	 * Upsert the search results into the Room `subreddits` table so the
+	 * cache is not empty (it was never populated before the 47th — the
+	 * local search ran against an always-empty table).
+	 */
+	private fun seedLocalCache(items: List<SubredditItem>) {
+		viewModelScope.launch {
+			items.forEach { item ->
+				try {
+					subredditRepository.insertSubreddit(
+						SubredditEntity(
+							name = item.name,
+							displayName = null,
+							subscribers = item.subscribers,
+							description = item.description,
+							iconUrl = item.iconUrl,
+							headerUrl = null,
+							createdUtc = null,
+							lastUpdated = System.currentTimeMillis(),
+						),
+					)
+				} catch (e: Exception) {
+					// The cache is best-effort — never fail the search
+					// because the local write failed.
+				}
+			}
+		}
+	}
 
-    /**
-     * Clear the current search state.
-     */
-    fun clearSearch() {
-        searchQuery.value = ""
-        _state.value = SubredditSearchUiState.Idle
-    }
+	/**
+	 * Clear the current search state.
+	 */
+	fun clearSearch() {
+		searchQuery.value = ""
+		_state.value = SubredditSearchUiState.Idle
+	}
 
-    /**
-     * Select a subreddit and navigate to it.
-     */
-    fun selectSubreddit(name: String): String {
-        return name
-    }
+	/**
+	 * Select a subreddit and navigate to it.
+	 */
+	fun selectSubreddit(name: String): String = name
 }
 
 /**
@@ -272,23 +270,23 @@ class SubredditSearchViewModel @Inject constructor(
  * icon is read straight off the raw `data` object).
  */
 internal fun toSubredditItem(child: JsonValue): SubredditSearchViewModel.SubredditItem? {
-    return try {
-        val thing = child.asObject<RedditThing>(RedditThing::class.java) ?: return null
-        val sub = thing.asSubreddit()
-        // display_name is the real name ("AskAnAmerican"); fall back to the
-        // /r/<name>/ url path if the field is missing.
-        val name = sub.display_name
-            ?: sub.url?.let { it.removePrefix("/r/").removeSuffix("/").takeIf { n -> n.isNotBlank() } }
-        if (name.isNullOrBlank()) return null
-        val iconOpt = child.getStringAtPath("data", "icon_img")
-        val icon = iconOpt.takeIf { it.isPresent }?.get() ?: sub.header_img
-        SubredditSearchViewModel.SubredditItem(
-            name = name,
-            subscribers = sub.subscribers,
-            description = sub.description,
-            iconUrl = icon
-        )
-    } catch (e: Exception) {
-        null
-    }
+	return try {
+		val thing = child.asObject<RedditThing>(RedditThing::class.java) ?: return null
+		val sub = thing.asSubreddit()
+		// display_name is the real name ("AskAnAmerican"); fall back to the
+		// /r/<name>/ url path if the field is missing.
+		val name = sub.display_name
+			?: sub.url?.let { it.removePrefix("/r/").removeSuffix("/").takeIf { n -> n.isNotBlank() } }
+		if (name.isNullOrBlank()) return null
+		val iconOpt = child.getStringAtPath("data", "icon_img")
+		val icon = iconOpt.takeIf { it.isPresent }?.get() ?: sub.header_img
+		SubredditSearchViewModel.SubredditItem(
+			name = name,
+			subscribers = sub.subscribers,
+			description = sub.description,
+			iconUrl = icon,
+		)
+	} catch (e: Exception) {
+		null
+	}
 }

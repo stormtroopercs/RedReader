@@ -16,28 +16,28 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.test.general
 
+import com.stormtroopercs.materialreader.common.CachedStringHash
 import org.junit.Assert
 import org.junit.Test
-import com.stormtroopercs.materialreader.common.CachedStringHash
 import java.util.concurrent.atomic.AtomicReference
 
 class CachedHashTest {
-    @Test
-    fun testHash() {
-
+	@Test
+	fun testHash() {
 		val data = AtomicReference("Hello")
 
 		val hash = CachedStringHash { data.get() }
 
 		Assert.assertEquals(
 			hash.hash,
-			"185F8DB32271FE25F561A6FC938B2E264306EC304EDA518007D1764826381969")
+			"185F8DB32271FE25F561A6FC938B2E264306EC304EDA518007D1764826381969",
+		)
 
 		data.set("World")
 
 		Assert.assertEquals(
 			hash.hash,
-			"78AE647DC5544D227130A0682A51E30BC7777FBB6D8A8F17007463A3ECD1D524")
-
-    }
+			"78AE647DC5544D227130A0682A51E30BC7777FBB6D8A8F17007463A3ECD1D524",
+		)
+	}
 }

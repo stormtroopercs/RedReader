@@ -21,7 +21,12 @@ import androidx.annotation.Keep
 import com.stormtroopercs.materialreader.BuildConfig
 
 object GlobalConfig {
-	@JvmField @Keep var appName = BuildConfig.APPLICATION_ID
-	@JvmField @Keep var appBuildType = BuildConfig.BUILD_TYPE
-	@JvmField @Keep var appId: String?=null
+	@JvmField @Keep
+	var appName = BuildConfig.APPLICATION_ID
+
+	@JvmField @Keep
+	var appBuildType = BuildConfig.BUILD_TYPE
+
+	@JvmField @Keep
+	var appId: String? = null
 }

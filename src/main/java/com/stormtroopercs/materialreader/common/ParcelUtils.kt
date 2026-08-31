@@ -19,72 +19,72 @@ package com.stormtroopercs.materialreader.common
 import android.os.Parcel
 
 object ParcelUtils {
-    fun writeNullableBoolean(
-        parcel: Parcel,
-        value: Boolean?
-    ) {
-        if (value == null) {
-            parcel.writeInt(0)
-        } else if (value) {
-            parcel.writeInt(1)
-        } else {
-            parcel.writeInt(-1)
-        }
-    }
+	fun writeNullableBoolean(
+		parcel: Parcel,
+		value: Boolean?,
+	) {
+		if (value == null) {
+			parcel.writeInt(0)
+		} else if (value) {
+			parcel.writeInt(1)
+		} else {
+			parcel.writeInt(-1)
+		}
+	}
 
-    fun readNullableBoolean(parcel: Parcel): Boolean? {
-        val value = parcel.readInt()
+	fun readNullableBoolean(parcel: Parcel): Boolean? {
+		val value = parcel.readInt()
 
-        when (value) {
-            -1 -> return false
-            0 -> return null
-            1 -> return true
-        }
+		when (value) {
+			-1 -> return false
+			0 -> return null
+			1 -> return true
+		}
 
-        throw RuntimeException("Invalid value " + value)
-    }
+		throw RuntimeException("Invalid value " + value)
+	}
 
-    fun writeNullableInt(
-        parcel: Parcel,
-        value: Int?
-    ) {
-        if (value == null) {
-            parcel.writeInt(0)
-        } else {
-            parcel.writeInt(1)
-            parcel.writeInt(value)
-        }
-    }
+	fun writeNullableInt(
+		parcel: Parcel,
+		value: Int?,
+	) {
+		if (value == null) {
+			parcel.writeInt(0)
+		} else {
+			parcel.writeInt(1)
+			parcel.writeInt(value)
+		}
+	}
 
-    fun readNullableInt(parcel: Parcel): Int? {
-        val present = parcel.readInt()
+	fun readNullableInt(parcel: Parcel): Int? {
+		val present = parcel.readInt()
 
-        if (present == 1) {
-            return parcel.readInt()
-        } else {
-            return null
-        }
-    }
+		if (present == 1) {
+			return parcel.readInt()
+		} else {
+			return null
+		}
+	}
 
-    fun writeNullableLong(
-        parcel: Parcel,
-        value: Long?
-    ) {
-        if (value == null) {
-            parcel.writeLong(0)
-        } else {
-            parcel.writeLong(1)
-            parcel.writeLong(value)
-        }
-    }
+	fun writeNullableLong(
+		parcel: Parcel,
+		value: Long?,
+	) {
+		if (value == null) {
+			parcel.writeLong(0)
+		} else {
+			parcel.writeLong(1)
+			parcel.writeLong(value)
+		}
+	}
 
-    fun readNullableLong(parcel: Parcel): Long? {
-        val present = parcel.readLong()
+	fun readNullableLong(parcel: Parcel): Long? {
+		val present = parcel.readLong()
 
-        if (present == 1L) {
-            return parcel.readLong()
-        } else {
-            return null
-        }
-    }
+		if (present == 1L) {
+			return parcel.readLong()
+		} else {
+			return null
+		}
+	}
 }

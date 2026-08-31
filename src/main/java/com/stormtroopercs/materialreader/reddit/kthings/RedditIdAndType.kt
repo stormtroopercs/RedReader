@@ -30,7 +30,7 @@ import kotlinx.serialization.encoding.Encoder
 @Serializable(with = RedditIdAndTypeSerializer::class)
 @Parcelize
 data class RedditIdAndType(
-	val value: String
+	val value: String,
 ) : Parcelable {
 	override fun toString() = value
 }
