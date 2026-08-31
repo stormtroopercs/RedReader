@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CompletableDeferred
@@ -67,6 +68,7 @@ import javax.inject.Inject
  * count, description, icon).
  */
 @HiltViewModel
+@OptIn(ExperimentalCoroutinesApi::class)
 class SubredditSearchViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val subredditRepository: SubredditRepository,
