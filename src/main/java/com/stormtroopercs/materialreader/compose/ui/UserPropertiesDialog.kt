@@ -22,7 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Comment
+import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -106,7 +106,7 @@ private fun UserPropertiesContent(user: RedditUser) {
         if (user.comment_karma != null) {
             item {
                 PropertyCard(
-                    icon = Icons.Default.Comment,
+                    icon = Icons.AutoMirrored.Filled.Comment,
                     title = "Comment Karma",
                     value = user.comment_karma.toString()
                 )

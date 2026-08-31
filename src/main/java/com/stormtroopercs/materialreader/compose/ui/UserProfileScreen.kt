@@ -29,6 +29,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.Comment
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,7 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.scale
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.stormtroopercs.materialreader.R
 import com.stormtroopercs.materialreader.common.datastream.parseDataUri
 import com.stormtroopercs.materialreader.compose.net.NetRequestStatus
@@ -613,18 +615,18 @@ private fun QuickActions(
                 onClick = onNavigateToPosts
             )
 
-            Divider()
+            HorizontalDivider()
 
             // View comments
             ActionRow(
-                icon = Icons.Default.Comment,
+                icon = Icons.AutoMirrored.Filled.Comment,
                 label = "View Comments",
                 onClick = onNavigateToComments
             )
 
             // Send message (signed in only, mirroring the legacy dialog)
             if (canMessage) {
-                Divider()
+                HorizontalDivider()
                 ActionRow(
                     icon = Icons.Default.Email,
                     label = "Send Message",
@@ -757,7 +759,7 @@ private fun SignOutCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Logout,
+                imageVector = Icons.AutoMirrored.Filled.Logout,
                 contentDescription = "Sign out",
                 tint = MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(24.dp)

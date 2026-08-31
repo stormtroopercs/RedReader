@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.Comment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,7 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.stormtroopercs.materialreader.navigation.InboxViewModel
 
 /**
@@ -339,7 +340,7 @@ private fun getSenderText(message: InboxViewModel.InboxItem): String {
 private fun getMessageTypeIcon(messageType: InboxViewModel.MessageType): androidx.compose.ui.graphics.vector.ImageVector {
     return when (messageType) {
         InboxViewModel.MessageType.MESSAGE -> Icons.AutoMirrored.Default.Message
-        InboxViewModel.MessageType.COMMENT_REPLY -> Icons.Default.Comment
+        InboxViewModel.MessageType.COMMENT_REPLY -> Icons.AutoMirrored.Filled.Comment
         InboxViewModel.MessageType.POST_REPLY -> Icons.Default.PostAdd
         InboxViewModel.MessageType.LIKE -> Icons.Default.Favorite
         InboxViewModel.MessageType.OTHER -> Icons.Default.Notifications

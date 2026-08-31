@@ -51,7 +51,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -83,7 +83,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stormtroopercs.materialreader.compose.net.NetRequestStatus
 import com.stormtroopercs.materialreader.compose.net.fetchImage
@@ -434,7 +434,7 @@ private fun SlidesToolbar(
 			// The reference's Sort opens the 9-option dialog (Phase 4.5), not a
 			// menu.
 			IconButton(onClick = onSortMenuToggle) {
-				Icon(Icons.Filled.Sort, contentDescription = "Sort")
+				Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort")
 			}
 			IconButton(onClick = onRefresh) {
 				Icon(Icons.Filled.Refresh, contentDescription = "Refresh")

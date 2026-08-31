@@ -35,7 +35,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -59,7 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stormtroopercs.materialreader.compose.ui.RRErrorView
 import com.stormtroopercs.materialreader.common.LinkHandler
@@ -175,7 +175,7 @@ fun RealPostListScreen(
 						Icon(Icons.Filled.Search, contentDescription = "Search")
 					}
 					IconButton(onClick = { sortDialogOpen = true }) {
-						Icon(Icons.Filled.Sort, contentDescription = "Sort")
+						Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort")
 					}
 					IconButton(onClick = { changeViewOpen = true }) {
 						Icon(Icons.Filled.ViewAgenda, contentDescription = "Change view")

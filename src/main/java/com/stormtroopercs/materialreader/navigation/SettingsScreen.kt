@@ -36,7 +36,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -467,7 +467,7 @@ private fun CategoryRow(
         }
 
         Icon(
-            imageVector = Icons.Default.ArrowForward,
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
             modifier = Modifier.size(20.dp)
         )
@@ -696,7 +696,7 @@ private fun EnumSettingItem(item: SettingsItem.EnumSetting<*>) {
 
         Spacer(Modifier.width(8.dp))
         Icon(
-            imageVector = Icons.Default.ArrowForward,
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
             modifier = Modifier.size(20.dp)
         )
@@ -763,7 +763,7 @@ private fun ChoiceSettingItem(item: SettingsItem.ChoiceSetting) {
 
         Spacer(Modifier.width(8.dp))
         Icon(
-            imageVector = Icons.Default.ArrowForward,
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
             modifier = Modifier.size(20.dp)
         )
@@ -831,7 +831,7 @@ private fun MultiSelectSettingItem(item: SettingsItem.MultiSelectSetting) {
 
         Spacer(Modifier.width(8.dp))
         Icon(
-            imageVector = Icons.Default.ArrowForward,
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
             modifier = Modifier.size(20.dp)
         )
@@ -912,7 +912,7 @@ private fun PreferenceItem(item: SettingsItem.PreferenceItem) {
         }
 
         Icon(
-            imageVector = Icons.Default.ArrowForward,
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
             modifier = Modifier.size(20.dp)
         )

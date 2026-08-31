@@ -348,7 +348,7 @@ fun AppNavGraph(navigationState: NavigationState) {
             // Child: User profile
             entry<UserProfile> { key ->
                 // Same entry-scoped instance the screen resolves itself.
-                val userProfileViewModel = androidx.hilt.navigation.compose.hiltViewModel<UserProfileViewModel>()
+                val userProfileViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel<UserProfileViewModel>()
                 com.stormtroopercs.materialreader.compose.ui.UserProfileScreen(
                     username = key.username,
                     onNavigateBack = { navigator.goBack() },
