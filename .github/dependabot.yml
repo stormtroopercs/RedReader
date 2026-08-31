@@ -14,9 +14,8 @@ updates:
   # (AGP, Kotlin, AndroidX, Compose, Hilt, ...).
   - package-ecosystem: "gradle"
     directory: "/"
-    # Development currently happens on the conversion branch; Dependabot
-    # otherwise targets the repository default branch (master).
-    target-branch: "java-to-kotlin-conversion"
+    # Development happens on main; Dependabot targets main (the default branch).
+    target-branch: "main"
     schedule:
       interval: "weekly"
     assignees:
@@ -43,7 +42,7 @@ updates:
   # CI workflows: track pinned action versions in .github/workflows.
   - package-ecosystem: "github-actions"
     directory: "/.github/workflows"
-    target-branch: "java-to-kotlin-conversion"
+    target-branch: "main"
     schedule:
       interval: "weekly"
     assignees:
