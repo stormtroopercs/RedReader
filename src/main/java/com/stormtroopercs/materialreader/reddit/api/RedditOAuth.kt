@@ -376,7 +376,7 @@ object RedditOAuth {
                     } catch (t: Throwable) {
                         throw RuntimeException(t)
                     } finally {
-                        body?.closeQuietly()
+                        body.closeQuietly()
                     }
                 }
             })
@@ -495,7 +495,7 @@ object RedditOAuth {
                     } catch (t: Throwable) {
                         throw RuntimeException(t)
                     } finally {
-                        body?.closeQuietly()
+                        body.closeQuietly()
                     }
                 }
             })
@@ -653,7 +653,7 @@ object RedditOAuth {
                     } catch (t: Throwable) {
                         throw RuntimeException(t)
                     } finally {
-                        body?.closeQuietly()
+                        body.closeQuietly()
                     }
                 }
             })
@@ -763,7 +763,7 @@ object RedditOAuth {
                     } catch (t: Throwable) {
                         throw RuntimeException(t)
                     } finally {
-                        body?.closeQuietly()
+                        body.closeQuietly()
                     }
                 }
             })

@@ -118,7 +118,6 @@ class UserPostListingURL internal constructor(
             Type.UPVOTED -> name = context.getString(string.mainmenu_upvoted)
             Type.DOWNVOTED -> name = context.getString(string.mainmenu_downvoted)
             Type.SUBMITTED -> name = context.getString(string.mainmenu_submitted)
-            else -> return super.humanReadableName(context, shorter)
         }
 
         if (shorter) {

@@ -99,7 +99,7 @@ class RedditAPIMultiredditListRequester(
                         val multiredditList = result.asArray()
 
                         for (multireddit in multiredditList!!) {
-                            val name = multireddit!!.asObject()!!
+                            val name = multireddit.asObject()!!
                                 .getObject("data")!!
                                 .getString("name")
                             output.add(name!!)
@@ -108,7 +108,7 @@ class RedditAPIMultiredditListRequester(
                         handler.onRequestSuccess(
                             WritableHashSet(
                                 output,
-                                timestamp!!,
+                                timestamp,
                                 user.canonicalUsername
                             ), timestamp
                         )

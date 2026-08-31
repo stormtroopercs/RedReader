@@ -114,7 +114,7 @@ class ShareOrderDialog : AppCompatDialogFragment(), ShareOrderCallbackListener {
     }
 
     override fun onSelectedIntent(position: Int) {
-        val info = orderedAppList!!.get(position)!!.activityInfo
+        val info = orderedAppList!!.get(position).activityInfo
         persistPriority(info)
         shareIntent!!.addCategory(Intent.CATEGORY_LAUNCHER)
         shareIntent!!.setClassName(info.applicationInfo.packageName, info.name)

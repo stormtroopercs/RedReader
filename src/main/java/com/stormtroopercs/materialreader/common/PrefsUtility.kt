@@ -916,7 +916,7 @@ object PrefsUtility {
 
         if (value.contains("-r")) {
             val split: Array<String?> =                 value.split("-r".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-            return LocaleListCompat.create(Locale(split[0], split[1]))
+            return LocaleListCompat.create(Locale(split[0] ?: "", split[1] ?: ""))
         }
 
         return LocaleListCompat.create(Locale(value))
@@ -1338,7 +1338,7 @@ object PrefsUtility {
         val result = EnumSet.noneOf<AppearancePostSubtitleItem>(
             AppearancePostSubtitleItem::class.java
         )
-        for (s in strings!!) {
+        for (s in strings) {
             result.add(AppearancePostSubtitleItem.valueOf(StringUtils.asciiUppercase(s)))
         }
 
@@ -1372,7 +1372,7 @@ object PrefsUtility {
         val result = EnumSet.noneOf<AppearancePostSubtitleItem>(
             AppearancePostSubtitleItem::class.java
         )
-        for (s in strings!!) {
+        for (s in strings) {
             result.add(AppearancePostSubtitleItem.valueOf(StringUtils.asciiUppercase(s)))
         }
 
@@ -1406,7 +1406,7 @@ object PrefsUtility {
         val result = EnumSet.noneOf<AppearanceCommentHeaderItem>(
             AppearanceCommentHeaderItem::class.java
         )
-        for (s in strings!!) {
+        for (s in strings) {
             if (s.equals("ups_downs", ignoreCase = true)) {
                 continue
             }
@@ -2153,7 +2153,7 @@ object PrefsUtility {
         )
 
         val result = EnumSet.noneOf<LinkHandler.LinkAction>(LinkHandler.LinkAction::class.java)
-        for (s in strings!!) {
+        for (s in strings) {
             result.add(LinkHandler.LinkAction.valueOf(StringUtils.asciiUppercase(s)))
         }
 

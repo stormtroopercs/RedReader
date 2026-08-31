@@ -29,11 +29,8 @@ class RedditThing : JsonDeserializable {
     var data: JsonObject?=null
 
     fun getKind(): Kind {
-        val result: Kind = kinds.get(this.kind)!!
-
-        if (result == null) {
-            throw RuntimeException("Unknown thing type: " + this.kind)
-        }
+        val result = kinds.get(this.kind)
+            ?: throw RuntimeException("Unknown thing type: " + this.kind)
 
         return result
     }

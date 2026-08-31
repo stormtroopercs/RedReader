@@ -83,10 +83,6 @@ class CommentReplyViewModel @Inject constructor(
     fun submit(activity: AppCompatActivity, markdown: String) {
         val thingId = parentThingId ?: return
         val account = accountManager.getDefaultAccount()
-        if (account == null) {
-            _state.value = ReplyUiState.Error("Not signed in")
-            return
-        }
         _state.value = ReplyUiState.Submitting
 
         val submitHandler = object : SubmitResponseHandler(activity) {

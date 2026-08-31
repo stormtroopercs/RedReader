@@ -239,16 +239,8 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 					val body: okhttp3.ResponseBody = response.body
 
 					if (status == 200 || status == 202) {
-						val bodyStream: InputStream?
-						val bodyLength: Long?
-
-						if (body != null) {
-							bodyStream = body.byteStream()
-							bodyLength = body.contentLength().takeUnless { it < 0 }
-						} else {
-							bodyStream = null
-							bodyLength = null
-						}
+						val bodyStream: InputStream? = body.byteStream()
+						val bodyLength: Long? = body.contentLength().takeUnless { it < 0 }
 
 						val contentType = response.header("Content-Type")
 
@@ -267,13 +259,10 @@ class OKHTTPBackend private constructor() : HTTPBackend() {
 						}
 
 						var bodyBytes: FailedRequestBody? = null
-
-						if (body != null) {
-							try {
-								bodyBytes = FailedRequestBody(body.bytes())
-							} catch (e: IOException) {
-								// Ignore
-							}
+						try {
+							bodyBytes = FailedRequestBody(body.bytes())
+						} catch (e: IOException) {
+							// Ignore
 						}
 
 						listener.onError(

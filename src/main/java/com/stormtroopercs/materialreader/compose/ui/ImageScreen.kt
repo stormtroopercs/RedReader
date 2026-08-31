@@ -153,7 +153,7 @@ fun ImageScreen(
 
     val barTitle = when {
         !standalone -> stringResource(R.string.image_gallery)
-        info?.title?.isNotBlank() == true -> info.title!!
+        info?.title?.isNotBlank() == true -> info.title.orEmpty()
         else -> mediaUrl.value.substringAfterLast('/').takeIf { it.isNotBlank() } ?: "Image"
     }
 
@@ -198,7 +198,7 @@ fun ImageScreen(
 
         if (!standalone) {
             AlbumPager(
-                albumUrl = albumUrl!!,
+                albumUrl = albumUrl,
                 startIndex = albumIndex,
                 theme = theme
             )
@@ -548,7 +548,7 @@ private fun ResolvedAlbumImage(
     } else {
         val resolved = fetchImageInfo(image.original.url).value
         when (val r = resolved) {
-            null, is NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+            is NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
                 MediaSpinner(theme)
             }
 

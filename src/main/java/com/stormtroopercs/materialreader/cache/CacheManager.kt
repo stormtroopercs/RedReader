@@ -275,7 +275,7 @@ class CacheManager @Inject constructor(
             Log.i("CacheManager", "Pruning " + filesToDelete.size + " files")
 
             for (id in filesToDelete) {
-                val file = getExistingCacheFile(id!!)
+                val file = getExistingCacheFile(id)
                 if (file != null) {
                     file.delete()
                 }
@@ -334,7 +334,7 @@ class CacheManager @Inject constructor(
 
     val preferredCacheLocation: File
         get() = File(
-            PrefsUtility.pref_cache_location(context)
+            PrefsUtility.pref_cache_location(context)!!
         )
 
     fun getExistingCacheFileById(
@@ -471,9 +471,6 @@ class CacheManager @Inject constructor(
             get() {
                 val result: InputStream =                     getCacheFileInputStream(this.id, mCacheCompressionType)!!
 
-                if (result == null) {
-                    throw FileNotFoundException("Stream was null for id " + this.id)
-                }
 
                 return result
             }
@@ -589,19 +586,6 @@ class CacheManager @Inject constructor(
         }
 
         fun handleRequest(request: CacheRequest) {
-            if (request.url == null) {
-                request.notifyFailure(
-                    getGeneralErrorForFailure(
-                        context,
-                        RequestFailureType.MALFORMED_URL,
-                        NullPointerException("URL was null"),
-                        null,
-                        null,
-                        Optional.empty<FailedRequestBody>()
-                    )
-                )
-                return
-            }
 
             if (request.downloadStrategy.shouldDownloadWithoutCheckingCache()) {
                 queueDownload(request)

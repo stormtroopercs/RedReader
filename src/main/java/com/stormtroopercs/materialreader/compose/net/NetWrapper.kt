@@ -599,7 +599,7 @@ fun fetchSubredditReportFlow(
 	val rulesUri = remember(subredditName) {
 		UriString.from(
 			Constants.Reddit.getUriBuilder("/r/$subredditName/about/rules.json")
-				?.appendQueryParameter("raw_json", "1")
+				.appendQueryParameter("raw_json", "1")
 				?.build()
 				?: Uri.parse("")
 		)
@@ -608,7 +608,7 @@ fun fetchSubredditReportFlow(
 	val aboutUri = remember(subredditName) {
 		UriString.from(
 			Constants.Reddit.getUriBuilder("/r/$subredditName/about.json")
-				?.appendQueryParameter("raw_json", "1")
+				.appendQueryParameter("raw_json", "1")
 				?.build()
 				?: Uri.parse("")
 		)

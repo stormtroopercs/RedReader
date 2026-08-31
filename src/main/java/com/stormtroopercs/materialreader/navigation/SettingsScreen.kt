@@ -2608,7 +2608,7 @@ private fun CacheLocationDialog(context: Context, onDismiss: () -> Unit) {
     val currentStorage = remember { PrefsUtility.pref_cache_location(context) }
     val choices = remember {
         CacheManager.getCacheDirs(context)
-            .filter { it != null && it.exists() && it.canRead() && it.canWrite() }
+            .filter { it.exists() && it.canRead() && it.canWrite() }
             .map { dir ->
                 var display = dir.getAbsolutePath()
                 if (!display.endsWith("/")) display += "/"

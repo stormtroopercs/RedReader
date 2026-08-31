@@ -129,7 +129,6 @@ class SubredditPostListURL private constructor(
 
             Type.SUBREDDIT_COMBINATION, Type.ALL_SUBTRACTION -> return subreddit.orEmpty()
 
-            else -> return super.humanReadableName(context, shorter)
         }
     }
 

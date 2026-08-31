@@ -43,9 +43,6 @@ class RedditAccount(
     val clientId: String?
 
     init {
-        if (username == null) {
-            throw RuntimeException("Null user in RedditAccount")
-        }
 
         this.username = username.trim { it <= ' ' }
         this.canonicalUsername = StringUtils.asciiLowercase(this.username)

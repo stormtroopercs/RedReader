@@ -169,7 +169,7 @@ class RedditAccountManager @Inject constructor(
                 db.close()
             }
 
-            return java.util.ArrayList<RedditAccount>(accountsCache)
+            return java.util.ArrayList<RedditAccount>(accountsCache!!)
         }
 
     fun getAccount(username: String): RedditAccount? {
@@ -257,7 +257,6 @@ class RedditAccountManager @Inject constructor(
         accountsCache = LinkedList<RedditAccount?>()
         defaultAccountCache = null
 
-        if (cursor != null) {
             while (cursor.moveToNext()) {
                 val username = cursor.getString(0)
 
@@ -288,9 +287,6 @@ class RedditAccountManager @Inject constructor(
             }
 
             cursor.close()
-        } else {
-            handleGlobalError(context, "Cursor was null after query")
-        }
     }
 
     fun addUpdateListener(listener: RedditAccountChangeListener) {

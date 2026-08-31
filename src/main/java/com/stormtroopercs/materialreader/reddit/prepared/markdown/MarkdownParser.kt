@@ -27,7 +27,7 @@ object MarkdownParser {
 
         for (i in lines.indices) {
             if (currentLine != null) {
-                when (lines[i]!!.type) {
+                when (lines[i].type) {
                     MarkdownParagraphType.BULLET, MarkdownParagraphType.NUMBERED, MarkdownParagraphType.HEADER, MarkdownParagraphType.CODE, MarkdownParagraphType.HLINE, MarkdownParagraphType.QUOTE -> {
                         mergedLines.add(currentLine)
                         currentLine = lines[i]
@@ -38,8 +38,8 @@ object MarkdownParser {
                         currentLine = null
                     }
 
-                    MarkdownParagraphType.TEXT -> when (lines[i - 1]!!.type) {
-                        MarkdownParagraphType.QUOTE, MarkdownParagraphType.BULLET, MarkdownParagraphType.NUMBERED, MarkdownParagraphType.TEXT -> if (lines[i - 1]!!.spacesAtEnd >= 2) {
+                    MarkdownParagraphType.TEXT -> when (lines[i - 1].type) {
+                        MarkdownParagraphType.QUOTE, MarkdownParagraphType.BULLET, MarkdownParagraphType.NUMBERED, MarkdownParagraphType.TEXT -> if (lines[i - 1].spacesAtEnd >= 2) {
                             mergedLines.add(currentLine)
                             currentLine = lines[i]
                         } else {
@@ -55,7 +55,7 @@ object MarkdownParser {
                     }
 
                 }
-            } else if (lines[i]!!.type != MarkdownParagraphType.EMPTY) {
+            } else if (lines[i].type != MarkdownParagraphType.EMPTY) {
                 currentLine = lines[i]
             }
         }

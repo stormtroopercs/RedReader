@@ -152,7 +152,7 @@ object MarkdownTokenizer {
                             // Greedily read to space, or <>, or etc
 
                             val linkStartPos = i
-                            val linkPrefixEndPos =                                 linkPrefixes[linkStartType]!!.size + linkStartPos
+                            val linkPrefixEndPos =                                 linkPrefixes[linkStartType].size + linkStartPos
                             var linkEndPos = linkPrefixEndPos
 
                             var hasOpeningParen = false
@@ -220,7 +220,7 @@ object MarkdownTokenizer {
                         val linkStartType =                             getRedditLinkStartType(input.data, i, input.pos)
                         if (linkStartType >= 0) {
                             val linkStartPos = i
-                            val linkPrefixEndPos =                                 (linkPrefixes_reddit[linkStartType]!!.size
+                            val linkPrefixEndPos =                                 (linkPrefixes_reddit[linkStartType].size
                                         + linkStartPos)
                             var linkEndPos = linkPrefixEndPos
 
@@ -963,9 +963,9 @@ object MarkdownTokenizer {
     ): Int {
         val maxLen = endExclusive - startInclusive
         for (type in linkPrefixes.indices) {
-            if (linkPrefixes[type]!!.size <= maxLen && MarkdownTokenizer.equals(
+            if (linkPrefixes[type].size <= maxLen && MarkdownTokenizer.equals(
                     haystack,
-                    linkPrefixes[type]!!,
+                    linkPrefixes[type],
                     startInclusive
                 )
             ) {
@@ -982,9 +982,9 @@ object MarkdownTokenizer {
     ): Int {
         val maxLen = endExclusive - startInclusive
         for (type in linkPrefixes_reddit.indices) {
-            if (linkPrefixes_reddit[type]!!.size <= maxLen && MarkdownTokenizer.equals(
+            if (linkPrefixes_reddit[type].size <= maxLen && MarkdownTokenizer.equals(
                     haystack,
-                    linkPrefixes_reddit[type]!!,
+                    linkPrefixes_reddit[type],
                     startInclusive
                 )
             ) {

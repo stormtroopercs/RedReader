@@ -106,10 +106,11 @@ class MarkdownParagraphGroup(private val paragraphs: Array<MarkdownParagraph>) {
 
                 MarkdownParagraphType.CODE -> {
                     tv.setTypeface(Fonts.veraMonoOrAlternative)
+                    val raw = paragraph.raw!!
                     tv.setText(
-                        paragraph.raw!!.arr,
-                        paragraph.raw!!.start,
-                        paragraph.raw!!.length
+                        raw.arr,
+                        raw.start,
+                        raw.length
                     )
                     layout.addView(tv)
 

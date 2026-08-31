@@ -182,7 +182,7 @@ class InboxViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            val account = accountManager.getDefaultAccount() ?: return@launch
+            val account = accountManager.getDefaultAccount()
             RedditAPI.markRead(
                 cacheManager,
                 account,
@@ -218,7 +218,7 @@ class InboxViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            val account = accountManager.getDefaultAccount() ?: return@launch
+            val account = accountManager.getDefaultAccount()
             RedditAPI.markAllAsRead(
                 cacheManager,
                 account,

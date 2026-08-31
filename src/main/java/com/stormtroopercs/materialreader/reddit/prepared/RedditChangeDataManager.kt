@@ -281,7 +281,7 @@ class RedditChangeDataManager {
     private fun insertAll(entries: HashMap<RedditIdAndType?, Entry>) {
         synchronized(mLock) {
             for (entry in entries.entries) {
-                val newEntry: Entry = entry.value!!
+                val newEntry: Entry = entry.value
                 val existingEntry = mEntries.get(entry.key)
 
                 if (existingEntry == null
@@ -521,7 +521,7 @@ class RedditChangeDataManager {
 
                 for (entry in entrySet) {
                     dos.writeUTF(entry.key!!.value)
-                    entry.value!!.writeTo(dos)
+                    entry.value.writeTo(dos)
                 }
 
                 if (isSensitiveDebugLoggingEnabled) {

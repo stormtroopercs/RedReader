@@ -58,13 +58,13 @@ fun RRComposeContext(
 	val accountManager = remember { RedditAccountManager.getInstance(activity) }
 
 	var currentAccountId by remember {
-		mutableStateOf(RedditAccountId(accountManager.defaultAccount?.canonicalUsername.orEmpty()))
+		mutableStateOf(RedditAccountId(accountManager.defaultAccount.canonicalUsername))
 	}
 
 	DisposableEffect(Unit) {
 		val updateListener = RedditAccountChangeListener {
 			AndroidCommon.runOnUiThread {
-				currentAccountId = RedditAccountId(accountManager.defaultAccount?.canonicalUsername.orEmpty())
+				currentAccountId = RedditAccountId(accountManager.defaultAccount.canonicalUsername)
 			}
 		}
 

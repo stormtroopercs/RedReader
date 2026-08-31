@@ -189,10 +189,6 @@ class CommentListViewModel @Inject constructor(
      */
     fun performAction(activity: AppCompatActivity, comment: CommentItem, action: CommentAction) {
         val account = accountManager.getDefaultAccount()
-        if (account == null) {
-            _actionResult.value = "Not signed in"
-            return
-        }
 
         val apiAction = when (action) {
             CommentAction.UPVOTE -> RedditAPI.ACTION_UPVOTE
@@ -212,7 +208,6 @@ class CommentListViewModel @Inject constructor(
                         CommentAction.DOWNVOTE -> "Downvoted"
                         CommentAction.SAVE -> "Saved"
                         CommentAction.UNSAVE -> "Removed from saved"
-                        else -> "Done"
                     }
                     // Toggle the local saved state so the action row reflects
                     // the new state immediately (a refresh re-derives it).
@@ -283,11 +278,6 @@ class CommentListViewModel @Inject constructor(
         _expanding.value = true
         viewModelScope.launch {
             val account = accountManager.getDefaultAccount()
-            if (account == null) {
-                _expanding.value = false
-                _actionResult.value = "Not signed in"
-                return@launch
-            }
             val baseDepth = more.replyDepth + 1
             val fetched = children.map { childId ->
                 async { fetchExpandedChildren(childId, postId, baseDepth, account) }
@@ -417,14 +407,6 @@ class CommentListViewModel @Inject constructor(
 
             try {
                 val account = accountManager.getDefaultAccount()
-                if (account == null) {
-                    AndroidCommon.runOnUiThread {
-                        _state.value = CommentListUiState.Error(
-                            RRError(title = "Not signed in", message = "Sign in to view comments")
-                        )
-                    }
-                    return@launch
-                }
 
                 // A bare post id is a post's comment listing; a u/<user>/comments
                 // path is a user's comment listing.
@@ -546,7 +528,7 @@ class CommentListViewModel @Inject constructor(
 
             is RedditThingResponse.Single -> {
                 if (thingResponse.thing is RedditThing.Listing) {
-                    val listing = (thingResponse.thing as RedditThing.Listing).data
+                    val listing = thingResponse.thing.data
                     for (child in listing.children) {
                         buildCommentItem(child, 0, comments, null)
                     }
@@ -565,7 +547,7 @@ class CommentListViewModel @Inject constructor(
         output: MutableList<CommentItem>,
         postId: String? = null
     ) {
-        val thing = maybeThing.ok() ?: return
+        val thing = maybeThing.ok()
 
         when (thing) {
             is RedditThing.More -> {
@@ -614,7 +596,7 @@ class CommentListViewModel @Inject constructor(
                         permalink = comment.permalink?.decoded,
                         saved = comment.saved,
                         edited = comment.edited is RedditFieldEdited.Bool &&
-                            (comment.edited as RedditFieldEdited.Bool).value,
+                            comment.edited.value,
                         parentFullName = comment.parent_id?.takeIf { it.startsWith("t1_") }
                     )
                 )

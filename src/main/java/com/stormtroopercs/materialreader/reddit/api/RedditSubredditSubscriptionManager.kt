@@ -436,9 +436,6 @@ class RedditSubredditSubscriptionManager @Inject constructor(
                     this@RedditSubredditSubscriptionManager
                 )
 
-                else -> throw UnexpectedInternalStateException(
-                    "Invalid SubredditSubscriptionChangeType " + changeType
-                )
             }
         }
     }

@@ -197,9 +197,6 @@ internal class CacheDbManager(context: Context?) :
         lengthCompressed: Long,
         lengthUncompressed: Long
     ): Long {
-        if (session == null) {
-            throw RuntimeException("No session to write")
-        }
 
         val db = this.getWritableDatabase()
 

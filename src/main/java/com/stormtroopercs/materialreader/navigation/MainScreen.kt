@@ -98,7 +98,7 @@ fun MainScreen(
                         .clickable(
                             onClick = {
                                 if (signedIn) {
-                                    onNavigateToProfile(accountName ?: "")
+                                    onNavigateToProfile(accountName)
                                 } else {
                                     onNavigateToLogin()
                                 }

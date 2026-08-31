@@ -191,11 +191,6 @@ class CacheRequest private constructor(
     init {
         this.context = context.getApplicationContext()
 
-        if (user == null) {
-            throw NullPointerException(
-                "User was null - set to empty string for anonymous"
-            )
-        }
 
         require(!(!downloadStrategy.shouldDownloadWithoutCheckingCache() && requestBody != null)) { "Should not perform cache lookup for POST requests" }
 
@@ -209,19 +204,6 @@ class CacheRequest private constructor(
         this.requestBody = Optional.Companion.ofNullable<HTTPRequestBody>(requestBody)
         this.cache = (requestBody == null) && cache
 
-        if (url == null) {
-            notifyFailure(
-                getGeneralErrorForFailure(
-                    this.context,
-                    RequestFailureType.MALFORMED_URL,
-                    null,
-                    null,
-                    null,
-                    Optional.Companion.empty<FailedRequestBody>()
-                )
-            )
-            cancel()
-        }
     }
 
     // Queue helpers

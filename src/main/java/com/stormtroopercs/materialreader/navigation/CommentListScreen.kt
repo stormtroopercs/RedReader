@@ -157,7 +157,7 @@ fun RealCommentListScreen(
 
     // The signed-in username — drives the "Me" nav chip (7.4).
     val me = remember {
-        RedditAccountManager.getInstance(context).defaultAccount?.username
+        RedditAccountManager.getInstance(context).defaultAccount.username
     }
 
     // Comment-nav chip selection (7.4). "Me" filters to the account's own
@@ -247,7 +247,7 @@ fun RealCommentListScreen(
                 // Apply the nav-chip filters (7.4).
                 var shown = state.comments
                 if (selectedChip == "Me") {
-                    me?.let { u -> shown = shown.filter { it.author == u } }
+                    shown = shown.filter { it.author == me }
                 }
                 if (selectedChip == "New comments") {
                     shown = shown.sortedByDescending { it.createdUtcTimestamp }

@@ -194,10 +194,6 @@ class CommunityViewModel @Inject constructor(
 
     private fun loadAbout(name: String) {
         val account = accountManager.getDefaultAccount()
-        if (account == null) {
-            _aboutTab.value = TabContent.Error("Not signed in")
-            return
-        }
         try {
             val requester = RedditAPIIndividualSubredditDataRequester(context, account)
             requester.performRequest(
@@ -255,10 +251,6 @@ class CommunityViewModel @Inject constructor(
 
     private fun loadFavorite(name: String) {
         val account = accountManager.getDefaultAccount()
-        if (account == null) {
-            _favorite.value = FavoriteContent.NotSignedIn
-            return
-        }
         try {
             val manager = RedditSubredditSubscriptionManager.getSingleton(context, account)
             subscriptionManager = manager
@@ -301,10 +293,6 @@ class CommunityViewModel @Inject constructor(
 
     private fun loadMods(name: String) {
         val account = accountManager.getDefaultAccount()
-        if (account == null) {
-            _mods.value = ModsContent.Error("Not signed in")
-            return
-        }
         val uriBuilder = Constants.Reddit.getUriBuilder("/r/$name/about/moderators.json")
             .appendQueryParameter("limit", "100")
         val jsonUri = UriString(uriBuilder.build().toString())
@@ -320,7 +308,7 @@ class CommunityViewModel @Inject constructor(
                     val result = streamFactory.create().use { JsonValue.parse(it) }
                     val children = result.getArrayAtPath("data", "children").get()
                     val moderators = children.mapNotNull { child ->
-                        val data = child.getObjectAtPath("data").orElseNull() as? JsonObject
+                        val data = child.getObjectAtPath("data").orElseNull()
                             ?: return@mapNotNull null
                         val modName = data.getString("name") ?: return@mapNotNull null
                         CommunityModerator(

@@ -162,7 +162,9 @@ object PrefsBackup {
                                         + rootObj.javaClass.getCanonicalName()
                             )
                         }
-                        root = MapReader(rootObj as MutableMap<Any?, Any?>)
+                        @Suppress("UNCHECKED_CAST")
+                        val map = rootObj as MutableMap<Any?, Any?>
+                        root = MapReader(map)
                     }
 
                     val type = root.getRequiredString(FIELD_TYPE)
@@ -251,7 +253,9 @@ object PrefsBackup {
                                     } else if (value is Int) {
                                         editor.putInt(key, value)
                                     } else if (value is MutableSet<*>) {
-                                        editor.putStringSet(key, value as MutableSet<String>)
+                                        @Suppress("UNCHECKED_CAST")
+                                        val set = value as MutableSet<String>
+                                        editor.putStringSet(key, set)
                                     } else if (value is Boolean) {
                                         editor.putBoolean(key, value)
                                     } else if (value is Long) {
@@ -344,13 +348,8 @@ object PrefsBackup {
     private class MapReader(private val mMap: MutableMap<*, *>) {
         @Throws(IOException::class)
         fun getRequired(key: Any): Any {
-            val result: Any = mMap.get(key)!!
-
-            if (result == null) {
-                throw IOException("Missing field: '" + key + "'")
-            }
-
-            return result
+        return mMap.get(key)
+                ?: throw IOException("Missing field: '" + key + "'")
         }
 
         @Throws(IOException::class)

@@ -422,13 +422,6 @@ object FileUtils {
                 }
             }
 
-            else -> {
-                handleGlobalError(
-                    activity, RuntimeException(
-                        "Missing handler for preference value " + saveLocation
-                    )
-                )
-            }
         }
     }
 

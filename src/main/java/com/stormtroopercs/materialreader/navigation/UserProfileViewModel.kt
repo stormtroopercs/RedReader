@@ -128,7 +128,6 @@ class UserProfileViewModel @Inject constructor(
             _state.value = UserProfileUiState.Loading
             try {
                 val account = accountManager.getDefaultAccount()
-                    ?: RedditAccountManager.getAnon()
 
                 val listener = object : CacheRequestJSONParser.Listener {
                     override fun onJsonParsed(

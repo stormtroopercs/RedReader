@@ -58,9 +58,9 @@ class ShareOrderAdapter(
         if (inflater != null) {
             rowView = inflater.inflate(R.layout.list_item_share_dialog, parent, false)
             val label = rowView.findViewById<TextView>(R.id.list_item_share_dialog_text)
-            label.setText(appList.get(position)!!.loadLabel(packageManager).toString())
+            label.setText(appList.get(position).loadLabel(packageManager).toString())
             val icon = rowView.findViewById<ImageView>(R.id.list_item_share_dialog_icon)
-            icon.setImageDrawable(appList.get(position)!!.loadIcon(packageManager))
+            icon.setImageDrawable(appList.get(position).loadIcon(packageManager))
             val divider = rowView.findViewById<View>(R.id.list_item_share_dialog_divider)
             divider.setVisibility(View.INVISIBLE)
 

@@ -136,7 +136,7 @@ private fun parseChangelog(context: android.content.Context): List<ChangelogVers
                         curVersion = ChangelogVersion(parts[1], mutableListOf())
                     }
                 } else {
-                    (curVersion?.entries as? MutableList<String>)?.add(line)
+                    (curVersion.entries as? MutableList<String>)?.add(line)
                 }
             }
         }

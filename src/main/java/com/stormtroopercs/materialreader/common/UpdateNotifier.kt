@@ -32,7 +32,7 @@ abstract class UpdateNotifier<E> {
         val iter = listeners.iterator()
 
         while (iter.hasNext()) {
-            val listener = iter.next()!!.get()
+            val listener = iter.next().get()
 
             if (listener == null || listener === updateListener) {
                 iter.remove()
@@ -45,7 +45,7 @@ abstract class UpdateNotifier<E> {
         val iter = listeners.iterator()
 
         while (iter.hasNext()) {
-            val listener = iter.next()!!.get()
+            val listener = iter.next().get()
 
             if (listener == null) {
                 iter.remove()

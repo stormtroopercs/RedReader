@@ -120,11 +120,6 @@ class RedditAPIIndividualSubredditListRequester(
                     return
                 }
 
-                else -> throw RuntimeException(
-                    ("Internal error: unknown subreddit list type '"
-                            + type.name
-                            + "'")
-                )
             }
         } else {
             doSubredditListRequest(type, handler, null)
@@ -197,10 +192,10 @@ class RedditAPIIndividualSubredditListRequester(
                         }
 
                         for (v in subreddits!!) {
-                            val thing = v!!.asObject<RedditThing>(RedditThing::class.java)
+                            val thing = v.asObject<RedditThing>(RedditThing::class.java)
                             val subreddit = thing!!.asSubreddit()
 
-                            subreddit.downloadTime = timestamp!!.toUtcMs()
+                            subreddit.downloadTime = timestamp.toUtcMs()
 
                             try {
                                 output.add(subreddit.canonicalId.toString())
@@ -257,7 +252,7 @@ class RedditAPIIndividualSubredditListRequester(
                             handler.onRequestSuccess(
                                 WritableHashSet(
                                     output,
-                                    timestamp!!,
+                                    timestamp,
                                     type.name
                                 ), timestamp
                             )
