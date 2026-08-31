@@ -251,7 +251,6 @@
     <string name="pref_appearance_navbar_color_option_black">Preto</string>
     <string name="pref_appearance_navbar_color_option_primary">Primária (claro)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Primária (escuro)</string>
-    <string name="pref_not_supported_before_lollipop">Não suportado em versões anteriores ao Android Lollipop</string>
     <string name="action_copy_text">Copiar Texto</string>
     <string name="action_copy_link">Copiar Link</string>
     <string name="mainmenu_custom_destination">Local Personalizado</string>
@@ -281,11 +280,8 @@
     <string name="action_pin_subreddit">Fixar Subreddit no Menu Principal</string>
     <string name="action_subscribe_subreddit">Inscrever-se no Subreddit</string>
     <string name="error_no_suitable_apps_available">Nenhum app adequado disponível.</string>
-    <string name="mainmenu_random">Subreddit Aleatório</string>
-    <string name="pref_menus_show_random_main_menu_title">Exibir /r/random no menu principal</string>
     <string name="title_license">Licença</string>
     <string name="sort_posts_best">Melhor</string>
-    <string name="mainmenu_random_nsfw">Subreddit NSFW aleatório</string>
     <string name="notification_channel_name_reddit_messages">Mensagens Reddit Recebidas</string>
     <string name="action_copy_selftext">Copiar Texto</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Selecionar um app para compartilhamento</string>
@@ -340,7 +336,6 @@
     <string name="pref_appearance_comment_age_mode_absolute">Tempo desde o comentário (x mins atrás)</string>
     <string name="pref_appearance_comment_age_mode_relative_post">Relativo à postagem (após x mins)</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">Relativo ao comentário pai (respondido x mins depois)</string>
-    <string name="accessibility_subtitle_points_withperiod">Pontuação: %d.</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Reddit imagens</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Reddit vídeos</string>
     <string name="pref_appearance_navbar_color_option_white">Branco</string>
@@ -356,8 +351,6 @@
     <string name="restore_preferences_error_version_warning_message">O arquivo selecionado foi criado por uma versão mais nova do MaterialReader. Restaurar as preferências por esse arquivo pode causar falhas e instabilidade.</string>
     <string name="backup_preferences_success">Backup concluído</string>
     <string name="restore_preferences_success">Restauração concluída</string>
-    <string name="backup_preferences_error_old_android_title">Sistema muito antigo</string>
-    <string name="backup_preferences_error_old_android_message">Este recurso requer Android 4.4 ou superior.</string>
     <string name="error_no_file_manager_title">Nenhum gerenciador de arquivos</string>
     <string name="error_no_file_manager_message">O sistema operacional deste dispositivo não possui um gerenciador de arquivos compatível com o Framework de Acesso ao Armazenamento do Android. Se houver um gerenciador de arquivos, ele pode estar desativado.</string>
     <string name="error_post_flair_required_title">Flair necessária</string>

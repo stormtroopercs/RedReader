@@ -335,7 +335,6 @@
     <string name="pref_appearance_navbar_color_option_black">Negru</string>
     <string name="pref_appearance_navbar_color_option_primary">Primar (deschis)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Primar (închis)</string>
-    <string name="pref_not_supported_before_lollipop">Neutilizabil pre-Android Lollipop</string>
     <!-- 2016-08-03 -->
     <string name="action_copy_text">Copiază Text</string>
     <string name="action_copy_link">Copiază Link</string>
@@ -387,17 +386,14 @@
     <string name="sort_comments_top_all">Top: Tot timpul</string>
     <string name="button_error_details">Detalii</string>
     <string name="pref_appearance_age_units_1">O unitate (x ore)</string>
-    <string name="backup_preferences_error_old_android_title">Sistem prea vechi</string>
     <string name="link_does_not_exist">Acest link nu există. Este posibil să fi fost șters.</string>
     <string name="video_restart">Reporniți videoclipul</string>
     <string name="action_save_image_success_no_path">Imaginea a fost salvată cu succes</string>
     <string name="pref_appearance_fontscale_use_global">Utilizați scara globală a fonturilor</string>
     <string name="search_results_query_only">Căutare pentru „%s”</string>
     <string name="search_results_short">Rezultatele Căutării</string>
-    <string name="mainmenu_random">Subreddit aleatoriu</string>
     <string name="title_license">Licență</string>
     <string name="error_already_submitted_title">Deja trimis</string>
-    <string name="mainmenu_random_nsfw">Subreddit aleatoriu NSFW</string>
     <string name="action_copy_selftext">Copiază textul postării</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Selectați o aplicație pentru partajare</string>
     <string name="error_toast_no_share_app_installed">Nu a fost instalată nicio aplicație adecvată pentru a partaja acest conținut.</string>
@@ -434,7 +430,6 @@
     <string name="pref_appearance_age_units_3">Trei unități (x ore, x minute, x secunde)</string>
     <string name="pref_appearance_comment_age_mode_relative_post">Relativ la postare (după x minute)</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">Relativ cu comentariul părinte (răspuns x minute mai târziu)</string>
-    <string name="accessibility_subtitle_points_withperiod">Scor: %d.</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Imagini Reddit</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Videoclipuri Reddit</string>
     <string name="error_inline_preview_failed_message">Nu s-a putut descărca previzualizarea imaginii.</string>
@@ -456,7 +451,6 @@
     <string name="button_continue_anyway">Continuă oricum</string>
     <string name="button_cancel">Anulare</string>
     <string name="restore_preferences_success">Restabilirea a reușit</string>
-    <string name="backup_preferences_error_old_android_message">Această funcție necesită Android 4.4 sau o versiune ulterioară.</string>
     <string name="error_no_file_manager_title">Fără manager de fișiere</string>
     <string name="error_post_flair_required_title">Fler necesar</string>
     <string name="error_post_flair_required_message">Regulile acestui subreddit necesită un fler pentru postarea dvs.</string>
@@ -478,7 +472,6 @@
     <string name="search_results_query_and_location">Căutați „%1$s” pe %2$s</string>
     <string name="search_results_location_only">Căutați pe %s</string>
     <string name="image_gallery_removed_message">Această galerie a fost eliminată și nu mai este accesibilă.</string>
-    <string name="pref_menus_show_random_main_menu_title">Arată /r/random în meniul principal</string>
     <string name="error_already_submitted_message">Această postare a fost deja trimisă la acest subreddit.</string>
     <string name="must_login_message">Trebuie să fiți conectat cu un cont Reddit pentru a face acest lucru.</string>
     <string name="pref_menus_appbar_items_overflow_only">Afișează numai în meniul cu trei puncte</string>

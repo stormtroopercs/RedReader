@@ -331,7 +331,6 @@
     <string name="pref_appearance_navbar_color_option_black">Zwart</string>
     <string name="pref_appearance_navbar_color_option_primary">Primair (licht)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Primair (donker)</string>
-    <string name="pref_not_supported_before_lollipop">Niet ondersteund voor versies ouder dan Android Lollipop</string>
     <!-- 2016-08-03 -->
     <string name="action_copy_text">Tekst kopiëren</string>
     <string name="action_copy_link">Link kopiëren</string>
@@ -394,8 +393,6 @@
     <!-- 2017-10-22 -->
     <!-- 2017-11-01 -->
     <!-- 2017-12-03 -->
-    <string name="mainmenu_random">Willekeurig subreddit</string>
-    <string name="pref_menus_show_random_main_menu_title">/r/random in hoofdmenu weergeven</string>
     <!-- 2018-01-16 -->
     <!-- 2018-02-03 -->
     <!-- 2018-02-10 -->

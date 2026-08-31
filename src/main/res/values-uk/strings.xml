@@ -244,7 +244,6 @@
     <string name="pref_appearance_navbar_color_option_black">Чорний</string>
     <string name="pref_appearance_navbar_color_option_primary">Основний (світлий)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Основний (темний)</string>
-    <string name="pref_not_supported_before_lollipop">Не підтримується на версіях Android давніших за Lollipop</string>
     <string name="action_copy_text">Копіювати текст</string>
     <string name="action_copy_link">Копіювати посилання</string>
     <string name="mainmenu_custom_destination">Інші місця</string>
@@ -274,8 +273,6 @@
     <string name="action_pin_subreddit">Закріпити сабреддіт у головному меню</string>
     <string name="action_subscribe_subreddit">Підписатися на сабреддіт</string>
     <string name="error_no_suitable_apps_available">Немає відповідних застосунків.</string>
-    <string name="mainmenu_random">Випадковий сабреддіт</string>
-    <string name="pref_menus_show_random_main_menu_title">Показувати /r/random у головному меню</string>
     <plurals name="load_more_comments_button_reply_count">
         <item quantity="one">Завантажити ще коментарі (%d відповідь)</item>
         <item quantity="few">Завантажити ще коментарі (%d відповіді)</item>
@@ -289,7 +286,6 @@
     <string name="title_license">Ліцензія</string>
     <string name="action_copy_selftext">Копіювати власний текст</string>
     <string name="notification_channel_name_reddit_messages">Вхідні повідомлення Reddit</string>
-    <string name="mainmenu_random_nsfw">Випадковий NSFW сабреддіт</string>
     <string name="error_already_submitted_title">Вже надіслано</string>
     <string name="error_http_429_message">Сервер відхилив запит через обмеження швидкості. Повторіть спробу за мить.</string>
     <string name="error_http_429_title">Забагато запитів</string>
@@ -303,8 +299,6 @@
     <string name="error_post_flair_required_title">Потрібен флейр</string>
     <string name="error_no_file_manager_message">В операційній системі цього пристрою відсутній менеджер файлів, сумісний з Android Storage Access Framework. Якщо менеджер файлів є, можливо його вимкнено.</string>
     <string name="error_no_file_manager_title">Немає файлового менеджера</string>
-    <string name="backup_preferences_error_old_android_message">Для цієї функції потрібен Android 4.4 або новішої версії.</string>
-    <string name="backup_preferences_error_old_android_title">Система занадто стара</string>
     <string name="restore_preferences_success">Відновлення виконано успішно</string>
     <string name="backup_preferences_success">Резервне копіювання виконано успішно</string>
     <string name="button_cancel">Скасувати</string>
@@ -327,7 +321,6 @@
     <string name="pref_appearance_navbar_color_option_white">Білий</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Відео Reddit</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Зображення Reddit</string>
-    <string name="accessibility_subtitle_points_withperiod">Оцінка: %d.</string>
     <string name="three_dots_menu">Додаткові параметри</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">Відносно батьківського коментаря (відповідає на x хв пізніше)</string>
     <string name="pref_appearance_comment_age_mode_relative_post">Відносно допису (через х хвилин)</string>

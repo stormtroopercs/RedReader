@@ -200,7 +200,6 @@
     <string name="props_created">Criado</string>
     <string name="props_caption">Legenda</string>
     <string name="props_author">Autor</string>
-    <string name="pref_not_supported_before_lollipop">Não suportado em versões anteriores ao Android Lollipop</string>
     <string name="pref_behaviour_view_mode_internal_browser">Navegador Interno</string>
     <string name="pref_behaviour_view_mode_external_browser">Navegador Externo</string>
     <string name="pref_behaviour_videoview_mode_internal_videoview">Visualizador de Vídeo Interno (Recomendado)</string>
@@ -274,16 +273,13 @@
     <string name="mainmenu_custom_destination_search">Buscar</string>
     <string name="edit_post_actionbar">Editar Post</string>
     <string name="error_no_suitable_apps_available">Nenhuma app adequada disponível.</string>
-    <string name="pref_menus_show_random_main_menu_title">Mostrar /r/random no menu principal</string>
     <plurals name="load_more_comments_button_reply_count">
         <item quantity="one">Carregar mais comentários (%d resposta)</item>
         <item quantity="many">Carregar mais comentários (%d respostas)</item>
         <item quantity="other">Carregar mais comentários (%d respostas)</item>
     </plurals>
-    <string name="mainmenu_random">Subreddit aleatório</string>
     <string name="search_results_query_only">Procure por \"%s\"</string>
     <string name="title_license">Licença</string>
-    <string name="mainmenu_random_nsfw">Subreddit NSFW aleatório</string>
     <string name="notification_channel_name_reddit_messages">Mensagens Reddit recebidas</string>
     <string name="action_copy_selftext">Copiar autotexto</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Selecione um aplicativo para compartilhamento</string>
@@ -347,7 +343,6 @@
     <string name="sort_comments_top_all">Mais Votados: Todos os Tempos</string>
     <string name="pref_behaviour_save_location_prompt_every_time">Pergunte sempre</string>
     <string name="pref_behaviour_save_location_system_default">Usar padrão do sistema</string>
-    <string name="accessibility_subtitle_points_withperiod">Pontuação: %d.</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Reddit imagens</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Reddit vídeos</string>
     <string name="pref_appearance_navbar_color_option_white">Branco</string>
@@ -374,8 +369,6 @@
     <string name="button_cancel">Cancelar</string>
     <string name="backup_preferences_success">Backup concluído</string>
     <string name="restore_preferences_success">Restauração concluída</string>
-    <string name="backup_preferences_error_old_android_title">Sistema muito antigo</string>
-    <string name="backup_preferences_error_old_android_message">Este recurso requer Android 4.4 ou superior.</string>
     <string name="error_no_file_manager_title">Nenhum gestor de ficheiros</string>
     <string name="error_no_file_manager_message">O sistema operativo deste dispositivo não possui um gestor de ficheiros compatível com o Framework de Acesso ao Armazenamento do Android. Se houver um gestor de ficheiros, ele pode estar desativado.</string>
     <string name="error_post_flair_required_title">Flair necessária</string>

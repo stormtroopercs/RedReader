@@ -331,7 +331,6 @@
     <string name="pref_appearance_navbar_color_option_black">Černá</string>
     <string name="pref_appearance_navbar_color_option_primary">Primární (světlá)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Primární (tmavá)</string>
-    <string name="pref_not_supported_before_lollipop">Nepodporováno před verzí Android Lollipop</string>
     <!-- 2016-08-03 -->
     <string name="action_copy_text">Kopíruj text</string>
     <string name="action_copy_link">Kopíruj odkaz</string>
@@ -392,8 +391,6 @@
     <!-- 2017-10-22 -->
     <!-- 2017-11-01 -->
     <!-- 2017-12-03 -->
-    <string name="mainmenu_random">Nahodilý subreddit</string>
-    <string name="pref_menus_show_random_main_menu_title">Ukaž /r/random (nahodilé) v hlavním menu</string>
     <!-- 2018-01-16 -->
     <!-- 2018-02-03 -->
     <!-- 2018-02-10 -->
@@ -408,7 +405,6 @@
     <!-- 2018-09-11 -->
     <!-- 2019-10-01 -->
     <!-- Weblate 2020-01-25 -->
-    <string name="mainmenu_random_nsfw">Nahodilý NSFW subreddit</string>
     <string name="notification_channel_name_reddit_messages">Příchozí zpráva z Redditu</string>
     <string name="action_copy_selftext">Zkopírovat Self-Text</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Vybrat app pro sdílení</string>
@@ -463,7 +459,6 @@
     <string name="pref_appearance_navbar_color_option_white">Bílá</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Videa Redditu</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Obrázky Redditu</string>
-    <string name="accessibility_subtitle_points_withperiod">Skóre: %d.</string>
     <string name="three_dots_menu">Více možností</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">Relativní k nadřazenému komentáři (odpověď x minut později)</string>
     <string name="pref_appearance_comment_age_mode_relative_post">Relativní k příspěvku (za x minut)</string>
@@ -500,8 +495,6 @@
     <string name="error_post_flair_required_title">Flér je nutný</string>
     <string name="error_no_file_manager_message">Operačnímu systému v tomto zařízení chybí správce souborů kompatibilní s Android Storage Access Framework. Je-li přítomen, pak je snad vypnut.</string>
     <string name="error_no_file_manager_title">Správce souborů nenalezen</string>
-    <string name="backup_preferences_error_old_android_message">Tato funkce si žádá Android 4.4 a novější.</string>
-    <string name="backup_preferences_error_old_android_title">Systém je příliš zastaralý</string>
     <string name="backup_preferences_success">Zálohování bylo úspěšné</string>
     <string name="restore_preferences_success">Obnovení bylo úspěšné</string>
     <string name="button_cancel">Zrušit</string>

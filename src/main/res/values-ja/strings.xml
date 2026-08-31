@@ -231,7 +231,6 @@
     <string name="error_parse_imgur_message">Imgurは理解できないデータを送ってきました。</string>
     <string name="error_upload_fail_imgur_message">アップロードがImgurに拒否された理由は不明です。</string>
     <string name="pref_appearance_navbar_color_option_primarydark">プライマリ (ダーク)</string>
-    <string name="pref_not_supported_before_lollipop">Android Lollipop以前はサポートされていません</string>
     <string name="action_copy_text">テキストをコピー</string>
     <string name="mainmenu_custom_destination">カスタムロケーション</string>
     <string name="time_every_time">全て</string>
@@ -253,7 +252,6 @@
     <string name="pref_appearance_android_status_always_hide">常時</string>
     <string name="pref_appearance_android_status_never_hide">なし</string>
     <string name="reddit_login_browser_popup_line_1">ログインするには、ウェブブラウザでRedditに移動します。</string>
-    <string name="accessibility_subtitle_points_withperiod">スコア: %d。</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Reddit画像</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Redditビデオ</string>
     <string name="mainmenu_downvoted">マイナス評価した投稿</string>
@@ -297,7 +295,6 @@
     <string name="action_block_subreddit">Subredditをブロック</string>
     <string name="action_pin_subreddit">Subredditをメインメニューにピン留め</string>
     <string name="action_subscribe_subreddit">Subredditを登録</string>
-    <string name="mainmenu_random">ランダムSubreddit</string>
     <string name="pref_menus_appbar_items_never">表示しない</string>
     <string name="search_results_query_only">\"%s\"を検索</string>
     <string name="pref_menus_appbar_items_always">常にボタンを表示</string>
@@ -327,8 +324,6 @@
     <string name="error_inline_preview_failed_message">画像プレビューをダウンロードできませんでした。</string>
     <string name="restore_preferences_error_invalid_file_contents_message">選択したファイルは有効な環境設定バックアップファイルではありません。</string>
     <string name="restore_preferences_error_invalid_file_version_message">選択したファイルは、新しいバージョンのMaterialReaderで作成されているため開けません。</string>
-    <string name="backup_preferences_error_old_android_title">システムが古すぎます</string>
-    <string name="backup_preferences_error_old_android_message">この機能を使用するには、Android 4.4以降が必要です。</string>
     <string name="error_no_file_manager_title">ファイルマネージャーがありません</string>
     <string name="error_imgur_400_title">Imgurエラー</string>
     <string name="pref_appearance_android_status_hide_on_media">メディア表示中</string>
@@ -340,7 +335,6 @@
     <string name="pref_appearance_comment_header_items_flair">フレア</string>
     <string name="error_too_fast_title">速すぎる</string>
     <string name="save_image_permission_denied">許可が拒否されました：画像を保存できませんでした。</string>
-    <string name="pref_menus_show_random_main_menu_title">メインメニューで/r/randomを表示</string>
     <string name="options_submit_post">投稿する</string>
     <string name="userprofile_moderator">モデレーター</string>
     <string name="userprofile_isfriend">友人</string>
@@ -361,6 +355,5 @@
     <string name="mainmenu_modmail">モドメール</string>
     <string name="general_false">間違い</string>
     <string name="dialog_go">行く</string>
-    <string name="mainmenu_random_nsfw">ランダム NSFW Subreddit</string>
     <string name="notification_channel_name_reddit_messages">着信Redditメッセージ</string>
 </resources>

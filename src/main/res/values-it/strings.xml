@@ -237,7 +237,6 @@
     <string name="pm_send_actionbar">Invia Messaggio</string>
     <string name="edit_comment_actionbar">Modifica Commento</string>
     <string name="pref_appearance_navbar_color_option_black">Nero</string>
-    <string name="pref_not_supported_before_lollipop">Non supportata per versioni inferiori ad Android Lollipop</string>
     <string name="action_copy_text">Copia Testo</string>
     <string name="action_copy_link">Copia Link</string>
     <string name="mainmenu_custom_destination_subreddit">Subreddit</string>
@@ -264,8 +263,6 @@
     <string name="action_block_subreddit">Blocca Subreddit</string>
     <string name="action_subscribe_subreddit">Iscriviti al Subreddit</string>
     <string name="error_no_suitable_apps_available">Nessuna app adatta disponibile.</string>
-    <string name="mainmenu_random">Subreddit Random</string>
-    <string name="pref_menus_show_random_main_menu_title">Mostra /r/random nel menu principale</string>
     <string name="error_message_login_user_denied_permission">È stato negato il permesso di accesso all\'account. Riprova.</string>
     <string name="pin_subreddit">Aggiungi a preferiti</string>
     <string name="error_too_fast_message">Reddit dice che stai inviando messaggi troppo velocemente. Attendi qualche minuto prima di riprovare.</string>
@@ -280,7 +277,6 @@
     <string name="error_already_submitted_title">Già inserito</string>
     <string name="error_already_submitted_message">Questo post è già stato inserito in questo subreddit.</string>
     <string name="sort_posts_best">Migliori</string>
-    <string name="mainmenu_random_nsfw">Subreddit NSFW casuale</string>
     <string name="notification_channel_name_reddit_messages">Messaggi di Reddit in arrivo</string>
     <string name="action_copy_selftext">Copiare Self-Text</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Selezionare un app per condividere</string>
@@ -318,7 +314,6 @@
     <string name="pref_appearance_navbar_color_option_white">Bianco</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Video su Reddit</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Immagini su reddit</string>
-    <string name="accessibility_subtitle_points_withperiod">Punteggio: %d.</string>
     <string name="three_dots_menu">Più opzioni</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">Relativo al commento genitore (risposto x minuti dopo)</string>
     <string name="pref_appearance_comment_age_mode_relative_post">Relativo al post (dopo x minuti)</string>
@@ -362,8 +357,6 @@
     <string name="error_post_flair_required_title">Flair richiesto</string>
     <string name="error_no_file_manager_message">Il sistema operativo del dispositivo non ha un file manager compatibile con l\'Android Storage Access Framework. Se un file manager è presente, potrebbe essere disabilitato.</string>
     <string name="error_no_file_manager_title">Nessun file manager</string>
-    <string name="backup_preferences_error_old_android_message">Questa funzione richiede Android 4.4 o superiore.</string>
-    <string name="backup_preferences_error_old_android_title">Versione android troppo vecchia</string>
     <string name="restore_preferences_success">Ripristino avvenuto</string>
     <string name="backup_preferences_success">Backup avvenuto</string>
     <string name="button_cancel">Annulla</string>

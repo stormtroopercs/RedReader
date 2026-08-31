@@ -171,7 +171,6 @@
     <string name="action_comment_go_to">Joan iruzkinera</string>
     <string name="error_title_login_unknown_reddit_error">Reddit errore ezezaguna: %s</string>
     <string name="screen_orientation_auto">Automatikoa</string>
-    <string name="pref_menus_show_random_main_menu_title">Erakutsi /r/random menu nagusian</string>
     <string name="title_changelog">Zer berri</string>
     <string name="action_fling_disabled">Desgaituta</string>
     <string name="options_close_all">Itxi guztiak</string>
@@ -204,7 +203,6 @@
     <string name="pm_send_actionbar">Bidali mezua</string>
     <string name="edit_comment_actionbar">Editatu iruzkina</string>
     <string name="pref_appearance_navbar_color_option_black">Beltza</string>
-    <string name="pref_not_supported_before_lollipop">Ez da onartzen Android Lollipop baino lehen</string>
     <string name="action_copy_text">Kopiatu testua</string>
     <string name="action_copy_link">Kopiatu esteka</string>
     <string name="mainmenu_custom_destination">Kokaleku pertsonalizatua</string>
@@ -230,7 +228,6 @@
     <string name="post_edit_done">Argitalpena editatua. Aldaketak freskatu ostean agertuko dira.</string>
     <string name="action_block_subreddit">Blokeatu subreddita</string>
     <string name="action_subscribe_subreddit">Harpidetu subredditera</string>
-    <string name="mainmenu_random">Ausazko subreddita</string>
     <string name="sort_posts_hot">Aktiboak</string>
     <string name="sort_posts_rising">Gorantz</string>
     <string name="sort_comments_hot">Gehien ikusitakoak</string>
@@ -280,7 +277,6 @@
     <string name="error_already_submitted_title">Bidali da dagoeneko</string>
     <string name="error_already_submitted_message">Argitalpen hau dagoeneko argitaratu da subreddit honetara.</string>
     <string name="sort_posts_best">Onenak</string>
-    <string name="mainmenu_random_nsfw">Ausazko NSFW Subreddita</string>
     <string name="notification_channel_name_reddit_messages">Sarrerako Reddit mezuak</string>
     <string name="action_copy_selftext">Kopiatu testu propioa</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Aukeratu partekatzeko app bat</string>
@@ -334,7 +330,6 @@
     <string name="pref_appearance_navbar_color_option_white">Zuria</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Reddit bideoak</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Reddit irudiak</string>
-    <string name="accessibility_subtitle_points_withperiod">Puntuazioa: %d.</string>
     <string name="three_dots_menu">Aukera gehiago</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">Iruzkin gurasoarekiko erlatiboa (x minutu beranduago erantzun da)</string>
     <string name="pref_appearance_comment_age_mode_relative_post">Argitalpenaren erlatiboa (x min ondoren)</string>
@@ -371,8 +366,6 @@
     <string name="error_post_flair_required_title">Bereizgarria beharrezkoa</string>
     <string name="error_no_file_manager_message">Gailu honetako sistema eragileari Android Storage Access Framework-rekin bateragarria den fitxategi kudeatzailea falta zaio. Fitxategi kudeatzailea badago, baliteke desgaituta egotea.</string>
     <string name="error_no_file_manager_title">Ez dago fitxategi kudeatzailerik</string>
-    <string name="backup_preferences_error_old_android_message">Ezaugarri honek Android 4.4 edo berriagoa behar du.</string>
-    <string name="backup_preferences_error_old_android_title">Sistema zaharregia da</string>
     <string name="restore_preferences_success">Lehenerapena ondo joan da</string>
     <string name="backup_preferences_success">Babeskopia ondo joan da</string>
     <string name="button_cancel">Ezeztatu</string>

@@ -230,7 +230,6 @@
     <string name="action_copy_link">링크 복사</string>
     <string name="mainmenu_custom_destination_user">유저</string>
     <string name="mainmenu_custom_destination_url">URL</string>
-    <string name="pref_not_supported_before_lollipop">안드로이드 롤리팝 이전 버전에서는 지원되지 않음</string>
     <string name="sort_pinned_subreddit_name">이름 기준</string>
     <string name="pref_appearance_comment_header_items_score">점수</string>
     <string name="general_success">성공</string>
@@ -259,13 +258,10 @@
     <string name="action_pin_subreddit">서브레딧을 메인 메뉴에 고정</string>
     <string name="action_subscribe_subreddit">서브레딧 구독</string>
     <string name="error_no_suitable_apps_available">적합한 앱이 없습니다.</string>
-    <string name="mainmenu_random">무작위 서브레딧</string>
-    <string name="pref_menus_show_random_main_menu_title">메인 메뉴에 /r/random 표시</string>
     <string name="title_license">라이선스</string>
     <string name="error_already_submitted_title">이미 제출됨</string>
     <string name="error_already_submitted_message">이 게시물은 이미 이 서브레딧에 제출되었습니다.</string>
     <string name="sort_posts_best">베스트 순</string>
-    <string name="mainmenu_random_nsfw">무작위 후방 서브레딧</string>
     <string name="button_error_send_report">제보하기</string>
     <string name="pref_appearance_comment_age_mode_relative_post">포스트 작성 시간 기준 (x분 후 )</string>
     <string name="error_toast_no_share_app_installed">이것을 공유하기 위해 적합한 앱이 설치되어 있지 않습니다</string>
@@ -325,7 +321,6 @@
     <string name="pref_appearance_comment_age_mode_absolute">댓글작성 후 지난시간 (x분 전)</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">상위 댓글 작성 시간 기준 (x분 후 댓글)</string>
     <string name="three_dots_menu">더 많은 옵션</string>
-    <string name="accessibility_subtitle_points_withperiod">점수: %d.</string>
     <string name="album_image_default_text">이미지 %d</string>
     <string name="error_inline_preview_failed_message">이미지 미리보기를 다운로드할 수 없습니다.</string>
     <string name="accessibility_subtitle_domain_i_redd_it">레딧 이미지</string>
@@ -344,7 +339,6 @@
     <string name="video_fast_forward">빨리감기</string>
     <string name="video_zoom_in">확대</string>
     <string name="video_zoom_out">축소</string>
-    <string name="backup_preferences_error_old_android_title">오래된 버전의 운영체제</string>
     <string name="restore_preferences_error_version_warning_message">선택된 파일은 상위버전의 MaterialReader에서 만들어졌습니다. 이 파일에서 설정을 복구하면 앱이 불안정해지거나 강제종료될 수 있습니다.</string>
     <string name="backup_preferences_success">백업 성공</string>
     <string name="restore_preferences_success">복구 성공</string>
@@ -354,7 +348,6 @@
     <string name="restore_preferences_error_version_warning_title">경고</string>
     <string name="button_continue_anyway">무시하고 계속</string>
     <string name="button_cancel">취소</string>
-    <string name="backup_preferences_error_old_android_message">이 기능은 안드로이드 4.4 이상이 필요합니다.</string>
     <string name="error_no_file_manager_message">이 기기의 운영체제에서 안드로이드 파일엑세스 프레임워크에 호환가능한 파일관리 앱이 없습니다. 해당 앱이 있다면, 비활성화된 상태일 수 있습니다.</string>
     <string name="error_post_flair_required_title">Flair 필요</string>
     <string name="error_post_flair_required_message">이 서브레딧의 규칙 상 게시물에 Flair를 반드시 선택해야 합니다.</string>

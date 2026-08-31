@@ -329,7 +329,6 @@
     <string name="pref_appearance_navbar_color_option_black">Czarny</string>
     <string name="pref_appearance_navbar_color_option_primary">Domyślny (jasny)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Domyślny (ciemny)</string>
-    <string name="pref_not_supported_before_lollipop">Niewspierany przed Androidem Lollipop (5)</string>
     <!-- 2016-08-03 -->
     <string name="action_copy_text">Kopiuj tekst</string>
     <string name="action_copy_link">Kopiuj odsyłacz</string>
@@ -384,12 +383,9 @@
     <!--2017-05-21-->
     <!-- 2017-06-05 -->
     <string name="error_no_suitable_apps_available">Brak odpowiedniej aplikacji.</string>
-    <string name="mainmenu_random">Losowy subreddit</string>
-    <string name="pref_menus_show_random_main_menu_title">Pokaż /r/random w menu głównym</string>
     <string name="mainmenu_custom_destination_search">Wyszukaj</string>
     <string name="title_license">Licencja</string>
     <string name="sort_posts_best">Najlepsze</string>
-    <string name="mainmenu_random_nsfw">Losowy subreddit NSFW</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Wybierz aplikację do udostępnienia</string>
     <string name="error_toast_no_share_app_installed">Nie zainstalowano odpowiedniej aplikacji do udostępniania tego.</string>
     <plurals name="load_more_comments_button_reply_count">
@@ -432,8 +428,6 @@
     <string name="error_post_flair_required_message">Zasady tego subreddita wymagają ustawienia flary na Twoim poście.</string>
     <string name="error_post_flair_required_title">Wymagana flara</string>
     <string name="error_no_file_manager_title">Brak menedżera plików</string>
-    <string name="backup_preferences_error_old_android_message">Ta funkcja wymaga Androida 4.4 lub nowszego.</string>
-    <string name="backup_preferences_error_old_android_title">System zbyt stary</string>
     <string name="button_cancel">Anuluj</string>
     <string name="button_continue_anyway">Kontynuuj mimo to</string>
     <string name="restore_preferences_error_version_warning_title">Ostrzeżenie</string>
@@ -450,7 +444,6 @@
     <string name="album_image_default_text">Obraz %d</string>
     <string name="error_inline_preview_failed_message">Nie udało się pobrać podglądu obrazu.</string>
     <string name="pref_appearance_navbar_color_option_white">Biały</string>
-    <string name="accessibility_subtitle_points_withperiod">Wynik: %d.</string>
     <string name="pref_appearance_comment_age_mode_relative_post">Względem posta (po x minutach)</string>
     <string name="pref_appearance_comment_age_mode_absolute">Czas od komentarza (x minut temu)</string>
     <string name="pref_appearance_age_units_3">Trzy jednostki (x godzin, x minut, x sekund)</string>

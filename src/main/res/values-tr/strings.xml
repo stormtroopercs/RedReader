@@ -137,7 +137,6 @@
     <string name="pm_send_done">Mesaj gönderildi.</string>
     <string name="error_too_long_title">Çok uzun</string>
     <string name="pref_appearance_navbar_color_option_black">Siyah</string>
-    <string name="pref_not_supported_before_lollipop">Android Lollipop\'tan önce desteklenmez</string>
     <string name="action_copy_link">Bağlantıyı Kopyala</string>
     <string name="sort_posts_best">En iyi</string>
     <string name="action_search">Arama</string>
@@ -245,7 +244,6 @@
     <string name="sort_pinned_subreddit_date">Eklenme Tarihine Göre</string>
     <string name="action_block_subreddit">Subreddit\'i Engelle</string>
     <string name="error_403_title_nonreddit">İzin Reddedildi</string>
-    <string name="mainmenu_random">Rastgele Subreddit</string>
     <string name="sort_blocked_subreddit_name">İsme göre</string>
     <string name="theme_name_ultrablack">Ultra Siyah</string>
     <string name="error_already_submitted_title">Çoktan gönderildi</string>
@@ -260,7 +258,6 @@
     <string name="action_subscribe_subreddit">Subreddit\'e abone olun</string>
     <string name="edit_post_actionbar">Gönderiyi Düzenle</string>
     <string name="action_pin_subreddit">Subreddit\'i Ana Menüye Sabitle</string>
-    <string name="pref_menus_show_random_main_menu_title">Ana menüde /r/random göster</string>
     <string name="notification_channel_name_reddit_messages">Gelen Reddit Mesajları</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Paylaşım için bir uygulama seçin</string>
     <string name="action_copy_selftext">Gönderi metnini kopyala</string>
@@ -306,11 +303,9 @@
     <string name="error_tor_connection_message">Tor\'a bağlanılamıyor. Lütfen Orbot uygulamasının çalıştığından emin olun veya ağ ayarlarında Tor\'u devre dışı bırakın.</string>
     <string name="props_subreddit">Subreddit</string>
     <string name="restore_preferences_success">Geri yükleme başarılı</string>
-    <string name="backup_preferences_error_old_android_message">Bu özellik Android 4.4 veya üzeri bir sürüm gerektirir.</string>
     <string name="error_no_file_manager_title">Dosya yöneticisi yok</string>
     <string name="button_cancel">İptal et</string>
     <string name="backup_preferences_success">Yedekleme başarılı</string>
-    <string name="backup_preferences_error_old_android_title">Sistem çok eski</string>
     <string name="pref_appearance_android_status_hide_on_media">Medyayı görüntülerken</string>
     <string name="error_post_flair_required_message">Bu subreddit\'in kuralları, gönderinizde bir flair belirlemeyi gerektirir.</string>
     <string name="error_no_file_manager_message">Bu cihazdaki işletim sisteminde Android Depolama Erişim Çerçevesi ile uyumlu bir dosya yöneticisi eksik. Bir dosya yöneticisi mevcutsa, devre dışı bırakılmış olabilir.</string>
@@ -339,7 +334,6 @@
     <string name="unblock_done">Subreddit engeli kaldırıldı. Ön sayfaya, /r/popular\'a ve /r/all\'a yapılacak gelecek ziyaretler bu subreddit\'i içerecektir.</string>
     <string name="title_license">Lisans</string>
     <string name="error_already_submitted_message">Bu gönderi zaten bu subreddit\'e gönderildi.</string>
-    <string name="mainmenu_random_nsfw">Rastgele NSFW Subreddit</string>
     <string name="pref_appearance_post_subtitle_items_spoiler">Spoiler etiketi</string>
     <string name="pref_appearance_post_subtitle_items_nsfw">NSFW etiketi</string>
     <string name="pref_appearance_post_subtitle_items_domain">Alan adı</string>
@@ -365,7 +359,6 @@
     <string name="pref_appearance_comment_age_mode_absolute">Yorumdan bu yana geçen süre (x dakika önce)</string>
     <string name="pref_appearance_comment_age_mode_relative_post">Gönderiye göre (x dakika sonra)</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">Üst yoruma göre (x dakika sonra yanıtlandı)</string>
-    <string name="accessibility_subtitle_points_withperiod">Puan: %d.</string>
     <string name="imageview_image_info_failed">Resim meta verileri indirilemedi. Web tarayıcısı deneniyor.</string>
     <string name="pref_accessibility_min_comment_height_none">Hiçbiri</string>
     <string name="mainmenu_sent_messages">Gönderilen Mesajlar</string>

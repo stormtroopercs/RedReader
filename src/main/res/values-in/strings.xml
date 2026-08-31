@@ -331,7 +331,6 @@
     <string name="pref_appearance_navbar_color_option_black">Hitam</string>
     <string name="pref_appearance_navbar_color_option_primary">Utama (terang)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Utama (gelap)</string>
-    <string name="pref_not_supported_before_lollipop">Tidak didukung sebelum Android Lollipop</string>
     <!-- 2016-08-03 -->
     <string name="action_copy_text">Salin Teks</string>
     <string name="action_copy_link">Salin Tautan</string>
@@ -388,14 +387,11 @@
     <!--2017-05-08-->
     <!--2017-05-21-->
     <string name="error_no_suitable_apps_available">Tidak tersedia apl yang cocok.</string>
-    <string name="mainmenu_random">Subreddit Acak</string>
-    <string name="pref_menus_show_random_main_menu_title">Tampilkan /r/random di menu utama</string>
     <string name="mainmenu_custom_destination_search">Cari</string>
     <string name="title_license">Lisensi</string>
     <string name="error_already_submitted_title">Sudah dikirimkan</string>
     <string name="error_already_submitted_message">Pos ini sudah dikirimkan ke subreddit ini.</string>
     <string name="sort_posts_best">Terbaik</string>
-    <string name="mainmenu_random_nsfw">Subreddit TAUSB Acak</string>
     <string name="notification_channel_name_reddit_messages">Pesan Masuk Reddit</string>
     <string name="action_copy_selftext">Salin Teks Self</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Pilih apl untuk berbagi</string>
@@ -448,7 +444,6 @@
     <string name="pref_appearance_navbar_color_option_white">Putih</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Video reddit</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Gambar reddit</string>
-    <string name="accessibility_subtitle_points_withperiod">Skor: %d.</string>
     <string name="three_dots_menu">Opsi lainnya</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">Relatif ke komentar induk (dibalas x mnt kemudian)</string>
     <string name="pref_appearance_comment_age_mode_relative_post">Relatif ke pos (setelah x mnt)</string>
@@ -485,8 +480,6 @@
     <string name="error_post_flair_required_title">Membutuhkan flair</string>
     <string name="error_no_file_manager_message">Sistem oprasi pada perangkat ini tidak memiliki pengelola berkas yang kompatibel dengan Android Storage Access Framework. Jika pengelola berkas tersedia, kemungkinan dinonaktifkan.</string>
     <string name="error_no_file_manager_title">Pengelola berkas tidak ada</string>
-    <string name="backup_preferences_error_old_android_message">Fitur ini membutuhkan Android 4.4 atau lebih baru.</string>
-    <string name="backup_preferences_error_old_android_title">Sistem terlalu tua</string>
     <string name="restore_preferences_success">Pemulihan berhasil</string>
     <string name="backup_preferences_success">Pencadangan berhasil</string>
     <string name="button_cancel">Batal</string>

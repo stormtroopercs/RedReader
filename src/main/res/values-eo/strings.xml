@@ -329,7 +329,6 @@
     <string name="pref_appearance_navbar_color_option_black">Nigra</string>
     <string name="pref_appearance_navbar_color_option_primary">Ĉefa (hela)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Ĉefa (malhela)</string>
-    <string name="pref_not_supported_before_lollipop">Ne subtenata antaŭ Android Lollipop (5)</string>
     <!-- 2016-08-03 -->
     <string name="action_copy_text">Kopii tekston</string>
     <string name="action_copy_link">Kopii ligilon</string>
@@ -384,14 +383,11 @@
     <!--2017-05-21-->
     <!-- 2017-06-05 -->
     <string name="error_no_suitable_apps_available">Neniu taŭga disponebla aplikaĵo.</string>
-    <string name="mainmenu_random">Hazarda redditero</string>
-    <string name="pref_menus_show_random_main_menu_title">Montri /r/random en la ĉefmenuo</string>
     <string name="mainmenu_custom_destination_search">Serĉi</string>
     <string name="title_license">Permesilo</string>
     <string name="error_already_submitted_title">Jam afiŝita</string>
     <string name="error_already_submitted_message">Tiu ĉi afiŝo jam estis sendita al tiu ĉi redditero.</string>
     <string name="sort_posts_best">Plej bonaj</string>
-    <string name="mainmenu_random_nsfw">Hazarda maldeca redditero</string>
     <string name="notification_channel_name_reddit_messages">Ricevitaj mesaĝoj el Reddit</string>
     <string name="action_copy_selftext">Kopii memtekston</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Elektu aplikaĵon por kunhavigi</string>
@@ -445,7 +441,6 @@
     <string name="pref_appearance_navbar_color_option_white">Blanka</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Filmetoj Reddit</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Bildoj Reddit</string>
-    <string name="accessibility_subtitle_points_withperiod">Poentaro: %d.</string>
     <string name="three_dots_menu">Pliaj agordoj</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">Rilata al supera komento (respondis post X minutoj)</string>
     <string name="pref_appearance_comment_age_mode_relative_post">Rilata al afiŝo (post X minutoj)</string>
@@ -482,7 +477,6 @@
     <string name="backup_preferences_success">Savkopiado sukcesis</string>
     <string name="restore_preferences_error_invalid_file_version_message">La elektita dosiero, kreita de pli nova versio de MaterialReader, tial ne estas malfermebla.</string>
     <string name="restore_preferences_error_invalid_file_contents_message">La elektita dosiero ne estas valida savkopio de agordoj.</string>
-    <string name="backup_preferences_error_old_android_message">Ĉi tiu funkcio bezonas version 4.4 aŭ pli novan de Android.</string>
     <string name="button_continue_anyway">Daŭrigi malgraŭ tio</string>
     <string name="restore_preferences_error_invalid_file_title">Nevalida dosiero</string>
     <string name="error_content_blocker_title">Enhavoblokilo troviĝis</string>
@@ -490,7 +484,6 @@
     <string name="error_tor_connection_title">Eraro de Tor</string>
     <string name="error_no_file_manager_title">Neniu dosieradministrilo</string>
     <string name="error_imgur_400_title">Eraro de Imgur</string>
-    <string name="backup_preferences_error_old_android_title">Sistemo estas tro malnova</string>
     <string name="button_cancel">Nuligi</string>
     <string name="restore_preferences_error_version_warning_title">Averto</string>
     <string name="search_results_location_only">Serĉi en %s</string>

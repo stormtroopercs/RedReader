@@ -289,7 +289,6 @@
     <string name="pref_appearance_navbar_color_option_black">Sort</string>
     <string name="pref_appearance_navbar_color_option_primary">Primær (lys)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Primær (mørk)</string>
-    <string name="pref_not_supported_before_lollipop">"Ikke supporteret  før Android Lollipop"</string>
     <string name="action_copy_text">Kopiér Tekst</string>
     <string name="action_copy_link">Kopiér Link</string>
     <string name="mainmenu_custom_destination">Brugerdefineret Lokation</string>
@@ -314,8 +313,6 @@
     <string name="action_pin_subreddit">"Tilføj Subreddit til Forsiden "</string>
     <string name="action_subscribe_subreddit">Abonner på Subreddit</string>
     <string name="error_no_suitable_apps_available">Der kunne ikke findes nogle egnede apps.</string>
-    <string name="mainmenu_random">Tilfældigt Subreddit</string>
-    <string name="pref_menus_show_random_main_menu_title">Vis /r/random i hovedmenuen</string>
     <plurals name="load_more_comments_button_reply_count">
         <item quantity="one">"Indlæs flere kommentarer (%d svar)"</item>
         <item quantity="other">"Indlæs flere kommentarer (%d svar)"</item>

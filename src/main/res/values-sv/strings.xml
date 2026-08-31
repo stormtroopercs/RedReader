@@ -318,7 +318,6 @@
     <string name="mainmenu_custom_destination_search">Sök</string>
     <string name="error_403_title_nonreddit">Åtkomst nekad</string>
     <string name="action_subscribe_subreddit">Prenumerera på subreddit</string>
-    <string name="mainmenu_random">Slumpmässigt vald subreddit</string>
     <string name="error_too_long_message">Reddit säger att texten du skrev in är för lång.</string>
     <string name="error_403_message_nonreddit">Servern svarade med ett \"åtkomst nekad\"-fel.</string>
     <string name="action_copy_text">Kopiera text</string>
@@ -332,7 +331,6 @@
     <string name="sort_blocked_subreddit_name">Efter namn</string>
     <string name="theme_name_night_lowcontrast">Natt (låg kontrast)</string>
     <string name="error_upload_fail_imgur_message">Uppladdningen avvisades av Imgur av okänd anledning.</string>
-    <string name="pref_menus_show_random_main_menu_title">Visa /r/random i huvudmenyn</string>
     <string name="edit_comment_actionbar">Redigera kommentar</string>
     <string name="pm_send_hint_recipient">Mottagare</string>
     <string name="sort_pinned_subreddit_date">Efter datum (tillagd)</string>
@@ -340,7 +338,6 @@
     <string name="pref_behaviour_imageview_mode_internal_opengl">Intern visare (OpenGL)</string>
     <string name="action_back">Tillbaka</string>
     <string name="theme_name_ultrablack">Ultrasvart</string>
-    <string name="pref_not_supported_before_lollipop">Stöds inte tidigare än Android Lollipop</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Primär (mörk)</string>
     <string name="error_upload_fail_imgur_title">Uppladdning misslyckades</string>
     <string name="error_parse_imgur_title">Tolkningsfel</string>
@@ -359,7 +356,6 @@
     <string name="error_toast_no_share_app_installed">Ingen tillgänglig app för att dela det här.</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Välj en app för delning</string>
     <string name="notification_channel_name_reddit_messages">Inkommande Reddit-meddelanden</string>
-    <string name="mainmenu_random_nsfw">Slumpmässig NSFW Subreddit</string>
     <string name="sort_posts_best">Bäst</string>
     <string name="title_license">Licens</string>
     <string name="image_gallery_removed_title">Galleri borttaget</string>
@@ -429,7 +425,6 @@
     <string name="pref_behaviour_save_location_prompt_every_time">Fråga varje gång</string>
     <string name="pref_behaviour_save_location_system_default">Använd systemstandard</string>
     <string name="three_dots_menu">Fler alternativ</string>
-    <string name="accessibility_subtitle_points_withperiod">Poäng: %d.</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Redditbilder</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Redditvideor</string>
     <string name="album_image_default_text">Bild %d</string>

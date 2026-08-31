@@ -264,12 +264,9 @@
     <string name="action_pin_subreddit">将子版钉在主菜单</string>
     <string name="action_subscribe_subreddit">订阅子版</string>
     <string name="error_no_suitable_apps_available">没有合适的应用。</string>
-    <string name="mainmenu_random">随机子版</string>
-    <string name="pref_menus_show_random_main_menu_title">在主菜单显示/r/random</string>
     <string name="upgrade_v190_login_message">MaterialReader 已升级，并使用 OAuth 进行 Reddit 验证。如果您在升级前登录了您的帐号，您已经被登出。</string>
     <string name="open_with">开启的应用</string>
     <string name="save_image_permission_denied">权限被拒：无法存储图片。</string>
-    <string name="pref_not_supported_before_lollipop">不支持比Android Lollipop更旧的版本</string>
     <string name="error_cache_dir_does_not_exist_title">缓存路径无效</string>
     <string name="error_cache_dir_does_not_exist_message">无法访问缓存目录。请在缓存设置中选择不同的位置。</string>
     <string name="error_403_title_nonreddit">访问遭拒</string>
@@ -280,7 +277,6 @@
     <string name="error_already_submitted_title">已被提交</string>
     <string name="error_already_submitted_message">该帖子已被提交到此subreddit.</string>
     <string name="sort_posts_best">最佳</string>
-    <string name="mainmenu_random_nsfw">随机NSFW Reddit子版块</string>
     <string name="notification_channel_name_reddit_messages">传入的Reddit消息</string>
     <string name="action_copy_selftext">复制 Self-Text</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">挑选用于分享的应用</string>
@@ -332,7 +328,6 @@
     <string name="pref_appearance_navbar_color_option_white">白色</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Reddit 视频</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Reddit 图片</string>
-    <string name="accessibility_subtitle_points_withperiod">得分: %d。</string>
     <string name="three_dots_menu">更多选项</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">相对于母评论 (x 分钟后回复)</string>
     <string name="pref_appearance_comment_age_mode_relative_post">相对于帖子 (x 分钟后)</string>
@@ -370,8 +365,6 @@
     <string name="error_post_flair_required_title">Flair 是必需的</string>
     <string name="error_no_file_manager_message">此设备上的操作系统缺少与 Android 存储访问框架兼容的文件管理器。 如果存在文件管理器，则它可能被禁用。</string>
     <string name="error_no_file_manager_title">无文件管理器</string>
-    <string name="backup_preferences_error_old_android_message">此功能需要 Android 4.4 或更高版本。</string>
-    <string name="backup_preferences_error_old_android_title">系统太旧</string>
     <string name="restore_preferences_success">还原成功</string>
     <string name="backup_preferences_success">成功备份</string>
     <string name="button_cancel">取消</string>

@@ -116,8 +116,6 @@
     <string name="error_post_flair_required_message">Tämän subredditin säännöt vaativat asettamaan julkaisuusi flairin.</string>
     <string name="error_no_file_manager_message">Laitteen käyttöjärjestelmästä puuttuu tiedostonhallintaohjelma, joka olisi yhteensopiva Android Storage Access Frameworkin kanssa. Jos tiedostonhallintaohjelma löytyy, se on voitu poistaa käytöstä.</string>
     <string name="error_no_file_manager_title">Ei tiedostonhallintaohjelmaa</string>
-    <string name="backup_preferences_error_old_android_message">Tämä ominaisuus vaatii Android 4.4 -version tai uudemman.</string>
-    <string name="backup_preferences_error_old_android_title">Liian vanha järjestelmä</string>
     <string name="restore_preferences_success">Palautus onnistui</string>
     <string name="backup_preferences_success">Varmuuskopiointi onnistui</string>
     <string name="button_cancel">Peruuta</string>
@@ -144,7 +142,6 @@
     <string name="pref_appearance_navbar_color_option_white">Valkoinen</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Reddit-videot</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Reddit-kuvat</string>
-    <string name="accessibility_subtitle_points_withperiod">Pisteet: %d.</string>
     <string name="three_dots_menu">Lisää asetuksia</string>
     <string name="pref_appearance_comment_age_mode_absolute">Kommentista kulunut aika (x minuuttia sitten)</string>
     <string name="pref_appearance_age_units_3">Kolme yksikköä (x tuntia, x minuuttia, x sekuntia)</string>
@@ -181,8 +178,6 @@
     <string name="error_already_submitted_message">Tämä julkaisu on jo lisätty tähän subredditiin.</string>
     <string name="error_already_submitted_title">On jo lisätty</string>
     <string name="title_license">Lisenssi</string>
-    <string name="pref_menus_show_random_main_menu_title">Näytä /r/random päävalikossa</string>
-    <string name="mainmenu_random">Satunnainen subreddit</string>
     <string name="error_no_suitable_apps_available">Ei kelvollisia sovelluksia saatavilla.</string>
     <string name="action_subscribe_subreddit">Tilaa subreddit</string>
     <string name="action_pin_subreddit">Kiinnitä subreddit päävalikkoon</string>
@@ -212,7 +207,6 @@
     <string name="mainmenu_custom_destination">Muokattu sijainti</string>
     <string name="action_copy_link">Kopioi linkki</string>
     <string name="action_copy_text">Kopioi teksti</string>
-    <string name="pref_not_supported_before_lollipop">Ei tuettu Android Lollipopia edeltävissä versioissa</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Ensisijainen (tumma)</string>
     <string name="pref_appearance_navbar_color_option_primary">Ensisijainen (vaalea)</string>
     <string name="pref_appearance_navbar_color_option_black">Musta</string>
@@ -255,7 +249,6 @@
     <string name="error_toast_no_share_app_installed">Ei kelvollisia sovelluksia asennettuna jakamaan tätä.</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Valitse sovellus jakamista varten</string>
     <string name="notification_channel_name_reddit_messages">Saapuvat Reddit-viestit</string>
-    <string name="mainmenu_random_nsfw">Satunnainen sopimaton subreddit</string>
     <string name="sort_posts_best">Paras</string>
     <string name="error_too_long_title">Liian pitkä</string>
     <string name="pm_send_hint_recipient">Vastaanottaja</string>

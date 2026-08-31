@@ -290,7 +290,6 @@
     <string name="pref_behaviour_videoview_mode_internal_videoview">Interner Video-Betrachter (empfohlen)</string>
     <string name="pref_behaviour_view_mode_external_browser">Externer Browser</string>
     <string name="pref_behaviour_view_mode_internal_browser">Interner Browser</string>
-    <string name="pref_not_supported_before_lollipop">Vor Android Lollipop nicht unterstützt</string>
     <string name="props_caption">Bildunterschrift</string>
     <string name="props_image_title">Bildinformationen</string>
     <string name="props_resolution">Auflösung</string>
@@ -318,14 +317,11 @@
     <string name="action_pin_subreddit">Subreddit an Hauptmenü anheften</string>
     <string name="action_block_subreddit">Subreddit blockieren</string>
     <string name="error_no_suitable_apps_available">Keine passenden Apps verfügbar.</string>
-    <string name="mainmenu_random">Zufälliges Subreddit</string>
-    <string name="pref_menus_show_random_main_menu_title">/r/random im Hauptmenü anzeigen</string>
     <string name="mainmenu_custom_destination_search">Suche</string>
     <string name="title_license">Lizenz</string>
     <string name="error_already_submitted_title">Bereits eingereicht</string>
     <string name="sort_posts_best">Beste</string>
     <string name="error_already_submitted_message">Dieser Beitrag wurde bereits an diesen Subreddit gesendet.</string>
-    <string name="mainmenu_random_nsfw">Zufälliger NSFW-Subreddit</string>
     <string name="notification_channel_name_reddit_messages">Eingehende Reddit-Nachrichten</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Wähle eine App zum Teilen aus</string>
     <string name="error_toast_no_share_app_installed">Keine geeignete App installiert, um dies zu teilen.</string>
@@ -356,7 +352,6 @@
     <string name="error_imgur_400_title">Imgur Fehler</string>
     <string name="error_tor_connection_title">Tor Fehler</string>
     <string name="error_no_file_manager_title">Kein Dateimanager</string>
-    <string name="backup_preferences_error_old_android_title">System zu alt</string>
     <string name="restore_preferences_error_version_warning_title">Warnung</string>
     <string name="restore_preferences_error_invalid_file_version_message">Die ausgewählte Datei wurde von einer neueren Version von MaterialReader erstellt und kann deswegen nicht geöffnet werden.</string>
     <string name="restore_preferences_error_invalid_file_title">Ungültige Datei</string>
@@ -408,14 +403,12 @@
     <string name="video_pause">Pause</string>
     <string name="video_rewind">Zurückspulen</string>
     <string name="video_zoom_in">Vergrößern</string>
-    <string name="backup_preferences_error_old_android_message">Diese Funktion benötigt Android 4.4 oder höher.</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Reddit Bilder</string>
     <string name="imageview_image_info_failed">Konnte Bild-Metadaten nicht herunterladen. Versuche Webbrowser.</string>
     <string name="video_fast_forward">Schneller Vorlauf</string>
     <string name="error_post_flair_required_message">Die Regeln dieses Subreddits verlangen, dass du deinem Beitrag einem Flair verleihst.</string>
     <string name="error_imgur_400_message">Imgur lehnt den Upload dieses Bildes ab, möglicherweise aufgrund eines Ratenlimits. Bitte verwende einen anderen Bildhoster oder versuche es später noch einmal.</string>
     <string name="error_http_429_message">Der Server hat die Anfrage aufgrund eines Ratenlimits abgelehnt. Bitte versuche es in Kürze erneut.</string>
-    <string name="accessibility_subtitle_points_withperiod">Upvoteanzahl: %d.</string>
     <string name="pref_appearance_navbar_color_option_white">Weiß</string>
     <string name="button_view">Anzeigen</string>
     <string name="mainmenu_sent_messages">Gesendete Nachrichten</string>

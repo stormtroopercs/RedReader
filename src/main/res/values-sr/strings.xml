@@ -229,7 +229,6 @@
     <string name="pref_appearance_navbar_color_option_black">Црна</string>
     <string name="pref_appearance_navbar_color_option_primary">Примарна (светла)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Примарна (тамна)</string>
-    <string name="pref_not_supported_before_lollipop">Није подржано пре верзије Android Lollipop</string>
     <string name="action_copy_text">Копирај текст</string>
     <string name="action_copy_link">Копирај везу</string>
     <string name="mainmenu_custom_destination">Произвољна путања</string>
@@ -259,13 +258,10 @@
     <string name="action_pin_subreddit">Закачи подредит у главни мени</string>
     <string name="action_subscribe_subreddit">Претплати се на подредит</string>
     <string name="error_no_suitable_apps_available">Нема доступних одговарајућих апликација.</string>
-    <string name="mainmenu_random">Насумични подредит</string>
-    <string name="pref_menus_show_random_main_menu_title">Прикажи /r/random у главном менију</string>
     <string name="title_license">Лиценца</string>
     <string name="error_already_submitted_title">Већ је послато</string>
     <string name="error_already_submitted_message">Ова објава је већ послата на овај подредит.</string>
     <string name="sort_posts_best">Најбоље</string>
-    <string name="mainmenu_random_nsfw">Случајан неприкладан подредит</string>
     <string name="notification_channel_name_reddit_messages">Долазне Редит поруке</string>
     <string name="action_copy_selftext">Умножи текст објаве</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Изаберите програм за дељење</string>
@@ -327,7 +323,6 @@
     <string name="pref_appearance_comment_age_mode_relative_post">У односу на објаву (након x мин)</string>
     <string name="pref_appearance_comment_age_mode_relative_parent">У односу на надређени коментар (одговорено x мин касније)</string>
     <string name="three_dots_menu">Више опција</string>
-    <string name="accessibility_subtitle_points_withperiod">Резултат: %d.</string>
     <string name="accessibility_subtitle_domain_i_redd_it">Редит слике</string>
     <string name="accessibility_subtitle_domain_v_redd_it">Редит видео снимци</string>
     <string name="pref_appearance_navbar_color_option_white">Бела</string>
@@ -354,8 +349,6 @@
     <string name="button_cancel">Откажи</string>
     <string name="backup_preferences_success">Резервна копија је успешно направљена</string>
     <string name="restore_preferences_success">Враћање је успешно обављено</string>
-    <string name="backup_preferences_error_old_android_title">Систем је престар</string>
-    <string name="backup_preferences_error_old_android_message">Ова функција захтева Android 4.4 или новији.</string>
     <string name="error_no_file_manager_title">Нема управника датотека</string>
     <string name="error_no_file_manager_message">Оперативном систему на овом уређају недостаје управник датотека који је усаглашен са Android-овим оквиром за приступ складишту (Storage Access Framework). Ако је управник датотека присутан, можда је онемогућен.</string>
     <string name="error_post_flair_required_title">Потребна је ознака</string>

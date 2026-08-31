@@ -210,7 +210,6 @@
     <string name="subscription_successful">Užsiprenumeruota %s</string>
     <string name="search_results_query_only">Ieškoti \"%s\"</string>
     <string name="list_yes_no_or_wifi_wifionly">Tik per Wi-Fi</string>
-    <string name="accessibility_subtitle_points_withperiod">Įvertinimas: %d.</string>
     <string name="three_dots_menu">Daugiau pasirinkimų</string>
     <string name="sort_comments_top_today">Populiariausi: Šiandien</string>
     <string name="search_results_short">Paieškos rezultatai</string>
@@ -257,8 +256,6 @@
     <string name="button_cancel">Atšaukti</string>
     <string name="backup_preferences_success">Atsarginė kopija sukurta sėkmingai</string>
     <string name="restore_preferences_success">Atkurta sėkmingai</string>
-    <string name="backup_preferences_error_old_android_title">Per sena sistema</string>
-    <string name="backup_preferences_error_old_android_message">Šiai funkcijai reikalinga 4.4 ar naujesnės versijos Android.</string>
     <string name="error_no_file_manager_title">Nėra failų tvarkyklės</string>
     <string name="error_tor_connection_title">Tor klaida</string>
     <string name="error_tor_connection_message">Nepavyksta prisijungti prie Tor. Įsitikinkite, kad veikia Orbot programa, arba išjunkite Tor tinklo nustatymuose.</string>
@@ -273,13 +270,10 @@
     <string name="pref_appearance_post_subtitle_items_domain">Domenas</string>
     <string name="error_toast_no_share_app_installed">Nėra įdiegtos tinkamos programos, kuria būtų galima tai bendrinti.</string>
     <string name="notification_channel_name_reddit_messages">Įeinančios Reddit žinutės</string>
-    <string name="mainmenu_random_nsfw">Atsitiktinis NSFW subreddit\'as</string>
     <string name="sort_posts_best">Geriausi</string>
     <string name="error_already_submitted_message">Šis įrašas jau buvo pateiktas šiam subreddit\'ui.</string>
     <string name="error_already_submitted_title">Jau pateikta</string>
     <string name="title_license">Licencija</string>
-    <string name="pref_menus_show_random_main_menu_title">Rodyti /r/random pagrindiniame meniu</string>
-    <string name="mainmenu_random">Atsitiktinis subreddit\'as</string>
     <string name="error_no_suitable_apps_available">Tinkamų programėlių nėra.</string>
     <string name="action_subscribe_subreddit">Prenumeruoti Subreddit\'ą</string>
     <string name="action_pin_subreddit">Prisegti Subreddit\'ą į pagrindinį meniu</string>
@@ -309,7 +303,6 @@
     <string name="mainmenu_custom_destination">Pasirinktinė vieta</string>
     <string name="action_copy_link">Kopijuoti nuorodą</string>
     <string name="action_copy_text">Kopijuoti tekstą</string>
-    <string name="pref_not_supported_before_lollipop">Nepalaikomas iki Android Lollipop</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Pirminė (tamsi)</string>
     <string name="pref_appearance_navbar_color_option_primary">Pirminė (šviesi)</string>
     <string name="pref_appearance_navbar_color_option_black">Juoda</string>

@@ -248,7 +248,6 @@
     <string name="pref_appearance_navbar_color_option_black">Черный</string>
     <string name="pref_appearance_navbar_color_option_primary">Основной (светлый)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Основной (темный)</string>
-    <string name="pref_not_supported_before_lollipop">Не поддерживается на версиях Android ниже Lollipop</string>
     <string name="action_copy_text">Копировать текст</string>
     <string name="action_copy_link">Скопировать ссылку</string>
     <string name="mainmenu_custom_destination">Другие места</string>
@@ -279,8 +278,6 @@
     <string name="error_no_suitable_apps_available">Нет подходящих приложений.</string>
     <string name="mainmenu_modmail">Почта модера</string>
     <string name="mainmenu_custom_destination_search">Поиск</string>
-    <string name="mainmenu_random">Случайный сабреддит</string>
-    <string name="pref_menus_show_random_main_menu_title">Отображать /r/random в главном меню</string>
     <string name="pin_successful">Закреплено %s в главном меню</string>
     <string name="unpin_successful">Откреплено %s из главного меню</string>
     <string name="unsubscription_successful">Отписался от %s</string>
@@ -305,7 +302,6 @@
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Выберите приложение для обмена</string>
     <string name="action_copy_selftext">Копировать собственный текст</string>
     <string name="notification_channel_name_reddit_messages">Входящие сообщения Reddit</string>
-    <string name="mainmenu_random_nsfw">Случайный NSFW сабреддит</string>
     <string name="sort_posts_best">Лучшее</string>
     <string name="error_already_submitted_message">Такой пост уже есть в этом субреддите.</string>
     <string name="error_already_submitted_title">Сообщение уже существует</string>
@@ -342,7 +338,6 @@
     <string name="pref_menus_appbar_items_always">Всегда показывать кнопку</string>
     <string name="link_copied_to_clipboard">Ссылка скопирована в буфер обмена</string>
     <string name="video_rewind">Перемотка назад</string>
-    <string name="accessibility_subtitle_points_withperiod">Оценка: %d.</string>
     <string name="three_dots_menu">Дополнительные параметры</string>
     <string name="video_zoom_out">Уменьшить масштаб</string>
     <string name="video_zoom_in">Увеличить масштаб</string>
@@ -372,8 +367,6 @@
     <string name="error_post_flair_required_title">Требуется вкус</string>
     <string name="error_no_file_manager_message">На этом устройстве отсутствует файловый менеджер, совместимый с Android Storage Access Framework. Если файловый менеджер присутствует, возможно он отключен.</string>
     <string name="error_no_file_manager_title">Нет файлового менеджера</string>
-    <string name="backup_preferences_error_old_android_message">Эта функция требует Android 4.4 или выше.</string>
-    <string name="backup_preferences_error_old_android_title">Система слишком старая</string>
     <string name="restore_preferences_success">Восстановлено успешно</string>
     <string name="backup_preferences_success">Резервное копирование успешно</string>
     <string name="button_cancel">Отмена</string>

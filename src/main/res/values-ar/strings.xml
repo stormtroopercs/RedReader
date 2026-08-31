@@ -289,7 +289,6 @@
     <string name="pref_appearance_navbar_color_option_black">اسود</string>
     <string name="pref_appearance_navbar_color_option_primary">الأساسي (فاتح)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">الأساسي (داكن)</string>
-    <string name="pref_not_supported_before_lollipop">ليس مدعوم لما قبل اندرويد 5</string>
     <string name="action_copy_text">نسخ النص</string>
     <string name="action_copy_link">نسخ الرابط</string>
     <string name="mainmenu_custom_destination">الذهاب إلى شيء معين</string>
@@ -318,14 +317,11 @@
     <string name="action_pin_subreddit">ثبت المنتدى فرعي إلى القائمة الرئيسية</string>
     <string name="action_subscribe_subreddit">إشترك لالمنتدى فرعي</string>
     <string name="error_no_suitable_apps_available">لا تتوفر تطبيقات مناسبه.</string>
-    <string name="mainmenu_random">منتدى فرعي عشوائي</string>
-    <string name="pref_menus_show_random_main_menu_title">إظهار &lt;/r/random&gt; في القائمة الرئيسية</string>
     <string name="mainmenu_custom_destination_search">بحث</string>
     <string name="error_already_submitted_title">تم التقديم من قبل</string>
     <string name="title_license">رخصة</string>
     <string name="error_already_submitted_message">هذه المنشورة تم نشرها الى هذا المجتمع فعلا.</string>
     <string name="sort_posts_best">الافضل</string>
-    <string name="mainmenu_random_nsfw">مجتمع مقيد عشوائي</string>
     <string name="notification_channel_name_reddit_messages">رسائل ريديت القادمة</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">اختر تطبيقاً للمشاركة</string>
     <string name="error_toast_no_share_app_installed">لا يوجد تطبيق مناسب لمشاركة هذا.</string>

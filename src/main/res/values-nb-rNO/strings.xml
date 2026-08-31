@@ -244,7 +244,6 @@
     <string name="pref_appearance_navbar_color_option_black">Svart</string>
     <string name="pref_appearance_navbar_color_option_primary">Primær (lys)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Primær (mørk)</string>
-    <string name="pref_not_supported_before_lollipop">Ikke støttet før Android Lollipop</string>
     <string name="action_copy_text">Kopier tekst</string>
     <string name="action_copy_link">Kopier lenke</string>
     <string name="mainmenu_custom_destination">Egendefinert plassering</string>
@@ -273,14 +272,11 @@
     <string name="action_pin_subreddit">Fest subreddit til hovedmeny</string>
     <string name="action_subscribe_subreddit">Abonner på subreddit</string>
     <string name="error_no_suitable_apps_available">Ingen egnede programmer tilgjengelig.</string>
-    <string name="mainmenu_random">Tilfeldig subreddit</string>
-    <string name="pref_menus_show_random_main_menu_title">Vis /r/random i hovedmenyen</string>
     <string name="mainmenu_custom_destination_search">Søk</string>
     <string name="title_license">Lisens</string>
     <string name="error_already_submitted_title">Allerede innsendt</string>
     <string name="error_already_submitted_message">Dette innlegget har allerede blitt innsendt til denne underreddit-en.</string>
     <string name="sort_posts_best">Best</string>
-    <string name="mainmenu_random_nsfw">Tilfeldig NSFW-underreddit</string>
     <string name="notification_channel_name_reddit_messages">Innkommende Reddit-meldinger</string>
     <string name="action_copy_selftext">Kopier egen førstepost</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Velg et program for deling</string>
@@ -315,7 +311,6 @@
     <string name="pref_appearance_post_subtitle_items_subreddit">Underreddit</string>
     <string name="pref_menus_appbar_items_if_room">Vis knapp hvis det er plass</string>
     <string name="imageview_image_info_failed">Kunne ikke laste ned bilde-metadata. Prøver med nettleser.</string>
-    <string name="accessibility_subtitle_points_withperiod">Poengsum: %d.</string>
     <string name="three_dots_menu">Flere alternativer</string>
     <string name="button_error_send_report">Rapporter</string>
     <string name="unpin_successful">Fjernet %s fra hovedmenyen</string>
@@ -362,8 +357,6 @@
     <string name="pref_appearance_post_subtitle_items_nsfw">Sensur-markering</string>
     <string name="error_toast_no_email_apps">Ingen e-postprogrammer er installert.</string>
     <string name="restore_preferences_error_invalid_file_title">Ugyldig fil</string>
-    <string name="backup_preferences_error_old_android_title">Systemet er for gammelt</string>
-    <string name="backup_preferences_error_old_android_message">Denne funksjonen krever Android 4.4 eller høyere.</string>
     <string name="error_no_file_manager_title">Ingen filbehandler</string>
     <string name="error_tor_connection_title">Tor-feil</string>
     <string name="error_imgur_400_title">Imgur-feil</string>

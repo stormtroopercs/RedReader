@@ -348,7 +348,6 @@
     <string name="pref_appearance_navbar_color_option_black">Fekete</string>
     <string name="pref_appearance_navbar_color_option_primary">Elsődleges (világos)</string>
     <string name="pref_appearance_navbar_color_option_primarydark">Elsődleges (sötét)</string>
-    <string name="pref_not_supported_before_lollipop">Nem támogatott az Android Lollipop előtt</string>
     <!-- 2016-08-03 -->
 	<string name="action_copy_text">Szöveg másolása</string>
     <string name="action_copy_link">Hivatkozás másolása</string>
@@ -401,7 +400,6 @@
     <string name="pref_appearance_age_units_1">Egy egység (x óra)</string>
     <string name="pref_appearance_age_units_2">Két egység (x óra, x p)</string>
     <string name="three_dots_menu">További beállítások</string>
-    <string name="accessibility_subtitle_points_withperiod">Pontszám: %d.</string>
     <string name="video_rewind">Visszatekerés</string>
     <string name="video_pause">Szüneteltetés</string>
     <string name="bug_chooser_title">Hibajelentés küldése e-mailben</string>
@@ -448,11 +446,9 @@
     <string name="action_copy_selftext">Saját szöveg másolása</string>
     <string name="pref_behaviour_sharing_share_dialog_dialogtitle">Válasszon alkalmazást a megosztáshoz</string>
     <string name="notification_channel_name_reddit_messages">Bejövő Reddit üzenetek</string>
-    <string name="mainmenu_random_nsfw">Véletlenszerű NSFW alreddit</string>
     <string name="error_already_submitted_message">Ezt a bejegyzést már korábban beküldte az alredditre.</string>
     <string name="error_already_submitted_title">Már korábban beküldve</string>
     <string name="title_license">Licenc</string>
-    <string name="mainmenu_random">Véletlenszerű alreddit</string>
     <string name="sort_posts_best">Legjobb</string>
     <string name="pref_menus_appbar_items_overflow_only">Megjelenítés csak a három pontos menüben</string>
     <string name="pref_menus_appbar_items_never">Ne jelenítse meg</string>
@@ -476,8 +472,6 @@
     <string name="restore_preferences_error_version_warning_message">A kiválasztott fájl a MaterialReader egy újabb verziójával készült. A fájl helyreállítása összeomlásokat és instabilitást okozhat.</string>
     <string name="button_continue_anyway">Folytatás mindenképp</string>
     <string name="sort_posts_controversial_all">Ellentmondásos: valaha</string>
-    <string name="backup_preferences_error_old_android_title">A rendszer túl régi</string>
-    <string name="backup_preferences_error_old_android_message">Ehhez a funkcióhoz legalább Android 4.4 szükséges.</string>
     <string name="error_no_file_manager_title">Nem található fájlkezelő</string>
     <string name="error_post_flair_required_title">Flair szükséges</string>
     <string name="error_post_flair_required_message">Az alreddit szabályai megkövetelik a flair beállítását a bejegyzésen.</string>
@@ -493,7 +487,6 @@
     <string name="search_results_location_only">Keresés itt: %s</string>
     <string name="pref_appearance_android_status_never_hide">Soha</string>
     <string name="error_no_suitable_apps_available">Nincs megfelelő alkalmazás.</string>
-    <string name="pref_menus_show_random_main_menu_title">Az /r/random megjelenítése a főmenüben</string>
     <string name="error_toast_failed_open_external_browser">Nem sikerült a hivatkozás külső böngészővel való megnyitása: „%s”</string>
     <string name="reddit_login_browser_popup_line_1">A bejelentkezéshez a böngészőben megnyílik a Reddit oldala.</string>
     <string name="pref_appearance_age_units_3">Három egység (x óra, x p, x mp)</string>
