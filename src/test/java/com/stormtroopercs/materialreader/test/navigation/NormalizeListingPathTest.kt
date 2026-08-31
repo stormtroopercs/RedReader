@@ -5,8 +5,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Tests for [normalizeListingPath], the feed-path normalization that keeps
- * community listings from double-prefixing (issue #21: a `r/Palworld`
+ * Tests for `String.normalizeListingPath()`, the feed-path normalization that
+ * keeps community listings from double-prefixing (issue #21: a `r/Palworld`
  * listing path produced `https://www.reddit.com/r/r/Palworld/` 404s). The
  * `PostList` route's `subreddit` field is contractually a bare community
  * name, but several entry points pass `r/`-prefixed values (the custom
@@ -19,58 +19,58 @@ class NormalizeListingPathTest {
 
     @Test
     fun bareNamePassesThrough() {
-        assertEquals("palworld", normalizeListingPath("Palworld"))
+        assertEquals("palworld", "Palworld".normalizeListingPath())
     }
 
     @Test
     fun rPrefixedNameIsStripped() {
-        assertEquals("palworld", normalizeListingPath("r/Palworld"))
+        assertEquals("palworld", "r/Palworld".normalizeListingPath())
     }
 
     @Test
     fun slashRPrefixedNameIsStripped() {
-        assertEquals("palworld", normalizeListingPath("/r/Palworld"))
+        assertEquals("palworld", "/r/Palworld".normalizeListingPath())
     }
 
     @Test
     fun doubledRPrefixIsStripped() {
         // The exact shape that reached the wire in issue #21.
-        assertEquals("palworld", normalizeListingPath("r/r/Palworld"))
+        assertEquals("palworld", "r/r/Palworld".normalizeListingPath())
     }
 
     @Test
     fun surroundingWhitespaceIsTrimmed() {
-        assertEquals("palworld", normalizeListingPath("  r/Palworld  "))
+        assertEquals("palworld", "  r/Palworld  ".normalizeListingPath())
     }
 
-    // --- other path shapes must pass through untouched --------------------
+    // --- other path shapes must pass through untouched -------------------
 
     @Test
     fun userListingPathIsUnchanged() {
         // Usernames are case-sensitive — the community lowercasing must not
         // leak into `u/…` paths.
-        assertEquals("u/SpecialUser/submitted", normalizeListingPath("u/SpecialUser/submitted"))
-        assertEquals("u/SpecialUser/comments", normalizeListingPath("u/SpecialUser/comments"))
-        assertEquals("me/submitted", normalizeListingPath("me/submitted"))
+        assertEquals("u/SpecialUser/submitted", "u/SpecialUser/submitted".normalizeListingPath())
+        assertEquals("u/SpecialUser/comments", "u/SpecialUser/comments".normalizeListingPath())
+        assertEquals("me/submitted", "me/submitted".normalizeListingPath())
     }
 
     @Test
     fun multiredditPathIsUnchanged() {
-        assertEquals("m/mylist", normalizeListingPath("m/mylist"))
-        assertEquals("u/SpecialUser/m/mylist", normalizeListingPath("u/SpecialUser/m/mylist"))
+        assertEquals("m/mylist", "m/mylist".normalizeListingPath())
+        assertEquals("u/SpecialUser/m/mylist", "u/SpecialUser/m/mylist".normalizeListingPath())
     }
 
     @Test
     fun searchPathIsUnchanged() {
-        assertEquals("s/palworld", normalizeListingPath("s/palworld"))
+        assertEquals("s/palworld", "s/palworld".normalizeListingPath())
     }
 
     @Test
     fun defaultFeedIdsAreUnchanged() {
-        assertEquals("frontpage", normalizeListingPath("frontpage"))
-        assertEquals("popular", normalizeListingPath("popular"))
-        assertEquals("all", normalizeListingPath("all"))
-        assertEquals("", normalizeListingPath(""))
-        assertEquals("", normalizeListingPath("   "))
+        assertEquals("frontpage", "frontpage".normalizeListingPath())
+        assertEquals("popular", "popular".normalizeListingPath())
+        assertEquals("all", "all".normalizeListingPath())
+        assertEquals("", "".normalizeListingPath())
+        assertEquals("", "   ".normalizeListingPath())
     }
 }

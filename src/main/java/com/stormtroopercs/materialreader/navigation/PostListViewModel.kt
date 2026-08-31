@@ -50,6 +50,7 @@ import com.stormtroopercs.materialreader.reddit.PostSort
 import com.stormtroopercs.materialreader.reddit.RedditAPI
 import com.stormtroopercs.materialreader.reddit.api.RedditAPIIndividualSubredditDataRequester
 import com.stormtroopercs.materialreader.reddit.things.RedditSubreddit
+import com.stormtroopercs.materialreader.reddit.things.InvalidSubredditNameException
 import com.stormtroopercs.materialreader.reddit.things.SubredditCanonicalId
 import com.stormtroopercs.materialreader.io.RequestResponseHandler
 import com.stormtroopercs.materialreader.reddit.APIResponseHandler.ActionResponseHandler
@@ -58,7 +59,6 @@ import com.stormtroopercs.materialreader.reddit.kthings.RedditIdAndType
 import com.stormtroopercs.materialreader.reddit.kthings.RedditThing
 import com.stormtroopercs.materialreader.reddit.url.MultiredditPostListURL
 import com.stormtroopercs.materialreader.reddit.url.PostListingURL
-import com.stormtroopercs.materialreader.reddit.url.RedditURLParser
 import com.stormtroopercs.materialreader.reddit.url.SearchPostListURL
 import com.stormtroopercs.materialreader.reddit.url.SubredditPostListURL
 import com.stormtroopercs.materialreader.reddit.url.UserPostListingURL
@@ -171,7 +171,7 @@ class PostListViewModel @Inject constructor(
         // `r/...` paths and external deep links carry `r/`); both must map
         // to the same `r/<name>` listing (issue #21: the prefixed form
         // produced `r/r/<name>` 404s).
-        currentListPath = normalizeListingPath(listPath)
+        currentListPath = listPath.normalizeListingPath()
         currentSearchQuery = searchQuery
         resolveTitle(currentListPath, searchQuery)
         // The feed's persisted sort (FINAL-DESIGN Phase 4.7) — loaded per
@@ -223,10 +223,6 @@ class PostListViewModel @Inject constructor(
      */
     fun performAction(activity: AppCompatActivity, post: PostItem, action: PostAction) {
         val account = accountManager.getDefaultAccount()
-        if (account == null) {
-            _actionResult.value = "Not signed in"
-            return
-        }
 
         val idAndType = RedditIdAndType(post.id)
         val apiAction = when (action) {
@@ -303,12 +299,6 @@ class PostListViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val account = accountManager.getDefaultAccount()
-                if (account == null) {
-                    _state.value = PostListUiState.Error(
-                        RRError(title = "Not signed in", message = "Sign in to view post listings")
-                    )
-                    return@launch
-                }
 
                 // The feed's current sort (FINAL-DESIGN Phase 4.5): the
                 // option's urlSort builds the listing URL (null = the
@@ -316,49 +306,15 @@ class PostListViewModel @Inject constructor(
                 val sortOption = _sortOption.value
                 val sort = sortOption.urlSort
 
-                val jsonUri: Uri
-                if (searchQuery != null) {
-                    // A search listing: build a SearchPostListURL from the location
-                    // (a subreddit name, a multireddit path m/<name> or
-                    // u/<user>/m/<name>, or null for a global search) + the query.
-                    val location = listPath.ifEmpty { null }
-                    val searchUrl = SearchPostListURL.build(location, searchQuery)
-                        .sort(sort)
-                    val uri = searchUrl.generateJsonUri()
-                    if (uri == null) {
-                        _state.value = PostListUiState.Error(
-                            RRError(title = "Invalid listing", message = "Could not build search URI")
+                val jsonUri = buildListingUri(listPath, searchQuery, sort)
+                if (jsonUri == null) {
+                    _state.value = PostListUiState.Error(
+                        RRError(
+                            title = "Invalid listing",
+                            message = "Could not build listing URL for \"$listPath\""
                         )
-                        return@launch
-                    }
-                    jsonUri = uri
-                } else {
-                    val rawUri = when {
-                        listPath.isBlank() || listPath == "frontpage" -> "https://www.reddit.com/"
-                        listPath == "popular" -> "https://www.reddit.com/r/popular/"
-                        listPath == "all" -> "https://www.reddit.com/r/all/"
-                        // A user multireddit (u/<user>/m/<name>): /me/ form.
-                        listPath.startsWith("u/") && listPath.contains("/m/") -> "https://www.reddit.com/me/$listPath/"
-                        listPath.startsWith("u/") -> "https://www.reddit.com/$listPath/"
-                        listPath.startsWith("m/") -> "https://www.reddit.com/me/$listPath/"
-                        else -> "https://www.reddit.com/r/$listPath/"
-                    }
-                    val postListingUrl = RedditURLParser.parseProbablePostListing(Uri.parse(rawUri))
-                        .applySort(sort)
-                    if (postListingUrl !is PostListingURL) {
-                        _state.value = PostListUiState.Error(
-                            RRError(title = "Invalid listing", message = "Invalid post listing URL")
-                        )
-                        return@launch
-                    }
-                    val uri = postListingUrl.generateJsonUri()
-                    if (uri == null) {
-                        _state.value = PostListUiState.Error(
-                            RRError(title = "Invalid listing", message = "Could not build JSON URI")
-                        )
-                        return@launch
-                    }
-                    jsonUri = uri
+                    )
+                    return@launch
                 }
 
                 val callbacks = object : CacheRequestCallbacks {
@@ -446,7 +402,6 @@ class PostListViewModel @Inject constructor(
         }
 
         val account = accountManager.getDefaultAccount()
-        if (account == null) return
 
         // Seed the pill immediately with the new name so switching feeds
         // never shows the previous community's name while about-data loads.
@@ -525,19 +480,94 @@ private fun RedditThing.Post.toPostItem(): PostItem {
 }
 
 /**
- * Normalise a feed path (a [PostList] route's `subreddit` field) for
- * listing construction. A community name may arrive bare (`Palworld`) or
- * `r/`-prefixed (`r/Palworld`, `/r/Palworld`, even a doubled `r/r/…`); all
- * forms map to the bare lowercase community name, which `fetchList` then
- * renders as the single `r/<name>` listing. Everything that is already a
- * full path or a default feed id passes through untouched (user listings
- * `u/…` keep their case-sensitive usernames; `m/…`/`me/…` multireddits,
- * `s/…` search, and `frontpage`/`popular`/`all` are not community names).
- * Issue #21: `r/`-prefixed paths produced
- * `https://www.reddit.com/r/r/<name>/` 404s.
+ * Build the Reddit JSON listing URI for a feed path. The path is normalized
+ * first (issue #21 / the 2026-08-30 bug reports: a `r/`-prefixed community
+ * name must never double-prefix into `r/r/<name>` 404s). Community names are
+ * routed through [SubredditCanonicalId], which guarantees the canonical
+ * `r/<name>` form; user / multireddit / default feeds keep their typed
+ * builders. There is intentionally NO catch-all branch — an unrecognized path
+ * returns null and surfaces as the existing "Invalid listing" error state
+ * rather than a silently-wrong 404 URL (the previous hand-rolled builder's
+ * `else -> "https://www.reddit.com/r/$listPath/"` fallthrough was the defect).
  */
-internal fun normalizeListingPath(path: String): String {
-    val trimmed = path.trim()
+internal fun buildListingUri(
+    listPath: String,
+    searchQuery: String?,
+    sort: PostSort?
+): Uri? {
+    val normalized = listPath.normalizeListingPath()
+
+    if (searchQuery != null) {
+        // SearchPostListURL.build already strips leading `/` and `r/` from the
+        // location, so a bare or `r/`-prefixed community name resolves to a
+        // scoped (`restrict_sr=on`) search, never `r/r/<name>`.
+        val location = normalized.ifEmpty { null }
+        return SearchPostListURL.build(location, searchQuery).sort(sort).generateJsonUri()
+    }
+
+    return when {
+        normalized.isEmpty() || normalized == "frontpage" ->
+            SubredditPostListURL.frontPage.sort(sort).generateJsonUri()
+
+        normalized == "popular" ->
+            SubredditPostListURL.popular.sort(sort).generateJsonUri()
+
+        normalized == "all" ->
+            SubredditPostListURL.all.sort(sort).generateJsonUri()
+
+        normalized.startsWith("u/") -> {
+            // u/<user>/<type> -> the matching UserPostListingURL.Type;
+            // u/<user>/m/<name> -> the user's multireddit.
+            val parts = normalized.split("/")
+            if (parts.size == 3) {
+                val type = UserPostListingURL.Type.values()
+                    .firstOrNull { it.name.equals(parts[2], ignoreCase = true) }
+                if (type != null) {
+                    UserPostListingURL(type, parts[1], sort, null, null, null).generateJsonUri()
+                } else {
+                    null
+                }
+            } else if (parts.size == 4 && parts[2].equals("m", ignoreCase = true)) {
+                val url = MultiredditPostListURL.getMultireddit(parts[1], parts[3])
+                if (url is MultiredditPostListURL) {
+                    url.sort(sort).generateJsonUri()
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
+        }
+
+        normalized.startsWith("m/") -> {
+            val url = MultiredditPostListURL.getMultireddit(normalized.substring(2))
+            if (url is MultiredditPostListURL) {
+                url.sort(sort).generateJsonUri()
+            } else {
+                null
+            }
+        }
+
+        else -> {
+            // A bare community name (every `r/`-form collapses to this via
+            // normalizeListingPath) -> the canonical r/<name> listing. An
+            // unparseable name (e.g. an empty/invalid subreddit) returns null.
+            try {
+                val url = SubredditPostListURL.getSubreddit(SubredditCanonicalId(normalized))
+                if (url is SubredditPostListURL) {
+                    url.sort(sort).generateJsonUri()
+                } else {
+                    null
+                }
+            } catch (e: InvalidSubredditNameException) {
+                null
+            }
+        }
+    }
+}
+
+internal fun String.normalizeListingPath(): String {
+    val trimmed = this.trim()
     if (trimmed.isEmpty()) {
         return ""
     }
@@ -556,17 +586,3 @@ internal fun normalizeListingPath(path: String): String {
     return name.lowercase(java.util.Locale.US)
 }
 
-/**
- * Re-derive a parsed listing URL with the feed's sort (FINAL-DESIGN Phase
- * 4.5). Each listing URL type has its own `sort(...)` builder; an unknown
- * type (e.g. an unparseable URL) is returned unchanged.
- */
-private fun RedditURLParser.RedditURL.applySort(sort: PostSort?): RedditURLParser.RedditURL {
-    if (sort == null) return this
-    return when (this) {
-        is SubredditPostListURL -> sort(sort)
-        is UserPostListingURL -> sort(sort)
-        is MultiredditPostListURL -> sort(sort)
-        else -> this
-    }
-}

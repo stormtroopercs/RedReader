@@ -16,6 +16,7 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.common
 
+import com.stormtroopercs.materialreader.navigation.normalizeListingPath
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -124,7 +125,7 @@ object LinkHandler {
 				val intent = Intent(activity, MainActivityCompose::class.java).apply {
 					putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_IMAGE)
 					putExtra(MainActivityCompose.EXTRA_IMAGE_URL, normalUrlString.value)
-					putExtra(MainActivityCompose.EXTRA_IMAGE_ALBUM_URL, albumInfo!!.url.value)
+					putExtra(MainActivityCompose.EXTRA_IMAGE_ALBUM_URL, albumInfo.url.value)
 					putExtra(MainActivityCompose.EXTRA_IMAGE_ALBUM_INDEX, albumImageIndex)
 				}
 				activity.startActivity(intent)
@@ -257,7 +258,7 @@ object LinkHandler {
 					// Reddit listing URL).
 					val listPath = when {
 						url == null -> null
-						url.subreddit != null -> url.subreddit
+						url.subreddit != null -> url.subreddit.normalizeListingPath()
 						url.type == SubredditPostListURL.Type.FRONTPAGE -> "frontpage"
 						url.type == SubredditPostListURL.Type.POPULAR -> "popular"
 						url.type == SubredditPostListURL.Type.ALL -> "all"
@@ -278,7 +279,7 @@ object LinkHandler {
 					// map to the in-app Compose PostList route; the VM builds
 					// /u/<user>/<type>/.
 					if (url != null && url.user != null) {
-						val listPath = "u/" + url.user + "/" + url.type.name.lowercase()
+					val listPath = ("u/" + url.user + "/" + url.type.name.lowercase()).normalizeListingPath()
 						val intent = Intent(activity, MainActivityCompose::class.java)
 						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_POST_LISTING)
 						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, listPath)
@@ -293,7 +294,7 @@ object LinkHandler {
 					// builds /me/m/<name>/ (the default user's own) or
 					// /u/<user>/m/<name>/ (another user's).
 					if (url != null) {
-						val listPath = if (url.username != null) "u/" + url.username + "/m/" + url.name else "m/" + url.name
+					val listPath = if (url.username != null) ("u/" + url.username + "/m/" + url.name).normalizeListingPath() else ("m/" + url.name).normalizeListingPath()
 						val intent = Intent(activity, MainActivityCompose::class.java)
 						intent.putExtra(MainActivityCompose.EXTRA_DEEP_LINK, MainActivityCompose.DEEP_LINK_POST_LISTING)
 						intent.putExtra(MainActivityCompose.EXTRA_POST_LISTING_SUBREDDIT, listPath)
@@ -992,7 +993,7 @@ object LinkHandler {
 
 					ImgurAPIV3.getAlbumInfo(
 						context,
-						albumUrl!!,
+						albumUrl,
 						albumId,
 						priority,
 						false,
@@ -1007,7 +1008,7 @@ object LinkHandler {
 
 								ImgurAPI.getAlbumInfo(
 									context,
-									albumUrl!!,
+									albumUrl,
 									albumId,
 									priority,
 									object : AlbumInfoRetryListener(listener) {

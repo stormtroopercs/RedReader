@@ -121,7 +121,7 @@ internal fun deepLinkDestination(
             DeepLinkDestination.Child(Main, CommentReply(it))
         }
         MainActivityCompose.DEEP_LINK_TERMS -> DeepLinkDestination.Child(Settings, RedditTerms)
-        MainActivityCompose.DEEP_LINK_POST_LISTING -> extras.postListingSubreddit?.let {
+        MainActivityCompose.DEEP_LINK_POST_LISTING -> extras.postListingSubreddit?.normalizeListingPath()?.let {
             DeepLinkDestination.Child(Main, PostList(it, extras.postListingSearchQuery))
         }
         MainActivityCompose.DEEP_LINK_COMMENT_LISTING -> extras.commentListingPostId?.let {
