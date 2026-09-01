@@ -23,7 +23,7 @@ import java.util.Locale
 
 object ScreenreaderPronunciation {
 	@Suppress("PropertyName")
-	private val LANGUAGE_CODE_EN: String = Locale("en").getLanguage()
+	private val LANGUAGE_CODE_EN: String = Locale.forLanguageTag("en").language
 
 	fun getPronunciation(
 		context: Context,

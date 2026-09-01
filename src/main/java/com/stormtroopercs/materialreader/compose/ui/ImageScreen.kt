@@ -669,6 +669,9 @@ private fun ZoomableImage(
  * pinch-zoom / pan / double-tap gestures as [ZoomableImage]. The [GIFView]
  * fills its bounds, so the fitted-size clamp is the container size itself.
  */
+// Movie is deprecated; the GIF pipeline keeps it because the ImageDecoder
+// replacements require API 28+ and minSdk is 23 (see GIFView.kt).
+@Suppress("DEPRECATION")
 @Composable
 private fun ZoomableGif(
     movie: Movie,

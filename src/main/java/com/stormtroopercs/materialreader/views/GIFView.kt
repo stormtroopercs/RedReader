@@ -14,6 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
+// android.graphics.Movie is deprecated (use ImageDecoder/AnimatedImageDrawable),
+// but those require API 28+ while minSdk is 23 — so the GIF pipeline keeps Movie.
+// This is the plan-sanctioned "accept the deprecation" for the highest-effort item.
+@file:Suppress("DEPRECATION")
+
 package com.stormtroopercs.materialreader.views
 
 import android.content.Context

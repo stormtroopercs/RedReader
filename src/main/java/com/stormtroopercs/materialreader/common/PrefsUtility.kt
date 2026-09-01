@@ -915,11 +915,13 @@ object PrefsUtility {
         }
 
         if (value.contains("-r")) {
-            val split: Array<String?> =                 value.split("-r".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-            return LocaleListCompat.create(Locale(split[0] ?: "", split[1] ?: ""))
+            // Stored as "lang-rCC" (e.g. "nb-rNO") → BCP-47 tag "lang-CC" ("nb-NO")
+            val parts = value.split("-r")
+            val tag = parts[0] + "-" + (parts.getOrNull(1) ?: "")
+            return LocaleListCompat.create(Locale.forLanguageTag(tag))
         }
 
-        return LocaleListCompat.create(Locale(value))
+        return LocaleListCompat.create(Locale.forLanguageTag(value))
     }
 
     private fun localesToLanguagePref(locales: LocaleListCompat): String {

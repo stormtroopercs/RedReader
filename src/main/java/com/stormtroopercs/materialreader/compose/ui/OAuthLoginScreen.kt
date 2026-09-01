@@ -19,7 +19,6 @@ package com.stormtroopercs.materialreader.compose.ui
 
 import android.annotation.SuppressLint
 import android.net.Uri
-import android.os.Build
 import android.os.Message
 import android.util.Log
 import android.view.ViewGroup
@@ -153,10 +152,6 @@ private fun createOAuthWebView(
 	settings.builtInZoomControls = false
 	settings.displayZoomControls = false
 	settings.cacheMode = WebSettings.LOAD_NO_CACHE
-	settings.databaseEnabled = false
-	if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-		settings.saveFormData = false
-	}
 	// ReCAPTCHA support
 	settings.setSupportMultipleWindows(true)
 	settings.javaScriptCanOpenWindowsAutomatically = true

@@ -300,6 +300,7 @@ class NewMessageChecker : BroadcastReceiver() {
 
 			val notification = NotificationCompat.Builder(
 				context,
+				NOTIFICATION_CHANNEL_ID,
 			)
 				.setSmallIcon(R.drawable.icon_notif)
 				.setContentTitle(title)
@@ -320,7 +321,7 @@ class NewMessageChecker : BroadcastReceiver() {
 
 			notification.setContentIntent(PendingIntent.getActivity(context, 0, intent, flags))
 
-			nm.notify(0, notification.getNotification())
+			nm.notify(0, notification.build())
 		}
 	}
 }

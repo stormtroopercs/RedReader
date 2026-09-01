@@ -280,7 +280,7 @@ fun PostSubmitScreen(
 						label = { Text("Flair") },
 						trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showFlairDropdown) },
 						modifier = Modifier
-							.menuAnchor()
+							.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
 							.fillMaxWidth(),
 					)
 					ExposedDropdownMenu(

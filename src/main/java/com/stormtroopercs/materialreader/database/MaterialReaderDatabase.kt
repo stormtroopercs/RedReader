@@ -53,8 +53,11 @@ abstract class MaterialReaderDatabase : RoomDatabase() {
 				MaterialReaderDatabase::class.java,
 				"redreader_database",
 			)
-				.fallbackToDestructiveMigration()
-				.build()
+		// `false` (drop all tables on the destructive-migration fallback) matches
+		// the old no-arg `fallbackToDestructiveMigration()` exactly — that field's
+		// default is `false`, so behaviour is unchanged.
+		.fallbackToDestructiveMigration(false)
+		.build()
 			INSTANCE = instance
 			instance
 		}

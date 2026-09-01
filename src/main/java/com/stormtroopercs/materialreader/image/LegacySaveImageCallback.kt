@@ -16,8 +16,7 @@
  ******************************************************************************/
 package com.stormtroopercs.materialreader.image
 
-import android.content.Intent
-import android.net.Uri
+import android.media.MediaScannerConnection
 import android.os.Environment
 import com.stormtroopercs.materialreader.R.string
 import com.stormtroopercs.materialreader.activities.BaseActivity
@@ -84,12 +83,14 @@ class LegacySaveImageCallback(private val activity: BaseActivity, private val ur
 					return@DownloadImageToSaveSuccessCallback
 				}
 
-				activity.sendBroadcast(
-					Intent(
-						Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,
-						Uri.parse("file://" + dst.getAbsolutePath()),
-					),
-				)
+				// The MediaScannerConnection replaced the deprecated
+				// ACTION_MEDIA_SCANNER_SCAN_FILE broadcast. A null callback keeps the
+				// fire-and-forget behaviour the broadcast had.
+				MediaScannerConnection.scanFile(
+					activity,
+					arrayOf(dst.getAbsolutePath()),
+					null,
+				) { _, _ -> }
 				quickToast(
 					activity,
 					(

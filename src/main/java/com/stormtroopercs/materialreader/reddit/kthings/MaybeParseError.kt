@@ -17,6 +17,7 @@
 
 package com.stormtroopercs.materialreader.reddit.kthings
 
+import android.os.Parcel
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.KSerializer
@@ -26,8 +27,17 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 @Serializable(with = MaybeParseErrorSerializer::class)
-@Parcelize // TODO test parcelize on sealed classes
 sealed class MaybeParseError<E : Parcelable> private constructor() : Parcelable {
+	// The sealed base carries no state of its own — only its data-holding
+	// subtypes are parceled (each with its own @Parcelize CREATOR). These two
+	// overrides satisfy the Parcelable interface for the base without the
+	// `@Parcelize` plugin emitting an empty-constructor "no data serialized"
+	// warning for it.
+	override fun describeContents() = 0
+
+	override fun writeToParcel(out: Parcel, flags: Int) {
+		// No data to write (see above).
+	}
 
 	@Parcelize
 	data class Ok<E : Parcelable>(val value: E) : MaybeParseError<E>()

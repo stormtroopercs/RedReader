@@ -334,6 +334,9 @@ fun fetchImage(
  * [GIFView.prepareMovie] (the same `Movie.decodeByteArray` path, including
  * its "Invalid GIF" guard).
  */
+// Movie is deprecated; the GIF pipeline keeps it because the ImageDecoder
+// replacements require API 28+ and minSdk is 23 (see GIFView.kt).
+@Suppress("DEPRECATION")
 @Composable
 fun fetchGif(
 	uri: UriString,

@@ -24,6 +24,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -47,7 +48,21 @@ abstract class BaseActivity :
 
 	private val mPermissionRequestCallbacks = HashMap<Int?, PermissionCallback?>()
 
-	private val mActivityResultCallbacks = HashMap<Int?, ActivityResultCallback?>()
+	// The Activity Result API replaces the deprecated startActivityForResult().
+	// Only one request is in flight at a time (the single caller issues one
+	// ACTION_CREATE_DOCUMENT round-trip), so a single launcher + the pending
+	// callback is the faithful translation of the old request-code HashMap.
+	private var pendingActivityResultCallback: ActivityResultCallback? = null
+
+	private val activityResultLauncher =
+		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+			val callback = pendingActivityResultCallback
+			pendingActivityResultCallback = null
+
+			if (callback != null) {
+				callback.onActivityResult(result.resultCode, result.data)
+			}
+		}
 
 	interface PermissionCallback {
 		fun onPermissionGranted()
@@ -149,6 +164,7 @@ abstract class BaseActivity :
 	 * appearance). Bar backgrounds are drawn by the app -- see
 	 * ViewsBaseActivity.
 	 */
+	@Suppress("DEPRECATION")
 	private fun applyEdgeToEdge() {
 		val window = getWindow()
 
@@ -273,25 +289,8 @@ abstract class BaseActivity :
 		intent: Intent,
 		callback: ActivityResultCallback,
 	) {
-		val requestCode = mRequestIdGenerator.incrementAndGet()
-		mActivityResultCallbacks.put(requestCode, callback)
-		startActivityForResult(intent, requestCode)
-	}
-
-	override fun onActivityResult(
-		requestCode: Int,
-		resultCode: Int,
-		data: Intent?,
-	) {
-		super.onActivityResult(requestCode, resultCode, data)
-
-		val callback = mActivityResultCallbacks.remove(requestCode)
-
-		if (callback == null) {
-			return
-		}
-
-		callback.onActivityResult(resultCode, data)
+		pendingActivityResultCallback = callback
+		activityResultLauncher.launch(intent)
 	}
 
 	private fun setOrientationFromPrefs() {

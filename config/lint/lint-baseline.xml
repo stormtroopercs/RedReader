@@ -1202,17 +1202,6 @@
 
     <issue
         id="UseKtx"
-        message="Use the KTX function `createBitmap` instead?"
-        errorLine1="        image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444)"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/jp/tomorrowkey/android/gifplayer/GifDecoder.kt"
-            line="564"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="UseKtx"
         message="Use the KTX extension function `String.toUri` instead?"
         errorLine1="                        Uri.parse(&quot;file://&quot; + dst.getAbsolutePath())"
         errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
