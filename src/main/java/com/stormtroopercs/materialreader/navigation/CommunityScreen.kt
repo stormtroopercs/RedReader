@@ -38,14 +38,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
-import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -245,28 +242,26 @@ fun CommunityDetailScreen(
 					}
 				},
 				actions = {
+					// The reference feed's top bar carries exactly Search / Sort /
+					// More actions — Change view and Refresh live in the More
+					// actions grid (FINAL-DESIGN Phase 5), and the bottom-right
+					// FAB is the prominent "more" entry point (posts_fab).
 					IconButton(onClick = onNavigateToSubredditSearch) {
 						Icon(Icons.Filled.Search, contentDescription = "Search")
 					}
 					IconButton(onClick = { sortDialogOpen = true }) {
 						Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort")
 					}
-					IconButton(onClick = { changeViewOpen = true }) {
-						Icon(Icons.Filled.ViewAgenda, contentDescription = "Change view")
-					}
-					IconButton(onClick = postVm::refresh) {
-						Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
-					}
-					IconButton(onClick = onNavigateToPostSubmit) {
-						Icon(Icons.Filled.Add, contentDescription = "Submit")
-					}
 					IconButton(onClick = { moreActionsOpen = true }) {
 						Icon(Icons.Filled.MoreVert, contentDescription = "More actions")
 					}
 				},
-			)
+				)
 		},
 		snackbarHost = { SnackbarHost(snackbarHostState) },
+		floatingActionButton = {
+			FeedMoreFab(onClick = { moreActionsOpen = true })
+		},
 	) { paddingValues ->
 		LazyColumn(
 			state = listState,

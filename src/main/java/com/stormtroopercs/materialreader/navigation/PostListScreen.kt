@@ -30,11 +30,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -169,20 +167,15 @@ fun RealPostListScreen(
 					}
 				},
 				actions = {
+					// The reference feed's top bar carries exactly Search / Sort /
+					// More actions — Change view and Refresh live in the More
+					// actions grid (FINAL-DESIGN Phase 5), and submit is the
+					// bottom-right FAB (Phase 5 / posts_fab).
 					IconButton(onClick = onNavigateToSubredditSearch) {
 						Icon(Icons.Filled.Search, contentDescription = "Search")
 					}
 					IconButton(onClick = { sortDialogOpen = true }) {
 						Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort")
-					}
-					IconButton(onClick = { changeViewOpen = true }) {
-						Icon(Icons.Filled.ViewAgenda, contentDescription = "Change view")
-					}
-					IconButton(onClick = viewModel::refresh) {
-						Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
-					}
-					IconButton(onClick = onNavigateToPostSubmit) {
-						Icon(Icons.Filled.Add, contentDescription = "Submit")
 					}
 					// The reference's power-user surface (FINAL-DESIGN
 					// Phase 5): the "More actions" grid, opened from the
@@ -195,98 +188,111 @@ fun RealPostListScreen(
 		},
 		snackbarHost = { SnackbarHost(snackbarHostState) },
 	) { paddingValues ->
-		Column(
+		Box(
 			modifier = Modifier
 				.fillMaxSize()
 				.padding(paddingValues),
 		) {
-			// The reference's feed filter chips: the Active sort chip (opens
-			// the 9-option dialog) + Communities / Instances (their
-			// directories; the single-instance app opens the community
-			// search for both).
-			FeedFilterChips(
-				sortLabel = sortOption.label,
-				onSortTap = { sortDialogOpen = true },
-				onCommunitiesTap = onNavigateToSubredditSearch,
-				onInstancesTap = onNavigateToSubredditSearch,
-			)
+			Column(
+				modifier = Modifier.fillMaxSize(),
+			) {
+				// The reference's feed filter chips: the Active sort chip (opens
+				// the 9-option dialog) + Communities / Instances (their
+				// directories; the single-instance app opens the community
+				// search for both).
+				FeedFilterChips(
+					sortLabel = sortOption.label,
+					onSortTap = { sortDialogOpen = true },
+					onCommunitiesTap = onNavigateToSubredditSearch,
+					onInstancesTap = onNavigateToSubredditSearch,
+				)
 
-			when (val state = uiState) {
-				is PostListUiState.Loading -> {
-					if (state.isInitialLoad) {
-						Box(
-							modifier = Modifier
-								.fillMaxSize()
-								.padding(32.dp),
-							contentAlignment = Alignment.Center,
-						) {
-							CircularProgressIndicator()
+				when (val state = uiState) {
+					is PostListUiState.Loading -> {
+						if (state.isInitialLoad) {
+							Box(
+								modifier = Modifier
+									.fillMaxSize()
+									.padding(32.dp),
+								contentAlignment = Alignment.Center,
+							) {
+								CircularProgressIndicator()
+							}
 						}
 					}
-				}
 
-				is PostListUiState.Success -> {
-					if (state.posts.isEmpty()) {
-						Box(
-							modifier = Modifier
-								.fillMaxSize()
-								.padding(32.dp),
-							contentAlignment = Alignment.Center,
-						) {
-							Text(
-								text = "No posts found",
-								style = MaterialTheme.typography.bodyLarge,
+					is PostListUiState.Success -> {
+						if (state.posts.isEmpty()) {
+							Box(
+								modifier = Modifier
+									.fillMaxSize()
+									.padding(32.dp),
+								contentAlignment = Alignment.Center,
+							) {
+								Text(
+									text = "No posts found",
+									style = MaterialTheme.typography.bodyLarge,
+								)
+							}
+						} else {
+							LazyColumn(
+								modifier = Modifier.fillMaxSize(),
+								content = {
+									items(state.posts, key = { it.id }) { post ->
+										PostCard(
+											post = post,
+											mode = viewMode,
+											modifier = Modifier.animateItem(),
+											onOpenThread = { onNavigateToCommentList(post.id) },
+											onMediaClick = { onOpenMedia(post) },
+											onAuthorClick = onNavigateToUserProfile,
+											onPostAction = ::onPostAction,
+											swipeEnabled = true,
+											onSwipeUpvote = { onPostAction(post, PostAction.UPVOTE) },
+											onSwipeDownvote = { onPostAction(post, PostAction.DOWNVOTE) },
+											onSwipeHide = { onPostAction(post, if (post.hidden) PostAction.UNHIDE else PostAction.HIDE) },
+										)
+									}
+								},
 							)
 						}
-					} else {
-						LazyColumn(
-							modifier = Modifier.fillMaxSize(),
-							content = {
-								items(state.posts, key = { it.id }) { post ->
-									PostCard(
-										post = post,
-										mode = viewMode,
-										modifier = Modifier.animateItem(),
-										onOpenThread = { onNavigateToCommentList(post.id) },
-										onMediaClick = { onOpenMedia(post) },
-										onAuthorClick = onNavigateToUserProfile,
-										onPostAction = ::onPostAction,
-										swipeEnabled = true,
-										onSwipeUpvote = { onPostAction(post, PostAction.UPVOTE) },
-										onSwipeDownvote = { onPostAction(post, PostAction.DOWNVOTE) },
-										onSwipeHide = { onPostAction(post, if (post.hidden) PostAction.UNHIDE else PostAction.HIDE) },
-									)
-								}
-							},
-						)
 					}
-				}
 
-				is PostListUiState.Error -> {
-					Box(
-						modifier = Modifier
-							.fillMaxSize()
-							.padding(16.dp),
-						contentAlignment = Alignment.Center,
-					) {
-						Column(
-							horizontalAlignment = Alignment.CenterHorizontally,
-							verticalArrangement = Arrangement.spacedBy(16.dp),
+					is PostListUiState.Error -> {
+						Box(
+							modifier = Modifier
+								.fillMaxSize()
+								.padding(16.dp),
+							contentAlignment = Alignment.Center,
 						) {
-							RRErrorView(error = state.error)
-							FilledTonalButton(
-								onClick = { viewModel.refresh() },
-								modifier = Modifier.align(Alignment.CenterHorizontally),
+							Column(
+								horizontalAlignment = Alignment.CenterHorizontally,
+								verticalArrangement = Arrangement.spacedBy(16.dp),
 							) {
-								Icon(Icons.Filled.Refresh, contentDescription = null)
-								Spacer(Modifier.width(8.dp))
-								Text("Retry")
+								RRErrorView(error = state.error)
+								FilledTonalButton(
+									onClick = { viewModel.refresh() },
+									modifier = Modifier.align(Alignment.CenterHorizontally),
+								) {
+									Icon(Icons.Filled.Refresh, contentDescription = null)
+									Spacer(Modifier.width(8.dp))
+									Text("Retry")
+								}
 							}
 						}
 					}
 				}
-			}
 		}
+
+		// The reference's feed "more" FAB (posts_fab): bottom-right,
+		// opens the same More actions grid as the top bar's More icon.
+		FeedMoreFab(
+			onClick = { moreActionsOpen = true },
+			modifier = Modifier
+				.align(Alignment.BottomEnd)
+				.padding(16.dp),
+		)
+	}
 	}
 
 	// The reference's 9-option sort dialog (Active = the listing default).

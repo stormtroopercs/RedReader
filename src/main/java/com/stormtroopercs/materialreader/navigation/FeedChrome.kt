@@ -28,8 +28,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -235,4 +237,30 @@ private fun SelectableRow(
 			}
 		},
 	)
+}
+
+/**
+ * The reference's feed "more" FAB (FINAL-DESIGN Phase 5 / the decompiled
+ * `posts_fab`): a bottom-right floating action button carrying a horizontal
+ * three-dot ("more options") glyph — a separate resource id from `submit`,
+ * confirmed by the reference layout. Present on the Posts-tab feed surfaces
+ * (home / community / slides) and absent from Explore, search, threads and
+ * settings. Tapping it opens the same [MoreActionsSheet] grid the top bar's
+ * "More actions" icon opens — a prominent duplicate entry point, not a
+ * distinct action. Wired via [FloatingActionButton] in each feed's Scaffold.
+ */
+@Composable
+fun FeedMoreFab(
+	onClick: () -> Unit,
+	modifier: Modifier = Modifier,
+) {
+	FloatingActionButton(
+		modifier = modifier,
+		onClick = onClick,
+	) {
+		Icon(
+			imageVector = Icons.Filled.MoreHoriz,
+			contentDescription = "More actions",
+		)
+	}
 }

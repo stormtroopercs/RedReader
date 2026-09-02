@@ -51,7 +51,6 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -277,8 +276,6 @@ fun RealSlidesFeedScreen(
 							onBack = onNavigateBack,
 							onSearch = onNavigateToSubredditSearch,
 							onCommunityTap = { onOpenCommunity(subreddit) },
-							onRefresh = { viewModel.refresh() },
-							onSubmit = onNavigateToPostSubmit,
 							onDismiss = { toolbarVisible.value = false },
 						)
 					}
@@ -383,6 +380,15 @@ fun RealSlidesFeedScreen(
 			)
 		}
 
+		// The reference's feed "more" FAB (posts_fab): present on the
+		// slides feed too (shots/40-slides.xml). Bottom-right.
+		FeedMoreFab(
+			onClick = { moreActionsOpen = true },
+			modifier = Modifier
+				.align(Alignment.BottomEnd)
+				.padding(16.dp),
+		)
+
 		SnackbarHost(
 			snackbarHostState,
 			modifier = Modifier.align(Alignment.BottomCenter),
@@ -404,8 +410,6 @@ private fun SlidesToolbar(
 	onBack: () -> Unit,
 	onSearch: () -> Unit,
 	onCommunityTap: () -> Unit,
-	onRefresh: () -> Unit,
-	onSubmit: () -> Unit,
 	onDismiss: () -> Unit,
 ) {
 	Surface(
@@ -434,15 +438,10 @@ private fun SlidesToolbar(
 				Icon(Icons.Filled.Search, contentDescription = "Search")
 			}
 			// The reference's Sort opens the 9-option dialog (Phase 4.5), not a
-			// menu.
+			// menu. Refresh + Change view + Submit live in the More actions
+			// grid (Phase 5) — the toolbar carries only Search / Sort / More.
 			IconButton(onClick = onSortMenuToggle) {
 				Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort")
-			}
-			IconButton(onClick = onRefresh) {
-				Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
-			}
-			IconButton(onClick = onSubmit) {
-				Icon(Icons.Filled.AddComment, contentDescription = "Submit")
 			}
 			// The reference's power-user surface (FINAL-DESIGN Phase 5).
 			IconButton(onClick = onMoreActionsToggle) {
