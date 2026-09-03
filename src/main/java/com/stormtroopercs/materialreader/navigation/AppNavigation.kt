@@ -26,6 +26,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -85,6 +88,10 @@ fun AppNavGraph(navigationState: NavigationState) {
 	val accountName = remember {
 		mutableStateOf(accountManager.defaultAccount.username)
 	}
+	// Part 1: OAuth failures surface in a dialog instead of a silent goBack() —
+	// the old path popped the login screen and dropped the user on the app home
+	// with no trace of why login failed (only a logcat line).
+	val oAuthError = remember { mutableStateOf<String?>(null) }
 
 	// Opens the license in the HtmlView route (the shared "License" handler
 	// the More-actions grid's About dialog uses).
@@ -591,9 +598,14 @@ fun AppNavGraph(navigationState: NavigationState) {
 							)
 						},
 						onOAuthError = { error ->
-							Log.e("AppNavigation", "OAuth failed: $error")
-							navigator.goBack()
-						},
+								// Part 1: show the error on screen (dialog on the home
+								// screen) instead of a silent goBack() — the user must
+								// know why login failed, not just be dropped on the
+								// front page.
+								Log.e("AppNavigation", "OAuth failed: $error")
+								oAuthError.value = error
+								navigator.goBack()
+							},
 					)
 				}
 
@@ -606,6 +618,22 @@ fun AppNavGraph(navigationState: NavigationState) {
 				}
 			},
 		)
+
+		// Part 1: the OAuth error dialog. Shown above whatever route is
+		// current — the login screen has already been popped, and the user must
+		// not be dropped on the home screen without knowing why login failed.
+		oAuthError.value?.let { error ->
+			AlertDialog(
+				onDismissRequest = { oAuthError.value = null },
+				title = { Text("Login failed") },
+				text = { Text(error) },
+				confirmButton = {
+					TextButton(onClick = { oAuthError.value = null }) {
+						Text("OK")
+					}
+				},
+			)
+		}
 	}
 }
 

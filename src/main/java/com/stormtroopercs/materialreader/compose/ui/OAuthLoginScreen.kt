@@ -24,11 +24,18 @@ import android.util.Log
 import android.view.ViewGroup
 import android.webkit.*
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -60,6 +67,12 @@ fun OAuthLoginScreen(
 	val context = LocalContext.current
 	val lifecycleOwner = LocalLifecycleOwner.current
 	var webViewRef by remember { mutableStateOf<WebView?>(null) }
+	// Part 2: the login POST can fail (challenge/captcha, rate limit, bad
+	// credentials) while Reddit is still showing its own page in the WebView.
+	// Instead of killing the sheet immediately (the old silent bounce), hold
+	// the failure message here and surface it as a dismissable banner, so the
+	// user can see why the login was denied and still interact with the page.
+	var rejectedNotice by remember { mutableStateOf<String?>(null) }
 
 	// WebView lifecycle management
 	DisposableEffect(lifecycleOwner) {
@@ -97,11 +110,58 @@ fun OAuthLoginScreen(
 		// fill the screen regardless of content.
 		AndroidView(
 			factory = { ctx ->
-				createOAuthWebView(ctx, onOAuthComplete, onOAuthError).also { webViewRef = it }
+				createOAuthWebView(
+					ctx,
+					onOAuthComplete,
+					onOAuthError,
+				) { message -> rejectedNotice = message }.also { webViewRef = it }
 			},
 			update = {},
 			modifier = Modifier.fillMaxSize(),
 		)
+
+		rejectedNotice?.let { message ->
+			Row(
+				modifier = Modifier
+					.align(Alignment.TopCenter)
+					.fillMaxWidth()
+					.padding(horizontal = 12.dp, vertical = 8.dp),
+				verticalAlignment = Alignment.CenterVertically,
+			) {
+				Surface(
+					color = MaterialTheme.colorScheme.errorContainer,
+					shape = MaterialTheme.shapes.medium,
+					modifier = Modifier.weight(1f),
+				) {
+					Row(
+						modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+						verticalAlignment = Alignment.CenterVertically,
+					) {
+						Text(
+							text = message,
+							style = MaterialTheme.typography.bodyMedium,
+							color = MaterialTheme.colorScheme.onErrorContainer,
+						)
+						TextButton(
+							onClick = { rejectedNotice = null },
+							modifier = Modifier.padding(start = 8.dp),
+						) {
+							Text("Dismiss")
+						}
+					}
+				}
+				IconButton(
+					onClick = { rejectedNotice = null },
+					modifier = Modifier.padding(start = 4.dp),
+				) {
+					Icon(
+						imageVector = Icons.Filled.Close,
+						contentDescription = "Dismiss",
+						tint = MaterialTheme.colorScheme.errorContainer,
+					)
+				}
+			}
+		}
 	}
 }
 
@@ -110,6 +170,7 @@ private fun createOAuthWebView(
 	context: android.content.Context,
 	onOAuthComplete: (String) -> Unit,
 	onOAuthError: (String) -> Unit,
+	onLoginRejected: (String) -> Unit,
 ): WebView {
 	// The default WebView constructor uses WRAP_CONTENT layout params, which the
 	// Compose AndroidView measures to the (near-empty) content height — the page
@@ -175,7 +236,8 @@ private fun createOAuthWebView(
 			resultMsg: Message,
 		): Boolean {
 			Log.i("OAuthLogin", "New window created (ReCAPTCHA?)")
-			val newWebView = createOAuthWebView(context, onOAuthComplete, onOAuthError)
+			val newWebView =
+				createOAuthWebView(context, onOAuthComplete, onOAuthError, onLoginRejected)
 			webViewStack.add(newWebView)
 			// Note: In Compose AndroidView, we can't swap views mid-flight easily.
 			// The popup will load but won't be visible. This is a limitation.
@@ -195,6 +257,19 @@ private fun createOAuthWebView(
 
 	webView.webViewClient = object : WebViewClient() {
 		override fun onPageFinished(view: WebView, url: String?) {
+			// Part 2: the account may have been rate-limited by a previous
+			// attempt (or an attempt from another device). Leaving the login
+			// page resets the attempt count, so surface an actionable hint.
+			view.evaluateJavascript(
+				"""(function() {
+                    var u = location.href;
+                    if (u.indexOf('/login') !== -1 && u.indexOf('/api/v1/authorize') === -1) {
+                        var t = (document.body && document.body.innerText) || '';
+                        if (t.indexOf('limit') !== -1) { window.__rrRateLimited = true; }
+                    }
+                })()""",
+				null,
+			)
 			// Auto-dismiss Reddit cookie consent dialog
 			view.evaluateJavascript(
 				"""(function() {
@@ -247,12 +322,45 @@ private fun createOAuthWebView(
 			request: WebResourceRequest,
 			errorResponse: WebResourceResponse,
 		) {
-			// Shreddit login 401 = invalid credentials
+			// The Shreddit login POST 4xx's for every rejection reason — bad
+			// credentials, a CAPTCHA/anti-bot challenge, rate limiting — so the
+			// status alone can't tell them apart. The old code treated any 4xx
+			// as "invalid credentials" and tore down the WebView (onOAuthError),
+			// bouncing the user to the app home with no explanation and no
+			// chance to see the challenge Reddit was showing. Part 2: keep the
+			// page alive, let it render whatever Reddit wants (inline challenge,
+			// rate-limit notice, or the corrected login form), and surface an
+			// honest, dismissable explanation in the banner above.
 			if (request.url.toString() == "https://www.reddit.com/svc/shreddit/account/login" &&
 				errorResponse.statusCode / 100 == 4
 			) {
 				Log.e("OAuthLogin", "Shreddit login failed: ${errorResponse.statusCode}")
-				onOAuthError("Invalid credentials. Please try again.")
+				val web = view
+				if (web != null && web.url?.contains("reddit.com/login") == true) {
+					web.evaluateJavascript(
+						"""(function() {
+                            try {
+                                var t = (document.body && document.body.innerText) || '';
+                                return (window.__rrRateLimited ||
+                                    t.indexOf('too many') !== -1 ||
+                                    t.indexOf('rate limit') !== -1) ? '1' : '0';
+                            } catch (e) { return '0'; }
+                        })()""",
+					) { value ->
+						val rateLimited = value == "\"1\""
+						val message = if (rateLimited) {
+							"Reddit has temporarily blocked login attempts for this account. " +
+								"Back out of this screen (system Back), wait a few minutes, " +
+								"then try again."
+						} else {
+							"Reddit rejected the login (HTTP ${errorResponse.statusCode}). " +
+								"Check the page behind this banner — it may be showing a CAPTCHA " +
+								"or other verification you need to complete — and then try " +
+								"logging in again."
+						}
+						onLoginRejected(message)
+					}
+				}
 			}
 		}
 	}
