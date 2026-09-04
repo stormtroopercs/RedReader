@@ -49,6 +49,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
+import org.apache.commons.text.StringEscapeUtils
 import java.io.IOException
 import java.util.UUID
 import javax.inject.Inject
@@ -278,15 +279,29 @@ internal fun toSubredditItem(child: JsonValue): SubredditSearchViewModel.Subredd
 		val name = sub.display_name
 			?: sub.url?.let { it.removePrefix("/r/").removeSuffix("/").takeIf { n -> n.isNotBlank() } }
 		if (name.isNullOrBlank()) return null
-		// The icon: `icon_img` when present AND non-blank (Reddit returns
-		// `"icon_img": ""` for some communities, and an empty URL would only
-		// produce a failed fetch / blank circle in the row), then the banner
-		// `header_img` — never a blank/empty string.
+		// The icon, in priority order:
+		//   1. `icon_img`  — legacy thumbs.redditmedia URL, present for some
+		//      communities.
+		//   2. `community_icon` — the MODERN field. For a large share of
+		//      popular communities (BaldursGate3, LivestreamFail, …) the
+		//      listing returns `"icon_img": ""` but a real logo in
+		//      `community_icon` (styles.redditmedia.com). Its query string is
+		//      HTML-entity-escaped (`&amp;`), so it must be unescaped before
+		//      it can be fetched — otherwise the request 404s and the row
+		//      renders a blank circle. Same unescape `RedditUser.iconUrl`
+		//      already applies.
+		//   3. `header_img` — the banner, as a last resort.
+		// Blank/empty values fall through to the next source so we never
+		// hand the row a URL that can only fail to load.
 		val icon = child.getStringAtPath("data", "icon_img")
 			.takeIf { it.isPresent }?.get()
 			?.takeIf { it.isNotBlank() }
+			?: child.getStringAtPath("data", "community_icon")
+				.takeIf { it.isPresent }?.get()
+				?.takeIf { it.isNotBlank() }
+				?.let { StringEscapeUtils.unescapeHtml4(it) }
 			?: sub.header_img
-			?.takeIf { it.isNotBlank() }
+				?.takeIf { it.isNotBlank() }
 		SubredditSearchViewModel.SubredditItem(
 			name = name,
 			subscribers = sub.subscribers,
