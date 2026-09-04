@@ -209,7 +209,7 @@ class CommunityViewModel @Inject constructor(
                             name = result.display_name ?: name,
                             subscribers = result.subscribers,
                             accountsActive = result.accounts_active,
-                            iconUrl = result.header_img?.takeIf { it.isNotBlank() },
+                            iconUrl = result.iconUrl?.value,
                             bannerUrl = result.header_img,
                             description = result.description,
                             createdUtc = result.created_utc.takeIf { it > 0 },
