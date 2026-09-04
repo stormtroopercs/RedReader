@@ -1097,18 +1097,10 @@ private fun getSettingsCategories(
                     get = { PrefsUtility.appearance_twopane() },
                     set = PrefsUtility::pref_appearance_twopane_set
                 ),
-                SettingsItem.EnumSetting(
-                    key = "theme",
-                    label = "Theme",
-                    description = "Colour theme of the app",
-                    entries = AppearanceTheme.entries,
-                    get = { PrefsUtility.appearance_theme() },
-                    set = PrefsUtility::appearance_theme_set
-                ),
                 SettingsItem.PreferenceItem(
                     key = "theme_colours",
                     label = "Theme colours",
-                    description = "Dynamic / manual accent, live preview, vote colours",
+                    description = "Colour source, accent presets, live preview, vote colours",
                     onClick = onOpenThemeColors
                 ),
                 SettingsItem.EnumSetting(

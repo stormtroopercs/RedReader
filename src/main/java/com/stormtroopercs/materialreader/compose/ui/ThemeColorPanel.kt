@@ -36,8 +36,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,6 +65,7 @@ import com.stormtroopercs.materialreader.compose.theme.colorToHex
 import com.stormtroopercs.materialreader.compose.theme.parseColorHex
 import com.stormtroopercs.materialreader.compose.theme.resolveManualAccent
 import com.stormtroopercs.materialreader.compose.theme.resolveThemeColorScheme
+import com.stormtroopercs.materialreader.settings.types.AppearanceTheme
 import com.stormtroopercs.materialreader.settings.types.ThemeColorMode
 import com.stormtroopercs.materialreader.settings.types.ThemeLightness
 
@@ -160,6 +163,14 @@ fun ThemeColorPanel(
 						)
 					}
 				}
+
+				// Preset selector: the curated accent colours (the old
+				// Appearance "Theme" dropdown's colour choices) as tappable
+				// swatches, sitting right beside the custom highlight picker.
+				PresetRow(
+					selectedHex = colorToHex(accent),
+					onPreset = { hex -> prefs.themeColorManual.value = hex },
+				)
 			}
 
 			SectionLabel("Preview")
@@ -223,6 +234,73 @@ private fun previewAccentFor(
 	prefs: ComposePrefs,
 	context: Context,
 ): Color = resolveThemeColorScheme(prefs, ThemeLightness.Light, context).primary
+
+/**
+ * The curated accent presets — the colour choices from the old Appearance
+ * "Theme" dropdown, repurposed as one-tap highlight colours (light themes
+ * only; the dark/light choice is a separate concern). `name` is the legacy
+ * [AppearanceTheme] name, kept for continuity with the reset defaults.
+ */
+private data class AccentPreset(val name: String, val color: Color)
+
+private val accentPresets: List<AccentPreset> =
+	AppearanceTheme.entries
+		.filter { it.lightness == ThemeLightness.Light }
+		.map { AccentPreset(it.name, it.colorPrimary) }
+
+/**
+ * A horizontal strip of tappable colour swatches sitting beside the custom
+ * "Highlight colour" picker. The active preset gets a check mark; a custom
+ * (non-preset) highlight shows no selection, so the picker stays the escape
+ * hatch for exact colours.
+ */
+@Composable
+private fun PresetRow(
+	selectedHex: String,
+	onPreset: (String) -> Unit,
+) {
+	Text(
+		text = "Presets",
+		style = MaterialTheme.typography.bodySmall,
+		color = MaterialTheme.colorScheme.onSurfaceVariant,
+		modifier = Modifier.padding(start = 2.dp),
+	)
+	Row(
+		modifier = Modifier.fillMaxWidth(),
+		horizontalArrangement = Arrangement.spacedBy(12.dp),
+	) {
+		accentPresets.forEach { preset ->
+			val isSelected = preset.color.value.toLong() ==
+				parseColorHex(selectedHex)?.value?.toLong()
+			Box(
+				modifier = Modifier
+					.size(38.dp)
+					.clip(CircleShape)
+					.background(preset.color)
+					.border(
+						width = if (isSelected) 2.dp else 1.dp,
+						color = if (isSelected) preset.color
+								else MaterialTheme.colorScheme.outline,
+						shape = CircleShape,
+					)
+					.clickable { onPreset(colorToHex(preset.color)) },
+				contentAlignment = Alignment.Center,
+			) {
+				if (isSelected) {
+					val bright = 0.299f * preset.color.red +
+						0.587f * preset.color.green +
+						0.114f * preset.color.blue > 0.6f
+					Icon(
+						imageVector = Icons.Filled.Check,
+						contentDescription = preset.name,
+						modifier = Modifier.size(18.dp),
+						tint = if (bright) Color.Black else Color.White,
+					)
+				}
+			}
+		}
+	}
+}
 
 @Composable
 private fun SectionLabel(text: String) {
