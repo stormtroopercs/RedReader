@@ -405,9 +405,19 @@ fun PostCard(
 	}
 }
 
-/** Resolve the media URI for a post's card (post url, else thumbnail). */
-private fun rememberMedia(post: PostItem): String? = post.url?.takeIf { it.isNotBlank() && !it.startsWith("reddit.com") }
-	?: post.thumbnail?.takeIf { it.isNotBlank() && it != "default" }
+/**
+ * Resolve the media URI for a post's card (post url, else thumbnail).
+ * Text posts (self) render **no media at all**: the listing API hands them a
+ * thread permalink as `url` and a 70×70 community icon as `thumbnail`, and
+ * fetching either as an image fails, leaving an empty grey placeholder box
+ * (the old `startsWith("reddit.com")` guard never matched `https://…`
+ * permalinks, so the leak reached the image pipeline).
+ */
+private fun rememberMedia(post: PostItem): String? {
+	if (post.isSelf) return null
+	return post.url?.takeIf { it.isNotBlank() && !it.contains("reddit.com") }
+		?: post.thumbnail?.takeIf { it.isNotBlank() && it != "default" }
+}
 
 /**
  * The card's text column: title → meta (author • time • flair) → body, in

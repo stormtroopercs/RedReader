@@ -700,7 +700,10 @@ private fun SlideMedia(
 	onMediaClick: () -> Unit = {},
 ) {
 	val revealed = remember { mutableStateOf(!(post.isOver18 || post.isSpoiler)) }
-	val mediaUrl = post.url?.takeIf { it.isNotBlank() && !it.startsWith("reddit.com") }
+	// Text posts (self) have no media: `url` is the thread permalink and
+	// `thumbnail` the 70×70 community icon — fetching either as an image
+	// fails. Null routes to the neutral surfaceVariant backdrop below.
+	val mediaUrl = if (post.isSelf) null else post.url?.takeIf { it.isNotBlank() && !it.contains("reddit.com") }
 		?: post.thumbnail
 			?.takeIf { it.isNotBlank() && it != "default" }
 
