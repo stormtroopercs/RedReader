@@ -17,6 +17,7 @@
 
 package com.stormtroopercs.materialreader.compose.ui
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -55,11 +56,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import com.stormtroopercs.materialreader.compose.prefs.ComposePrefs
 import com.stormtroopercs.materialreader.compose.prefs.LocalComposePrefs
 import com.stormtroopercs.materialreader.compose.theme.colorToHex
 import com.stormtroopercs.materialreader.compose.theme.parseColorHex
 import com.stormtroopercs.materialreader.compose.theme.resolveManualAccent
+import com.stormtroopercs.materialreader.compose.theme.resolveThemeColorScheme
 import com.stormtroopercs.materialreader.settings.types.ThemeColorMode
+import com.stormtroopercs.materialreader.settings.types.ThemeLightness
 
 /**
  * The theme-colour settings panel (reference `Theme` page): an
@@ -75,11 +80,17 @@ fun ThemeColorPanel(
 	onBack: () -> Unit,
 ) {
 	val prefs = LocalComposePrefs.current
+	val context = LocalContext.current
 	var showAccentPicker by remember { mutableStateOf(false) }
 	var showUpvotePicker by remember { mutableStateOf(false) }
 	var showDownvotePicker by remember { mutableStateOf(false) }
 
 	val accent = resolveManualAccent(prefs.themeColorManual.value)
+	// The preview must reflect the *effective* accent: in Automatic mode that's
+	// the wallpaper-derived dynamic colour (the same scheme the app actually
+	// renders), not the stored manual pick. Otherwise the preview keeps
+	// showing the manual colour even though the app is in Automatic mode.
+	val previewAccent = previewAccentFor(prefs, context)
 	val upvoteOverride = prefs.themeUpvoteColor.value?.let(::parseColorHex)
 	val downvoteOverride = prefs.themeDownvoteColor.value?.let(::parseColorHex)
 
@@ -152,7 +163,7 @@ fun ThemeColorPanel(
 			}
 
 			SectionLabel("Preview")
-			ThemePreviewGrid(accent = accent)
+			ThemePreviewGrid(accent = previewAccent)
 
 			SectionLabel("Accessibility")
 			VoteColorRow(
@@ -198,6 +209,20 @@ fun ThemeColorPanel(
 		)
 	}
 }
+
+/**
+ * The accent the [ThemePreviewGrid] should display: the primary colour of the
+ * exact [ColorScheme] the app renders for the current colour source — the
+ * wallpaper-derived dynamic colour in Automatic mode (API 31+; the neutral
+ * fallback below), the user's manual accent in Manual mode. Deriving it from
+ * the same [resolveThemeColorScheme] the app uses keeps the preview honest
+ * instead of always echoing the stored manual colour.
+ */
+@Composable
+private fun previewAccentFor(
+	prefs: ComposePrefs,
+	context: Context,
+): Color = resolveThemeColorScheme(prefs, ThemeLightness.Light, context).primary
 
 @Composable
 private fun SectionLabel(text: String) {
