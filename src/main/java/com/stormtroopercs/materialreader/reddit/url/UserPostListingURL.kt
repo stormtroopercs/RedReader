@@ -41,7 +41,7 @@ class UserPostListingURL internal constructor(
     }
 
     enum class Type {
-        SAVED, HIDDEN, UPVOTED, DOWNVOTED, SUBMITTED
+        SAVED, HIDDEN, UPVOTED, DOWNVOTED, SUBMITTED, HISTORY
     }
 
     override fun after(newAfter : RedditIdAndType): UserPostListingURL {
@@ -118,6 +118,7 @@ class UserPostListingURL internal constructor(
             Type.UPVOTED -> name = context.getString(string.mainmenu_upvoted)
             Type.DOWNVOTED -> name = context.getString(string.mainmenu_downvoted)
             Type.SUBMITTED -> name = context.getString(string.mainmenu_submitted)
+            Type.HISTORY -> name = context.getString(string.mainmenu_history)
         }
 
         if (shorter) {

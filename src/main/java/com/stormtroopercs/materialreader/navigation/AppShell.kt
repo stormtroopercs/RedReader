@@ -30,17 +30,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddComment
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
@@ -50,24 +52,45 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.Image
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
+import androidx.compose.runtime.State
+import android.graphics.BitmapFactory
+import androidx.core.graphics.scale
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.stormtroopercs.materialreader.R
+import com.stormtroopercs.materialreader.common.UriString
+import com.stormtroopercs.materialreader.compose.net.FileRequestResult
+import com.stormtroopercs.materialreader.compose.net.NetRequestStatus
+import com.stormtroopercs.materialreader.compose.net.fetchImage
 import com.stormtroopercs.materialreader.compose.prefs.ComposePrefsSingleton
+import com.stormtroopercs.materialreader.common.datastream.parseDataUri
+import com.stormtroopercs.materialreader.settings.types.AppearanceTheme
 import com.stormtroopercs.materialreader.settings.types.NavigationType
+import com.stormtroopercs.materialreader.settings.types.ThemeLightness
+import kotlinx.coroutines.launch
+import kotlin.math.max
+import kotlin.math.roundToInt
 
 /**
  * Set by [AppShell] to a lambda that opens the navigation drawer, or `null`
@@ -160,21 +183,7 @@ fun AppShell(
 	val closeDrawer: () -> Unit = { scope.launch { drawerState.close() } }
 
 	// Drawer navigation actions. Each navigates, then closes the drawer.
-	val onPosts: () -> Unit = {
-		navigationState.switchTopLevel(Main)
-		navigationState.popToRoot()
-		closeDrawer()
-	}
-	val onExplore: () -> Unit = {
-		navigationState.switchTopLevel(Explore)
-		navigationState.popToRoot()
-		closeDrawer()
-	}
-	val onPopular: () -> Unit = {
-		navigator.navigate(PostList("popular"))
-		closeDrawer()
-	}
-	val onMessages: () -> Unit = {
+	val onInbox: () -> Unit = {
 		navigator.navigate(Inbox)
 		closeDrawer()
 	}
@@ -186,13 +195,63 @@ fun AppShell(
 		}
 		closeDrawer()
 	}
-	val onSettings: () -> Unit = {
-		navigator.navigate(Settings)
-		closeDrawer()
+	// The user's own action listings — u/<user>/<type> resolves through
+	// UserPostListingURL (SAVED / HIDDEN / UPVOTED / DOWNVOTED / HISTORY).
+	val onUpvoted: () -> Unit = {
+		if (accountName != null) {
+			navigator.navigate(PostList("u/$accountName/upvoted"))
+			closeDrawer()
+		} else {
+			navigator.navigate(OAuthLogin)
+		}
 	}
-	val onSearch: () -> Unit = {
-		navigator.navigate(SubredditSearch)
-		closeDrawer()
+	val onDownvoted: () -> Unit = {
+		if (accountName != null) {
+			navigator.navigate(PostList("u/$accountName/downvoted"))
+			closeDrawer()
+		} else {
+			navigator.navigate(OAuthLogin)
+		}
+	}
+	val onHidden: () -> Unit = {
+		if (accountName != null) {
+			navigator.navigate(PostList("u/$accountName/hidden"))
+			closeDrawer()
+		} else {
+			navigator.navigate(OAuthLogin)
+		}
+	}
+	val onSaved: () -> Unit = {
+		if (accountName != null) {
+			navigator.navigate(PostList("u/$accountName/saved"))
+			closeDrawer()
+		} else {
+			navigator.navigate(OAuthLogin)
+		}
+	}
+	val onHistory: () -> Unit = {
+		if (accountName != null) {
+			navigator.navigate(PostList("u/$accountName/history"))
+			closeDrawer()
+		} else {
+			navigator.navigate(OAuthLogin)
+		}
+	}
+	// Live preference toggles (no navigation, no drawer close): flip the light
+	// theme to the opposite lightness (keeping the accent colour), and invert
+	// the NSFW behaviour pref — same keys the Settings rows read.
+	val prefs = ComposePrefsSingleton.instance
+	val onLightTheme: () -> Unit = {
+		val current = prefs.appearanceTheme.value
+		val opposite = if (current.lightness == ThemeLightness.Light) {
+			AppearanceTheme.NIGHT
+		} else {
+			AppearanceTheme.RED
+		}
+		prefs.appearanceTheme.value = opposite
+	}
+	val onNsfwToggle: () -> Unit = {
+		prefs.behaviourNsfw.value = !prefs.behaviourNsfw.value
 	}
 
 	val scaffold: @Composable () -> Unit = {
@@ -215,13 +274,15 @@ fun AppShell(
 				drawerContent = {
 					AppDrawer(
 						accountName = accountName,
-						onPosts = onPosts,
-						onExplore = onExplore,
-						onPopular = onPopular,
-						onMessages = onMessages,
+						onInbox = onInbox,
 						onProfile = onProfile,
-						onSettings = onSettings,
-						onSearch = onSearch,
+						onUpvoted = onUpvoted,
+						onDownvoted = onDownvoted,
+						onHidden = onHidden,
+						onSaved = onSaved,
+						onHistory = onHistory,
+						onLightTheme = onLightTheme,
+						onNsfwToggle = onNsfwToggle,
 					)
 				},
 			) {
@@ -300,23 +361,45 @@ private fun AppShellScaffold(
 }
 
 /**
- * The left navigation drawer (FINAL-DESIGN Phase 2.2, DESIGN §3.2): an account
- * header (circular avatar + username + subtitle), a search field, and a list of
- * [MaterialRow] destinations. Opened from the tab screens' hamburger in the
- * `Drawer` and `Both` navigation styles.
+ * The left navigation drawer — the reference app's main menu (its
+ * `fragment_drawer` / `holder_drawer_header` layout): a stacked account header
+ * (circular avatar above the username and karma), then the Account / Post /
+ * Preferences sections of icon rows, the last three with switches. Opened
+ * from the tab screens' hamburger in the `Drawer` and `Both` navigation
+ * styles. Rows without a destination in this app (the reference's
+ * Subscriptions / MultiReddits) are omitted rather than shipped as dead
+ * buttons.
  */
 @Composable
 private fun AppDrawer(
 	accountName: String?,
-	onPosts: () -> Unit,
-	onExplore: () -> Unit,
-	onPopular: () -> Unit,
-	onMessages: () -> Unit,
+	onInbox: () -> Unit,
 	onProfile: () -> Unit,
-	onSettings: () -> Unit,
-	onSearch: () -> Unit,
+	onUpvoted: () -> Unit,
+	onDownvoted: () -> Unit,
+	onHidden: () -> Unit,
+	onSaved: () -> Unit,
+	onHistory: () -> Unit,
+	onLightTheme: () -> Unit,
+	onNsfwToggle: () -> Unit,
 ) {
 	val signedIn = !accountName.isNullOrBlank()
+
+	val accountViewModel = hiltViewModel<DrawerAccountViewModel>()
+	val karma by accountViewModel.karma.collectAsStateWithLifecycle()
+	val iconUrl by accountViewModel.iconUrl.collectAsStateWithLifecycle()
+
+	val prefs = ComposePrefsSingleton.instance
+	// The Switch reads the live pref (ComposePrefsImpl registers a shared-prefs
+	// observer that recomposes on change); the theme row likewise.
+	val nsfwEnabled = prefs.behaviourNsfw.value
+
+	// Kick off the karma/avatar fetch once per username (the ViewModel no-ops
+	// on a repeat).
+	LaunchedEffect(accountName) {
+		accountViewModel.loadUser(accountName)
+	}
+
 	// The drawer panel is transparent by default (ModalNavigationDrawer only
 	// paints the scrim) — a solid page-background fill keeps the content
 	// behind it from bleeding through the rows.
@@ -325,108 +408,260 @@ private fun AppDrawer(
 			.fillMaxSize()
 			.background(MaterialTheme.colorScheme.background),
 	) {
-		// Account header: circular avatar + username + subtitle (DESIGN §3.2).
-		Row(
+		// Stacked account header (the reference's holder_drawer_header):
+		// circular avatar, username beneath, karma beneath that.
+		Column(
 			modifier = Modifier
 				.fillMaxWidth()
-				.padding(horizontal = 16.dp, vertical = 16.dp),
-			verticalAlignment = Alignment.CenterVertically,
+				.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 16.dp),
+			horizontalAlignment = Alignment.Start,
 		) {
-			Box(
-				modifier = Modifier
-					.size(40.dp)
-					.clip(CircleShape)
-					.background(MaterialTheme.colorScheme.primaryContainer),
-				contentAlignment = Alignment.Center,
-			) {
-				Icon(
-					imageVector = Icons.Filled.Person,
-					contentDescription = null,
-					tint = MaterialTheme.colorScheme.onPrimaryContainer,
-				)
-			}
-			Spacer(Modifier.width(16.dp))
-			Column {
+			DrawerAvatar(iconUrl = iconUrl)
+			Spacer(Modifier.height(10.dp))
+			Text(
+				text = accountName?.takeIf { it.isNotBlank() } ?: "Sign in to Reddit",
+				style = MaterialTheme.typography.titleMedium,
+				fontWeight = FontWeight.SemiBold,
+				color = MaterialTheme.colorScheme.onSurface,
+				maxLines = 1,
+			)
+			if (signedIn && karma != null) {
+				Spacer(Modifier.height(2.dp))
 				Text(
-					text = accountName?.takeIf { it.isNotBlank() }?.let { "u/$it" } ?: "Sign in to Reddit",
-					style = MaterialTheme.typography.titleMedium,
-					color = MaterialTheme.colorScheme.onSurface,
-					maxLines = 1,
-				)
-				Text(
-					text = if (signedIn) "Profile and sign out" else "Login required",
-					style = MaterialTheme.typography.bodySmall,
+					text = "Karma: $karma",
+					style = MaterialTheme.typography.bodyMedium,
 					color = MaterialTheme.colorScheme.onSurfaceVariant,
 					maxLines = 1,
 				)
 			}
+			if (!signedIn) {
+				Spacer(Modifier.height(8.dp))
+				TextButton(onClick = onProfile) {
+					Text("Log in to Reddit")
+				}
+			}
 		}
 
-		HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-		// The account row opens the signed-in user's profile (or the login flow
-		// when signed out) — mirrors the reference's header-tap behaviour.
-		MaterialRow(
-			title = if (signedIn) "Profile" else "Sign in",
+		// ACCOUNT section.
+		DrawerSectionHeader("Account")
+		DrawerRow(
+			title = "Profile",
 			icon = Icons.Filled.Person,
-			subtitle = if (signedIn) accountName else "Log in to Reddit",
 			onClick = onProfile,
 		)
+		DrawerRow(
+			title = "Inbox",
+			icon = Icons.Filled.AddComment,
+			onClick = onInbox,
+		)
+		DrawerRow(
+			title = "History",
+			icon = Icons.Filled.History,
+			onClick = onHistory,
+		)
 
-		// Search field (single line, IME action "search" → subreddit search).
-		Row(
-			modifier = Modifier
-				.fillMaxWidth()
-				.padding(horizontal = 16.dp, vertical = 8.dp),
-			verticalAlignment = Alignment.CenterVertically,
-		) {
-			OutlinedTextField(
-				value = "",
-				onValueChange = {},
-				placeholder = { Text("Search") },
-				leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-				modifier = Modifier.fillMaxWidth(),
-				singleLine = true,
-				readOnly = true,
-				keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-				keyboardActions = KeyboardActions(onSearch = { onSearch() }),
-			)
-		}
+		// POST section — the user's own action listings (u/<user>/<type>).
+		DrawerSectionHeader("Post")
+		DrawerRow(
+			title = "Upvoted",
+			icon = Icons.Filled.ArrowUpward,
+			onClick = onUpvoted,
+		)
+		DrawerRow(
+			title = "Downvoted",
+			icon = Icons.Filled.ArrowDownward,
+			onClick = onDownvoted,
+		)
+		DrawerRow(
+			title = "Hidden",
+			icon = Icons.Filled.Lock,
+			onClick = onHidden,
+		)
+		DrawerRow(
+			title = "Saved",
+			icon = Icons.Filled.Bookmark,
+			onClick = onSaved,
+		)
 
-		HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-		MaterialRow(
-			title = "Posts",
-			icon = Icons.Filled.Home,
-			subtitle = "Your home feed",
-			onClick = onPosts,
+		// PREFERENCES section — live switches, no navigation.
+		DrawerSectionHeader("Preferences")
+		DrawerSwitchRow(
+			title = "Light Theme",
+			icon = Icons.Filled.LightMode,
+			checked = prefs.appearanceTheme.value.lightness == ThemeLightness.Light,
+			onCheckedChange = { onLightTheme() },
 		)
-		MaterialRow(
-			title = "Explore",
-			icon = Icons.Filled.Explore,
-			subtitle = "Discover communities",
-			onClick = onExplore,
-		)
-		MaterialRow(
-			title = "Popular",
-			icon = Icons.Filled.Public,
-			subtitle = "Popular across Reddit",
-			onClick = onPopular,
-		)
-		MaterialRow(
-			title = "Messages",
-			icon = Icons.Filled.Message,
-			subtitle = "Inbox",
-			onClick = onMessages,
-		)
-		MaterialRow(
-			title = "Settings",
-			icon = Icons.Filled.Settings,
-			subtitle = "Preferences and appearance",
-			onClick = onSettings,
+		DrawerSwitchRow(
+			title = "Disable NSFW",
+			icon = Icons.Filled.VisibilityOff,
+			checked = !nsfwEnabled,
+			onCheckedChange = { onNsfwToggle() },
 		)
 
 		Spacer(Modifier.weight(1f))
+	}
+}
+
+/** A section header in the drawer: a caption + hairline divider. */
+@Composable
+private fun DrawerSectionHeader(text: String) {
+	Column(modifier = Modifier.fillMaxWidth()) {
+		Text(
+			text = text,
+			modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 4.dp),
+			style = MaterialTheme.typography.labelLarge,
+			fontWeight = FontWeight.SemiBold,
+			color = MaterialTheme.colorScheme.onSurfaceVariant,
+		)
+		HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp))
+	}
+}
+
+/** A drawer list row: 24dp icon + label, ripple on the whole row. */
+@Composable
+private fun DrawerRow(
+	title: String,
+	icon: androidx.compose.ui.graphics.vector.ImageVector,
+	onClick: () -> Unit,
+) {
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(onClick = onClick)
+			.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 10.dp),
+		verticalAlignment = Alignment.CenterVertically,
+	) {
+		Icon(
+			imageVector = icon,
+			contentDescription = null,
+			modifier = Modifier.size(24.dp),
+			tint = MaterialTheme.colorScheme.onSurfaceVariant,
+		)
+		Spacer(Modifier.width(20.dp))
+		Text(
+			text = title,
+			style = MaterialTheme.typography.bodyLarge,
+			color = MaterialTheme.colorScheme.onSurface,
+			maxLines = 1,
+		)
+	}
+}
+
+/** A drawer list row with a trailing switch (the Preferences section). */
+@Composable
+private fun DrawerSwitchRow(
+	title: String,
+	icon: androidx.compose.ui.graphics.vector.ImageVector,
+	checked: Boolean,
+	onCheckedChange: (Boolean) -> Unit,
+) {
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.padding(start = 20.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+		verticalAlignment = Alignment.CenterVertically,
+	) {
+		Icon(
+			imageVector = icon,
+			contentDescription = null,
+			modifier = Modifier.size(24.dp),
+			tint = MaterialTheme.colorScheme.onSurfaceVariant,
+		)
+		Spacer(Modifier.width(20.dp))
+		Text(
+			text = title,
+			modifier = Modifier.weight(1f),
+			style = MaterialTheme.typography.bodyLarge,
+			color = MaterialTheme.colorScheme.onSurface,
+			maxLines = 1,
+		)
+		Switch(
+			checked = checked,
+			onCheckedChange = onCheckedChange,
+		)
+	}
+}
+
+/**
+ * The drawer header's circular account avatar: the modern `icon` field (a
+ * base64 data URI, decoded in memory) or the legacy `icon_img` URL through
+ * the fetch pipeline — the same two-source logic as the profile screen —
+ * with a default-Snoo fallback while loading or when there is no picture.
+ */
+@Composable
+private fun DrawerAvatar(iconUrl: String?) {
+	val parsed = remember(iconUrl) {
+		iconUrl?.takeIf { it.isNotEmpty() }?.let { parseDataUri(it) }
+	}
+	val dataUriBitmap: ImageBitmap? = parsed?.let { decodeDrawerAvatarImage(it.bytes) }
+
+	val imageState: State<NetRequestStatus<FileRequestResult<ImageBitmap>>>? =
+		if (dataUriBitmap == null && !iconUrl.isNullOrEmpty()) {
+			fetchImage(UriString(iconUrl), scaleToMaxAxis = 128)
+		} else null
+
+	val st = imageState?.value
+	Box(
+		modifier = Modifier
+			.size(72.dp)
+			.clip(CircleShape)
+			.background(
+				Brush.linearGradient(
+					listOf(
+						MaterialTheme.colorScheme.secondaryContainer,
+						MaterialTheme.colorScheme.primaryContainer,
+					),
+				),
+			),
+		contentAlignment = Alignment.Center,
+	) {
+		when {
+			dataUriBitmap != null -> {
+				Image(
+					bitmap = dataUriBitmap,
+					contentDescription = "Account avatar",
+					modifier = Modifier
+						.size(72.dp)
+						.clip(CircleShape),
+				)
+			}
+			st is NetRequestStatus.Success -> {
+				Image(
+					bitmap = st.result.data,
+					contentDescription = "Account avatar",
+					modifier = Modifier
+						.size(72.dp)
+						.clip(CircleShape),
+				)
+			}
+			else -> {
+				Icon(
+					painter = painterResource(R.drawable.ic_community_default_snoo),
+					contentDescription = "Account avatar",
+					modifier = Modifier.size(44.dp),
+					tint = MaterialTheme.colorScheme.onSurfaceVariant,
+				)
+			}
+		}
+	}
+}
+
+/** Decodes a data-URI avatar payload, downscaled to a 72dp header size. */
+private fun decodeDrawerAvatarImage(bytes: ByteArray, maxAxis: Int = 160): ImageBitmap? {
+	return try {
+		val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return null
+		val result = if (max(decoded.width, decoded.height) <= maxAxis) {
+			decoded
+		} else {
+			val scale = maxAxis / max(decoded.width, decoded.height).toFloat()
+			decoded.scale(
+				(decoded.width * scale).roundToInt(),
+				(decoded.height * scale).roundToInt(),
+			)
+		}
+		result.asImageBitmap()
+	} catch (e: Exception) {
+		null
 	}
 }
 

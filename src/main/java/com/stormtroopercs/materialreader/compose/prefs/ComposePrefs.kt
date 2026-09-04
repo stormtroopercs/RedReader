@@ -53,6 +53,9 @@ interface ComposePrefs {
 	/** Primary navigation style: bottom bar, drawer, or both. */
 	val navigationType: Preference<NavigationType>
 
+	/** Show NSFW content (the `nsfw` behaviour pref, same key the Settings row uses). */
+	val behaviourNsfw: Preference<Boolean>
+
 	val appearanceFontScaleGlobal: Float
 	val appearanceFontScaleBodyText: Float
 	val appearanceFontScalePosts: Float
@@ -298,6 +301,13 @@ private class ComposePrefsImpl(private val context: Context) : ComposePrefs {
 		"navigation_type",
 		NavigationType.BOTTOM,
 		NavigationType.settingSerializer,
+	)
+
+	// Same key + default as PrefsUtility.pref_behaviour_nsfw(), so the drawer
+	// switch and the Settings row read/write one pref.
+	override val behaviourNsfw: Preference<Boolean> = BoolPref(
+		R.string.pref_behaviour_nsfw_key,
+		false,
 	)
 
 	override val themeColorManual: Preference<String> = StringPref(
