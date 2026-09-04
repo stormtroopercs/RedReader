@@ -433,7 +433,7 @@ private fun CommunityHeader(
 			.padding(horizontal = 16.dp, vertical = 12.dp),
 	) {
 		Row(verticalAlignment = Alignment.CenterVertically) {
-			if (iconUrl != null) {
+			if (iconUrl != null && iconUrl.isNotBlank()) {
 				Box(
 					modifier = Modifier
 						.size(56.dp)
@@ -448,7 +448,11 @@ private fun CommunityHeader(
 							contentScale = ContentScale.Crop,
 							modifier = Modifier.fillMaxSize().clip(CircleShape),
 						)
-						else -> Unit
+						else -> {
+							// A present-but-failing icon URL must not leave a
+							// blank circle — show the letter placeholder.
+							CommunityHeaderLetterFallback(name)
+						}
 					}
 				}
 				Spacer(Modifier.width(16.dp))
@@ -676,18 +680,22 @@ private fun CommunityModsTab(
 								.background(MaterialTheme.colorScheme.surfaceVariant),
 							contentAlignment = Alignment.Center,
 						) {
-							if (mod.iconUrl != null) {
-								val data by fetchImage(UriString(mod.iconUrl), scaleToMaxAxis = 96)
-								when (val it = data) {
-									is NetRequestStatus.Success -> Image(
-										bitmap = it.result.data,
-										contentDescription = null,
-										contentScale = ContentScale.Crop,
-										modifier = Modifier.fillMaxSize().clip(CircleShape),
-									)
-									else -> Unit
-								}
-							} else {
+							if (mod.iconUrl != null && mod.iconUrl.isNotBlank()) {
+									val data by fetchImage(UriString(mod.iconUrl), scaleToMaxAxis = 96)
+									when (val it = data) {
+										is NetRequestStatus.Success -> Image(
+											bitmap = it.result.data,
+											contentDescription = null,
+											contentScale = ContentScale.Crop,
+											modifier = Modifier.fillMaxSize().clip(CircleShape),
+										)
+										else -> Icon(
+											imageVector = Icons.Filled.Person,
+											contentDescription = null,
+											modifier = Modifier.size(20.dp),
+										)
+									}
+								} else {
 								Icon(
 									imageVector = Icons.Filled.Person,
 									contentDescription = null,
@@ -722,5 +730,28 @@ private fun CenteredState(content: @Composable () -> Unit) {
 		contentAlignment = Alignment.Center,
 	) {
 		content()
+	}
+}
+
+/**
+ * The community header's letter placeholder (shown when the icon URL is
+ * present but the fetch hasn't produced a bitmap yet / failed): a filled
+ * circle with the community's first letter, same styling as the no-icon
+ * branch so a failing icon never reads as a blank hole.
+ */
+@Composable
+private fun CommunityHeaderLetterFallback(name: String?) {
+	Box(
+		modifier = Modifier
+			.fillMaxSize()
+			.background(MaterialTheme.colorScheme.primaryContainer),
+		contentAlignment = Alignment.Center,
+	) {
+		Text(
+			text = name?.firstOrNull()?.uppercase() ?: "?",
+			color = MaterialTheme.colorScheme.onPrimaryContainer,
+			fontWeight = FontWeight.Bold,
+			style = MaterialTheme.typography.headlineMedium,
+		)
 	}
 }

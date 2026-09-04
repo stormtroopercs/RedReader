@@ -196,6 +196,12 @@ fun ExploreScreen(
  * One directory row (FINAL-DESIGN 6.2): a 32dp circular community icon (the
  * letter fallback when there is none), the name, and the compact `Nk subs`
  * meta line. The whole row ripples and opens the community detail.
+ *
+ * The letter fallback is the fallback for **any** state where no image is
+ * on screen — a null/blank icon URL *and* a URL that fails to load (Reddit
+ * returns `"icon_img": ""` or a throttled/403 icon URL for some communities;
+ * rendering nothing for those left a bare blank circle, which read as a
+ * missing icon rather than a placeholder).
  */
 @Composable
 private fun CommunityDirectoryRow(
@@ -217,7 +223,7 @@ private fun CommunityDirectoryRow(
 				.clip(CircleShape),
 			contentAlignment = Alignment.Center,
 		) {
-			if (iconUrl != null) {
+			if (iconUrl != null && iconUrl.isNotBlank()) {
 				val data by fetchImage(UriString(iconUrl), scaleToMaxAxis = 96)
 				when (val it = data) {
 					is NetRequestStatus.Success -> Image(
@@ -226,22 +232,10 @@ private fun CommunityDirectoryRow(
 						contentScale = ContentScale.Crop,
 						modifier = Modifier.fillMaxSize().clip(CircleShape),
 					)
-					else -> Unit
+					else -> CommunityLetterFallback(name)
 				}
 			} else {
-				Box(
-					modifier = Modifier
-						.fillMaxSize()
-						.background(MaterialTheme.colorScheme.primaryContainer),
-					contentAlignment = Alignment.Center,
-				) {
-					Text(
-						text = name.firstOrNull()?.uppercase() ?: "?",
-						color = MaterialTheme.colorScheme.onPrimaryContainer,
-						fontWeight = FontWeight.Bold,
-						style = MaterialTheme.typography.bodyMedium,
-					)
-				}
+				CommunityLetterFallback(name)
 			}
 		}
 		Spacer(Modifier.width(16.dp))
@@ -259,6 +253,24 @@ private fun CommunityDirectoryRow(
 				)
 			}
 		}
+	}
+}
+
+/** The row's letter placeholder: a filled circle with the name's initial. */
+@Composable
+private fun CommunityLetterFallback(name: String) {
+	Box(
+		modifier = Modifier
+			.fillMaxSize()
+			.background(MaterialTheme.colorScheme.primaryContainer),
+		contentAlignment = Alignment.Center,
+	) {
+		Text(
+			text = name.firstOrNull()?.uppercase() ?: "?",
+			color = MaterialTheme.colorScheme.onPrimaryContainer,
+			fontWeight = FontWeight.Bold,
+			style = MaterialTheme.typography.bodyMedium,
+		)
 	}
 }
 

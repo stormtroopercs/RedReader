@@ -278,8 +278,15 @@ internal fun toSubredditItem(child: JsonValue): SubredditSearchViewModel.Subredd
 		val name = sub.display_name
 			?: sub.url?.let { it.removePrefix("/r/").removeSuffix("/").takeIf { n -> n.isNotBlank() } }
 		if (name.isNullOrBlank()) return null
-		val iconOpt = child.getStringAtPath("data", "icon_img")
-		val icon = iconOpt.takeIf { it.isPresent }?.get() ?: sub.header_img
+		// The icon: `icon_img` when present AND non-blank (Reddit returns
+		// `"icon_img": ""` for some communities, and an empty URL would only
+		// produce a failed fetch / blank circle in the row), then the banner
+		// `header_img` — never a blank/empty string.
+		val icon = child.getStringAtPath("data", "icon_img")
+			.takeIf { it.isPresent }?.get()
+			?.takeIf { it.isNotBlank() }
+			?: sub.header_img
+			?.takeIf { it.isNotBlank() }
 		SubredditSearchViewModel.SubredditItem(
 			name = name,
 			subscribers = sub.subscribers,
