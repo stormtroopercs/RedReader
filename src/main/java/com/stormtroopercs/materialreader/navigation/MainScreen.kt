@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -73,6 +74,20 @@ fun MainScreen(
                 scrollBehavior = scrollBehavior,
                 title = {
                     Text(text = "MaterialReader")
+                },
+                navigationIcon = {
+                    // Drawer-enabled navigation styles (Drawer / Both) show a
+                    // hamburger that opens the left navigation drawer; the
+                    // default Bottom style omits it.
+                    val openDrawer = LocalOpenDrawer.current
+                    if (openDrawer != null) {
+                        IconButton(onClick = openDrawer) {
+                            Icon(
+                                imageVector = Icons.Filled.Menu,
+                                contentDescription = "Open navigation menu"
+                            )
+                        }
+                    }
                 },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {

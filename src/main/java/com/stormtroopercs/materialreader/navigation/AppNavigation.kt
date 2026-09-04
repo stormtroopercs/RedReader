@@ -135,6 +135,7 @@ fun AppNavGraph(navigationState: NavigationState) {
 
 	AppShell(
 		navigationState = navigationState,
+		accountName = accountName.value,
 	) {
 		NavDisplay(
 			backStack = navigationState.activeBackStack,

@@ -92,6 +92,11 @@ fun ExploreScreen(
 	}
 
 	Column(modifier = Modifier.fillMaxSize()) {
+		// Drawer-enabled navigation styles (Drawer / Both) put a hamburger bar
+		// above the search field; the default Bottom style skips it.
+		if (LocalOpenDrawer.current != null) {
+			DrawerHamburgerBar(title = "Explore")
+		}
 		// The search field (the reference's Explore header). Tapping the
 		// magnifier or pressing the IME action opens the subreddit search.
 		Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
