@@ -433,13 +433,13 @@ private fun CommunityHeader(
 			.padding(horizontal = 16.dp, vertical = 12.dp),
 	) {
 		Row(verticalAlignment = Alignment.CenterVertically) {
-			if (iconUrl != null && iconUrl.isNotBlank()) {
-				Box(
-					modifier = Modifier
-						.size(56.dp)
-						.clip(CircleShape),
-					contentAlignment = Alignment.Center,
-				) {
+			Box(
+				modifier = Modifier
+					.size(56.dp)
+					.clip(CircleShape),
+				contentAlignment = Alignment.Center,
+			) {
+				if (iconUrl != null && iconUrl.isNotBlank()) {
 					val data by fetchImage(UriString(iconUrl), scaleToMaxAxis = 160)
 					when (val it = data) {
 						is NetRequestStatus.Success -> Image(
@@ -448,32 +448,13 @@ private fun CommunityHeader(
 							contentScale = ContentScale.Crop,
 							modifier = Modifier.fillMaxSize().clip(CircleShape),
 						)
-						else -> {
-							// A present-but-failing icon URL must not leave a
-							// blank circle — show the letter placeholder.
-							CommunityHeaderLetterFallback(name)
-						}
+						else -> CommunityDefaultAvatar()
 					}
+				} else {
+					CommunityDefaultAvatar()
 				}
-				Spacer(Modifier.width(16.dp))
-			} else {
-				// No icon: a colored circle with the community's first letter.
-				Box(
-					modifier = Modifier
-						.size(56.dp)
-						.clip(CircleShape)
-						.background(MaterialTheme.colorScheme.primaryContainer),
-					contentAlignment = Alignment.Center,
-				) {
-					Text(
-						text = name?.firstOrNull()?.uppercase() ?: "?",
-						color = MaterialTheme.colorScheme.onPrimaryContainer,
-						fontWeight = FontWeight.Bold,
-						style = MaterialTheme.typography.headlineMedium,
-					)
-				}
-				Spacer(Modifier.width(16.dp))
 			}
+			Spacer(Modifier.width(16.dp))
 			Column {
 				Text(
 					text = name ?: "Community",
@@ -730,28 +711,5 @@ private fun CenteredState(content: @Composable () -> Unit) {
 		contentAlignment = Alignment.Center,
 	) {
 		content()
-	}
-}
-
-/**
- * The community header's letter placeholder (shown when the icon URL is
- * present but the fetch hasn't produced a bitmap yet / failed): a filled
- * circle with the community's first letter, same styling as the no-icon
- * branch so a failing icon never reads as a blank hole.
- */
-@Composable
-private fun CommunityHeaderLetterFallback(name: String?) {
-	Box(
-		modifier = Modifier
-			.fillMaxSize()
-			.background(MaterialTheme.colorScheme.primaryContainer),
-		contentAlignment = Alignment.Center,
-	) {
-		Text(
-			text = name?.firstOrNull()?.uppercase() ?: "?",
-			color = MaterialTheme.colorScheme.onPrimaryContainer,
-			fontWeight = FontWeight.Bold,
-			style = MaterialTheme.typography.headlineMedium,
-		)
 	}
 }

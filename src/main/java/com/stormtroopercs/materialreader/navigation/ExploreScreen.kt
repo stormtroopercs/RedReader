@@ -232,13 +232,13 @@ private fun CommunityDirectoryRow(
 						contentScale = ContentScale.Crop,
 						modifier = Modifier.fillMaxSize().clip(CircleShape),
 					)
-					else -> CommunityLetterFallback(name)
+					else -> CommunityDefaultAvatar()
 				}
 			} else {
-				CommunityLetterFallback(name)
+				CommunityDefaultAvatar()
 			}
-		}
-		Spacer(Modifier.width(16.dp))
+			}
+			Spacer(Modifier.width(16.dp))
 		Column {
 			Text(
 				text = "r/$name",
@@ -253,24 +253,6 @@ private fun CommunityDirectoryRow(
 				)
 			}
 		}
-	}
-}
-
-/** The row's letter placeholder: a filled circle with the name's initial. */
-@Composable
-private fun CommunityLetterFallback(name: String) {
-	Box(
-		modifier = Modifier
-			.fillMaxSize()
-			.background(MaterialTheme.colorScheme.primaryContainer),
-		contentAlignment = Alignment.Center,
-	) {
-		Text(
-			text = name.firstOrNull()?.uppercase() ?: "?",
-			color = MaterialTheme.colorScheme.onPrimaryContainer,
-			fontWeight = FontWeight.Bold,
-			style = MaterialTheme.typography.bodyMedium,
-		)
 	}
 }
 
