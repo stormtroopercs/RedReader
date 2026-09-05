@@ -37,6 +37,7 @@ fun RRComposeContextTest(content: @Composable () -> Unit) {
 		override val themeUpvoteColor: Preference<String?> = testPref(null)
 		override val themeDownvoteColor: Preference<String?> = testPref(null)
 		override val navigationType: Preference<NavigationType> = testPref(NavigationType.BOTTOM)
+	override val behaviourNsfw: Preference<Boolean> = testPref(false)
 		override val appearanceFontScaleGlobal = 1f
 		override val appearanceFontScaleBodyText = 1f
 		override val appearanceFontScalePosts = 1f
