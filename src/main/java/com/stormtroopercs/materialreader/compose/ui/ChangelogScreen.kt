@@ -89,7 +89,7 @@ private fun ChangelogVersionCard(version: ChangelogVersion) {
             Text(
                 text = version.versionName,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(8.dp))

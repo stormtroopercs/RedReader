@@ -336,7 +336,7 @@ private fun UserHeader(
 				Text(
 					text = "More info",
 					style = MaterialTheme.typography.bodySmall,
-					color = MaterialTheme.colorScheme.primary,
+					color = MaterialTheme.colorScheme.onSurfaceVariant,
 					modifier = Modifier.clickable { onMoreInfo(user) },
 				)
 			}
@@ -478,7 +478,7 @@ private fun KarmaCard(label: String, value: Int) {
 			text = value.toString(),
 			style = MaterialTheme.typography.headlineMedium,
 			fontWeight = FontWeight.Bold,
-			color = MaterialTheme.colorScheme.primary,
+			color = MaterialTheme.colorScheme.onSurface,
 		)
 		Text(
 			text = label,
@@ -521,7 +521,7 @@ private fun AccountBadges(uiState: UserProfileViewModel.UserProfileUiState.Ready
 					BadgeChip(
 						icon = Icons.Default.VerifiedUser,
 						label = "Mod",
-						color = MaterialTheme.colorScheme.primary,
+						color = MaterialTheme.colorScheme.onSurfaceVariant,
 					)
 				}
 				if (uiState.isEmployee) {
@@ -542,7 +542,7 @@ private fun AccountBadges(uiState: UserProfileViewModel.UserProfileUiState.Ready
 					BadgeChip(
 						icon = Icons.Default.Star,
 						label = "Friend",
-						color = MaterialTheme.colorScheme.primary,
+						color = MaterialTheme.colorScheme.onSurfaceVariant,
 					)
 				}
 				if (uiState.isSelf) {
@@ -829,7 +829,7 @@ private fun AccountDetails(uiState: UserProfileViewModel.UserProfileUiState.Read
 			DetailRow(
 				label = "Moderator",
 				value = if (uiState.isMod) "Yes" else "No",
-				valueColor = if (uiState.isMod) MaterialTheme.colorScheme.primary else null,
+				valueColor = if (uiState.isMod) MaterialTheme.colorScheme.onSurface else null,
 			)
 		}
 	}

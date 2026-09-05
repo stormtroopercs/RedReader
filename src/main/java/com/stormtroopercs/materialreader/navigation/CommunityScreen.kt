@@ -551,7 +551,7 @@ private fun CommunityAboutTab(content: CommunityViewModel.TabContent) {
 						Text(
 							text = fact.label,
 							style = MaterialTheme.typography.labelMedium,
-							color = MaterialTheme.colorScheme.primary,
+							color = MaterialTheme.colorScheme.onSurface,
 							fontWeight = FontWeight.SemiBold,
 						)
 						Spacer(Modifier.height(4.dp))

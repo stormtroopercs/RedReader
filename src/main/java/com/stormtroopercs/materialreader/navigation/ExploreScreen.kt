@@ -175,7 +175,7 @@ fun ExploreScreen(
 							text = "Feeds",
 							style = MaterialTheme.typography.titleSmall,
 							fontWeight = FontWeight.Bold,
-							color = MaterialTheme.colorScheme.primary,
+							color = MaterialTheme.colorScheme.onSurface,
 						)
 					}
 				}

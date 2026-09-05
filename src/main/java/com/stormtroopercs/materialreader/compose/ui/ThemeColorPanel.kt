@@ -308,7 +308,7 @@ private fun SectionLabel(text: String) {
 		text = text,
 		style = MaterialTheme.typography.titleSmall,
 		fontWeight = FontWeight.Bold,
-		color = MaterialTheme.colorScheme.primary,
+		color = MaterialTheme.colorScheme.onSurface,
 		modifier = Modifier.padding(top = 4.dp),
 	)
 }
@@ -347,7 +347,7 @@ private fun VoteColorRow(
 			Text(
 				text = "Reset",
 				style = MaterialTheme.typography.labelMedium,
-				color = MaterialTheme.colorScheme.primary,
+				color = MaterialTheme.colorScheme.onSurface,
 			)
 		}
 	}

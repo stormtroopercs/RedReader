@@ -239,7 +239,7 @@ fun AccountListScreen(
 					}) {
 						Text(
 							stringResource(R.string.having_trouble_logging_in),
-							color = MaterialTheme.colorScheme.primary,
+							color = MaterialTheme.colorScheme.onSurfaceVariant,
 						)
 					}
 				}

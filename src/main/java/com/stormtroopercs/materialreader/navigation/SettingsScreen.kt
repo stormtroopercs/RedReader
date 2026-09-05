@@ -574,7 +574,7 @@ private fun SettingsCategoryHeader(title: String) {
         text = title,
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.Bold,
-        color = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -691,7 +691,7 @@ private fun EnumSettingItem(item: SettingsItem.EnumSetting<*>) {
         Text(
             text = displaySettingValue(selected.name),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(Modifier.width(8.dp))
@@ -758,7 +758,7 @@ private fun ChoiceSettingItem(item: SettingsItem.ChoiceSetting) {
         Text(
             text = selectedLabel ?: "",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(Modifier.width(8.dp))
@@ -826,7 +826,7 @@ private fun MultiSelectSettingItem(item: SettingsItem.MultiSelectSetting) {
         Text(
             text = if (selected.isEmpty()) "None" else "${selected.size} selected",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(Modifier.width(8.dp))
@@ -2775,7 +2775,7 @@ private fun AppbarScreen(modifier: Modifier, onBack: () -> Unit) {
                 text = "Action bar items",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)

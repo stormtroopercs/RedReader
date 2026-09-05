@@ -439,7 +439,7 @@ private fun CommentRow(
                     Text(
                         text = flair,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Spacer(Modifier.width(6.dp))
@@ -642,7 +642,7 @@ private fun ViewMoreRow(
             Text(
                 text = "View more ($count)",
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium
             )
         }

@@ -20,10 +20,10 @@ package com.stormtroopercs.materialreader.compose.theme
 import android.content.Context
 import android.os.Build
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.lightColorScheme as m3LightColorScheme
+import androidx.compose.material3.darkColorScheme as m3DarkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import com.stormtroopercs.materialreader.compose.prefs.ComposePrefs
@@ -102,11 +102,50 @@ fun resolveThemeColorScheme(
 		} else {
 			resolveManualAccent(prefs.themeColorManual.value)
 		}
-		if (light) {
-			lightColorScheme(primary = accent, secondary = accent)
-		} else {
-			darkColorScheme(primary = accent, secondary = accent)
-		}
+		// A full accent-driven scheme — NOT `lightColorScheme(primary=accent)`,
+		// which only overrides two slots and leaves the *container* colours and
+		// surfaceTint at the Material 3 baseline purple. Those are the chip /
+		// item backgrounds and the ripple, so the accent must own them too.
+		// Text slots stay neutral (near-black / near-white) so no text ever
+		// takes on the accent.
+		buildAccentScheme(accent, light)
+	}
+}
+
+/**
+ * Build a full [ColorScheme] from a single accent colour: the accent drives
+ * primary / secondary / tertiary and their containers plus the surface tint
+ * (so button fills, chips, ripples and press states follow the chosen colour),
+ * while surface, on-surface and outline stay neutral grays. Text is therefore
+ * always near-black on a light background and near-white on a dark one,
+ * regardless of the accent.
+ */
+private fun buildAccentScheme(accent: Color, light: Boolean): ColorScheme {
+	val accentContainer = if (light) accent.copy(alpha = 0.12f) else accent.copy(alpha = 0.24f)
+	return if (light) {
+		m3LightColorScheme().copy(
+			primary = accent,
+			onPrimary = Color.White,
+			primaryContainer = accentContainer,
+			onPrimaryContainer = Color(0xFF1C1B1F),
+			secondary = accent,
+			secondaryContainer = accentContainer,
+			tertiary = accent,
+			tertiaryContainer = accentContainer,
+			surfaceTint = accent,
+		)
+	} else {
+		m3DarkColorScheme().copy(
+			primary = accent,
+			onPrimary = Color.White,
+			primaryContainer = accentContainer,
+			onPrimaryContainer = Color(0xFFECE6F0),
+			secondary = accent,
+			secondaryContainer = accentContainer,
+			tertiary = accent,
+			tertiaryContainer = accentContainer,
+			surfaceTint = accent,
+		)
 	}
 }
 

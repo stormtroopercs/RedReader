@@ -262,7 +262,7 @@ private fun InboxMessageCard(
 						Text(
 							text = "New",
 							style = MaterialTheme.typography.labelSmall,
-							color = MaterialTheme.colorScheme.primary,
+							color = MaterialTheme.colorScheme.onSurface,
 							fontWeight = FontWeight.Bold,
 						)
 					}
