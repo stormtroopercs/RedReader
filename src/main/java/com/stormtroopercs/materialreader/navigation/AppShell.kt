@@ -49,6 +49,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -273,6 +274,7 @@ fun AppShell(
 				drawerState = drawerState,
 				drawerContent = {
 					AppDrawer(
+						drawerState = drawerState,
 						accountName = accountName,
 						onInbox = onInbox,
 						onProfile = onProfile,
@@ -372,6 +374,7 @@ private fun AppShellScaffold(
  */
 @Composable
 private fun AppDrawer(
+	drawerState: DrawerState,
 	accountName: String?,
 	onInbox: () -> Unit,
 	onProfile: () -> Unit,
@@ -400,13 +403,13 @@ private fun AppDrawer(
 		accountViewModel.loadUser(accountName)
 	}
 
-	// The drawer panel is transparent by default (ModalNavigationDrawer only
-	// paints the scrim) — a solid page-background fill keeps the content
-	// behind it from bleeding through the rows.
-	Column(
-		modifier = Modifier
-			.fillMaxSize()
-			.background(MaterialTheme.colorScheme.background),
+	// The panel is the documented [ModalDrawerSheet] — the official
+	// ModalNavigationDrawer sample wraps its content in it: it supplies the
+	// modal drawer's shape, tonal elevation, container colour
+	// (surfaceContainerLow) and window insets, and is opaque by default so the
+	// content behind the drawer can't bleed through the rows.
+	ModalDrawerSheet(
+		drawerState = drawerState,
 	) {
 		// Stacked account header (the reference's holder_drawer_header):
 		// circular avatar, username beneath, karma beneath that.
