@@ -19,6 +19,7 @@ package com.stormtroopercs.materialreader.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +38,7 @@ import androidx.compose.material.icons.filled.AddComment
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
@@ -63,14 +65,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.Image
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -418,6 +423,14 @@ private fun AppDrawer(
 		accountViewModel.loadUser(accountName)
 	}
 
+	// Per-section collapse: each section starts expanded; tapping its header
+	// toggles it. (remember — survives recompositions, resets when the drawer
+	// leaves composition.)
+	val accountExpanded = remember { mutableStateOf(true) }
+	val postExpanded = remember { mutableStateOf(true) }
+	val prefsExpanded = remember { mutableStateOf(true) }
+	val subsExpanded = remember { mutableStateOf(true) }
+
 	// The panel is the documented [ModalDrawerSheet] — the official
 	// ModalNavigationDrawer sample wraps its content in it: it supplies the
 	// modal drawer's shape, tonal elevation, container colour
@@ -476,94 +489,108 @@ private fun AppDrawer(
 					.padding(bottom = 16.dp),
 			) {
 				// ACCOUNT section.
-				DrawerSectionHeader("Account")
-				DrawerRow(
-					title = "Profile",
-					icon = Icons.Filled.Person,
-					onClick = onProfile,
-				)
-				DrawerRow(
-					title = "Inbox",
-					icon = Icons.Filled.AddComment,
-					onClick = onInbox,
-				)
-				DrawerRow(
-					title = "History",
-					icon = Icons.Filled.History,
-					onClick = onHistory,
-				)
+				DrawerSectionHeader("Account", expanded = accountExpanded.value, onToggle = { accountExpanded.value = !accountExpanded.value })
+				if (accountExpanded.value) {
+					DrawerRow(
+						title = "Profile",
+						icon = Icons.Filled.Person,
+						onClick = onProfile,
+					)
+					DrawerRow(
+						title = "Inbox",
+						icon = Icons.Filled.AddComment,
+						onClick = onInbox,
+					)
+					DrawerRow(
+						title = "History",
+						icon = Icons.Filled.History,
+						onClick = onHistory,
+					)
+				}
 
 				// POST section — the user's own action listings (u/<user>/<type>).
-				DrawerSectionHeader("Post")
-				DrawerRow(
-					title = "Upvoted",
-					icon = Icons.Filled.ArrowUpward,
-					onClick = onUpvoted,
-				)
-				DrawerRow(
-					title = "Downvoted",
-					icon = Icons.Filled.ArrowDownward,
-					onClick = onDownvoted,
-				)
-				DrawerRow(
-					title = "Hidden",
-					icon = Icons.Filled.Lock,
-					onClick = onHidden,
-				)
-				DrawerRow(
-					title = "Saved",
-					icon = Icons.Filled.Bookmark,
-					onClick = onSaved,
-				)
+				DrawerSectionHeader("Post", expanded = postExpanded.value, onToggle = { postExpanded.value = !postExpanded.value })
+				if (postExpanded.value) {
+					DrawerRow(
+						title = "Upvoted",
+						icon = Icons.Filled.ArrowUpward,
+						onClick = onUpvoted,
+					)
+					DrawerRow(
+						title = "Downvoted",
+						icon = Icons.Filled.ArrowDownward,
+						onClick = onDownvoted,
+					)
+					DrawerRow(
+						title = "Hidden",
+						icon = Icons.Filled.Lock,
+						onClick = onHidden,
+					)
+					DrawerRow(
+						title = "Saved",
+						icon = Icons.Filled.Bookmark,
+						onClick = onSaved,
+					)
+				}
 
 				// PREFERENCES section — live switches, no navigation.
-				DrawerSectionHeader("Preferences")
-				DrawerSwitchRow(
-					title = "Light Theme",
-					icon = Icons.Filled.LightMode,
-					checked = prefs.appearanceTheme.value.lightness == ThemeLightness.Light,
-					onCheckedChange = { onLightTheme() },
-				)
-				DrawerSwitchRow(
-					title = "Disable NSFW",
-					icon = Icons.Filled.VisibilityOff,
-					checked = !nsfwEnabled,
-					onCheckedChange = { onNsfwToggle() },
-				)
+				DrawerSectionHeader("Preferences", expanded = prefsExpanded.value, onToggle = { prefsExpanded.value = !prefsExpanded.value })
+				if (prefsExpanded.value) {
+					DrawerSwitchRow(
+						title = "Light Theme",
+						icon = Icons.Filled.LightMode,
+						checked = prefs.appearanceTheme.value.lightness == ThemeLightness.Light,
+						onCheckedChange = { onLightTheme() },
+					)
+					DrawerSwitchRow(
+						title = "Disable NSFW",
+						icon = Icons.Filled.VisibilityOff,
+						checked = !nsfwEnabled,
+						onCheckedChange = { onNsfwToggle() },
+					)
+				}
 
 				// SUBSCRIPTIONS section — the signed-in user's subscribed
 				// subreddits, moved here from the retired main-menu screen.
 				// Omitted when signed out or when the account has none.
 				when (val subscribed = subscribedState) {
 					is MainScreenViewModel.SubscribedState.Loading -> {
-						DrawerSectionHeader("Subscriptions")
-						DrawerRow(
-							title = "Loading…",
-							icon = Icons.Filled.Home,
-							onClick = {},
-						)
+						DrawerSectionHeader("Subscriptions", expanded = subsExpanded.value, onToggle = { subsExpanded.value = !subsExpanded.value })
+						if (subsExpanded.value) {
+							DrawerRow(
+								title = "Loading…",
+								icon = Icons.Filled.Home,
+								onClick = {},
+							)
+						}
 					}
 
 					is MainScreenViewModel.SubscribedState.Error -> {
-						DrawerSectionHeader("Subscriptions")
-						DrawerRow(
-							title = subscribed.message,
-							icon = Icons.Filled.Home,
-							onClick = {},
-						)
+						DrawerSectionHeader("Subscriptions", expanded = subsExpanded.value, onToggle = { subsExpanded.value = !subsExpanded.value })
+						if (subsExpanded.value) {
+							DrawerRow(
+								title = subscribed.message,
+								icon = Icons.Filled.Home,
+								onClick = {},
+							)
+						}
 					}
 
 					is MainScreenViewModel.SubscribedState.Success -> {
 						if (subscribed.subreddits.isNotEmpty()) {
 							DrawerSectionHeader(
 								"Subscriptions (${subscribed.subreddits.size})",
+								expanded = subsExpanded.value,
+								onToggle = { subsExpanded.value = !subsExpanded.value },
 							)
-							subscribed.subreddits.forEach { subreddit ->
-								SubscriptionRow(
-									name = subreddit.name,
-									iconUrl = subreddit.iconUrl,
-									onClick = { onOpenSubreddit(subreddit.name) },
-								)
+							if (subsExpanded.value) {
+								subscribed.subreddits.forEach { subreddit ->
+									SubscriptionRow(
+										name = subreddit.name,
+										iconUrl = subreddit.iconUrl,
+										onClick = { onOpenSubreddit(subreddit.name) },
+									)
+								}
 							}
 						}
 					}
@@ -577,17 +604,45 @@ private fun AppDrawer(
 	}
 }
 
-/** A section header in the drawer: a caption + hairline divider. */
+/**
+ * A section header in the drawer: a caption + hairline divider. Tapping the
+ * header row toggles the section's collapsed/expanded state; a trailing
+ * chevron points down when expanded and rotates to point right when collapsed.
+ */
 @Composable
-private fun DrawerSectionHeader(text: String) {
+private fun DrawerSectionHeader(
+	text: String,
+	expanded: Boolean,
+	onToggle: () -> Unit,
+) {
 	Column(modifier = Modifier.fillMaxWidth()) {
-		Text(
-			text = text,
-			modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 4.dp),
-			style = MaterialTheme.typography.labelLarge,
-			fontWeight = FontWeight.SemiBold,
-			color = MaterialTheme.colorScheme.onSurfaceVariant,
-		)
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.clickable(onClick = onToggle)
+				.padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 4.dp),
+			verticalAlignment = Alignment.CenterVertically,
+		) {
+			Text(
+				text = text,
+				style = MaterialTheme.typography.labelLarge,
+				fontWeight = FontWeight.SemiBold,
+				color = MaterialTheme.colorScheme.onSurfaceVariant,
+			)
+			Spacer(Modifier.weight(1f))
+			val rotation by animateFloatAsState(
+				targetValue = if (expanded) 0f else -90f,
+				label = "drawer_section_chevron",
+			)
+			Icon(
+				imageVector = Icons.Filled.ExpandMore,
+				contentDescription = if (expanded) "Collapse $text" else "Expand $text",
+				modifier = Modifier
+					.size(18.dp)
+					.rotate(rotation),
+				tint = MaterialTheme.colorScheme.onSurfaceVariant,
+			)
+		}
 		HorizontalDivider(modifier = Modifier.padding(horizontal = 20.dp))
 	}
 }
