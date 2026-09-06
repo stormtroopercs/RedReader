@@ -53,7 +53,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -655,7 +655,7 @@ internal fun SlidePost(
 					onClick = { onPostAction(post, PostAction.DOWNVOTE) },
 				),
 				ActionBarButton(
-					icon = if (post.saved) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+					icon = if (post.saved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
 					contentDescription = if (post.saved) "Unsave" else "Save",
 					onClick = {
 						onPostAction(post, if (post.saved) PostAction.UNSAVE else PostAction.SAVE)

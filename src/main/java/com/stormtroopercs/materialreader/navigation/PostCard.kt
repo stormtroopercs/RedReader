@@ -41,7 +41,7 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -129,7 +129,7 @@ fun StatsAndIconsRow(
 			onClick = { onPostAction(post, PostAction.DOWNVOTE) },
 		)
 		IconSlot(
-			icon = if (post.saved) Icons.Filled.Bookmark else Icons.Outlined.Bookmark,
+			icon = if (post.saved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
 			label = if (post.saved) "Unsave" else "Save",
 			onClick = { onPostAction(post, if (post.saved) PostAction.UNSAVE else PostAction.SAVE) },
 		)
