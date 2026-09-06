@@ -133,6 +133,113 @@ fun AppNavGraph(navigationState: NavigationState) {
 		onDispose { accountManager.removeUpdateListener(listener) }
 	}
 
+	// The feed surface (FINAL-DESIGN Phase 4.7), shared by the Posts-tab home
+	// feed ([Main]) and any pushed [PostList] child. The feed's persisted view
+	// mode decides the surface: Slides → the signature swipe feed; every other
+	// mode → the list view in that card mode. It is read reactively so a
+	// Change-View selection swaps the surface in place (recomposition) instead
+	// of re-navigating — a re-navigation pushed a second, equal NavKey entry
+	// and blanked the screen.
+	@Composable
+	fun feedScreen(
+		subreddit: String,
+		searchQuery: String?,
+		isTabRoot: Boolean,
+		titleOverride: String?,
+	) {
+		val viewMode = FeedPreferences.effectiveViewMode(
+			FeedPreferences.effectiveKey(subreddit, searchQuery),
+		)
+		if (viewMode == PostViewMode.SLIDES) {
+			RealSlidesFeedScreen(
+				subreddit = subreddit,
+				searchQuery = searchQuery,
+				onNavigateBack = { navigator.goBack() },
+				onNavigateToCommentList = { postId ->
+					navigator.navigate(CommentList(postId))
+				},
+				onNavigateToUserProfile = { username ->
+					navigator.navigate(UserProfile(username))
+				},
+				onNavigateToPostSubmit = {
+					navigator.navigate(PostSubmit(subreddit))
+				},
+				onNavigateToSubredditSearch = {
+					navigator.navigate(SubredditSearch)
+				},
+				onNavigateToProfile = {
+					val username = RedditAccountManager.getInstance(context).defaultAccount.username
+					navigator.navigate(UserProfile(username))
+				},
+				onNavigateToRandomPost = { postId ->
+					navigator.navigate(CommentList(postId))
+				},
+				onNavigateToSaved = {
+					val username = RedditAccountManager.getInstance(context).defaultAccount.username
+					navigator.navigate(PostList("u/$username/saved"))
+				},
+				onOpenListing = { path ->
+					navigator.navigate(PostList(path))
+				},
+				// The community pill opens the community detail (Phase 6.3);
+				// non-community feeds fall back to the community search.
+				onOpenCommunity = { communityPath ->
+					if (isCommunityFeedPath(communityPath)) {
+						navigator.navigate(Community(communityPath.removePrefix("r/")))
+					} else {
+						navigator.navigate(SubredditSearch)
+					}
+				},
+				onNavigateToSettings = {
+					navigator.navigate(Settings)
+				},
+				onOpenLicense = openLicense,
+				onOpenMedia = openMedia,
+				isTabRoot = isTabRoot,
+				titleOverride = titleOverride,
+			)
+		} else {
+			RealPostListScreen(
+				subreddit = subreddit,
+				searchQuery = searchQuery,
+				onNavigateBack = { navigator.goBack() },
+				onNavigateToCommentList = { postId ->
+					navigator.navigate(CommentList(postId))
+				},
+				onNavigateToUserProfile = { username ->
+					navigator.navigate(UserProfile(username))
+				},
+				onNavigateToPostSubmit = {
+					navigator.navigate(PostSubmit(subreddit))
+				},
+				onNavigateToSubredditSearch = {
+					navigator.navigate(SubredditSearch)
+				},
+				onNavigateToProfile = {
+					val username = RedditAccountManager.getInstance(context).defaultAccount.username
+					navigator.navigate(UserProfile(username))
+				},
+				onNavigateToRandomPost = { postId ->
+					navigator.navigate(CommentList(postId))
+				},
+				onNavigateToSaved = {
+					val username = RedditAccountManager.getInstance(context).defaultAccount.username
+					navigator.navigate(PostList("u/$username/saved"))
+				},
+				onOpenListing = { path ->
+					navigator.navigate(PostList(path))
+				},
+				onNavigateToSettings = {
+					navigator.navigate(Settings)
+				},
+				onOpenLicense = openLicense,
+				onOpenMedia = openMedia,
+				isTabRoot = isTabRoot,
+				titleOverride = titleOverride,
+			)
+		}
+	}
+
 	AppShell(
 		navigationState = navigationState,
 		accountName = accountName.value,
@@ -158,18 +265,19 @@ fun AppNavGraph(navigationState: NavigationState) {
 					slideOutHorizontally(targetOffsetX = { it }, animationSpec = navSlideSpec)
 			},
 			entryProvider = entryProvider {
-				// Top-level: Main screen
+				// Top-level: Posts tab = the user's home feed (FINAL-DESIGN
+				// Phase 2.1): the frontpage listing (Reddit `/`, the user's
+				// personalized feed when authenticated). Rendered as the tab
+				// root: no back arrow, the tab title, and the drawer hamburger
+				// when a drawer is enabled. The legacy menu screen (search field
+				// + frontpage/popular/all rows) is retired — search lives in the
+				// feed's top bar, and the subreddit directory lives in the drawer.
 				entry<Main> {
-					MainScreen(
-						onNavigateToPostList = { subreddit ->
-							navigator.navigate(PostList(subreddit))
-						},
-						onNavigateToSettings = {
-							navigator.navigate(Settings)
-						},
-						onNavigateToSubredditSearch = {
-							navigator.navigate(SubredditSearch)
-						},
+					feedScreen(
+						subreddit = "frontpage",
+						searchQuery = null,
+						isTabRoot = true,
+						titleOverride = "Posts",
 					)
 				}
 
@@ -206,103 +314,14 @@ fun AppNavGraph(navigationState: NavigationState) {
 				}
 
 				// Child: Post list. The feed's persisted view mode decides the
-				// surface (FINAL-DESIGN Phase 4.7): Slides → the signature swipe
-				// feed (the default for community feeds, and any feed the user
-				// has explicitly set to slides); every other mode → the list
-				// view in that card mode.
+				// surface (FINAL-DESIGN Phase 4.7) — see [feedScreen].
 				entry<PostList> { key ->
-					// The feed's view mode, read reactively from the observable
-					// prefs: a Change-View selection swaps the surface in place
-					// (recomposition) instead of re-navigating — a re-navigation
-					// pushed a second, equal NavKey entry and blanked the screen.
-					val viewMode = FeedPreferences.effectiveViewMode(
-						FeedPreferences.effectiveKey(key.subreddit, key.searchQuery),
+					feedScreen(
+						subreddit = key.subreddit,
+						searchQuery = key.searchQuery,
+						isTabRoot = false,
+						titleOverride = null,
 					)
-					if (viewMode == PostViewMode.SLIDES) {
-						RealSlidesFeedScreen(
-							subreddit = key.subreddit,
-							searchQuery = key.searchQuery,
-							onNavigateBack = { navigator.goBack() },
-							onNavigateToCommentList = { postId ->
-								navigator.navigate(CommentList(postId))
-							},
-							onNavigateToUserProfile = { username ->
-								navigator.navigate(UserProfile(username))
-							},
-							onNavigateToPostSubmit = {
-								navigator.navigate(PostSubmit(key.subreddit))
-							},
-							onNavigateToSubredditSearch = {
-								navigator.navigate(SubredditSearch)
-							},
-							onNavigateToProfile = {
-								val username = RedditAccountManager.getInstance(context).defaultAccount.username
-								navigator.navigate(UserProfile(username))
-							},
-							onNavigateToRandomPost = { postId ->
-								navigator.navigate(CommentList(postId))
-							},
-							onNavigateToSaved = {
-								val username = RedditAccountManager.getInstance(context).defaultAccount.username
-								navigator.navigate(PostList("u/$username/saved"))
-							},
-							onOpenListing = { path ->
-								navigator.navigate(PostList(path))
-							},
-							// The community pill opens the community detail
-							// (Phase 6.3); non-community feeds fall back to the
-							// community search.
-							onOpenCommunity = { communityPath ->
-								if (isCommunityFeedPath(communityPath)) {
-									navigator.navigate(Community(communityPath.removePrefix("r/")))
-								} else {
-									navigator.navigate(SubredditSearch)
-								}
-							},
-							onNavigateToSettings = {
-								navigator.navigate(Settings)
-							},
-							onOpenLicense = openLicense,
-							onOpenMedia = openMedia,
-							)
-							} else {
-						RealPostListScreen(
-							subreddit = key.subreddit,
-							searchQuery = key.searchQuery,
-							onNavigateBack = { navigator.goBack() },
-							onNavigateToCommentList = { postId ->
-								navigator.navigate(CommentList(postId))
-							},
-							onNavigateToUserProfile = { username ->
-								navigator.navigate(UserProfile(username))
-							},
-							onNavigateToPostSubmit = {
-								navigator.navigate(PostSubmit(key.subreddit))
-							},
-							onNavigateToSubredditSearch = {
-								navigator.navigate(SubredditSearch)
-							},
-							onNavigateToProfile = {
-								val username = RedditAccountManager.getInstance(context).defaultAccount.username
-								navigator.navigate(UserProfile(username))
-							},
-							onNavigateToRandomPost = { postId ->
-								navigator.navigate(CommentList(postId))
-							},
-							onNavigateToSaved = {
-								val username = RedditAccountManager.getInstance(context).defaultAccount.username
-								navigator.navigate(PostList("u/$username/saved"))
-							},
-							onOpenListing = { path ->
-								navigator.navigate(PostList(path))
-							},
-							onNavigateToSettings = {
-								navigator.navigate(Settings)
-							},
-							onOpenLicense = openLicense,
-							onOpenMedia = openMedia,
-							)
-							}
 				}
 
 				// Child: Comment list

@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -54,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -95,11 +97,22 @@ fun RealPostListScreen(
 	onOpenLicense: () -> Unit = {},
 	/** Open a post's media in the full-screen viewer (media tap). */
 	onOpenMedia: (PostItem) -> Unit = {},
+	/**
+	 * True when this feed is the top-level Posts tab (the app root) rather than
+	 * a pushed child: the top bar then carries the drawer hamburger (when the
+	 * drawer is enabled) instead of a back arrow, and the tab's title.
+	 */
+	isTabRoot: Boolean = false,
+	/** The tab-root title override (e.g. "Posts"); null = the feed's own title. */
+	titleOverride: String? = null,
 ) {
 	val viewModel: PostListViewModel = hiltViewModel()
 	val uiState by viewModel.state.collectAsStateWithLifecycle()
 	val sortOption by viewModel.sortOption.collectAsStateWithLifecycle()
 	val listTitle by viewModel.title.collectAsStateWithLifecycle()
+	// The drawer opener, when this is the Posts tab root and a drawer is
+	// enabled (Drawer / Both styles). Null in the Bottom style → back arrow.
+	val openDrawer = LocalOpenDrawer.current
 
 	LaunchedEffect(subreddit, searchQuery) {
 		viewModel.fetchPosts(subreddit, searchQuery)
@@ -155,16 +168,29 @@ fun RealPostListScreen(
 				scrollBehavior = null,
 				title = {
 					Text(
-						text = listTitle.ifEmpty { "r/$subreddit" },
+						text = titleOverride ?: listTitle.ifEmpty { "r/$subreddit" },
 						fontWeight = FontWeight.SemiBold,
+						maxLines = 1,
+						overflow = TextOverflow.Ellipsis,
 					)
 				},
 				navigationIcon = {
-					IconButton(onClick = onNavigateBack) {
-						Icon(
-							imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-							contentDescription = "Back",
-						)
+					if (isTabRoot && openDrawer != null) {
+						// The Posts tab root with a drawer: a hamburger (there's no
+						// back to go to).
+						IconButton(onClick = openDrawer) {
+							Icon(
+								imageVector = Icons.Filled.Menu,
+								contentDescription = "Open menu",
+							)
+						}
+					} else {
+						IconButton(onClick = onNavigateBack) {
+							Icon(
+								imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+								contentDescription = "Back",
+							)
+						}
 					}
 				},
 				actions = {

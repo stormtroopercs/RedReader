@@ -29,7 +29,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddComment
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -238,6 +240,11 @@ fun AppShell(
 			navigator.navigate(OAuthLogin)
 		}
 	}
+	// Your subreddits (drawer): tapping a subscribed community opens its feed.
+	val onOpenSubreddit: (String) -> Unit = { name ->
+		navigator.navigate(PostList(name))
+		closeDrawer()
+	}
 	// Live preference toggles (no navigation, no drawer close): flip the light
 	// theme to the opposite lightness (keeping the accent colour), and invert
 	// the NSFW behaviour pref — same keys the Settings rows read.
@@ -283,6 +290,7 @@ fun AppShell(
 						onHidden = onHidden,
 						onSaved = onSaved,
 						onHistory = onHistory,
+						onOpenSubreddit = onOpenSubreddit,
 						onLightTheme = onLightTheme,
 						onNsfwToggle = onNsfwToggle,
 					)
@@ -383,6 +391,7 @@ private fun AppDrawer(
 	onHidden: () -> Unit,
 	onSaved: () -> Unit,
 	onHistory: () -> Unit,
+	onOpenSubreddit: (String) -> Unit,
 	onLightTheme: () -> Unit,
 	onNsfwToggle: () -> Unit,
 ) {
@@ -391,6 +400,11 @@ private fun AppDrawer(
 	val accountViewModel = hiltViewModel<DrawerAccountViewModel>()
 	val karma by accountViewModel.karma.collectAsStateWithLifecycle()
 	val iconUrl by accountViewModel.iconUrl.collectAsStateWithLifecycle()
+
+	// The "Your subreddits" list (moved here from the retired main-menu
+	// screen). Fetches once per process; Idle when signed out.
+	val subscribedViewModel = hiltViewModel<MainScreenViewModel>()
+	val subscribedState by subscribedViewModel.state.collectAsStateWithLifecycle()
 
 	val prefs = ComposePrefsSingleton.instance
 	// The Switch reads the live pref (ComposePrefsImpl registers a shared-prefs
@@ -411,97 +425,154 @@ private fun AppDrawer(
 	ModalDrawerSheet(
 		drawerState = drawerState,
 	) {
-		// Stacked account header (the reference's holder_drawer_header):
-		// circular avatar, username beneath, karma beneath that.
+		// A single bounded outer Column so the header stays fixed while the
+		// sections below it scroll. Robust to the sheet's internal layout.
 		Column(
 			modifier = Modifier
-				.fillMaxWidth()
-				.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 16.dp),
-			horizontalAlignment = Alignment.Start,
+				.fillMaxSize()
+				.padding(bottom = 16.dp),
 		) {
-			DrawerAvatar(iconUrl = iconUrl)
-			Spacer(Modifier.height(10.dp))
-			Text(
-				text = accountName?.takeIf { it.isNotBlank() } ?: "Sign in to Reddit",
-				style = MaterialTheme.typography.titleMedium,
-				fontWeight = FontWeight.SemiBold,
-				color = MaterialTheme.colorScheme.onSurface,
-				maxLines = 1,
-			)
-			if (signedIn && karma != null) {
-				Spacer(Modifier.height(2.dp))
+			// Stacked account header (the reference's holder_drawer_header):
+			// circular avatar, username beneath, karma beneath that.
+			Column(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 16.dp),
+				horizontalAlignment = Alignment.Start,
+			) {
+				DrawerAvatar(iconUrl = iconUrl)
+				Spacer(Modifier.height(10.dp))
 				Text(
-					text = "Karma: $karma",
-					style = MaterialTheme.typography.bodyMedium,
-					color = MaterialTheme.colorScheme.onSurfaceVariant,
+					text = accountName?.takeIf { it.isNotBlank() } ?: "Sign in to Reddit",
+					style = MaterialTheme.typography.titleMedium,
+					fontWeight = FontWeight.SemiBold,
+					color = MaterialTheme.colorScheme.onSurface,
 					maxLines = 1,
 				)
-			}
-			if (!signedIn) {
-				Spacer(Modifier.height(8.dp))
-				TextButton(onClick = onProfile) {
-					Text("Log in to Reddit")
+				if (signedIn && karma != null) {
+					Spacer(Modifier.height(2.dp))
+					Text(
+						text = "Karma: $karma",
+						style = MaterialTheme.typography.bodyMedium,
+						color = MaterialTheme.colorScheme.onSurfaceVariant,
+						maxLines = 1,
+					)
+				}
+				if (!signedIn) {
+					Spacer(Modifier.height(8.dp))
+					TextButton(onClick = onProfile) {
+						Text("Log in to Reddit")
+					}
 				}
 			}
+
+			// The scrollable drawer body: fixed header above, sections
+			// (Account, Post, Preferences, Your subreddits) scroll beneath it.
+			Column(
+				modifier = Modifier
+					.weight(1f)
+					.verticalScroll(rememberScrollState())
+					.padding(bottom = 16.dp),
+			) {
+				// ACCOUNT section.
+				DrawerSectionHeader("Account")
+				DrawerRow(
+					title = "Profile",
+					icon = Icons.Filled.Person,
+					onClick = onProfile,
+				)
+				DrawerRow(
+					title = "Inbox",
+					icon = Icons.Filled.AddComment,
+					onClick = onInbox,
+				)
+				DrawerRow(
+					title = "History",
+					icon = Icons.Filled.History,
+					onClick = onHistory,
+				)
+
+				// POST section — the user's own action listings (u/<user>/<type>).
+				DrawerSectionHeader("Post")
+				DrawerRow(
+					title = "Upvoted",
+					icon = Icons.Filled.ArrowUpward,
+					onClick = onUpvoted,
+				)
+				DrawerRow(
+					title = "Downvoted",
+					icon = Icons.Filled.ArrowDownward,
+					onClick = onDownvoted,
+				)
+				DrawerRow(
+					title = "Hidden",
+					icon = Icons.Filled.Lock,
+					onClick = onHidden,
+				)
+				DrawerRow(
+					title = "Saved",
+					icon = Icons.Filled.Bookmark,
+					onClick = onSaved,
+				)
+
+				// PREFERENCES section — live switches, no navigation.
+				DrawerSectionHeader("Preferences")
+				DrawerSwitchRow(
+					title = "Light Theme",
+					icon = Icons.Filled.LightMode,
+					checked = prefs.appearanceTheme.value.lightness == ThemeLightness.Light,
+					onCheckedChange = { onLightTheme() },
+				)
+				DrawerSwitchRow(
+					title = "Disable NSFW",
+					icon = Icons.Filled.VisibilityOff,
+					checked = !nsfwEnabled,
+					onCheckedChange = { onNsfwToggle() },
+				)
+
+				// YOUR SUBREDDITS section — the signed-in user's subscribed
+				// subreddits, moved here from the retired main-menu screen.
+				// Omitted when signed out or when the account has none.
+				when (val subscribed = subscribedState) {
+					is MainScreenViewModel.SubscribedState.Loading -> {
+						DrawerSectionHeader("Your subreddits")
+						DrawerRow(
+							title = "Loading…",
+							icon = Icons.Filled.Home,
+							onClick = {},
+						)
+					}
+
+					is MainScreenViewModel.SubscribedState.Error -> {
+						DrawerSectionHeader("Your subreddits")
+						DrawerRow(
+							title = subscribed.message,
+							icon = Icons.Filled.Home,
+							onClick = {},
+						)
+					}
+
+					is MainScreenViewModel.SubscribedState.Success -> {
+						if (subscribed.subreddits.isNotEmpty()) {
+							DrawerSectionHeader(
+								"Your subreddits (${subscribed.subreddits.size})",
+							)
+							subscribed.subreddits.forEach { subreddit ->
+								DrawerRow(
+									title = "r/${subreddit.name}",
+									icon = Icons.Filled.Home,
+									onClick = { onOpenSubreddit(subreddit.name) },
+								)
+							}
+						}
+					}
+
+					is MainScreenViewModel.SubscribedState.Idle -> Unit
+				}
+
+				Spacer(Modifier.height(24.dp))
+			}
 		}
-
-		// ACCOUNT section.
-		DrawerSectionHeader("Account")
-		DrawerRow(
-			title = "Profile",
-			icon = Icons.Filled.Person,
-			onClick = onProfile,
-		)
-		DrawerRow(
-			title = "Inbox",
-			icon = Icons.Filled.AddComment,
-			onClick = onInbox,
-		)
-		DrawerRow(
-			title = "History",
-			icon = Icons.Filled.History,
-			onClick = onHistory,
-		)
-
-		// POST section — the user's own action listings (u/<user>/<type>).
-		DrawerSectionHeader("Post")
-		DrawerRow(
-			title = "Upvoted",
-			icon = Icons.Filled.ArrowUpward,
-			onClick = onUpvoted,
-		)
-		DrawerRow(
-			title = "Downvoted",
-			icon = Icons.Filled.ArrowDownward,
-			onClick = onDownvoted,
-		)
-		DrawerRow(
-			title = "Hidden",
-			icon = Icons.Filled.Lock,
-			onClick = onHidden,
-		)
-		DrawerRow(
-			title = "Saved",
-			icon = Icons.Filled.Bookmark,
-			onClick = onSaved,
-		)
-
-		// PREFERENCES section — live switches, no navigation.
-		DrawerSectionHeader("Preferences")
-		DrawerSwitchRow(
-			title = "Light Theme",
-			icon = Icons.Filled.LightMode,
-			checked = prefs.appearanceTheme.value.lightness == ThemeLightness.Light,
-			onCheckedChange = { onLightTheme() },
-		)
-		DrawerSwitchRow(
-			title = "Disable NSFW",
-			icon = Icons.Filled.VisibilityOff,
-			checked = !nsfwEnabled,
-			onCheckedChange = { onNsfwToggle() },
-		)
-
-		Spacer(Modifier.weight(1f))
 	}
 }
 

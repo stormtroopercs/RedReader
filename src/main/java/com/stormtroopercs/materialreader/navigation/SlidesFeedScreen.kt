@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Search
@@ -135,12 +136,23 @@ fun RealSlidesFeedScreen(
 	onOpenLicense: () -> Unit = {},
 	/** Open a post's media in the full-screen viewer (media tap). */
 	onOpenMedia: (PostItem) -> Unit = {},
+	/**
+	 * True when this feed is the top-level Posts tab (the app root) rather than
+	 * a pushed child: the toolbar stays visible (so the drawer hamburger is
+	 * reachable) and shows the hamburger instead of a back arrow.
+	 */
+	isTabRoot: Boolean = false,
+	/** The tab-root title override (e.g. "Posts"); null = the feed's own title. */
+	titleOverride: String? = null,
 ) {
 	val viewModel: PostListViewModel = hiltViewModel()
 	val uiState by viewModel.state.collectAsStateWithLifecycle()
 	val listTitle by viewModel.title.collectAsStateWithLifecycle()
 	val community by viewModel.community.collectAsStateWithLifecycle()
 	val sortOption by viewModel.sortOption.collectAsStateWithLifecycle()
+	// The drawer opener, when this is the Posts tab root and a drawer is
+	// enabled (Drawer / Both styles). Null in the Bottom style → back arrow.
+	val openDrawer = LocalOpenDrawer.current
 	val context = LocalContext.current
 	val snackbarHostState = remember { SnackbarHostState() }
 
@@ -224,11 +236,11 @@ fun RealSlidesFeedScreen(
 					// downward drag while on the first slide (the reference's
 					// "scroll-down reveals it"). Swiping to another slide hides
 					// it again.
-					val toolbarVisible = remember { mutableStateOf(false) }
+					val toolbarVisible = remember { mutableStateOf(isTabRoot) }
 					LaunchedEffect(pagerState) {
 						snapshotFlow { pagerState.currentPage }
 							.collect { page ->
-								if (page != 0) toolbarVisible.value = false
+								if (page != 0 && !isTabRoot) toolbarVisible.value = false
 							}
 					}
 
@@ -273,14 +285,15 @@ fun RealSlidesFeedScreen(
 						modifier = Modifier.fillMaxWidth(),
 					) {
 						SlidesToolbar(
-							title = listTitle.ifEmpty { "r/$subreddit" },
+							title = titleOverride ?: listTitle.ifEmpty { "r/$subreddit" },
 							community = community,
+							openDrawer = openDrawer,
 							onSortMenuToggle = { sortDialogOpen = true },
 							onMoreActionsToggle = { moreActionsOpen = true },
 							onBack = onNavigateBack,
 							onSearch = onNavigateToSubredditSearch,
 							onCommunityTap = { onOpenCommunity(subreddit) },
-							onDismiss = { toolbarVisible.value = false },
+							onDismiss = { if (!isTabRoot) toolbarVisible.value = false },
 						)
 					}
 				}
@@ -416,6 +429,7 @@ private fun SlidesToolbar(
 	onSearch: () -> Unit,
 	onCommunityTap: () -> Unit,
 	onDismiss: () -> Unit,
+	openDrawer: (() -> Unit)? = null,
 ) {
 	Surface(
 		color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
@@ -427,8 +441,14 @@ private fun SlidesToolbar(
 				.padding(horizontal = 4.dp),
 			verticalAlignment = Alignment.CenterVertically,
 		) {
-			IconButton(onClick = onBack) {
-				Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+			if (openDrawer != null) {
+				IconButton(onClick = openDrawer) {
+					Icon(Icons.Filled.Menu, contentDescription = "Open menu")
+				}
+			} else {
+				IconButton(onClick = onBack) {
+					Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+				}
 			}
 
 			// The community pill: avatar + name + chevron + subscriber count.

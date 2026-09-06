@@ -44,13 +44,16 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * ViewModel for the main screen's "Your subreddits" section.
+ * ViewModel for the navigation drawer's "Your subreddits" section.
  *
  * Fetches the signed-in user's subscribed subreddits from the live Reddit
  * API (`/subreddits/mine/subscriber.json`) — the same endpoint the legacy
  * main menu's `MainMenuListingManager` used (via
  * `RedditSubredditSubscriptionManager`). Results are sorted alphabetically,
  * matching the legacy `GROUP_SUBREDDITS_ITEMS` ordering.
+ *
+ * The section (and this fetch) was moved into the drawer when the legacy
+ * main-menu screen was retired (the Posts tab is now the home feed).
  *
  * When signed out the section is hidden entirely (the legacy main menu also
  * suppressed the subscribed group for anonymous accounts — DeepWiki-verified
