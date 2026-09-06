@@ -69,6 +69,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
@@ -530,12 +531,12 @@ private fun AppDrawer(
 					onCheckedChange = { onNsfwToggle() },
 				)
 
-				// YOUR SUBREDDITS section — the signed-in user's subscribed
+				// SUBSCRIPTIONS section — the signed-in user's subscribed
 				// subreddits, moved here from the retired main-menu screen.
 				// Omitted when signed out or when the account has none.
 				when (val subscribed = subscribedState) {
 					is MainScreenViewModel.SubscribedState.Loading -> {
-						DrawerSectionHeader("Your subreddits")
+						DrawerSectionHeader("Subscriptions")
 						DrawerRow(
 							title = "Loading…",
 							icon = Icons.Filled.Home,
@@ -544,7 +545,7 @@ private fun AppDrawer(
 					}
 
 					is MainScreenViewModel.SubscribedState.Error -> {
-						DrawerSectionHeader("Your subreddits")
+						DrawerSectionHeader("Subscriptions")
 						DrawerRow(
 							title = subscribed.message,
 							icon = Icons.Filled.Home,
@@ -555,12 +556,12 @@ private fun AppDrawer(
 					is MainScreenViewModel.SubscribedState.Success -> {
 						if (subscribed.subreddits.isNotEmpty()) {
 							DrawerSectionHeader(
-								"Your subreddits (${subscribed.subreddits.size})",
+								"Subscriptions (${subscribed.subreddits.size})",
 							)
 							subscribed.subreddits.forEach { subreddit ->
-								DrawerRow(
-									title = "r/${subreddit.name}",
-									icon = Icons.Filled.Home,
+								SubscriptionRow(
+									name = subreddit.name,
+									iconUrl = subreddit.iconUrl,
 									onClick = { onOpenSubreddit(subreddit.name) },
 								)
 							}
@@ -614,6 +615,58 @@ private fun DrawerRow(
 		Spacer(Modifier.width(20.dp))
 		Text(
 			text = title,
+			style = MaterialTheme.typography.bodyLarge,
+			color = MaterialTheme.colorScheme.onSurface,
+			maxLines = 1,
+		)
+	}
+}
+
+/**
+ * A drawer row for one subscribed community: the community's own circular
+ * icon (fetched from [iconUrl], the `icon_img` → `community_icon` →
+ * `header_img` resolution done in [MainScreenViewModel]) with the Snoo
+ * fallback for icon-less communities — instead of a generic icon. Mirrors
+ * the Explore directory rows.
+ */
+@Composable
+private fun SubscriptionRow(
+	name: String,
+	iconUrl: String?,
+	onClick: () -> Unit,
+) {
+	Row(
+		modifier = Modifier
+			.fillMaxWidth()
+			.clickable(onClick = onClick)
+			.padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 10.dp),
+		verticalAlignment = Alignment.CenterVertically,
+	) {
+		Box(
+			modifier = Modifier
+				.size(32.dp)
+				.clip(CircleShape),
+			contentAlignment = Alignment.Center,
+		) {
+			if (iconUrl != null && iconUrl.isNotBlank()) {
+				val data by fetchImage(UriString(iconUrl), scaleToMaxAxis = 96)
+				when (val it = data) {
+					is NetRequestStatus.Success -> Image(
+						bitmap = it.result.data,
+						contentDescription = null,
+						contentScale = ContentScale.Crop,
+						modifier = Modifier.fillMaxSize().clip(CircleShape),
+					)
+
+					else -> CommunityDefaultAvatar()
+				}
+			} else {
+				CommunityDefaultAvatar()
+			}
+		}
+		Spacer(Modifier.width(20.dp))
+		Text(
+			text = "r/$name",
 			style = MaterialTheme.typography.bodyLarge,
 			color = MaterialTheme.colorScheme.onSurface,
 			maxLines = 1,
