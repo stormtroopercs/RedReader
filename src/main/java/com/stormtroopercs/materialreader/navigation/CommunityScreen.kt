@@ -34,6 +34,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -182,10 +184,13 @@ fun CommunityDetailScreen(
 		derivedStateOf { listState.firstVisibleItemIndex >= 2 }
 	}
 
-	// The Active tab's card mode (persisted per feed, Phase 4.7).
-	val viewMode = remember(name) {
-		FeedPreferences.viewModeFor(feedIdFor("r/$name", null))
-	}
+	// The Active tab's card mode (persisted per feed, Phase 4.7). Read
+	// reactively under the shared, normalized key — the same one the
+	// PostList route uses (one feed, one view mode) — so a Change-View
+	// selection recomposes the feed in place.
+	val viewMode = FeedPreferences.effectiveViewMode(
+		FeedPreferences.effectiveKey(name, null),
+	)
 
 	fun onPostAction(post: PostItem, action: PostAction) {
 		val activity = context as? AppCompatActivity ?: return
@@ -299,15 +304,75 @@ fun CommunityDetailScreen(
 			item {
 				when (tab) {
 					CommunityTab.ACTIVE -> {
-						CommunityActiveFeed(
-							uiState = uiState,
-							posts = posts,
-							viewMode = viewMode,
-							onOpenThread = onNavigateToCommentList,
-							onOpenMedia = onOpenMedia,
-							onAuthorClick = onNavigateToUserProfile,
-							onPostAction = ::onPostAction,
-						)
+						if (viewMode == PostViewMode.SLIDES) {
+							// The signature swipe feed under the community's
+							// own header + tabs (one feed, one view mode —
+							// picking Slides in Change View recomposes this
+							// tab in place, no re-navigation).
+							Box(
+								modifier = Modifier
+									.fillMaxWidth()
+									.height(640.dp),
+							) {
+								when (val state = uiState) {
+									is PostListUiState.Loading -> {
+										if (state.isInitialLoad) {
+											Box(
+												modifier = Modifier.fillMaxSize(),
+												contentAlignment = Alignment.Center,
+											) { CircularProgressIndicator() }
+										}
+									}
+									is PostListUiState.Error -> {
+										Box(
+											modifier = Modifier
+												.fillMaxSize()
+												.padding(16.dp),
+											contentAlignment = Alignment.Center,
+										) { RRErrorView(error = state.error) }
+									}
+									is PostListUiState.Success -> {
+										val slidePosts = state.posts
+										if (slidePosts.isEmpty()) {
+											Box(
+												modifier = Modifier.fillMaxSize(),
+												contentAlignment = Alignment.Center,
+											) {
+												Text("No posts found")
+											}
+										} else {
+											val pagerState =
+												rememberPagerState(pageCount = { slidePosts.size })
+											VerticalPager(
+												state = pagerState,
+												modifier = Modifier.fillMaxSize(),
+											) { page ->
+												SlidePost(
+													post = slidePosts[page],
+													modifier = Modifier.fillMaxSize(),
+													onPostClick = {
+														onNavigateToCommentList(slidePosts[page].id)
+													},
+													onAuthorClick = onNavigateToUserProfile,
+													onPostAction = ::onPostAction,
+													onMediaClick = { onOpenMedia(slidePosts[page]) },
+												)
+											}
+										}
+									}
+								}
+							}
+						} else {
+							CommunityActiveFeed(
+								uiState = uiState,
+								posts = posts,
+								viewMode = viewMode,
+								onOpenThread = onNavigateToCommentList,
+								onOpenMedia = onOpenMedia,
+								onAuthorClick = onNavigateToUserProfile,
+								onPostAction = ::onPostAction,
+							)
+						}
 					}
 					CommunityTab.ABOUT -> {
 						CommunityAboutTab(content = aboutTab)
@@ -344,14 +409,20 @@ fun CommunityDetailScreen(
 			},
 		)
 	}
-	// Change-View bottom sheet: the card modes + Slides.
+	// Change-View bottom sheet: the card modes + Slides. Selecting a
+	// mode persists it under the shared key; the feed recomposes in place
+	// (slides render the slide-style feed below).
 	if (changeViewOpen) {
 		ChangeViewSheet(
 			current = viewMode,
 			onDismiss = { changeViewOpen = false },
 			onSelect = { mode ->
-				FeedPreferences.setViewModeFor(feedIdFor("r/$name", null), mode)
+				FeedPreferences.setViewModeFor(FeedPreferences.effectiveKey(name, null), mode)
 				changeViewOpen = false
+			},
+			onCustomize = {
+				changeViewOpen = false
+				onNavigateToSettings()
 			},
 		)
 	}

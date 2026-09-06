@@ -18,6 +18,9 @@
 package com.stormtroopercs.materialreader.navigation
 
 import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.stormtroopercs.materialreader.common.General
 import com.stormtroopercs.materialreader.settings.types.PostSwipeAction
 import com.stormtroopercs.materialreader.settings.types.PostViewMode
@@ -29,13 +32,20 @@ import com.stormtroopercs.materialreader.settings.types.PostViewMode
  * for the **community directory** (the reference's Explore screen).
  *
  * Per-feed values (the view mode) live in one shared-prefs key as a
- * `feedId=mode` comma list; an unknown feed falls back to the app default
- * ([PostViewMode.CARDS]). The swipe slots are global (the reference has a
- * single Post-options set, not per-feed).
+ * `feedId=mode` comma list; an unknown feed falls back to the feed default
+ * (community feeds → [PostViewMode.SLIDES], everything else
+ * [PostViewMode.CARDS] — see [effectiveViewMode]). The swipe slots are
+ * global (the reference has a single Post-options set, not per-feed).
  *
  * Plain Kotlin object (no `@Singleton`): it reads/writes the app's
  * SharedPreferences directly, needs no DI graph, and is constructible in
  * plain-JUnit tests via [init].
+ *
+ * The view-mode map is additionally held as Compose snapshot state
+ * ([viewModes]): the navigation entry that decides which feed surface to
+ * render reads it reactively, so a Change-View selection swaps the surface
+ * in place via recomposition instead of re-navigating (a re-navigation
+ * pushed a second, equal `NavKey` entry and blanked the screen).
  */
 object FeedPreferences {
 
@@ -45,6 +55,7 @@ object FeedPreferences {
 	private const val KEY_SWIPE_2 = "post_swipe_action_2"
 	private const val KEY_SWIPE_3 = "post_swipe_action_3"
 	private const val KEY_SWIPE_VIBRATE = "post_swipe_vibrate"
+	private const val KEY_DEFAULT_VIEW_MODE = "feed_default_view_mode"
 
 	// ── "More actions" grid (FINAL-DESIGN Phase 5) ──
 	private const val KEY_ACTION_ORDER = "more_actions_order"
@@ -66,7 +77,15 @@ object FeedPreferences {
 	 * with (FINAL-DESIGN Phase 4.7: sort is persisted per feed). Unknown
 	 * feeds fall back to "Active" (the listing's own default order).
 	 */
-	fun sortOptionIdFor(feedId: String): String = parseMapping(KEY_SORTS)[feedId] ?: "active"
+	fun sortOptionIdFor(feedId: String): String {
+		val stored = parseMapping(KEY_SORTS)
+		stored[feedId]?.let { return it }
+		// Legacy keys from before feed ids were normalized (bare `Art`,
+		// `r/Art`): match by the normalized form, case-insensitively.
+		return stored.entries
+			.firstOrNull { it.key.normalizeListingPath().equals(feedId, ignoreCase = true) }
+			?.value ?: "active"
+	}
 
 	fun setSortOptionFor(feedId: String, optionId: String) {
 		putMapping(KEY_SORTS, feedId, optionId)
@@ -95,11 +114,101 @@ object FeedPreferences {
 		prefs.edit()
 			.putString(key, current.entries.joinToString(",") { "${it.key}=${it.value}" })
 			.apply()
+		if (key == KEY_VIEW_MODES) {
+			viewModes = current
+		}
 	}
 
-	/** The card mode for the feed identified by [feedId] (e.g. `r/<name>`). */
+	/**
+	 * The per-feed view-mode map as Compose snapshot state (raw
+	 * `feedId=mode` pairs). Written by [setViewModeFor]; read reactively by
+	 * the feed surfaces (the PostList entry, the community detail) so a
+	 * Change-View selection recomposes the surface in place.
+	 */
+	var viewModes by mutableStateOf<Map<String, String>>(emptyMap())
+		private set
+
+	/**
+	 * The global default view mode (Settings → Post options → "Default feed
+	 * view"): the mode feeds open in when they have no per-feed choice from
+	 * the Change-View sheet. `null` = the built-in per-feed defaults
+	 * (communities → [PostViewMode.SLIDES], everything else
+	 * [PostViewMode.CARDS]). Held as snapshot state so a change in Settings
+	 * recomposes the feed surfaces (including ones kept composed under a
+	 * newer nav entry).
+	 */
+	var defaultViewModeValue by mutableStateOf<String?>(null)
+		private set
+
+	/** The global default view mode, or null for the built-in defaults. */
+	fun defaultViewMode(): PostViewMode? = defaultViewModeValue
+		?.let { value -> PostViewMode.entries.firstOrNull { it.stringValue == value } }
+
+	/** Store the global default ("default" / blank = the built-in defaults). */
+	fun setDefaultViewMode(value: String) {
+		prefs.edit()
+			.putString(KEY_DEFAULT_VIEW_MODE, value.ifBlank { "default" })
+			.apply()
+		defaultViewModeValue = value.ifBlank { "default" }.takeIf { it != "default" }
+	}
+
+	/**
+	 * The mode a feed opens in: the user's per-feed selection when one
+	 * exists (Change View), then the global default (Settings), otherwise
+	 * the feed default — community feeds open in the signature swipe feed
+	 * (Phase 3), everything else in the list view (FINAL-DESIGN Phase 4.7).
+	 * [feedId] must be the normalized [effectiveKey] form.
+	 */
+	fun effectiveViewMode(feedId: String): PostViewMode =
+		if (hasViewModeFor(feedId)) {
+			viewModeFor(feedId)
+		} else {
+			defaultViewMode() ?:
+				if (!feedId.startsWith("search:") && isCommunityFeedPath(feedId)) {
+					PostViewMode.SLIDES
+				} else {
+					PostViewMode.CARDS
+				}
+		}
+
+	/**
+	 * The shared preference key for a listing: the normalized listing
+	 * path (bare community names lowercased, `r/` prefixes stripped) with
+	 * a `search:` prefix for search listings. Every surface that shows a
+	 * listing (the PostList route, the community detail) resolves the
+	 * same key here, so one feed has one view mode.
+	 */
+	fun effectiveKey(subreddit: String, searchQuery: String?): String {
+		val base = subreddit.normalizeListingPath().ifBlank { "frontpage" }
+		return if (searchQuery != null) "search:$base:$searchQuery" else base
+	}
+
+	/**
+	 * True when [subreddit] (a normalized or raw listing path) is a
+	 * community feed (r/<name>) — the feeds that open in the signature
+	 * swipe feed by default.
+	 */
+	fun isCommunityFeedPath(subreddit: String): Boolean = subreddit.isNotBlank() &&
+		!subreddit.startsWith("u/") &&
+		!subreddit.startsWith("m/") &&
+		!subreddit.startsWith("s/") &&
+		subreddit != "frontpage" &&
+		subreddit != "popular" &&
+		subreddit != "all"
+
+	/** The raw persisted mode for [feedId] (exact key, then a legacy key). */
+	private fun storedMode(feedId: String): String? {
+		viewModes[feedId]?.let { return it }
+		// Legacy keys from before keys were normalized (bare `Art`,
+		// `r/Art`): match by the normalized form, case-insensitively.
+		return viewModes.entries
+			.firstOrNull { it.key.normalizeListingPath().equals(feedId, ignoreCase = true) }
+			?.value
+	}
+
+	/** The card mode the feed identified by [feedId] was last browsed in. */
 	fun viewModeFor(feedId: String): PostViewMode {
-		val stored = parseMapping(KEY_VIEW_MODES)[feedId] ?: return PostViewMode.CARDS
+		val stored = storedMode(feedId) ?: return PostViewMode.CARDS
 		return PostViewMode.entries.firstOrNull { it.stringValue == stored } ?: PostViewMode.CARDS
 	}
 
@@ -108,7 +217,7 @@ object FeedPreferences {
 	}
 
 	/** Whether the feed has an explicit view-mode selection (Phase 4.7). */
-	fun hasViewModeFor(feedId: String): Boolean = parseMapping(KEY_VIEW_MODES)[feedId] != null
+	fun hasViewModeFor(feedId: String): Boolean = storedMode(feedId) != null
 
 	fun swipeAction1(): PostSwipeAction = swipeAction(KEY_SWIPE_1, PostSwipeAction.UPVOTE)
 	fun swipeAction2(): PostSwipeAction = swipeAction(KEY_SWIPE_2, PostSwipeAction.DOWNVOTE)
@@ -130,12 +239,8 @@ object FeedPreferences {
 		prefs.edit().putString(key, value.stringValue).apply()
 	}
 
-	/**
-	 * Parse a `key=value` comma list. Feed ids and modes are both
-	 * restricted (no `=` or `,`), so a naive split is safe; a malformed
-	 * entry is dropped rather than throwing.
-	 */
-	internal fun parseViewModes(): Map<String, String> = parseMapping(KEY_VIEW_MODES)
+	/** The persisted per-feed view-mode map (Compose-observable). */
+	internal fun parseViewModes(): Map<String, String> = viewModes
 
 	// ── "More actions" grid (FINAL-DESIGN Phase 5) ──
 
@@ -214,10 +319,18 @@ object FeedPreferences {
 	/** Point the singleton at an explicit context (Application.onCreate). */
 	fun init(context: Context) {
 		contextRef = context
+		// Prime the observable view-mode map from the persisted value so
+		// first composition reads the saved selections.
+		viewModes = parseMapping(KEY_VIEW_MODES)
+		// Prime the global default too ("default" = the built-in defaults).
+		val storedDefault = prefs.getString(KEY_DEFAULT_VIEW_MODE, null)
+		defaultViewModeValue = storedDefault?.takeIf { it != "default" }
 	}
 
 	/** Drop the context override (plain-JUnit tests reset state between cases). */
 	fun resetForTesting() {
 		contextRef = null
+		viewModes = emptyMap()
+		defaultViewModeValue = null
 	}
 }

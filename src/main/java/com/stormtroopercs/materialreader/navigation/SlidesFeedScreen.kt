@@ -131,8 +131,6 @@ fun RealSlidesFeedScreen(
 	onOpenCommunity: (String) -> Unit = {},
 	/** Open Settings (More actions → Settings). */
 	onNavigateToSettings: () -> Unit = {},
-	/** Re-enter this feed as the list view (Change View → a list mode). */
-	onNavigateToList: () -> Unit = {},
 	/** Open the license view (More actions → About → License). */
 	onOpenLicense: () -> Unit = {},
 	/** Open a post's media in the full-screen viewer (media tap). */
@@ -146,11 +144,17 @@ fun RealSlidesFeedScreen(
 	val context = LocalContext.current
 	val snackbarHostState = remember { SnackbarHostState() }
 
+	// The feed's mode, read live from the observable prefs (the entry
+	// renders this surface only while the mode is Slides; the Change-View
+	// sheet's checkmark shows the real value).
+	val viewMode = FeedPreferences.effectiveViewMode(
+		FeedPreferences.effectiveKey(subreddit, searchQuery),
+	)
+
 	var sortDialogOpen by remember { mutableStateOf(false) }
 	var moreActionsOpen by remember { mutableStateOf(false) }
 	var changeViewOpen by remember { mutableStateOf(false) }
 	var aboutOpen by remember { mutableStateOf(false) }
-	val toolbarVisible = remember { mutableStateOf(false) }
 
 	LaunchedEffect(subreddit, searchQuery) {
 		viewModel.fetchPosts(subreddit, searchQuery)
@@ -352,22 +356,23 @@ fun RealSlidesFeedScreen(
 			)
 		}
 
-		// Change View (from the grid): the card modes; picking a list mode
-		// re-enters this feed as the list view.
+		// Change View (from the grid): the card modes + Slides. Selecting a
+		// mode persists it; the entry recomposes in place (picking a list
+		// mode swaps this surface for the list view — no re-navigation).
 		if (changeViewOpen) {
 			ChangeViewSheet(
-				current = com.stormtroopercs.materialreader.settings.types.PostViewMode.SLIDES,
+				current = viewMode,
 				onDismiss = { changeViewOpen = false },
 				onSelect = { mode ->
 					FeedPreferences.setViewModeFor(
-						feedIdFor(subreddit, searchQuery),
+						FeedPreferences.effectiveKey(subreddit, searchQuery),
 						mode,
 					)
 					changeViewOpen = false
-					if (mode != com.stormtroopercs.materialreader.settings.types.PostViewMode.SLIDES) {
-						// Leave the swipe feed for the list view.
-						onNavigateToList()
-					}
+				},
+				onCustomize = {
+					changeViewOpen = false
+					onNavigateToSettings()
 				},
 			)
 		}
@@ -514,10 +519,12 @@ private fun CommunityPill(
 
 /**
  * One slide: full-bleed media + bottom scrim + overlay (avatar, meta, title,
- * scrollable selftext) + the six-button action bar.
+ * scrollable selftext) + the six-button action bar. [internal] so the
+ * community detail's Active tab can render the slides feed under its own
+ * header/tabs (one feed, one view mode — no re-navigation).
  */
 @Composable
-private fun SlidePost(
+internal fun SlidePost(
 	post: PostItem,
 	modifier: Modifier = Modifier,
 	onPostClick: () -> Unit,

@@ -105,6 +105,7 @@ import com.stormtroopercs.materialreader.common.time.TimeDuration
 import com.stormtroopercs.materialreader.common.StringUtils
 import com.stormtroopercs.materialreader.settings.types.AppearanceTheme
 import com.stormtroopercs.materialreader.settings.types.PostSwipeAction
+import com.stormtroopercs.materialreader.settings.types.PostViewMode
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -1327,6 +1328,22 @@ private fun getSettingsCategories(
             id = "post_options",
             title = "Post options",
             items = listOf(
+                SettingsItem.ChoiceSetting(
+                    key = "feed_default_view_mode",
+                    label = "Default feed view",
+                    description = "The view feeds open in unless a feed has its own choice from the Change View sheet",
+                    options = listOf(
+                        "Default (per feed)" to "default",
+                        "List" to PostViewMode.LIST.stringValue,
+                        "Compact" to PostViewMode.COMPACT.stringValue,
+                        "Smaller cards" to PostViewMode.SMALLER.stringValue,
+                        "Small cards" to PostViewMode.SIMPLE.stringValue,
+                        "Cards" to PostViewMode.CARDS.stringValue,
+                        "Slides" to PostViewMode.SLIDES.stringValue
+                    ),
+                    get = { FeedPreferences.defaultViewMode()?.stringValue ?: "default" },
+                    set = { FeedPreferences.setDefaultViewMode(it) }
+                ),
                 SettingsItem.ChoiceSetting(
                     key = "post_swipe_action_1",
                     label = "Swipe right action",

@@ -81,8 +81,6 @@ fun RealPostListScreen(
 	onNavigateToUserProfile: (String) -> Unit,
 	onNavigateToPostSubmit: () -> Unit,
 	onNavigateToSubredditSearch: () -> Unit,
-	/** Switch this feed to the swipe feed (Change View → Slides). */
-	onNavigateToSlides: () -> Unit = {},
 	/** Open the default account's own profile (More actions → Profile). */
 	onNavigateToProfile: () -> Unit = {},
 	/** Jump straight to a (random) post's thread (More actions → Random). */
@@ -145,8 +143,11 @@ fun RealPostListScreen(
 		}
 	}
 
-	// The card mode for this feed (persisted per feed, Phase 4.7).
-	val viewMode = FeedPreferences.viewModeFor(feedIdFor(subreddit, searchQuery))
+	// The card mode for this feed (persisted per feed, Phase 4.7). Read
+	// reactively from the observable prefs: a Change-View selection
+	// recomposes the entry in place (list mode swap) — the slides switch
+	// happens at the entry level.
+	val viewMode = FeedPreferences.viewModeFor(FeedPreferences.effectiveKey(subreddit, searchQuery))
 
 	Scaffold(
 		topBar = {
@@ -307,18 +308,23 @@ fun RealPostListScreen(
 		)
 	}
 
-	// The Change-View bottom sheet: the card modes + Slides (which
-	// re-enters this feed as the swipe feed).
+	// The Change-View bottom sheet: the card modes + Slides. Selecting a
+	// mode persists it; the entry recomposes in place (the slides switch
+	// is the entry's job — the surface swap needs no re-navigation).
 	if (changeViewOpen) {
 		ChangeViewSheet(
 			current = viewMode,
 			onDismiss = { changeViewOpen = false },
 			onSelect = { mode ->
-				FeedPreferences.setViewModeFor(feedIdFor(subreddit, searchQuery), mode)
+				FeedPreferences.setViewModeFor(
+					FeedPreferences.effectiveKey(subreddit, searchQuery),
+					mode,
+				)
 				changeViewOpen = false
-				if (mode == PostViewMode.SLIDES) {
-					onNavigateToSlides()
-				}
+			},
+			onCustomize = {
+				changeViewOpen = false
+				onNavigateToSettings()
 			},
 		)
 	}
@@ -388,5 +394,5 @@ fun RealPostListScreen(
 	}
 }
 
-/** The per-feed preference key: the listing path (search listings get a `search:` prefix). */
-internal fun feedIdFor(subreddit: String, searchQuery: String?): String = if (searchQuery != null) "search:$subreddit:$searchQuery" else subreddit.ifBlank { "frontpage" }
+// The per-feed preference key now lives in [FeedPreferences.effectiveKey]
+// (shared by every feed surface so one feed has one view mode).

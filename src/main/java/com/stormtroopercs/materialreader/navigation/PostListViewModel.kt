@@ -182,7 +182,7 @@ class PostListViewModel @Inject constructor(
 		resolveTitle(currentListPath, searchQuery)
 		// The feed's persisted sort (FINAL-DESIGN Phase 4.7) — loaded per
 		// feed so each listing keeps its own order.
-		_sortOption.value = FeedSortOption.forId(FeedPreferences.sortOptionIdFor(feedIdFor(currentListPath, searchQuery)))
+		_sortOption.value = FeedSortOption.forId(FeedPreferences.sortOptionIdFor(FeedPreferences.effectiveKey(currentListPath, searchQuery)))
 		_state.value = PostListUiState.Loading(_state.value !is PostListUiState.Success)
 		fetchList(currentListPath, searchQuery)
 		fetchCommunity(currentListPath, searchQuery)
@@ -204,7 +204,7 @@ class PostListViewModel @Inject constructor(
 		if (option.id == _sortOption.value.id) return
 		_sortOption.value = option
 		FeedPreferences.setSortOptionFor(
-			feedIdFor(currentListPath, currentSearchQuery),
+			FeedPreferences.effectiveKey(currentListPath, currentSearchQuery),
 			option.id,
 		)
 		refresh()

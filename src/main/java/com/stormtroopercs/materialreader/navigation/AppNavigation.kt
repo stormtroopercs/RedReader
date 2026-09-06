@@ -223,19 +223,13 @@ fun AppNavGraph(navigationState: NavigationState) {
 				// has explicitly set to slides); every other mode → the list
 				// view in that card mode.
 				entry<PostList> { key ->
-					val feedId = feedIdFor(key.subreddit, key.searchQuery)
-					// No explicit selection: community feeds open in the
-					// signature swipe feed (the Phase 3 default); everything
-					// else opens in the list view.
-					val viewMode = if (FeedPreferences.hasViewModeFor(feedId)) {
-						FeedPreferences.viewModeFor(feedId)
-					} else {
-						if (key.searchQuery == null && isCommunityFeedPath(key.subreddit)) {
-							PostViewMode.SLIDES
-						} else {
-							PostViewMode.CARDS
-						}
-					}
+					// The feed's view mode, read reactively from the observable
+					// prefs: a Change-View selection swaps the surface in place
+					// (recomposition) instead of re-navigating — a re-navigation
+					// pushed a second, equal NavKey entry and blanked the screen.
+					val viewMode = FeedPreferences.effectiveViewMode(
+						FeedPreferences.effectiveKey(key.subreddit, key.searchQuery),
+					)
 					if (viewMode == PostViewMode.SLIDES) {
 						RealSlidesFeedScreen(
 							subreddit = key.subreddit,
@@ -280,15 +274,10 @@ fun AppNavGraph(navigationState: NavigationState) {
 							onNavigateToSettings = {
 								navigator.navigate(Settings)
 							},
-							onNavigateToList = {
-								// Re-enter this feed; the new entry's composition
-								// reads the persisted (now list) view mode.
-								navigator.navigate(PostList(key.subreddit, key.searchQuery))
-							},
 							onOpenLicense = openLicense,
 							onOpenMedia = openMedia,
-						)
-					} else {
+							)
+							} else {
 						RealPostListScreen(
 							subreddit = key.subreddit,
 							searchQuery = key.searchQuery,
@@ -304,13 +293,6 @@ fun AppNavGraph(navigationState: NavigationState) {
 							},
 							onNavigateToSubredditSearch = {
 								navigator.navigate(SubredditSearch)
-							},
-							onNavigateToSlides = {
-								// Persist the selection, then re-enter this feed:
-								// the new entry's composition reads the persisted
-								// mode and renders the swipe feed.
-								FeedPreferences.setViewModeFor(feedId, PostViewMode.SLIDES)
-								navigator.navigate(PostList(key.subreddit, key.searchQuery))
 							},
 							onNavigateToProfile = {
 								val username = RedditAccountManager.getInstance(context).defaultAccount.username
@@ -331,8 +313,8 @@ fun AppNavGraph(navigationState: NavigationState) {
 							},
 							onOpenLicense = openLicense,
 							onOpenMedia = openMedia,
-						)
-					}
+							)
+							}
 				}
 
 				// Child: Comment list
@@ -639,13 +621,9 @@ fun AppNavGraph(navigationState: NavigationState) {
 }
 
 /**
- * True when [subreddit] is a community feed (r/<name>) — the feeds that
- * open in the signature swipe feed by default.
+ * The entry-point for a listing that may not be a community: community
+ * names route through the community detail (Phase 6.3) — the other feeds
+ * (frontpage, user, multireddit, search) open the standard list feed.
  */
-private fun isCommunityFeedPath(subreddit: String): Boolean = subreddit.isNotBlank() &&
-	!subreddit.startsWith("u/") &&
-	!subreddit.startsWith("m/") &&
-	!subreddit.startsWith("s/") &&
-	subreddit != "frontpage" &&
-	subreddit != "popular" &&
-	subreddit != "all"
+private fun isCommunityFeedPath(subreddit: String): Boolean =
+	FeedPreferences.isCommunityFeedPath(subreddit)

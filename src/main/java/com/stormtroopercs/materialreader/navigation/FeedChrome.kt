@@ -170,7 +170,9 @@ fun SortOptionsDialog(
 /**
  * The reference's "Change View" bottom sheet (FINAL-DESIGN Phase 4.6): the
  * card modes (List / Compact / Smaller cards / Small cards / Cards /
- * Slides) + Dismiss + Customize. Selecting an entry closes the sheet.
+ * Slides) + Dismiss + Customize. Selecting an entry applies the mode
+ * (the surface switches in place) and closes the sheet; Customize opens
+ * the per-view options (Settings → Post options).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -178,6 +180,7 @@ fun ChangeViewSheet(
 	current: PostViewMode,
 	onDismiss: () -> Unit,
 	onSelect: (PostViewMode) -> Unit,
+	onCustomize: () -> Unit = {},
 ) {
 	ModalBottomSheet(onDismissRequest = onDismiss) {
 		Column(modifier = Modifier.padding(bottom = 24.dp)) {
@@ -203,7 +206,7 @@ fun ChangeViewSheet(
 				// Customize: the per-view options (swipe actions live in
 				// Settings → Post options; there is no per-view customizer in
 				// the reference beyond that).
-				TextButton(onClick = onDismiss) { Text("Customize") }
+				TextButton(onClick = onCustomize) { Text("Customize") }
 			}
 		}
 	}
