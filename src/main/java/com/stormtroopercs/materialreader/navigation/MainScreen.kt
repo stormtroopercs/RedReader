@@ -18,7 +18,6 @@
 package com.stormtroopercs.materialreader.navigation
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -27,7 +26,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,19 +47,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
  * Main screen composable.
  * Replaces MainMenuFragment with Compose UI.
  *
- * [accountName] is the signed-in Reddit username, or null when not
- * authenticated. The account row opens the user's own profile when
- * authenticated (avatar, karma, sign out) and offers sign-in otherwise.
+ * The account (u/username) and Messages rows live in the navigation drawer,
+ * so this screen no longer carries an account or inbox entry — it lists
+ * search, the signed-in user's subscribed subreddits, and the default feeds.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    accountName: String? = null,
     onNavigateToPostList: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToLogin: () -> Unit = {},
-    onNavigateToInbox: () -> Unit = {},
-    onNavigateToProfile: (String) -> Unit = {},
     onNavigateToSubredditSearch: () -> Unit = {},
     viewModel: MainScreenViewModel = hiltViewModel()
 ) {
@@ -105,57 +99,6 @@ fun MainScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            item(key = "account") {
-                val signedIn = !accountName.isNullOrBlank()
-                ListItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            onClick = {
-                                if (signedIn) {
-                                    onNavigateToProfile(accountName)
-                                } else {
-                                    onNavigateToLogin()
-                                }
-                            }
-                        ),
-                    leadingContent = {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null
-                        )
-                    },
-                    headlineContent = {
-                        Text(
-                            text = accountName?.takeIf { it.isNotBlank() }?.let { "u/$it" } ?: "Sign in to Reddit",
-                            fontWeight = if (signedIn) androidx.compose.ui.text.font.FontWeight.Normal else androidx.compose.ui.text.font.FontWeight.Bold
-                        )
-                    },
-                    supportingContent = {
-                        if (signedIn) {
-                            Text(text = "Profile and sign out")
-                        } else {
-                            Text(text = "Login required to view posts")
-                        }
-                    },
-                    trailingContent = {
-                        if (signedIn) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = null
-                            )
-                        }
-                    }
-                )
-            }
-
-            item(key = "inbox") {
-                MainListItem(
-                    title = "Messages",
-                    onClick = { onNavigateToInbox() }
-                )
-            }
-
             item(key = "search") {
                 MainListItem(
                     title = "Search subreddits",

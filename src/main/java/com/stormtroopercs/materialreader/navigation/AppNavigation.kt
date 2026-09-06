@@ -161,23 +161,11 @@ fun AppNavGraph(navigationState: NavigationState) {
 				// Top-level: Main screen
 				entry<Main> {
 					MainScreen(
-						accountName = accountName.value,
 						onNavigateToPostList = { subreddit ->
 							navigator.navigate(PostList(subreddit))
 						},
 						onNavigateToSettings = {
 							navigator.navigate(Settings)
-						},
-						onNavigateToLogin = {
-							navigator.navigate(OAuthLogin)
-						},
-						onNavigateToInbox = {
-							navigator.navigate(Inbox)
-						},
-						onNavigateToProfile = {
-							// The account row opens the signed-in user's own
-							// profile (karma, avatar, sign out).
-							navigator.navigate(UserProfile(it))
 						},
 						onNavigateToSubredditSearch = {
 							navigator.navigate(SubredditSearch)
