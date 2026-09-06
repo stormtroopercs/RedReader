@@ -26,7 +26,9 @@ import com.stormtroopercs.materialreader.account.RedditAccountManager
 import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.cache.CacheRequest
 import com.stormtroopercs.materialreader.cache.CacheRequestCallbacks
+import com.stormtroopercs.materialreader.cache.downloadstrategy.DownloadStrategy
 import com.stormtroopercs.materialreader.cache.downloadstrategy.DownloadStrategyIfNotCached
+import com.stormtroopercs.materialreader.cache.downloadstrategy.DownloadStrategyIfTimestampOutsideBounds
 import com.stormtroopercs.materialreader.common.AndroidCommon
 import com.stormtroopercs.materialreader.common.BugReporter
 import com.stormtroopercs.materialreader.common.Constants
@@ -34,8 +36,10 @@ import com.stormtroopercs.materialreader.common.GenericFactory
 import com.stormtroopercs.materialreader.common.PrefsUtility
 import com.stormtroopercs.materialreader.common.Priority
 import com.stormtroopercs.materialreader.common.RRError
+import com.stormtroopercs.materialreader.common.TimestampBound
 import com.stormtroopercs.materialreader.common.UriString
 import com.stormtroopercs.materialreader.common.datastream.SeekableInputStream
+import com.stormtroopercs.materialreader.common.time.TimeDuration
 import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import com.stormtroopercs.materialreader.io.RequestResponseHandler
 import com.stormtroopercs.materialreader.reddit.APIResponseHandler.ActionResponseHandler
@@ -57,6 +61,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
@@ -147,6 +152,55 @@ class PostListViewModel @Inject constructor(
 
 	private var currentListPath: String = ""
 	private var currentSearchQuery: String? = null
+
+	/**
+	 * Per-listing cache strategy. Community / frontpage / search listings are
+	 * read-only from the app's point of view — `IfNotCached` is enough (they
+	 * change on Reddit's side, but a stale page is acceptable offline and the
+	 * sort dialog / pull-refresh can force a refetch through a fresh URL).
+	 *
+	 * User-owned listings (`u/<user>/saved|history|upvoted|downvoted|hidden|
+	 * submitted` and the user's multireddits) are different: the app itself
+	 * mutates them (save, hide, vote). With the plain `IfNotCached` strategy
+	 * the first fetch — e.g. an empty Saved list — is served from cache
+	 * forever, so a post saved in the feed never appears in the drawer's
+	 * Saved screen. These get a 2-minute TTL instead: re-entry within two
+	 * minutes still shows the (locally-mutated) cached list, and a later
+	 * visit re-downloads, so the listing converges on the server state.
+	 */
+	private fun downloadStrategyFor(listPath: String): DownloadStrategy = if (
+		listPath.startsWith("u/") || listPath.startsWith("m/")
+	) {
+		DownloadStrategyIfTimestampOutsideBounds(
+			TimestampBound.notOlderThan(TimeDuration.minutes(2)),
+		)
+	} else {
+		DownloadStrategyIfNotCached.INSTANCE
+	}
+
+	/**
+	 * The user-owned listing [action] mutates, as a default-sort URI — the
+	 * same shape `buildListingUri` builds for the drawer's listings (the
+	 * drawer always opens them with the listing's default order). `null`
+	 * when the action does not touch a user listing (a vote on someone else's
+	 * post also changes upvoted/downvoted, but those listings are opened the
+	 * same way, so they are covered by the same invalidation).
+	 */
+	private fun affectedUserListingUri(action: PostAction): UriString? {
+		val type = when (action) {
+			PostAction.SAVE, PostAction.UNSAVE -> UserPostListingURL.Type.SAVED
+			PostAction.HIDE, PostAction.UNHIDE -> UserPostListingURL.Type.HIDDEN
+			PostAction.UPVOTE -> UserPostListingURL.Type.UPVOTED
+			PostAction.DOWNVOTE -> UserPostListingURL.Type.DOWNVOTED
+			else -> return null
+		}
+		val username = accountManager.getDefaultAccount().username
+		if (username.isEmpty()) return null
+		return UriString(
+			UserPostListingURL(type, username, null, null, null, null)
+				.generateJsonUri().toString(),
+		)
+	}
 
 	/**
 	 * Derive a human-readable title for the listing the screen will show. For a
@@ -243,8 +297,23 @@ class PostListViewModel @Inject constructor(
 
 		val handler = object : ActionResponseHandler(activity) {
 			override fun onSuccess() {
+				// A save/hide/vote mutates one of the user's own listings, so
+				// the cached copy of that listing (e.g. an empty Saved page)
+				// is stale from this instant on: drop it (off the UI thread)
+				// so the next open re-downloads instead of serving the
+				// pre-action page.
+				affectedUserListingUri(action)?.let { cacheManager.invalidate(it, account) }
 				AndroidCommon.runOnUiThread {
-					_posts.value = _posts.value.map { if (it.id == post.id) applyPostAction(it, action) else it }
+					val updated = _posts.value.map { if (it.id == post.id) applyPostAction(it, action) else it }
+					_posts.value = updated
+					// The feed surfaces (list + slides) render `state`, not `posts` —
+					// the success path must update BOTH, else the action (e.g. save)
+					// shows its snackbar but the row's icon/flags keep the pre-action
+					// value until the next refetch.
+					_state.update {
+						if (it is PostListUiState.Success) PostListUiState.Success(it.posts.map { p -> if (p.id == post.id) applyPostAction(p, action) else p })
+						else it
+					}
 					_actionResult.value = resultMessageFor(action)
 				}
 			}
@@ -371,7 +440,7 @@ class PostListViewModel @Inject constructor(
 					account,
 					null,
 					Priority(Constants.Priority.API_POST_LIST),
-					DownloadStrategyIfNotCached.INSTANCE,
+					downloadStrategyFor(currentListPath),
 					Constants.FileType.POST_LIST,
 					CacheRequest.DownloadQueueType.REDDIT_API,
 					context,

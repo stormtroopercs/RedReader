@@ -332,6 +332,21 @@ class CacheManager @Inject constructor(
         return dbManager.select(url, user.username, null)
     }
 
+    /**
+     * Invalidate the cached copy of [url] for [user]: drops every cache
+     * session row and deletes the backing file(s). The next request for the
+     * URL will miss the cache and re-download. Used for listings the app
+     * itself mutates (the user's saved / hidden / voted lists) so the next
+     * open reflects the change immediately instead of serving the stale page.
+     * No-op when nothing is cached.
+     */
+    fun invalidate(url: UriString, user: RedditAccount) {
+        for (entry in dbManager.select(url, user.username, null)) {
+            getExistingCacheFile(entry.id)?.delete()
+            dbManager.delete(entry.id)
+        }
+    }
+
     val preferredCacheLocation: File
         get() = File(
             PrefsUtility.pref_cache_location(context)!!
