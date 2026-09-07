@@ -138,6 +138,8 @@ fun CommunityDetailScreen(
 	onOpenMedia: (PostItem) -> Unit = {},
 	/** Open a post's video in the full-screen video overlay (video-media tap). */
 	onOpenVideo: (PostItem) -> Unit = {},
+	/** Open a link post's article (a tap on its resolved article preview). */
+	onOpenLink: (PostItem) -> Unit = {},
 ) {
 	val name = tabTitle.removePrefix("r/")
 	val communityVm: CommunityViewModel = hiltViewModel()
@@ -357,7 +359,14 @@ fun CommunityDetailScreen(
 													},
 													onAuthorClick = onNavigateToUserProfile,
 													onPostAction = ::onPostAction,
-													onMediaClick = { onOpenMedia(slidePosts[page]) },
+													onMediaClick = {
+														val p = slidePosts[page]
+														when {
+															p.isVideo -> onOpenVideo(p)
+															p.linkPreviewUrl?.isNotBlank() == true -> onOpenLink(p)
+															else -> onOpenMedia(p)
+														}
+													},
 												)
 											}
 										}
@@ -372,6 +381,7 @@ fun CommunityDetailScreen(
 								onOpenThread = onNavigateToCommentList,
 								onOpenMedia = onOpenMedia,
 								onOpenVideo = onOpenVideo,
+								onOpenLink = onOpenLink,
 								onAuthorClick = onNavigateToUserProfile,
 								onPostAction = ::onPostAction,
 							)
@@ -556,6 +566,7 @@ private fun CommunityActiveFeed(
 	onOpenThread: (String) -> Unit,
 	onOpenMedia: (PostItem) -> Unit,
 	onOpenVideo: (PostItem) -> Unit,
+	onOpenLink: (PostItem) -> Unit = {},
 	onAuthorClick: (String) -> Unit,
 	onPostAction: (PostItem, PostAction) -> Unit,
 ) {
@@ -591,6 +602,8 @@ private fun CommunityActiveFeed(
 						mode = viewMode,
 						onOpenThread = { onOpenThread(post.id) },
 						onMediaClick = { onOpenMedia(post) },
+						onOpenVideo = { onOpenVideo(post) },
+						onOpenLink = { onOpenLink(post) },
 						onAuthorClick = onAuthorClick,
 						onPostAction = { p, a -> onPostAction(p, a) },
 						swipeEnabled = true,

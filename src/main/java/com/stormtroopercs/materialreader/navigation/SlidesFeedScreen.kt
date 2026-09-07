@@ -139,6 +139,8 @@ fun RealSlidesFeedScreen(
 	onOpenMedia: (PostItem) -> Unit = {},
 	/** Open a post's video in the full-screen video overlay (video-media tap). */
 	onOpenVideo: (PostItem) -> Unit = {},
+	/** Open a link post's article (a tap on its resolved article preview). */
+	onOpenLink: (PostItem) -> Unit = {},
 	/**
 	 * True when this feed is the top-level Posts tab (the app root) rather than
 	 * a pushed child: the toolbar stays visible (so the drawer hamburger is
@@ -276,10 +278,19 @@ fun RealSlidesFeedScreen(
 							onAuthorClick = onNavigateToUserProfile,
 							onPostAction = ::onPostAction,
 							// The slide's media tap: a video post opens the full-screen
-					// video overlay (its preview still is the slide's media);
-					// any other post opens the full-screen image viewer.
-					onMediaClick = { if (posts[page].isVideo) onOpenVideo(posts[page]) else onOpenMedia(posts[page]) },
-						)
+							// video overlay (its preview still is the slide's media);
+							// a link post (its article preview = the og:image) opens
+							// the article itself; any other post opens the
+							// full-screen image viewer.
+							onMediaClick = {
+								val p = posts[page]
+								when {
+									p.isVideo -> onOpenVideo(p)
+									p.linkPreviewUrl?.isNotBlank() == true -> onOpenLink(p)
+									else -> onOpenMedia(p)
+								}
+							},
+							)
 					}
 
 					// The revealed toolbar (community pill + actions), sliding
@@ -736,9 +747,16 @@ private fun SlideMedia(
 	// Text posts (self) have no media: `url` is the thread permalink and
 	// `thumbnail` the 70×70 community icon — fetching either as an image
 	// fails. Null routes to the neutral surfaceVariant backdrop below.
-	val mediaUrl = if (post.isSelf) null else post.url?.takeIf { it.isNotBlank() && !it.contains("reddit.com") }
-		?: post.thumbnail
-			?.takeIf { it.isNotBlank() && it != "default" }
+	// A link post (news article, …) whose page declared an og:image shows
+	// the article's hero picture — the post's `url` is the article page
+	// (HTML), which the image pipeline cannot decode.
+	val mediaUrl = if (post.isSelf) {
+		null
+	} else {
+		post.linkPreviewUrl?.takeIf { it.isNotBlank() }
+			?: post.url?.takeIf { it.isNotBlank() && !it.contains("reddit.com") }
+			?: post.thumbnail?.takeIf { it.isNotBlank() && it != "default" }
+	}
 	// A video post's slide media is its static preview still (Reddit's
 	// `reddit_video_preview`) — shown full-bleed while scrolling, tapped to
 	// open the full-screen player (the caller routes video taps there).

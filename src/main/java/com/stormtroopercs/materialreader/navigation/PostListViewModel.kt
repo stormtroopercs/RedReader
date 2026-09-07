@@ -33,6 +33,7 @@ import com.stormtroopercs.materialreader.common.AndroidCommon
 import com.stormtroopercs.materialreader.common.BugReporter
 import com.stormtroopercs.materialreader.common.Constants
 import com.stormtroopercs.materialreader.common.GenericFactory
+import com.stormtroopercs.materialreader.common.LinkHandler
 import com.stormtroopercs.materialreader.common.PrefsUtility
 import com.stormtroopercs.materialreader.common.Priority
 import com.stormtroopercs.materialreader.common.RRError
@@ -58,11 +59,14 @@ import com.stormtroopercs.materialreader.reddit.url.SubredditPostListURL
 import com.stormtroopercs.materialreader.reddit.url.UserPostListingURL
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import java.io.IOException
 import java.util.UUID
 import javax.inject.Inject
@@ -116,6 +120,16 @@ data class PostItem(
 	 * Null for non-video posts (and video posts with no preview).
 	 */
 	val videoPreviewUrl: String? = null,
+	/**
+	 * The picture a **link post** (external article / page) should show in
+	 * the feed: the og:image (fallback: twitter:image) declared in the
+	 * linked page — the article's "hero" image. Null for self posts, video
+	 * posts, direct-media links (their media is the `url` itself), and link
+	 * posts whose page declares no such tag (the feed then shows no
+	 * preview instead of a broken one). Populated after the listing load by
+	 * [resolveLinkPreviews].
+	 */
+	val linkPreviewUrl: String? = null,
 )
 
 /**
@@ -428,9 +442,14 @@ class PostListViewModel @Inject constructor(
 								// action toggles this): drop posts the
 								// account's change data marks as read.
 								.let { filterReadPosts(it, account) }
+								// Link posts (news articles, …) carry no image in
+								// the Reddit payload: resolve each one's og:image
+								// (the article's hero picture) so the feed can show
+								// it instead of a broken image box.
+								.let { resolveLinkPreviews(it) }
 
-							_posts.value = posts
-							_state.value = PostListUiState.Success(posts)
+								_posts.value = posts
+								_state.value = PostListUiState.Success(posts)
 						} catch (e: Exception) {
 							_state.value = PostListUiState.Error(
 								RRError(
@@ -531,6 +550,68 @@ class PostListViewModel @Inject constructor(
 		} catch (e: Exception) {
 			posts
 		}
+	}
+
+	/**
+	 * Resolve the og:image (the article's "hero" picture) for the feed's
+	 * **link posts** — external article / page links (news posts). Such a
+	 * post's Reddit payload carries no image at all: `url` is the article
+	 * page, `thumbnail` is empty and there is no `preview`, so the feed's
+	 * image pipeline would try to decode the article's HTML as a bitmap and
+	 * leave a grey placeholder. Each eligible post's linked page is fetched
+	 * (one parallel worker at a time — the shared HTTPBackend is bounded)
+	 * and its og:image / twitter:image meta tag extracted (see
+	 * [LinkHandler.fetchOgImage]); the first success is remembered in
+	 * [PostItem.linkPreviewUrl].
+	 *
+	 * Only **link** posts are candidates: self posts and video posts are
+	 * skipped (the video path resolves its own preview still), and direct
+	 * image / GIF / video file links are skipped too — their media *is*
+	 * the `url`, which the feed already renders. The result is returned
+	 * immediately (an empty set of resolved previews); the resolved values
+	 * flow back through the state flow as they complete, so a page whose
+	 * fetch fails or declares no og:image simply shows no preview instead
+	 * of a broken one.
+	 */
+	private fun resolveLinkPreviews(posts: List<PostItem>): List<PostItem> {
+		val candidates = posts
+			.filterNot { it.isSelf || it.isVideo }
+			.map { post -> post.url?.takeIf { it.isNotBlank() && !it.contains("reddit.com") } }
+			.filterNotNull()
+			.filter { !LinkHandler.isProbablyAnImage(UriString(it)) }
+		if (candidates.isEmpty()) return posts
+
+		val work = candidates.distinct()
+		val scope = viewModelScope
+		// Cap the concurrent page fetches (the shared HTTPBackend's
+		// connection pool is small); the rest queue up in order.
+		val permits = Semaphore(2)
+		work.forEach { url ->
+			scope.launch(Dispatchers.IO) {
+				permits.withPermit {
+					try {
+						LinkHandler.fetchOgImage(context, UriString(url))?.value?.let { og ->
+							// Reflect the resolved preview into the current list
+							// (both the `posts` and `state` the surfaces render).
+							_posts.update { current ->
+								current.map { if (it.url == url) it.copy(linkPreviewUrl = og) else it }
+							}
+							_state.update {
+								if (it is PostListUiState.Success) {
+									PostListUiState.Success(
+										it.posts.map { p -> if (p.url == url) p.copy(linkPreviewUrl = og) else p },
+									)
+								} else it
+							}
+						}
+					} catch (e: Exception) {
+						// No preview for this page; the post simply renders
+						// without media.
+					}
+				}
+			}
+		}
+		return posts
 	}
 }
 

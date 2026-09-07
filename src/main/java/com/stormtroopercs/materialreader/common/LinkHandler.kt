@@ -40,6 +40,7 @@ import com.stormtroopercs.materialreader.common.General.quickToast
 import com.stormtroopercs.materialreader.common.PrefsUtility.AlbumViewMode
 import com.stormtroopercs.materialreader.common.PrefsUtility.SharingDomain
 import com.stormtroopercs.materialreader.fragments.ShareOrderDialog
+import com.stormtroopercs.materialreader.http.FailedRequestBody
 import com.stormtroopercs.materialreader.http.HTTPBackend
 import com.stormtroopercs.materialreader.image.AlbumInfo
 import com.stormtroopercs.materialreader.image.DeviantArtAPI
@@ -66,6 +67,7 @@ import com.stormtroopercs.materialreader.reddit.url.SearchPostListURL
 import com.stormtroopercs.materialreader.reddit.url.SubredditPostListURL
 import com.stormtroopercs.materialreader.reddit.url.UserCommentListingURL
 import com.stormtroopercs.materialreader.reddit.url.UserPostListingURL
+import java.io.InputStream
 import java.util.Locale
 import java.util.regex.Pattern
 import kotlin.concurrent.thread
@@ -726,6 +728,143 @@ object LinkHandler {
 	fun getRedGifsEmbedUrl(url: UriString): UriString? = getRedGifsId(url)?.let { imgId ->
 		UriString("https://www.redgifs.com/ifr/" + StringUtils.asciiLowercase(imgId))
 	}
+
+	/**
+	 * The og:image (fallback: twitter:image) declared in the HTML page at
+	 * [url] — the article's "hero" picture. Link posts (news articles,
+	 * blog posts, …) carry no image data in the Reddit payload at all
+	 * (`url` is the article page, `thumbnail` is empty, no `preview`);
+	 * the only place the article's picture exists is this meta tag.
+	 *
+	 * Runs on the calling thread and performs a network fetch (bounded at
+	 * 512 KB and 10 s, via the shared [HTTPBackend] — app user-agent,
+	 * redirects followed). Returns null when the fetch fails, the
+	 * publisher declares no such tag, or the declared value cannot be
+	 * resolved to an absolute http(s) URL. Callers are expected to run
+	 * this off the main thread.
+	 */
+	@JvmStatic
+	fun fetchOgImage(context: Context, url: UriString): UriString? {
+		val found = arrayOf<String?>(null)
+		var failed = false
+		val request = HTTPBackend.backend.prepareRequest(
+			context,
+			HTTPBackend.RequestDetails(url, null),
+		)
+		request.executeInThisThread(object : HTTPBackend.Listener {
+			override fun onError(
+				failureType: CacheRequest.RequestFailureType,
+				exception: Throwable?,
+				httpStatus: Int?,
+				body: FailedRequestBody?,
+			) {
+				failed = true
+			}
+
+			override fun onSuccess(mimetype: String?, bodyBytes: Long?, body: InputStream) {
+				// Read up to 512 KB: every og:image meta tag sits in the
+				// <head>, long before the page body. (InputStream.readNBytes
+				// needs API 33; minSdk is 23.)
+				val buf = java.io.ByteArrayOutputStream(64 * 1024)
+				val chunk = ByteArray(8 * 1024)
+				while (buf.size() < OG_IMAGE_MAX_HTML_BYTES) {
+					val read = body.read(chunk, 0, 8192)
+					if (read < 0) break
+					buf.write(chunk, 0, read)
+				}
+				found[0] = extractOgImage(String(buf.toByteArray(), Charsets.UTF_8), url.value)
+			}
+		})
+		if (failed) {
+			Log.i("LinkHandler:fetchOgImage", "fetch failed for $url")
+			return null
+		}
+		return found[0]?.let { UriString(it) }
+	}
+
+	/**
+	 * Extracts the first declared og:image (else twitter:image) content
+	 * value from an HTML document. Handles both attribute orders
+	 * (`property="og:image" content="…"` and the reversed form) and
+	 * single-quoted attributes, and unescapes the common HTML entities in
+	 * the value (og:image URLs commonly carry `&amp;`).
+	 *
+	 * The declared value may be relative (some publishers, e.g. who.int,
+	 * ship `/path/to/image.jpg` or `//cdn.example/image.jpg`); it is
+	 * resolved against [baseUrl] — the article page's own URL — so the
+	 * result is always an absolute http(s) URL. Returns null when the
+	 * publisher declares no such tag.
+	 */
+	internal fun extractOgImage(html: String, baseUrl: String?): String? {
+		val ogMatcher = OG_IMAGE_META_PATTERN.matcher(html)
+		val candidate = when {
+			ogMatcher.find() -> ogMatcher.group(1)
+			else -> {
+				val twMatcher = TWITTER_IMAGE_META_PATTERN.matcher(html)
+				if (twMatcher.find()) twMatcher.group(1) else null
+			}
+		}
+		val value = candidate?.let { unescapeHtmlEntities(it).trim() } ?: return null
+		return resolveUrl(baseUrl, value)
+	}
+
+	/**
+	 * Resolve [candidate] (an og:image value, possibly relative or
+	 * protocol-relative) to an absolute http(s) URL against [base]
+	 * (the page it came from). Returns null if the result is not a
+	 * usable http(s) URL.
+	 */
+	internal fun resolveUrl(base: String?, candidate: String): String? {
+		val resolved = when {
+			// Already absolute.
+			candidate.startsWith("http://", true) ||
+				candidate.startsWith("https://", true) -> candidate
+			// Protocol-relative: //cdn.example/img.jpg
+			candidate.startsWith("//") -> "https:" + candidate
+			base != null -> {
+				val origin = runCatching {
+					val uri = java.net.URI(base)
+					"${uri.scheme ?: "https"}://${uri.host}"
+				}.getOrNull()
+				when {
+					// Root-relative: /ResourcePackages/…
+					candidate.startsWith("/") -> (origin ?: "https:") + candidate
+					// Otherwise resolve against the full base URL.
+					else -> runCatching {
+						java.net.URI(base).resolve(candidate).toString()
+					}.getOrNull() ?: "$origin${if (candidate.startsWith("/")) "" else "/"}$candidate"
+				}
+			}
+			else -> null
+		}
+		return resolved
+			?.takeIf { it.startsWith("http://", true) || it.startsWith("https://", true) }
+	}
+
+	private const val OG_IMAGE_MAX_HTML_BYTES = 512 * 1024
+
+	// content=… may appear before or after property=/name= within the tag.
+	private val OG_IMAGE_META_PATTERN = Pattern.compile(
+		"""<meta[^>]{0,300}?(?:property|name)\s*=\s*["']og:image["'][^>]{0,300}?content\s*=\s*["']([^"']+)["']""",
+		Pattern.CASE_INSENSITIVE,
+	)
+	private val TWITTER_IMAGE_META_PATTERN = Pattern.compile(
+		"""<meta[^>]{0,300}?(?:property|name)\s*=\s*["']twitter:image["'][^>]{0,300}?content\s*=\s*["']([^"']+)["']""",
+		Pattern.CASE_INSENSITIVE,
+	)
+
+	/**
+	 * Unescapes the entities that appear in real-world og:image URLs.
+	 * [android.text.Html.fromHtml] would do this too but its FROM_HTML_MODE
+	 * overloads require API 24 while the app's minSdk is 23.
+	 */
+	private fun unescapeHtmlEntities(value: String): String = value
+		.replace("&amp;", "&")
+		.replace("&lt;", "<")
+		.replace("&gt;", ">")
+		.replace("&quot;", "\"")
+		.replace("&#39;", "'")
+		.replace("&apos;", "'")
 
 	@JvmStatic
 	fun isProbablyAnImage(url: UriString?): Boolean {

@@ -280,6 +280,8 @@ fun PostCard(
 	onOpenThread: () -> Unit,
 	onMediaClick: () -> Unit = {},
 	onOpenVideo: () -> Unit = {},
+	/** Open the linked page of a link post (a tap on its article preview). */
+	onOpenLink: (PostItem) -> Unit = {},
 	onAuthorClick: (String) -> Unit,
 	onPostAction: (PostItem, PostAction) -> Unit,
 	swipeEnabled: Boolean = false,
@@ -303,6 +305,17 @@ fun PostCard(
 		PostViewMode.COMPACT, PostViewMode.LIST -> 2
 		PostViewMode.SIMPLE -> 1
 		else -> 4
+	}
+
+	// The media region's tap: a video post opens the full-screen player, a
+	// link post (its article preview = the og:image) opens the article
+	// itself, any other media opens the full-screen viewer.
+	val mediaTap: () -> Unit = when {
+		post.isVideo -> onOpenVideo
+		post.linkPreviewUrl?.isNotBlank() == true -> {
+			{ onOpenLink(post) }
+		}
+		else -> onMediaClick
 	}
 
 	Column(
@@ -346,7 +359,7 @@ fun PostCard(
 					}
 					if (mediaSize > 0.dp && media != null) {
 						Box(
-							modifier = Modifier.clickable(onClick = if (post.isVideo) onOpenVideo else onMediaClick),
+							modifier = Modifier.clickable(onClick = mediaTap),
 						) {
 							PostThumbnailPreview(
 								uri = media,
@@ -377,7 +390,7 @@ fun PostCard(
 					Box(
 						modifier = Modifier
 							.fillMaxWidth()
-							.clickable(onClick = if (post.isVideo) onOpenVideo else onMediaClick),
+							.clickable(onClick = mediaTap),
 					) {
 						PostThumbnailPreview(
 							uri = media,
@@ -415,18 +428,25 @@ fun PostCard(
  * Resolve the media URI for a post's card. Video posts render their static
  * preview still (Reddit's `reddit_video_preview`) while scrolling instead of
  * a grey badge box — tapping it opens the full-screen player overlay (the
- * screens route video media taps there). Other posts: the post url, else the
- * thumbnail. Text posts (self) render **no media at all**: the listing API
- * hands them a thread permalink as `url` and a 70×70 community icon as
- * `thumbnail`, and fetching either as an image fails, leaving an empty grey
- * placeholder box (the old `startsWith("reddit.com")` guard never matched
- * `https://…` permalinks, so the leak reached the image pipeline).
+ * screens route video media taps there). Link posts (news articles, …)
+ * render the article's og:image (the publisher's hero picture, resolved
+ * into [PostItem.linkPreviewUrl]) — tapping it opens the article itself.
+ * Other posts: the post url, else the thumbnail. Text posts (self) render
+ * **no media at all**: the listing API hands them a thread permalink as
+ * `url` and a 70×70 community icon as `thumbnail`, and fetching either as
+ * an image fails, leaving an empty grey placeholder box (the old
+ * `startsWith("reddit.com")` guard never matched `https://…` permalinks, so
+ * the leak reached the image pipeline).
  */
 private fun rememberMedia(post: PostItem): String? {
 	if (post.isSelf) return null
 	if (post.isVideo) {
 		post.videoPreviewUrl?.takeIf { it.isNotBlank() }?.let { return it }
 	}
+	// A link post whose article page declared an og:image: show the
+	// article's hero picture (fetching the article URL itself as an image
+	// fails — it is HTML, not an image file).
+	post.linkPreviewUrl?.takeIf { it.isNotBlank() }?.let { return it }
 	return post.url?.takeIf { it.isNotBlank() && !it.contains("reddit.com") }
 		?: post.thumbnail?.takeIf { it.isNotBlank() && it != "default" }
 }

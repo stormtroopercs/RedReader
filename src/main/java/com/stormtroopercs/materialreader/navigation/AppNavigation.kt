@@ -141,6 +141,15 @@ fun AppNavGraph(navigationState: NavigationState) {
 			)
 		}
 	}
+	// Opens a **link post's** article in the in-app WebView route (a tap on
+	// its resolved og:image preview): the post's `url` is the linked page
+	// (the news article), not an image.
+	val openLink: (PostItem) -> Unit = { post ->
+		val url = post.url?.takeIf { it.isNotBlank() && !it.contains("reddit.com") }
+		if (url != null) {
+			navigator.navigate(WebViewRoute(url = url, title = post.title))
+		}
+	}
 	DisposableEffect(accountManager) {
 		val listener = RedditAccountChangeListener {
 			accountName.value = accountManager.defaultAccount.username
@@ -212,10 +221,11 @@ fun AppNavGraph(navigationState: NavigationState) {
 				onOpenLicense = openLicense,
 				onOpenMedia = openMedia,
 				onOpenVideo = openVideo,
+				onOpenLink = openLink,
 				isTabRoot = isTabRoot,
 				titleOverride = titleOverride,
-			)
-		} else {
+				)
+				} else {
 			RealPostListScreen(
 				subreddit = subreddit,
 				searchQuery = searchQuery,
@@ -252,6 +262,7 @@ fun AppNavGraph(navigationState: NavigationState) {
 				onOpenLicense = openLicense,
 				onOpenMedia = openMedia,
 				onOpenVideo = openVideo,
+				onOpenLink = openLink,
 				onOpenSubreddits = {
 					navigator.navigate(Subreddits)
 				},
@@ -495,8 +506,9 @@ fun AppNavGraph(navigationState: NavigationState) {
 						onOpenLicense = openLicense,
 						onOpenMedia = openMedia,
 						onOpenVideo = openVideo,
-				)
-			}
+						onOpenLink = openLink,
+						)
+						}
 
 				// Child: Comment reply
 				entry<CommentReply> { key ->
