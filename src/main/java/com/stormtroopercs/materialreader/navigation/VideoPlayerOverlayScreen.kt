@@ -15,10 +15,15 @@
  * along with MaterialReader.  If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
 
+// media3's player APIs are @UnstableApi — this whole screen opts in
+// (same as the image viewer's video path in ImageScreen.kt).
+@file:OptIn(UnstableApi::class)
+
 package com.stormtroopercs.materialreader.navigation
 
 import android.app.Activity
 import android.content.Context
+import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -81,7 +86,6 @@ import java.io.IOException
  * the spinner — the same still the feed shows while scrolling. Back (or the
  * top-right close) pops the route.
  */
-@OptIn(UnstableApi::class)
 @Composable
 fun VideoPlayerOverlayScreen(
 	url: String,
@@ -175,7 +179,6 @@ fun VideoPlayerOverlayScreen(
  * `ExoPlayerWrapperView` (views.video) — with the three centered circular,
  * grey translucent control buttons overlaid on it.
  */
-@OptIn(UnstableApi::class)
 @Composable
 private fun VideoOverlayPlayer(
 	streamFactory: GenericFactory<SeekableInputStream, IOException>,
