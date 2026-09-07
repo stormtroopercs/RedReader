@@ -678,14 +678,15 @@ private fun DrawerRow(
 }
 
 /**
- * A drawer row for one subscribed community: the community's own circular
+ * A list row for one subscribed community: the community's own circular
  * icon (fetched from [iconUrl], the `icon_img` → `community_icon` →
  * `header_img` resolution done in [MainScreenViewModel]) with the Snoo
  * fallback for icon-less communities — instead of a generic icon. Mirrors
- * the Explore directory rows.
+ * the Explore directory rows. Shared by the drawer's Subscriptions section
+ * and the full-screen Subreddits list.
  */
 @Composable
-private fun SubscriptionRow(
+fun SubscriptionRow(
 	name: String,
 	iconUrl: String?,
 	onClick: () -> Unit,

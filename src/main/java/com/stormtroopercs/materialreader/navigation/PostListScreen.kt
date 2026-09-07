@@ -85,6 +85,9 @@ fun RealPostListScreen(
 	onNavigateToSubredditSearch: () -> Unit,
 	/** Open the default account's own profile (More actions → Profile). */
 	onNavigateToProfile: () -> Unit = {},
+	/** Open the full-screen list of the account's subscribed subreddits
+	 * (the feed's Subreddits chip). */
+	onOpenSubreddits: () -> Unit = {},
 	/** Jump straight to a (random) post's thread (More actions → Random). */
 	onNavigateToRandomPost: (String) -> Unit = {},
 	/** Open the account's saved list (More actions → Saved). */
@@ -225,15 +228,14 @@ fun RealPostListScreen(
 			Column(
 				modifier = Modifier.fillMaxSize(),
 			) {
-				// The reference's feed filter chips: the Active sort chip (opens
-				// the 9-option dialog) + Communities / Instances (their
-				// directories; the single-instance app opens the community
-				// search for both).
+				// The feed's filter chips: the Active sort chip (opens the
+				// 9-option dialog) + Subreddits (the account's subscribed
+				// subreddits — the same list as the drawer's Subscriptions
+				// section).
 				FeedFilterChips(
 					sortLabel = sortOption.label,
 					onSortTap = { sortDialogOpen = true },
-					onCommunitiesTap = onNavigateToSubredditSearch,
-					onInstancesTap = onNavigateToSubredditSearch,
+					onSubredditsTap = onOpenSubreddits,
 				)
 
 				when (val state = uiState) {

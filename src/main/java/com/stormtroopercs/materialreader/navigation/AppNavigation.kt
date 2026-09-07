@@ -252,6 +252,9 @@ fun AppNavGraph(navigationState: NavigationState) {
 				onOpenLicense = openLicense,
 				onOpenMedia = openMedia,
 				onOpenVideo = openVideo,
+				onOpenSubreddits = {
+					navigator.navigate(Subreddits)
+				},
 				isTabRoot = isTabRoot,
 				titleOverride = titleOverride,
 				)
@@ -433,6 +436,18 @@ fun AppNavGraph(navigationState: NavigationState) {
 					com.stormtroopercs.materialreader.compose.ui.SubredditSearchScreen(
 						onNavigateBack = { navigator.goBack() },
 						onSubredditSelected = { subreddit ->
+							navigator.navigate(PostList(subreddit))
+						},
+					)
+				}
+
+				// Child: the signed-in user's subscribed subreddits (the Posts
+				// tab's Subreddits chip; the same list the drawer's Subscriptions
+				// section shows — one MainScreenViewModel per entry).
+				entry<Subreddits> {
+					SubredditsScreen(
+						onNavigateBack = { navigator.goBack() },
+						onOpenSubreddit = { subreddit ->
 							navigator.navigate(PostList(subreddit))
 						},
 					)

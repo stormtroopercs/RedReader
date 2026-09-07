@@ -129,6 +129,16 @@ data object Accounts : NavKey
 data class Album(val url: String) : NavKey
 
 /**
+ * The full-screen list of the signed-in user's subscribed subreddits.
+ * Opened by the Posts tab's **Subreddits** feed chip (the Lemmy app's
+ * "Communities" directory chip, repurposed — this is a single-instance
+ * Reddit app, so the list is the account's own subscriptions, matching the
+ * drawer's Subscriptions section).
+ */
+@Serializable
+object Subreddits : NavKey
+
+/**
  * Full-screen video player for a feed video post. [url] is the post's mp4
  * stream (its `findUrl()`), [previewUrl] the post's static preview still
  * (Reddit's `reddit_video_preview` — shown while the stream resolves).

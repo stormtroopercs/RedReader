@@ -50,16 +50,20 @@ import com.stormtroopercs.materialreader.settings.types.PostViewMode
 /**
  * The reference's top-of-feed filter chips (FINAL-DESIGN Phase 4.4): the
  * **Active** chip (the current sort — filled + caret, opens the 9-option
- * sort dialog) plus **Communities** / **Instances** (opening the respective
- * directories). Horizontal, scrollable, sits between the top bar and the
- * post list.
+ * sort dialog) plus **Subreddits** (the signed-in user's subscribed
+ * subreddits — the same list the drawer's Subscriptions section shows).
+ * Horizontal, scrollable, sits between the top bar and the post list.
+ *
+ * (Lemmy remnant removed: the old **Communities** / **Instances** chips were
+ * the Lemmy app's community / instance directory. This is a single-instance
+ * Reddit app — "Communities" became "Subreddits" and opened the subscribed
+ * list, and "Instances" (a Lemmy-only concept) was dropped.)
  */
 @Composable
 fun FeedFilterChips(
 	sortLabel: String,
 	onSortTap: () -> Unit,
-	onCommunitiesTap: () -> Unit,
-	onInstancesTap: () -> Unit,
+	onSubredditsTap: () -> Unit,
 	modifier: Modifier = Modifier,
 ) {
 	LazyRow(
@@ -86,15 +90,8 @@ fun FeedFilterChips(
 		item {
 			FilterChip(
 				selected = false,
-				onClick = onCommunitiesTap,
-				label = { Text("Communities") },
-			)
-		}
-		item {
-			FilterChip(
-				selected = false,
-				onClick = onInstancesTap,
-				label = { Text("Instances") },
+				onClick = onSubredditsTap,
+				label = { Text("Subreddits") },
 			)
 		}
 	}
