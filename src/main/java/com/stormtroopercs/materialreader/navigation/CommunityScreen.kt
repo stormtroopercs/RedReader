@@ -136,6 +136,8 @@ fun CommunityDetailScreen(
 	onOpenLicense: () -> Unit = {},
 	/** Open a post's media in the full-screen viewer (media tap). */
 	onOpenMedia: (PostItem) -> Unit = {},
+	/** Open a post's video in the full-screen video overlay (video-media tap). */
+	onOpenVideo: (PostItem) -> Unit = {},
 ) {
 	val name = tabTitle.removePrefix("r/")
 	val communityVm: CommunityViewModel = hiltViewModel()
@@ -369,6 +371,7 @@ fun CommunityDetailScreen(
 								viewMode = viewMode,
 								onOpenThread = onNavigateToCommentList,
 								onOpenMedia = onOpenMedia,
+								onOpenVideo = onOpenVideo,
 								onAuthorClick = onNavigateToUserProfile,
 								onPostAction = ::onPostAction,
 							)
@@ -552,6 +555,7 @@ private fun CommunityActiveFeed(
 	viewMode: PostViewMode,
 	onOpenThread: (String) -> Unit,
 	onOpenMedia: (PostItem) -> Unit,
+	onOpenVideo: (PostItem) -> Unit,
 	onAuthorClick: (String) -> Unit,
 	onPostAction: (PostItem, PostAction) -> Unit,
 ) {

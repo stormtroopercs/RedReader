@@ -108,8 +108,8 @@ import com.stormtroopercs.materialreader.fragments.ReportDialog
  * community picker) and the right-side Search / Sort / More actions. Swiping
  * to another slide (or up, off the first) hides it again.
  *
- * Media renderers: image now; NSFW/spoiler = tap-to-reveal blur; video = a
- * placeholder (inline Media3 is a follow-up).
+ * Media renderers: image now; NSFW/spoiler = tap-to-reveal blur; video = its
+ * static preview still (tapping opens the full-screen video overlay).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -137,6 +137,8 @@ fun RealSlidesFeedScreen(
 	onOpenLicense: () -> Unit = {},
 	/** Open a post's media in the full-screen viewer (media tap). */
 	onOpenMedia: (PostItem) -> Unit = {},
+	/** Open a post's video in the full-screen video overlay (video-media tap). */
+	onOpenVideo: (PostItem) -> Unit = {},
 	/**
 	 * True when this feed is the top-level Posts tab (the app root) rather than
 	 * a pushed child: the toolbar stays visible (so the drawer hamburger is
@@ -273,7 +275,10 @@ fun RealSlidesFeedScreen(
 							onPostClick = { onNavigateToCommentList(posts[page].id) },
 							onAuthorClick = onNavigateToUserProfile,
 							onPostAction = ::onPostAction,
-							onMediaClick = { onOpenMedia(posts[page]) },
+							// The slide's media tap: a video post opens the full-screen
+					// video overlay (its preview still is the slide's media);
+					// any other post opens the full-screen image viewer.
+					onMediaClick = { if (posts[page].isVideo) onOpenVideo(posts[page]) else onOpenMedia(posts[page]) },
 						)
 					}
 
@@ -734,20 +739,65 @@ private fun SlideMedia(
 	val mediaUrl = if (post.isSelf) null else post.url?.takeIf { it.isNotBlank() && !it.contains("reddit.com") }
 		?: post.thumbnail
 			?.takeIf { it.isNotBlank() && it != "default" }
+	// A video post's slide media is its static preview still (Reddit's
+	// `reddit_video_preview`) — shown full-bleed while scrolling, tapped to
+	// open the full-screen player (the caller routes video taps there).
+	// Without a preview, fall back to the thumbnail; without either, the
+	// black placeholder.
+	val videoPreview = if (post.isVideo) {
+		post.videoPreviewUrl?.takeIf { it.isNotBlank() }
+			?: post.thumbnail?.takeIf { it.isNotBlank() && it != "default" }
+	} else {
+		null
+	}
 
 	Box(
 		modifier = modifier
-			.then(if (mediaUrl != null) Modifier.clickable(onClick = onMediaClick) else Modifier),
+			.then(if (mediaUrl != null || videoPreview != null) Modifier.clickable(onClick = onMediaClick) else Modifier),
 	) {
 		if (post.isVideo) {
-			// Video placeholder (inline Media3 is a follow-up).
-			Box(
+			// The static preview still (the same image the cards feed shows)
+			// with a play glyph; tapping it opens the full-screen player
+			// (the caller routes video media taps to the overlay). Without a
+			// preview, the black placeholder.
+			videoPreview?.let { preview ->
+				val data by fetchImage(UriString(preview), scaleToMaxAxis = 1280)
+				Box(
+					modifier = Modifier
+						.fillMaxSize()
+						.background(Color.Black),
+					contentAlignment = Alignment.Center,
+				) {
+					when (val it = data) {
+						is NetRequestStatus.Downloading -> Box(
+							modifier = Modifier.fillMaxSize(),
+							contentAlignment = Alignment.Center,
+						) {
+							CircularProgressIndicator(progress = { it.fractionComplete })
+						}
+						is NetRequestStatus.Failed -> Unit
+						is NetRequestStatus.Success -> Image(
+							bitmap = it.result.data,
+							contentDescription = null,
+							contentScale = ContentScale.Crop,
+							modifier = Modifier.fillMaxSize(),
+						)
+						else -> Unit
+					}
+					Icon(
+						imageVector = Icons.Filled.PlayCircle,
+						contentDescription = "Play video",
+						tint = Color.White.copy(alpha = 0.85f),
+						modifier = Modifier.size(96.dp),
+					)
+				}
+			} ?: Box(
 				modifier = Modifier.fillMaxSize().background(Color.Black),
 				contentAlignment = Alignment.Center,
 			) {
 				Icon(
 					imageVector = Icons.Filled.PlayCircle,
-					contentDescription = "Video",
+					contentDescription = "Play video",
 					tint = Color.White.copy(alpha = 0.7f),
 					modifier = Modifier.size(96.dp),
 				)

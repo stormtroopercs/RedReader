@@ -253,15 +253,19 @@ fun Modifier.postSwipeToAction(
  * (FINAL-DESIGN Phase 4.1, DESIGN §4.3). Media (220dp, 8dp margin, rounded)
  * above the title → meta → body ordering; the corrected [StatsAndIconsRow]
  * underneath. The whole card is tappable (opens the thread); the media
- * region is tappable **too** and wins its own tap — opening the post's
- * media in the full-screen viewer ([onMediaClick]).
+ * region is tappable **too** and wins its own tap — a video post's media
+ * (its static preview still) opens the full-screen video overlay
+ * ([onOpenVideo]), any other media the full-screen viewer
+ * ([onMediaClick]).
  *
  * @param post the post to render.
  * @param mode the card mode (see [PostViewMode]).
  * @param onOpenThread opens the post's comment thread.
  * @param onMediaClick opens the post's media in the full-screen viewer
- *   (a tap on the media region; null/blank media or a non-media post makes
- *   it a no-op).
+ *   (a tap on a non-video post's media region; null/blank media or a
+ *   non-media post makes it a no-op).
+ * @param onOpenVideo opens a video post's stream in the full-screen video
+ *   overlay (a tap on its preview still).
  * @param onAuthorClick opens the author's profile.
  * @param onPostAction a list action (vote / save / hide / share / report).
  * @param swipeEnabled whether the horizontal swipe-to-action gesture is on.
@@ -275,6 +279,7 @@ fun PostCard(
 	modifier: Modifier = Modifier,
 	onOpenThread: () -> Unit,
 	onMediaClick: () -> Unit = {},
+	onOpenVideo: () -> Unit = {},
 	onAuthorClick: (String) -> Unit,
 	onPostAction: (PostItem, PostAction) -> Unit,
 	swipeEnabled: Boolean = false,
@@ -341,7 +346,7 @@ fun PostCard(
 					}
 					if (mediaSize > 0.dp && media != null) {
 						Box(
-							modifier = Modifier.clickable(onClick = onMediaClick),
+							modifier = Modifier.clickable(onClick = if (post.isVideo) onOpenVideo else onMediaClick),
 						) {
 							PostThumbnailPreview(
 								uri = media,
@@ -372,7 +377,7 @@ fun PostCard(
 					Box(
 						modifier = Modifier
 							.fillMaxWidth()
-							.clickable(onClick = onMediaClick),
+							.clickable(onClick = if (post.isVideo) onOpenVideo else onMediaClick),
 					) {
 						PostThumbnailPreview(
 							uri = media,
@@ -407,15 +412,21 @@ fun PostCard(
 }
 
 /**
- * Resolve the media URI for a post's card (post url, else thumbnail).
- * Text posts (self) render **no media at all**: the listing API hands them a
- * thread permalink as `url` and a 70×70 community icon as `thumbnail`, and
- * fetching either as an image fails, leaving an empty grey placeholder box
- * (the old `startsWith("reddit.com")` guard never matched `https://…`
- * permalinks, so the leak reached the image pipeline).
+ * Resolve the media URI for a post's card. Video posts render their static
+ * preview still (Reddit's `reddit_video_preview`) while scrolling instead of
+ * a grey badge box — tapping it opens the full-screen player overlay (the
+ * screens route video media taps there). Other posts: the post url, else the
+ * thumbnail. Text posts (self) render **no media at all**: the listing API
+ * hands them a thread permalink as `url` and a 70×70 community icon as
+ * `thumbnail`, and fetching either as an image fails, leaving an empty grey
+ * placeholder box (the old `startsWith("reddit.com")` guard never matched
+ * `https://…` permalinks, so the leak reached the image pipeline).
  */
 private fun rememberMedia(post: PostItem): String? {
 	if (post.isSelf) return null
+	if (post.isVideo) {
+		post.videoPreviewUrl?.takeIf { it.isNotBlank() }?.let { return it }
+	}
 	return post.url?.takeIf { it.isNotBlank() && !it.contains("reddit.com") }
 		?: post.thumbnail?.takeIf { it.isNotBlank() && it != "default" }
 }

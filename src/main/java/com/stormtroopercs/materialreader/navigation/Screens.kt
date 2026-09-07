@@ -128,6 +128,18 @@ data object Accounts : NavKey
 @Serializable
 data class Album(val url: String) : NavKey
 
+/**
+ * Full-screen video player for a feed video post. [url] is the post's mp4
+ * stream (its `findUrl()`), [previewUrl] the post's static preview still
+ * (Reddit's `reddit_video_preview` — shown while the stream resolves).
+ * Tapping a video post's media in a feed opens this route.
+ */
+@Serializable
+data class VideoPlayer(
+	val url: String,
+	val previewUrl: String?,
+) : NavKey
+
 /** Full-screen image viewer (direct still-image/GIF/video file URLs, or an album). */
 @Serializable
 data class Image(

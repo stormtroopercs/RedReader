@@ -125,6 +125,22 @@ fun AppNavGraph(navigationState: NavigationState) {
 			}
 		}
 	}
+	// Opens a video post in the full-screen video overlay (the feed's video
+	// media tap → its static preview still, tapped to the player with the
+	// centered mute / play / pause / fullscreen controls). For a video post
+	// `url` is the mp4 stream (Reddit `media.reddit_video.fallback_url`),
+	// `videoPreviewUrl` the `reddit_video_preview` still.
+	val openVideo: (PostItem) -> Unit = { post ->
+		val url = post.url?.takeIf { it.isNotBlank() && !it.startsWith("reddit.com") }
+		if (url != null) {
+			navigator.navigate(
+				VideoPlayer(
+					url = url,
+					previewUrl = post.videoPreviewUrl?.takeIf { it.isNotBlank() },
+				),
+			)
+		}
+	}
 	DisposableEffect(accountManager) {
 		val listener = RedditAccountChangeListener {
 			accountName.value = accountManager.defaultAccount.username
@@ -195,6 +211,7 @@ fun AppNavGraph(navigationState: NavigationState) {
 				},
 				onOpenLicense = openLicense,
 				onOpenMedia = openMedia,
+				onOpenVideo = openVideo,
 				isTabRoot = isTabRoot,
 				titleOverride = titleOverride,
 			)
@@ -234,11 +251,12 @@ fun AppNavGraph(navigationState: NavigationState) {
 				},
 				onOpenLicense = openLicense,
 				onOpenMedia = openMedia,
+				onOpenVideo = openVideo,
 				isTabRoot = isTabRoot,
 				titleOverride = titleOverride,
-			)
-		}
-	}
+				)
+				}
+				}
 
 	AppShell(
 		navigationState = navigationState,
@@ -461,8 +479,9 @@ fun AppNavGraph(navigationState: NavigationState) {
 						},
 						onOpenLicense = openLicense,
 						onOpenMedia = openMedia,
-					)
-				}
+						onOpenVideo = openVideo,
+				)
+			}
 
 				// Child: Comment reply
 				entry<CommentReply> { key ->
@@ -497,7 +516,19 @@ fun AppNavGraph(navigationState: NavigationState) {
 					)
 				}
 
-				// Child: Reddit Terms
+				// Child: Full-screen video player (a feed video post's media tap).
+			// The screen resolves the post's mp4 stream (same path ImageScreen's
+			// video tab uses) and plays it with the centered translucent
+			// mute / play-pause / fullscreen controls.
+			entry<VideoPlayer> { key ->
+				VideoPlayerOverlayScreen(
+					url = key.url,
+					previewUrl = key.previewUrl,
+					onNavigateBack = { navigator.goBack() },
+				)
+			}
+
+	// Child: Reddit Terms
 				entry<RedditTerms> {
 					com.stormtroopercs.materialreader.compose.ui.RedditTermsScreen(
 						onDone = { navigator.goBack() },

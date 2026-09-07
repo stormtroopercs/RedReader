@@ -97,6 +97,8 @@ fun RealPostListScreen(
 	onOpenLicense: () -> Unit = {},
 	/** Open a post's media in the full-screen viewer (media tap). */
 	onOpenMedia: (PostItem) -> Unit = {},
+	/** Open a post's video in the full-screen video overlay (video-media tap). */
+	onOpenVideo: (PostItem) -> Unit = {},
 	/**
 	 * True when this feed is the top-level Posts tab (the app root) rather than
 	 * a pushed child: the top bar then carries the drawer hamburger (when the
@@ -272,6 +274,7 @@ fun RealPostListScreen(
 											modifier = Modifier.animateItem(),
 											onOpenThread = { onNavigateToCommentList(post.id) },
 											onMediaClick = { onOpenMedia(post) },
+											onOpenVideo = { onOpenVideo(post) },
 											onAuthorClick = onNavigateToUserProfile,
 											onPostAction = ::onPostAction,
 											swipeEnabled = true,

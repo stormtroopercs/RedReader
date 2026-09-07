@@ -108,6 +108,13 @@ data class PostItem(
 	val createdUtc: Long,
 	val saved: Boolean = false,
 	val hidden: Boolean = false,
+	/**
+	 * The post's static video preview still (Reddit's
+	 * `preview.reddit_video_preview.fallback_url`) — the image the feed shows
+	 * while scrolling a video post and the player shows while its stream
+	 * resolves. Null for non-video posts (and video posts with no preview).
+	 */
+	val videoPreviewUrl: String? = null,
 )
 
 /**
@@ -551,6 +558,12 @@ private fun RedditThing.Post.toPostItem(): PostItem {
 		createdUtc = p.created_utc.value.toUtcSecs(),
 		saved = p.saved,
 		hidden = p.hidden,
+		videoPreviewUrl = if (p.is_video) {
+			p.preview?.reddit_video_preview?.fallback_url?.decoded
+				?.takeIf { it.isNotBlank() }
+		} else {
+			null
+		},
 	)
 }
 
