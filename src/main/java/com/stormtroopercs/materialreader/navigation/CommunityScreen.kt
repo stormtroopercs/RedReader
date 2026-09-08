@@ -265,7 +265,7 @@ fun CommunityDetailScreen(
 						Icon(Icons.Filled.MoreVert, contentDescription = "More actions")
 					}
 				},
-				)
+			)
 		},
 		snackbarHost = { SnackbarHost(snackbarHostState) },
 		floatingActionButton = {
@@ -755,21 +755,21 @@ private fun CommunityModsTab(
 							contentAlignment = Alignment.Center,
 						) {
 							if (mod.iconUrl != null && mod.iconUrl.isNotBlank()) {
-									val data by fetchImage(UriString(mod.iconUrl), scaleToMaxAxis = 96)
-									when (val it = data) {
-										is NetRequestStatus.Success -> Image(
-											bitmap = it.result.data,
-											contentDescription = null,
-											contentScale = ContentScale.Crop,
-											modifier = Modifier.fillMaxSize().clip(CircleShape),
-										)
-										else -> Icon(
-											imageVector = Icons.Filled.Person,
-											contentDescription = null,
-											modifier = Modifier.size(20.dp),
-										)
-									}
-								} else {
+								val data by fetchImage(UriString(mod.iconUrl), scaleToMaxAxis = 96)
+								when (val it = data) {
+									is NetRequestStatus.Success -> Image(
+										bitmap = it.result.data,
+										contentDescription = null,
+										contentScale = ContentScale.Crop,
+										modifier = Modifier.fillMaxSize().clip(CircleShape),
+									)
+									else -> Icon(
+										imageVector = Icons.Filled.Person,
+										contentDescription = null,
+										modifier = Modifier.size(20.dp),
+									)
+								}
+							} else {
 								Icon(
 									imageVector = Icons.Filled.Person,
 									contentDescription = null,

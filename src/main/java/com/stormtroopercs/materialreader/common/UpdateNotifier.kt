@@ -20,40 +20,40 @@ import java.lang.ref.WeakReference
 import java.util.LinkedList
 
 abstract class UpdateNotifier<E> {
-    private val listeners = LinkedList<WeakReference<E>>()
+	private val listeners = LinkedList<WeakReference<E>>()
 
-    @Synchronized
-    fun addListener(updateListener: E) {
-        listeners.add(WeakReference<E>(updateListener))
-    }
+	@Synchronized
+	fun addListener(updateListener: E) {
+		listeners.add(WeakReference<E>(updateListener))
+	}
 
-    @Synchronized
-    fun removeListener(updateListener: E) {
-        val iter = listeners.iterator()
+	@Synchronized
+	fun removeListener(updateListener: E) {
+		val iter = listeners.iterator()
 
-        while (iter.hasNext()) {
-            val listener = iter.next().get()
+		while (iter.hasNext()) {
+			val listener = iter.next().get()
 
-            if (listener == null || listener === updateListener) {
-                iter.remove()
-            }
-        }
-    }
+			if (listener == null || listener === updateListener) {
+				iter.remove()
+			}
+		}
+	}
 
-    @Synchronized
-    fun updateAllListeners() {
-        val iter = listeners.iterator()
+	@Synchronized
+	fun updateAllListeners() {
+		val iter = listeners.iterator()
 
-        while (iter.hasNext()) {
-            val listener = iter.next().get()
+		while (iter.hasNext()) {
+			val listener = iter.next().get()
 
-            if (listener == null) {
-                iter.remove()
-            } else {
-                notifyListener(listener)
-            }
-        }
-    }
+			if (listener == null) {
+				iter.remove()
+			} else {
+				notifyListener(listener)
+			}
+		}
+	}
 
-    protected abstract fun notifyListener(listener: E)
+	protected abstract fun notifyListener(listener: E)
 }

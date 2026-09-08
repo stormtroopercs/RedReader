@@ -53,7 +53,7 @@ import com.stormtroopercs.materialreader.image.AlbumInfo
 fun RRComposeContext(
 	activity: BaseActivity,
 	controlsStatusBar: Boolean = false,
-	content: @Composable () -> Unit
+	content: @Composable () -> Unit,
 ) {
 	val accountManager = remember { RedditAccountManager.getInstance(activity) }
 
@@ -87,7 +87,7 @@ fun RRComposeContext(
 					val intent = Intent(activity, MainActivityCompose::class.java)
 					intent.putExtra(
 						MainActivityCompose.EXTRA_DEEP_LINK,
-						MainActivityCompose.DEEP_LINK_SETTINGS
+						MainActivityCompose.DEEP_LINK_SETTINGS,
 					)
 					activity.startActivity(intent)
 				}
@@ -97,7 +97,7 @@ fun RRComposeContext(
 						activity = activity,
 						url = it.url,
 						albumInfo = it.albumInfo,
-						albumImageIndex = it.albumImageIndex
+						albumImageIndex = it.albumImageIndex,
 					)
 				}
 
@@ -105,7 +105,7 @@ fun RRComposeContext(
 					LinkHandler.onLinkLongClicked(
 						activity = activity,
 						uri = it.url,
-						forceNoImage = false
+						forceNoImage = false,
 					)
 				}
 
@@ -117,7 +117,7 @@ fun RRComposeContext(
 					LinkHandler.onActionMenuItemSelected(
 						uri = it.url,
 						activity = activity,
-						action = LinkHandler.LinkAction.SAVE_IMAGE
+						action = LinkHandler.LinkAction.SAVE_IMAGE,
 					)
 				}
 
@@ -125,7 +125,7 @@ fun RRComposeContext(
 					LinkHandler.onActionMenuItemSelected(
 						uri = it.url,
 						activity = activity,
-						action = LinkHandler.LinkAction.SHARE
+						action = LinkHandler.LinkAction.SHARE,
 					)
 				}
 
@@ -133,7 +133,7 @@ fun RRComposeContext(
 					LinkHandler.onActionMenuItemSelected(
 						uri = it.url,
 						activity = activity,
-						action = LinkHandler.LinkAction.SHARE_IMAGE
+						action = LinkHandler.LinkAction.SHARE_IMAGE,
 					)
 				}
 
@@ -153,7 +153,7 @@ fun RRComposeContext(
 					val intent = Intent(activity, MainActivityCompose::class.java)
 					intent.putExtra(
 						MainActivityCompose.EXTRA_DEEP_LINK,
-						MainActivityCompose.DEEP_LINK_ACCOUNTS
+						MainActivityCompose.DEEP_LINK_ACCOUNTS,
 					)
 					activity.startActivity(intent)
 				}
@@ -162,7 +162,7 @@ fun RRComposeContext(
 					val intent = Intent(activity, MainActivityCompose::class.java)
 					intent.putExtra(
 						MainActivityCompose.EXTRA_DEEP_LINK,
-						MainActivityCompose.DEEP_LINK_TERMS
+						MainActivityCompose.DEEP_LINK_TERMS,
 					)
 					activity.startActivity(intent)
 				}
@@ -191,36 +191,36 @@ sealed interface Dest {
 
 	data class Link(
 		val url: UriString,
-		val albumInfo: AlbumInfo?=null,
-		val albumImageIndex: Int?=null
+		val albumInfo: AlbumInfo? = null,
+		val albumImageIndex: Int? = null,
 	) : Dest
 
 	data class LinkLongClick(
-		val url: UriString
+		val url: UriString,
 	) : Dest
 
 	data class ResultDialog(
-		val error: RRError
+		val error: RRError,
 	) : Dest
 
 	data class ErrorPropertiesDialog(
-		val error: RRError
+		val error: RRError,
 	) : Dest
 
 	data class SaveMedia(
-		val url: UriString
+		val url: UriString,
 	) : Dest
 
 	data class ShareMedia(
-		val url: UriString
+		val url: UriString,
 	) : Dest
 
 	data class ShareLink(
-		val url: UriString
+		val url: UriString,
 	) : Dest
 
 	data class WebBrowser(
-		val url: String
+		val url: String,
 	) : Dest
 
 	data object RedditTerms : Dest

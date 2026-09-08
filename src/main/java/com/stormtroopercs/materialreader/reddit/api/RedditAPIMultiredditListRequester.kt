@@ -39,114 +39,112 @@ import com.stormtroopercs.materialreader.io.RequestResponseHandler
 import com.stormtroopercs.materialreader.io.WritableHashSet
 import com.stormtroopercs.materialreader.jsonwrap.JsonValue
 import java.util.UUID
-import com.stormtroopercs.materialreader.common.General
 
 class RedditAPIMultiredditListRequester(
-    private val context: Context,
-    private val user: RedditAccount
+	private val context: Context,
+	private val user: RedditAccount,
 ) : CacheDataSource<RedditAPIMultiredditListRequester.Key, WritableHashSet, RRError> {
-    class Key {
-        companion object {
-            val INSTANCE: Key = Key()
-        }
-    }
+	class Key {
+		companion object {
+			val INSTANCE: Key = Key()
+		}
+	}
 
-    override fun performRequest(
-        key: Key,
-        timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<WritableHashSet, RRError>
-    ) {
-        if (user.isAnonymous) {
-            val now = now()
+	override fun performRequest(
+		key: Key,
+		timestampBound: TimestampBound?,
+		handler: RequestResponseHandler<WritableHashSet, RRError>,
+	) {
+		if (user.isAnonymous) {
+			val now = now()
 
-            handler.onRequestSuccess(
-                WritableHashSet(
-                    HashSet<String>(),
-                    now,
-                    user.canonicalUsername
-                ),
-                now
-            )
-        } else {
-            doRequest(handler)
-        }
-    }
+			handler.onRequestSuccess(
+				WritableHashSet(
+					HashSet<String>(),
+					now,
+					user.canonicalUsername,
+				),
+				now,
+			)
+		} else {
+			doRequest(handler)
+		}
+	}
 
-    private fun doRequest(
-        handler: RequestResponseHandler<WritableHashSet, RRError>
-    ) {
-        val uri = Reddit.getUri(Reddit.PATH_MULTIREDDITS_MINE)
+	private fun doRequest(
+		handler: RequestResponseHandler<WritableHashSet, RRError>,
+	) {
+		val uri = Reddit.getUri(Reddit.PATH_MULTIREDDITS_MINE)
 
-        val request = CacheRequest(
-            uri,
-            user,
-            null,
-            Priority(Constants.Priority.API_SUBREDDIT_LIST),
-            DownloadStrategyAlways.Companion.INSTANCE,
-            Constants.FileType.MULTIREDDIT_LIST,
-            DownloadQueueType.REDDIT_API,
-            context,
-            CacheRequestJSONParser(context, object : CacheRequestJSONParser.Listener {
-                override fun onJsonParsed(
-                    result: JsonValue,
-                    timestamp: TimestampUTC,
-                    session: UUID,
-                    fromCache: Boolean
-                ) {
-                    try {
-                        val output = HashSet<String>()
+		val request = CacheRequest(
+			uri,
+			user,
+			null,
+			Priority(Constants.Priority.API_SUBREDDIT_LIST),
+			DownloadStrategyAlways.Companion.INSTANCE,
+			Constants.FileType.MULTIREDDIT_LIST,
+			DownloadQueueType.REDDIT_API,
+			context,
+			CacheRequestJSONParser(
+				context,
+				object : CacheRequestJSONParser.Listener {
+					override fun onJsonParsed(
+						result: JsonValue,
+						timestamp: TimestampUTC,
+						session: UUID,
+						fromCache: Boolean,
+					) {
+						try {
+							val output = HashSet<String>()
 
-                        val multiredditList = result.asArray()
+							val multiredditList = result.asArray()
 
-                        for (multireddit in multiredditList!!) {
-                            val name = multireddit.asObject()!!
-                                .getObject("data")!!
-                                .getString("name")
-                            output.add(name!!)
-                        }
+							for (multireddit in multiredditList!!) {
+								val name = multireddit.asObject()!!
+									.getObject("data")!!
+									.getString("name")
+								output.add(name!!)
+							}
 
-                        handler.onRequestSuccess(
-                            WritableHashSet(
-                                output,
-                                timestamp,
-                                user.canonicalUsername
-                            ), timestamp
-                        )
-                    } catch (e: Exception) {
-                        handler.onRequestFailed(
-                            getGeneralErrorForFailure(
-                                context,
-                                RequestFailureType.PARSE,
-                                e,
-                                null,
-                                uri,
-                                Optional.Companion.of<FailedRequestBody>(FailedRequestBody(result))
-                            )
-                        )
-                    }
-                }
+							handler.onRequestSuccess(
+								WritableHashSet(
+									output,
+									timestamp,
+									user.canonicalUsername,
+								),
+								timestamp,
+							)
+						} catch (e: Exception) {
+							handler.onRequestFailed(
+								getGeneralErrorForFailure(
+									context,
+									RequestFailureType.PARSE,
+									e,
+									null,
+									uri,
+									Optional.Companion.of<FailedRequestBody>(FailedRequestBody(result)),
+								),
+							)
+						}
+					}
 
-                override fun onFailure(error: RRError) {
-                    handler.onRequestFailed(error)
-                }
-            })
-        )
+					override fun onFailure(error: RRError) {
+						handler.onRequestFailed(error)
+					}
+				},
+			),
+		)
 
-        CacheManager.Companion.getInstance(context).makeRequest(request)
-    }
+		CacheManager.Companion.getInstance(context).makeRequest(request)
+	}
 
-    override fun performRequest(
-        keys: MutableCollection<Key>, timestampBound: TimestampBound?,
-        handler: RequestResponseHandler<HashMap<Key, WritableHashSet>, RRError>
-    ) {
-        throw UnsupportedOperationException()
-    }
+	override fun performRequest(
+		keys: MutableCollection<Key>,
+		timestampBound: TimestampBound?,
+		handler: RequestResponseHandler<HashMap<Key, WritableHashSet>, RRError>,
+	): Unit = throw UnsupportedOperationException()
 
-    override fun performWrite(value: WritableHashSet) {
-        throw UnsupportedOperationException()
-    }
+	override fun performWrite(value: WritableHashSet): Unit = throw UnsupportedOperationException()
 
-    override fun performWrite(values: MutableCollection<WritableHashSet>) {
-        throw UnsupportedOperationException()
-    }
+	override fun performWrite(values: MutableCollection<WritableHashSet>): Unit = throw UnsupportedOperationException()
 }

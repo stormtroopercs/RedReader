@@ -18,35 +18,27 @@
 package com.stormtroopercs.materialreader.navigation
 
 import android.content.Context
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import com.stormtroopercs.materialreader.account.RedditAccount
 import com.stormtroopercs.materialreader.account.RedditAccountManager
-import com.stormtroopercs.materialreader.common.BugReporter
 import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.cache.CacheRequest
 import com.stormtroopercs.materialreader.cache.CacheRequestCallbacks
 import com.stormtroopercs.materialreader.cache.downloadstrategy.DownloadStrategyIfNotCached
+import com.stormtroopercs.materialreader.common.AndroidCommon
+import com.stormtroopercs.materialreader.common.BugReporter
 import com.stormtroopercs.materialreader.common.Constants
 import com.stormtroopercs.materialreader.common.General
 import com.stormtroopercs.materialreader.common.Priority
 import com.stormtroopercs.materialreader.common.RRError
 import com.stormtroopercs.materialreader.common.UriString
-import com.stormtroopercs.materialreader.common.AndroidCommon
 import com.stormtroopercs.materialreader.common.datastream.SeekableInputStream
-import com.stormtroopercs.materialreader.jsonwrap.JsonValue
-import com.stormtroopercs.materialreader.reddit.RedditAPI
+import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import com.stormtroopercs.materialreader.reddit.APIResponseHandler.ActionResponseHandler
+import com.stormtroopercs.materialreader.reddit.RedditAPI
 import com.stormtroopercs.materialreader.reddit.kthings.JsonUtils
 import com.stormtroopercs.materialreader.reddit.kthings.MaybeParseError
 import com.stormtroopercs.materialreader.reddit.kthings.RedditFieldEdited
@@ -57,9 +49,15 @@ import com.stormtroopercs.materialreader.reddit.kthings.RedditThingResponse
 import com.stormtroopercs.materialreader.reddit.url.CommentListingURL
 import com.stormtroopercs.materialreader.reddit.url.PostCommentListingURL
 import com.stormtroopercs.materialreader.reddit.url.RedditURLParser
-import android.net.Uri
-import com.stormtroopercs.materialreader.common.invokeIf
-import com.stormtroopercs.materialreader.common.time.TimestampUTC
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
 import javax.inject.Inject
@@ -69,53 +67,53 @@ import kotlin.math.max
  * UI state for the comment list screen.
  */
 sealed class CommentListUiState {
-    object Loading : CommentListUiState()
-    data class Success(
-        val postTitle: String?,
-        val postAuthor: String?,
-        val comments: List<CommentItem>,
-        val moreCommentsAvailable: Boolean
-    ) : CommentListUiState()
-    data class Error(val error: RRError) : CommentListUiState()
+	object Loading : CommentListUiState()
+	data class Success(
+		val postTitle: String?,
+		val postAuthor: String?,
+		val comments: List<CommentItem>,
+		val moreCommentsAvailable: Boolean,
+	) : CommentListUiState()
+	data class Error(val error: RRError) : CommentListUiState()
 }
 
 /**
  * A single comment item for display in Compose UI.
  */
 data class CommentItem(
-    val id: String,
-    val author: String?,
-    val body: String,
-    val score: Int,
-    val replyCount: Int,
-    val createdUtcTimestamp: Long,
-    val authorFlairText: String?,
-    val isTopLevel: Boolean,
-    val collapsed: Boolean,
-    val collapsedReason: String?,
-    val replyDepth: Int = 0,
-    /** The full `t1_…` name — needed for vote / report (RedditAPI expects the
-     *  full id, not the bare one in [id]). */
-    val fullName: String = "",
-    /** The comment's subreddit (for the report flow). */
-    val subreddit: String? = null,
-    /** The comment's permalink (a `UrlEncodedString` path), used to build a
-     *  shareable URL. */
-    val permalink: String? = null,
-    /** Whether the account has saved the comment (the Save action toggle). */
-    val saved: Boolean = false,
-    /** Whether the comment was edited (the author line's `* (last edited)`). */
-    val edited: Boolean = false,
-    /** The parent comment's full `t1_…` name (null for top-level). */
-    val parentFullName: String? = null,
-    /**
-     * Present only on collapsed-continuation rows (`more_N`): the first
-     * `t1_…` id of each truncated thread. Tapping the row expands them
-     * (FINAL-DESIGN 7.2) by fetching each child's subtree.
-     */
-    val moreChildren: List<String>? = null,
-    /** The post id the continuation belongs to (expansion fetches need it). */
-    val postId: String? = null
+	val id: String,
+	val author: String?,
+	val body: String,
+	val score: Int,
+	val replyCount: Int,
+	val createdUtcTimestamp: Long,
+	val authorFlairText: String?,
+	val isTopLevel: Boolean,
+	val collapsed: Boolean,
+	val collapsedReason: String?,
+	val replyDepth: Int = 0,
+	/** The full `t1_…` name — needed for vote / report (RedditAPI expects the
+	 *  full id, not the bare one in [id]). */
+	val fullName: String = "",
+	/** The comment's subreddit (for the report flow). */
+	val subreddit: String? = null,
+	/** The comment's permalink (a `UrlEncodedString` path), used to build a
+	 *  shareable URL. */
+	val permalink: String? = null,
+	/** Whether the account has saved the comment (the Save action toggle). */
+	val saved: Boolean = false,
+	/** Whether the comment was edited (the author line's `* (last edited)`). */
+	val edited: Boolean = false,
+	/** The parent comment's full `t1_…` name (null for top-level). */
+	val parentFullName: String? = null,
+	/**
+	 * Present only on collapsed-continuation rows (`more_N`): the first
+	 * `t1_…` id of each truncated thread. Tapping the row expands them
+	 * (FINAL-DESIGN 7.2) by fetching each child's subtree.
+	 */
+	val moreChildren: List<String>? = null,
+	/** The post id the continuation belongs to (expansion fetches need it). */
+	val postId: String? = null,
 )
 
 /**
@@ -127,490 +125,496 @@ data class CommentItem(
 enum class CommentAction {
 	/** Vote up (`api/vote`, dir +1). */
 	UPVOTE,
+
 	/** Vote down (`api/vote`, dir -1). */
 	DOWNVOTE,
+
 	/** Save the comment (`api/save`). */
 	SAVE,
+
 	/** Remove the comment from the saved list (`api/unsave`). */
 	UNSAVE,
+
 	/** Copy the comment's permalink to the clipboard (screen-handled). */
 	COPY_LINK,
+
 	/** Share the comment's permalink via the OS share sheet (screen-handled). */
 	SHARE,
+
 	/** Open the report dialog (screen-handled). */
-	REPORT
+	REPORT,
 }
 
 @HiltViewModel
 class CommentListViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val accountManager: RedditAccountManager,
-    private val cacheManager: CacheManager
+	@ApplicationContext private val context: Context,
+	private val accountManager: RedditAccountManager,
+	private val cacheManager: CacheManager,
 ) : ViewModel() {
 
-    @Suppress("PropertyName")
-    private val _state = MutableStateFlow<CommentListUiState>(CommentListUiState.Loading)
-    val state: StateFlow<CommentListUiState> = _state.asStateFlow()
+	@Suppress("PropertyName")
+	private val _state = MutableStateFlow<CommentListUiState>(CommentListUiState.Loading)
+	val state: StateFlow<CommentListUiState> = _state.asStateFlow()
 
-    @Suppress("PropertyName")
-    private val _postId = MutableStateFlow("")
-    val postId: StateFlow<String> = _postId.asStateFlow()
+	@Suppress("PropertyName")
+	private val _postId = MutableStateFlow("")
+	val postId: StateFlow<String> = _postId.asStateFlow()
 
-    private val _title = MutableStateFlow("")
-    val title: StateFlow<String> = _title.asStateFlow()
+	private val _title = MutableStateFlow("")
+	val title: StateFlow<String> = _title.asStateFlow()
 
-    /**
-     * Fetch the comment listing identified by [listingPath]: a bare post id
-     * (a post's comment listing) or a `u/<user>/comments` path (a user's
-     * comment listing). The path is mapped to the matching Reddit
-     * comment-listing URL and the screen title is derived from it.
-     */
-    fun fetchComments(listingPath: String) {
-        _postId.value = listingPath
-        _title.value = if (listingPath.startsWith("u/")) listingPath else "Comments"
-        fetchList(listingPath)
-    }
+	/**
+	 * Fetch the comment listing identified by [listingPath]: a bare post id
+	 * (a post's comment listing) or a `u/<user>/comments` path (a user's
+	 * comment listing). The path is mapped to the matching Reddit
+	 * comment-listing URL and the screen title is derived from it.
+	 */
+	fun fetchComments(listingPath: String) {
+		_postId.value = listingPath
+		_title.value = if (listingPath.startsWith("u/")) listingPath else "Comments"
+		fetchList(listingPath)
+	}
 
-    fun refresh() {
-        fetchComments(_postId.value)
-    }
+	fun refresh() {
+		fetchComments(_postId.value)
+	}
 
-    /** A transient result for the last comment action (success/failure text)
-     *  to surface as a Snackbar. Null when nothing to show. */
-    private val _actionResult = MutableStateFlow<String?>(null)
-    val actionResult: StateFlow<String?> = _actionResult.asStateFlow()
+	/** A transient result for the last comment action (success/failure text)
+	 *  to surface as a Snackbar. Null when nothing to show. */
+	private val _actionResult = MutableStateFlow<String?>(null)
+	val actionResult: StateFlow<String?> = _actionResult.asStateFlow()
 
-    /**
-     * Vote on [comment] against the Reddit API, as the legacy
-     * `RedditCommentActions` menu did: `api/vote` with dir +1 (up) / −1
-     * (down). The default account is used and the hosting [activity] builds
-     * the [ActionResponseHandler]. [COPY_LINK] and [REPORT] are not endpoint
-     * calls (handled by the screen), so they are not processed here.
-     */
-    fun performAction(activity: AppCompatActivity, comment: CommentItem, action: CommentAction) {
-        val account = accountManager.getDefaultAccount()
+	/**
+	 * Vote on [comment] against the Reddit API, as the legacy
+	 * `RedditCommentActions` menu did: `api/vote` with dir +1 (up) / −1
+	 * (down). The default account is used and the hosting [activity] builds
+	 * the [ActionResponseHandler]. [COPY_LINK] and [REPORT] are not endpoint
+	 * calls (handled by the screen), so they are not processed here.
+	 */
+	fun performAction(activity: AppCompatActivity, comment: CommentItem, action: CommentAction) {
+		val account = accountManager.getDefaultAccount()
 
-        val apiAction = when (action) {
-            CommentAction.UPVOTE -> RedditAPI.ACTION_UPVOTE
-            CommentAction.DOWNVOTE -> RedditAPI.ACTION_DOWNVOTE
-            CommentAction.SAVE -> RedditAPI.ACTION_SAVE
-            CommentAction.UNSAVE -> RedditAPI.ACTION_UNSAVE
-            else -> return
-        }
+		val apiAction = when (action) {
+			CommentAction.UPVOTE -> RedditAPI.ACTION_UPVOTE
+			CommentAction.DOWNVOTE -> RedditAPI.ACTION_DOWNVOTE
+			CommentAction.SAVE -> RedditAPI.ACTION_SAVE
+			CommentAction.UNSAVE -> RedditAPI.ACTION_UNSAVE
+			else -> return
+		}
 
-        val idAndType = RedditIdAndType(comment.fullName)
+		val idAndType = RedditIdAndType(comment.fullName)
 
-        val handler = object : ActionResponseHandler(activity) {
-            override fun onSuccess() {
-                AndroidCommon.runOnUiThread {
-                    _actionResult.value = when (action) {
-                        CommentAction.UPVOTE -> "Upvoted"
-                        CommentAction.DOWNVOTE -> "Downvoted"
-                        CommentAction.SAVE -> "Saved"
-                        CommentAction.UNSAVE -> "Removed from saved"
-                    }
-                    // Toggle the local saved state so the action row reflects
-                    // the new state immediately (a refresh re-derives it).
-                    if (action == CommentAction.SAVE || action == CommentAction.UNSAVE) {
-                        val state = _state.value
-                        if (state is CommentListUiState.Success) {
-                            _state.value = state.copy(
-                                comments = state.comments.map { c ->
-                                    if (c.fullName == idAndType.toString()) {
-                                        c.copy(saved = action == CommentAction.SAVE)
-                                    } else {
-                                        c
-                                    }
-                                }
-                            )
-                        }
-                    }
-                }
-            }
+		val handler = object : ActionResponseHandler(activity) {
+			override fun onSuccess() {
+				AndroidCommon.runOnUiThread {
+					_actionResult.value = when (action) {
+						CommentAction.UPVOTE -> "Upvoted"
+						CommentAction.DOWNVOTE -> "Downvoted"
+						CommentAction.SAVE -> "Saved"
+						CommentAction.UNSAVE -> "Removed from saved"
+					}
+					// Toggle the local saved state so the action row reflects
+					// the new state immediately (a refresh re-derives it).
+					if (action == CommentAction.SAVE || action == CommentAction.UNSAVE) {
+						val state = _state.value
+						if (state is CommentListUiState.Success) {
+							_state.value = state.copy(
+								comments = state.comments.map { c ->
+									if (c.fullName == idAndType.toString()) {
+										c.copy(saved = action == CommentAction.SAVE)
+									} else {
+										c
+									}
+								},
+							)
+						}
+					}
+				}
+			}
 
-            override fun onFailure(error: RRError) {
-                AndroidCommon.runOnUiThread {
-                    _actionResult.value = error.message ?: "Action failed"
-                }
-            }
+			override fun onFailure(error: RRError) {
+				AndroidCommon.runOnUiThread {
+					_actionResult.value = error.message ?: "Action failed"
+				}
+			}
 
-            override fun onCallbackException(t: Throwable) {
-                BugReporter.handleGlobalError(activity, t)
-            }
-        }
+			override fun onCallbackException(t: Throwable) {
+				BugReporter.handleGlobalError(activity, t)
+			}
+		}
 
-        RedditAPI.action(
-            cacheManager,
-            handler,
-            account,
-            idAndType,
-            apiAction,
-            activity
-        )
-    }
+		RedditAPI.action(
+			cacheManager,
+			handler,
+			account,
+			idAndType,
+			apiAction,
+			activity,
+		)
+	}
 
-    /** Clear a shown action-result message (called after the Snackbar). */
-    fun clearActionResult() {
-        _actionResult.value = null
-    }
+	/** Clear a shown action-result message (called after the Snackbar). */
+	fun clearActionResult() {
+		_actionResult.value = null
+	}
 
-    /** True while a collapsed-continuation row is being expanded (7.2). */
-    private val _expanding = MutableStateFlow(false)
-    val expanding: StateFlow<Boolean> = _expanding.asStateFlow()
+	/** True while a collapsed-continuation row is being expanded (7.2). */
+	private val _expanding = MutableStateFlow(false)
+	val expanding: StateFlow<Boolean> = _expanding.asStateFlow()
 
-    /**
-     * Expand a collapsed-continuation row (a `more_N` row, FINAL-DESIGN 7.2):
-     * fetch each child's subtree (`/comments/<post>/comment/<child>.json`) and
-     * splice the loaded comments into the list in place of the row.
-     */
-    /**
-     * Expand a collapsed-continuation row (a `more_N` row, FINAL-DESIGN 7.2):
-     * fetch each child's subtree (`/comments/<post>/comment/<child>.json`) and
-     * splice the loaded comments into the list in place of the row. All child
-     * fetches run concurrently via structured concurrency (`async`/`awaitAll`),
-     * so the whole expansion cancels cleanly with the ViewModel scope and no
-     * manual `pending` counter is needed.
-     */
-    fun expandMore(more: CommentItem) {
-        val children = more.moreChildren ?: return
-        val postId = more.postId ?: return
-        if (_expanding.value) return
-        _expanding.value = true
-        viewModelScope.launch {
-            val account = accountManager.getDefaultAccount()
-            val baseDepth = more.replyDepth + 1
-            val fetched = children.map { childId ->
-                async { fetchExpandedChildren(childId, postId, baseDepth, account) }
-            }.awaitAll().flatten()
+	/**
+	 * Expand a collapsed-continuation row (a `more_N` row, FINAL-DESIGN 7.2):
+	 * fetch each child's subtree (`/comments/<post>/comment/<child>.json`) and
+	 * splice the loaded comments into the list in place of the row.
+	 */
 
-            AndroidCommon.runOnUiThread {
-                if (fetched.isNotEmpty()) insertChildren(more.id, fetched)
-                _expanding.value = false
-            }
-        }
-    }
+	/**
+	 * Expand a collapsed-continuation row (a `more_N` row, FINAL-DESIGN 7.2):
+	 * fetch each child's subtree (`/comments/<post>/comment/<child>.json`) and
+	 * splice the loaded comments into the list in place of the row. All child
+	 * fetches run concurrently via structured concurrency (`async`/`awaitAll`),
+	 * so the whole expansion cancels cleanly with the ViewModel scope and no
+	 * manual `pending` counter is needed.
+	 */
+	fun expandMore(more: CommentItem) {
+		val children = more.moreChildren ?: return
+		val postId = more.postId ?: return
+		if (_expanding.value) return
+		_expanding.value = true
+		viewModelScope.launch {
+			val account = accountManager.getDefaultAccount()
+			val baseDepth = more.replyDepth + 1
+			val fetched = children.map { childId ->
+				async { fetchExpandedChildren(childId, postId, baseDepth, account) }
+			}.awaitAll().flatten()
 
-    /**
-     * Suspend until the comment-listing for [childId] under [postId] is fetched
-     * and parsed, returning the flattened [CommentItem]s at [baseDepth]. On a
-     * network/parse failure returns an empty list (the row simply stays
-     * collapsed) and surfaces the error as a snackbar. Backed by a CacheRequest
-     * bridged into coroutines via a [CompletableDeferred] (its [await] is
-     * cancellable, so an expand that is superseded is dropped).
-     */
-    private suspend fun fetchExpandedChildren(
-        childId: String,
-        postId: String,
-        baseDepth: Int,
-        account: RedditAccount
-    ): List<CommentItem> {
-        val deferred = CompletableDeferred<List<CommentItem>>()
-        val url = PostCommentListingURL(null, postId, childId, null, 10, null, false)
-        val uri = UriString(url.generateJsonUri().toString())
-        val cacheRequest = CacheRequest(
-            uri,
-            account,
-            null,
-            Priority(Constants.Priority.API_COMMENT_LIST),
-            DownloadStrategyIfNotCached.INSTANCE,
-            Constants.FileType.COMMENT_LIST,
-            CacheRequest.DownloadQueueType.REDDIT_API,
-            context,
-            object : CacheRequestCallbacks {
-                override fun onFailure(error: RRError) {
-                    if (deferred.isActive) deferred.complete(emptyList())
-                }
+			AndroidCommon.runOnUiThread {
+				if (fetched.isNotEmpty()) insertChildren(more.id, fetched)
+				_expanding.value = false
+			}
+		}
+	}
 
-                override fun onDataStreamComplete(
-                    streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<SeekableInputStream, IOException>,
-                    timestamp: TimestampUTC,
-                    session: java.util.UUID,
-                    fromCache: Boolean,
-                    mimetype: String?
-                ) {
-                    try {
-                        val thingResponse = streamFactory.create().use { stream ->
-                            JsonUtils.decodeRedditThingResponseFromStream(stream)
-                        }
-                        val fetched = mutableListOf<CommentItem>()
-                        parseExpandedResponse(thingResponse, baseDepth, postId, fetched)
-                        if (deferred.isActive) deferred.complete(fetched)
-                    } catch (e: Exception) {
-                        val error = General.getGeneralErrorForFailure(
-                            context,
-                            CacheRequest.RequestFailureType.PARSE,
-                            e,
-                            null,
-                            uri,
-                            com.stormtroopercs.materialreader.common.Optional.empty()
-                        )
-                        AndroidCommon.runOnUiThread {
-                            _actionResult.value = error.message ?: "Failed to load comments"
-                        }
-                        if (deferred.isActive) deferred.complete(emptyList())
-                    }
-                }
-            }
-        )
-        cacheManager.makeRequest(cacheRequest)
-        return deferred.await()
-    }
+	/**
+	 * Suspend until the comment-listing for [childId] under [postId] is fetched
+	 * and parsed, returning the flattened [CommentItem]s at [baseDepth]. On a
+	 * network/parse failure returns an empty list (the row simply stays
+	 * collapsed) and surfaces the error as a snackbar. Backed by a CacheRequest
+	 * bridged into coroutines via a [CompletableDeferred] (its [await] is
+	 * cancellable, so an expand that is superseded is dropped).
+	 */
+	private suspend fun fetchExpandedChildren(
+		childId: String,
+		postId: String,
+		baseDepth: Int,
+		account: RedditAccount,
+	): List<CommentItem> {
+		val deferred = CompletableDeferred<List<CommentItem>>()
+		val url = PostCommentListingURL(null, postId, childId, null, 10, null, false)
+		val uri = UriString(url.generateJsonUri().toString())
+		val cacheRequest = CacheRequest(
+			uri,
+			account,
+			null,
+			Priority(Constants.Priority.API_COMMENT_LIST),
+			DownloadStrategyIfNotCached.INSTANCE,
+			Constants.FileType.COMMENT_LIST,
+			CacheRequest.DownloadQueueType.REDDIT_API,
+			context,
+			object : CacheRequestCallbacks {
+				override fun onFailure(error: RRError) {
+					if (deferred.isActive) deferred.complete(emptyList())
+				}
 
-    /**
-     * Parse a fetched child-comment thing response into flattened comment
-     * items at [baseDepth] (the continuation row's depth + 1). Post things are
-     * skipped by [buildCommentItem].
-     */
-    private fun parseExpandedResponse(
-        thingResponse: RedditThingResponse,
-        baseDepth: Int,
-        postId: String,
-        output: MutableList<CommentItem>
-    ) {
-        when (thingResponse) {
-            is RedditThingResponse.Single -> {
-                val thing = thingResponse.thing
-                if (thing is RedditThing.Listing) {
-                    for (child in thing.data.children) {
-                        buildCommentItem(child, baseDepth, output, postId)
-                    }
-                }
-            }
+				override fun onDataStreamComplete(
+					streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<SeekableInputStream, IOException>,
+					timestamp: TimestampUTC,
+					session: java.util.UUID,
+					fromCache: Boolean,
+					mimetype: String?,
+				) {
+					try {
+						val thingResponse = streamFactory.create().use { stream ->
+							JsonUtils.decodeRedditThingResponseFromStream(stream)
+						}
+						val fetched = mutableListOf<CommentItem>()
+						parseExpandedResponse(thingResponse, baseDepth, postId, fetched)
+						if (deferred.isActive) deferred.complete(fetched)
+					} catch (e: Exception) {
+						val error = General.getGeneralErrorForFailure(
+							context,
+							CacheRequest.RequestFailureType.PARSE,
+							e,
+							null,
+							uri,
+							com.stormtroopercs.materialreader.common.Optional.empty(),
+						)
+						AndroidCommon.runOnUiThread {
+							_actionResult.value = error.message ?: "Failed to load comments"
+						}
+						if (deferred.isActive) deferred.complete(emptyList())
+					}
+				}
+			},
+		)
+		cacheManager.makeRequest(cacheRequest)
+		return deferred.await()
+	}
 
-            is RedditThingResponse.Multiple -> {
-                for (thing in thingResponse.things) {
-                    if (thing is RedditThing.Listing) {
-                        for (child in thing.data.children) {
-                            buildCommentItem(child, baseDepth, output, postId)
-                        }
-                    }
-                }
-            }
-        }
-    }
+	/**
+	 * Parse a fetched child-comment thing response into flattened comment
+	 * items at [baseDepth] (the continuation row's depth + 1). Post things are
+	 * skipped by [buildCommentItem].
+	 */
+	private fun parseExpandedResponse(
+		thingResponse: RedditThingResponse,
+		baseDepth: Int,
+		postId: String,
+		output: MutableList<CommentItem>,
+	) {
+		when (thingResponse) {
+			is RedditThingResponse.Single -> {
+				val thing = thingResponse.thing
+				if (thing is RedditThing.Listing) {
+					for (child in thing.data.children) {
+						buildCommentItem(child, baseDepth, output, postId)
+					}
+				}
+			}
 
-    /** Splice [fetched] into the list in place of the `more_N` row [moreId]. */
-    private fun insertChildren(moreId: String, fetched: List<CommentItem>) {
-        val state = _state.value
-        if (state !is CommentListUiState.Success) return
-        val comments = state.comments.toMutableList()
-        val idx = comments.indexOfFirst { it.id == moreId }
-        if (idx < 0) return
-        comments.removeAt(idx)
-        comments.addAll(idx, fetched)
-        _state.value = state.copy(comments = comments)
-    }
+			is RedditThingResponse.Multiple -> {
+				for (thing in thingResponse.things) {
+					if (thing is RedditThing.Listing) {
+						for (child in thing.data.children) {
+							buildCommentItem(child, baseDepth, output, postId)
+						}
+					}
+				}
+			}
+		}
+	}
 
-    private fun fetchList(listingPath: String) {
-        viewModelScope.launch {
-            _state.value = CommentListUiState.Loading
+	/** Splice [fetched] into the list in place of the `more_N` row [moreId]. */
+	private fun insertChildren(moreId: String, fetched: List<CommentItem>) {
+		val state = _state.value
+		if (state !is CommentListUiState.Success) return
+		val comments = state.comments.toMutableList()
+		val idx = comments.indexOfFirst { it.id == moreId }
+		if (idx < 0) return
+		comments.removeAt(idx)
+		comments.addAll(idx, fetched)
+		_state.value = state.copy(comments = comments)
+	}
 
-            try {
-                val account = accountManager.getDefaultAccount()
+	private fun fetchList(listingPath: String) {
+		viewModelScope.launch {
+			_state.value = CommentListUiState.Loading
 
-                // A bare post id is a post's comment listing; a u/<user>/comments
-                // path is a user's comment listing.
-                val rawUri = if (listingPath.startsWith("u/")) {
-                    "https://www.reddit.com/$listingPath/"
-                } else {
-                    "https://www.reddit.com/comments/$listingPath/"
-                }
-                val url = RedditURLParser.parseProbableCommentListing(Uri.parse(rawUri))
-                if (url !is CommentListingURL) {
-                    AndroidCommon.runOnUiThread {
-                        _state.value = CommentListUiState.Error(
-                            RRError(title = "Invalid listing", message = "Invalid comment listing URL")
-                        )
-                    }
-                    return@launch
-                }
-                val uri = UriString(url.generateJsonUri().toString())
+			try {
+				val account = accountManager.getDefaultAccount()
 
-                val cacheRequest = CacheRequest(
-                    uri,
-                    account,
-                    null,
-                    Priority(Constants.Priority.API_COMMENT_LIST),
-                    DownloadStrategyIfNotCached.INSTANCE,
-                    Constants.FileType.COMMENT_LIST,
-                    CacheRequest.DownloadQueueType.REDDIT_API,
-                    context,
-                    object : CacheRequestCallbacks {
-                        override fun onFailure(error: RRError) {
-                            AndroidCommon.runOnUiThread {
-                                _state.value = CommentListUiState.Error(error)
-                            }
-                        }
+				// A bare post id is a post's comment listing; a u/<user>/comments
+				// path is a user's comment listing.
+				val rawUri = if (listingPath.startsWith("u/")) {
+					"https://www.reddit.com/$listingPath/"
+				} else {
+					"https://www.reddit.com/comments/$listingPath/"
+				}
+				val url = RedditURLParser.parseProbableCommentListing(Uri.parse(rawUri))
+				if (url !is CommentListingURL) {
+					AndroidCommon.runOnUiThread {
+						_state.value = CommentListUiState.Error(
+							RRError(title = "Invalid listing", message = "Invalid comment listing URL"),
+						)
+					}
+					return@launch
+				}
+				val uri = UriString(url.generateJsonUri().toString())
 
-                        override fun onDataStreamComplete(
-                            streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<SeekableInputStream, IOException>,
-                            timestamp: TimestampUTC,
-                            session: java.util.UUID,
-                            fromCache: Boolean,
-                            mimetype: String?
-                        ) {
-                            try {
-                                val thingResponse = streamFactory.create().use { stream ->
-                                    JsonUtils.decodeRedditThingResponseFromStream(stream)
-                                }
+				val cacheRequest = CacheRequest(
+					uri,
+					account,
+					null,
+					Priority(Constants.Priority.API_COMMENT_LIST),
+					DownloadStrategyIfNotCached.INSTANCE,
+					Constants.FileType.COMMENT_LIST,
+					CacheRequest.DownloadQueueType.REDDIT_API,
+					context,
+					object : CacheRequestCallbacks {
+						override fun onFailure(error: RRError) {
+							AndroidCommon.runOnUiThread {
+								_state.value = CommentListUiState.Error(error)
+							}
+						}
 
-                                val (postTitle, postAuthor, comments) = parseThingResponse(thingResponse)
+						override fun onDataStreamComplete(
+							streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<SeekableInputStream, IOException>,
+							timestamp: TimestampUTC,
+							session: java.util.UUID,
+							fromCache: Boolean,
+							mimetype: String?,
+						) {
+							try {
+								val thingResponse = streamFactory.create().use { stream ->
+									JsonUtils.decodeRedditThingResponseFromStream(stream)
+								}
 
-                                AndroidCommon.runOnUiThread {
-                                    _state.value = CommentListUiState.Success(
-                                        postTitle = postTitle,
-                                        postAuthor = postAuthor,
-                                        comments = comments,
-                                        moreCommentsAvailable = comments.any { it.id.startsWith("more_") }
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                val error = General.getGeneralErrorForFailure(
-                                    context,
-                                    CacheRequest.RequestFailureType.PARSE,
-                                    e,
-                                    null,
-                                    uri,
-                                    com.stormtroopercs.materialreader.common.Optional.empty()
-                                )
-                                AndroidCommon.runOnUiThread {
-                                    _state.value = CommentListUiState.Error(error)
-                                }
-                            }
-                        }
-                    }
-                )
+								val (postTitle, postAuthor, comments) = parseThingResponse(thingResponse)
 
-                cacheManager.makeRequest(cacheRequest)
+								AndroidCommon.runOnUiThread {
+									_state.value = CommentListUiState.Success(
+										postTitle = postTitle,
+										postAuthor = postAuthor,
+										comments = comments,
+										moreCommentsAvailable = comments.any { it.id.startsWith("more_") },
+									)
+								}
+							} catch (e: Exception) {
+								val error = General.getGeneralErrorForFailure(
+									context,
+									CacheRequest.RequestFailureType.PARSE,
+									e,
+									null,
+									uri,
+									com.stormtroopercs.materialreader.common.Optional.empty(),
+								)
+								AndroidCommon.runOnUiThread {
+									_state.value = CommentListUiState.Error(error)
+								}
+							}
+						}
+					},
+				)
 
-            } catch (e: Exception) {
-                val error = RRError(
-                    title = "Error loading comments",
-                    message = e.message ?: "Unknown error",
-                    reportable = false
-                )
-                _state.value = CommentListUiState.Error(error)
-            }
-        }
-    }
+				cacheManager.makeRequest(cacheRequest)
+			} catch (e: Exception) {
+				val error = RRError(
+					title = "Error loading comments",
+					message = e.message ?: "Unknown error",
+					reportable = false,
+				)
+				_state.value = CommentListUiState.Error(error)
+			}
+		}
+	}
 
-    private fun parseThingResponse(thingResponse: RedditThingResponse): Triple<String?, String?, List<CommentItem>> {
-        val comments = mutableListOf<CommentItem>()
+	private fun parseThingResponse(thingResponse: RedditThingResponse): Triple<String?, String?, List<CommentItem>> {
+		val comments = mutableListOf<CommentItem>()
 
-        when (thingResponse) {
-            is RedditThingResponse.Multiple -> {
-                val first = thingResponse.things[0]
-                val second = thingResponse.things[1]
+		when (thingResponse) {
+			is RedditThingResponse.Multiple -> {
+				val first = thingResponse.things[0]
+				val second = thingResponse.things[1]
 
-                var postTitle: String?=null
-                var postAuthor: String?=null
-                var postId: String? = null
+				var postTitle: String? = null
+				var postAuthor: String? = null
+				var postId: String? = null
 
-                if (first is RedditThing.Listing) {
-                    val firstListing = first.data
-                    if (firstListing.children.isNotEmpty()) {
-                        val firstPost = firstListing.children[0].ok() as RedditThing.Post
-                        postTitle = firstPost.data.title?.decoded
-                        postAuthor = firstPost.data.author?.decoded
-                        postId = firstPost.data.id
-                    }
-                }
+				if (first is RedditThing.Listing) {
+					val firstListing = first.data
+					if (firstListing.children.isNotEmpty()) {
+						val firstPost = firstListing.children[0].ok() as RedditThing.Post
+						postTitle = firstPost.data.title?.decoded
+						postAuthor = firstPost.data.author?.decoded
+						postId = firstPost.data.id
+					}
+				}
 
-                if (second is RedditThing.Listing) {
-                    val commentListing = second.data
-                    for (child in commentListing.children) {
-                        buildCommentItem(child, 0, comments, postId)
-                    }
-                }
+				if (second is RedditThing.Listing) {
+					val commentListing = second.data
+					for (child in commentListing.children) {
+						buildCommentItem(child, 0, comments, postId)
+					}
+				}
 
-                return Triple(postTitle, postAuthor, comments)
-            }
+				return Triple(postTitle, postAuthor, comments)
+			}
 
-            is RedditThingResponse.Single -> {
-                if (thingResponse.thing is RedditThing.Listing) {
-                    val listing = thingResponse.thing.data
-                    for (child in listing.children) {
-                        buildCommentItem(child, 0, comments, null)
-                    }
-                }
+			is RedditThingResponse.Single -> {
+				if (thingResponse.thing is RedditThing.Listing) {
+					val listing = thingResponse.thing.data
+					for (child in listing.children) {
+						buildCommentItem(child, 0, comments, null)
+					}
+				}
 
-                return Triple(null, null, comments)
-            }
-        }
+				return Triple(null, null, comments)
+			}
+		}
 
-        return Triple(null, null, comments)
-    }
+		return Triple(null, null, comments)
+	}
 
-    private fun buildCommentItem(
-        maybeThing: MaybeParseError<RedditThing>,
-        depth: Int,
-        output: MutableList<CommentItem>,
-        postId: String? = null
-    ) {
-        val thing = maybeThing.ok()
+	private fun buildCommentItem(
+		maybeThing: MaybeParseError<RedditThing>,
+		depth: Int,
+		output: MutableList<CommentItem>,
+		postId: String? = null,
+	) {
+		val thing = maybeThing.ok()
 
-        when (thing) {
-            is RedditThing.More -> {
-                output.add(
-                    CommentItem(
-                        id = "more_${thing.data.count}",
-                        author = null,
-                        body = "+${thing.data.count} more comments",
-                        score = 0,
-                        replyCount = thing.data.count,
-                        createdUtcTimestamp = System.currentTimeMillis() / 1000,
-                        authorFlairText = null,
-                        isTopLevel = depth == 0,
-                        collapsed = false,
-                        collapsedReason = "MORE",
-                        replyDepth = depth,
-                        moreChildren = thing.data.children,
-                        postId = postId
-                    )
-                )
-            }
+		when (thing) {
+			is RedditThing.More -> {
+				output.add(
+					CommentItem(
+						id = "more_${thing.data.count}",
+						author = null,
+						body = "+${thing.data.count} more comments",
+						score = 0,
+						replyCount = thing.data.count,
+						createdUtcTimestamp = System.currentTimeMillis() / 1000,
+						authorFlairText = null,
+						isTopLevel = depth == 0,
+						collapsed = false,
+						collapsedReason = "MORE",
+						replyDepth = depth,
+						moreChildren = thing.data.children,
+						postId = postId,
+					),
+				)
+			}
 
-            is RedditThing.Comment -> {
-                val comment = thing.data
-                val body = comment.body?.decoded ?: ""
+			is RedditThing.Comment -> {
+				val comment = thing.data
+				val body = comment.body?.decoded ?: ""
 
-                output.add(
-                    CommentItem(
-                        id = comment.id,
-                        author = comment.author?.decoded,
-                        body = body,
-                        score = if (comment.likes == true) comment.ups else max(0, comment.ups - comment.downs),
-                        replyCount = if (comment.replies is RedditFieldReplies.Some) {
-                            (comment.replies.value as RedditThing.Listing).data.children.size
-                        } else {
-                            0
-                        },
-                        createdUtcTimestamp = comment.created_utc.value.toUtcSecs(),
-                        authorFlairText = comment.author_flair_text?.decoded,
-                        isTopLevel = depth == 0,
-                        collapsed = false,
-                        collapsedReason = comment.collapsed_reason_code,
-                        replyDepth = depth,
-                        fullName = comment.name.toString(),
-                        subreddit = comment.subreddit?.decoded,
-                        permalink = comment.permalink?.decoded,
-                        saved = comment.saved,
-                        edited = comment.edited is RedditFieldEdited.Bool &&
-                            comment.edited.value,
-                        parentFullName = comment.parent_id?.takeIf { it.startsWith("t1_") }
-                    )
-                )
+				output.add(
+					CommentItem(
+						id = comment.id,
+						author = comment.author?.decoded,
+						body = body,
+						score = if (comment.likes == true) comment.ups else max(0, comment.ups - comment.downs),
+						replyCount = if (comment.replies is RedditFieldReplies.Some) {
+							(comment.replies.value as RedditThing.Listing).data.children.size
+						} else {
+							0
+						},
+						createdUtcTimestamp = comment.created_utc.value.toUtcSecs(),
+						authorFlairText = comment.author_flair_text?.decoded,
+						isTopLevel = depth == 0,
+						collapsed = false,
+						collapsedReason = comment.collapsed_reason_code,
+						replyDepth = depth,
+						fullName = comment.name.toString(),
+						subreddit = comment.subreddit?.decoded,
+						permalink = comment.permalink?.decoded,
+						saved = comment.saved,
+						edited = comment.edited is RedditFieldEdited.Bool &&
+							comment.edited.value,
+						parentFullName = comment.parent_id?.takeIf { it.startsWith("t1_") },
+					),
+				)
 
-                // Recurse into replies
-                if (comment.replies is RedditFieldReplies.Some) {
-                    val replies = (comment.replies.value as RedditThing.Listing).data
-                    for (reply in replies.children) {
-                        buildCommentItem(reply, depth + 1, output, postId)
-                    }
-                }
-            }
+				// Recurse into replies
+				if (comment.replies is RedditFieldReplies.Some) {
+					val replies = (comment.replies.value as RedditThing.Listing).data
+					for (reply in replies.children) {
+						buildCommentItem(reply, depth + 1, output, postId)
+					}
+				}
+			}
 
-            else -> {}
-        }
-    }
+			else -> {}
+		}
+	}
 }

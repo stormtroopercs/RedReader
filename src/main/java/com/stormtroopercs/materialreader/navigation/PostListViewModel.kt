@@ -333,8 +333,11 @@ class PostListViewModel @Inject constructor(
 					// shows its snackbar but the row's icon/flags keep the pre-action
 					// value until the next refetch.
 					_state.update {
-						if (it is PostListUiState.Success) PostListUiState.Success(it.posts.map { p -> if (p.id == post.id) applyPostAction(p, action) else p })
-						else it
+						if (it is PostListUiState.Success) {
+							PostListUiState.Success(it.posts.map { p -> if (p.id == post.id) applyPostAction(p, action) else p })
+						} else {
+							it
+						}
 					}
 					_actionResult.value = resultMessageFor(action)
 				}
@@ -442,8 +445,8 @@ class PostListViewModel @Inject constructor(
 								// it instead of a broken image box.
 								.let { resolveLinkPreviews(it) }
 
-								_posts.value = posts
-								_state.value = PostListUiState.Success(posts)
+							_posts.value = posts
+							_state.value = PostListUiState.Success(posts)
 						} catch (e: Exception) {
 							_state.value = PostListUiState.Error(
 								RRError(
@@ -595,7 +598,9 @@ class PostListViewModel @Inject constructor(
 									PostListUiState.Success(
 										it.posts.map { p -> if (p.url == url) p.copy(linkPreviewUrl = og) else p },
 									)
-								} else it
+								} else {
+									it
+								}
 							}
 						}
 					} catch (e: Exception) {

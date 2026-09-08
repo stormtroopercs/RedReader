@@ -224,8 +224,8 @@ fun AppNavGraph(navigationState: NavigationState) {
 				onOpenLink = openLink,
 				isTabRoot = isTabRoot,
 				titleOverride = titleOverride,
-				)
-				} else {
+			)
+		} else {
 			RealPostListScreen(
 				subreddit = subreddit,
 				searchQuery = searchQuery,
@@ -268,9 +268,9 @@ fun AppNavGraph(navigationState: NavigationState) {
 				},
 				isTabRoot = isTabRoot,
 				titleOverride = titleOverride,
-				)
-				}
-				}
+			)
+		}
+	}
 
 	AppShell(
 		navigationState = navigationState,
@@ -507,8 +507,8 @@ fun AppNavGraph(navigationState: NavigationState) {
 						onOpenMedia = openMedia,
 						onOpenVideo = openVideo,
 						onOpenLink = openLink,
-						)
-						}
+					)
+				}
 
 				// Child: Comment reply
 				entry<CommentReply> { key ->
@@ -544,18 +544,18 @@ fun AppNavGraph(navigationState: NavigationState) {
 				}
 
 				// Child: Full-screen video player (a feed video post's media tap).
-			// The screen resolves the post's mp4 stream (same path ImageScreen's
-			// video tab uses) and plays it with the centered translucent
-			// mute / play-pause / fullscreen controls.
-			entry<VideoPlayer> { key ->
-				VideoPlayerOverlayScreen(
-					url = key.url,
-					previewUrl = key.previewUrl,
-					onNavigateBack = { navigator.goBack() },
-				)
-			}
+				// The screen resolves the post's mp4 stream (same path ImageScreen's
+				// video tab uses) and plays it with the centered translucent
+				// mute / play-pause / fullscreen controls.
+				entry<VideoPlayer> { key ->
+					VideoPlayerOverlayScreen(
+						url = key.url,
+						previewUrl = key.previewUrl,
+						onNavigateBack = { navigator.goBack() },
+					)
+				}
 
-	// Child: Reddit Terms
+				// Child: Reddit Terms
 				entry<RedditTerms> {
 					com.stormtroopercs.materialreader.compose.ui.RedditTermsScreen(
 						onDone = { navigator.goBack() },
@@ -646,14 +646,14 @@ fun AppNavGraph(navigationState: NavigationState) {
 							)
 						},
 						onOAuthError = { error ->
-								// Part 1: show the error on screen (dialog on the home
-								// screen) instead of a silent goBack() — the user must
-								// know why login failed, not just be dropped on the
-								// front page.
-								Log.e("AppNavigation", "OAuth failed: $error")
-								oAuthError.value = error
-								navigator.goBack()
-							},
+							// Part 1: show the error on screen (dialog on the home
+							// screen) instead of a silent goBack() — the user must
+							// know why login failed, not just be dropped on the
+							// front page.
+							Log.e("AppNavigation", "OAuth failed: $error")
+							oAuthError.value = error
+							navigator.goBack()
+						},
 					)
 				}
 
@@ -690,5 +690,4 @@ fun AppNavGraph(navigationState: NavigationState) {
  * names route through the community detail (Phase 6.3) — the other feeds
  * (frontpage, user, multireddit, search) open the standard list feed.
  */
-private fun isCommunityFeedPath(subreddit: String): Boolean =
-	FeedPreferences.isCommunityFeedPath(subreddit)
+private fun isCommunityFeedPath(subreddit: String): Boolean = FeedPreferences.isCommunityFeedPath(subreddit)

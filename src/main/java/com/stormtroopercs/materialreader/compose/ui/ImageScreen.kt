@@ -18,7 +18,6 @@
 package com.stormtroopercs.materialreader.compose.ui
 
 import android.graphics.Movie
-import androidx.compose.material3.Button
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,6 +35,7 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,7 +77,6 @@ import com.stormtroopercs.materialreader.compose.net.fetchImageInfo
 import com.stormtroopercs.materialreader.compose.net.fetchVideoStream
 import com.stormtroopercs.materialreader.compose.theme.LocalComposeTheme
 import com.stormtroopercs.materialreader.fragments.ImageInfoDialog
-import com.stormtroopercs.materialreader.image.AlbumInfo
 import com.stormtroopercs.materialreader.image.ImageInfo
 import com.stormtroopercs.materialreader.views.GIFView
 import com.stormtroopercs.materialreader.views.video.ExoPlayerSeekableInputStreamDataSource
@@ -110,142 +109,142 @@ import kotlin.math.max
  */
 @Composable
 fun ImageScreen(
-    url: UriString,
-    isGif: Boolean = false,
-    isVideo: Boolean = false,
-    albumUrl: UriString? = null,
-    albumIndex: Int = 0,
-    onBackPressed: () -> Unit,
-    maxCanvasDimension: Int = 2048
+	url: UriString,
+	isGif: Boolean = false,
+	isVideo: Boolean = false,
+	albumUrl: UriString? = null,
+	albumIndex: Int = 0,
+	onBackPressed: () -> Unit,
+	maxCanvasDimension: Int = 2048,
 ) {
-    val theme = LocalComposeTheme.current
-    val launch = LocalLauncher.current
+	val theme = LocalComposeTheme.current
+	val launch = LocalLauncher.current
 
-    val standalone = albumUrl == null
+	val standalone = albumUrl == null
 
-    // Standalone links that are not direct media files need host resolution
-    // (imgur / gfycat / redgifs / streamable / v.redd.it / deviantart / ...).
-    // Resolve them here — the same host resolution the legacy ImageViewActivity
-    // performed — and render the result with the same still / GIF / video
-    // components (37th).
-    val needsResolution = standalone &&
-        !LinkHandler.isDirectStillImage(url) &&
-        !LinkHandler.isDirectGifFile(url) &&
-        !LinkHandler.isDirectVideoFile(url)
-    // Composed conditionally so the resolver's LaunchedEffect is created /
-    // disposed exactly when a standalone link needs host resolution.
-    val resolved: NetRequestStatus<ImageInfo>? =
-        if (needsResolution) fetchImageInfo(url).value else null
+	// Standalone links that are not direct media files need host resolution
+	// (imgur / gfycat / redgifs / streamable / v.redd.it / deviantart / ...).
+	// Resolve them here — the same host resolution the legacy ImageViewActivity
+	// performed — and render the result with the same still / GIF / video
+	// components (37th).
+	val needsResolution = standalone &&
+		!LinkHandler.isDirectStillImage(url) &&
+		!LinkHandler.isDirectGifFile(url) &&
+		!LinkHandler.isDirectVideoFile(url)
+	// Composed conditionally so the resolver's LaunchedEffect is created /
+	// disposed exactly when a standalone link needs host resolution.
+	val resolved: NetRequestStatus<ImageInfo>? =
+		if (needsResolution) fetchImageInfo(url).value else null
 
-    val info: ImageInfo? = when (val r = resolved) {
-        null -> null
-        is NetRequestStatus.Success -> r.result
-        else -> null
-    }
+	val info: ImageInfo? = when (val r = resolved) {
+		null -> null
+		is NetRequestStatus.Success -> r.result
+		else -> null
+	}
 
-    val mediaUrl = info?.original?.url ?: url
-    val effectiveIsGif = info?.let {
-        it.mediaType == ImageInfo.MediaType.GIF || it.isAnimated == true
-    } ?: isGif
-    val effectiveIsVideo = info?.let {
-        it.mediaType == ImageInfo.MediaType.VIDEO
-    } ?: isVideo
+	val mediaUrl = info?.original?.url ?: url
+	val effectiveIsGif = info?.let {
+		it.mediaType == ImageInfo.MediaType.GIF || it.isAnimated == true
+	} ?: isGif
+	val effectiveIsVideo = info?.let {
+		it.mediaType == ImageInfo.MediaType.VIDEO
+	} ?: isVideo
 
-    val barTitle = when {
-        !standalone -> stringResource(R.string.image_gallery)
-        info?.title?.isNotBlank() == true -> info.title.orEmpty()
-        else -> mediaUrl.value.substringAfterLast('/').takeIf { it.isNotBlank() } ?: "Image"
-    }
+	val barTitle = when {
+		!standalone -> stringResource(R.string.image_gallery)
+		info?.title?.isNotBlank() == true -> info.title.orEmpty()
+		else -> mediaUrl.value.substringAfterLast('/').takeIf { it.isNotBlank() } ?: "Image"
+	}
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(theme.postCard.listBackgroundColor)
-    ) {
-        // Slim top bar: back, title, and (standalone) the media-action toolbar
-        // (save / share / image info) — the Compose equivalent of the legacy
-        // ImageViewActivity floating toolbar.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .systemBarsPadding()
-                .height(48.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            RRIconButton(
-                onClick = { onBackPressed() },
-                icon = R.drawable.ic_action_back_dark,
-                contentDescription = R.string.action_back,
-                tint = theme.album.toolbarIconColor
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = barTitle,
-                modifier = Modifier.weight(1f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (standalone && (info != null || !needsResolution)) {
-                MediaToolbar(
-                    mediaUrl = mediaUrl,
-                    shareLinkUrl = url,
-                    info = info,
-                    theme = theme,
-                    launch = launch
-                )
-            }
-        }
+	Column(
+		modifier = Modifier
+			.fillMaxSize()
+			.background(theme.postCard.listBackgroundColor),
+	) {
+		// Slim top bar: back, title, and (standalone) the media-action toolbar
+		// (save / share / image info) — the Compose equivalent of the legacy
+		// ImageViewActivity floating toolbar.
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.systemBarsPadding()
+				.height(48.dp),
+			verticalAlignment = Alignment.CenterVertically,
+		) {
+			RRIconButton(
+				onClick = { onBackPressed() },
+				icon = R.drawable.ic_action_back_dark,
+				contentDescription = R.string.action_back,
+				tint = theme.album.toolbarIconColor,
+			)
+			Spacer(Modifier.width(6.dp))
+			Text(
+				text = barTitle,
+				modifier = Modifier.weight(1f),
+				maxLines = 1,
+				overflow = TextOverflow.Ellipsis,
+			)
+			if (standalone && (info != null || !needsResolution)) {
+				MediaToolbar(
+					mediaUrl = mediaUrl,
+					shareLinkUrl = url,
+					info = info,
+					theme = theme,
+					launch = launch,
+				)
+			}
+		}
 
-        if (!standalone) {
-            AlbumPager(
-                albumUrl = albumUrl,
-                startIndex = albumIndex,
-                theme = theme
-            )
-        } else if (needsResolution) {
-            when (val r = resolved) {
-                null -> MediaSpinner(theme)
-                is NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> MediaSpinner(theme)
-                is NetRequestStatus.Failed -> {
-                    ResolutionFailure(
-                        error = r.error,
-                        browserUrl = url.value,
-                        launch = launch
-                    )
-                }
-                is NetRequestStatus.Success -> {
-                    val result = r.result
-                    if (result.mediaType == null && result.urlEmbeddedPlayer == null) {
-                        // A host that resolved to no playable media (e.g. a
-                        // RedGifs page with only an embedded web player).
-                        ResolutionFailure(
-                            error = null,
-                            browserUrl = result.urlEmbeddedPlayer?.value
-                                ?: result.original.url.value,
-                            launch = launch
-                        )
-                    } else {
-                        MediaImage(
-                            url = result.original.url,
-                            isGif = result.mediaType == ImageInfo.MediaType.GIF
-                                || result.isAnimated == true,
-                            isVideo = result.mediaType == ImageInfo.MediaType.VIDEO,
-                            maxCanvasDimension = maxCanvasDimension,
-                            theme = theme
-                        )
-                    }
-                }
-            }
-        } else {
-            MediaImage(
-                url = url,
-                isGif = isGif,
-                isVideo = isVideo,
-                maxCanvasDimension = maxCanvasDimension,
-                theme = theme
-            )
-        }
-    }
+		if (!standalone) {
+			AlbumPager(
+				albumUrl = albumUrl,
+				startIndex = albumIndex,
+				theme = theme,
+			)
+		} else if (needsResolution) {
+			when (val r = resolved) {
+				null -> MediaSpinner(theme)
+				is NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> MediaSpinner(theme)
+				is NetRequestStatus.Failed -> {
+					ResolutionFailure(
+						error = r.error,
+						browserUrl = url.value,
+						launch = launch,
+					)
+				}
+				is NetRequestStatus.Success -> {
+					val result = r.result
+					if (result.mediaType == null && result.urlEmbeddedPlayer == null) {
+						// A host that resolved to no playable media (e.g. a
+						// RedGifs page with only an embedded web player).
+						ResolutionFailure(
+							error = null,
+							browserUrl = result.urlEmbeddedPlayer?.value
+								?: result.original.url.value,
+							launch = launch,
+						)
+					} else {
+						MediaImage(
+							url = result.original.url,
+							isGif = result.mediaType == ImageInfo.MediaType.GIF ||
+								result.isAnimated == true,
+							isVideo = result.mediaType == ImageInfo.MediaType.VIDEO,
+							maxCanvasDimension = maxCanvasDimension,
+							theme = theme,
+						)
+					}
+				}
+			}
+		} else {
+			MediaImage(
+				url = url,
+				isGif = isGif,
+				isVideo = isVideo,
+				maxCanvasDimension = maxCanvasDimension,
+				theme = theme,
+			)
+		}
+	}
 }
 
 /**
@@ -257,49 +256,49 @@ fun ImageScreen(
  */
 @Composable
 private fun MediaToolbar(
-    mediaUrl: UriString,
-    shareLinkUrl: UriString,
-    info: ImageInfo?,
-    theme: com.stormtroopercs.materialreader.compose.theme.ComposeTheme,
-    launch: (Dest) -> Unit
+	mediaUrl: UriString,
+	shareLinkUrl: UriString,
+	info: ImageInfo?,
+	theme: com.stormtroopercs.materialreader.compose.theme.ComposeTheme,
+	launch: (Dest) -> Unit,
 ) {
-    val context = LocalContext.current
+	val context = LocalContext.current
 
-    RRIconButton(
-        onClick = { launch(Dest.SaveMedia(mediaUrl)) },
-        icon = R.drawable.download,
-        contentDescription = R.string.action_save_image,
-        tint = theme.album.toolbarIconColor
-    )
+	RRIconButton(
+		onClick = { launch(Dest.SaveMedia(mediaUrl)) },
+		icon = R.drawable.download,
+		contentDescription = R.string.action_save_image,
+		tint = theme.album.toolbarIconColor,
+	)
 
-    RRDropdownMenuIconButton(
-        icon = R.drawable.ic_action_share_dark,
-        contentDescription = R.string.action_share
-    ) {
-        Item(
-            icon = R.drawable.ic_action_image_dark,
-            text = R.string.action_share_image,
-            onClick = { launch(Dest.ShareMedia(mediaUrl)) }
-        )
-        Item(
-            icon = R.drawable.ic_action_link_dark,
-            text = R.string.action_share_link,
-            onClick = { launch(Dest.ShareLink(shareLinkUrl)) }
-        )
-    }
+	RRDropdownMenuIconButton(
+		icon = R.drawable.ic_action_share_dark,
+		contentDescription = R.string.action_share,
+	) {
+		Item(
+			icon = R.drawable.ic_action_image_dark,
+			text = R.string.action_share_image,
+			onClick = { launch(Dest.ShareMedia(mediaUrl)) },
+		)
+		Item(
+			icon = R.drawable.ic_action_link_dark,
+			text = R.string.action_share_link,
+			onClick = { launch(Dest.ShareLink(shareLinkUrl)) },
+		)
+	}
 
-    if (info != null) {
-        RRIconButton(
-            onClick = {
-                (context as? BaseActivity)?.supportFragmentManager?.let { fm ->
-                    ImageInfoDialog.newInstance(info).show(fm, null)
-                }
-            },
-            icon = R.drawable.ic_action_info_dark,
-            contentDescription = R.string.props_image_title,
-            tint = theme.album.toolbarIconColor
-        )
-    }
+	if (info != null) {
+		RRIconButton(
+			onClick = {
+				(context as? BaseActivity)?.supportFragmentManager?.let { fm ->
+					ImageInfoDialog.newInstance(info).show(fm, null)
+				}
+			},
+			icon = R.drawable.ic_action_info_dark,
+			contentDescription = R.string.props_image_title,
+			tint = theme.album.toolbarIconColor,
+		)
+	}
 }
 
 /**
@@ -310,30 +309,30 @@ private fun MediaToolbar(
  */
 @Composable
 private fun ResolutionFailure(
-    error: com.stormtroopercs.materialreader.common.RRError?,
-    browserUrl: String,
-    launch: (Dest) -> Unit
+	error: com.stormtroopercs.materialreader.common.RRError?,
+	browserUrl: String,
+	launch: (Dest) -> Unit,
 ) {
-    val theme = LocalComposeTheme.current
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (error != null) {
-            RRErrorView(error = error)
-        }
-        Spacer(Modifier.height(12.dp))
-        Button(
-            onClick = { launch(Dest.WebBrowser(browserUrl)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-        ) {
-            Text(stringResource(R.string.action_external))
-        }
-    }
+	val theme = LocalComposeTheme.current
+	Column(
+		modifier = Modifier
+			.fillMaxSize()
+			.padding(16.dp),
+		horizontalAlignment = Alignment.CenterHorizontally,
+	) {
+		if (error != null) {
+			RRErrorView(error = error)
+		}
+		Spacer(Modifier.height(12.dp))
+		Button(
+			onClick = { launch(Dest.WebBrowser(browserUrl)) },
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(horizontal = 24.dp),
+		) {
+			Text(stringResource(R.string.action_external))
+		}
+	}
 }
 
 /**
@@ -344,76 +343,76 @@ private fun ResolutionFailure(
  */
 @Composable
 private fun MediaImage(
-    url: UriString,
-    isGif: Boolean,
-    isVideo: Boolean,
-    maxCanvasDimension: Int,
-    theme: com.stormtroopercs.materialreader.compose.theme.ComposeTheme
+	url: UriString,
+	isGif: Boolean,
+	isVideo: Boolean,
+	maxCanvasDimension: Int,
+	theme: com.stormtroopercs.materialreader.compose.theme.ComposeTheme,
 ) {
-    val data by fetchImage(url, scaleToMaxAxis = maxCanvasDimension)
-    val gifData by fetchGif(url)
-    val videoData by fetchVideoStream(url)
+	val data by fetchImage(url, scaleToMaxAxis = maxCanvasDimension)
+	val gifData by fetchGif(url)
+	val videoData by fetchVideoStream(url)
 
-    when {
-        isVideo -> {
-            when (val it = videoData) {
-                NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
-                    MediaSpinner(theme)
-                }
-                is NetRequestStatus.Failed -> {
-                    RRErrorView(error = it.error)
-                }
-                is NetRequestStatus.Success -> {
-                    it.result.metadata?.let { metadata ->
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            VideoImage(streamFactory = metadata.streamFactory, theme = theme)
-                        }
-                    } ?: MediaSpinner(theme)
-                }
-            }
-        }
+	when {
+		isVideo -> {
+			when (val it = videoData) {
+				NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+					MediaSpinner(theme)
+				}
+				is NetRequestStatus.Failed -> {
+					RRErrorView(error = it.error)
+				}
+				is NetRequestStatus.Success -> {
+					it.result.metadata?.let { metadata ->
+						Box(
+							modifier = Modifier.fillMaxSize(),
+							contentAlignment = Alignment.Center,
+						) {
+							VideoImage(streamFactory = metadata.streamFactory, theme = theme)
+						}
+					} ?: MediaSpinner(theme)
+				}
+			}
+		}
 
-        isGif -> {
-            when (val it = gifData) {
-                NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
-                    MediaSpinner(theme)
-                }
-                is NetRequestStatus.Failed -> {
-                    RRErrorView(error = it.error)
-                }
-                is NetRequestStatus.Success -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ZoomableGif(movie = it.result.data)
-                    }
-                }
-            }
-        }
+		isGif -> {
+			when (val it = gifData) {
+				NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+					MediaSpinner(theme)
+				}
+				is NetRequestStatus.Failed -> {
+					RRErrorView(error = it.error)
+				}
+				is NetRequestStatus.Success -> {
+					Box(
+						modifier = Modifier.fillMaxSize(),
+						contentAlignment = Alignment.Center,
+					) {
+						ZoomableGif(movie = it.result.data)
+					}
+				}
+			}
+		}
 
-        else -> {
-            when (val it = data) {
-                NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
-                    MediaSpinner(theme)
-                }
-                is NetRequestStatus.Failed -> {
-                    RRErrorView(error = it.error)
-                }
-                is NetRequestStatus.Success -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ZoomableImage(bitmap = it.result.data)
-                    }
-                }
-            }
-        }
-    }
+		else -> {
+			when (val it = data) {
+				NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+					MediaSpinner(theme)
+				}
+				is NetRequestStatus.Failed -> {
+					RRErrorView(error = it.error)
+				}
+				is NetRequestStatus.Success -> {
+					Box(
+						modifier = Modifier.fillMaxSize(),
+						contentAlignment = Alignment.Center,
+					) {
+						ZoomableImage(bitmap = it.result.data)
+					}
+				}
+			}
+		}
+	}
 }
 
 /**
@@ -428,30 +427,30 @@ private fun MediaImage(
 @OptIn(UnstableApi::class)
 @Composable
 private fun VideoImage(
-    streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<com.stormtroopercs.materialreader.common.datastream.SeekableInputStream, java.io.IOException>,
-    theme: com.stormtroopercs.materialreader.compose.theme.ComposeTheme,
-    modifier: Modifier = Modifier
+	streamFactory: com.stormtroopercs.materialreader.common.GenericFactory<com.stormtroopercs.materialreader.common.datastream.SeekableInputStream, java.io.IOException>,
+	theme: com.stormtroopercs.materialreader.compose.theme.ComposeTheme,
+	modifier: Modifier = Modifier,
 ) {
-    AndroidView(
-        factory = { context ->
-            val mediaSource: MediaSource = ProgressiveMediaSource
-                .Factory(ExoPlayerSeekableInputStreamDataSourceFactory(true, streamFactory))
-                .createMediaSource(MediaItem.fromUri(ExoPlayerSeekableInputStreamDataSource.URI))
-            ExoPlayerWrapperView(context, mediaSource, ExoPlayerWrapperView.Listener {}, 0)
-        },
-        onRelease = { it.release() },
-        modifier = modifier.fillMaxSize()
-    )
+	AndroidView(
+		factory = { context ->
+			val mediaSource: MediaSource = ProgressiveMediaSource
+				.Factory(ExoPlayerSeekableInputStreamDataSourceFactory(true, streamFactory))
+				.createMediaSource(MediaItem.fromUri(ExoPlayerSeekableInputStreamDataSource.URI))
+			ExoPlayerWrapperView(context, mediaSource, ExoPlayerWrapperView.Listener {}, 0)
+		},
+		onRelease = { it.release() },
+		modifier = modifier.fillMaxSize(),
+	)
 }
 
 @Composable
 private fun MediaSpinner(theme: com.stormtroopercs.materialreader.compose.theme.ComposeTheme) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(color = theme.album.toolbarIconColor)
-    }
+	Box(
+		modifier = Modifier.fillMaxSize(),
+		contentAlignment = Alignment.Center,
+	) {
+		CircularProgressIndicator(color = theme.album.toolbarIconColor)
+	}
 }
 
 /**
@@ -462,59 +461,59 @@ private fun MediaSpinner(theme: com.stormtroopercs.materialreader.compose.theme.
  */
 @Composable
 private fun AlbumPager(
-    albumUrl: UriString,
-    startIndex: Int,
-    theme: com.stormtroopercs.materialreader.compose.theme.ComposeTheme
+	albumUrl: UriString,
+	startIndex: Int,
+	theme: com.stormtroopercs.materialreader.compose.theme.ComposeTheme,
 ) {
-    val album by fetchAlbum(albumUrl)
+	val album by fetchAlbum(albumUrl)
 
-    when (val it = album) {
-        NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
-            MediaSpinner(theme)
-        }
+	when (val it = album) {
+		NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+			MediaSpinner(theme)
+		}
 
-        is NetRequestStatus.Failed -> {
-            RRErrorView(error = it.error)
-        }
+		is NetRequestStatus.Failed -> {
+			RRErrorView(error = it.error)
+		}
 
-        is NetRequestStatus.Success -> {
-            if (it.result.images.isEmpty()) {
-                MediaSpinner(theme)
-            } else {
-                val pagerState = rememberPagerState(
-                    initialPage = startIndex.coerceIn(0, it.result.images.size - 1)
-                ) { it.result.images.size }
+		is NetRequestStatus.Success -> {
+			if (it.result.images.isEmpty()) {
+				MediaSpinner(theme)
+			} else {
+				val pagerState = rememberPagerState(
+					initialPage = startIndex.coerceIn(0, it.result.images.size - 1),
+				) { it.result.images.size }
 
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.fillMaxSize()
-                    ) { page ->
-                        ResolvedAlbumImage(
-                            image = it.result.images[page],
-                            maxCanvasDimension = 2048,
-                            theme = theme
-                        )
-                    }
+				Box(
+					modifier = Modifier.fillMaxSize(),
+				) {
+					HorizontalPager(
+						state = pagerState,
+						modifier = Modifier.fillMaxSize(),
+					) { page ->
+						ResolvedAlbumImage(
+							image = it.result.images[page],
+							maxCanvasDimension = 2048,
+							theme = theme,
+						)
+					}
 
-                    // "N of M" position indicator.
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 24.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "${pagerState.currentPage + 1} / ${it.result.images.size}",
-                            color = theme.album.toolbarIconColor
-                        )
-                    }
-                }
-            }
-        }
-    }
+					// "N of M" position indicator.
+					Box(
+						modifier = Modifier
+							.align(Alignment.BottomCenter)
+							.padding(bottom = 24.dp),
+						contentAlignment = Alignment.Center,
+					) {
+						Text(
+							text = "${pagerState.currentPage + 1} / ${it.result.images.size}",
+							color = theme.album.toolbarIconColor,
+						)
+					}
+				}
+			}
+		}
+	}
 }
 
 /**
@@ -528,61 +527,61 @@ private fun AlbumPager(
  */
 @Composable
 private fun ResolvedAlbumImage(
-    image: ImageInfo,
-    maxCanvasDimension: Int,
-    theme: com.stormtroopercs.materialreader.compose.theme.ComposeTheme
+	image: ImageInfo,
+	maxCanvasDimension: Int,
+	theme: com.stormtroopercs.materialreader.compose.theme.ComposeTheme,
 ) {
-    val isDirect = LinkHandler.isDirectStillImage(image.original.url) ||
-        LinkHandler.isDirectGifFile(image.original.url) ||
-        LinkHandler.isDirectVideoFile(image.original.url)
+	val isDirect = LinkHandler.isDirectStillImage(image.original.url) ||
+		LinkHandler.isDirectGifFile(image.original.url) ||
+		LinkHandler.isDirectVideoFile(image.original.url)
 
-    if (isDirect) {
-        MediaImage(
-            url = image.original.url,
-            isGif = image.mediaType == ImageInfo.MediaType.GIF
-                || image.isAnimated == true,
-            isVideo = image.mediaType == ImageInfo.MediaType.VIDEO,
-            maxCanvasDimension = maxCanvasDimension,
-            theme = theme
-        )
-    } else {
-        val resolved = fetchImageInfo(image.original.url).value
-        when (val r = resolved) {
-            is NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
-                MediaSpinner(theme)
-            }
+	if (isDirect) {
+		MediaImage(
+			url = image.original.url,
+			isGif = image.mediaType == ImageInfo.MediaType.GIF ||
+				image.isAnimated == true,
+			isVideo = image.mediaType == ImageInfo.MediaType.VIDEO,
+			maxCanvasDimension = maxCanvasDimension,
+			theme = theme,
+		)
+	} else {
+		val resolved = fetchImageInfo(image.original.url).value
+		when (val r = resolved) {
+			is NetRequestStatus.Connecting, is NetRequestStatus.Downloading -> {
+				MediaSpinner(theme)
+			}
 
-            is NetRequestStatus.Failed -> {
-                RRErrorView(error = r.error)
-            }
+			is NetRequestStatus.Failed -> {
+				RRErrorView(error = r.error)
+			}
 
-            is NetRequestStatus.Success -> {
-                val result = r.result
-                if (result.mediaType == null && result.urlEmbeddedPlayer == null) {
-                    // A host that resolved to no playable media (e.g. an
-                    // embedded web player) — show a note for this page.
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.error_inline_preview_failed_message),
-                            color = theme.album.toolbarIconColor
-                        )
-                    }
-                } else {
-                    MediaImage(
-                        url = result.original.url,
-                        isGif = result.mediaType == ImageInfo.MediaType.GIF
-                            || result.isAnimated == true,
-                        isVideo = result.mediaType == ImageInfo.MediaType.VIDEO,
-                        maxCanvasDimension = maxCanvasDimension,
-                        theme = theme
-                    )
-                }
-            }
-        }
-    }
+			is NetRequestStatus.Success -> {
+				val result = r.result
+				if (result.mediaType == null && result.urlEmbeddedPlayer == null) {
+					// A host that resolved to no playable media (e.g. an
+					// embedded web player) — show a note for this page.
+					Box(
+						modifier = Modifier.fillMaxSize(),
+						contentAlignment = Alignment.Center,
+					) {
+						Text(
+							text = stringResource(R.string.error_inline_preview_failed_message),
+							color = theme.album.toolbarIconColor,
+						)
+					}
+				} else {
+					MediaImage(
+						url = result.original.url,
+						isGif = result.mediaType == ImageInfo.MediaType.GIF ||
+							result.isAnimated == true,
+						isVideo = result.mediaType == ImageInfo.MediaType.VIDEO,
+						maxCanvasDimension = maxCanvasDimension,
+						theme = theme,
+					)
+				}
+			}
+		}
+	}
 }
 
 /**
@@ -593,74 +592,75 @@ private fun ResolvedAlbumImage(
  */
 @Composable
 private fun ZoomableImage(
-    bitmap: ImageBitmap,
-    modifier: Modifier = Modifier
+	bitmap: ImageBitmap,
+	modifier: Modifier = Modifier,
 ) {
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-    var containerSize by remember { mutableStateOf(IntSize.Zero) }
+	var scale by remember { mutableFloatStateOf(1f) }
+	var offset by remember { mutableStateOf(Offset.Zero) }
+	var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
-    val imageSize = remember(bitmap) { IntSize(bitmap.width, bitmap.height) }
-    val imageAspect = remember(imageSize) {
-        if (imageSize.height > 0) imageSize.width.toFloat() / imageSize.height else 1f
-    }
+	val imageSize = remember(bitmap) { IntSize(bitmap.width, bitmap.height) }
+	val imageAspect = remember(imageSize) {
+		if (imageSize.height > 0) imageSize.width.toFloat() / imageSize.height else 1f
+	}
 
-    // Size of the image as fitted (ContentScale.Fit) into the container.
-    val fittedSize = remember(containerSize, imageAspect) {
-        if (containerSize.width == 0 || containerSize.height == 0) Size.Zero
-        else if (containerSize.width.toFloat() / containerSize.height < imageAspect) {
-            Size(containerSize.width.toFloat(), containerSize.width.toFloat() / imageAspect)
-        } else {
-            Size(containerSize.height * imageAspect, containerSize.height.toFloat())
-        }
-    }
+	// Size of the image as fitted (ContentScale.Fit) into the container.
+	val fittedSize = remember(containerSize, imageAspect) {
+		if (containerSize.width == 0 || containerSize.height == 0) {
+			Size.Zero
+		} else if (containerSize.width.toFloat() / containerSize.height < imageAspect) {
+			Size(containerSize.width.toFloat(), containerSize.width.toFloat() / imageAspect)
+		} else {
+			Size(containerSize.height * imageAspect, containerSize.height.toFloat())
+		}
+	}
 
-    fun maxOffsetX() = max(0f, (scale - 1f) * fittedSize.width / 2f)
-    fun maxOffsetY() = max(0f, (scale - 1f) * fittedSize.height / 2f)
+	fun maxOffsetX() = max(0f, (scale - 1f) * fittedSize.width / 2f)
+	fun maxOffsetY() = max(0f, (scale - 1f) * fittedSize.height / 2f)
 
-    fun clampOffset(o: Offset) = Offset(
-        x = o.x.coerceIn(-maxOffsetX(), maxOffsetX()),
-        y = o.y.coerceIn(-maxOffsetY(), maxOffsetY())
-    )
+	fun clampOffset(o: Offset) = Offset(
+		x = o.x.coerceIn(-maxOffsetX(), maxOffsetX()),
+		y = o.y.coerceIn(-maxOffsetY(), maxOffsetY()),
+	)
 
-    Image(
-        bitmap = bitmap,
-        contentDescription = null,
-        contentScale = ContentScale.Fit,
-        modifier = modifier
-            .fillMaxSize()
-            .onGloballyPositioned { containerSize = it.size }
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                translationX = offset.x
-                translationY = offset.y
-            }
-            .pointerInput(Unit) {
-                detectTransformGestures { _, gesturePan, gestureZoom, _ ->
-                    val newScale = (scale * gestureZoom).coerceIn(1f, 4f)
-                    val newOffset = if (newScale <= 1f) {
-                        Offset.Zero
-                    } else {
-                        clampOffset(offset + gesturePan)
-                    }
-                    scale = newScale
-                    offset = newOffset
-                }
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onDoubleTap = {
-                        if (scale > 1.01f) {
-                            scale = 1f
-                            offset = Offset.Zero
-                        } else {
-                            scale = 2.5f
-                        }
-                    }
-                )
-            }
-    )
+	Image(
+		bitmap = bitmap,
+		contentDescription = null,
+		contentScale = ContentScale.Fit,
+		modifier = modifier
+			.fillMaxSize()
+			.onGloballyPositioned { containerSize = it.size }
+			.graphicsLayer {
+				scaleX = scale
+				scaleY = scale
+				translationX = offset.x
+				translationY = offset.y
+			}
+			.pointerInput(Unit) {
+				detectTransformGestures { _, gesturePan, gestureZoom, _ ->
+					val newScale = (scale * gestureZoom).coerceIn(1f, 4f)
+					val newOffset = if (newScale <= 1f) {
+						Offset.Zero
+					} else {
+						clampOffset(offset + gesturePan)
+					}
+					scale = newScale
+					offset = newOffset
+				}
+			}
+			.pointerInput(Unit) {
+				detectTapGestures(
+					onDoubleTap = {
+						if (scale > 1.01f) {
+							scale = 1f
+							offset = Offset.Zero
+						} else {
+							scale = 2.5f
+						}
+					},
+				)
+			},
+	)
 }
 
 /**
@@ -674,55 +674,55 @@ private fun ZoomableImage(
 @Suppress("DEPRECATION")
 @Composable
 private fun ZoomableGif(
-    movie: Movie,
-    modifier: Modifier = Modifier
+	movie: Movie,
+	modifier: Modifier = Modifier,
 ) {
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-    var containerSize by remember { mutableStateOf(IntSize.Zero) }
+	var scale by remember { mutableFloatStateOf(1f) }
+	var offset by remember { mutableStateOf(Offset.Zero) }
+	var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
-    fun maxOffsetX() = max(0f, (scale - 1f) * containerSize.width / 2f)
-    fun maxOffsetY() = max(0f, (scale - 1f) * containerSize.height / 2f)
+	fun maxOffsetX() = max(0f, (scale - 1f) * containerSize.width / 2f)
+	fun maxOffsetY() = max(0f, (scale - 1f) * containerSize.height / 2f)
 
-    fun clampOffset(o: Offset) = Offset(
-        x = o.x.coerceIn(-maxOffsetX(), maxOffsetX()),
-        y = o.y.coerceIn(-maxOffsetY(), maxOffsetY())
-    )
+	fun clampOffset(o: Offset) = Offset(
+		x = o.x.coerceIn(-maxOffsetX(), maxOffsetX()),
+		y = o.y.coerceIn(-maxOffsetY(), maxOffsetY()),
+	)
 
-    AndroidView(
-        factory = { context -> GIFView(context, movie) },
-        modifier = modifier
-            .fillMaxSize()
-            .onGloballyPositioned { containerSize = it.size }
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                translationX = offset.x
-                translationY = offset.y
-            }
-            .pointerInput(Unit) {
-                detectTransformGestures { _, gesturePan, gestureZoom, _ ->
-                    val newScale = (scale * gestureZoom).coerceIn(1f, 4f)
-                    val newOffset = if (newScale <= 1f) {
-                        Offset.Zero
-                    } else {
-                        clampOffset(offset + gesturePan)
-                    }
-                    scale = newScale
-                    offset = newOffset
-                }
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onDoubleTap = {
-                        if (scale > 1.01f) {
-                            scale = 1f
-                            offset = Offset.Zero
-                        } else {
-                            scale = 2.5f
-                        }
-                    }
-                )
-            }
-    )
+	AndroidView(
+		factory = { context -> GIFView(context, movie) },
+		modifier = modifier
+			.fillMaxSize()
+			.onGloballyPositioned { containerSize = it.size }
+			.graphicsLayer {
+				scaleX = scale
+				scaleY = scale
+				translationX = offset.x
+				translationY = offset.y
+			}
+			.pointerInput(Unit) {
+				detectTransformGestures { _, gesturePan, gestureZoom, _ ->
+					val newScale = (scale * gestureZoom).coerceIn(1f, 4f)
+					val newOffset = if (newScale <= 1f) {
+						Offset.Zero
+					} else {
+						clampOffset(offset + gesturePan)
+					}
+					scale = newScale
+					offset = newOffset
+				}
+			}
+			.pointerInput(Unit) {
+				detectTapGestures(
+					onDoubleTap = {
+						if (scale > 1.01f) {
+							scale = 1f
+							offset = Offset.Zero
+						} else {
+							scale = 2.5f
+						}
+					},
+				)
+			},
+	)
 }

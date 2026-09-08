@@ -18,7 +18,6 @@
 package com.stormtroopercs.materialreader.navigation
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -242,8 +241,8 @@ private fun CommunityDirectoryRow(
 			} else {
 				CommunityDefaultAvatar()
 			}
-			}
-			Spacer(Modifier.width(16.dp))
+		}
+		Spacer(Modifier.width(16.dp))
 		Column {
 			Text(
 				text = "r/$name",

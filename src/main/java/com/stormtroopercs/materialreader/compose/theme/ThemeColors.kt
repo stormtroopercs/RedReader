@@ -22,8 +22,6 @@ import android.os.Build
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme as m3LightColorScheme
-import androidx.compose.material3.darkColorScheme as m3DarkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import com.stormtroopercs.materialreader.compose.prefs.ComposePrefs
@@ -32,9 +30,11 @@ import com.stormtroopercs.materialreader.settings.types.ThemeLightness
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
-import kotlin.math.roundToInt
+import androidx.compose.material3.darkColorScheme as m3DarkColorScheme
+import androidx.compose.material3.lightColorScheme as m3LightColorScheme
 
 /**
  * Neutral-gray fallback accents for dynamic colour on devices below API 31
@@ -263,14 +263,18 @@ private fun buildAccentScheme(accent: Color, light: Boolean): ColorScheme {
 // build is `internal`, so tones are derived here). ---
 
 private fun srgbToOklab(c: Color): Triple<Float, Float, Float> {
-	val r = c.red; val g = c.green; val b = c.blue
+	val r = c.red
+	val g = c.green
+	val b = c.blue
 	val lr = if (r <= 0.04045f) r / 12.92f else ((r + 0.055f) / 1.055f).pow(2.4f)
 	val lg = if (g <= 0.04045f) g / 12.92f else ((g + 0.055f) / 1.055f).pow(2.4f)
 	val lb = if (b <= 0.04045f) b / 12.92f else ((b + 0.055f) / 1.055f).pow(2.4f)
 	val l = 0.4122214708f * lr + 0.5363325363f * lg + 0.0514459929f * lb
 	val m = 0.2119034982f * lr + 0.6806995451f * lg + 0.1073969566f * lb
 	val s = 0.0883024619f * lr + 0.2817188376f * lg + 0.6299787005f * lb
-	val l_ = l.pow(1f / 3f); val m_ = m.pow(1f / 3f); val s_ = s.pow(1f / 3f)
+	val l_ = l.pow(1f / 3f)
+	val m_ = m.pow(1f / 3f)
+	val s_ = s.pow(1f / 3f)
 	return Triple(
 		0.2104542553f * l_ + 0.7936177850f * m_ - 0.0040720468f * s_,
 		1.9779984951f * l_ - 2.4285922050f * m_ + 0.4505937099f * s_,
@@ -289,7 +293,9 @@ private fun oklabToColor(L: Float, a: Float, b: Float): Color {
 	val l_ = L + 0.3963377774f * a + 0.2158037573f * b
 	val m_ = L - 0.1055613458f * a - 0.0638541728f * b
 	val s_ = L - 0.0894841775f * a - 1.2914855480f * b
-	val l = l_.pow(3); val m = m_.pow(3); val s = s_.pow(3)
+	val l = l_.pow(3)
+	val m = m_.pow(3)
+	val s = s_.pow(3)
 	val lr = 4.0767416621f * l - 3.3077115913f * m + 0.2309699292f * s
 	val lg = -1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s
 	val lb = -0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s

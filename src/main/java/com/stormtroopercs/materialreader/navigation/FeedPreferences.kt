@@ -159,17 +159,16 @@ object FeedPreferences {
 	 * (Phase 3), everything else in the list view (FINAL-DESIGN Phase 4.7).
 	 * [feedId] must be the normalized [effectiveKey] form.
 	 */
-	fun effectiveViewMode(feedId: String): PostViewMode =
-		if (hasViewModeFor(feedId)) {
-			viewModeFor(feedId)
-		} else {
-			defaultViewMode() ?:
-				if (!feedId.startsWith("search:") && isCommunityFeedPath(feedId)) {
-					PostViewMode.SLIDES
-				} else {
-					PostViewMode.CARDS
-				}
-		}
+	fun effectiveViewMode(feedId: String): PostViewMode = if (hasViewModeFor(feedId)) {
+		viewModeFor(feedId)
+	} else {
+		defaultViewMode()
+			?: if (!feedId.startsWith("search:") && isCommunityFeedPath(feedId)) {
+				PostViewMode.SLIDES
+			} else {
+				PostViewMode.CARDS
+			}
+	}
 
 	/**
 	 * The shared preference key for a listing: the normalized listing

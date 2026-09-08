@@ -24,8 +24,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
 import androidx.annotation.OptIn
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -154,9 +154,8 @@ class VideoOverlayPlayerView(
 	}
 
 	companion object {
-		private fun Activity.isInLandscapeFullscreen(): Boolean =
-			requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-				|| requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+		private fun Activity.isInLandscapeFullscreen(): Boolean = requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE ||
+			requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
 
 		private fun Activity.enterFullscreen() {
 			window.decorView.systemUiVisibility =

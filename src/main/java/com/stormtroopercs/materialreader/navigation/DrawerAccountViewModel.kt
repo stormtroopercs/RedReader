@@ -20,14 +20,6 @@ package com.stormtroopercs.materialreader.navigation
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import java.util.UUID
-import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import com.stormtroopercs.materialreader.account.RedditAccountManager
 import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.cache.CacheRequest
@@ -39,6 +31,14 @@ import com.stormtroopercs.materialreader.common.RRError
 import com.stormtroopercs.materialreader.common.time.TimestampUTC
 import com.stormtroopercs.materialreader.jsonwrap.JsonValue
 import com.stormtroopercs.materialreader.reddit.things.RedditThing
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.util.UUID
+import javax.inject.Inject
 
 /**
  * Backs the navigation drawer's account header: the signed-in user's total
@@ -77,7 +77,7 @@ class DrawerAccountViewModel @Inject constructor(
 						result: JsonValue,
 						timestamp: TimestampUTC,
 						session: UUID,
-						fromCache: Boolean
+						fromCache: Boolean,
 					) {
 						try {
 							// /user/{name}/about.json is a RedditThing envelope
@@ -107,7 +107,7 @@ class DrawerAccountViewModel @Inject constructor(
 					Constants.FileType.USER_ABOUT,
 					CacheRequest.DownloadQueueType.REDDIT_API,
 					context,
-					CacheRequestJSONParser(context, listener)
+					CacheRequestJSONParser(context, listener),
 				)
 				cacheManager.makeRequest(request)
 			} catch (e: Exception) {

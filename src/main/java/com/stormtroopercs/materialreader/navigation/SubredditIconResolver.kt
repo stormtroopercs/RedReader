@@ -98,8 +98,7 @@ object SubredditIconResolver {
 			?.takeIf { it != NO_ICON }
 	}
 
-	private fun normalize(name: String): String? =
-		name.trim().lowercase(Locale.US).takeIf { it.isNotBlank() }
+	private fun normalize(name: String): String? = name.trim().lowercase(Locale.US).takeIf { it.isNotBlank() }
 
 	@Synchronized
 	private fun getOrCreateInFlight(

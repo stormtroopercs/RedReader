@@ -185,8 +185,7 @@ class ListingUrlBuildTest {
 	// `sort=top&t=<window>` (community listing) / `sort=controversial&t=…`;
 	// a windowless option (Hot) keeps a plain sort path.
 
-	private fun uriWithSort(listPath: String, sort: PostSort?): String? =
-		buildListingUri(listPath, null, sort)?.toString()
+	private fun uriWithSort(listPath: String, sort: PostSort?): String? = buildListingUri(listPath, null, sort)?.toString()
 
 	@Test
 	fun topDayOnFrontpage() {

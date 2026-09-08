@@ -21,60 +21,61 @@ import com.stormtroopercs.materialreader.reddit.api.RedditOAuth.AccessToken
 import com.stormtroopercs.materialreader.reddit.api.RedditOAuth.RefreshToken
 
 class RedditAccount(
-    username: String,
-    refreshToken: RefreshToken?,
-    priority: Long,
-    clientId: String?
+	username: String,
+	refreshToken: RefreshToken?,
+	priority: Long,
+	clientId: String?,
 ) {
-    @JvmField
-    val username: String
-    @JvmField
-    val canonicalUsername: String
-    @JvmField
-    val refreshToken: RefreshToken?
+	@JvmField
+	val username: String
 
-    @get:Synchronized
-    var mostRecentAccessToken: AccessToken?=null
-        private set
+	@JvmField
+	val canonicalUsername: String
 
-    @JvmField
-    val priority: Long
-    @JvmField
-    val clientId: String?
+	@JvmField
+	val refreshToken: RefreshToken?
 
-    init {
+	@get:Synchronized
+	var mostRecentAccessToken: AccessToken? = null
+		private set
 
-        this.username = username.trim { it <= ' ' }
-        this.canonicalUsername = StringUtils.asciiLowercase(this.username)
-        this.refreshToken = refreshToken
-        this.priority = priority
-        this.clientId = clientId
-    }
+	@JvmField
+	val priority: Long
 
-    val isAnonymous: Boolean
-        get() = username.isEmpty()
+	@JvmField
+	val clientId: String?
 
-    val isNotAnonymous: Boolean
-        get() = !this.isAnonymous
+	init {
 
-    @Synchronized
-    fun setAccessToken(token: AccessToken?) {
-        this.mostRecentAccessToken = token
-    }
+		this.username = username.trim { it <= ' ' }
+		this.canonicalUsername = StringUtils.asciiLowercase(this.username)
+		this.refreshToken = refreshToken
+		this.priority = priority
+		this.clientId = clientId
+	}
 
-    override fun equals(o: Any?): Boolean {
-        if (o !is RedditAccount) {
-            return false
-        }
+	val isAnonymous: Boolean
+		get() = username.isEmpty()
 
-        val other = o
+	val isNotAnonymous: Boolean
+		get() = !this.isAnonymous
 
-        return canonicalUsername.equals(other.canonicalUsername, ignoreCase = true)
-                && clientId == other.clientId
-                && refreshToken == other.refreshToken
-    }
+	@Synchronized
+	fun setAccessToken(token: AccessToken?) {
+		this.mostRecentAccessToken = token
+	}
 
-    override fun hashCode(): Int {
-        return this.canonicalUsername.hashCode()
-    }
+	override fun equals(o: Any?): Boolean {
+		if (o !is RedditAccount) {
+			return false
+		}
+
+		val other = o
+
+		return canonicalUsername.equals(other.canonicalUsername, ignoreCase = true) &&
+			clientId == other.clientId &&
+			refreshToken == other.refreshToken
+	}
+
+	override fun hashCode(): Int = this.canonicalUsername.hashCode()
 }

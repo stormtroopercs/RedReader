@@ -21,24 +21,16 @@ import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import java.util.UUID
-import javax.inject.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import com.stormtroopercs.materialreader.R
 import com.stormtroopercs.materialreader.account.RedditAccountManager
 import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.cache.CacheRequest
 import com.stormtroopercs.materialreader.cache.CacheRequestJSONParser
 import com.stormtroopercs.materialreader.cache.downloadstrategy.DownloadStrategyAlways
 import com.stormtroopercs.materialreader.cache.downloadstrategy.DownloadStrategyIfNotCached
-import com.stormtroopercs.materialreader.R
 import com.stormtroopercs.materialreader.common.Constants
-import com.stormtroopercs.materialreader.common.Priority
 import com.stormtroopercs.materialreader.common.PrefsUtility
+import com.stormtroopercs.materialreader.common.Priority
 import com.stormtroopercs.materialreader.common.RRError
 import com.stormtroopercs.materialreader.common.StringUtils
 import com.stormtroopercs.materialreader.common.time.TimeFormatHelper
@@ -49,6 +41,14 @@ import com.stormtroopercs.materialreader.reddit.APIResponseHandler.UserResponseH
 import com.stormtroopercs.materialreader.reddit.RedditAPI
 import com.stormtroopercs.materialreader.reddit.things.RedditThing
 import com.stormtroopercs.materialreader.reddit.things.RedditUser
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.util.UUID
+import javax.inject.Inject
 
 /**
  * ViewModel for user profile display.
@@ -62,301 +62,303 @@ import com.stormtroopercs.materialreader.reddit.things.RedditUser
  */
 @HiltViewModel
 class UserProfileViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val accountManager: RedditAccountManager,
-    private val cacheManager: CacheManager
+	@ApplicationContext private val context: Context,
+	private val accountManager: RedditAccountManager,
+	private val cacheManager: CacheManager,
 ) : ViewModel() {
 
-    sealed class UserProfileUiState {
-        object Loading : UserProfileUiState()
-        data class Ready(
-            val username: String,
-            val karma: Int,
-            val linkKarma: Int,
-            val commentKarma: Int,
-            val isGold: Boolean,
-            val isMod: Boolean,
-            val isEmployee: Boolean,
-            val isSuspended: Boolean,
-            val isFriend: Boolean,
-            val isBlocked: Boolean,
-            val isSelf: Boolean,
-            val canBlock: Boolean,
-            val canMessage: Boolean,
-            val iconUrl: String?,
-            val accountType: String,
-            val accountAge: String?,
-            val latestUser: RedditUser?
-        ) : UserProfileUiState()
-        data class Error(val message: String) : UserProfileUiState()
-    }
+	sealed class UserProfileUiState {
+		object Loading : UserProfileUiState()
+		data class Ready(
+			val username: String,
+			val karma: Int,
+			val linkKarma: Int,
+			val commentKarma: Int,
+			val isGold: Boolean,
+			val isMod: Boolean,
+			val isEmployee: Boolean,
+			val isSuspended: Boolean,
+			val isFriend: Boolean,
+			val isBlocked: Boolean,
+			val isSelf: Boolean,
+			val canBlock: Boolean,
+			val canMessage: Boolean,
+			val iconUrl: String?,
+			val accountType: String,
+			val accountAge: String?,
+			val latestUser: RedditUser?,
+		) : UserProfileUiState()
+		data class Error(val message: String) : UserProfileUiState()
+	}
 
-    /**
-     * Transient feedback for a block/unblock action. Non-null only until the
-     * UI has handled it (then cleared via [clearBlockFeedback]).
-     */
-    sealed class BlockFeedback {
-        /** The account lacks the `block_user` permission (HTTP 403). */
-        object PermissionDenied : BlockFeedback()
-        /** The action failed for another reason. */
-        data class Failure(val error: RRError) : BlockFeedback()
-    }
+	/**
+	 * Transient feedback for a block/unblock action. Non-null only until the
+	 * UI has handled it (then cleared via [clearBlockFeedback]).
+	 */
+	sealed class BlockFeedback {
+		/** The account lacks the `block_user` permission (HTTP 403). */
+		object PermissionDenied : BlockFeedback()
 
-    private val _state = MutableStateFlow<UserProfileUiState>(UserProfileUiState.Loading)
-    val state: StateFlow<UserProfileUiState> = _state.asStateFlow()
+		/** The action failed for another reason. */
+		data class Failure(val error: RRError) : BlockFeedback()
+	}
 
-    private val _blockFeedback = MutableStateFlow<BlockFeedback?>(null)
-    val blockFeedback: StateFlow<BlockFeedback?> = _blockFeedback.asStateFlow()
+	private val _state = MutableStateFlow<UserProfileUiState>(UserProfileUiState.Loading)
+	val state: StateFlow<UserProfileUiState> = _state.asStateFlow()
 
-    fun clearBlockFeedback() {
-        _blockFeedback.value = null
-    }
+	private val _blockFeedback = MutableStateFlow<BlockFeedback?>(null)
+	val blockFeedback: StateFlow<BlockFeedback?> = _blockFeedback.asStateFlow()
 
-    private var currentUsername: String = ""
+	fun clearBlockFeedback() {
+		_blockFeedback.value = null
+	}
 
-    /**
-     * Load the user profile for the given username via the Reddit API
-     * (/user/{name}/about.json), mirroring the legacy UserProfileDialog flow.
-     */
-    fun loadProfile(username: String) {
-        if (username.isBlank()) {
-            _state.value = UserProfileUiState.Error("No username to load")
-            return
-        }
-        currentUsername = username
-        viewModelScope.launch {
-            _state.value = UserProfileUiState.Loading
-            try {
-                val account = accountManager.getDefaultAccount()
+	private var currentUsername: String = ""
 
-                val listener = object : CacheRequestJSONParser.Listener {
-                    override fun onJsonParsed(
-                        result: JsonValue,
-                        timestamp: TimestampUTC,
-                        session: UUID,
-                        fromCache: Boolean
-                    ) {
-                        try {
-                            // /user/{name}/about.json is a RedditThing envelope
-                            // ({kind: "t2", data: {...}}) — parse the envelope and
-                            // unwrap the user, the same way RedditAPI.getUser does.
-                            val user = result.asObject(RedditThing::class.java)?.asUser()
-                            if (user == null || user.name == null) {
-                                _state.value = UserProfileUiState.Error("User not found")
-                                return
-                            }
-                            val default = accountManager.getDefaultAccount()
-                            val isAnonymous = default.isAnonymous
-                            val isSelf = user.name != null && !default.isAnonymous &&
-                                StringUtils.asciiLowercase(user.name!!) ==
-                                StringUtils.asciiLowercase(default.canonicalUsername)
+	/**
+	 * Load the user profile for the given username via the Reddit API
+	 * (/user/{name}/about.json), mirroring the legacy UserProfileDialog flow.
+	 */
+	fun loadProfile(username: String) {
+		if (username.isBlank()) {
+			_state.value = UserProfileUiState.Error("No username to load")
+			return
+		}
+		currentUsername = username
+		viewModelScope.launch {
+			_state.value = UserProfileUiState.Loading
+			try {
+				val account = accountManager.getDefaultAccount()
 
-                            val accountAge = user.created_utc?.let { createdUtc ->
-                                TimeFormatHelper.format(
-                                    TimestampUTC.now().elapsedPeriodSince(
-                                        TimestampUTC.fromUtcSecs(createdUtc)
-                                    ),
-                                    context,
-                                    R.string.user_profile_account_age,
-                                    1
-                                )
-                            }
+				val listener = object : CacheRequestJSONParser.Listener {
+					override fun onJsonParsed(
+						result: JsonValue,
+						timestamp: TimestampUTC,
+						session: UUID,
+						fromCache: Boolean,
+					) {
+						try {
+							// /user/{name}/about.json is a RedditThing envelope
+							// ({kind: "t2", data: {...}}) — parse the envelope and
+							// unwrap the user, the same way RedditAPI.getUser does.
+							val user = result.asObject(RedditThing::class.java)?.asUser()
+							if (user == null || user.name == null) {
+								_state.value = UserProfileUiState.Error("User not found")
+								return
+							}
+							val default = accountManager.getDefaultAccount()
+							val isAnonymous = default.isAnonymous
+							val isSelf = user.name != null &&
+								!default.isAnonymous &&
+								StringUtils.asciiLowercase(user.name!!) ==
+								StringUtils.asciiLowercase(default.canonicalUsername)
 
-                            _state.value = UserProfileUiState.Ready(
-                                username = user.name ?: username,
-                                karma = (user.link_karma ?: 0) + (user.comment_karma ?: 0),
-                                linkKarma = user.link_karma ?: 0,
-                                commentKarma = user.comment_karma ?: 0,
-                                isGold = user.is_gold == true,
-                                isMod = user.is_mod == true,
-                                isEmployee = user.is_employee == true,
-                                isSuspended = user.is_suspended == true,
-                                isFriend = user.is_friend == true,
-                                isBlocked = user.is_blocked == true,
-                                isSelf = isSelf,
-                                canBlock = !isAnonymous && !isSelf,
-                                canMessage = !isAnonymous,
-                                iconUrl = user.iconUrl?.value,
-                                accountType = "Reddit User",
-                                accountAge = accountAge,
-                                latestUser = user
-                            )
-                        } catch (t: Throwable) {
-                            _state.value = UserProfileUiState.Error(
-                                "Failed to load profile: ${t.message}"
-                            )
-                        }
-                    }
+							val accountAge = user.created_utc?.let { createdUtc ->
+								TimeFormatHelper.format(
+									TimestampUTC.now().elapsedPeriodSince(
+										TimestampUTC.fromUtcSecs(createdUtc),
+									),
+									context,
+									R.string.user_profile_account_age,
+									1,
+								)
+							}
 
-                    override fun onFailure(error: RRError) {
-                        _state.value = UserProfileUiState.Error(
-                            error.message ?: "Failed to load profile"
-                        )
-                    }
-                }
+							_state.value = UserProfileUiState.Ready(
+								username = user.name ?: username,
+								karma = (user.link_karma ?: 0) + (user.comment_karma ?: 0),
+								linkKarma = user.link_karma ?: 0,
+								commentKarma = user.comment_karma ?: 0,
+								isGold = user.is_gold == true,
+								isMod = user.is_mod == true,
+								isEmployee = user.is_employee == true,
+								isSuspended = user.is_suspended == true,
+								isFriend = user.is_friend == true,
+								isBlocked = user.is_blocked == true,
+								isSelf = isSelf,
+								canBlock = !isAnonymous && !isSelf,
+								canMessage = !isAnonymous,
+								iconUrl = user.iconUrl?.value,
+								accountType = "Reddit User",
+								accountAge = accountAge,
+								latestUser = user,
+							)
+						} catch (t: Throwable) {
+							_state.value = UserProfileUiState.Error(
+								"Failed to load profile: ${t.message}",
+							)
+						}
+					}
 
-                val request = CacheRequest(
-                    Constants.Reddit.getUri("/user/$username/about.json"),
-                    account,
-                    null,
-                    Priority(Constants.Priority.API_USER_ABOUT),
-                    DownloadStrategyIfNotCached.INSTANCE,
-                    Constants.FileType.USER_ABOUT,
-                    CacheRequest.DownloadQueueType.REDDIT_API,
-                    context,
-                    CacheRequestJSONParser(context, listener)
-                )
-                cacheManager.makeRequest(request)
-            } catch (e: Exception) {
-                _state.value = UserProfileUiState.Error(
-                    "Failed to load profile: ${e.message}"
-                )
-            }
-        }
-    }
+					override fun onFailure(error: RRError) {
+						_state.value = UserProfileUiState.Error(
+							error.message ?: "Failed to load profile",
+						)
+					}
+				}
 
-    /**
-     * Block a user via [RedditAPI.blockUser]. On success the profile flips to
-     * the blocked state; on a 403 the [BlockFeedback.PermissionDenied] event is
-     * raised (the UI offers a re-login); otherwise a
-     * [BlockFeedback.Failure] is raised.
-     *
-     * [activity] is the hosting activity (the response handlers post to its UI
-     * thread and the API needs a non-application context for the request).
-     */
-    fun blockUser(activity: AppCompatActivity, username: String) {
-        val cm = cacheManager
-        val currentUser = accountManager.defaultAccount
+				val request = CacheRequest(
+					Constants.Reddit.getUri("/user/$username/about.json"),
+					account,
+					null,
+					Priority(Constants.Priority.API_USER_ABOUT),
+					DownloadStrategyIfNotCached.INSTANCE,
+					Constants.FileType.USER_ABOUT,
+					CacheRequest.DownloadQueueType.REDDIT_API,
+					context,
+					CacheRequestJSONParser(context, listener),
+				)
+				cacheManager.makeRequest(request)
+			} catch (e: Exception) {
+				_state.value = UserProfileUiState.Error(
+					"Failed to load profile: ${e.message}",
+				)
+			}
+		}
+	}
 
-        RedditAPI.blockUser(
-            cm,
-            username,
-            object : RedditAPI.BlockUserResponseHandler {
-                override fun onSuccess() {
-                    activity.runOnUiThread {
-                        (state.value as? UserProfileUiState.Ready)?.let { ready ->
-                            _state.value = ready.copy(isBlocked = true)
-                        }
-                    }
-                }
+	/**
+	 * Block a user via [RedditAPI.blockUser]. On success the profile flips to
+	 * the blocked state; on a 403 the [BlockFeedback.PermissionDenied] event is
+	 * raised (the UI offers a re-login); otherwise a
+	 * [BlockFeedback.Failure] is raised.
+	 *
+	 * [activity] is the hosting activity (the response handlers post to its UI
+	 * thread and the API needs a non-application context for the request).
+	 */
+	fun blockUser(activity: AppCompatActivity, username: String) {
+		val cm = cacheManager
+		val currentUser = accountManager.defaultAccount
 
-                override fun onBlockUserPermissionDenied() {
-                    activity.runOnUiThread {
-                        _blockFeedback.value = BlockFeedback.PermissionDenied
-                    }
-                }
+		RedditAPI.blockUser(
+			cm,
+			username,
+			object : RedditAPI.BlockUserResponseHandler {
+				override fun onSuccess() {
+					activity.runOnUiThread {
+						(state.value as? UserProfileUiState.Ready)?.let { ready ->
+							_state.value = ready.copy(isBlocked = true)
+						}
+					}
+				}
 
-                override fun onFailure(error: RRError) {
-                    activity.runOnUiThread {
-                        _blockFeedback.value = BlockFeedback.Failure(error)
-                    }
-                }
-            },
-            currentUser,
-            activity
-        )
-    }
+				override fun onBlockUserPermissionDenied() {
+					activity.runOnUiThread {
+						_blockFeedback.value = BlockFeedback.PermissionDenied
+					}
+				}
 
-    /**
-     * Unblock a user via [RedditAPI.unblockUser]. The unblock endpoint needs the
-     * current user's fullname as the `container` field, so this is a two-step
-     * call: first [RedditAPI.getUser] for the current account to read its
-     * fullname, then [RedditAPI.unblockUser]. Mirrors the legacy user-profile
-     * dialog's two-step unblock.
-     */
-    fun unblockUser(activity: AppCompatActivity, username: String) {
-        val cm = cacheManager
-        val currentUser = accountManager.defaultAccount
+				override fun onFailure(error: RRError) {
+					activity.runOnUiThread {
+						_blockFeedback.value = BlockFeedback.Failure(error)
+					}
+				}
+			},
+			currentUser,
+			activity,
+		)
+	}
 
-        RedditAPI.getUser(
-            cm,
-            currentUser.username,
-            object : UserResponseHandler(activity) {
-                override fun onDownloadStarted() {}
+	/**
+	 * Unblock a user via [RedditAPI.unblockUser]. The unblock endpoint needs the
+	 * current user's fullname as the `container` field, so this is a two-step
+	 * call: first [RedditAPI.getUser] for the current account to read its
+	 * fullname, then [RedditAPI.unblockUser]. Mirrors the legacy user-profile
+	 * dialog's two-step unblock.
+	 */
+	fun unblockUser(activity: AppCompatActivity, username: String) {
+		val cm = cacheManager
+		val currentUser = accountManager.defaultAccount
 
-                override fun onSuccess(redditUser: RedditUser, timestamp: TimestampUTC) {
-                    val currentUserFullname = redditUser.fullname()
-                    RedditAPI.unblockUser(
-                        cm,
-                        username,
-                        currentUserFullname,
-                        object : ActionResponseHandler(activity) {
-                            override fun onSuccess() {
-                                activity.runOnUiThread {
-                                    (state.value as? UserProfileUiState.Ready)?.let { ready ->
-                                        _state.value = ready.copy(isBlocked = false)
-                                    }
-                                }
-                            }
+		RedditAPI.getUser(
+			cm,
+			currentUser.username,
+			object : UserResponseHandler(activity) {
+				override fun onDownloadStarted() {}
 
-                            override fun onFailure(error: RRError) {
-                                activity.runOnUiThread {
-                                    _blockFeedback.value = BlockFeedback.Failure(error)
-                                }
-                            }
+				override fun onSuccess(redditUser: RedditUser, timestamp: TimestampUTC) {
+					val currentUserFullname = redditUser.fullname()
+					RedditAPI.unblockUser(
+						cm,
+						username,
+						currentUserFullname,
+						object : ActionResponseHandler(activity) {
+							override fun onSuccess() {
+								activity.runOnUiThread {
+									(state.value as? UserProfileUiState.Ready)?.let { ready ->
+										_state.value = ready.copy(isBlocked = false)
+									}
+								}
+							}
 
-                            override fun onCallbackException(t: Throwable) {
-                                activity.runOnUiThread {
-                                    _blockFeedback.value = BlockFeedback.Failure(RRError(t = t))
-                                }
-                            }
-                        },
-                        currentUser,
-                        activity
-                    )
-                }
+							override fun onFailure(error: RRError) {
+								activity.runOnUiThread {
+									_blockFeedback.value = BlockFeedback.Failure(error)
+								}
+							}
 
-                override fun onCallbackException(t: Throwable) {
-                    activity.runOnUiThread {
-                        _blockFeedback.value = BlockFeedback.Failure(RRError(t = t))
-                    }
-                }
+							override fun onCallbackException(t: Throwable) {
+								activity.runOnUiThread {
+									_blockFeedback.value = BlockFeedback.Failure(RRError(t = t))
+								}
+							}
+						},
+						currentUser,
+						activity,
+					)
+				}
 
-                override fun onFailure(error: RRError) {
-                    activity.runOnUiThread {
-                        _blockFeedback.value = BlockFeedback.Failure(error)
-                    }
-                }
-            },
-            currentUser,
-            DownloadStrategyAlways.INSTANCE,
-            activity
-        )
-    }
+				override fun onCallbackException(t: Throwable) {
+					activity.runOnUiThread {
+						_blockFeedback.value = BlockFeedback.Failure(RRError(t = t))
+					}
+				}
 
-    /**
-     * Mute a user (hide their comments).
-     */
-    fun muteUser(username: String) {
-        viewModelScope.launch {
-            try {
-                PrefsUtility.pref_appearance_hide_comments_from_blocked_users_set(true)
-            } catch (e: Exception) {
-                _state.value = UserProfileUiState.Error("Failed to mute user: ${e.message}")
-            }
-        }
-    }
+				override fun onFailure(error: RRError) {
+					activity.runOnUiThread {
+						_blockFeedback.value = BlockFeedback.Failure(error)
+					}
+				}
+			},
+			currentUser,
+			DownloadStrategyAlways.INSTANCE,
+			activity,
+		)
+	}
 
-    /**
-     * Sign the current account out: remove it from the local account store
-     * ([RedditAccountManager.deleteAccount]). The account manager notifies its
-     * listeners, so the main screen's account row flips back to "Sign in to
-     * Reddit" and the default account falls back to anonymous. No server call
-     * is involved (the refresh token simply stops being used from this
-     * device), mirroring the legacy account dialog's remove-account action.
-     */
-    fun signOut() {
-        viewModelScope.launch {
-            try {
-                val manager = accountManager
-                val account = manager.defaultAccount
-                if (account.isAnonymous) {
-                    return@launch
-                }
-                manager.deleteAccount(account)
-            } catch (e: Exception) {
-                _state.value = UserProfileUiState.Error("Failed to sign out: ${e.message}")
-            }
-        }
-    }
+	/**
+	 * Mute a user (hide their comments).
+	 */
+	fun muteUser(username: String) {
+		viewModelScope.launch {
+			try {
+				PrefsUtility.pref_appearance_hide_comments_from_blocked_users_set(true)
+			} catch (e: Exception) {
+				_state.value = UserProfileUiState.Error("Failed to mute user: ${e.message}")
+			}
+		}
+	}
+
+	/**
+	 * Sign the current account out: remove it from the local account store
+	 * ([RedditAccountManager.deleteAccount]). The account manager notifies its
+	 * listeners, so the main screen's account row flips back to "Sign in to
+	 * Reddit" and the default account falls back to anonymous. No server call
+	 * is involved (the refresh token simply stops being used from this
+	 * device), mirroring the legacy account dialog's remove-account action.
+	 */
+	fun signOut() {
+		viewModelScope.launch {
+			try {
+				val manager = accountManager
+				val account = manager.defaultAccount
+				if (account.isAnonymous) {
+					return@launch
+				}
+				manager.deleteAccount(account)
+			} catch (e: Exception) {
+				_state.value = UserProfileUiState.Error("Failed to sign out: ${e.message}")
+			}
+		}
+	}
 }

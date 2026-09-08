@@ -21,54 +21,56 @@ import com.stormtroopercs.materialreader.jsonwrap.JsonObject.JsonDeserializable
 import java.lang.reflect.InvocationTargetException
 
 class RedditThing : JsonDeserializable {
-    enum class Kind {
-        POST, USER, COMMENT, MESSAGE, SUBREDDIT, MORE_COMMENTS, LISTING
-    }
+	enum class Kind {
+		POST,
+		USER,
+		COMMENT,
+		MESSAGE,
+		SUBREDDIT,
+		MORE_COMMENTS,
+		LISTING,
+	}
 
-    var kind: String?=null
-    var data: JsonObject?=null
+	var kind: String? = null
+	var data: JsonObject? = null
 
-    fun getKind(): Kind {
-        val result = kinds.get(this.kind)
-            ?: throw RuntimeException("Unknown thing type: " + this.kind)
+	fun getKind(): Kind {
+		val result = kinds.get(this.kind)
+			?: throw RuntimeException("Unknown thing type: " + this.kind)
 
-        return result
-    }
+		return result
+	}
 
-    @Throws(
-        InstantiationException::class,
-        IllegalAccessException::class,
-        NoSuchMethodException::class,
-        InvocationTargetException::class
-    )
-    fun asSubreddit(): RedditSubreddit {
-        return data!!.asObject<RedditSubreddit>(RedditSubreddit::class.java)
-    }
+	@Throws(
+		InstantiationException::class,
+		IllegalAccessException::class,
+		NoSuchMethodException::class,
+		InvocationTargetException::class,
+	)
+	fun asSubreddit(): RedditSubreddit = data!!.asObject<RedditSubreddit>(RedditSubreddit::class.java)
 
-    @Throws(
-        InstantiationException::class,
-        IllegalAccessException::class,
-        NoSuchMethodException::class,
-        InvocationTargetException::class
-    )
-    fun asUser(): RedditUser {
-        return data!!.asObject<RedditUser>(RedditUser::class.java)
-    }
+	@Throws(
+		InstantiationException::class,
+		IllegalAccessException::class,
+		NoSuchMethodException::class,
+		InvocationTargetException::class,
+	)
+	fun asUser(): RedditUser = data!!.asObject<RedditUser>(RedditUser::class.java)
 
-    companion object {
-        const val KIND_USER: String = "t2"
+	companion object {
+		const val KIND_USER: String = "t2"
 
-        private val kinds: MutableMap<String?, Kind>
+		private val kinds: MutableMap<String?, Kind>
 
-        init {
-            kinds = HashMap<String?, Kind>()
-            kinds.put("t1", Kind.COMMENT)
-            kinds.put(KIND_USER, Kind.USER)
-            kinds.put("t3", Kind.POST)
-            kinds.put("t4", Kind.MESSAGE)
-            kinds.put("t5", Kind.SUBREDDIT)
-            kinds.put("more", Kind.MORE_COMMENTS)
-            kinds.put("Listing", Kind.LISTING)
-        }
-    }
+		init {
+			kinds = HashMap<String?, Kind>()
+			kinds.put("t1", Kind.COMMENT)
+			kinds.put(KIND_USER, Kind.USER)
+			kinds.put("t3", Kind.POST)
+			kinds.put("t4", Kind.MESSAGE)
+			kinds.put("t5", Kind.SUBREDDIT)
+			kinds.put("more", Kind.MORE_COMMENTS)
+			kinds.put("Listing", Kind.LISTING)
+		}
+	}
 }

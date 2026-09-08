@@ -31,8 +31,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -140,8 +140,7 @@ data class FeedSortOption(
 		)
 
 		/** The label for a persisted window id. */
-		fun windowLabel(window: String): String =
-			timeWindows.firstOrNull { it.id == window }?.label ?: window
+		fun windowLabel(window: String): String = timeWindows.firstOrNull { it.id == window }?.label ?: window
 
 		/** The [PostSort] for a (base sort, window) pair. */
 		private fun windowSort(base: PostSort, window: String): PostSort = when (base) {

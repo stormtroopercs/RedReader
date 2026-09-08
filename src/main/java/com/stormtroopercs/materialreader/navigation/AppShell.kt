@@ -17,9 +17,11 @@
 
 package com.stormtroopercs.materialreader.navigation
 
+import android.graphics.BitmapFactory
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,8 +44,8 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -64,6 +66,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,28 +75,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.Image
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.State
-import android.graphics.BitmapFactory
 import androidx.core.graphics.scale
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stormtroopercs.materialreader.R
 import com.stormtroopercs.materialreader.common.UriString
+import com.stormtroopercs.materialreader.common.datastream.parseDataUri
 import com.stormtroopercs.materialreader.compose.net.FileRequestResult
 import com.stormtroopercs.materialreader.compose.net.NetRequestStatus
 import com.stormtroopercs.materialreader.compose.net.fetchImage
 import com.stormtroopercs.materialreader.compose.prefs.ComposePrefsSingleton
-import com.stormtroopercs.materialreader.common.datastream.parseDataUri
 import com.stormtroopercs.materialreader.settings.types.AppearanceTheme
 import com.stormtroopercs.materialreader.settings.types.NavigationType
 import com.stormtroopercs.materialreader.settings.types.ThemeLightness
@@ -280,7 +280,13 @@ fun AppShell(
 	}
 
 	CompositionLocalProvider(
-		LocalOpenDrawer provides (if (showDrawer) { { scope.launch { drawerState.open() } } } else null),
+		LocalOpenDrawer provides (
+			if (showDrawer) {
+				{ scope.launch { drawerState.open() } }
+			} else {
+				null
+			}
+			),
 	) {
 		if (showDrawer) {
 			ModalNavigationDrawer(
@@ -781,7 +787,9 @@ private fun DrawerAvatar(iconUrl: String?) {
 	val imageState: State<NetRequestStatus<FileRequestResult<ImageBitmap>>>? =
 		if (dataUriBitmap == null && !iconUrl.isNullOrEmpty()) {
 			fetchImage(UriString(iconUrl), scaleToMaxAxis = 128)
-		} else null
+		} else {
+			null
+		}
 
 	val st = imageState?.value
 	Box(

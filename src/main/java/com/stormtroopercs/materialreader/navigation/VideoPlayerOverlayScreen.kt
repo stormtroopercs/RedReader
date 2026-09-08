@@ -22,7 +22,6 @@
 package com.stormtroopercs.materialreader.navigation
 
 import android.app.Activity
-import android.content.Context
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -58,8 +57,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.util.UnstableApi
@@ -155,7 +154,7 @@ fun VideoPlayerOverlayScreen(
 					CircularProgressIndicator()
 				}
 			}
-			}
+		}
 
 		// Close (top-right), above everything.
 		IconButton(

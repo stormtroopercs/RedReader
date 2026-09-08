@@ -293,7 +293,7 @@ fun RealSlidesFeedScreen(
 									else -> onOpenMedia(p)
 								}
 							},
-							)
+						)
 					}
 
 					// The revealed toolbar (community pill + actions), sliding

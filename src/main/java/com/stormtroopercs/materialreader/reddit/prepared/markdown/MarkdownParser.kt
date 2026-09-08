@@ -17,72 +17,79 @@
 package com.stormtroopercs.materialreader.reddit.prepared.markdown
 
 object MarkdownParser {
-    fun parse(raw: CharArray): MarkdownParagraphGroup {
-        val rawLines: Array<CharArrSubstring> = CharArrSubstring.Companion.generateFromLines(raw)
+	fun parse(raw: CharArray): MarkdownParagraphGroup {
+		val rawLines: Array<CharArrSubstring> = CharArrSubstring.Companion.generateFromLines(raw)
 
-        val lines = Array(rawLines.size) { MarkdownLine.Companion.generate(rawLines[it]) }
+		val lines = Array(rawLines.size) { MarkdownLine.Companion.generate(rawLines[it]) }
 
-        val mergedLines = ArrayList<MarkdownLine>(rawLines.size)
-        var currentLine: MarkdownLine?=null
+		val mergedLines = ArrayList<MarkdownLine>(rawLines.size)
+		var currentLine: MarkdownLine? = null
 
-        for (i in lines.indices) {
-            if (currentLine != null) {
-                when (lines[i].type) {
-                    MarkdownParagraphType.BULLET, MarkdownParagraphType.NUMBERED, MarkdownParagraphType.HEADER, MarkdownParagraphType.CODE, MarkdownParagraphType.HLINE, MarkdownParagraphType.QUOTE -> {
-                        mergedLines.add(currentLine)
-                        currentLine = lines[i]
-                    }
+		for (i in lines.indices) {
+			if (currentLine != null) {
+				when (lines[i].type) {
+					MarkdownParagraphType.BULLET, MarkdownParagraphType.NUMBERED, MarkdownParagraphType.HEADER, MarkdownParagraphType.CODE, MarkdownParagraphType.HLINE, MarkdownParagraphType.QUOTE -> {
+						mergedLines.add(currentLine)
+						currentLine = lines[i]
+					}
 
-                    MarkdownParagraphType.EMPTY -> {
-                        mergedLines.add(currentLine)
-                        currentLine = null
-                    }
+					MarkdownParagraphType.EMPTY -> {
+						mergedLines.add(currentLine)
+						currentLine = null
+					}
 
-                    MarkdownParagraphType.TEXT -> when (lines[i - 1].type) {
-                        MarkdownParagraphType.QUOTE, MarkdownParagraphType.BULLET, MarkdownParagraphType.NUMBERED, MarkdownParagraphType.TEXT -> if (lines[i - 1].spacesAtEnd >= 2) {
-                            mergedLines.add(currentLine)
-                            currentLine = lines[i]
-                        } else {
-                            currentLine = currentLine.rejoin(lines[i])
-                        }
+					MarkdownParagraphType.TEXT -> when (lines[i - 1].type) {
+						MarkdownParagraphType.QUOTE, MarkdownParagraphType.BULLET, MarkdownParagraphType.NUMBERED, MarkdownParagraphType.TEXT -> if (lines[i - 1].spacesAtEnd >= 2) {
+							mergedLines.add(currentLine)
+							currentLine = lines[i]
+						} else {
+							currentLine = currentLine.rejoin(lines[i])
+						}
 
-                        MarkdownParagraphType.CODE, MarkdownParagraphType.HEADER, MarkdownParagraphType.HLINE -> {
-                            mergedLines.add(currentLine)
-                            currentLine = lines[i]
-                        }
+						MarkdownParagraphType.CODE, MarkdownParagraphType.HEADER, MarkdownParagraphType.HLINE -> {
+							mergedLines.add(currentLine)
+							currentLine = lines[i]
+						}
 
-                        else -> {}
-                    }
+						else -> {}
+					}
+				}
+			} else if (lines[i].type != MarkdownParagraphType.EMPTY) {
+				currentLine = lines[i]
+			}
+		}
 
-                }
-            } else if (lines[i].type != MarkdownParagraphType.EMPTY) {
-                currentLine = lines[i]
-            }
-        }
+		if (currentLine != null) {
+			mergedLines.add(currentLine)
+		}
 
-        if (currentLine != null) {
-            mergedLines.add(currentLine)
-        }
+		val outputParagraphs = ArrayList<MarkdownParagraph>(mergedLines.size)
 
-        val outputParagraphs =             ArrayList<MarkdownParagraph>(mergedLines.size)
+		for (line in mergedLines) {
+			val lastParagraph = if (outputParagraphs.isEmpty()) {
+				null
+			} else {
+				outputParagraphs.get(outputParagraphs.size - 1)
+			}
 
-        for (line in mergedLines) {
-            val lastParagraph = if (outputParagraphs.isEmpty())
-                null
-            else
-                outputParagraphs.get(outputParagraphs.size - 1)
+			val paragraph = line.tokenize(lastParagraph)
 
-            val paragraph = line.tokenize(lastParagraph)
+			if (!paragraph.isEmpty) {
+				outputParagraphs.add(paragraph)
+			}
+		}
 
-            if (!paragraph.isEmpty) {
-                outputParagraphs.add(paragraph)
-            }
-        }
+		return MarkdownParagraphGroup(outputParagraphs.toTypedArray())
+	}
 
-        return MarkdownParagraphGroup(outputParagraphs.toTypedArray())
-    }
-
-    enum class MarkdownParagraphType {
-        TEXT, CODE, BULLET, NUMBERED, QUOTE, HEADER, HLINE, EMPTY
-    }
+	enum class MarkdownParagraphType {
+		TEXT,
+		CODE,
+		BULLET,
+		NUMBERED,
+		QUOTE,
+		HEADER,
+		HLINE,
+		EMPTY,
+	}
 }

@@ -19,8 +19,8 @@ package com.stormtroopercs.materialreader.compose.net
 
 import android.graphics.BitmapFactory
 import android.graphics.Movie
-import android.util.Log
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
@@ -89,7 +89,7 @@ sealed interface NetRequestStatus<out R> {
 
 	@Immutable
 	data class Success<R>(
-		val result: R
+		val result: R,
 	) : NetRequestStatus<R>
 }
 
@@ -105,7 +105,7 @@ class FileRequestMetadata(
 @Immutable
 class FileRequestResult<R>(
 	val metadata: FileRequestMetadata?,
-	val data: R
+	val data: R,
 )
 
 @Composable
@@ -113,7 +113,7 @@ fun fetchAlbum(
 	uri: UriString,
 	user: RedditAccountId = LocalRedditUser.current,
 ): State<NetRequestStatus<AlbumInfo>> {
-	val state = 		remember { mutableStateOf<NetRequestStatus<AlbumInfo>>(NetRequestStatus.Connecting) }
+	val state = remember { mutableStateOf<NetRequestStatus<AlbumInfo>>(NetRequestStatus.Connecting) }
 
 	// Prevent conflicting updates to state
 	val currentRequest = remember { mutableIntStateOf(0) }
@@ -121,7 +121,6 @@ fun fetchAlbum(
 	val context = LocalContext.current.applicationContext
 
 	LaunchedEffect(uri, user) {
-
 		state.value = NetRequestStatus.Connecting
 
 		val thisRequest = ++currentRequest.intValue
@@ -143,7 +142,7 @@ fun fetchAlbum(
 					AndroidCommon.runOnUiThread {
 						if (thisRequest == currentRequest.intValue) {
 							state.value = NetRequestStatus.Success(
-								info
+								info,
 							)
 						}
 					}
@@ -156,7 +155,7 @@ fun fetchAlbum(
 							context.getString(R.string.image_gallery_removed_message),
 							reportable = false,
 							url = uri,
-						)
+						),
 					)
 				}
 
@@ -166,12 +165,11 @@ fun fetchAlbum(
 							context.getString(R.string.image_gallery_no_data_present_title),
 							context.getString(R.string.image_gallery_no_data_present_message),
 							reportable = true,
-							url = uri
-						)
+							url = uri,
+						),
 					)
 				}
-
-			}
+			},
 		)
 	}
 
@@ -198,7 +196,6 @@ fun fetchImageInfo(
 	val context = LocalContext.current.applicationContext
 
 	LaunchedEffect(uri) {
-
 		state.value = NetRequestStatus.Connecting
 
 		val thisRequest = ++currentRequest.intValue
@@ -231,13 +228,13 @@ fun fetchImageInfo(
 								RRError(
 									context.getString(R.string.imageview_image_info_failed),
 									url = uri,
-									reportable = false
-								)
+									reportable = false,
+								),
 							)
 						}
 					}
 				}
-			}
+			},
 		)
 	}
 
@@ -248,22 +245,21 @@ fun fetchImageInfo(
 fun fetchImage(
 	uri: UriString,
 	user: RedditAccountId = LocalRedditUser.current,
-	scaleToMaxAxis: Int = 2048
+	scaleToMaxAxis: Int = 2048,
 ): State<NetRequestStatus<FileRequestResult<ImageBitmap>>> {
-
 	val TAG = "NetWrapper:fetchImage"
 
 	val context = LocalContext.current.applicationContext
 
-	val filter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<ImageBitmap>> = 		remember(uri, user, scaleToMaxAxis) {
+	val filter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<ImageBitmap>> = remember(uri, user, scaleToMaxAxis) {
 		{
 			try {
 				ImageBitmapCache.get(uri.toString(), scaleToMaxAxis)?.let { cached ->
 					NetRequestStatus.Success(
 						FileRequestResult(
 							metadata = it,
-							data = cached
-						)
+							data = cached,
+						),
 					)
 				} ?: run {
 					val result = BitmapFactory.decodeStream(it.streamFactory.create())
@@ -272,12 +268,11 @@ fun fetchImage(
 					val maxAxis = max(result.width, result.height)
 
 					val scaledResult = result.invokeIf(maxAxis > scaleToMaxAxis) {
-
 						val newSize = if (result.width > result.height) {
 							val scale = scaleToMaxAxis / result.width.toFloat()
 							ImageSize(
 								scaleToMaxAxis,
-								(result.height.toFloat() * scale).roundToInt()
+								(result.height.toFloat() * scale).roundToInt(),
 							)
 						} else {
 							val scale = scaleToMaxAxis / result.height.toFloat()
@@ -286,7 +281,7 @@ fun fetchImage(
 
 						Log.i(
 							TAG,
-							"Scaling image from ${result.width}x${result.height} to $newSize"
+							"Scaling image from ${result.width}x${result.height} to $newSize",
 						)
 
 						scale(newSize.width, newSize.height)
@@ -299,8 +294,8 @@ fun fetchImage(
 					NetRequestStatus.Success(
 						FileRequestResult(
 							metadata = it,
-							data = bitmap
-						)
+							data = bitmap,
+						),
 					)
 				}
 			} catch (e: Exception) {
@@ -308,8 +303,8 @@ fun fetchImage(
 					RRError(
 						title = context.getString(R.string.error_image_decode_failed),
 						url = uri,
-						t = e
-					)
+						t = e,
+					),
 				)
 			}
 		}
@@ -323,7 +318,7 @@ fun fetchImage(
 		fileType = Constants.FileType.IMAGE,
 		queueType = CacheRequest.DownloadQueueType.IMMEDIATE,
 		cache = true,
-		filter = filter
+		filter = filter,
 	)
 }
 
@@ -340,9 +335,8 @@ fun fetchImage(
 @Composable
 fun fetchGif(
 	uri: UriString,
-	user: RedditAccountId = LocalRedditUser.current
+	user: RedditAccountId = LocalRedditUser.current,
 ): State<NetRequestStatus<FileRequestResult<Movie>>> {
-
 	val TAG = "NetWrapper:fetchGif"
 
 	val context = LocalContext.current.applicationContext
@@ -366,24 +360,24 @@ fun fetchGif(
 				NetRequestStatus.Success(
 					FileRequestResult(
 						metadata = it,
-						data = movie
-					)
+						data = movie,
+					),
 				)
 			} catch (e: OutOfMemoryError) {
 				NetRequestStatus.Failed(
 					RRError(
 						title = context.getString(R.string.imageview_oom),
 						url = uri,
-						t = e
-					)
+						t = e,
+					),
 				)
 			} catch (e: Exception) {
 				NetRequestStatus.Failed(
 					RRError(
 						title = context.getString(R.string.error_image_decode_failed),
 						url = uri,
-						t = e
-					)
+						t = e,
+					),
 				)
 			}
 		}
@@ -397,7 +391,7 @@ fun fetchGif(
 		fileType = Constants.FileType.IMAGE,
 		queueType = CacheRequest.DownloadQueueType.IMMEDIATE,
 		cache = true,
-		filter = filter
+		filter = filter,
 	)
 }
 
@@ -411,9 +405,8 @@ fun fetchGif(
 @Composable
 fun fetchVideoStream(
 	uri: UriString,
-	user: RedditAccountId = LocalRedditUser.current
+	user: RedditAccountId = LocalRedditUser.current,
 ): State<NetRequestStatus<FileRequestResult<Unit>>> {
-
 	val context = LocalContext.current.applicationContext
 
 	val filter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<Unit>> = remember(uri, user) {
@@ -421,8 +414,8 @@ fun fetchVideoStream(
 			NetRequestStatus.Success(
 				FileRequestResult(
 					metadata = metadata,
-					data = Unit
-				)
+					data = Unit,
+				),
 			)
 		}
 	}
@@ -435,7 +428,7 @@ fun fetchVideoStream(
 		fileType = Constants.FileType.IMAGE,
 		queueType = CacheRequest.DownloadQueueType.IMMEDIATE,
 		cache = true,
-		filter = filter
+		filter = filter,
 	)
 }
 
@@ -449,10 +442,9 @@ private fun <T> fetchFile(
 	fileType: Int,
 	queueType: DownloadQueueType,
 	cache: Boolean,
-	filter: ((FileRequestMetadata) -> NetRequestStatus<FileRequestResult<T>>)
+	filter: ((FileRequestMetadata) -> NetRequestStatus<FileRequestResult<T>>),
 ): State<NetRequestStatus<FileRequestResult<T>>> {
-
-	val state = 		remember { mutableStateOf<NetRequestStatus<FileRequestResult<T>>>(NetRequestStatus.Connecting) }
+	val state = remember { mutableStateOf<NetRequestStatus<FileRequestResult<T>>>(NetRequestStatus.Connecting) }
 
 	// Prevent conflicting updates to state
 	val currentRequest = remember { mutableIntStateOf(0) }
@@ -462,24 +454,23 @@ private fun <T> fetchFile(
 
 	val context = LocalContext.current
 
-	val account: RedditAccount = 		RedditAccountManager.getInstance(context).getAccount(user.canonicalUsername)
-			?: run {
-				state.value = NetRequestStatus.Failed(
-					RRError(
-						title = stringResource(R.string.error_invalid_account_title),
-						message = stringResource(R.string.error_invalid_account_message),
-					)
-				)
+	val account: RedditAccount = RedditAccountManager.getInstance(context).getAccount(user.canonicalUsername)
+		?: run {
+			state.value = NetRequestStatus.Failed(
+				RRError(
+					title = stringResource(R.string.error_invalid_account_title),
+					message = stringResource(R.string.error_invalid_account_message),
+				),
+			)
 
-				return state
-			}
+			return state
+		}
 
 	LaunchedEffect(
 		currentLocalRetry,
 		currentGlobalRetry,
-		uri, user, priority, downloadStrategy, fileType, queueType, cache, filter
+		uri, user, priority, downloadStrategy, fileType, queueType, cache, filter,
 	) {
-
 		if (state.value is NetRequestStatus.Failed && currentLocalRetry != currentGlobalRetry) {
 			state.value = NetRequestStatus.Connecting
 
@@ -499,9 +490,8 @@ private fun <T> fetchFile(
 		fileType,
 		queueType,
 		cache,
-		filter
+		filter,
 	) {
-
 		state.value = NetRequestStatus.Connecting
 
 		val thisRequest = ++currentRequest.intValue
@@ -526,9 +516,11 @@ private fun <T> fetchFile(
 				override fun onFailure(error: RRError) {
 					AndroidCommon.runOnUiThread {
 						if (active) {
-							state.value = 								NetRequestStatus.Failed(error.invokeIf(error.resolution == null) {
+							state.value = NetRequestStatus.Failed(
+								error.invokeIf(error.resolution == null) {
 									error.copy(resolution = RRError.Resolution.RETRY)
-								})
+								},
+							)
 							done = true
 						}
 					}
@@ -539,7 +531,7 @@ private fun <T> fetchFile(
 					timestamp: TimestampUTC,
 					session: UUID,
 					fromCache: Boolean,
-					mimetype: String?
+					mimetype: String?,
 				) {
 					val result = filter(
 						FileRequestMetadata(
@@ -547,8 +539,8 @@ private fun <T> fetchFile(
 							timestamp,
 							session,
 							fromCache,
-							mimetype
-						)
+							mimetype,
+						),
 					)
 
 					AndroidCommon.runOnUiThread {
@@ -562,15 +554,15 @@ private fun <T> fetchFile(
 				override fun onProgress(
 					authorizationInProgress: Boolean,
 					bytesRead: Long,
-					totalBytes: Long
+					totalBytes: Long,
 				) {
 					AndroidCommon.runOnUiThread {
 						if (active && totalBytes > 0) {
-							state.value = 								NetRequestStatus.Downloading(bytesRead.toFloat() / totalBytes.toFloat())
+							state.value = NetRequestStatus.Downloading(bytesRead.toFloat() / totalBytes.toFloat())
 						}
 					}
 				}
-			}
+			},
 		)
 
 		CacheManager.getInstance(context).makeRequest(req)
@@ -596,7 +588,6 @@ fun fetchSubredditReportFlow(
 	subredditName: String,
 	user: RedditAccountId = LocalRedditUser.current,
 ): State<NetRequestStatus<SubredditReportFlow>> {
-
 	val context = LocalContext.current.applicationContext
 
 	val rulesUri = remember(subredditName) {
@@ -604,7 +595,7 @@ fun fetchSubredditReportFlow(
 			Constants.Reddit.getUriBuilder("/r/$subredditName/about/rules.json")
 				.appendQueryParameter("raw_json", "1")
 				?.build()
-				?: Uri.parse("")
+				?: Uri.parse(""),
 		)
 	}
 
@@ -613,59 +604,57 @@ fun fetchSubredditReportFlow(
 			Constants.Reddit.getUriBuilder("/r/$subredditName/about.json")
 				.appendQueryParameter("raw_json", "1")
 				?.build()
-				?: Uri.parse("")
+				?: Uri.parse(""),
 		)
 	}
 
-	val rulesFilter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<SubredditRules>> = 		remember(rulesUri) {
-			{
-				try {
-					val json = JsonValue.parse(it.streamFactory.create())
+	val rulesFilter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<SubredditRules>> = remember(rulesUri) {
+		{
+			try {
+				val json = JsonValue.parse(it.streamFactory.create())
 
-					val parsed = SubredditRules.parse(json)
-						?: throw IOException("Invalid subreddit rules format")
+				val parsed = SubredditRules.parse(json)
+					?: throw IOException("Invalid subreddit rules format")
 
-					NetRequestStatus.Success(FileRequestResult(metadata = it, data = parsed))
-
-				} catch (e: Exception) {
-					NetRequestStatus.Failed(
-						General.getGeneralErrorForFailure(
-							context,
-							CacheRequest.RequestFailureType.PARSE,
-							e,
-							null,
-							rulesUri,
-							Optional.empty()
-						)
-					)
-				}
+				NetRequestStatus.Success(FileRequestResult(metadata = it, data = parsed))
+			} catch (e: Exception) {
+				NetRequestStatus.Failed(
+					General.getGeneralErrorForFailure(
+						context,
+						CacheRequest.RequestFailureType.PARSE,
+						e,
+						null,
+						rulesUri,
+						Optional.empty(),
+					),
+				)
 			}
 		}
+	}
 
-	val aboutFilter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<Boolean>> = 		remember(aboutUri) {
-			{
-				try {
-					val json = JsonValue.parse(it.streamFactory.create())
+	val aboutFilter: (FileRequestMetadata) -> NetRequestStatus<FileRequestResult<Boolean>> = remember(aboutUri) {
+		{
+			try {
+				val json = JsonValue.parse(it.streamFactory.create())
 
-					val freeFormReports = json.getObjectAtPath("data").orElseNull()
-						?.getBoolean("free_form_reports") ?: true
+				val freeFormReports = json.getObjectAtPath("data").orElseNull()
+					?.getBoolean("free_form_reports") ?: true
 
-					NetRequestStatus.Success(FileRequestResult(metadata = it, data = freeFormReports))
-
-				} catch (e: Exception) {
-					NetRequestStatus.Failed(
-						General.getGeneralErrorForFailure(
-							context,
-							CacheRequest.RequestFailureType.PARSE,
-							e,
-							null,
-							aboutUri,
-							Optional.empty()
-						)
-					)
-				}
+				NetRequestStatus.Success(FileRequestResult(metadata = it, data = freeFormReports))
+			} catch (e: Exception) {
+				NetRequestStatus.Failed(
+					General.getGeneralErrorForFailure(
+						context,
+						CacheRequest.RequestFailureType.PARSE,
+						e,
+						null,
+						aboutUri,
+						Optional.empty(),
+					),
+				)
 			}
 		}
+	}
 
 	val rules = fetchFile(
 		uri = rulesUri,
@@ -675,7 +664,7 @@ fun fetchSubredditReportFlow(
 		fileType = Constants.FileType.NOCACHE,
 		queueType = CacheRequest.DownloadQueueType.REDDIT_API,
 		cache = false,
-		filter = rulesFilter
+		filter = rulesFilter,
 	)
 
 	val about = fetchFile(
@@ -686,7 +675,7 @@ fun fetchSubredditReportFlow(
 		fileType = Constants.FileType.NOCACHE,
 		queueType = CacheRequest.DownloadQueueType.REDDIT_API,
 		cache = false,
-		filter = aboutFilter
+		filter = aboutFilter,
 	)
 
 	return remember(rules, about) {
@@ -708,8 +697,8 @@ fun fetchSubredditReportFlow(
 							SubredditReportFlow(
 								rules = r.result.data.rules,
 								siteRulesFlow = r.result.data.siteRulesFlow,
-								freeFormReports = freeFormReports
-							)
+								freeFormReports = freeFormReports,
+							),
 						)
 					}
 				}

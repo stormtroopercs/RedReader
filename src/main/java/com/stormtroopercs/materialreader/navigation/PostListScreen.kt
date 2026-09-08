@@ -62,7 +62,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stormtroopercs.materialreader.common.LinkHandler
 import com.stormtroopercs.materialreader.compose.ui.RRErrorView
 import com.stormtroopercs.materialreader.fragments.ReportDialog
-import com.stormtroopercs.materialreader.settings.types.PostViewMode
 
 /**
  * Post list screen composable (FINAL-DESIGN Phase 4): the reference's list
@@ -318,17 +317,17 @@ fun RealPostListScreen(
 						}
 					}
 				}
-		}
+			}
 
-		// The reference's feed "more" FAB (posts_fab): bottom-right,
-		// opens the same More actions grid as the top bar's More icon.
-		FeedMoreFab(
-			onClick = { moreActionsOpen = true },
-			modifier = Modifier
-				.align(Alignment.BottomEnd)
-				.padding(16.dp),
-		)
-	}
+			// The reference's feed "more" FAB (posts_fab): bottom-right,
+			// opens the same More actions grid as the top bar's More icon.
+			FeedMoreFab(
+				onClick = { moreActionsOpen = true },
+				modifier = Modifier
+					.align(Alignment.BottomEnd)
+					.padding(16.dp),
+			)
+		}
 	}
 
 	// The reference's 9-option sort dialog (Active = the listing default).

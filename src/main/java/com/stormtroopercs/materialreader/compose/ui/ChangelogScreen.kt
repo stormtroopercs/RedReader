@@ -34,115 +34,115 @@ import androidx.compose.ui.unit.dp
  * Reads changelog.txt / changelog-alpha.txt from assets.
  */
 data class ChangelogVersion(
-    val versionName: String,
-    val entries: List<String>
+	val versionName: String,
+	val entries: List<String>,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangelogScreen(
-    onNavigateBack: () -> Unit
+	onNavigateBack: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val changelog = remember { parseChangelog(context) }
+	val context = LocalContext.current
+	val changelog = remember { parseChangelog(context) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Changelog") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(changelog) { version ->
-                ChangelogVersionCard(version)
-            }
-        }
-    }
+	Scaffold(
+		topBar = {
+			TopAppBar(
+				title = { Text("Changelog") },
+				navigationIcon = {
+					IconButton(onClick = onNavigateBack) {
+						Icon(
+							imageVector = Icons.AutoMirrored.Default.ArrowBack,
+							contentDescription = "Back",
+						)
+					}
+				},
+			)
+		},
+	) { paddingValues ->
+		LazyColumn(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(paddingValues),
+			contentPadding = PaddingValues(16.dp),
+			verticalArrangement = Arrangement.spacedBy(16.dp),
+		) {
+			items(changelog) { version ->
+				ChangelogVersionCard(version)
+			}
+		}
+	}
 }
 
 @Composable
 private fun ChangelogVersionCard(version: ChangelogVersion) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = version.versionName,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+	Card(
+		modifier = Modifier.fillMaxWidth(),
+		colors = CardDefaults.cardColors(
+			containerColor = MaterialTheme.colorScheme.surfaceVariant,
+		),
+	) {
+		Column(
+			modifier = Modifier.padding(16.dp),
+		) {
+			Text(
+				text = version.versionName,
+				style = MaterialTheme.typography.titleMedium,
+				color = MaterialTheme.colorScheme.onSurface,
+			)
 
-            Spacer(modifier = Modifier.height(8.dp))
+			Spacer(modifier = Modifier.height(8.dp))
 
-            version.entries.forEach { entry ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "•",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = entry,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-        }
-    }
+			version.entries.forEach { entry ->
+				Row(
+					modifier = Modifier.fillMaxWidth(),
+					horizontalArrangement = Arrangement.spacedBy(8.dp),
+				) {
+					Text(
+						text = "•",
+						style = MaterialTheme.typography.bodyMedium,
+						color = MaterialTheme.colorScheme.onSurfaceVariant,
+					)
+					Text(
+						text = entry,
+						style = MaterialTheme.typography.bodyMedium,
+						color = MaterialTheme.colorScheme.onSurfaceVariant,
+					)
+				}
+				Spacer(modifier = Modifier.height(4.dp))
+			}
+		}
+	}
 }
 
 private fun parseChangelog(context: android.content.Context): List<ChangelogVersion> {
-    val packageName = context.packageName
-    val filename = if (packageName.contains("alpha")) "changelog-alpha.txt" else "changelog.txt"
+	val packageName = context.packageName
+	val filename = if (packageName.contains("alpha")) "changelog-alpha.txt" else "changelog.txt"
 
-    return try {
-        val versions = mutableListOf<ChangelogVersion>()
-        var curVersion: ChangelogVersion? = null
+	return try {
+		val versions = mutableListOf<ChangelogVersion>()
+		var curVersion: ChangelogVersion? = null
 
-        context.assets.open(filename).bufferedReader().useLines { lines ->
-            for (line in lines) {
-                if (line.isEmpty()) {
-                    curVersion?.let { versions.add(it) }
-                    curVersion = null
-                } else if (curVersion == null) {
-                    // Version header line: "some text/versionName"
-                    val parts = line.split("/")
-                    if (parts.size >= 2) {
-                        curVersion = ChangelogVersion(parts[1], mutableListOf())
-                    }
-                } else {
-                    (curVersion.entries as? MutableList<String>)?.add(line)
-                }
-            }
-        }
-        curVersion?.let { versions.add(it) }
-        versions
-    } catch (e: Exception) {
-        emptyList()
-    }
+		context.assets.open(filename).bufferedReader().useLines { lines ->
+			for (line in lines) {
+				if (line.isEmpty()) {
+					curVersion?.let { versions.add(it) }
+					curVersion = null
+				} else if (curVersion == null) {
+					// Version header line: "some text/versionName"
+					val parts = line.split("/")
+					if (parts.size >= 2) {
+						curVersion = ChangelogVersion(parts[1], mutableListOf())
+					}
+				} else {
+					(curVersion.entries as? MutableList<String>)?.add(line)
+				}
+			}
+		}
+		curVersion?.let { versions.add(it) }
+		versions
+	} catch (e: Exception) {
+		emptyList()
+	}
 }
