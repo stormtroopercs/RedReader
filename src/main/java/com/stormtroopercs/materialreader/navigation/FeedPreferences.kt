@@ -75,7 +75,7 @@ object FeedPreferences {
 	/**
 	 * The sort option the feed identified by [feedId] was last browsed
 	 * with (FINAL-DESIGN Phase 4.7: sort is persisted per feed). Unknown
-	 * feeds fall back to "Active" (the listing's own default order).
+	 * feeds fall back to "Best" (the listing's own default order).
 	 */
 	fun sortOptionIdFor(feedId: String): String {
 		val stored = parseMapping(KEY_SORTS)
@@ -84,7 +84,7 @@ object FeedPreferences {
 		// `r/Art`): match by the normalized form, case-insensitively.
 		return stored.entries
 			.firstOrNull { it.key.normalizeListingPath().equals(feedId, ignoreCase = true) }
-			?.value ?: "active"
+			?.value ?: "best"
 	}
 
 	fun setSortOptionFor(feedId: String, optionId: String) {

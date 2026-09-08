@@ -163,7 +163,7 @@ class PostListViewModel @Inject constructor(
 	private val _posts = MutableStateFlow<List<PostItem>>(emptyList())
 	val posts: StateFlow<List<PostItem>> = _posts.asStateFlow()
 
-	private val _sortOption = MutableStateFlow(FeedSortOption.forId("active"))
+	private val _sortOption = MutableStateFlow(FeedSortOption.forId("best"))
 	val sortOption: StateFlow<FeedSortOption> = _sortOption.asStateFlow()
 
 	private val _title = MutableStateFlow("")
@@ -272,9 +272,9 @@ class PostListViewModel @Inject constructor(
 	}
 
 	/**
-	 * The feed's sort (FINAL-DESIGN Phase 4.5): the reference's 9-option
-	 * dialog, persisted per feed. Changing it refetches the listing with
-	 * the option's sort (and re-orders "Old" locally).
+	 * The feed's sort (FINAL-DESIGN Phase 4.5): the six-option dialog
+	 * (Best / Hot / New / Rising / Top / Controversial), persisted per
+	 * feed. Changing it refetches the listing with the option's sort.
 	 */
 	fun setSortOption(option: FeedSortOption) {
 		if (option.id == _sortOption.value.id) return
@@ -432,12 +432,6 @@ class PostListViewModel @Inject constructor(
 							val posts = listing.children
 								.mapNotNull { it.ok() as? RedditThing.Post }
 								.map { it.toPostItem() }
-								// The "Old" option: the Reddit API has no
-								// oldest-first sort, so the listing is
-								// fetched newest-first (a strict
-								// created-utc order) and presented
-								// oldest-first.
-								.let { if (sortOption.reverse) it.reversed() else it }
 								// "Hide read posts" (the grid's "Hide read"
 								// action toggles this): drop posts the
 								// account's change data marks as read.

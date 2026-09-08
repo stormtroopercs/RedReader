@@ -48,10 +48,10 @@ import com.stormtroopercs.materialreader.reddit.PostSort
 import com.stormtroopercs.materialreader.settings.types.PostViewMode
 
 /**
- * The reference's top-of-feed filter chips (FINAL-DESIGN Phase 4.4): the
- * **Active** chip (the current sort — filled + caret, opens the 9-option
- * sort dialog) plus **Subreddits** (the signed-in user's subscribed
- * subreddits — the same list the drawer's Subscriptions section shows).
+ * The top-of-feed filter chips (FINAL-DESIGN Phase 4.4): the sort chip
+ * (the current sort — filled + caret, opens the 6-option sort dialog)
+ * plus **Subreddits** (the signed-in user's subscribed subreddits — the
+ * same list the drawer's Subscriptions section shows).
  * Horizontal, scrollable, sits between the top bar and the post list.
  *
  * (Lemmy remnant removed: the old **Communities** / **Instances** chips were
@@ -98,42 +98,33 @@ fun FeedFilterChips(
 }
 
 /**
- * One of the reference's 9 sort dialog options (FINAL-DESIGN Phase 4.5,
- * DESIGN §2.3; the reference's `sort_*` string resources confirm the exact
- * set). Options are keyed by a stable [id] — two of them ("Old" and "Top")
- * both resolve to `top?t=all` against the Reddit API, so the id (not the
- * `PostSort`) is the identity for selection + persistence.
+ * One of the feed's six sort options (the reference's `sort_*` string
+ * resources confirm the set). Options are keyed by a stable [id] — the id
+ * (not the `PostSort`) is the identity for selection + persistence, since
+ * "Best" is the listing's own default order (no URL sort param).
  *
- * Each option has two resolutions: [urlSort] — the sort param the listing
- * URL is built with (null = the listing's own default) — and [reverse] —
- * whether the fetched items are then presented in reverse order (the
- * "Old" option: the Reddit API has no oldest-first sort, so the listing
- * is fetched newest-first (`new` — a strict created-utc order) and
- * reversed locally to oldest-first).
+ * Each option has one resolution: [urlSort] — the sort param the listing
+ * URL is built with (null = the listing's own default, which Reddit's UI
+ * calls **Best**).
  */
 data class FeedSortOption(
 	val id: String,
 	val label: String,
-	/** The sort the listing URL is built with (null = the listing default). */
+	/** The sort the listing URL is built with (null = the listing's own "Best" default). */
 	val urlSort: PostSort?,
-	/** Present the fetched items in reverse order (oldest-first). */
-	val reverse: Boolean = false,
 ) {
 	companion object {
-		/** The dialog's 9 options, in the reference's order. */
+		/** The dialog's six options, top to bottom (Best first). */
 		val options: List<FeedSortOption> = listOf(
-			FeedSortOption("active", "Active", null),
+			FeedSortOption("best", "Best", null),
 			FeedSortOption("hot", "Hot", PostSort.HOT),
 			FeedSortOption("new", "New", PostSort.NEW),
-			FeedSortOption("old", "Old", PostSort.NEW, reverse = true),
-			FeedSortOption("most_comments", "Most comments", PostSort.COMMENTS_ALL),
-			FeedSortOption("new_comments", "New comments", PostSort.COMMENTS_HOUR),
-			FeedSortOption("scaled", "Scaled", PostSort.RISING),
-			FeedSortOption("controversial", "Controversial", PostSort.CONTROVERSIAL_ALL),
+			FeedSortOption("rising", "Rising", PostSort.RISING),
 			FeedSortOption("top", "Top", PostSort.TOP_ALL),
+			FeedSortOption("controversial", "Controversial", PostSort.CONTROVERSIAL_ALL),
 		)
 
-		/** The option for a persisted [id] (unknown ids fall back to Active). */
+		/** The option for a persisted [id] (unknown ids fall back to Best). */
 		fun forId(id: String): FeedSortOption = options.firstOrNull { it.id == id } ?: options.first()
 	}
 }
