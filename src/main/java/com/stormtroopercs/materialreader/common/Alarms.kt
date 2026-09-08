@@ -90,11 +90,11 @@ object Alarms {
 		}
 	}
 
-    /*
+	/*
 		An enum to represent an alarm that may be created.
 		If you wish to add an alarm, just add it at the top of the enum with the 3 arguments,
 		and then call startAlarm() on it.
-     */
+	 */
 	enum class Alarm(
 		private val interval: Long,
 		alarmClass: Class<out BroadcastReceiver?>,
