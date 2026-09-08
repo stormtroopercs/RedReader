@@ -36,12 +36,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -207,7 +207,7 @@ private fun VideoOverlayPlayer(
 				// fullscreened state so the feed underneath isn't stuck
 				// landscape.
 				val activity = context as? Activity
-				(it as VideoOverlayPlayerView).restoreSystemChrome(activity)
+				it.restoreSystemChrome(activity)
 				it.release()
 			},
 			modifier = Modifier.fillMaxSize(),
@@ -220,7 +220,7 @@ private fun VideoOverlayPlayer(
 			horizontalArrangement = Arrangement.spacedBy(28.dp),
 		) {
 			OverlayControlButton(
-				icon = if (muted) Icons.Filled.VolumeOff else Icons.Filled.VolumeUp,
+				icon = if (muted) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp,
 				contentDescription = if (muted) "Unmute" else "Mute",
 				onClick = {
 					muted = !muted
