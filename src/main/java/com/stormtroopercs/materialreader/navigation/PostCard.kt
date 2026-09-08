@@ -250,13 +250,15 @@ fun Modifier.postSwipeToAction(
 
 /**
  * A single post in the list feed, in one of the reference's card modes
- * (FINAL-DESIGN Phase 4.1, DESIGN §4.3). Media (220dp, 8dp margin, rounded)
- * above the title → meta → body ordering; the corrected [StatsAndIconsRow]
- * underneath. The whole card is tappable (opens the thread); the media
- * region is tappable **too** and wins its own tap — a video post's media
- * (its static preview still) opens the full-screen video overlay
- * ([onOpenVideo]), any other media the full-screen viewer
- * ([onMediaClick]).
+ * (FINAL-DESIGN Phase 4.1, DESIGN §4.3). The card's layout (top → bottom):
+ * the community header (its circular icon + `r/<name>` on the first line,
+ * the poster's username one line below), the media (220dp, 8dp margin,
+ * rounded; text posts have none), the post's title + contents, and the
+ * corrected [StatsAndIconsRow] underneath. The whole card is tappable
+ * (opens the thread); the media region is tappable **too** and wins its
+ * own tap — a video post's media (its static preview still) opens the
+ * full-screen video overlay ([onOpenVideo]), any other media the full-screen
+ * viewer ([onMediaClick]).
  *
  * @param post the post to render.
  * @param mode the card mode (see [PostViewMode]).
@@ -267,6 +269,8 @@ fun Modifier.postSwipeToAction(
  * @param onOpenVideo opens a video post's stream in the full-screen video
  *   overlay (a tap on its preview still).
  * @param onAuthorClick opens the author's profile.
+ * @param onOpenSubreddit opens the post's community feed (a tap on the
+ *   header's icon or `r/<name>`).
  * @param onPostAction a list action (vote / save / hide / share / report).
  * @param swipeEnabled whether the horizontal swipe-to-action gesture is on.
  * @param onSwipeUpvote / onSwipeDownvote / onSwipeHide the swipe actions
@@ -283,6 +287,8 @@ fun PostCard(
 	/** Open the linked page of a link post (a tap on its article preview). */
 	onOpenLink: (PostItem) -> Unit = {},
 	onAuthorClick: (String) -> Unit,
+	/** Open the post's community feed (a tap on the header's icon / name). */
+	onOpenSubreddit: (String) -> Unit = {},
 	onPostAction: (PostItem, PostAction) -> Unit,
 	swipeEnabled: Boolean = false,
 	onSwipeUpvote: () -> Unit = {},
@@ -340,6 +346,14 @@ fun PostCard(
 			)
 			.clickable(onClick = onOpenThread),
 	) {
+		// ── Community header (icon + r/<name> on line 1, poster on line 2) ──
+		PostCardHeader(
+			post = post,
+			onAuthorClick = onAuthorClick,
+			onOpenSubreddit = onOpenSubreddit,
+			modifier = Modifier.padding(start = 12.dp, top = 8.dp, end = 12.dp),
+		)
+
 		// ── Media (per mode) ──
 		val media = rememberMedia(post)
 		when (mode) {
@@ -354,7 +368,6 @@ fun PostCard(
 						PostCardTextColumn(
 							post = post,
 							bodyLines = bodyLines,
-							onAuthorClick = onAuthorClick,
 						)
 					}
 					if (mediaSize > 0.dp && media != null) {
@@ -373,14 +386,12 @@ fun PostCard(
 						PostCardTextColumn(
 							post = post,
 							bodyLines = bodyLines,
-							onAuthorClick = onAuthorClick,
 						)
 					}
 					if (mode == PostViewMode.HORIZONTAL && media == null) {
 						PostCardTextColumn(
 							post = post,
 							bodyLines = bodyLines,
-							onAuthorClick = onAuthorClick,
 						)
 					}
 				}
@@ -406,7 +417,6 @@ fun PostCard(
 				PostCardTextColumn(
 					post = post,
 					bodyLines = bodyLines,
-					onAuthorClick = onAuthorClick,
 					modifier = Modifier.padding(horizontal = 12.dp),
 				)
 			}
@@ -452,14 +462,15 @@ private fun rememberMedia(post: PostItem): String? {
 }
 
 /**
- * The card's text column: title → meta (author • time • flair) → body, in
- * the reference's title→desc→body ordering.
+ * The card's text column: title → body. The community header (icon +
+ * name, poster) sits above the media — see [PostCardHeader] — so this
+ * column carries only the post's own text, in the reference's
+ * title→desc→body ordering.
  */
 @Composable
 private fun PostCardTextColumn(
 	post: PostItem,
 	bodyLines: Int,
-	onAuthorClick: (String) -> Unit,
 	modifier: Modifier = Modifier,
 ) {
 	val theme = LocalComposeTheme.current.postCard
@@ -470,14 +481,58 @@ private fun PostCardTextColumn(
 			maxLines = 3,
 			overflow = TextOverflow.Ellipsis,
 		)
-		Spacer(Modifier.height(2.dp))
+		post.selftext?.takeIf { it.isNotBlank() }?.let { selftext ->
+			Spacer(Modifier.height(4.dp))
+			Text(
+				text = selftext,
+				style = theme.subtitle,
+				maxLines = bodyLines,
+				overflow = TextOverflow.Ellipsis,
+			)
+		}
+	}
+}
+
+/**
+ * The card's community header: the subreddit's circular icon (its own logo,
+ * resolved via [SubredditIconResolver]) + `r/<name>` on the first line —
+ * tappable, it opens the community feed — and the poster's username (with
+ * the post's age and flair) on the line below.
+ */
+@Composable
+private fun PostCardHeader(
+	post: PostItem,
+	onAuthorClick: (String) -> Unit,
+	onOpenSubreddit: (String) -> Unit,
+	modifier: Modifier = Modifier,
+) {
+	val theme = LocalComposeTheme.current.postCard
+	Column(modifier = modifier) {
+		Row(
+			verticalAlignment = Alignment.CenterVertically,
+		) {
+			SubredditIcon(
+				name = post.subreddit,
+				size = 20.dp,
+			)
+			Spacer(Modifier.width(6.dp))
+			Text(
+				text = "r/${post.subreddit}",
+				style = theme.subtitle,
+				maxLines = 1,
+				overflow = TextOverflow.Ellipsis,
+				modifier = Modifier
+					.weight(1f, fill = false)
+					.clickable(onClick = { onOpenSubreddit(post.subreddit) }),
+			)
+		}
 		Row(
 			verticalAlignment = Alignment.CenterVertically,
 			modifier = Modifier.horizontalScroll(rememberScrollState()),
 		) {
 			post.author?.takeIf { it.isNotBlank() }?.let { author ->
 				Text(
-					text = author,
+					text = "u/$author",
 					style = theme.subtitle,
 					modifier = Modifier.clickable { onAuthorClick(author) },
 				)
@@ -497,15 +552,6 @@ private fun PostCardTextColumn(
 					)
 				}
 			}
-		}
-		post.selftext?.takeIf { it.isNotBlank() }?.let { selftext ->
-			Spacer(Modifier.height(4.dp))
-			Text(
-				text = selftext,
-				style = theme.subtitle,
-				maxLines = bodyLines,
-				overflow = TextOverflow.Ellipsis,
-			)
 		}
 	}
 }

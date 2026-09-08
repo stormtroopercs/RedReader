@@ -281,6 +281,7 @@ fun RealPostListScreen(
 											onOpenVideo = { onOpenVideo(post) },
 											onOpenLink = { onOpenLink(post) },
 											onAuthorClick = onNavigateToUserProfile,
+											onOpenSubreddit = { name -> onOpenListing("r/$name") },
 											onPostAction = ::onPostAction,
 											swipeEnabled = true,
 											onSwipeUpvote = { onPostAction(post, PostAction.UPVOTE) },

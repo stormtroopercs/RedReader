@@ -141,6 +141,8 @@ fun RealSlidesFeedScreen(
 	onOpenVideo: (PostItem) -> Unit = {},
 	/** Open a link post's article (a tap on its resolved article preview). */
 	onOpenLink: (PostItem) -> Unit = {},
+	/** Open a post's community feed (a tap on its header icon / name). */
+	onOpenSubreddit: (String) -> Unit = {},
 	/**
 	 * True when this feed is the top-level Posts tab (the app root) rather than
 	 * a pushed child: the toolbar stays visible (so the drawer hamburger is
@@ -276,6 +278,7 @@ fun RealSlidesFeedScreen(
 							modifier = Modifier.fillMaxSize(),
 							onPostClick = { onNavigateToCommentList(posts[page].id) },
 							onAuthorClick = onNavigateToUserProfile,
+							onOpenSubreddit = { name -> onOpenListing("r/$name") },
 							onPostAction = ::onPostAction,
 							// The slide's media tap: a video post opens the full-screen
 							// video overlay (its preview still is the slide's media);
@@ -555,10 +558,10 @@ private fun CommunityPill(
 }
 
 /**
- * One slide: full-bleed media + bottom scrim + overlay (avatar, meta, title,
- * scrollable selftext) + the six-button action bar. [internal] so the
- * community detail's Active tab can render the slides feed under its own
- * header/tabs (one feed, one view mode — no re-navigation).
+ * One slide: full-bleed media + bottom scrim + overlay (community icon +
+ * name, poster, title, scrollable selftext) + the six-button action bar.
+ * [internal] so the community detail's Active tab can render the slides feed
+ * under its own header/tabs (one feed, one view mode — no re-navigation).
  */
 @Composable
 internal fun SlidePost(
@@ -566,6 +569,8 @@ internal fun SlidePost(
 	modifier: Modifier = Modifier,
 	onPostClick: () -> Unit,
 	onAuthorClick: (String) -> Unit,
+	/** Open the post's community feed (a tap on the header's icon / name). */
+	onOpenSubreddit: (String) -> Unit = {},
 	onPostAction: (PostItem, PostAction) -> Unit,
 	onMediaClick: () -> Unit = {},
 ) {
@@ -593,7 +598,8 @@ internal fun SlidePost(
 				),
 		)
 
-		// Overlay: meta + title + selftext, above the action bar.
+		// Overlay: meta (community + poster) + title + selftext, above the
+		// action bar.
 		Column(
 			modifier = Modifier
 				.fillMaxWidth()
@@ -601,29 +607,38 @@ internal fun SlidePost(
 				.padding(horizontal = 12.dp, vertical = 10.dp),
 		) {
 			Row(verticalAlignment = Alignment.CenterVertically) {
-				Box(
-					modifier = Modifier
-						.size(28.dp)
-						.clip(CircleShape)
-						.background(MaterialTheme.colorScheme.primaryContainer),
-					contentAlignment = Alignment.Center,
-				) {
-					Text(
-						text = (post.author?.firstOrNull()?.uppercase() ?: "?"),
-						color = MaterialTheme.colorScheme.onPrimaryContainer,
-						fontWeight = FontWeight.Bold,
-					)
-				}
+				SubredditIcon(
+					name = post.subreddit,
+					size = 24.dp,
+				)
 				Spacer(Modifier.width(8.dp))
-				Column(modifier = Modifier.weight(1f)) {
+				Text(
+					text = "r/${post.subreddit}",
+					color = Color.White,
+					fontWeight = FontWeight.Medium,
+					maxLines = 1,
+					overflow = TextOverflow.Ellipsis,
+					modifier = Modifier
+						.weight(1f)
+						.clickable(onClick = { onOpenSubreddit(post.subreddit) }),
+				)
+			}
+			Spacer(Modifier.height(2.dp))
+			Row(verticalAlignment = Alignment.CenterVertically) {
+				post.author?.takeIf { it.isNotBlank() }?.let { author ->
 					Text(
-						text = "r/${post.subreddit} • ${post.author ?: "Unknown"}",
+						text = "u/$author",
 						color = Color.White,
 						fontWeight = FontWeight.Medium,
 						maxLines = 1,
-						overflow = TextOverflow.Ellipsis,
+						modifier = Modifier.clickable { onAuthorClick(author) },
 					)
 				}
+				Text(
+					text = "  •  ${formatTimeAgoShort(post.createdUtc)}",
+					color = Color.White,
+					maxLines = 1,
+				)
 			}
 			Spacer(Modifier.height(6.dp))
 			Text(

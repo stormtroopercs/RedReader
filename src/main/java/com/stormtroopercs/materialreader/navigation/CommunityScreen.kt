@@ -358,6 +358,7 @@ fun CommunityDetailScreen(
 														onNavigateToCommentList(slidePosts[page].id)
 													},
 													onAuthorClick = onNavigateToUserProfile,
+													onOpenSubreddit = { communityName -> onOpenListing("r/$communityName") },
 													onPostAction = ::onPostAction,
 													onMediaClick = {
 														val p = slidePosts[page]
@@ -383,6 +384,7 @@ fun CommunityDetailScreen(
 								onOpenVideo = onOpenVideo,
 								onOpenLink = onOpenLink,
 								onAuthorClick = onNavigateToUserProfile,
+								onOpenSubreddit = { communityName -> onOpenListing("r/$communityName") },
 								onPostAction = ::onPostAction,
 							)
 						}
@@ -568,6 +570,8 @@ private fun CommunityActiveFeed(
 	onOpenVideo: (PostItem) -> Unit,
 	onOpenLink: (PostItem) -> Unit = {},
 	onAuthorClick: (String) -> Unit,
+	/** Open a post's community feed (a tap on its header icon / name). */
+	onOpenSubreddit: (String) -> Unit = {},
 	onPostAction: (PostItem, PostAction) -> Unit,
 ) {
 	when (val state = uiState) {
@@ -605,6 +609,7 @@ private fun CommunityActiveFeed(
 						onOpenVideo = { onOpenVideo(post) },
 						onOpenLink = { onOpenLink(post) },
 						onAuthorClick = onAuthorClick,
+						onOpenSubreddit = onOpenSubreddit,
 						onPostAction = { p, a -> onPostAction(p, a) },
 						swipeEnabled = true,
 						onSwipeUpvote = { onPostAction(post, PostAction.UPVOTE) },
