@@ -153,8 +153,8 @@ object SubredditIconResolver {
 @Composable
 fun SubredditIcon(
 	name: String,
-	size: Dp = 20.dp,
 	modifier: Modifier = Modifier,
+	size: Dp = 20.dp,
 ) {
 	val context = LocalContext.current
 	// The process cache is authoritative at composition time; when it has
