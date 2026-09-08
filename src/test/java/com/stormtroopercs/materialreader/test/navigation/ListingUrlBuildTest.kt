@@ -3,7 +3,9 @@ package com.stormtroopercs.materialreader.test.navigation
 import android.app.Application
 import com.stormtroopercs.materialreader.common.General
 import com.stormtroopercs.materialreader.common.PrefsUtility
+import com.stormtroopercs.materialreader.navigation.FeedSortOption
 import com.stormtroopercs.materialreader.navigation.buildListingUri
+import com.stormtroopercs.materialreader.reddit.PostSort
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
@@ -175,5 +177,64 @@ class ListingUrlBuildTest {
 	@Test
 	fun unknownPathReturnsNull() {
 		assertNull(uri("not-a-real-feed-shape"))
+	}
+
+	// --- feed sort (the two-level dialog's resolved options) ---------------
+	//
+	// Top / Controversial with a time window must reach the URL as
+	// `sort=top&t=<window>` (community listing) / `sort=controversial&t=…`;
+	// a windowless option (Hot) keeps a plain sort path.
+
+	private fun uriWithSort(listPath: String, sort: PostSort?): String? =
+		buildListingUri(listPath, null, sort)?.toString()
+
+	@Test
+	fun topDayOnFrontpage() {
+		val option = FeedSortOption.forId("top:day")
+		assertEquals(PostSort.TOP_DAY, option.urlSort)
+		assertEquals("https://oauth.reddit.com/top/.json?t=day", uriWithSort("frontpage", option.urlSort))
+	}
+
+	@Test
+	fun topAllOnCommunity() {
+		val option = FeedSortOption.forId("top:all")
+		assertEquals(PostSort.TOP_ALL, option.urlSort)
+		assertEquals("https://oauth.reddit.com/r/palworld/top/.json?t=all", uriWithSort("palworld", option.urlSort))
+	}
+
+	@Test
+	fun controversialWeekOnFrontpage() {
+		val option = FeedSortOption.forId("controversial:week")
+		assertEquals(PostSort.CONTROVERSIAL_WEEK, option.urlSort)
+		assertEquals(
+			"https://oauth.reddit.com/controversial/.json?t=week",
+			uriWithSort("frontpage", option.urlSort),
+		)
+	}
+
+	@Test
+	fun controversialHourOnCommunity() {
+		val option = FeedSortOption.forId("controversial:hour")
+		assertEquals(PostSort.CONTROVERSIAL_HOUR, option.urlSort)
+		assertEquals(
+			"https://oauth.reddit.com/r/palworld/controversial/.json?t=hour",
+			uriWithSort("palworld", option.urlSort),
+		)
+	}
+
+	@Test
+	fun hotStaysWindowless() {
+		val option = FeedSortOption.forId("hot")
+		assertEquals(PostSort.HOT, option.urlSort)
+		assertEquals("https://oauth.reddit.com/r/palworld/hot/.json", uriWithSort("palworld", option.urlSort))
+	}
+
+	@Test
+	fun topDayOnSearch() {
+		// Search listings carry the window as query params on the search path.
+		assertEquals(
+			"https://oauth.reddit.com/search/.json?q=kotlin&sort=top&t=day",
+			buildListingUri("", "kotlin", PostSort.TOP_DAY)?.toString(),
+		)
 	}
 }

@@ -235,7 +235,7 @@ fun RealPostListScreen(
 				// subreddits — the same list as the drawer's Subscriptions
 				// section).
 				FeedFilterChips(
-					sortLabel = sortOption.label,
+					sortLabel = sortOption.chipLabel,
 					onSortTap = { sortDialogOpen = true },
 					onSubredditsTap = onOpenSubreddits,
 				)

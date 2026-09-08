@@ -40,6 +40,10 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -103,56 +107,177 @@ fun FeedFilterChips(
  * (not the `PostSort`) is the identity for selection + persistence, since
  * "Best" is the listing's own default order (no URL sort param).
  *
- * Each option has one resolution: [urlSort] — the sort param the listing
- * URL is built with (null = the listing's own default, which Reddit's UI
- * calls **Best**).
+ * Top and Controversial carry a time window (hour / day / week / month /
+ * year / all): tapping either in the sort dialog opens the window list,
+ * never applies the option itself. Selecting a window resolves the option
+ * with [timeWindow] set — its [id] then carries the window
+ * (`top:day`) so the choice persists per feed.
  */
 data class FeedSortOption(
 	val id: String,
 	val label: String,
 	/** The sort the listing URL is built with (null = the listing's own "Best" default). */
 	val urlSort: PostSort?,
+	/** True for the options with a time window (Top, Controversial). */
+	val hasTimeWindows: Boolean = false,
+	/** The chosen window (hour / day / …) — non-null only once the user picked one. */
+	val timeWindow: String? = null,
 ) {
+	/** The feed chip's label: plain for the windowless options,
+	 *  `Top · Day` once a window is chosen. */
+	val chipLabel: String
+		get() = if (timeWindow != null) "$label · ${windowLabel(timeWindow)}" else label
+
 	companion object {
+		/** The time windows, in dialog order (top to bottom). */
+		val timeWindows: List<TimeWindow> = listOf(
+			TimeWindow("hour", "Hour"),
+			TimeWindow("day", "Day"),
+			TimeWindow("week", "Week"),
+			TimeWindow("month", "Month"),
+			TimeWindow("year", "Year"),
+			TimeWindow("all", "All Time"),
+		)
+
+		/** The label for a persisted window id. */
+		fun windowLabel(window: String): String =
+			timeWindows.firstOrNull { it.id == window }?.label ?: window
+
+		/** The [PostSort] for a (base sort, window) pair. */
+		private fun windowSort(base: PostSort, window: String): PostSort = when (base) {
+			PostSort.TOP_ALL -> when (window) {
+				"hour" -> PostSort.TOP_HOUR
+				"day" -> PostSort.TOP_DAY
+				"week" -> PostSort.TOP_WEEK
+				"month" -> PostSort.TOP_MONTH
+				"year" -> PostSort.TOP_YEAR
+				else -> PostSort.TOP_ALL
+			}
+			PostSort.CONTROVERSIAL_ALL -> when (window) {
+				"hour" -> PostSort.CONTROVERSIAL_HOUR
+				"day" -> PostSort.CONTROVERSIAL_DAY
+				"week" -> PostSort.CONTROVERSIAL_WEEK
+				"month" -> PostSort.CONTROVERSIAL_MONTH
+				"year" -> PostSort.CONTROVERSIAL_YEAR
+				else -> PostSort.CONTROVERSIAL_ALL
+			}
+			else -> base
+		}
+
 		/** The dialog's six options, top to bottom (Best first). */
 		val options: List<FeedSortOption> = listOf(
 			FeedSortOption("best", "Best", null),
 			FeedSortOption("hot", "Hot", PostSort.HOT),
 			FeedSortOption("new", "New", PostSort.NEW),
 			FeedSortOption("rising", "Rising", PostSort.RISING),
-			FeedSortOption("top", "Top", PostSort.TOP_ALL),
-			FeedSortOption("controversial", "Controversial", PostSort.CONTROVERSIAL_ALL),
+			FeedSortOption("top", "Top", PostSort.TOP_ALL, hasTimeWindows = true),
+			FeedSortOption("controversial", "Controversial", PostSort.CONTROVERSIAL_ALL, hasTimeWindows = true),
 		)
 
-		/** The option for a persisted [id] (unknown ids fall back to Best). */
-		fun forId(id: String): FeedSortOption = options.firstOrNull { it.id == id } ?: options.first()
+		/** The option for a persisted [id] (unknown ids fall back to Best).
+		 *  Windowed ids (`top:day`) reconstruct the option with its window. */
+		fun forId(id: String): FeedSortOption {
+			val colon = id.indexOf(':')
+			if (colon > 0) {
+				val base = id.substring(0, colon)
+				val window = id.substring(colon + 1)
+				options.firstOrNull { it.id == base }?.let { option ->
+					if (option.hasTimeWindows && timeWindows.any { it.id == window }) {
+						return option.copy(
+							id = id,
+							timeWindow = window,
+							urlSort = windowSort(option.urlSort ?: return@let, window),
+						)
+					}
+				}
+			}
+			return options.firstOrNull { it.id == id } ?: options.first()
+		}
+
+		/** Apply [window] to [option] — the resolved, persistable form. */
+		fun withWindow(option: FeedSortOption, window: String): FeedSortOption {
+			val sort = windowSort(option.urlSort ?: return option, window)
+			return option.copy(id = "${option.id}:$window", timeWindow = window, urlSort = sort)
+		}
 	}
 }
 
+/** One of Top / Controversial's time windows. */
+data class TimeWindow(val id: String, val label: String)
+
+/**
+ * The feed's two-level sort dialog (FINAL-DESIGN Phase 4.5). Level 1 lists
+ * the six options; tapping **Top** or **Controversial** — the two options
+ * with a time window — opens level 2, the window list (Hour / Day / Week /
+ * Month / Year / All Time). Picking a window applies the resolved option
+ * (e.g. `Top · Day`) and closes both levels; dismissing level 2 (outside
+ * tap / Dismiss) returns to level 1 without changing the sort.
+ */
 @Composable
 fun SortOptionsDialog(
 	currentId: String,
 	onDismiss: () -> Unit,
 	onSelected: (FeedSortOption) -> Unit,
 ) {
-	AlertDialog(
-		onDismissRequest = onDismiss,
-		title = { Text("Post sort") },
-		text = {
-			Column {
-				FeedSortOption.options.forEach { option ->
-					SelectableRow(
-						label = option.label,
-						selected = option.id == currentId,
-						onClick = { onSelected(option) },
-					)
+	var windowOption by remember { mutableStateOf<FeedSortOption?>(null) }
+	// The resolved current selection (a windowed id like `top:day` carries
+	// its window) — level 1 uses it to check the active base option and
+	// show the current window in its label.
+	val current = remember(currentId) { FeedSortOption.forId(currentId) }
+	val windowOptionSnapshot = windowOption
+	if (windowOptionSnapshot != null) {
+		// Level 2: the time-window list for the tapped option.
+		AlertDialog(
+			onDismissRequest = { windowOption = null },
+			title = { Text("${windowOptionSnapshot.label} · time window") },
+			text = {
+				Column {
+					FeedSortOption.timeWindows.forEach { window ->
+						SelectableRow(
+							label = window.label,
+							selected = windowOptionSnapshot.timeWindow == window.id,
+							onClick = {
+								onSelected(FeedSortOption.withWindow(windowOptionSnapshot, window.id))
+							},
+						)
+					}
 				}
-			}
-		},
-		confirmButton = {
-			TextButton(onClick = onDismiss) { Text("Dismiss") }
-		},
-	)
+			},
+			confirmButton = {
+				TextButton(onClick = { windowOption = null }) { Text("Cancel") }
+			},
+		)
+	} else {
+		// Level 1: the six options. Top / Controversial open level 2; the
+		// rest apply directly. The active row (matched by base id, so a
+		// windowed `top:day` checks "Top") shows the current window in its
+		// label.
+		AlertDialog(
+			onDismissRequest = onDismiss,
+			title = { Text("Post sort") },
+			text = {
+				Column {
+					FeedSortOption.options.forEach { option ->
+						val active = option.id == currentId.substringBefore(':')
+						SelectableRow(
+							label = if (active) current.chipLabel else option.label,
+							selected = active,
+							onClick = {
+								if (option.hasTimeWindows) {
+									windowOption = option
+								} else {
+									onSelected(option)
+								}
+							},
+						)
+					}
+				}
+			},
+			confirmButton = {
+				TextButton(onClick = onDismiss) { Text("Dismiss") }
+			},
+		)
+	}
 }
 
 /**
