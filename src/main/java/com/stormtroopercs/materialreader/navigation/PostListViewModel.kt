@@ -27,6 +27,7 @@ import com.stormtroopercs.materialreader.cache.CacheManager
 import com.stormtroopercs.materialreader.cache.CacheRequest
 import com.stormtroopercs.materialreader.cache.CacheRequestCallbacks
 import com.stormtroopercs.materialreader.cache.downloadstrategy.DownloadStrategy
+import com.stormtroopercs.materialreader.cache.downloadstrategy.DownloadStrategyAlways
 import com.stormtroopercs.materialreader.cache.downloadstrategy.DownloadStrategyIfNotCached
 import com.stormtroopercs.materialreader.cache.downloadstrategy.DownloadStrategyIfTimestampOutsideBounds
 import com.stormtroopercs.materialreader.common.AndroidCommon
@@ -267,7 +268,11 @@ class PostListViewModel @Inject constructor(
 	fun refresh() {
 		if (currentListPath.isEmpty() && currentSearchQuery == null) return
 		_state.value = PostListUiState.Loading(false)
-		fetchList(currentListPath, currentSearchQuery)
+		// A manual refresh (the grid's Refresh action / sort change) must
+		// bypass the cache: community/frontpage listings use IfNotCached,
+		// so re-issuing the same URL would be served from cache and the
+		// feed would never update.
+		fetchList(currentListPath, currentSearchQuery, forceDownload = true)
 		fetchCommunity(currentListPath, currentSearchQuery)
 	}
 
@@ -391,7 +396,7 @@ class PostListViewModel @Inject constructor(
 		else -> ""
 	}
 
-	private fun fetchList(listPath: String, searchQuery: String?) {
+	private fun fetchList(listPath: String, searchQuery: String?, forceDownload: Boolean = false) {
 		viewModelScope.launch {
 			try {
 				val account = accountManager.getDefaultAccount()
@@ -464,7 +469,11 @@ class PostListViewModel @Inject constructor(
 					account,
 					null,
 					Priority(Constants.Priority.API_POST_LIST),
-					downloadStrategyFor(currentListPath),
+					if (forceDownload) {
+						DownloadStrategyAlways.INSTANCE
+					} else {
+						downloadStrategyFor(currentListPath)
+					},
 					Constants.FileType.POST_LIST,
 					CacheRequest.DownloadQueueType.REDDIT_API,
 					context,
