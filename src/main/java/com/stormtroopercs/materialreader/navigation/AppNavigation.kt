@@ -371,6 +371,28 @@ fun AppNavGraph(navigationState: NavigationState) {
 							// thing id.
 							navigator.navigate(CommentReply(key.postId))
 						},
+						onOpenMedia = { url ->
+							// A tapped media block in a comment body opens the
+							// same full-screen viewer a post media tap uses.
+							if (url.isNotBlank()) {
+								val uri = com.stormtroopercs.materialreader.common.UriString(url)
+								if (com.stormtroopercs.materialreader.common.LinkHandler.imgurAlbumPattern
+										.matcher(url).find() ||
+									com.stormtroopercs.materialreader.common.LinkHandler.redditGalleryPattern
+										.matcher(url).find()
+								) {
+									navigator.navigate(Album(url))
+								} else {
+									navigator.navigate(
+										Image(
+											url = url,
+											isGif = com.stormtroopercs.materialreader.common.LinkHandler.isDirectGifFile(uri),
+											isVideo = com.stormtroopercs.materialreader.common.LinkHandler.isDirectVideoFile(uri),
+										),
+									)
+								}
+							}
+						},
 					)
 				}
 

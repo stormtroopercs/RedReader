@@ -112,6 +112,7 @@ fun RealCommentListScreen(
 	onNavigateBack: () -> Unit,
 	onReply: (CommentItem) -> Unit,
 	onReplyToPost: () -> Unit,
+	onOpenMedia: (String) -> Unit,
 ) {
 	val viewModel: CommentListViewModel = hiltViewModel()
 	val uiState by viewModel.state.collectAsStateWithLifecycle()
@@ -267,6 +268,7 @@ fun RealCommentListScreen(
 					onReplyToPost = onReplyToPost,
 					collapsedIds = collapsedIds,
 					onToggleCollapsed = { viewModel.toggleCollapsed(it) },
+					onOpenMedia = onOpenMedia,
 					modifier = Modifier.padding(paddingValues),
 				)
 			}
@@ -313,6 +315,7 @@ private fun CommentListContent(
 	onReplyToPost: () -> Unit,
 	collapsedIds: Set<String>,
 	onToggleCollapsed: (CommentItem) -> Unit,
+	onOpenMedia: (String) -> Unit,
 	modifier: Modifier = Modifier,
 ) {
 	val theme = LocalComposeTheme.current.postCard
@@ -364,6 +367,7 @@ private fun CommentListContent(
 						onCommentAction = onCommentAction,
 						onReply = onReply,
 						onToggleCollapsed = onToggleCollapsed,
+						onOpenMedia = onOpenMedia,
 					)
 				}
 			}
@@ -423,6 +427,7 @@ private fun CommentRow(
 	onCommentAction: (CommentItem, CommentAction) -> Unit,
 	onReply: (CommentItem) -> Unit,
 	onToggleCollapsed: (CommentItem) -> Unit,
+	onOpenMedia: (String) -> Unit,
 ) {
 	var moreMenuExpanded by remember { mutableStateOf(false) }
 	// Cap the indent so very deep threads stay readable.
@@ -514,13 +519,12 @@ private fun CommentRow(
 					color = MaterialTheme.colorScheme.onSurfaceVariant,
 				)
 			} else {
-				// Body.
+				// Body. Plays any embedded GIF / video / still inline (7.1)
+				// instead of leaving the raw markdown visible.
 				Spacer(Modifier.height(6.dp))
-				Text(
-					text = comment.body,
-					style = MaterialTheme.typography.bodyMedium,
-					maxLines = Int.MAX_VALUE,
-					overflow = TextOverflow.Visible,
+				CommentBody(
+					body = comment.body,
+					onOpenMedia = onOpenMedia,
 				)
 
 				// Compact action row.
