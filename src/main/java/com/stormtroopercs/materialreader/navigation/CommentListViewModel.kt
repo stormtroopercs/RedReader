@@ -145,6 +145,36 @@ enum class CommentAction {
 	REPORT,
 }
 
+/**
+ * Filter a flat depth-first comment list down to the rows visible under the
+ * user's manual thread collapses ([collapsed] holds the ids of the comments
+ * the user collapsed). A row is hidden when any of its ancestors — a
+ * preceding row at a strictly shallower depth — is collapsed; the hidden
+ * comment's own id may sit in [collapsed] or not (its descendants are
+ * hidden either way, which is what matters for the UI). [comments] must be
+ * in depth-first parse order (the order [CommentItem]s are built in);
+ * re-sorted views (e.g. "New comments") must be filtered first, then sorted.
+ */
+fun filterCollapsedThreads(
+	comments: List<CommentItem>,
+	collapsed: Set<String>,
+): List<CommentItem> {
+	if (collapsed.isEmpty()) return comments
+
+	val result = mutableListOf<CommentItem>()
+	// The open ancestor chain: (id, depth) pairs with strictly increasing
+	// depth. Before each row, pop everything at its depth or deeper — what
+	// remains is exactly its ancestor chain in a depth-first list.
+	val stack = ArrayDeque<Pair<String, Int>>()
+	for (row in comments) {
+		while (stack.isNotEmpty() && stack.last().second >= row.replyDepth) stack.removeLast()
+		val visible = stack.none { it.first in collapsed }
+		if (visible) result.add(row)
+		stack.addLast(row.id to row.replyDepth)
+	}
+	return result
+}
+
 @HiltViewModel
 class CommentListViewModel @Inject constructor(
 	@ApplicationContext private val context: Context,
@@ -256,6 +286,22 @@ class CommentListViewModel @Inject constructor(
 	/** Clear a shown action-result message (called after the Snackbar). */
 	fun clearActionResult() {
 		_actionResult.value = null
+	}
+
+	/**
+	 * The ids of comments the user manually collapsed (thread collapse).
+	 * Collapsing a comment hides its whole subtree until re-expanded.
+	 * Screen-local state — a refetch starts with everything expanded.
+	 */
+	@Suppress("PropertyName")
+	private val _collapsedIds = MutableStateFlow<Set<String>>(emptySet())
+	val collapsedIds: StateFlow<Set<String>> = _collapsedIds.asStateFlow()
+
+	/** Toggle the thread under [comment] between collapsed and expanded. */
+	fun toggleCollapsed(comment: CommentItem) {
+		val current = _collapsedIds.value
+		_collapsedIds.value =
+			if (comment.id in current) current - comment.id else current + comment.id
 	}
 
 	/** True while a collapsed-continuation row is being expanded (7.2). */
@@ -409,6 +455,8 @@ class CommentListViewModel @Inject constructor(
 	private fun fetchList(listingPath: String) {
 		viewModelScope.launch {
 			_state.value = CommentListUiState.Loading
+			// A new listing starts fully expanded.
+			_collapsedIds.value = emptySet()
 
 			try {
 				val account = accountManager.getDefaultAccount()

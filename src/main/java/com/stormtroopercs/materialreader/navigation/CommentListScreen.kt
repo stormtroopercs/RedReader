@@ -43,6 +43,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -114,6 +116,7 @@ fun RealCommentListScreen(
 	val uiState by viewModel.state.collectAsStateWithLifecycle()
 	val listTitle by viewModel.title.collectAsStateWithLifecycle()
 	val expanding by viewModel.expanding.collectAsStateWithLifecycle()
+	val collapsedIds by viewModel.collapsedIds.collectAsStateWithLifecycle()
 	val context = LocalContext.current
 	val clipboardManager = LocalClipboard.current
 	val clipboardScope = rememberCoroutineScope()
@@ -242,8 +245,9 @@ fun RealCommentListScreen(
 			}
 
 			is CommentListUiState.Success -> {
-				// Apply the nav-chip filters (7.4).
-				var shown = state.comments
+				// Hide collapsed threads first (the depth-first order the
+				// list was parsed in), then apply the nav-chip filters (7.4).
+				var shown = filterCollapsedThreads(state.comments, collapsedIds)
 				if (selectedChip == "Me") {
 					shown = shown.filter { it.author == me }
 				}
@@ -260,6 +264,8 @@ fun RealCommentListScreen(
 					onExpandMore = { viewModel.expandMore(it) },
 					onReply = onReply,
 					onReplyToPost = onReplyToPost,
+					collapsedIds = collapsedIds,
+					onToggleCollapsed = { viewModel.toggleCollapsed(it) },
 					modifier = Modifier.padding(paddingValues),
 				)
 			}
@@ -304,6 +310,8 @@ private fun CommentListContent(
 	onExpandMore: (CommentItem) -> Unit,
 	onReply: (CommentItem) -> Unit,
 	onReplyToPost: () -> Unit,
+	collapsedIds: Set<String>,
+	onToggleCollapsed: (CommentItem) -> Unit,
 	modifier: Modifier = Modifier,
 ) {
 	val theme = LocalComposeTheme.current.postCard
@@ -351,8 +359,10 @@ private fun CommentListContent(
 					CommentRow(
 						comment = comment,
 						showAvatars = showAvatars,
+						isCollapsed = comment.id in collapsedIds,
 						onCommentAction = onCommentAction,
 						onReply = onReply,
+						onToggleCollapsed = onToggleCollapsed,
 					)
 				}
 			}
@@ -399,13 +409,19 @@ private fun PostHeaderCard(
  * avatar (optional), an author line (`u/name • N points • age`, + `(edited)`),
  * a wrapped body, and a compact action row. Nesting is a leading indent of
  * ~16dp per level — no vertical guide lines.
+ *
+ * Thread collapse: the author line carries a chevron that hides the
+ * comment's body and whole subtree; the row shrinks to the author line plus
+ * a `N replies collapsed` summary. Tapping it again restores the thread.
  */
 @Composable
 private fun CommentRow(
 	comment: CommentItem,
 	showAvatars: Boolean,
+	isCollapsed: Boolean,
 	onCommentAction: (CommentItem, CommentAction) -> Unit,
 	onReply: (CommentItem) -> Unit,
+	onToggleCollapsed: (CommentItem) -> Unit,
 ) {
 	var moreMenuExpanded by remember { mutableStateOf(false) }
 	// Cap the indent so very deep threads stay readable.
@@ -463,84 +479,116 @@ private fun CommentRow(
 						maxLines = 1,
 					)
 				}
-			}
-
-			// Body.
-			Spacer(Modifier.height(6.dp))
-			Text(
-				text = comment.body,
-				style = MaterialTheme.typography.bodyMedium,
-				maxLines = Int.MAX_VALUE,
-				overflow = TextOverflow.Visible,
-			)
-
-			// Compact action row.
-			Spacer(Modifier.height(6.dp))
-			Row(verticalAlignment = Alignment.CenterVertically) {
-				ActionIcon(
-					icon = Icons.Default.ArrowUpward,
-					label = "Upvote",
-					onClick = { onCommentAction(comment, CommentAction.UPVOTE) },
-				)
-				Text(
-					text = formatScore(comment.score),
-					style = MaterialTheme.typography.labelSmall,
-					modifier = Modifier.padding(horizontal = 4.dp),
-				)
-				ActionIcon(
-					icon = Icons.Default.ArrowDownward,
-					label = "Downvote",
-					onClick = { onCommentAction(comment, CommentAction.DOWNVOTE) },
-				)
-				if (comment.replyCount > 0) {
-					Spacer(Modifier.width(12.dp))
-					ActionIcon(
-						icon = Icons.AutoMirrored.Default.Message,
-						label = "${comment.replyCount} replies",
-						onClick = { onReply(comment) },
-					)
-				} else {
-					Spacer(Modifier.width(12.dp))
-					ActionIcon(
-						icon = Icons.AutoMirrored.Default.Message,
-						label = "Reply",
-						onClick = { onReply(comment) },
+				Spacer(Modifier.weight(1f))
+				// Thread collapse/expand chevron.
+				IconButton(
+					onClick = { onToggleCollapsed(comment) },
+					modifier = Modifier.size(24.dp),
+				) {
+					Icon(
+						imageVector = if (isCollapsed) {
+							Icons.Default.KeyboardArrowUp
+						} else {
+							Icons.Default.KeyboardArrowDown
+						},
+						contentDescription =
+						if (isCollapsed) "Expand thread" else "Collapse thread",
+						modifier = Modifier.size(18.dp),
+						tint = MaterialTheme.colorScheme.onSurfaceVariant,
 					)
 				}
-				Spacer(Modifier.width(12.dp))
-				ActionIcon(
-					icon = Icons.Default.Flag,
-					label = "Report",
-					onClick = { onCommentAction(comment, CommentAction.REPORT) },
+			}
+
+			if (isCollapsed) {
+				// Collapsed summary in place of body + action row.
+				Spacer(Modifier.height(4.dp))
+				Text(
+					text = if (comment.replyCount > 0) {
+						"${comment.replyCount} ${if (comment.replyCount == 1) "reply" else "replies"} collapsed"
+					} else {
+						"Thread collapsed"
+					},
+					style = MaterialTheme.typography.labelMedium,
+					color = MaterialTheme.colorScheme.onSurfaceVariant,
 				)
-				Box {
+			} else {
+				// Body.
+				Spacer(Modifier.height(6.dp))
+				Text(
+					text = comment.body,
+					style = MaterialTheme.typography.bodyMedium,
+					maxLines = Int.MAX_VALUE,
+					overflow = TextOverflow.Visible,
+				)
+
+				// Compact action row.
+				Spacer(Modifier.height(6.dp))
+				Row(verticalAlignment = Alignment.CenterVertically) {
 					ActionIcon(
-						icon = Icons.Default.MoreVert,
-						label = "More",
-						onClick = { moreMenuExpanded = true },
+						icon = Icons.Default.ArrowUpward,
+						label = "Upvote",
+						onClick = { onCommentAction(comment, CommentAction.UPVOTE) },
 					)
-					DropdownMenu(
-						expanded = moreMenuExpanded,
-						onDismissRequest = { moreMenuExpanded = false },
-					) {
-						val saveLabel = if (comment.saved) "Unsave" else "Save"
-						DropdownMenuItem(
-							text = { Text(saveLabel) },
-							onClick = {
-								moreMenuExpanded = false
-								onCommentAction(
-									comment,
-									if (comment.saved) CommentAction.UNSAVE else CommentAction.SAVE,
-								)
-							},
+					Text(
+						text = formatScore(comment.score),
+						style = MaterialTheme.typography.labelSmall,
+						modifier = Modifier.padding(horizontal = 4.dp),
+					)
+					ActionIcon(
+						icon = Icons.Default.ArrowDownward,
+						label = "Downvote",
+						onClick = { onCommentAction(comment, CommentAction.DOWNVOTE) },
+					)
+					if (comment.replyCount > 0) {
+						Spacer(Modifier.width(12.dp))
+						ActionIcon(
+							icon = Icons.AutoMirrored.Default.Message,
+							label = "${comment.replyCount} replies",
+							onClick = { onReply(comment) },
 						)
-						DropdownMenuItem(
-							text = { Text("Copy link") },
-							onClick = {
-								moreMenuExpanded = false
-								onCommentAction(comment, CommentAction.COPY_LINK)
-							},
+					} else {
+						Spacer(Modifier.width(12.dp))
+						ActionIcon(
+							icon = Icons.AutoMirrored.Default.Message,
+							label = "Reply",
+							onClick = { onReply(comment) },
 						)
+					}
+					Spacer(Modifier.width(12.dp))
+					ActionIcon(
+						icon = Icons.Default.Flag,
+						label = "Report",
+						onClick = { onCommentAction(comment, CommentAction.REPORT) },
+					)
+					Box {
+						ActionIcon(
+							icon = Icons.Default.MoreVert,
+							label = "More",
+							onClick = { moreMenuExpanded = true },
+						)
+						DropdownMenu(
+							expanded = moreMenuExpanded,
+							onDismissRequest = { moreMenuExpanded = false },
+						) {
+							val saveLabel = if (comment.saved) "Unsave" else "Save"
+							DropdownMenuItem(
+								text = { Text(saveLabel) },
+								onClick = {
+									moreMenuExpanded = false
+									onCommentAction(
+										comment,
+										if (comment.saved) CommentAction.UNSAVE else CommentAction.SAVE,
+									)
+								},
+							)
+							DropdownMenuItem(
+								text = { Text("Copy link") },
+								onClick = {
+									moreMenuExpanded = false
+									onCommentAction(comment, CommentAction.COPY_LINK)
+								},
+							)
+						}
 					}
 				}
 			}
