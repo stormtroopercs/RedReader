@@ -79,6 +79,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -432,10 +433,11 @@ private fun CommentRow(
 			.fillMaxWidth()
 			.padding(start = (indentLevels * 16).dp, end = 16.dp, top = 10.dp, bottom = 10.dp),
 	) {
-		// 16dp circular avatar (7.1) — an initial avatar coloured by the
-		// username hash; shown only when the setting is on.
+		// 16dp circular avatar (7.1) — the account picture (resolved from the
+		// user's about endpoint) with the coloured initial as fallback; shown
+		// only when the "Show user avatars" setting is on.
 		if (showAvatars) {
-			CommentAvatar(name = comment.author, show = comment.author != null)
+			UserAvatar(name = comment.author)
 			Spacer(Modifier.width(10.dp))
 		}
 
@@ -599,10 +601,15 @@ private fun CommentRow(
 /**
  * A 16dp circular comment avatar (7.1): a single coloured initial derived
  * from the username. [show] is false for deleted/anonymous comments (no
- * avatar slot is drawn by the caller in that case).
+ * avatar slot is drawn by the caller in that case). [UserAvatar] layers the
+ * real account picture on top of this fallback, so it's internal and shared.
  */
 @Composable
-private fun CommentAvatar(name: String?, show: Boolean) {
+internal fun CommentAvatar(
+	name: String?,
+	show: Boolean,
+	size: Dp = 16.dp,
+) {
 	if (!show || name == null) return
 	val hue = (name.hashCode() and 0x7fffffff) % 360
 	val color = Color(0.45f, 0.45f, 0.55f).let {
@@ -615,7 +622,7 @@ private fun CommentAvatar(name: String?, show: Boolean) {
 	}
 	Box(
 		modifier = Modifier
-			.size(16.dp)
+			.size(size)
 			.clip(CircleShape)
 			.background(color),
 		contentAlignment = Alignment.Center,

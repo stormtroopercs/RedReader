@@ -1475,7 +1475,7 @@ private fun getSettingsCategories(
 		items = listOf(
 			SettingsItem.BooleanSetting(
 				key = "user_show_avatars",
-				label = "Show user avatars",
+				label = "Show account pictures",
 				get = { PrefsUtility.appearance_user_show_avatars() },
 				set = PrefsUtility::pref_appearance_user_show_avatars_set,
 			),
