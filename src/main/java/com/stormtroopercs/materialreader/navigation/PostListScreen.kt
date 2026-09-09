@@ -45,6 +45,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,8 +61,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stormtroopercs.materialreader.common.LinkHandler
+import com.stormtroopercs.materialreader.common.PrefsUtility
 import com.stormtroopercs.materialreader.compose.ui.RRErrorView
 import com.stormtroopercs.materialreader.fragments.ReportDialog
+import com.stormtroopercs.materialreader.settings.types.PostViewMode
 
 /**
  * Post list screen composable (FINAL-DESIGN Phase 4): the reference's list
@@ -116,6 +119,7 @@ fun RealPostListScreen(
 	val uiState by viewModel.state.collectAsStateWithLifecycle()
 	val sortOption by viewModel.sortOption.collectAsStateWithLifecycle()
 	val listTitle by viewModel.title.collectAsStateWithLifecycle()
+	val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
 	// The drawer opener, when this is the Posts tab root and a drawer is
 	// enabled (Drawer / Both styles). Null in the Bottom style → back arrow.
 	val openDrawer = LocalOpenDrawer.current
@@ -130,6 +134,16 @@ fun RealPostListScreen(
 	var aboutOpen by remember { mutableStateOf(false) }
 	val snackbarHostState = remember { SnackbarHostState() }
 	val context = LocalContext.current
+
+	// Pull-to-refresh (enabled by the "Swipe down to refresh" setting, on
+	// by default): the last loaded posts are kept across a refresh so the
+	// list never blanks while the new listing loads (the refresh indicator
+	// sits above them instead of a full-screen spinner).
+	val swipeRefreshEnabled = remember { PrefsUtility.pref_behaviour_enable_swipe_refresh() }
+	val lastPosts = remember { mutableStateOf<List<PostItem>?>(null) }
+	LaunchedEffect(uiState) {
+		(uiState as? PostListUiState.Success)?.let { lastPosts.value = it.posts }
+	}
 
 	// Surface the result of the last post action (vote / save / hide) as a
 	// Snackbar, then clear it so a repeat action re-triggers it.
@@ -221,11 +235,7 @@ fun RealPostListScreen(
 		},
 		snackbarHost = { SnackbarHost(snackbarHostState) },
 	) { paddingValues ->
-		Box(
-			modifier = Modifier
-				.fillMaxSize()
-				.padding(paddingValues),
-		) {
+		val feedContent: @Composable () -> Unit = {
 			Column(
 				modifier = Modifier.fillMaxSize(),
 			) {
@@ -250,6 +260,37 @@ fun RealPostListScreen(
 							) {
 								CircularProgressIndicator()
 							}
+						} else {
+							// A refresh (grid's Refresh / sort change /
+							// pull-to-refresh): keep the previous posts on
+							// screen — the pull indicator shows the refresh —
+							// instead of blanking the list.
+							val stale = lastPosts.value
+							if (stale.isNullOrEmpty()) {
+								Box(
+									modifier = Modifier
+										.fillMaxSize()
+										.padding(32.dp),
+									contentAlignment = Alignment.Center,
+								) {
+									Text(
+										text = "No posts found",
+										style = MaterialTheme.typography.bodyLarge,
+									)
+								}
+							} else {
+								PostCards(
+									posts = stale,
+									viewMode = viewMode,
+									onNavigateToCommentList = onNavigateToCommentList,
+									onOpenMedia = onOpenMedia,
+									onOpenVideo = onOpenVideo,
+									onOpenLink = onOpenLink,
+									onNavigateToUserProfile = onNavigateToUserProfile,
+									onOpenListing = onOpenListing,
+									onPostAction = ::onPostAction,
+								)
+							}
 						}
 					}
 
@@ -267,28 +308,16 @@ fun RealPostListScreen(
 								)
 							}
 						} else {
-							LazyColumn(
-								modifier = Modifier.fillMaxSize(),
-								content = {
-									items(state.posts, key = { it.id }) { post ->
-										PostCard(
-											post = post,
-											mode = viewMode,
-											modifier = Modifier.animateItem(),
-											onOpenThread = { onNavigateToCommentList(post.id) },
-											onMediaClick = { onOpenMedia(post) },
-											onOpenVideo = { onOpenVideo(post) },
-											onOpenLink = { onOpenLink(post) },
-											onAuthorClick = onNavigateToUserProfile,
-											onOpenSubreddit = { name -> onOpenListing("r/$name") },
-											onPostAction = ::onPostAction,
-											swipeEnabled = true,
-											onSwipeUpvote = { onPostAction(post, PostAction.UPVOTE) },
-											onSwipeDownvote = { onPostAction(post, PostAction.DOWNVOTE) },
-											onSwipeHide = { onPostAction(post, if (post.hidden) PostAction.UNHIDE else PostAction.HIDE) },
-										)
-									}
-								},
+							PostCards(
+								posts = state.posts,
+								viewMode = viewMode,
+								onNavigateToCommentList = onNavigateToCommentList,
+								onOpenMedia = onOpenMedia,
+								onOpenVideo = onOpenVideo,
+								onOpenLink = onOpenLink,
+								onNavigateToUserProfile = onNavigateToUserProfile,
+								onOpenListing = onOpenListing,
+								onPostAction = ::onPostAction,
 							)
 						}
 					}
@@ -316,6 +345,30 @@ fun RealPostListScreen(
 							}
 						}
 					}
+				}
+			}
+		}
+
+		Box(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(paddingValues),
+		) {
+			// Pull-to-refresh (the "Swipe down to refresh" setting, on by
+			// default): pulling down from the top of the feed shows the
+			// refresh indicator and forces a fresh fetch (viewModel.refresh()
+			// bypasses the listing cache).
+			if (swipeRefreshEnabled) {
+				PullToRefreshBox(
+					isRefreshing = refreshing,
+					onRefresh = { viewModel.refresh() },
+					modifier = Modifier.fillMaxSize(),
+				) {
+					feedContent()
+				}
+			} else {
+				Box(modifier = Modifier.fillMaxSize()) {
+					feedContent()
 				}
 			}
 
@@ -430,3 +483,43 @@ fun RealPostListScreen(
 
 // The per-feed preference key now lives in [FeedPreferences.effectiveKey]
 // (shared by every feed surface so one feed has one view mode).
+
+// The feed's post cards: a plain LazyColumn of [PostCard]s (the same
+// cards the slides mode renders one-per-page) — list / cards / compact
+// are the PostCard modes; the slides mode uses its own pager.
+@Composable
+fun PostCards(
+	posts: List<PostItem>,
+	viewMode: PostViewMode,
+	onNavigateToCommentList: (String) -> Unit,
+	onOpenMedia: (PostItem) -> Unit,
+	onOpenVideo: (PostItem) -> Unit,
+	onOpenLink: (PostItem) -> Unit,
+	onNavigateToUserProfile: (String) -> Unit,
+	onOpenListing: (String) -> Unit,
+	onPostAction: (PostItem, PostAction) -> Unit,
+) {
+	LazyColumn(
+		modifier = Modifier.fillMaxSize(),
+		content = {
+			items(posts, key = { it.id }) { post ->
+				PostCard(
+					post = post,
+					mode = viewMode,
+					modifier = Modifier.animateItem(),
+					onOpenThread = { onNavigateToCommentList(post.id) },
+					onMediaClick = { onOpenMedia(post) },
+					onOpenVideo = { onOpenVideo(post) },
+					onOpenLink = { onOpenLink(post) },
+					onAuthorClick = onNavigateToUserProfile,
+					onOpenSubreddit = { name -> onOpenListing("r/$name") },
+					onPostAction = onPostAction,
+					swipeEnabled = true,
+					onSwipeUpvote = { onPostAction(post, PostAction.UPVOTE) },
+					onSwipeDownvote = { onPostAction(post, PostAction.DOWNVOTE) },
+					onSwipeHide = { onPostAction(post, if (post.hidden) PostAction.UNHIDE else PostAction.HIDE) },
+				)
+			}
+		},
+	)
+}

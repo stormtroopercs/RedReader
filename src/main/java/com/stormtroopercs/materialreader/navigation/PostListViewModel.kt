@@ -161,6 +161,15 @@ class PostListViewModel @Inject constructor(
 	private val _state = MutableStateFlow<PostListUiState>(PostListUiState.Loading(true))
 	val state: StateFlow<PostListUiState> = _state.asStateFlow()
 
+	/**
+	 * True while a manual refresh (the More-actions grid's Refresh, a sort
+	 * change, or a pull-to-refresh) is in flight — independent of [state]
+	 * so the feed can keep showing the previous posts while the new ones
+	 * load. Cleared when the fetch resolves (success or failure).
+	 */
+	private val _refreshing = MutableStateFlow(false)
+	val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
+
 	private val _posts = MutableStateFlow<List<PostItem>>(emptyList())
 	val posts: StateFlow<List<PostItem>> = _posts.asStateFlow()
 
@@ -268,6 +277,7 @@ class PostListViewModel @Inject constructor(
 	fun refresh() {
 		if (currentListPath.isEmpty() && currentSearchQuery == null) return
 		_state.value = PostListUiState.Loading(false)
+		_refreshing.value = true
 		// A manual refresh (the grid's Refresh action / sort change) must
 		// bypass the cache: community/frontpage listings use IfNotCached,
 		// so re-issuing the same URL would be served from cache and the
@@ -409,6 +419,7 @@ class PostListViewModel @Inject constructor(
 
 				val jsonUri = buildListingUri(listPath, searchQuery, sort)
 				if (jsonUri == null) {
+					_refreshing.value = false
 					_state.value = PostListUiState.Error(
 						RRError(
 							title = "Invalid listing",
@@ -420,6 +431,7 @@ class PostListViewModel @Inject constructor(
 
 				val callbacks = object : CacheRequestCallbacks {
 					override fun onFailure(error: RRError) {
+						_refreshing.value = false
 						_state.value = PostListUiState.Error(error)
 					}
 
@@ -451,8 +463,10 @@ class PostListViewModel @Inject constructor(
 								.let { resolveLinkPreviews(it) }
 
 							_posts.value = posts
+							_refreshing.value = false
 							_state.value = PostListUiState.Success(posts)
 						} catch (e: Exception) {
+							_refreshing.value = false
 							_state.value = PostListUiState.Error(
 								RRError(
 									title = "Parse error",
@@ -481,6 +495,7 @@ class PostListViewModel @Inject constructor(
 				)
 				cacheManager.makeRequest(request)
 			} catch (e: Exception) {
+				_refreshing.value = false
 				_state.value = PostListUiState.Error(
 					RRError(title = "Error", message = e.message, t = e),
 				)
