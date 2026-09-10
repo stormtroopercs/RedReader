@@ -120,6 +120,22 @@ private fun normalizeEmbedTarget(target: String): String? {
 }
 
 /**
+ * True when [uri] is (or resolves to) a playable media URL: a direct file
+ * (`.jpg` / `.gif` / `.mp4` / ...) or a host whose documented URL scheme maps
+ * to a direct file. The extension-only [LinkHandler] `isDirect*` checks miss
+ * query-stringed image hosts such as `preview.redd.it/<id>.jpg?width=…`
+ * (Reddit's own CDN) because they look past the `?` for the file extension;
+ * [LinkHandler.resolveImagePatternUrl] strips the query before matching, so
+ * OR-ing it in lets the parser promote those to inline media. This mirrors the
+ * full-screen image viewer's own resolution so the parser and the inline
+ * player agree on what counts as media.
+ */
+private fun isPlayableMediaUrl(uri: UriString): Boolean = LinkHandler.isDirectStillImage(uri) ||
+	LinkHandler.isDirectGifFile(uri) ||
+	LinkHandler.isDirectVideoFile(uri) ||
+	LinkHandler.resolveImagePatternUrl(uri) != null
+
+/**
  * Split a raw comment body into [CommentBodySegment]s: runs of text, the
  * media blocks embedded in it, and links. Recognized:
  *  - markdown image embeds `![alt](target)` whose target is a URL or a
@@ -182,10 +198,7 @@ fun parseCommentBodySegments(body: String): List<CommentBodySegment> {
 			val target = match.groupValues[2]
 			if (target.startsWith("http://") || target.startsWith("https://")) {
 				val uri = UriString(target)
-				if (LinkHandler.isDirectStillImage(uri) ||
-					LinkHandler.isDirectGifFile(uri) ||
-					LinkHandler.isDirectVideoFile(uri)
-				) {
+				if (isPlayableMediaUrl(uri)) {
 					// A markdown link pointing at a direct media file plays inline.
 					flush()
 					segments.add(CommentBodySegment.Media(target))
@@ -208,10 +221,7 @@ fun parseCommentBodySegments(body: String): List<CommentBodySegment> {
 		} else {
 			val url = match.value
 			val uri = UriString(url)
-			if (LinkHandler.isDirectStillImage(uri) ||
-				LinkHandler.isDirectGifFile(uri) ||
-				LinkHandler.isDirectVideoFile(uri)
-			) {
+			if (isPlayableMediaUrl(uri)) {
 				flush()
 				segments.add(CommentBodySegment.Media(url))
 			} else {

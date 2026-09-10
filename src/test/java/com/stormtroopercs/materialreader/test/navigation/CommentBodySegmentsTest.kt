@@ -227,4 +227,60 @@ class CommentBodySegmentsTest {
 		assertTrue(hasCommentBodyLink("[this video]($url)"))
 		assertFalse(hasCommentBodyMedia("[this video]($url)"))
 	}
+
+	// --- query-stringed image hosts (preview.redd.it etc.) --------------
+	// Reddit's own CDN serves media with query strings
+	// (`…/<id>.jpg?width=640&format=jpg&auto=webp`), so the extension-only
+	// `isDirect*` checks miss them. The parser must still promote them to
+	// inline media (matching the image viewer's query-stripping resolver).
+
+	@Test
+	fun barePreviewRedditStillUrlBecomesMedia() {
+		val url = "https://preview.redd.it/abcdef123456.jpg?width=640&format=jpg&auto=webp"
+		assertEquals(
+			listOf(
+				text("look: "),
+				media(url),
+				text(" cool?"),
+			),
+			parseCommentBodySegments("look: $url cool?"),
+		)
+	}
+
+	@Test
+	fun barePreviewRedditGifUrlBecomesMedia() {
+		val url = "https://preview.redd.it/abcdef123456.gif?width=320&crop=smart&format=png8&s=xyz"
+		assertEquals(listOf(media(url)), parseCommentBodySegments(url))
+	}
+
+	@Test
+	fun markdownLinkToPreviewRedditStillBecomesMedia() {
+		val url = "https://preview.redd.it/abcdef123456.jpg?width=640&format=jpg&auto=webp"
+		assertEquals(listOf(media(url)), parseCommentBodySegments("[the pic]($url)"))
+	}
+
+	@Test
+	fun iRedditUploadsUrlBecomesMedia() {
+		val url = "https://i.reddituploads.com/abcdef123456"
+		assertEquals(listOf(media(url)), parseCommentBodySegments(url))
+	}
+
+	@Test
+	fun previewRedditStillDrivesMediaFilter() {
+		assertTrue(hasCommentBodyMedia("https://preview.redd.it/abcdef123456.jpg?width=640&format=jpg&auto=webp"))
+	}
+
+	@Test
+	fun previewRedditStillNotCountedAsLink() {
+		// A query-stringed image is promoted to media, not tappable link text.
+		assertFalse(
+			hasCommentBodyLink("https://preview.redd.it/abcdef123456.jpg?width=640&format=jpg&auto=webp"),
+		)
+	}
+
+	@Test
+	fun bareVideoWithQueryBecomesMedia() {
+		val url = "https://v.redd.it/abcdef123456/DASH_720.mp4"
+		assertEquals(listOf(media(url)), parseCommentBodySegments(url))
+	}
 }
