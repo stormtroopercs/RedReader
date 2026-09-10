@@ -120,20 +120,28 @@ private fun normalizeEmbedTarget(target: String): String? {
 }
 
 /**
- * True when [uri] is (or resolves to) a playable media URL: a direct file
- * (`.jpg` / `.gif` / `.mp4` / ...) or a host whose documented URL scheme maps
- * to a direct file. The extension-only [LinkHandler] `isDirect*` checks miss
- * query-stringed image hosts such as `preview.redd.it/<id>.jpg?width=…`
- * (Reddit's own CDN) because they look past the `?` for the file extension;
- * [LinkHandler.resolveImagePatternUrl] strips the query before matching, so
- * OR-ing it in lets the parser promote those to inline media. This mirrors the
- * full-screen image viewer's own resolution so the parser and the inline
- * player agree on what counts as media.
+ * True when [uri] is (or resolves to) a playable media URL. Covers:
+ *  - direct files (`.jpg` / `.gif` / `.mp4` / ...), including the
+ *    `.webp` / `.m4v` / `.mov` the image-viewer resolver doesn't list — via the
+ *    [LinkHandler] `isDirect*` checks;
+ *  - page-URL hosts the full-screen viewer resolves through a live API or a
+ *    documented URL scheme — `v.redd.it/<id>` (Reddit videos), imgur, gfycat,
+ *    redgifs, streamable, deviantart — plus query-stringed image hosts such as
+ *    `preview.redd.it/<id>.jpeg?width=…` (Reddit's own CDN), which the
+ *    extension-only `isDirect*` checks miss because they look past the `?` for
+ *    the file extension.
+ *
+ * The three `isDirect*` file-extension checks are ORed with
+ * [LinkHandler.isProbablyAnImage] — the same predicate the in-app image
+ * viewer uses to decide whether a link opens the media viewer — so the
+ * parser and the inline player agree on what counts as media. The `isDirect*`
+ * terms are kept because `isProbablyAnImage`'s pattern-match tail does not
+ * list every direct file extension (`.webp` / `.m4v` / `.mov`).
  */
 private fun isPlayableMediaUrl(uri: UriString): Boolean = LinkHandler.isDirectStillImage(uri) ||
 	LinkHandler.isDirectGifFile(uri) ||
 	LinkHandler.isDirectVideoFile(uri) ||
-	LinkHandler.resolveImagePatternUrl(uri) != null
+	LinkHandler.isProbablyAnImage(uri)
 
 /**
  * Split a raw comment body into [CommentBodySegment]s: runs of text, the

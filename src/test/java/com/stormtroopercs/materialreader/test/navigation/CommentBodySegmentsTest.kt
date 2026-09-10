@@ -283,4 +283,25 @@ class CommentBodySegmentsTest {
 		val url = "https://v.redd.it/abcdef123456/DASH_720.mp4"
 		assertEquals(listOf(media(url)), parseCommentBodySegments(url))
 	}
+
+	@Test
+	fun bareVRedditVideoPageUrlBecomesMedia() {
+		// A v.redd.it page URL (no file extension) resolves to a video via
+		// the DASH playlist, so it promotes to inline media like the GIFs.
+		val url = "https://v.redd.it/abc12345xyz"
+		assertEquals(
+			listOf(
+				text("watch "),
+				media(url),
+				text(" this"),
+			),
+			parseCommentBodySegments("watch $url this"),
+		)
+	}
+
+	@Test
+	fun vRedditVideoPageUrlNotCountedAsLink() {
+		assertFalse(hasCommentBodyLink("https://v.redd.it/abc12345xyz"))
+		assertTrue(hasCommentBodyMedia("https://v.redd.it/abc12345xyz"))
+	}
 }
