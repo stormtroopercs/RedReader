@@ -20,6 +20,7 @@ package com.stormtroopercs.materialreader.navigation
 
 import android.graphics.Movie
 import androidx.annotation.OptIn
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,6 +39,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
@@ -58,20 +64,28 @@ import com.stormtroopercs.materialreader.views.video.ExoPlayerSeekableInputStrea
 import com.stormtroopercs.materialreader.views.video.ExoPlayerWrapperView
 
 /**
- * A piece of a rendered comment body: either a run of plain [Text] or an
- * embedded [Media] block (a GIF / video / still) that should play inline.
+ * A piece of a rendered comment body: a run of plain [Text], an embedded
+ * [Media] block (a GIF / video / still that plays inline), or a [Link]
+ * (markdown `[text](url)` or a bare non-media URL) that renders as
+ * prominent, tappable link text.
  */
 sealed interface CommentBodySegment {
 	data class Text(val value: String) : CommentBodySegment
 
 	data class Media(val url: String) : CommentBodySegment
+
+	data class Link(val text: String, val url: String) : CommentBodySegment
 }
 
 // A markdown image embed: `![alt](target)`. Reddit renders GIF drops as
 // `![gif](giphy|<id>)` / `![gif](https://…)` / `![gif](imgur|<id>)`.
 private val MARKDOWN_IMAGE = Regex("!\\[([^\\]]*)\\]\\(([^)\\s]+)\\)")
 
-// A bare media URL sitting in the body text (no markdown wrapper).
+// A markdown link: `[text](url)`. The scanner skips occurrences a `!`
+// precedes (those are image embeds, matched by [MARKDOWN_IMAGE]).
+private val MARKDOWN_LINK = Regex("\\[([^\\]]*)\\]\\(([^)\\s]+)\\)")
+
+// A bare URL sitting in the body text (no markdown wrapper).
 private val BARE_URL = Regex("https?://[^\\s\\)\\]}>\"']+")
 
 /**
@@ -106,15 +120,18 @@ private fun normalizeEmbedTarget(target: String): String? {
 }
 
 /**
- * Split a raw comment body into [CommentBodySegment]s: runs of text and the
- * media blocks embedded in it. Recognized media:
+ * Split a raw comment body into [CommentBodySegment]s: runs of text, the
+ * media blocks embedded in it, and links. Recognized:
  *  - markdown image embeds `![alt](target)` whose target is a URL or a
- *    `host|id` shorthand (see [normalizeEmbedTarget]);
- *  - bare URLs in the text that [LinkHandler] recognises as a direct image /
- *    GIF / video file.
+ *    `host|id` shorthand (see [normalizeEmbedTarget]) → [CommentBodySegment.Media];
+ *  - markdown links `[text](url)` whose target is a playable media URL →
+ *    [CommentBodySegment.Media], otherwise → [CommentBodySegment.Link];
+ *  - bare URLs in the text: direct image / GIF / video files per
+ *    [LinkHandler] → [CommentBodySegment.Media], everything else →
+ *    [CommentBodySegment.Link].
  *
- * Anything else stays text. A body with no media yields a single [Text]
- * segment equal to the original body.
+ * Anything else stays text. A body with no media or links yields a single
+ * [CommentBodySegment.Text] segment equal to the original body.
  */
 fun parseCommentBodySegments(body: String): List<CommentBodySegment> {
 	val segments = ArrayList<CommentBodySegment>()
@@ -129,12 +146,17 @@ fun parseCommentBodySegments(body: String): List<CommentBodySegment> {
 	var i = 0
 	while (i < body.length) {
 		val md = MARKDOWN_IMAGE.find(body, i)
+		val ml = MARKDOWN_LINK.find(body, i)
 		val bu = BARE_URL.find(body, i)
-		// The earliest token (markdown embed or bare URL) at or after i.
+		// The earliest token (image embed, markdown link, or bare URL) at or
+		// after i. Image embeds beat a link starting at the same index (an
+		// image's `!` immediately precedes the link's `[`).
 		val match = when {
-			md != null && (bu == null || md.range.first <= bu.range.first) -> md
-			bu != null -> bu
-			else -> null
+			md != null &&
+				(ml == null || md.range.first <= ml.range.first) &&
+				(bu == null || md.range.first <= bu.range.first) -> md
+			ml != null && (bu == null || ml.range.first <= bu.range.first) -> ml
+			else -> bu
 		}
 		if (match == null) {
 			// No more tokens — the rest of the body is plain text.
@@ -155,6 +177,34 @@ fun parseCommentBodySegments(body: String): List<CommentBodySegment> {
 				// An embed for a host we can't play — keep it visible as text.
 				text.append(match.value)
 			}
+		} else if (match === ml) {
+			val linkText = match.groupValues[1]
+			val target = match.groupValues[2]
+			if (target.startsWith("http://") || target.startsWith("https://")) {
+				val uri = UriString(target)
+				if (LinkHandler.isDirectStillImage(uri) ||
+					LinkHandler.isDirectGifFile(uri) ||
+					LinkHandler.isDirectVideoFile(uri)
+				) {
+					// A markdown link pointing at a direct media file plays inline.
+					flush()
+					segments.add(CommentBodySegment.Media(target))
+				} else {
+					// A regular link — render it as prominent tappable text.
+					flush()
+					segments.add(CommentBodySegment.Link(linkText, target))
+				}
+			} else {
+				val playable = normalizeEmbedTarget(target)
+				if (playable != null) {
+					// A `host|id` shorthand we know how to play.
+					flush()
+					segments.add(CommentBodySegment.Media(playable))
+				} else {
+					// A shorthand for a host we can't play — keep visible as text.
+					text.append(match.value)
+				}
+			}
 		} else {
 			val url = match.value
 			val uri = UriString(url)
@@ -165,8 +215,10 @@ fun parseCommentBodySegments(body: String): List<CommentBodySegment> {
 				flush()
 				segments.add(CommentBodySegment.Media(url))
 			} else {
-				// A non-media URL (an article link, etc.) — keep as text.
-				text.append(url)
+				// A non-media URL (an article link, etc.) — render it as
+				// prominent tappable text.
+				flush()
+				segments.add(CommentBodySegment.Link(url, url))
 			}
 		}
 	}
@@ -182,48 +234,36 @@ fun parseCommentBodySegments(body: String): List<CommentBodySegment> {
 fun hasCommentBodyMedia(body: String): Boolean = parseCommentBodySegments(body).any { it is CommentBodySegment.Media }
 
 /**
- * True when the comment body contains at least one non-media URL (an article
- * or external link that the parser keeps as plain text). Drives the "Links"
- * comment-nav menu option. A URL that the parser promotes to a playable media
- * block does not count.
+ * True when the comment body contains at least one non-media link (a
+ * markdown `[text](url)` or a bare URL that the parser keeps as tappable
+ * link text). Drives the "Links" comment-nav menu option. A URL that the
+ * parser promotes to a playable media block does not count.
  */
-fun hasCommentBodyLink(body: String): Boolean {
-	if (body.isBlank()) return false
-	// Collect every URL-like token the scanner would see (markdown embed
-	// targets + bare URLs), in the same order the parser does.
-	val tokens = ArrayList<String>()
-	var i = 0
-	while (i < body.length) {
-		val md = MARKDOWN_IMAGE.find(body, i)
-		val bu = BARE_URL.find(body, i)
-		val match = when {
-			md != null && (bu == null || md.range.first <= bu.range.first) -> md
-			bu != null -> bu
-			else -> null
-		}
-		if (match == null) break
-		if (match === md) tokens.add(match.groupValues[2]) else tokens.add(match.value)
-		i = match.range.last + 1
-	}
-	val mediaCount = parseCommentBodySegments(body).count { it is CommentBodySegment.Media }
-	return tokens.size > mediaCount
-}
+fun hasCommentBodyLink(body: String): Boolean = parseCommentBodySegments(body).any { it is CommentBodySegment.Link }
 
 /**
- * Renders a comment body, playing any embedded GIF / video / still inline
- * (FINAL-DESIGN 7.1 comment body) instead of leaving the raw markdown visible.
+ * Renders a comment body: embedded GIF / video / stills play inline
+ * (FINAL-DESIGN 7.1 comment body), and every link (markdown `[text](url)`
+ * or a bare URL) is drawn as prominent, underlined, tappable link text so
+ * the user knows it opens.
  *
- * [onOpenMedia] is invoked when the user taps a media block to open it in the
- * full-screen viewer.
+ * [onOpenMedia] is invoked when the user taps a media block to open it in
+ * the full-screen viewer. Link taps are always routed through the app's
+ * standard [LinkHandler.onLinkClicked] dispatcher (in-app viewer for
+ * media-bearing URLs, the in-app/external browser for pages).
  */
 @Composable
 fun CommentBody(
 	body: String,
 	onOpenMedia: (String) -> Unit = {},
 ) {
+	val context = LocalContext.current
+	val onOpenLink: (String) -> Unit = { url ->
+		(context as? AppCompatActivity)?.let { host -> LinkHandler.onLinkClicked(host, UriString(url)) }
+	}
 	val segments = remember(body) { parseCommentBodySegments(body) }
 	if (segments.size == 1 && segments[0] is CommentBodySegment.Text) {
-		// Fast path: no media — render exactly as the plain body text.
+		// Fast path: no media, no links — render exactly as the plain body text.
 		Text(
 			text = body,
 			style = MaterialTheme.typography.bodyMedium,
@@ -232,22 +272,78 @@ fun CommentBody(
 		)
 		return
 	}
-	segments.forEach { segment ->
-		when (segment) {
-			is CommentBodySegment.Text -> Text(
-				text = segment.value,
-				style = MaterialTheme.typography.bodyMedium,
-				maxLines = Int.MAX_VALUE,
-				overflow = androidx.compose.ui.text.style.TextOverflow.Visible,
-			)
+	// Render maximal runs of Text/Link segments as one text span (so a
+	// sentence containing several links is a single line of text); media
+	// blocks break the runs.
+	var run = listOf<CommentBodySegment>()
 
+	@Composable
+	fun emitRun(parts: List<CommentBodySegment>) {
+		if (parts.isEmpty()) return
+		Text(
+			text = buildBodyRun(parts, onOpenLink),
+			style = MaterialTheme.typography.bodyMedium,
+			maxLines = Int.MAX_VALUE,
+			overflow = androidx.compose.ui.text.style.TextOverflow.Visible,
+		)
+	}
+	for (segment in segments) {
+		when (segment) {
 			is CommentBodySegment.Media -> {
+				emitRun(run)
+				run = emptyList()
 				Spacer(Modifier.height(6.dp))
 				CommentMediaBlock(url = segment.url, onOpenMedia = onOpenMedia)
 				Spacer(Modifier.height(6.dp))
 			}
+
+			is CommentBodySegment.Text, is CommentBodySegment.Link -> run += segment
 		}
 	}
+	emitRun(run)
+}
+
+/**
+ * Builds one text run (plain text interleaved with links) as an
+ * [AnnotatedString] whose links are prominent: accent-coloured, underlined,
+ * and tappable (a [LinkAnnotation.Clickable] carrying the target URL).
+ */
+@Composable
+private fun buildBodyRun(
+	segments: List<CommentBodySegment>,
+	onOpenLink: (String) -> Unit,
+): AnnotatedString {
+	val builder = AnnotatedString.Builder()
+	for (segment in segments) {
+		when (segment) {
+			is CommentBodySegment.Text -> builder.append(segment.value)
+
+			is CommentBodySegment.Link -> {
+				val start = builder.length
+				builder.append(segment.text)
+				val end = builder.length
+				builder.addStyle(
+					SpanStyle(
+						color = MaterialTheme.colorScheme.primary,
+						textDecoration = TextDecoration.Underline,
+					),
+					start,
+					end,
+				)
+				builder.addLink(
+					LinkAnnotation.Clickable(
+						tag = segment.url,
+						linkInteractionListener = { onOpenLink(segment.url) },
+					),
+					start,
+					end,
+				)
+			}
+
+			is CommentBodySegment.Media -> Unit // media never lands in a text run
+		}
+	}
+	return builder.toAnnotatedString()
 }
 
 /**

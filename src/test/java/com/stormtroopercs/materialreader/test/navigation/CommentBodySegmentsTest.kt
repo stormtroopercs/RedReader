@@ -18,6 +18,7 @@ class CommentBodySegmentsTest {
 
 	private fun text(value: String) = CommentBodySegment.Text(value)
 	private fun media(url: String) = CommentBodySegment.Media(url)
+	private fun link(text: String, url: String) = CommentBodySegment.Link(text, url)
 
 	@Test
 	fun plainBodyIsOneTextSegment() {
@@ -86,10 +87,17 @@ class CommentBodySegmentsTest {
 	}
 
 	@Test
-	fun bareArticleUrlStaysText() {
-		// A non-media URL (an article) is not media — it stays as text.
+	fun bareArticleUrlBecomesLink() {
+		// A non-media URL (an article) renders as a tappable link.
 		val url = "https://www.bbc.com/news/article-123"
-		assertEquals(listOf(text("read $url now")), parseCommentBodySegments("read $url now"))
+		assertEquals(
+			listOf(
+				text("read "),
+				link(url, url),
+				text(" now"),
+			),
+			parseCommentBodySegments("read $url now"),
+		)
 	}
 
 	@Test
@@ -164,5 +172,59 @@ class CommentBodySegmentsTest {
 		val body = "![gif](giphy|a) and read https://www.bbc.com/news/article-123"
 		assertTrue(hasCommentBodyMedia(body))
 		assertTrue(hasCommentBodyLink(body))
+	}
+
+	// --- markdown links [text](url) --------------------------------------
+
+	@Test
+	fun markdownLinkBecomesLinkSegment() {
+		val url = "https://www.youtube.com/watch?v=ciHZwS71yZc"
+		assertEquals(
+			listOf(
+				text("check "),
+				link("this video", url),
+				text(" out"),
+			),
+			parseCommentBodySegments("check [this video]($url) out"),
+		)
+	}
+
+	@Test
+	fun markdownLinkToPlayableMediaBecomesMedia() {
+		val url = "https://media.giphy.com/media/xyz/giphy.gif"
+		assertEquals(listOf(media(url)), parseCommentBodySegments("[the gif]($url)"))
+	}
+
+	@Test
+	fun markdownLinkToHostIdShorthandBecomesMedia() {
+		assertEquals(
+			listOf(media("https://imgur.com/abc123")),
+			parseCommentBodySegments("[cat](imgur|abc123)"),
+		)
+	}
+
+	@Test
+	fun markdownLinkToUnknownHostStaysText() {
+		assertEquals(
+			listOf(text("[x](unknownhost|abc)")),
+			parseCommentBodySegments("[x](unknownhost|abc)"),
+		)
+	}
+
+	@Test
+	fun imageEmbedStillBeatsLinkAtSamePosition() {
+		// `![gif](giphy|abc)` also matches the markdown-link pattern; the
+		// image scanner must win and produce media, not a link.
+		assertEquals(
+			listOf(media("https://media.giphy.com/media/abc/giphy.gif")),
+			parseCommentBodySegments("![gif](giphy|abc)"),
+		)
+	}
+
+	@Test
+	fun markdownLinkDrivesLinksFilter() {
+		val url = "https://www.youtube.com/watch?v=ciHZwS71yZc"
+		assertTrue(hasCommentBodyLink("[this video]($url)"))
+		assertFalse(hasCommentBodyMedia("[this video]($url)"))
 	}
 }
