@@ -176,6 +176,40 @@ fun parseCommentBodySegments(body: String): List<CommentBodySegment> {
 }
 
 /**
+ * True when the comment body embeds at least one piece of media (a GIF,
+ * video, or image token). Drives the "Images" comment-nav menu option.
+ */
+fun hasCommentBodyMedia(body: String): Boolean = parseCommentBodySegments(body).any { it is CommentBodySegment.Media }
+
+/**
+ * True when the comment body contains at least one non-media URL (an article
+ * or external link that the parser keeps as plain text). Drives the "Links"
+ * comment-nav menu option. A URL that the parser promotes to a playable media
+ * block does not count.
+ */
+fun hasCommentBodyLink(body: String): Boolean {
+	if (body.isBlank()) return false
+	// Collect every URL-like token the scanner would see (markdown embed
+	// targets + bare URLs), in the same order the parser does.
+	val tokens = ArrayList<String>()
+	var i = 0
+	while (i < body.length) {
+		val md = MARKDOWN_IMAGE.find(body, i)
+		val bu = BARE_URL.find(body, i)
+		val match = when {
+			md != null && (bu == null || md.range.first <= bu.range.first) -> md
+			bu != null -> bu
+			else -> null
+		}
+		if (match == null) break
+		if (match === md) tokens.add(match.groupValues[2]) else tokens.add(match.value)
+		i = match.range.last + 1
+	}
+	val mediaCount = parseCommentBodySegments(body).count { it is CommentBodySegment.Media }
+	return tokens.size > mediaCount
+}
+
+/**
  * Renders a comment body, playing any embedded GIF / video / still inline
  * (FINAL-DESIGN 7.1 comment body) instead of leaving the raw markdown visible.
  *

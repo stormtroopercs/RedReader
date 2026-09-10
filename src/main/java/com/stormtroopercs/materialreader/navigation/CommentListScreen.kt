@@ -42,11 +42,17 @@ import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -54,7 +60,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -158,18 +163,16 @@ fun RealCommentListScreen(
 		}
 	}
 
-	// The signed-in username — drives the "Me" nav chip (7.4).
+	// The signed-in username — drives the "Me" comment-nav menu option.
 	val me = remember {
 		RedditAccountManager.getInstance(context).defaultAccount.username
 	}
 
-	// Comment-nav chip selection (7.4). "Me" filters to the account's own
-	// comments; "New comments" sorts most-recent-first. The media chips
-	// (Images / Links / Videos) are selectable toggles — their filtering needs
-	// per-comment media metadata not yet parsed, so they select but do not
-	// (yet) change the list.
-	var selectedChip by remember { mutableStateOf("All") }
-	val chips = listOf("Images", "Links", "Me", "New comments", "OP", "Threads", "Videos")
+	// Comment-nav menu filter (the ⋮ top-right menu): null = all comments.
+	// "Me" keeps only the account's own comments; "New comments" sorts
+	// most-recent-first; "Images"/"Links" keep only comments whose body embeds
+	// media / a link; "OP" keeps only the post author's comments.
+	var menuFilter by remember { mutableStateOf<String?>(null) }
 
 	Scaffold(
 		topBar = {
@@ -190,10 +193,74 @@ fun RealCommentListScreen(
 					}
 				},
 				actions = {
-					IconButton(onClick = { viewModel.refresh() }) {
+					// ⋮ overflow menu (replaces the standalone refresh button):
+					// refresh, reply, images, links, me, new comments, op.
+					var moreMenuExpanded by remember { mutableStateOf(false) }
+					IconButton(onClick = { moreMenuExpanded = true }) {
 						Icon(
-							imageVector = Icons.Default.Refresh,
-							contentDescription = "Refresh",
+							imageVector = Icons.Default.MoreVert,
+							contentDescription = "More",
+						)
+					}
+					DropdownMenu(
+						expanded = moreMenuExpanded,
+						onDismissRequest = { moreMenuExpanded = false },
+					) {
+						DropdownMenuItem(
+							text = { Text("Refresh") },
+							leadingIcon = { Icon(Icons.Default.Refresh, null) },
+							onClick = {
+								moreMenuExpanded = false
+								viewModel.refresh()
+							},
+						)
+						DropdownMenuItem(
+							text = { Text("Reply") },
+							leadingIcon = { Icon(Icons.Default.Edit, null) },
+							onClick = {
+								moreMenuExpanded = false
+								onReplyToPost()
+							},
+						)
+						DropdownMenuItem(
+							text = { Text("Images") },
+							leadingIcon = { Icon(Icons.Default.Photo, null) },
+							onClick = {
+								moreMenuExpanded = false
+								menuFilter = if (menuFilter == "Images") null else "Images"
+							},
+						)
+						DropdownMenuItem(
+							text = { Text("Links") },
+							leadingIcon = { Icon(Icons.Default.Link, null) },
+							onClick = {
+								moreMenuExpanded = false
+								menuFilter = if (menuFilter == "Links") null else "Links"
+							},
+						)
+						DropdownMenuItem(
+							text = { Text("Me") },
+							leadingIcon = { Icon(Icons.Default.Person, null) },
+							onClick = {
+								moreMenuExpanded = false
+								menuFilter = if (menuFilter == "Me") null else "Me"
+							},
+						)
+						DropdownMenuItem(
+							text = { Text("New comments") },
+							leadingIcon = { Icon(Icons.Default.Schedule, null) },
+							onClick = {
+								moreMenuExpanded = false
+								menuFilter = if (menuFilter == "New comments") null else "New comments"
+							},
+						)
+						DropdownMenuItem(
+							text = { Text("OP") },
+							leadingIcon = { Icon(Icons.Default.Star, null) },
+							onClick = {
+								moreMenuExpanded = false
+								menuFilter = if (menuFilter == "OP") null else "OP"
+							},
 						)
 					}
 				},
@@ -206,24 +273,6 @@ fun RealCommentListScreen(
 				icon = { Icon(Icons.Default.Add, contentDescription = null) },
 				text = { Text("Reply") },
 			)
-		},
-		bottomBar = {
-			// Comment-nav chip row (7.4).
-			Row(
-				modifier = Modifier
-					.fillMaxWidth()
-					.background(MaterialTheme.colorScheme.surface)
-					.padding(horizontal = 12.dp, vertical = 6.dp),
-				horizontalArrangement = Arrangement.spacedBy(8.dp),
-			) {
-				chips.forEach { chip ->
-					FilterChip(
-						selected = selectedChip == chip,
-						onClick = { selectedChip = if (selectedChip == chip) "All" else chip },
-						label = { Text(chip, style = MaterialTheme.typography.labelSmall) },
-					)
-				}
-			}
 		},
 		snackbarHost = { SnackbarHost(snackbarHostState) },
 	) { paddingValues ->
@@ -248,13 +297,15 @@ fun RealCommentListScreen(
 
 			is CommentListUiState.Success -> {
 				// Hide collapsed threads first (the depth-first order the
-				// list was parsed in), then apply the nav-chip filters (7.4).
+				// list was parsed in), then apply the ⋮ menu filter.
 				var shown = filterCollapsedThreads(state.comments, collapsedIds)
-				if (selectedChip == "Me") {
-					shown = shown.filter { it.author == me }
-				}
-				if (selectedChip == "New comments") {
-					shown = shown.sortedByDescending { it.createdUtcTimestamp }
+				when (menuFilter) {
+					"Me" -> shown = shown.filter { it.author == me }
+					"New comments" -> shown = shown.sortedByDescending { it.createdUtcTimestamp }
+					"Images" -> shown = shown.filter { hasCommentBodyMedia(it.body) }
+					"Links" -> shown = shown.filter { hasCommentBodyLink(it.body) }
+					"OP" -> shown = shown.filter { it.author == state.postAuthor }
+					else -> Unit
 				}
 
 				CommentListContent(

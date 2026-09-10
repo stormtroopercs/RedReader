@@ -1,8 +1,12 @@
 package com.stormtroopercs.materialreader.test.navigation
 
 import com.stormtroopercs.materialreader.navigation.CommentBodySegment
+import com.stormtroopercs.materialreader.navigation.hasCommentBodyLink
+import com.stormtroopercs.materialreader.navigation.hasCommentBodyMedia
 import com.stormtroopercs.materialreader.navigation.parseCommentBodySegments
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -104,5 +108,61 @@ class CommentBodySegmentsTest {
 			),
 			segs,
 		)
+	}
+
+	// --- hasCommentBodyMedia ("Images" menu filter) ------------------------
+
+	@Test
+	fun mediaFlagTrueForGiphyEmbed() {
+		assertTrue(hasCommentBodyMedia("![gif](giphy|d81n9rX8stxBRbqrbG)"))
+	}
+
+	@Test
+	fun mediaFlagTrueForBareGifUrl() {
+		assertTrue(hasCommentBodyMedia("check https://media.giphy.com/media/xyz/giphy.gif"))
+	}
+
+	@Test
+	fun mediaFlagFalseForPlainText() {
+		assertFalse(hasCommentBodyMedia("just a normal comment"))
+	}
+
+	@Test
+	fun mediaFlagFalseForArticleLink() {
+		assertFalse(hasCommentBodyMedia("read https://www.bbc.com/news/article-123 now"))
+	}
+
+	// --- hasCommentBodyLink ("Links" menu filter) --------------------------
+
+	@Test
+	fun linkFlagTrueForArticleUrl() {
+		assertTrue(hasCommentBodyLink("see https://www.bbc.com/news/article-123"))
+	}
+
+	@Test
+	fun linkFlagTrueForLoneArticleUrl() {
+		assertTrue(hasCommentBodyLink("https://www.bbc.com/news/article-123"))
+	}
+
+	@Test
+	fun linkFlagFalseForPlainText() {
+		assertFalse(hasCommentBodyLink("just a normal comment"))
+	}
+
+	@Test
+	fun linkFlagFalseForMediaOnlyBody() {
+		assertFalse(hasCommentBodyLink("![gif](giphy|d81n9rX8stxBRbqrbG)"))
+	}
+
+	@Test
+	fun linkFlagFalseForEmptyBody() {
+		assertFalse(hasCommentBodyLink(""))
+	}
+
+	@Test
+	fun mediaAndLinkFlagsCoexist() {
+		val body = "![gif](giphy|a) and read https://www.bbc.com/news/article-123"
+		assertTrue(hasCommentBodyMedia(body))
+		assertTrue(hasCommentBodyLink(body))
 	}
 }
