@@ -85,9 +85,16 @@ class RawObjectDB<K, E : WritableObject<K>>(
 	}
 
 	private fun getFieldTypeString(fieldType: Class<*>?): String {
-		if (fieldType == Int::class.java || fieldType == Long::class.java || fieldType == Integer.TYPE || fieldType == Long.TYPE) {
+		if (fieldType == Int::class.java ||
+			fieldType == Long::class.java ||
+			fieldType == java.lang.Integer::class.java ||
+			fieldType == java.lang.Long::class.java ||
+			fieldType == Integer.TYPE ||
+			fieldType == Long.TYPE
+		) {
 			return " INTEGER"
 		} else if (fieldType == Boolean::class.java ||
+			fieldType == java.lang.Boolean::class.java ||
 			fieldType == java.lang.Boolean.TYPE
 		) {
 			return " INTEGER"
@@ -208,15 +215,15 @@ class RawObjectDB<K, E : WritableObject<K>>(
 
 			if (fieldType == String::class.java) {
 				field.set(obj, if (cursor.isNull(i)) null else cursor.getString(i))
-			} else if (fieldType == Int::class.java) {
+			} else if (fieldType == Int::class.java || fieldType == java.lang.Integer::class.java) {
 				field.set(obj, if (cursor.isNull(i)) null else cursor.getInt(i))
 			} else if (fieldType == Integer.TYPE) {
 				field.setInt(obj, cursor.getInt(i))
-			} else if (fieldType == kotlin.Long::class.java) {
+			} else if (fieldType == kotlin.Long::class.java || fieldType == java.lang.Long::class.java) {
 				field.set(obj, if (cursor.isNull(i)) null else cursor.getLong(i))
 			} else if (fieldType == Long.TYPE) {
 				field.setLong(obj, cursor.getLong(i))
-			} else if (fieldType == kotlin.Boolean::class.java) {
+			} else if (fieldType == kotlin.Boolean::class.java || fieldType == java.lang.Boolean::class.java) {
 				field.set(obj, if (cursor.isNull(i)) null else cursor.getInt(i) != 0)
 			} else if (fieldType == java.lang.Boolean.TYPE) {
 				field.setBoolean(obj, cursor.getInt(i) != 0)
@@ -301,15 +308,15 @@ class RawObjectDB<K, E : WritableObject<K>>(
 
 			if (fieldType == String::class.java) {
 				result.put(fieldNames[i], field.get(obj) as String?)
-			} else if (fieldType == Int::class.java) {
+			} else if (fieldType == Int::class.java || fieldType == java.lang.Integer::class.java) {
 				result.put(fieldNames[i], field.get(obj) as Int?)
 			} else if (fieldType == Integer.TYPE) {
 				result.put(fieldNames[i], field.getInt(obj))
-			} else if (fieldType == kotlin.Long::class.java) {
+			} else if (fieldType == kotlin.Long::class.java || fieldType == java.lang.Long::class.java) {
 				result.put(fieldNames[i], field.get(obj) as kotlin.Long?)
 			} else if (fieldType == Long.TYPE) {
 				result.put(fieldNames[i], field.getLong(obj))
-			} else if (fieldType == kotlin.Boolean::class.java) {
+			} else if (fieldType == kotlin.Boolean::class.java || fieldType == java.lang.Boolean::class.java) {
 				val `val` = field.get(obj) as kotlin.Boolean?
 				result.put(fieldNames[i], if (`val` == null) null else (if (`val`) 1 else 0))
 			} else if (fieldType == java.lang.Boolean.TYPE) {
