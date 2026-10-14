@@ -41,7 +41,7 @@ hilt-navigation-compose = "1.4.0"
 hilt-work = "1.4.0"
 room = "2.8.4"
 workmanager = "2.11.2"
-ksp = "2.3.11"
+ksp = "2.3.12"
 zstd = "1.5.7-16"
 
 junit = "4.13.2"
